@@ -59,7 +59,7 @@ class HawkesProcess:
         self.params_: Optional[Dict[str, float]] = None
 
     # -----------------------------
-    # 1) Preprocess / Filter
+    # Preprocess / Filter
     # -----------------------------
     @staticmethod
     def _preprocess(df: pl.DataFrame) -> pl.DataFrame:
@@ -122,7 +122,7 @@ class HawkesProcess:
         return t_rel
 
     # -----------------------------
-    # 2) Core: intensity at events & log-likelihood
+    # Core: intensity at events & log-likelihood
     # -----------------------------
     @staticmethod
     def _compute_R_exp_kernel(t: np.ndarray, beta: float) -> np.ndarray:
@@ -161,13 +161,13 @@ class HawkesProcess:
         if np.any(lam_at_events <= 0):
             return -np.inf
 
-        term1 = np.sum(np.log(lam_at_events))
-        term2 = mu * T
-        term3 = (alpha / beta) * np.sum(1.0 - np.exp(-beta * (T - t)))
+        term1 = np.sum(np.log(lam_at_events)) # 실제 사건이 발생한 시에서의 강도 합
+        term2 = mu * T                        # 기저 강도의 적분 합
+        term3 = (alpha / beta) * np.sum(1.0 - np.exp(-beta * (T - t))) # 자기 흥 효과에 대한 적분항
         return float(term1 - term2 - term3)
 
     # -----------------------------
-    # 3) Fit (MLE) with penalty for stability
+    # Fit (MLE) with penalty for stability
     # -----------------------------
     def fit_mle(
         self,
@@ -245,7 +245,7 @@ class HawkesProcess:
         return out
 
     # -----------------------------
-    # 4) Time-rescaling diagnostics
+    # Time-rescaling diagnostics
     # -----------------------------
     @staticmethod
     def _rescaling_z_exp_kernel(t: np.ndarray, mu: float, alpha: float, beta: float) -> np.ndarray:
@@ -309,7 +309,8 @@ class HawkesProcess:
         return out
 
     # -----------------------------
-    # 5) Simulation: Ogata thinning (exponential kernel)
+    # Simulation: Ogata thinning (exponential kernel)
+    # 비균질 포아송 프로세스(Non-homogeneous Poisson Process)를 시뮬레이션하는 표준 기법
     # -----------------------------
     @staticmethod
     def simulate_ogata(
@@ -375,7 +376,7 @@ class HawkesProcess:
         return np.array(events, dtype=np.float64)
 
     # -----------------------------
-    # 6) Convenience run
+    # Convenience run
     # -----------------------------
     def run_full(
         self,

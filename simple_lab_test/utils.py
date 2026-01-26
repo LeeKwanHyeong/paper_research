@@ -48,4 +48,4 @@ def get_taxi_data(vendor: int = 0):
     elif vendor == 2:
         return vendor2_data
     else:
-        return vendor1_data + vendor2_data
+        return pl.concat([vendor1_data, vendor2_data], how="vertical")
