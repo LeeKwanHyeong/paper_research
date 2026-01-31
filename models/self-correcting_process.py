@@ -7,7 +7,7 @@ from typing import Optional, Tuple, Dict, Any, List
 import numpy as np
 import polars as pl
 
-from simple_lab_test.utils import get_taxi_data
+from utils.dataset_utils import get_taxi_data
 
 # scipy는 선택 의존성(없어도 동작하도록)
 try:
