@@ -66,6 +66,18 @@ class RMTPP(nn.Module):
         self.b_t = nn.Parameter(torch.zeros(1))
         self.w_raw = nn.Parameter(torch.zeros(1))
 
+        self._init_stable()
+
+    def _init_stable(self):
+        # v_t, mark_head를 너무 크게 시작하지 않게
+        nn.init.normal_(self.v_t.weight, mean=0.0, std=0.01)
+        nn.init.normal_(self.mark_head.weight, mean=0.0, std=0.02)
+        nn.init.zeros_(self.mark_head.bias)
+
+        # w_raw를 음수로 시작하면 softplus(w_raw)가 작게 시작 -> wd가 작아져 폭주 억제
+        with torch.no_grad():
+            self.w_raw.fill_(-3.0)  # softplus(-3) ~ 0.048
+
     def _w_pos(self) -> torch.Tensor:
         # ensure w > 0 for stability of 1/w and inverse-CDF sampling
         return F.softplus(self.w_raw) + self.cfg.w_min
@@ -85,26 +97,42 @@ class RMTPP(nn.Module):
         out, _ = self.rnn(x)                            # [B, L, H]
         return out
 
+    # def log_f_dt(self, h_j: torch.Tensor, dt_next: torch.Tensor) -> torch.Tensor:
+    #     """
+    #     log f(d_{j+1} | h_j) using closed-form  # 논문 수식 (12)
+    #
+    #     Let:
+    #         a = v^T*h_j + b
+    #         w = positive scalar
+    #         d = (t - t_{j})
+    #         log f(d) = a + w d + (1/w)exp(a) - (1/w)exp(a+w d)
+    #     """
+    #     w = self._w_pos()   # scalr
+    #     a = self.v_t(h_j).squeeze(-1) + self.b_t    # [B, ...] + scalar => [B, ...]
+    #
+    #     wd = w * dt_next
+    #     term1 = a + wd
+    #     exp_a = self._clamped_exp(a)
+    #     exp_a_wd = self._clamped_exp(a + wd)
+    #
+    #     log_f = term1 + (exp_a / w) - (exp_a_wd / w)
+    #
+    #     return log_f
     def log_f_dt(self, h_j: torch.Tensor, dt_next: torch.Tensor) -> torch.Tensor:
-        """
-        log f(d_{j+1} | h_j) using closed-form  # 논문 수식 (12)
+        w = self._w_pos()  # scalar
+        a = self.v_t(h_j).squeeze(-1) + self.b_t  # [B, L-1]
 
-        Let:
-            a = v^T*h_j + b
-            w = positive scalar
-            d = (t - t_{j})
-            log f(d) = a + w d + (1/w)exp(a) - (1/w)exp(a+w d)
-        """
-        w = self._w_pos()   # scalr
-        a = self.v_t(h_j).squeeze(-1) + self.b_t    # [B, ...] + scalar => [B, ...]
+        # clamp a to prevent exp overflow
+        a_c = torch.clamp(a, max=self.cfg.exp_clamp)
+        exp_a = torch.exp(a_c)
 
         wd = w * dt_next
-        term1 = a + wd
-        exp_a = self._clamped_exp(a)
-        exp_a_wd = self._clamped_exp(a + wd)
+        wd_c = torch.clamp(wd, max=getattr(self.cfg, "wd_clamp", 10.0))
+        expm1_wd = torch.expm1(wd_c)  # exp(wd)-1 안정 계산
 
-        log_f = term1 + (exp_a / w) - (exp_a_wd / w)
-
+        # log f(d) = (a + wd) - (exp(a)/w) * (exp(wd)-1)
+        log_lambda = a_c + wd_c
+        log_f = log_lambda - (exp_a / w) * expm1_wd
         return log_f
 
     def nll(

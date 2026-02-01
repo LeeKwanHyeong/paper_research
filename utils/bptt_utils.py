@@ -3,9 +3,12 @@ import torch
 from models.recurrent_marked_temporal_point_process.rmtpp import RMTPP
 
 
-def train_one_epoch(model: RMTPP, loader, optimizer, device = 'cuda' if torch.cuda.is_available() else 'cpu'):
+def train_one_epoch(model, loader, optimizer, device):
     model.train()
-    total = 0.0
+    total_nll = 0.0
+    total_m = 0.0
+    total_t = 0.0
+    n_batches = 0
 
     for marks, dts, mask in loader:
         marks = marks.to(device)
@@ -13,21 +16,32 @@ def train_one_epoch(model: RMTPP, loader, optimizer, device = 'cuda' if torch.cu
         mask = mask.to(device)
 
         out = model.nll(marks, dts, mask)
-        loss = out['nll']
+        loss = out["nll"]
 
-        optimizer.zero_grad(set_to_none = True)
+        optimizer.zero_grad(set_to_none=True)
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm = 5.0)
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 5.0)
         optimizer.step()
 
-        total += float(loss.item())
+        total_nll += float(out["nll"].item())
+        total_m += float(out["nll_marker"].item())
+        total_t += float(out["nll_time"].item())
+        n_batches += 1
 
-    return total / max(len(loader), 1)
+    return {
+        "nll": total_nll / max(n_batches, 1),
+        "nll_marker": total_m / max(n_batches, 1),
+        "nll_time": total_t / max(n_batches, 1),
+        "batches": n_batches,
+    }
 
 @torch.no_grad()
-def eval_epoch(model: RMTPP, loader, device = 'cuda' if torch.cuda.is_available() else 'cpu'):
+def eval_one_epoch(model, loader, device):
     model.eval()
-    total = 0.0
+    total_nll = 0.0
+    total_m = 0.0
+    total_t = 0.0
+    n_batches = 0
 
     for marks, dts, mask in loader:
         marks = marks.to(device)
@@ -35,9 +49,17 @@ def eval_epoch(model: RMTPP, loader, device = 'cuda' if torch.cuda.is_available(
         mask = mask.to(device)
 
         out = model.nll(marks, dts, mask)
-        total += float(out['nll'].item())
+        total_nll += float(out["nll"].item())
+        total_m += float(out["nll_marker"].item())
+        total_t += float(out["nll_time"].item())
+        n_batches += 1
 
-    return total / max(len(loader), 1)
+    return {
+        "nll": total_nll / max(n_batches, 1),
+        "nll_marker": total_m / max(n_batches, 1),
+        "nll_time": total_t / max(n_batches, 1),
+        "batches": n_batches,
+    }
 
 @torch.no_grad()
 def predict_next(model: RMTPP, marks: torch.Tensor, dts: torch.Tensor):

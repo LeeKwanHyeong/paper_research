@@ -11,4 +11,4 @@ class RMTPPConfig:
     dropout: float = 0.1
     eps: float = 1e-8
     w_min: float = 1e-3     # w_t stabilization because of 0 (1/w)
-    exp_clamp: float = 50.0 # exponential overflow guard
+    exp_clamp: float = 300.0 # exponential overflow guard
