@@ -1,71 +1,67 @@
 from typing import Optional, Dict
 
+from torch import nn
 import torch
-import torch.nn as nn
+from models.RMTPPs.config import RMTPPConfig
+from models.Titan import TitanConfig, MemoryEncoder, LMM
 import torch.nn.functional as F
 
-from models.recurrent_marked_temporal_point_process.config import RMTPPConfig
+class TitanRMTPP(nn.Module):
+    '''
+    Titan-Based RMTPPs Model
+    - Backbone: Titan MemoryEncoder (replaces RNN)
+    - Memory: Optional LMM (Local Memory Matching) for retrieving past patterns
+    - Head: Standard RMTPPs intensity and marker prediction heads
+    '''
 
-
-class RMTPP(nn.Module):
-    """
-    Recurrent Marked Temporal Point Process (RMTPP)
-    - Marker head: softmax P(y_{j+1} | h_j) (paper equation. 10)
-    - Time head: intensity lamgda(t) = exp(v^T h_j + w * (t-t_j) + b)   (paper equation. 11)
-        => duration density f(d | h_j) closed-form
-
-    Input Sequence:
-        marks: [B, L] (0..k-1)
-        dts:   [B, L] (d_j = t_j - t_{j-1})
-
-    Traget
-        next_marks: [B, L-1] (y_{j+1})
-        next_dts:   [B, L-1] (d_{j+1})
-    """
-    def __init__(self, cfg: RMTPPConfig):
+    def __init__(self, cfg: RMTPPConfig, titan_cfg: TitanConfig):
         super().__init__()
-
         self.cfg = cfg
+        self.titan_cfg = titan_cfg
 
-        self.emb = nn.Embedding(cfg.num_marks, cfg.mark_emb_dim) # marker embedding
+        self.emb = nn.Embedding(cfg.num_marks, cfg.mark_emb_dim)    # marker embedding
 
-        rnn_in_dim = cfg.mark_emb_dim + 1
-        if cfg.rnn_type == 'rnn':
-            self.rnn = nn.RNN(
-                input_size = rnn_in_dim,
-                hidden_size = cfg.rnn_hidden_dim,
-                batch_first = True,
-                dropout = cfg.dropout if cfg.dropout > 0.0 else 0.0
+
+        # Input dim = Mark Embedding + Log-Time (1 dim)
+        input_dim = cfg.mark_emb_dim + 1
+        d_model = titan_cfg.d_model
+
+        # Titan Backbone
+        # RMTPP는 AutoRegressive하므로, Encoder 내부 Attention에서 Causal Mask 적용 필요.
+        self.encoder = MemoryEncoder(
+            input_dim = input_dim,
+            d_model = d_model,
+            n_layers = titan_cfg.n_layers,
+            n_heads = titan_cfg.n_heads,
+            d_ff = titan_cfg.d_ff,
+            contextual_mem_size = titan_cfg.contextual_mem_size,
+            persistent_mem_size = titan_cfg.persistent_mem_size,
+            dropout = titan_cfg.dropout,
+            use_pos_emb = True,
+            max_len = getattr(titan_cfg, 'max_len', 512),
+            use_causal = titan_cfg.use_causal
+        )
+
+        # LMM (Local Memory Matchinig)
+        self.use_lmm = getattr(titan_cfg, 'use_lmm', False)
+        if self.use_lmm:
+            self.lmm = LMM(
+                d_model = titan_cfg.d_model,
+                mem_size = getattr(titan_cfg, 'mem_size', 512),
+                topk = getattr(titan_cfg, 'mem_topk', 8),
             )
 
-        elif cfg.rnn_type == 'gru':
-            self.rnn = nn.GRU(
-                input_size = rnn_in_dim,
-                hidden_size = cfg.rnn_hidden_dim,
-                batch_first = True,
-                dropout = cfg.dropout if cfg.dropout > 0.0 else 0.0
-            )
+        # Prediction Heads (RMTPPs Standards)
+        # Next Marker Prediction
+        self.mark_head = nn.Linear(d_model, cfg.num_marks)
 
-        elif cfg.rnn_type == 'lstm':
-            self.rnn = nn.LSTM(
-                input_size = rnn_in_dim,
-                hidden_size = cfg.rnn_hidden_dim,
-                batch_first = True,
-                dropout = cfg.dropout if cfg.dropout > 0.0 else 0.0
-            )
-
-        else:
-            raise ValueError(f"Unsupported rnn_type: {cfg.rnn_type}")
-
-        # Marker generation head: logits for next mark
-        self.mark_head = nn.Linear(cfg.rnn_hidden_dim, cfg.num_marks)
-
-        # Time intensity parameters (paper equation. 10)
+        # Next Time Intensity Parameters
         # v_t: vector, b_t: scalar, w_t: scalr (>0 enforced by softplus)
-        self.v_t = nn.Linear(cfg.rnn_hidden_dim, 1, bias = False) # v*T h
-        self.b_t = nn.Parameter(torch.zeros(1))
-        self.w_raw = nn.Parameter(torch.zeros(1))
+        self.v_t = nn.Linear(d_model, 1, bias = False)  # Depends on History H
+        self.b_t = nn.Parameter(torch.zeros(1))                   # Base intensity bias
+        self.w_raw = nn.Parameter(torch.zeros(1))                 # Time decay parameter
 
+        # Initialize weights
         self._init_stable()
 
     def _init_stable(self):
@@ -85,52 +81,47 @@ class RMTPP(nn.Module):
     def _clamped_exp(self, x: torch.Tensor) -> torch.Tensor:
         return torch.exp(torch.clamp(x, max = self.cfg.exp_clamp))
 
-    def forward_hidden(self, marks: torch.Tensor, dts: torch.Tensor) -> torch.Tensor:
+    def forward(self, marks: torch.Tensor, dts: torch.Tensor) -> torch.Tensor:
         """
-        :returns [B, L, H]
+        Process input sequence through Embedding -> Titan Encoder -> LMM
+        :returns
+            h: [B, L, d_model] (Context vector for each step)
         """
         # marks: [B, L], dts: [B, L]
+
+        # 1. Embeddings
         emb = self.emb(marks)                           # [B, L, E]
         dt_feat = dts.unsqueeze(-1).float()             # [B, L, 1]
-        x = torch.cat([emb, dt_feat], dim = -1)  # [B, L, E + 1]
+        x = torch.cat([emb, dt_feat], dim = -1)  # [B, L, Input_Dim]
 
-        out, _ = self.rnn(x)                            # [B, L, H]
-        return out
+        # 2. Titan Encoder
+        # Ensure 'MemoryEncoder' or 'MemoryAttention' applies causal masking
+        h = self.encoder(x) # [B, L, D]
 
-    # def log_f_dt(self, h_j: torch.Tensor, dt_next: torch.Tensor) -> torch.Tensor:
-    #     """
-    #     log f(d_{j+1} | h_j) using closed-form  # 논문 수식 (12)
-    #
-    #     Let:
-    #         a = v^T*h_j + b
-    #         w = positive scalar
-    #         d = (t - t_{j})
-    #         log f(d) = a + w d + (1/w)exp(a) - (1/w)exp(a+w d)
-    #     """
-    #     w = self._w_pos()   # scalr
-    #     a = self.v_t(h_j).squeeze(-1) + self.b_t    # [B, ...] + scalar => [B, ...]
-    #
-    #     wd = w * dt_next
-    #     term1 = a + wd
-    #     exp_a = self._clamped_exp(a)
-    #     exp_a_wd = self._clamped_exp(a + wd)
-    #
-    #     log_f = term1 + (exp_a / w) - (exp_a_wd / w)
-    #
-    #     return log_f
+        # 3. LMM (Long-term Pattern Retrieval)
+        if self.use_lmm:
+            h = self.lmm(h)
+
+        return h
+
     def log_f_dt(self, h_j: torch.Tensor, dt_next: torch.Tensor) -> torch.Tensor:
-        w = self._w_pos()  # scalar
-        a = self.v_t(h_j).squeeze(-1) + self.b_t  # [B, L-1]
+        '''
+        Calculate log density of the next inter-event time.
+        log f(d) = log(lambda(d)) - integral_0^d lambda(u) du
+        '''
+        w = self._w_pos()
+        # h_j: [B, L-1, D] -> v_t -> [B, L-1, 1] -> squeeze -> [B, L-1]
+        a = self.v_t(h_j).squeeze(-1) + self.b_t
 
-        # clamp a to prevent exp overflow
+        # Numerical stability
         a_c = torch.clamp(a, max=self.cfg.exp_clamp)
         exp_a = torch.exp(a_c)
 
         wd = w * dt_next
         wd_c = torch.clamp(wd, max=getattr(self.cfg, "wd_clamp", 10.0))
-        expm1_wd = torch.expm1(wd_c)  # exp(wd)-1 안정 계산
+        expm1_wd = torch.expm1(wd_c)  # exp(wd) - 1
 
-        # log f(d) = (a + wd) - (exp(a)/w) * (exp(wd)-1)
+        # log f(d) calculation
         log_lambda = a_c + wd_c
         log_f = log_lambda - (exp_a / w) * expm1_wd
         return log_f
@@ -154,9 +145,9 @@ class RMTPP(nn.Module):
         """
         B, L = marks.shape
         if mask is None:
-            mask = torch.ones_like((B, L), device = marks.device, dtype = torch.bool)
+            mask = torch.ones((B, L), device = marks.device, dtype = torch.bool)
 
-        h = self.forward_hidden(marks, dts) # [B, L, H]
+        h = self.forward(marks, dts) # [B, L, H]
 
         h_j = h[:, :-1, :]                      # [B, L-1, H]
         y_next = marks[:, 1:]                   # [B, L-1]
@@ -209,4 +200,3 @@ class RMTPP(nn.Module):
         x = 1.0 + (w/exp_a) * (-torch.log(u))
         dt = (1.0 / w) * torch.log(x.clamp_min(self.cfg.eps))
         return dt
-
