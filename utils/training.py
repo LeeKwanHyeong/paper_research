@@ -61,7 +61,7 @@ def eval_next_event(model: RMTPP, loader: DataLoader, device: str) -> Dict[str, 
         rmse = np.sqrt(dt_sq / max(total, 1))
         return {'mark_acc': acc, 'dt_mae': mae, 'dt_rmse': rmse}
 
-def eval_next_event_weeklookback(model, loader: DataLoader, device: str) -> Dict[str, float]:
+def eval_next_event_week_lookback(model, loader: DataLoader, device: str) -> Dict[str, float]:
     """
     Week-lookback + padding/mask 버전 평가.
     Dataset이 (marks, dts, mask, part_idx)를 반환.
@@ -78,6 +78,11 @@ def eval_next_event_weeklookback(model, loader: DataLoader, device: str) -> Dict
     dt_abs = 0.0
     dt_sq = 0.0
 
+    sum_nll_time = 0.0
+    sum_nll_marker = 0.0
+    sum_nll_total = 0.0
+    sum_steps = 0.0
+
     pad_id = int(model.cfg.num_marks - 1)
 
     with torch.no_grad():
@@ -86,8 +91,22 @@ def eval_next_event_weeklookback(model, loader: DataLoader, device: str) -> Dict
             dts   = dts.to(device)    # (B, Lmax)
             mask  = mask.to(device)   # (B, Lmax)
 
-            # left-pad에서는 target은 항상 끝(-1), prev는 -2
-            # 단, 유효 토큰이 2개 이상이어야 함
+            # --------------------- NLL -----------------------
+            out = model.nll(marks, dts, mask=mask)
+            # out: {"nll", "nll_time", "nll_marker", "steps"...} 형태라고 가정
+            steps = float(
+                out.get("steps", mask[:, 1:].sum()).item() if hasattr(out.get("steps", None), "item") else out.get(
+                    "steps", mask[:, 1:].sum().item()))
+            # steps가 tensor일 수도 있어서 안전 처리
+            if steps <= 0:
+                steps = float(mask[:, 1:].sum().item())
+
+            sum_nll_time += float(out["nll_time"].item()) * steps
+            sum_nll_marker += float(out["nll_marker"].item()) * steps
+            sum_nll_total += float(out["nll"].item()) * steps
+            sum_steps += steps
+
+            # --------------------- Marker -----------------------
             valid = mask[:, -1] & mask[:, -2]
             if valid.sum().item() == 0:
                 continue
@@ -123,7 +142,28 @@ def eval_next_event_weeklookback(model, loader: DataLoader, device: str) -> Dict
     acc = correct / max(total, 1)
     mae = dt_abs / max(total, 1)
     rmse = float(np.sqrt(dt_sq / max(total, 1)))
-    return {"mark_acc": acc, "dt_mae": mae, "dt_rmse": rmse, "_total": total, "_correct": correct}
+
+    # step-weighted mean nll
+    if sum_steps <= 0:
+        val_nll_time = float("nan")
+        val_nll_marker = float("nan")
+        val_nll_total = float("nan")
+    else:
+        val_nll_time = sum_nll_time / sum_steps
+        val_nll_marker = sum_nll_marker / sum_steps
+        val_nll_total = sum_nll_total / sum_steps
+
+    return {
+        "mark_acc": acc,
+        "dt_mae": mae,
+        "dt_rmse": rmse,
+        "val_nll_time": val_nll_time,
+        "val_nll_marker": val_nll_marker,
+        "val_nll": val_nll_total,
+        "_total": total,
+        "_correct": correct,
+        "_nll_steps": sum_steps,
+    }
 
 def train_rmtpp(marked_df: pl.DataFrame, training_config: TrainingConfig, rmtpp_config: RMTPPConfig):
     # train_ds = RMTPPDataset(marked_df, lookback=training_config.lookback, val_ratio=training_config.val_ratio,
@@ -188,13 +228,22 @@ def train_rmtpp(marked_df: pl.DataFrame, training_config: TrainingConfig, rmtpp_
 
         train_loss = running / max(steps, 1)
         # val_metrics = eval_next_event(model, val_loader, training_config.device)
-        val_metrics = eval_next_event_weeklookback(model, val_loader, training_config.device)
+        val_metrics = eval_next_event_week_lookback(model, val_loader, training_config.device)
 
         score = val_metrics['mark_acc'] - 0.01 * val_metrics['dt_mae']
 
-        print(f"[Epoch {epoch:02d}] train_loss={train_loss:.8f} | "
-              f"val_acc={val_metrics['mark_acc']:.8f} val_dt_mae={val_metrics['dt_mae']:.8f} | val_dt_rmse={val_metrics['dt_rmse']:.8f} "
-              f"| total={val_metrics['_total']} | correct={val_metrics['_correct']}")
+        # print(f"[Epoch {epoch:02d}] train_loss={train_loss:.8f} | "
+        #       f"val_acc={val_metrics['mark_acc']:.8f} val_dt_mae={val_metrics['dt_mae']:.8f} | val_dt_rmse={val_metrics['dt_rmse']:.8f} "
+        #       f"| total={val_metrics['_total']} | correct={val_metrics['_correct']}")
+        print(
+            f"[Epoch {epoch:02d}] train_loss={train_loss:.8f} | "
+            f"val_acc={val_metrics['mark_acc']:.8f} "
+            f"val_dt_mae={val_metrics['dt_mae']:.8f} | val_dt_rmse={val_metrics['dt_rmse']:.8f} | "
+            f"val_nll_time={val_metrics['val_nll_time']:.6f} "
+            f"val_nll_marker={val_metrics['val_nll_marker']:.6f} "
+            f"val_nll={val_metrics['val_nll']:.6f} | "
+            f"total={val_metrics['_total']} | correct={val_metrics['_correct']} | steps={val_metrics['_nll_steps']:.0f}"
+        )
 
         if score > best_val:
             best_val = score

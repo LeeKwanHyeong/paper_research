@@ -6,12 +6,12 @@ from models.RMTPPs.config import RMTPPConfig
 from models.Titan import TitanConfig, MemoryEncoder, LMM
 import torch.nn.functional as F
 
-class TitanRMTPP(nn.Module):
+class TitanTPP(nn.Module):
     '''
-    Titan-Based RMTPPs Model
+    Titan-Based TPPs Model
     - Backbone: Titan MemoryEncoder (replaces RNN)
     - Memory: Optional LMM (Local Memory Matching) for retrieving past patterns
-    - Head: Standard RMTPPs intensity and marker prediction heads
+    - Head: Standard TPPs intensity and marker prediction heads
     '''
 
     def __init__(self, cfg: RMTPPConfig, titan_cfg: TitanConfig):
@@ -91,7 +91,8 @@ class TitanRMTPP(nn.Module):
 
         # 1. Embeddings
         emb = self.emb(marks)                           # [B, L, E]
-        dt_feat = dts.unsqueeze(-1).float()             # [B, L, 1]
+        # dt_feat = dts.unsqueeze(-1).float()             # [B, L, 1]
+        dt_feat = torch.log1p(dts.clamp_min(0).float()).unsqueeze(-1)
         x = torch.cat([emb, dt_feat], dim = -1)  # [B, L, Input_Dim]
 
         # 2. Titan Encoder

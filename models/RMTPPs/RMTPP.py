@@ -97,27 +97,6 @@ class RMTPP(nn.Module):
         out, _ = self.rnn(x)                            # [B, L, H]
         return out
 
-    # def log_f_dt(self, h_j: torch.Tensor, dt_next: torch.Tensor) -> torch.Tensor:
-    #     """
-    #     log f(d_{j+1} | h_j) using closed-form  # 논문 수식 (12)
-    #
-    #     Let:
-    #         a = v^T*h_j + b
-    #         w = positive scalar
-    #         d = (t - t_{j})
-    #         log f(d) = a + w d + (1/w)exp(a) - (1/w)exp(a+w d)
-    #     """
-    #     w = self._w_pos()   # scalr
-    #     a = self.v_t(h_j).squeeze(-1) + self.b_t    # [B, ...] + scalar => [B, ...]
-    #
-    #     wd = w * dt_next
-    #     term1 = a + wd
-    #     exp_a = self._clamped_exp(a)
-    #     exp_a_wd = self._clamped_exp(a + wd)
-    #
-    #     log_f = term1 + (exp_a / w) - (exp_a_wd / w)
-    #
-    #     return log_f
     def log_f_dt(self, h_j: torch.Tensor, dt_next: torch.Tensor) -> torch.Tensor:
         w = self._w_pos()  # scalar
         a = self.v_t(h_j).squeeze(-1) + self.b_t  # [B, L-1]
@@ -134,6 +113,24 @@ class RMTPP(nn.Module):
         log_lambda = a_c + wd_c
         log_f = log_lambda - (exp_a / w) * expm1_wd
         return log_f
+
+    def log_S_dt(self, h_j: torch.Tensor, dt: torch.Tensor) -> torch.Tensor:
+        """
+        log S(dt | h_j)
+        S(d) = exp(-(exp(a)/w) * (exp(w d)-1))
+        => logS(d) = - (exp(a)/w) * (exp(w d)-1)
+        """
+        w = self._w_pos()
+        a = self.v_t(h_j).squeeze(-1) + self.b_t
+
+        a_c = torch.clamp(a, max=self.cfg.exp_clamp)
+        exp_a = torch.exp(a_c)
+
+        wd = w * dt
+        wd_c = torch.clamp(wd, max=getattr(self.cfg, "wd_clamp", 10.0))
+        expm1_wd = torch.expm1(wd_c)
+
+        return - (exp_a / w) * expm1_wd
 
     def nll(
         self,
