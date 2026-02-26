@@ -156,7 +156,7 @@ class RMTPP(nn.Module):
         if mask is None:
             mask = torch.ones((B, L), device = marks.device, dtype = torch.bool)
 
-        h = self.forward_hidden(marks, dts) # [B, L, H]
+        h = self.forward(marks, dts) # [B, L, H]
 
         h_j = h[:, :-1, :]                      # [B, L-1, H]
         y_next = marks[:, 1:]                   # [B, L-1]
