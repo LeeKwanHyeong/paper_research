@@ -1,6 +1,6 @@
 import polars as pl
 
-def make_marks_intermittent(df: pl.DataFrame, K: int = 12, p1: float = 0.99, p2: float = 0.999) -> pl.DataFrame:
+def make_marks_intermittent_default(df: pl.DataFrame, K: int = 12, p1: float = 0.99, p2: float = 0.999) -> pl.DataFrame:
     # assert K >= 6
 
     # event 생성

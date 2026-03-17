@@ -120,8 +120,8 @@ class MemoryAttention(nn.Module):
         if len(mem_list) > 0:
             mem = torch.cat(mem_list, dim=1)
             n_mem = mem.size(1)
-            k = torch.cat([k, mem], dim=1)  # Key extends to [B, L + n_mem, D]
-            v = torch.cat([v, mem], dim=1)  # Value extends
+            k = torch.cat([mem, k], dim=1)  # Key extends to [B, L + n_mem, D]
+            v = torch.cat([mem, v], dim=1)  # Value extends
 
         qh = self._split_heads(q)  # [B, H, L, Hd]
         kh = self._split_heads(k)  # [B, H, L + n_mem, Hd]
