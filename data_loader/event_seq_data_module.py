@@ -153,12 +153,14 @@ class RMTPPDataset(Dataset):
               .agg([
                   pl.col("delta_t").alias("dt_list"),
                   pl.col("mark").alias("mk_list"),
+                  pl.col("scale_residual").alias("val_list") if "scale_residual" in df.columns else pl.lit(None).alias("val_list"),
               ])
         )
 
         self.parts = grouped["oper_part_no"].to_list()
         self.dt_lists = grouped["dt_list"].to_list()
         self.mk_lists = grouped["mk_list"].to_list()
+        self.val_lists = grouped["val_list"].to_list()
 
         # 전역 인덱스: (part_idx, end_pos)
         self.index = []
@@ -191,6 +193,8 @@ class RMTPPDataset(Dataset):
 
         dt = np.asarray(self.dt_lists[p_idx], dtype=np.float32)
         mk = np.asarray(self.mk_lists[p_idx], dtype=np.int64)
+        val_list = self.val_lists[p_idx]
+        val = None if val_list is None else np.asarray(val_list, dtype=np.float32)
 
         start = end_pos - self.lookback + 1
 
@@ -199,13 +203,19 @@ class RMTPPDataset(Dataset):
         y_dt = dt[end_pos + 1]              # ()
         y_mk = mk[end_pos + 1]              # ()
 
-        return {
+        sample = {
             "x_mk": torch.from_numpy(x_mk).long(),
             "x_dt": torch.from_numpy(x_dt).float(),
             "y_mk": torch.tensor(y_mk).long(),
             "y_dt": torch.tensor(y_dt).float(),
             "part_idx": torch.tensor(p_idx).long(),
         }
+
+        if val is not None:
+            sample["x_val"] = torch.from_numpy(val[start:end_pos + 1]).float()
+            sample["y_val"] = torch.tensor(val[end_pos + 1]).float()
+
+        return sample
 
 
 class RMTPPWeekLookbackDataset(Dataset):
@@ -259,6 +269,7 @@ class RMTPPWeekLookbackDataset(Dataset):
                   pl.col("seq").cast(pl.Int32).alias("seq_list"),
                   pl.col("delta_t").cast(pl.Float32).alias("dt_list"),
                   pl.col("mark").cast(pl.Int32).alias("mk_list"),
+                  pl.col("scale_residual").cast(pl.Float32).alias("val_list") if "scale_residual" in df.columns else pl.lit(None).alias("val_list"),
               ])
         )
 
@@ -266,6 +277,7 @@ class RMTPPWeekLookbackDataset(Dataset):
         self.seq_lists = grouped["seq_list"].to_list()
         self.dt_lists = grouped["dt_list"].to_list()
         self.mk_lists = grouped["mk_list"].to_list()
+        self.val_lists = grouped["val_list"].to_list()
 
         # 샘플 인덱스: (part_idx, context_end_idx=i)
         self.index = []
@@ -293,6 +305,8 @@ class RMTPPWeekLookbackDataset(Dataset):
         seq = np.asarray(self.seq_lists[p_idx], dtype=np.int32)
         dt  = np.asarray(self.dt_lists[p_idx], dtype=np.float32)
         mk  = np.asarray(self.mk_lists[p_idx], dtype=np.int64)
+        val_list = self.val_lists[p_idx]
+        val = None if val_list is None else np.asarray(val_list, dtype=np.float32)
 
         t_i = int(seq[i])
         left = t_i - (self.W - 1)
@@ -319,22 +333,32 @@ class RMTPPWeekLookbackDataset(Dataset):
         if pad_len > 0:
             mk_pad = np.full((self.max_len,), self.pad_id, dtype=np.int64)
             dt_pad = np.zeros((self.max_len,), dtype=np.float32)
+            # Residual padding uses 0.0 because masked positions are ignored in loss.
+            val_pad = np.zeros((self.max_len,), dtype=np.float32)
             mask   = np.zeros((self.max_len,), dtype=np.bool_)
 
             mk_pad[pad_len:] = mk_seq
             dt_pad[pad_len:] = dt_seq
+            if val is not None:
+                val_pad[pad_len:] = val[all_idx]
             mask[pad_len:]   = True
         else:
             mk_pad = mk_seq.astype(np.int64)
             dt_pad = dt_seq.astype(np.float32)
+            val_pad = val[all_idx].astype(np.float32) if val is not None else np.zeros((self.max_len,), dtype=np.float32)
             mask   = np.ones((self.max_len,), dtype=np.bool_)
 
-        return {
+        sample = {
             "marks": torch.from_numpy(mk_pad).long(),     # (max_len,)
             "dts":   torch.from_numpy(dt_pad).float(),    # (max_len,)
             "mask":  torch.from_numpy(mask).bool(),       # (max_len,)
             "part_idx": torch.tensor(p_idx).long(),
         }
+
+        if val is not None:
+            sample["values"] = torch.from_numpy(val_pad).float()
+
+        return sample
 
 
 def collate_week_lookback(batch):
@@ -342,7 +366,10 @@ def collate_week_lookback(batch):
     dts   = torch.stack([b["dts"] for b in batch], dim=0).float()    # (B,Lmax)
     mask  = torch.stack([b["mask"] for b in batch], dim=0).bool()    # (B,Lmax)
     part_idx = torch.stack([b["part_idx"] for b in batch], dim=0).long()
-    return marks, dts, mask, part_idx
+    values = None
+    if "values" in batch[0]:
+        values = torch.stack([b["values"] for b in batch], dim=0).float()
+    return marks, dts, mask, part_idx, values
 
 
 def collate_next_event(batch):
@@ -356,8 +383,13 @@ def collate_next_event(batch):
 
     # (B,)
     part_idx = torch.stack([b['part_idx'] for b in batch], dim=0).long()
+    x_val = None
+    y_val = None
+    if "x_val" in batch[0]:
+        x_val = torch.stack([b["x_val"] for b in batch], dim=0).float()
+        y_val = torch.stack([b["y_val"] for b in batch], dim=0).float()
 
-    return x_mk, x_dt, y_mk, y_dt, part_idx
+    return x_mk, x_dt, y_mk, y_dt, part_idx, x_val, y_val
 
 
 def _clip_dt_min1(df: pl.DataFrame) -> pl.DataFrame:
@@ -392,5 +424,4 @@ def time_split_events(marked_df: pl.DataFrame, val_ratio: float = 0.2) -> tuple[
     val_df   = df2.filter(pl.col("rn") >= pl.col("k")).drop(["n", "k", "rn"])
 
     return train_df, val_df
-
 

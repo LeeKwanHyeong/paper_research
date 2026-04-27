@@ -21,7 +21,6 @@ class TitanTPP(nn.Module):
 
         self.emb = nn.Embedding(cfg.num_marks, cfg.mark_emb_dim)    # marker embedding
 
-
         # Input dim = Mark Embedding + Log-Time (1 dim)
         input_dim = cfg.mark_emb_dim + 1
         d_model = titan_cfg.d_model
@@ -54,6 +53,8 @@ class TitanTPP(nn.Module):
         # Prediction Heads (RMTPPs Standards)
         # Next Marker Prediction
         self.mark_head = nn.Linear(d_model, cfg.num_marks)
+        # Value head predicts the residual part of log10(qty).
+        self.value_head = nn.Linear(d_model, 1)
 
         # Next Time Intensity Parameters
         # v_t: vector, b_t: scalar, w_t: scalr (>0 enforced by softplus)
@@ -69,6 +70,8 @@ class TitanTPP(nn.Module):
         nn.init.normal_(self.v_t.weight, mean=0.0, std=0.01)
         nn.init.normal_(self.mark_head.weight, mean=0.0, std=0.02)
         nn.init.zeros_(self.mark_head.bias)
+        nn.init.normal_(self.value_head.weight, mean=0.0, std=0.02)
+        nn.init.zeros_(self.value_head.bias)
 
         # w_raw를 음수로 시작하면 softplus(w_raw)가 작게 시작 -> wd가 작아져 폭주 억제
         with torch.no_grad():
@@ -80,6 +83,27 @@ class TitanTPP(nn.Module):
 
     def _clamped_exp(self, x: torch.Tensor) -> torch.Tensor:
         return torch.exp(torch.clamp(x, max = self.cfg.exp_clamp))
+
+    def predict_value(self, h_j: torch.Tensor) -> torch.Tensor:
+        """
+        Predict the residual component of log_base(qty).
+        """
+        value_raw = self.value_head(h_j).squeeze(-1)
+        if self.cfg.value_head_activation == "sigmoid":
+            return torch.sigmoid(value_raw)
+        return value_raw
+
+    def reconstruct_log_qty(self, mark: torch.Tensor, value_residual: torch.Tensor) -> torch.Tensor:
+        return mark.float() + value_residual.float()
+
+    def reconstruct_qty(self, mark: torch.Tensor, value_residual: torch.Tensor) -> torch.Tensor:
+        log_qty = self.reconstruct_log_qty(mark, value_residual)
+        scale_base = torch.as_tensor(
+            self.cfg.scale_base,
+            dtype=log_qty.dtype,
+            device=log_qty.device,
+        )
+        return torch.pow(scale_base, log_qty)
 
     def forward(self, marks: torch.Tensor, dts: torch.Tensor) -> torch.Tensor:
         """
@@ -131,6 +155,7 @@ class TitanTPP(nn.Module):
         self,
         marks: torch.Tensor,
         dts: torch.Tensor,
+        values: Optional[torch.Tensor] = None,
         mask: Optional[torch.Tensor] = None,
     ) -> Dict[str, torch.Tensor]:
         """
@@ -166,6 +191,18 @@ class TitanTPP(nn.Module):
         # Time log-density
         logf_dt = self.log_f_dt(h_j, dt_next)   # [B, L-1]
 
+        # Residual regression for quantity reconstruction.
+        if values is not None and self.cfg.use_value_head:
+            value_next = values[:, 1:].float()
+            value_hat = self.predict_value(h_j)
+            # value_sq = F.smooth_l1_loss(value_hat, value_next, reduction="none")
+            value_sq = F.huber_loss(value_hat, value_next, reduction="none")
+            value_sq = value_sq * step_mask
+            value_loss = value_sq.sum() / step_mask.sum().clamp_min(1)
+        else:
+            value_hat = None
+            value_loss = torch.zeros((), device=marks.device, dtype=torch.float32)
+
         # apply mask
         logp_y = log_y * step_mask
         logf_dt = logf_dt * step_mask
@@ -179,6 +216,8 @@ class TitanTPP(nn.Module):
             'nll': nll_total,
             'nll_marker': nll_marker,
             'nll_time': nll_time,
+            'value_loss': value_loss,
+            'value_hat': value_hat,
             'steps': step_mask.sum(),
         }
 

@@ -66,15 +66,21 @@ def predict_next(model: RMTPP, marks: torch.Tensor, dts: torch.Tensor):
     """
     marks: [1, L], dts: [1, L]
     """
-    h = model.forward_hidden(marks, dts)    # [1, L, H]
+    # RMTPP/TitanTPP both expose forward() -> hidden states.
+    h = model.forward(marks, dts)           # [1, L, H]
     h_last = h[:, -1, :]                    # [1, H]
 
     # next mark distribution
-    logits = model.mark_head(h_last)        # [1, K]
+    logits = model.mark_head(h_last)[..., : model.cfg.num_marks - 1]  # exclude PAD
     prob = torch.softmax(logits, dim = -1)
     y_hat = torch.argmax(prob, dim = -1)    # [1]
 
     # next dt sampling
     dt_hat = model.sample_next_dt(h_last)   # [1]
-    return y_hat, dt_hat, prob
+    value_hat = None
+    qty_hat = None
+    if hasattr(model, "predict_value"):
+        value_hat = model.predict_value(h_last)
+        qty_hat = model.reconstruct_qty(y_hat, value_hat)
 
+    return y_hat, dt_hat, prob, value_hat, qty_hat
