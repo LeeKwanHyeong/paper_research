@@ -10,15 +10,19 @@ from pathlib import Path
 
 import polars as pl
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+BOOTSTRAP_ROOT = Path(__file__).resolve().parents[2]
+if str(BOOTSTRAP_ROOT) not in sys.path:
+    sys.path.insert(0, str(BOOTSTRAP_ROOT))
+
+from simple_lab_test.common.pathing import ensure_project_root_on_path
+
+PROJECT_ROOT = ensure_project_root_on_path(__file__)
 
 from utils.magnitude_pipeline import compare_scale_bases
 
 
 def main():
-    raw_df = pl.read_parquet("sample_data/intermittent_df.parquet")
+    raw_df = pl.read_parquet(PROJECT_ROOT / "sample_data" / "intermittent_df.parquet")
 
     # The summary table is compact enough to paste into notes or slides, while
     # the raw stacked table keeps the per-class counts available for inspection.
