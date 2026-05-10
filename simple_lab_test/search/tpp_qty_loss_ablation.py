@@ -394,6 +394,9 @@ def instantiate_model(
     num_marks: int,
     scale_base: float,
     candidate: TitanCandidate,
+    loss_mode: str,
+    lambda_qty: float,
+    qty_scale_value: float,
 ) -> tuple[torch.nn.Module, RMTPPConfig, Any]:
     """
     Create one RMTPP-family model and the configs that define it.
@@ -408,6 +411,11 @@ def instantiate_model(
             # When RMTPP joins the ablation, we keep its hidden width aligned
             # with the Titan preset so the main change remains the backbone type.
             "rnn_hidden_dim": candidate.d_model,
+            # Persist the active qty-loss setup in the model config so
+            # manifests/checkpoints reflect the true ablation condition.
+            "loss_mode": loss_mode,
+            "lambda_qty": lambda_qty,
+            "qty_scale_value": qty_scale_value,
         }
     )
     titan_cfg = build_titan_config(search_cfg, candidate)
@@ -688,6 +696,9 @@ def train_one_run(
         num_marks=int(marked_meta["num_marks"]),
         scale_base=run_cfg.scale_base,
         candidate=run_cfg.titan_candidate,
+        loss_mode=run_cfg.loss_mode,
+        lambda_qty=cfg.lambda_qty,
+        qty_scale_value=qty_scale,
     )
 
     save_json(

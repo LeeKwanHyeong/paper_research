@@ -11,6 +11,11 @@ The default profile follows the analysis report:
 - `intermittent`: `log10 + mid_deep_lmm`
 - `yellow_trip`: `log10 + mid_lmm`
 
+This script intentionally keeps the loss definition fixed at
+`residual_only` so the headline RMTPP vs TitanTPP comparison stays aligned
+with the legacy benchmark setup. Quantity-loss variants are explored in the
+separate `tpp_qty_loss_ablation.py` runner.
+
 Alternative profiles are also supported so we can compare:
 - `overall`: use the single global best Titan profile for both datasets
 - `score_priority`: use the report's score-oriented yellow-trip choice
@@ -132,6 +137,7 @@ class ABConfig:
     rmtpp_rnn_type: str = "gru"
     rmtpp_mark_emb_dim: int = 32
     value_head_activation: str = "sigmoid"
+    loss_mode: str = "residual_only"
 
 
 DEFAULT_AB_EPOCHS = int(ABConfig.__dataclass_fields__["epochs"].default)
@@ -266,6 +272,7 @@ def build_ab_run_paths(ab_cfg: ABConfig, run_cfg: ABRunConfig) -> ABRunPaths:
         / "runs"
         / run_cfg.dataset_name
         / run_cfg.model_name
+        / f"lossmode_{ab_cfg.loss_mode}"
         / f"profile_{run_cfg.titan_profile}"
         / f"base_{base_label}"
         / run_cfg.titan_candidate_name
@@ -388,6 +395,10 @@ def train_one_model(
             "rnn_type": ab_cfg.rmtpp_rnn_type,
             "mark_emb_dim": ab_cfg.rmtpp_mark_emb_dim,
             "rnn_hidden_dim": run_cfg.titan_candidate.d_model,
+            # The main paper benchmark intentionally fixes both models to the
+            # legacy residual-only objective. Loss-type exploration lives in
+            # the dedicated qty-loss ablation runner.
+            "loss_mode": ab_cfg.loss_mode,
         }
     )
     titan_cfg = build_titan_config(search_cfg, run_cfg.titan_candidate)
@@ -435,6 +446,7 @@ def train_one_model(
         "epochs": int(run_cfg.epochs),
         "scale_base": float(run_cfg.scale_base),
         "titan_profile": run_cfg.titan_profile,
+        "loss_mode": ab_cfg.loss_mode,
         "titan_candidate_name": run_cfg.titan_candidate_name,
         "run_dir": str(run_paths.run_dir),
         "checkpoint_path": str(checkpoint_path),
@@ -480,6 +492,7 @@ def build_error_row(run_cfg: ABRunConfig, exc: Exception) -> dict[str, Any]:
         "epochs": int(run_cfg.epochs),
         "scale_base": float(run_cfg.scale_base),
         "titan_profile": run_cfg.titan_profile,
+        "loss_mode": ab_cfg.loss_mode,
         "titan_candidate_name": run_cfg.titan_candidate_name,
         "error": repr(exc),
         **flatten_candidate(run_cfg.titan_candidate),

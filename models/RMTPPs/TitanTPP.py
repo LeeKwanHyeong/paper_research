@@ -105,6 +105,33 @@ class TitanTPP(nn.Module):
         )
         return torch.pow(scale_base, log_qty)
 
+    def expected_qty_from_logits(
+        self,
+        logits_no_pad: torch.Tensor,
+        value_residual: torch.Tensor,
+    ) -> torch.Tensor:
+        """
+        Build a differentiable quantity estimate from mark probabilities.
+
+        We intentionally avoid argmax-mark reconstruction here so direct
+        quantity supervision can still update the mark head during training.
+        """
+        mark_probs = torch.softmax(logits_no_pad, dim=-1)
+        real_mark_count = logits_no_pad.size(-1)
+        mark_grid = torch.arange(
+            real_mark_count,
+            device=logits_no_pad.device,
+            dtype=value_residual.dtype,
+        ).view(1, 1, real_mark_count)
+        log_qty = mark_grid + value_residual.unsqueeze(-1)
+        scale_base = torch.as_tensor(
+            self.cfg.scale_base,
+            dtype=value_residual.dtype,
+            device=value_residual.device,
+        )
+        qty_per_mark = torch.pow(scale_base, log_qty)
+        return (mark_probs * qty_per_mark).sum(dim=-1)
+
     def forward(self, marks: torch.Tensor, dts: torch.Tensor) -> torch.Tensor:
         """
         Process input sequence through Embedding -> Titan Encoder -> LMM
@@ -199,9 +226,31 @@ class TitanTPP(nn.Module):
             value_sq = F.huber_loss(value_hat, value_next, reduction="none")
             value_sq = value_sq * step_mask
             value_loss = value_sq.sum() / step_mask.sum().clamp_min(1)
+
+            # Direct quantity supervision is kept optional so TitanTPP can
+            # stay on the legacy residual-only objective for the paper A/B,
+            # while still allowing development-time experiments on qty loss.
+            pad_id = int(self.cfg.num_marks - 1)
+            logits_real = logits[..., :pad_id]
+            expected_qty = self.expected_qty_from_logits(logits_real, value_hat)
+            true_qty = self.reconstruct_qty(y_next.clamp_max(pad_id - 1), value_next)
+
+            qty_scale_value = torch.as_tensor(
+                float(max(getattr(self.cfg, "qty_scale_value", 1.0), 1.0)),
+                device=true_qty.device,
+                dtype=true_qty.dtype,
+            )
+            qty_sq = F.huber_loss(
+                expected_qty / qty_scale_value,
+                true_qty / qty_scale_value,
+                reduction="none",
+            )
+            qty_sq = qty_sq * step_mask
+            qty_loss = qty_sq.sum() / step_mask.sum().clamp_min(1)
         else:
             value_hat = None
             value_loss = torch.zeros((), device=marks.device, dtype=torch.float32)
+            qty_loss = torch.zeros((), device=marks.device, dtype=torch.float32)
 
         # apply mask
         logp_y = log_y * step_mask
@@ -212,11 +261,23 @@ class TitanTPP(nn.Module):
         nll_time = -logf_dt.sum() / (step_mask.sum().clamp_min(1))
         nll_total = nll_marker + nll_time
 
+        loss_mode = getattr(self.cfg, "loss_mode", "residual_only")
+        if loss_mode == "residual_only":
+            total_loss = nll_total + value_loss
+        elif loss_mode == "hybrid":
+            total_loss = nll_total + value_loss + getattr(self.cfg, "lambda_qty", 0.25) * qty_loss
+        elif loss_mode == "qty_only":
+            total_loss = nll_total + getattr(self.cfg, "lambda_qty", 0.25) * qty_loss
+        else:
+            raise ValueError(f"Unsupported loss_mode: {loss_mode}")
+
         return {
             'nll': nll_total,
             'nll_marker': nll_marker,
             'nll_time': nll_time,
             'value_loss': value_loss,
+            'qty_loss': qty_loss,
+            'total_loss': total_loss,
             'value_hat': value_hat,
             'steps': step_mask.sum(),
         }

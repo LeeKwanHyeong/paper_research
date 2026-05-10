@@ -484,11 +484,35 @@ def _train_week_lookback_model(model, train_loader: DataLoader, val_loader: Data
             values = values.to(training_config.device) if values is not None else None
 
             out = model.nll(marks, dts, values=values, mask=mask)
-            loss = (
-                out["nll_marker"]
-                + training_config.lambda_value * out["value_loss"]
-                + training_config.lambda_dt * out["nll_time"]
-            )
+            loss_mode = getattr(model.cfg, "loss_mode", "residual_only")
+            if "total_loss" in out:
+                if loss_mode == "residual_only":
+                    loss = (
+                        out["nll_marker"]
+                        + training_config.lambda_value * out["value_loss"]
+                        + training_config.lambda_dt * out["nll_time"]
+                    )
+                elif loss_mode == "hybrid":
+                    loss = (
+                        out["nll_marker"]
+                        + training_config.lambda_value * out["value_loss"]
+                        + training_config.lambda_dt * out["nll_time"]
+                        + getattr(model.cfg, "lambda_qty", 0.25) * out["qty_loss"]
+                    )
+                elif loss_mode == "qty_only":
+                    loss = (
+                        out["nll_marker"]
+                        + training_config.lambda_dt * out["nll_time"]
+                        + getattr(model.cfg, "lambda_qty", 0.25) * out["qty_loss"]
+                    )
+                else:
+                    raise ValueError(f"Unsupported loss_mode: {loss_mode}")
+            else:
+                loss = (
+                    out["nll_marker"]
+                    + training_config.lambda_value * out["value_loss"]
+                    + training_config.lambda_dt * out["nll_time"]
+                )
 
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
