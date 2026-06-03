@@ -8,7 +8,7 @@ Why this script exists:
 3. save reusable artifacts for the paper: run tables, summary tables, and plots
 
 The default profile follows the analysis report:
-- `intermittent`: `log10 + mid_deep_lmm`
+- `intermittent`: `log2 + small_lmm` over `marked_target_df`
 - `yellow_trip`: `log10 + mid_lmm`
 
 This script intentionally keeps the loss definition fixed at
@@ -80,6 +80,7 @@ from simple_lab_test.search.titan_hparam_search import (
     ensure_dir,
     prepare_marked_dataset,
     sanitize_float_label,
+    search_config_for_dataset,
     save_json,
     summarize_history,
     tee_training_output,
@@ -93,17 +94,17 @@ from utils.training import train_rmtpp, train_titantpp
 # ---------------------------------------------------------------------------
 
 BEST_TITAN_BY_DATASET = {
-    "intermittent": {"scale_base": 10.0, "candidate_name": "mid_deep_lmm"},
+    "intermittent": {"scale_base": 2.0, "candidate_name": "small_lmm"},
     "yellow_trip": {"scale_base": 10.0, "candidate_name": "mid_lmm"},
 }
 
 BEST_TITAN_OVERALL = {
-    "intermittent": {"scale_base": 10.0, "candidate_name": "mid_lmm"},
+    "intermittent": {"scale_base": 2.0, "candidate_name": "small_lmm"},
     "yellow_trip": {"scale_base": 10.0, "candidate_name": "mid_lmm"},
 }
 
 BEST_TITAN_SCORE_PRIORITY = {
-    "intermittent": {"scale_base": 10.0, "candidate_name": "mid_deep_lmm"},
+    "intermittent": {"scale_base": 2.0, "candidate_name": "small_lmm"},
     "yellow_trip": {"scale_base": 4.0, "candidate_name": "mid_deep_lmm"},
 }
 
@@ -218,11 +219,11 @@ def find_candidate_by_name(candidates: Iterable[TitanCandidate], name: str) -> T
     raise KeyError(f"Titan candidate not found: {name}")
 
 
-def make_search_cfg(ab_cfg: ABConfig) -> SearchConfig:
+def make_search_cfg(ab_cfg: ABConfig, dataset_kind: str | None = None) -> SearchConfig:
     """
     Reuse the existing SearchConfig so preprocessing/cache utilities stay shared.
     """
-    return SearchConfig(
+    search_cfg = SearchConfig(
         base_dir=ab_cfg.base_dir,
         device=ab_cfg.device,
         lookback_weeks=ab_cfg.lookback_weeks,
@@ -236,13 +237,16 @@ def make_search_cfg(ab_cfg: ABConfig) -> SearchConfig:
         force_rerun=ab_cfg.force_rerun,
         stop_on_error=ab_cfg.stop_on_error,
     )
+    if dataset_kind is None:
+        return search_cfg
+    return search_config_for_dataset(search_cfg, dataset_kind)
 
 
-def make_training_cfg(ab_cfg: ABConfig) -> Any:
+def make_training_cfg(ab_cfg: ABConfig, dataset_kind: str | None = None) -> Any:
     """
     Build the shared trainer config used by both RMTPP and TitanTPP.
     """
-    search_cfg = make_search_cfg(ab_cfg)
+    search_cfg = make_search_cfg(ab_cfg, dataset_kind)
     return build_training_config(search_cfg, epochs=ab_cfg.epochs)
 
 
@@ -379,8 +383,8 @@ def train_one_model(
             return cached_summary
 
     set_global_seed(run_cfg.seed)
-    search_cfg = make_search_cfg(ab_cfg)
-    training_cfg = make_training_cfg(ab_cfg)
+    search_cfg = make_search_cfg(ab_cfg, run_cfg.dataset_kind)
+    training_cfg = make_training_cfg(ab_cfg, run_cfg.dataset_kind)
 
     # RMTPP shares the same mark vocabulary and scale base as Titan so the only
     # real change in the A/B test is the sequence encoder architecture.
@@ -406,6 +410,7 @@ def train_one_model(
     save_json(
         {
             "ab_config": ab_cfg,
+            "effective_search_config": search_cfg,
             "run_config": run_cfg,
             "training_config": training_cfg,
             "rmtpp_config": rmtpp_cfg,
@@ -444,6 +449,9 @@ def train_one_model(
         "model_name": run_cfg.model_name,
         "seed": int(run_cfg.seed),
         "epochs": int(run_cfg.epochs),
+        "batch_size": int(training_cfg.batch_size),
+        "lookback_weeks": int(training_cfg.lookback),
+        "max_seq_len": int(training_cfg.max_seq_len),
         "scale_base": float(run_cfg.scale_base),
         "titan_profile": run_cfg.titan_profile,
         "loss_mode": ab_cfg.loss_mode,
@@ -600,6 +608,9 @@ def aggregate_run_rows(rows: list[dict[str, Any]]) -> tuple[pl.DataFrame, pl.Dat
         .agg([
             pl.first("dataset_kind").alias("dataset_kind"),
             pl.first("scale_base").alias("scale_base"),
+            pl.first("batch_size").alias("batch_size"),
+            pl.first("lookback_weeks").alias("lookback_weeks"),
+            pl.first("max_seq_len").alias("max_seq_len"),
             pl.first("titan_profile").alias("titan_profile"),
             pl.first("titan_candidate_name").alias("titan_candidate_name"),
             pl.len().alias("run_count"),
@@ -930,6 +941,10 @@ def main() -> None:
     save_json(
         {
             "ab_config": ab_cfg,
+            "dataset_effective_search_configs": {
+                spec.name: make_search_cfg(ab_cfg, spec.kind)
+                for spec in dataset_specs
+            },
             "dataset_specs": dataset_specs,
             "titan_profile_map": profile_map,
             "candidates": candidates,

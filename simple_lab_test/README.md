@@ -169,7 +169,7 @@ quantity reconstruction이 좋아지더라도 curve가 RMTPP보다 더 출렁여
 - 실험안 1: qty direct loss
 - 실험안 2: residual loss + qty loss hybrid
 
-상세 설계는 [`search/README.md`](./search/README.md)에 정리합니다.
+상세 설계는 [`search/README.md`](search/search_experiment_guide.md)에 정리합니다.
 
 ## 참고
 

@@ -6,7 +6,7 @@ from typing import Literal
 class RMTPPConfig:
     num_marks: int  # K
     mark_emb_dim: int = 32
-    rnn_hidden_dim: int = 128
+    rnn_hidden_dim: int = 256
     rnn_type: Literal['rnn', 'gru', 'lstm'] = 'rnn'
     dropout: float = 0.1
     scale_base: float = 10.0

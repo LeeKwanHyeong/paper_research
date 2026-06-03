@@ -21,10 +21,11 @@ import contextlib
 import io
 import json
 import logging
+import math
 import os
 import random
 import sys
-from dataclasses import asdict, dataclass, is_dataclass
+from dataclasses import asdict, dataclass, is_dataclass, replace
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
@@ -76,8 +77,9 @@ class DatasetSpec:
     """
     Dataset-specific knobs for event-table construction.
 
-    `intermittent` uses the existing weekly demand table directly, while
-    `yellow_trip` first needs to be aggregated into weekly pickup-count series.
+    `marked_target` uses the already episode-collapsed and magnitude-marked
+    intermittent target table, while `yellow_trip` first needs to be aggregated
+    into weekly pickup-count series.
     """
     name: str
     parquet_path: str
@@ -256,6 +258,80 @@ def sanitize_float_label(value: float) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Dataset-specific runtime defaults
+# ---------------------------------------------------------------------------
+
+MARKED_TARGET_KIND = "marked_target"
+MARKED_TARGET_DEFAULT_SCALE_BASE = 2.0
+MARKED_TARGET_LOOKBACK_WEEKS = 52
+MARKED_TARGET_MAX_SEQ_LEN = 16
+MARKED_TARGET_BATCH_SIZE = 64
+MARKED_TARGET_TITAN_CANDIDATES = frozenset({"small_no_lmm", "small_lmm"})
+MARKED_TARGET_REQUIRED_COLUMNS = frozenset(
+    {
+        "oper_part_no",
+        "demand_dt",
+        "seq",
+        "demand_qty",
+        "delta_t",
+    }
+)
+
+
+def is_marked_target_kind(dataset_kind: str) -> bool:
+    """
+    Identify the episode-level intermittent target dataset.
+    """
+    return dataset_kind == MARKED_TARGET_KIND
+
+
+def search_config_for_dataset(search_cfg: SearchConfig, dataset_kind: str) -> SearchConfig:
+    """
+    Apply dataset-specific runtime overrides without changing yellow-trip runs.
+
+    The marked target table has only about 21k episode-level events, so the
+    model and loader should stay intentionally small. Yellow-trip keeps whatever
+    was passed through CLI/defaults.
+    """
+    if not is_marked_target_kind(dataset_kind):
+        return search_cfg
+
+    return replace(
+        search_cfg,
+        lookback_weeks=MARKED_TARGET_LOOKBACK_WEEKS,
+        max_seq_len=MARKED_TARGET_MAX_SEQ_LEN,
+        batch_size=MARKED_TARGET_BATCH_SIZE,
+    )
+
+
+def scale_bases_for_dataset(search_cfg: SearchConfig, spec: DatasetSpec) -> tuple[float, ...]:
+    """
+    Return the scale bases that make sense for a dataset.
+    """
+    if is_marked_target_kind(spec.kind):
+        return (MARKED_TARGET_DEFAULT_SCALE_BASE,)
+    return search_cfg.log_bases
+
+
+def scale_base_allowed_for_dataset(spec: DatasetSpec, scale_base: float) -> bool:
+    """
+    Prevent a pre-marked target table from being treated as if it can be re-binned.
+    """
+    if not is_marked_target_kind(spec.kind):
+        return True
+    return abs(float(scale_base) - MARKED_TARGET_DEFAULT_SCALE_BASE) < 1e-9
+
+
+def candidate_allowed_for_dataset(spec: DatasetSpec, candidate: TitanCandidate) -> bool:
+    """
+    Keep Titan small on the marked target data, while leaving yellow-trip intact.
+    """
+    if not is_marked_target_kind(spec.kind):
+        return True
+    return candidate.name in MARKED_TARGET_TITAN_CANDIDATES
+
+
+# ---------------------------------------------------------------------------
 # Search-space definitions
 # ---------------------------------------------------------------------------
 
@@ -263,8 +339,8 @@ def default_dataset_specs() -> list[DatasetSpec]:
     return [
         DatasetSpec(
             name="intermittent",
-            parquet_path=str(PROJECT_ROOT / "sample_data" / "intermittent_df.parquet"),
-            kind="intermittent",
+            parquet_path=str(PROJECT_ROOT / "sample_data" / "marked_target_df.parquet"),
+            kind=MARKED_TARGET_KIND,
         ),
         DatasetSpec(
             name="yellow_trip",
@@ -386,6 +462,11 @@ def dataset_variant_key(spec: DatasetSpec) -> str:
     """
     Build a cache-key-friendly label so preprocessing variants do not collide.
     """
+    if spec.kind == MARKED_TARGET_KIND:
+        if spec.max_series is None:
+            return "marked_parts_all"
+        return f"marked_parts_{spec.max_series}"
+
     if spec.kind == "intermittent":
         if spec.max_series is None:
             return "parts_all"
@@ -432,6 +513,53 @@ def prepare_intermittent_events(spec: DatasetSpec) -> pl.DataFrame:
         "demand_qty",
     ])
     return filter_top_series(raw_df, key_col="oper_part_no", max_series=spec.max_series)
+
+
+def prepare_marked_target_events(
+    spec: DatasetSpec,
+    *,
+    scale_base: float = MARKED_TARGET_DEFAULT_SCALE_BASE,
+) -> pl.DataFrame:
+    """
+    Load the episode-level marked target table as-is.
+
+    `marked_target_df.parquet` is expected to come from the notebook pipeline
+    that collapses consecutive burst weeks into one episode. This loader keeps
+    those episode-level rows and `delta_t` values, then normalizes
+    `mark/scale_residual` from `demand_qty` for the configured scale base.
+    It never rebuilds rows from raw weekly positives.
+    """
+    marked_df = pl.read_parquet(spec.parquet_path)
+    missing = sorted(MARKED_TARGET_REQUIRED_COLUMNS - set(marked_df.columns))
+    if missing:
+        raise ValueError(
+            "marked_target_df.parquet is missing required columns: "
+            f"{missing}. Regenerate it from the episode-level intermittent "
+            "pipeline with scale_base=2.0."
+        )
+
+    log_base = math.log(float(scale_base))
+    safe_qty = pl.max_horizontal(
+        pl.col("demand_qty").cast(pl.Float64),
+        pl.lit(1.0),
+    )
+    marked_df = (
+        marked_df.select([
+            "oper_part_no",
+            "demand_dt",
+            "seq",
+            "delta_t",
+            "demand_qty",
+        ])
+        .with_columns((safe_qty.log() / log_base).alias("log_qty"))
+        .with_columns([
+            pl.col("log_qty").floor().cast(pl.Int32).alias("mark"),
+            (pl.col("log_qty") - pl.col("log_qty").floor()).cast(pl.Float64).alias("scale_residual"),
+            pl.col("log_qty").alias("z"),
+        ])
+    )
+    marked_df = filter_top_series(marked_df, key_col="oper_part_no", max_series=spec.max_series)
+    return marked_df.sort(["oper_part_no", "seq"])
 
 
 def prepare_yellow_trip_events(spec: DatasetSpec) -> pl.DataFrame:
@@ -533,6 +661,8 @@ def prepare_raw_events(spec: DatasetSpec) -> pl.DataFrame:
     """
     Route each dataset spec to the appropriate raw-event builder.
     """
+    if spec.kind == MARKED_TARGET_KIND:
+        return prepare_marked_target_events(spec)
     if spec.kind == "intermittent":
         return prepare_intermittent_events(spec)
     if spec.kind == "yellow_trip":
@@ -555,6 +685,47 @@ def has_positive_events(raw_events: pl.DataFrame) -> bool:
     return bool(positive_count and positive_count > 0)
 
 
+def build_premarked_target_meta(
+    *,
+    marked_df: pl.DataFrame,
+    spec: DatasetSpec,
+    scale_base: float,
+    raw_dist_path: Path,
+    marked_dist_path: Path,
+) -> dict[str, Any]:
+    """
+    Build the same metadata shape used by freshly marked datasets.
+    """
+    if marked_df.height == 0:
+        raise ValueError("marked_target_df.parquet is empty after dataset filtering.")
+
+    max_order = int(marked_df.select(pl.col("mark").max()).item())
+    min_order = int(marked_df.select(pl.col("mark").min()).item())
+    distribution = (
+        marked_df.group_by("mark")
+        .agg(pl.len().alias("count"))
+        .sort("mark")
+        .with_columns((pl.col("count") / pl.col("count").sum()).alias("ratio"))
+    )
+    distribution.write_parquet(marked_dist_path)
+    distribution.write_parquet(raw_dist_path)
+
+    return {
+        "scale_base": float(scale_base),
+        "min_order": min_order,
+        "max_order": max_order,
+        "num_marks": max_order + 2,
+        "dataset_name": spec.name,
+        "dataset_kind": spec.kind,
+        "source_path": spec.parquet_path,
+        "raw_rows": int(marked_df.height),
+        "series_count": int(marked_df["oper_part_no"].n_unique()),
+        "raw_distribution_path": str(raw_dist_path),
+        "marked_distribution_path": str(marked_dist_path),
+        "premarked": True,
+    }
+
+
 def prepare_marked_dataset(
     spec: DatasetSpec,
     scale_base: float,
@@ -573,6 +744,33 @@ def prepare_marked_dataset(
     meta_json_path = cache_root / f"meta_base_{sanitize_float_label(scale_base)}.json"
     raw_dist_path = cache_root / f"raw_dist_base_{sanitize_float_label(scale_base)}.parquet"
     marked_dist_path = cache_root / f"marked_dist_base_{sanitize_float_label(scale_base)}.parquet"
+
+    if is_marked_target_kind(spec.kind):
+        if not scale_base_allowed_for_dataset(spec, scale_base):
+            raise ValueError(
+                f"marked_target_df.parquet is pre-marked for scale_base="
+                f"{MARKED_TARGET_DEFAULT_SCALE_BASE}; got scale_base={scale_base}."
+            )
+
+        if marked_cache_path.exists() and meta_json_path.exists() and not search_cfg.force_rerun:
+            marked_df = pl.read_parquet(marked_cache_path)
+            with open(meta_json_path, "r", encoding="utf-8") as f:
+                meta = json.load(f)
+            return marked_df, meta, cache_root
+
+        logger.info("Loading pre-marked target dataset=%s from %s", spec.name, spec.parquet_path)
+        marked_df = prepare_marked_target_events(spec, scale_base=scale_base)
+        marked_df.write_parquet(raw_cache_path)
+        marked_df.write_parquet(marked_cache_path)
+        meta = build_premarked_target_meta(
+            marked_df=marked_df,
+            spec=spec,
+            scale_base=scale_base,
+            raw_dist_path=raw_dist_path,
+            marked_dist_path=marked_dist_path,
+        )
+        save_json(meta, meta_json_path)
+        return marked_df, meta, cache_root
 
     if raw_cache_path.exists() and not search_cfg.force_rerun:
         raw_events = pl.read_parquet(raw_cache_path)
@@ -774,17 +972,19 @@ def run_single_experiment(
             return json.load(f)
 
     set_global_seed(run_cfg.seed)
-    training_cfg = build_training_config(search_cfg, epochs=run_cfg.training_epochs)
+    dataset_search_cfg = search_config_for_dataset(search_cfg, run_cfg.dataset_kind)
+    training_cfg = build_training_config(dataset_search_cfg, epochs=run_cfg.training_epochs)
     rmtpp_cfg = build_rmtpp_config(
-        search_cfg,
+        dataset_search_cfg,
         num_marks=int(marked_meta["num_marks"]),
         scale_base=run_cfg.scale_base,
     )
-    titan_cfg = build_titan_config(search_cfg, run_cfg.titan_candidate)
+    titan_cfg = build_titan_config(dataset_search_cfg, run_cfg.titan_candidate)
 
     save_json(
         {
             "run_config": run_cfg,
+            "effective_search_config": dataset_search_cfg,
             "training_config": training_cfg,
             "rmtpp_config": rmtpp_cfg,
             "titan_config": titan_cfg,
@@ -815,6 +1015,9 @@ def run_single_experiment(
         "candidate_name": run_cfg.candidate_name,
         "seed": int(run_cfg.seed),
         "training_epochs": int(run_cfg.training_epochs),
+        "batch_size": int(training_cfg.batch_size),
+        "lookback_weeks": int(training_cfg.lookback),
+        "max_seq_len": int(training_cfg.max_seq_len),
         "run_dir": str(run_paths.run_dir),
         "checkpoint_path": str(checkpoint_path),
         "num_marks": int(marked_meta["num_marks"]),
@@ -1010,7 +1213,14 @@ def run_stage(
     Run one full stage (coarse or refinement) across datasets, bases, and seeds.
     """
     rows: list[dict[str, Any]] = []
-    total_runs = len(dataset_specs) * len(candidate_pairs) * len(seeds)
+    total_runs = sum(
+        1
+        for dataset_spec in dataset_specs
+        for scale_base, candidate in candidate_pairs
+        if scale_base_allowed_for_dataset(dataset_spec, scale_base)
+        and candidate_allowed_for_dataset(dataset_spec, candidate)
+        for _seed in seeds
+    )
     completed = 0
 
     leaderboard_dir = ensure_dir(Path(search_cfg.base_dir) / "leaderboard")
@@ -1018,6 +1228,10 @@ def run_stage(
 
     for dataset_spec in dataset_specs:
         for scale_base, candidate in candidate_pairs:
+            if not scale_base_allowed_for_dataset(dataset_spec, scale_base):
+                continue
+            if not candidate_allowed_for_dataset(dataset_spec, candidate):
+                continue
             marked_df, marked_meta = marked_cache[(dataset_spec.name, scale_base)]
             for seed in seeds:
                 completed += 1
@@ -1085,7 +1299,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--datasets",
         default="intermittent,yellow_trip",
-        help="Comma-separated dataset names to run. Available: intermittent,yellow_trip",
+        help=(
+            "Comma-separated dataset names to run. Available: intermittent,yellow_trip. "
+            "The intermittent label loads sample_data/marked_target_df.parquet."
+        ),
     )
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--stage1-epochs", type=int, default=3)
@@ -1143,6 +1360,10 @@ def main() -> None:
     save_json(
         {
             "search_config": search_cfg,
+            "dataset_effective_search_configs": {
+                spec.name: search_config_for_dataset(search_cfg, spec.kind)
+                for spec in dataset_specs
+            },
             "dataset_specs": dataset_specs,
             "candidates": candidates,
         },
@@ -1152,7 +1373,7 @@ def main() -> None:
     logger.info("Preparing marked dataset caches for %s datasets", len(dataset_specs))
     marked_cache: dict[tuple[str, float], tuple[pl.DataFrame, dict[str, Any]]] = {}
     for spec in dataset_specs:
-        for scale_base in search_cfg.log_bases:
+        for scale_base in scale_bases_for_dataset(search_cfg, spec):
             marked_df, marked_meta, cache_root = prepare_marked_dataset(
                 spec=spec,
                 scale_base=scale_base,
@@ -1172,7 +1393,12 @@ def main() -> None:
             )
 
     stage1_pairs = [(scale_base, candidate) for scale_base in search_cfg.log_bases for candidate in candidates]
-    logger.info("Stage 1 search over %s candidate/base pairs", len(stage1_pairs))
+    logger.info(
+        "Stage 1 search over %s global candidate/base pairs; marked_target runs are filtered to base=%s and %s",
+        len(stage1_pairs),
+        MARKED_TARGET_DEFAULT_SCALE_BASE,
+        sorted(MARKED_TARGET_TITAN_CANDIDATES),
+    )
     stage1_rows = run_stage(
         stage_name="stage1",
         search_cfg=search_cfg,
@@ -1208,6 +1434,16 @@ def main() -> None:
         (scale_base, find_candidate_by_name(candidates, candidate_name))
         for scale_base, candidate_name in top_stage1
     ]
+    if any(is_marked_target_kind(spec.kind) for spec in dataset_specs):
+        marked_pair = (
+            MARKED_TARGET_DEFAULT_SCALE_BASE,
+            find_candidate_by_name(candidates, "small_lmm"),
+        )
+        if not any(
+            abs(scale_base - marked_pair[0]) < 1e-9 and candidate.name == marked_pair[1].name
+            for scale_base, candidate in stage2_pairs
+        ):
+            stage2_pairs.append(marked_pair)
 
     logger.info("Stage 2 refinement over %s combos", len(stage2_pairs))
     stage2_rows = run_stage(
