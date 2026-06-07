@@ -124,6 +124,8 @@ class LongEpochConfig:
     stop_on_error: bool = False
     rmtpp_rnn_type: str = "gru"
     rmtpp_mark_emb_dim: int = 32
+    rmtpp_hidden_dim: int | None = None
+    titan_candidates: tuple[str, ...] = ()
     loss_mode: str = "residual_only"
     analysis_scale_base: float = 10.0
     analysis_tail_order: int = 4
@@ -250,7 +252,10 @@ def build_model(
             **asdict(rmtpp_cfg),
             "rnn_type": long_cfg.rmtpp_rnn_type,
             "mark_emb_dim": long_cfg.rmtpp_mark_emb_dim,
-            "rnn_hidden_dim": run_cfg.titan_candidate.d_model,
+            # Candidate sweeps should not silently change the RMTPP baseline
+            # capacity. When --rmtpp-hidden-dim is omitted, we keep the legacy
+            # behavior and mirror the profile candidate's d_model.
+            "rnn_hidden_dim": long_cfg.rmtpp_hidden_dim or run_cfg.titan_candidate.d_model,
             # Keep the main RMTPP-vs-TitanTPP comparison on the legacy
             # residual-only objective. Quantity-loss variants stay in the
             # dedicated ablation script.
@@ -816,6 +821,23 @@ def build_error_row(run_cfg: LongRunConfig, exc: Exception) -> dict[str, Any]:
     }
 
 
+def selected_titan_candidates(
+    *,
+    long_cfg: LongEpochConfig,
+    profile: dict[str, Any],
+    all_candidates: list[TitanCandidate],
+) -> tuple[TitanCandidate, ...]:
+    """
+    Resolve the Titan candidate list for one dataset.
+
+    Without --titan-candidates, the script preserves the report-derived single
+    candidate profile. With --titan-candidates, it sweeps exactly the requested
+    Titan presets while keeping the dataset scale_base from the selected profile.
+    """
+    candidate_names = long_cfg.titan_candidates or (str(profile["candidate_name"]),)
+    return tuple(find_candidate_by_name(all_candidates, name) for name in candidate_names)
+
+
 def run_long_benchmark(
     *,
     long_cfg: LongEpochConfig,
@@ -832,24 +854,78 @@ def run_long_benchmark(
     leaderboard_dir = ensure_dir(Path(long_cfg.base_dir) / "leaderboard")
     path_prefix = leaderboard_dir / "long_epoch_runs"
 
-    total_runs = len(dataset_specs) * len(long_cfg.seeds) * 2
+    total_runs = 0
+    for spec in dataset_specs:
+        profile = profile_map[spec.name]
+        total_runs += len(long_cfg.seeds) * (1 + len(selected_titan_candidates(
+            long_cfg=long_cfg,
+            profile=profile,
+            all_candidates=all_candidates,
+        )))
     completed = 0
 
     for spec in dataset_specs:
         profile = profile_map[spec.name]
         scale_base = float(profile["scale_base"])
-        candidate = find_candidate_by_name(all_candidates, str(profile["candidate_name"]))
+        baseline_candidate = find_candidate_by_name(all_candidates, str(profile["candidate_name"]))
+        titan_candidates = selected_titan_candidates(
+            long_cfg=long_cfg,
+            profile=profile,
+            all_candidates=all_candidates,
+        )
         marked_df, marked_meta = marked_cache[(spec.name, scale_base)]
 
         for seed in long_cfg.seeds:
-            for model_name in ("rmtpp", "titantpp"):
+            completed += 1
+            logger.info(
+                "Long run %s/%s | dataset=%s | model=rmtpp | base=%s | baseline_candidate=%s | seed=%s",
+                completed,
+                total_runs,
+                spec.name,
+                scale_base,
+                baseline_candidate.name,
+                seed,
+            )
+            run_cfg = LongRunConfig(
+                dataset_name=spec.name,
+                dataset_kind=spec.kind,
+                model_name="rmtpp",
+                seed=seed,
+                epochs=long_cfg.epochs,
+                scale_base=scale_base,
+                titan_profile=long_cfg.titan_profile,
+                titan_candidate_name=baseline_candidate.name,
+                titan_candidate=baseline_candidate,
+            )
+            try:
+                row = train_one_long_run(
+                    long_cfg=long_cfg,
+                    run_cfg=run_cfg,
+                    marked_df=marked_df,
+                    marked_meta=marked_meta,
+                    logger=logger,
+                )
+            except Exception as exc:
+                row = build_error_row(run_cfg, exc)
+                logger.exception(
+                    "Long run failed | dataset=%s model=rmtpp base=%s seed=%s",
+                    spec.name,
+                    scale_base,
+                    seed,
+                )
+                if long_cfg.stop_on_error:
+                    raise
+            rows.append(row)
+            persist_rows(rows, path_prefix)
+
+            for candidate in titan_candidates:
                 completed += 1
                 logger.info(
                     "Long run %s/%s | dataset=%s | model=%s | base=%s | titan_candidate=%s | seed=%s",
                     completed,
                     total_runs,
                     spec.name,
-                    model_name,
+                    "titantpp",
                     scale_base,
                     candidate.name,
                     seed,
@@ -857,7 +933,7 @@ def run_long_benchmark(
                 run_cfg = LongRunConfig(
                     dataset_name=spec.name,
                     dataset_kind=spec.kind,
-                    model_name=model_name,
+                    model_name="titantpp",
                     seed=seed,
                     epochs=long_cfg.epochs,
                     scale_base=scale_base,
@@ -878,7 +954,7 @@ def run_long_benchmark(
                     logger.exception(
                         "Long run failed | dataset=%s model=%s base=%s seed=%s",
                         spec.name,
-                        model_name,
+                        "titantpp",
                         scale_base,
                         seed,
                     )
@@ -910,6 +986,7 @@ def load_all_histories(run_rows: list[dict[str, Any]]) -> pl.DataFrame:
             history_rows.append({
                 "dataset_name": row["dataset_name"],
                 "model_name": row["model_name"],
+                "titan_candidate_name": row["titan_candidate_name"],
                 "seed": int(row["seed"]),
                 "epoch": int(epoch_row["epoch"]),
                 "score": float(epoch_row["score"]),
@@ -953,7 +1030,7 @@ def aggregate_run_rows(rows: list[dict[str, Any]]) -> tuple[pl.DataFrame, pl.Dat
         return run_df, pl.DataFrame()
 
     summary_df = (
-        success_df.group_by(["dataset_name", "model_name"])
+        success_df.group_by(["dataset_name", "model_name", "titan_candidate_name"])
         .agg([
             pl.first("dataset_kind").alias("dataset_kind"),
             pl.first("scale_base").alias("scale_base"),
@@ -963,7 +1040,6 @@ def aggregate_run_rows(rows: list[dict[str, Any]]) -> tuple[pl.DataFrame, pl.Dat
             pl.first("max_seq_len").alias("max_seq_len"),
             pl.first("analysis_scale_base").alias("analysis_scale_base"),
             pl.first("titan_profile").alias("titan_profile"),
-            pl.first("titan_candidate_name").alias("titan_candidate_name"),
             pl.len().alias("run_count"),
             pl.mean("best_val_nll").alias("mean_best_val_nll"),
             pl.std("best_val_nll").fill_null(0.0).alias("std_best_val_nll"),
@@ -983,7 +1059,7 @@ def aggregate_run_rows(rows: list[dict[str, Any]]) -> tuple[pl.DataFrame, pl.Dat
             pl.mean("final_score").alias("mean_final_score"),
             pl.mean("final_train_loss").alias("mean_final_train_loss"),
         ])
-        .sort(["dataset_name", "model_name"])
+        .sort(["dataset_name", "model_name", "titan_candidate_name"])
     )
     return success_df, summary_df
 
@@ -1001,29 +1077,30 @@ def build_long_delta_table(summary_df: pl.DataFrame) -> pl.DataFrame:
             continue
 
         rmtpp_row = rmtpp_rows[0]
-        titan_row = titan_rows[0]
-        rows.append({
-            "dataset_name": dataset_name,
-            "titan_profile": titan_row["titan_profile"],
-            "scale_base": titan_row["scale_base"],
-            "titan_candidate_name": titan_row["titan_candidate_name"],
-            "delta_best_val_nll": float(titan_row["mean_best_val_nll"] - rmtpp_row["mean_best_val_nll"]),
-            "delta_best_val_nll_qty_mae": float(
-                titan_row["mean_best_val_nll_qty_mae"] - rmtpp_row["mean_best_val_nll_qty_mae"]
-            ),
-            "delta_best_val_nll_score": float(
-                titan_row["mean_best_val_nll_score"] - rmtpp_row["mean_best_val_nll_score"]
-            ),
-            "delta_best_val_nll_dt_mae": float(
-                titan_row["mean_best_val_nll_dt_mae"] - rmtpp_row["mean_best_val_nll_dt_mae"]
-            ),
-            "delta_best_val_nll_mark_acc": float(
-                titan_row["mean_best_val_nll_mark_acc"] - rmtpp_row["mean_best_val_nll_mark_acc"]
-            ),
-            "delta_best_epoch": float(
-                titan_row["mean_best_val_nll_epoch"] - rmtpp_row["mean_best_val_nll_epoch"]
-            ),
-        })
+        for titan_row in titan_rows:
+            rows.append({
+                "dataset_name": dataset_name,
+                "titan_profile": titan_row["titan_profile"],
+                "scale_base": titan_row["scale_base"],
+                "rmtpp_candidate_name": rmtpp_row["titan_candidate_name"],
+                "titan_candidate_name": titan_row["titan_candidate_name"],
+                "delta_best_val_nll": float(titan_row["mean_best_val_nll"] - rmtpp_row["mean_best_val_nll"]),
+                "delta_best_val_nll_qty_mae": float(
+                    titan_row["mean_best_val_nll_qty_mae"] - rmtpp_row["mean_best_val_nll_qty_mae"]
+                ),
+                "delta_best_val_nll_score": float(
+                    titan_row["mean_best_val_nll_score"] - rmtpp_row["mean_best_val_nll_score"]
+                ),
+                "delta_best_val_nll_dt_mae": float(
+                    titan_row["mean_best_val_nll_dt_mae"] - rmtpp_row["mean_best_val_nll_dt_mae"]
+                ),
+                "delta_best_val_nll_mark_acc": float(
+                    titan_row["mean_best_val_nll_mark_acc"] - rmtpp_row["mean_best_val_nll_mark_acc"]
+                ),
+                "delta_best_epoch": float(
+                    titan_row["mean_best_val_nll_epoch"] - rmtpp_row["mean_best_val_nll_epoch"]
+                ),
+            })
     return pl.DataFrame(rows) if rows else pl.DataFrame()
 
 
@@ -1035,7 +1112,14 @@ def aggregate_scale_metrics(scale_df: pl.DataFrame) -> pl.DataFrame:
         return pl.DataFrame()
 
     return (
-        scale_df.group_by(["dataset_name", "model_name", "selection", "scale_order", "scale_label"])
+        scale_df.group_by([
+            "dataset_name",
+            "model_name",
+            "titan_candidate_name",
+            "selection",
+            "scale_order",
+            "scale_label",
+        ])
         .agg([
             pl.sum("count").alias("total_count"),
             pl.mean("share").alias("mean_share"),
@@ -1050,8 +1134,76 @@ def aggregate_scale_metrics(scale_df: pl.DataFrame) -> pl.DataFrame:
             pl.mean("dt_mae").alias("mean_dt_mae"),
             pl.mean("mark_acc").alias("mean_mark_acc"),
         ])
-        .sort(["dataset_name", "selection", "scale_order", "model_name"])
+        .sort(["dataset_name", "selection", "scale_order", "model_name", "titan_candidate_name"])
     )
+
+
+def make_run_label(model_name: str, candidate_name: str) -> str:
+    """
+    Display RMTPP once and keep Titan candidates visually separate in plots.
+    """
+    if model_name == "rmtpp":
+        return "RMTPP"
+    return f"TITAN:{candidate_name}"
+
+
+def save_long_learning_curve_plots(history_df: pl.DataFrame, plots_dir: Path) -> None:
+    """
+    Plot mean +/- std learning curves without mixing Titan candidate presets.
+    """
+    if history_df.height == 0:
+        return
+
+    ensure_dir(plots_dir)
+    curve_metrics = [
+        ("score", "Validation Score"),
+        ("val_nll", "Validation NLL"),
+        ("qty_mae", "Validation Qty MAE"),
+    ]
+    palette = ["#5DA5DA", "#F17CB0", "#60BD68", "#B276B2", "#F15854", "#DECF3F"]
+
+    for dataset_name in history_df["dataset_name"].unique().to_list():
+        dataset_df = history_df.filter(pl.col("dataset_name") == dataset_name).with_columns(
+            pl.struct(["model_name", "titan_candidate_name"])
+            .map_elements(
+                lambda row: make_run_label(str(row["model_name"]), str(row["titan_candidate_name"])),
+                return_dtype=pl.Utf8,
+            )
+            .alias("run_label")
+        )
+        run_labels = dataset_df["run_label"].unique().sort().to_list()
+        fig, axes = plt.subplots(1, len(curve_metrics), figsize=(18, 5))
+
+        for ax, (metric, title) in zip(axes, curve_metrics):
+            for idx, run_label in enumerate(run_labels):
+                run_df = dataset_df.filter(pl.col("run_label") == run_label)
+                if run_df.height == 0:
+                    continue
+                agg_df = (
+                    run_df.group_by("epoch")
+                    .agg([
+                        pl.mean(metric).alias("mean_metric"),
+                        pl.std(metric).fill_null(0.0).alias("std_metric"),
+                    ])
+                    .sort("epoch")
+                )
+                epochs = agg_df["epoch"].to_list()
+                mean_values = agg_df["mean_metric"].to_list()
+                std_values = agg_df["std_metric"].to_list()
+                color = palette[idx % len(palette)]
+                ax.plot(epochs, mean_values, label=run_label, color=color, linewidth=2)
+                lower = np.array(mean_values) - np.array(std_values)
+                upper = np.array(mean_values) + np.array(std_values)
+                ax.fill_between(epochs, lower, upper, color=color, alpha=0.18)
+            ax.set_title(title)
+            ax.set_xlabel("Epoch")
+            ax.grid(alpha=0.25)
+            ax.legend()
+
+        fig.suptitle(f"{dataset_name}: Learning Curves", fontsize=14)
+        fig.tight_layout(rect=(0, 0, 1, 0.96))
+        fig.savefig(plots_dir / f"{dataset_name}_learning_curves.png", dpi=200, bbox_inches="tight")
+        plt.close(fig)
 
 
 def save_scale_metric_plots(scale_summary_df: pl.DataFrame, plots_dir: Path) -> None:
@@ -1062,13 +1214,20 @@ def save_scale_metric_plots(scale_summary_df: pl.DataFrame, plots_dir: Path) -> 
         return
 
     ensure_dir(plots_dir)
-    colors = {"rmtpp": "#5DA5DA", "titantpp": "#F17CB0"}
+    palette = ["#5DA5DA", "#F17CB0", "#60BD68", "#B276B2", "#F15854", "#DECF3F"]
 
     for dataset_name in scale_summary_df["dataset_name"].unique().to_list():
         for selection in scale_summary_df["selection"].unique().to_list():
             dataset_df = scale_summary_df.filter(
                 (pl.col("dataset_name") == dataset_name)
                 & (pl.col("selection") == selection)
+            ).with_columns(
+                pl.struct(["model_name", "titan_candidate_name"])
+                .map_elements(
+                    lambda row: make_run_label(str(row["model_name"]), str(row["titan_candidate_name"])),
+                    return_dtype=pl.Utf8,
+                )
+                .alias("run_label")
             )
             if dataset_df.height == 0:
                 continue
@@ -1080,22 +1239,28 @@ def save_scale_metric_plots(scale_summary_df: pl.DataFrame, plots_dir: Path) -> 
                 .to_list()
             )
             x = np.arange(len(scale_labels))
-            width = 0.36
+            run_labels = dataset_df["run_label"].unique().sort().to_list()
+            width = min(0.8 / max(len(run_labels), 1), 0.28)
 
             fig, axes = plt.subplots(1, 2, figsize=(14, 5))
             for metric, title, ax in [
                 ("mean_qty_mae", "Scale-wise Qty MAE", axes[0]),
                 ("mean_qty_wape", "Scale-wise WAPE", axes[1]),
             ]:
-                for offset, model_name in [(-width / 2, "rmtpp"), (width / 2, "titantpp")]:
-                    model_df = dataset_df.filter(pl.col("model_name") == model_name).sort("scale_order")
-                    values = model_df[metric].to_list() if model_df.height else [0.0] * len(scale_labels)
+                for idx, run_label in enumerate(run_labels):
+                    offset = (idx - (len(run_labels) - 1) / 2) * width
+                    model_df = dataset_df.filter(pl.col("run_label") == run_label).sort("scale_order")
+                    value_by_label = {
+                        str(row["scale_label"]): float(row[metric])
+                        for row in model_df.to_dicts()
+                    }
+                    values = [value_by_label.get(str(label), 0.0) for label in scale_labels]
                     ax.bar(
                         x + offset,
                         values,
                         width=width,
-                        label=model_name.upper(),
-                        color=colors[model_name],
+                        label=run_label,
+                        color=palette[idx % len(palette)],
                         alpha=0.9,
                     )
                 ax.set_title(title)
@@ -1241,6 +1406,23 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--lr", type=float, default=float(LongEpochConfig.__dataclass_fields__["lr"].default))
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--seeds", default="42,52,62", help="Comma-separated random seeds.")
+    parser.add_argument(
+        "--titan-candidates",
+        default="",
+        help=(
+            "Optional comma-separated TitanCandidate names. "
+            "When omitted, the selected --titan-profile candidate is used."
+        ),
+    )
+    parser.add_argument(
+        "--rmtpp-hidden-dim",
+        type=int,
+        default=0,
+        help=(
+            "Optional fixed RMTPP hidden size. "
+            "Use 0 to mirror the profile candidate d_model for backward compatibility."
+        ),
+    )
     parser.add_argument("--lookback-weeks", type=int, default=52)
     parser.add_argument("--max-seq-len", type=int, default=64)
     parser.add_argument("--intermittent-max-series", type=int, default=None)
@@ -1269,6 +1451,11 @@ def main() -> None:
     args = parse_args()
     selected_dataset_names = {name.strip() for name in args.datasets.split(",") if name.strip()}
     seeds = tuple(int(seed.strip()) for seed in args.seeds.split(",") if seed.strip())
+    titan_candidates = tuple(
+        candidate.strip()
+        for candidate in args.titan_candidates.split(",")
+        if candidate.strip()
+    )
     eval_selections = tuple(
         selection.strip()
         for selection in args.eval_selections.split(",")
@@ -1286,6 +1473,8 @@ def main() -> None:
         lr=args.lr,
         batch_size=args.batch_size,
         seeds=seeds,
+        rmtpp_hidden_dim=None if int(args.rmtpp_hidden_dim) <= 0 else int(args.rmtpp_hidden_dim),
+        titan_candidates=titan_candidates,
         lookback_weeks=args.lookback_weeks,
         max_seq_len=args.max_seq_len,
         titan_profile=args.titan_profile,
@@ -1367,7 +1556,7 @@ def main() -> None:
         scale_summary_df.write_parquet(leaderboard_dir / "scale_wise_summary.parquet")
         scale_summary_df.write_csv(leaderboard_dir / "scale_wise_summary.csv")
 
-    save_learning_curve_plots(history_df, plots_dir)
+    save_long_learning_curve_plots(history_df, plots_dir)
     save_scale_metric_plots(scale_summary_df, plots_dir)
     save_paper_outputs(
         summary_df=summary_df,

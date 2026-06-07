@@ -62,6 +62,25 @@ python simple_lab_test/search/titan_rmtpp_long_epoch_scale_eval.py \
   --force-rerun
 ```
 
+Marked target Titan candidate sweep:
+
+```bash
+python simple_lab_test/search/titan_rmtpp_long_epoch_scale_eval.py \
+  --datasets intermittent \
+  --titan-candidates small_deep_lmm,mid_lmm \
+  --rmtpp-hidden-dim 64 \
+  --epochs 800 \
+  --seeds 42,52,62 \
+  --lr 1e-3 \
+  --eval-selections best_val_nll,best_score,final \
+  --force-rerun
+```
+
+`--titan-candidates`를 비우면 기존처럼 `--titan-profile`의 단일 후보를 쓰고,
+값을 넣으면 지정한 Titan preset들을 같은 marked dataset/cache에서 순회합니다.
+`--rmtpp-hidden-dim`은 후보 sweep 중 RMTPP baseline capacity가 후보별로 흔들리지
+않도록 고정하는 옵션입니다.
+
 Marked target quantity loss ablation:
 
 ```bash

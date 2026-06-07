@@ -8,10 +8,11 @@ from data_loader.event_seq_data_module import time_split_events, RMTPPDataset, c
     RMTPPWeekLookbackDataset, collate_week_lookback
 from models.RMTPPs.RMTPP import RMTPP
 from models.RMTPPs.TitanTPP import TitanTPP
+from models.RMTPPs.TransformerHawkesTPP import TransformerHawkesTPP
 import numpy as np
 import polars as pl
 
-from models.RMTPPs.config import RMTPPConfig
+from models.RMTPPs.config import RMTPPConfig, THPConfig
 from models.Titan import TitanConfig
 
 
@@ -586,6 +587,24 @@ def train_titantpp(
     return _train_week_lookback_model(model, train_loader, val_loader, training_config)
 
 
+def train_transformer_hawkes_tpp(
+    marked_df: pl.DataFrame,
+    training_config: TrainingConfig,
+    rmtpp_config: RMTPPConfig,
+    thp_config: THPConfig,
+):
+    """
+    THP baseline trainer using the same loader/objective as RMTPP/TitanTPP.
+
+    This intentionally keeps the magnitude-factorized decoder identical across
+    models, so the comparison focuses on the history encoder family:
+    recurrent vs Transformer Hawkes vs Titan.
+    """
+    train_loader, val_loader = _make_week_lookback_loaders(marked_df, training_config)
+    model = TransformerHawkesTPP(rmtpp_config, thp_config).to(training_config.device)
+    return _train_week_lookback_model(model, train_loader, val_loader, training_config)
+
+
 def train_rmtpp_classic(marked_df: pl.DataFrame, training_config: TrainingConfig, rmtpp_config: RMTPPConfig):
     train_loader, val_loader = _make_classic_next_event_loaders(marked_df, training_config)
     model = RMTPP(rmtpp_config).to(training_config.device)
@@ -603,4 +622,18 @@ def train_titantpp_classic(
     """
     train_loader, val_loader = _make_classic_next_event_loaders(marked_df, training_config)
     model = TitanTPP(rmtpp_config, titan_config).to(training_config.device)
+    return _train_classic_next_event_model(model, train_loader, val_loader, training_config)
+
+
+def train_transformer_hawkes_tpp_classic(
+    marked_df: pl.DataFrame,
+    training_config: TrainingConfig,
+    rmtpp_config: RMTPPConfig,
+    thp_config: THPConfig,
+):
+    """
+    Classic fixed-event-lookback trainer for the THP baseline.
+    """
+    train_loader, val_loader = _make_classic_next_event_loaders(marked_df, training_config)
+    model = TransformerHawkesTPP(rmtpp_config, thp_config).to(training_config.device)
     return _train_classic_next_event_model(model, train_loader, val_loader, training_config)

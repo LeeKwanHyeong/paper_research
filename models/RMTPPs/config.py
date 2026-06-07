@@ -25,3 +25,24 @@ class RMTPPConfig:
     eps: float = 1e-8
     w_min: float = 1e-3     # w_t stabilization because of 0 (1/w)
     exp_clamp: float = 300.0 # exponential overflow guard
+
+
+@dataclass
+class THPConfig:
+    """
+    Transformer Hawkes Process encoder configuration.
+
+    This follows the official THP implementation's main encoder choices:
+    temporal sinusoidal encoding, causal self-attention, and position-wise FFN.
+    The surrounding TPP decoder is kept compatible with this project so THP can
+    be compared against RMTPP/TitanTPP under the same mark/time/value heads.
+    """
+    d_model: int = 128
+    d_inner: int = 512
+    n_layers: int = 3
+    n_heads: int = 4
+    dropout: float = 0.1
+    normalize_before: bool = False
+    add_temporal_encoding_each_layer: bool = True
+    use_rnn: bool = False
+    d_rnn: int = 128
