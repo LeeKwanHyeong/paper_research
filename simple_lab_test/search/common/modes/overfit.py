@@ -87,7 +87,7 @@ from simple_lab_test.search.titan_rmtpp_ab_test import (
     markdown_table_from_df,
     persist_rows,
 )
-from simple_lab_test.search.titan_rmtpp_long_epoch_scale_eval import (
+from simple_lab_test.search.common.modes.long_epoch_legacy import (
     LongEpochConfig,
     LongRunConfig,
     build_error_row,

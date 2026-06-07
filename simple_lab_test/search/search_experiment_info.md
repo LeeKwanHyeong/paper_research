@@ -149,7 +149,7 @@ Configuration 위치:
 python simple_lab_test/search/titan_rmtpp_ab_test.py
 ```
 
-### `tpp_qty_loss_ablation.py`
+### `tpp_experiment.py qty-ablation`
 
 역할:
 - `residual_only`, `hybrid`, `qty_only` quantity supervision 방식을 비교합니다.
@@ -176,10 +176,10 @@ Configuration 위치:
 대표 실행:
 
 ```bash
-python simple_lab_test/search/tpp_qty_loss_ablation.py
+python simple_lab_test/search/tpp_experiment.py qty-ablation
 ```
 
-### `titan_rmtpp_long_epoch_scale_eval.py`
+### `tpp_experiment.py long-epoch`
 
 역할:
 - 30 epoch가 부족했는지 확인하고, best validation NLL checkpoint 기준
@@ -211,12 +211,12 @@ Configuration 위치:
 대표 실행:
 
 ```bash
-python simple_lab_test/search/titan_rmtpp_long_epoch_scale_eval.py \
+python simple_lab_test/search/tpp_experiment.py long-epoch \
   --epochs 100 \
   --seeds 42,52,62
 ```
 
-### `tpp_overfit_diagnostic.py`
+### `tpp_experiment.py overfit`
 
 역할:
 - 모델이 train distribution을 강하게 학습하거나 과적합할 수 있는지 확인하는
@@ -230,7 +230,7 @@ Configuration 위치:
   줄입니다.
 - `titan_candidate_names_for_spec()`: 기본 실행에서 marked target Titan 후보를
   small preset으로 제한합니다.
-- `train_one_long_run()`은 `titan_rmtpp_long_epoch_scale_eval.py`의 dataset별
+- `train_one_long_run()`은 `tpp_experiment.py long-epoch`의 dataset별
   effective config 적용을 그대로 사용합니다.
 
 현재 marked target 설정:
@@ -248,13 +248,13 @@ Configuration 위치:
 대표 실행:
 
 ```bash
-python simple_lab_test/search/tpp_overfit_diagnostic.py \
+python simple_lab_test/search/tpp_experiment.py overfit \
   --datasets intermittent \
   --epochs 100 \
   --seeds 42
 ```
 
-### `yellow_trip_resolution_ab_test.py`
+### `tpp_experiment.py yellow-resolution`
 
 역할:
 - yellow-trip을 weekly가 아니라 daily/hourly event sequence로 재구성해
@@ -275,7 +275,7 @@ Configuration 위치:
 대표 실행:
 
 ```bash
-python simple_lab_test/search/yellow_trip_resolution_ab_test.py \
+python simple_lab_test/search/tpp_experiment.py yellow-resolution \
   --resolutions daily,hourly \
   --models rmtpp,titantpp \
   --titan-candidates mid_lmm,mid_deep_lmm \
@@ -290,10 +290,10 @@ python simple_lab_test/search/yellow_trip_resolution_ab_test.py \
 | raw intermittent log base별 mark 분포만 보고 싶은가? | `compare_log_bases_distribution.py` |
 | marked target과 yellow-trip에서 Titan 후보를 탐색하고 싶은가? | `titan_hparam_search.py` |
 | marked target 기준 RMTPP vs TitanTPP 기본 비교가 필요한가? | `titan_rmtpp_ab_test.py` |
-| epoch를 길게 늘렸을 때 수렴/scale-wise error가 어떤가? | `titan_rmtpp_long_epoch_scale_eval.py` |
-| 모델이 train data를 충분히 학습 가능한지 확인할 것인가? | `tpp_overfit_diagnostic.py` |
-| quantity direct loss가 필요한지 비교할 것인가? | `tpp_qty_loss_ablation.py` |
-| yellow-trip weekly가 너무 짧아 daily/hourly로 바꿔볼 것인가? | `yellow_trip_resolution_ab_test.py` |
+| epoch를 길게 늘렸을 때 수렴/scale-wise error가 어떤가? | `tpp_experiment.py long-epoch` |
+| 모델이 train data를 충분히 학습 가능한지 확인할 것인가? | `tpp_experiment.py overfit` |
+| quantity direct loss가 필요한지 비교할 것인가? | `tpp_experiment.py qty-ablation` |
+| yellow-trip weekly가 너무 짧아 daily/hourly로 바꿔볼 것인가? | `tpp_experiment.py yellow-resolution` |
 
 ## 산출물 확인 순서
 
@@ -328,5 +328,5 @@ marking하면 `delta_t`가 다시 1 근처로 무너질 수 있습니다.
 
 yellow-trip weekly 실험은 series 길이가 짧고 interval이 단순해 RMTPP가 충분히
 강하게 보일 수 있습니다. TitanTPP의 encoder capacity를 더 공정하게 보려면
-`yellow_trip_resolution_ab_test.py`의 daily/hourly benchmark를 함께 확인해야
+`tpp_experiment.py yellow-resolution`의 daily/hourly benchmark를 함께 확인해야
 합니다.

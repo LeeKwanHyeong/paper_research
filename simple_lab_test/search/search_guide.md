@@ -27,13 +27,13 @@ Marked target 기본값:
 
 | 파일 | 목적 | 언제 쓰는가 |
 | --- | --- | --- |
+| `tpp_experiment.py` | 통합 실험 CLI | 앞으로 모델/데이터셋이 늘어나는 본 실험 진입점 |
+| `common/runner.py` | `long-epoch` 공통 train/eval/report runner | 본 비교, THP 포함 장기 학습, scale-wise MAE |
+| `common/models.py` | RMTPP/TitanTPP/THP model registry | 새 비교 모델 추가 시 먼저 수정할 곳 |
+| `common/modes/` | 기존 overfit, qty-ablation, yellow-resolution 실행 모듈 | 이전 실험을 통합 CLI 아래에서 유지할 때 |
 | `compare_log_bases_distribution.py` | raw intermittent의 `log10/log4/log2` 분포 비교 | mark/binning sanity check |
 | `titan_hparam_search.py` | TitanTPP scale base와 TitanConfig 자동 탐색 | 후보군을 넓게 확인할 때 |
 | `titan_rmtpp_ab_test.py` | best profile로 RMTPP vs TitanTPP 본 A/B 비교 | marked target 논문용 기본 비교표가 필요할 때 |
-| `titan_rmtpp_long_epoch_scale_eval.py` | long epoch, best NLL, scale-wise quantity error 분석 | 30 epoch 부족 여부와 scale별 MAE를 볼 때 |
-| `tpp_overfit_diagnostic.py` | 모델이 train data를 충분히 학습/과적합할 수 있는지 stress test | 학습 가능성과 capacity를 검증할 때 |
-| `tpp_qty_loss_ablation.py` | `residual_only`, `hybrid`, `qty_only` loss ablation | quantity loss 설계 후보를 비교할 때 |
-| `yellow_trip_resolution_ab_test.py` | yellow-trip daily/hourly 재구성 A/B benchmark | weekly yellow-trip이 너무 짧은지 확인할 때 |
 
 ## 권장 실행 순서
 
@@ -41,6 +41,63 @@ Marked target 기본값:
 2. marked target A/B smoke test
 3. quantity loss ablation 또는 long epoch로 안정성 확인
 4. yellow-trip은 기존 weekly 결과와 별도로 daily/hourly benchmark 확인
+
+## 통합 CLI 사용법
+
+앞으로 새 모델을 추가하거나 후보군을 늘릴 때는 우선 `tpp_experiment.py`의
+`long-epoch` 모드를 기준으로 실행하는 것을 권장합니다. 이 모드는 기존
+long-epoch 전용 스크립트의 핵심 기능을 공통 모듈로 옮긴 버전입니다.
+
+지원되는 모델 이름:
+
+| 모델 이름 | 설명 |
+| --- | --- |
+| `rmtpp` | recurrent RMTPP baseline |
+| `titantpp` | Titan encoder 기반 TPP |
+| `thp` | Transformer Hawkes Process 스타일 causal Transformer baseline |
+
+Marked target + Titan candidate sweep:
+
+```bash
+python simple_lab_test/search/tpp_experiment.py long-epoch \
+  --base-dir search_artifacts/unified_marked_target_long_epoch \
+  --datasets intermittent \
+  --models rmtpp,titantpp \
+  --titan-candidates small_deep_lmm,mid_lmm \
+  --rmtpp-hidden-dim 64 \
+  --epochs 800 \
+  --seeds 42,52,62 \
+  --lr 1e-3 \
+  --eval-selections best_val_nll,best_score,final \
+  --force-rerun
+```
+
+THP baseline까지 함께 비교:
+
+```bash
+python simple_lab_test/search/tpp_experiment.py long-epoch \
+  --base-dir search_artifacts/unified_marked_target_with_thp \
+  --datasets intermittent \
+  --models rmtpp,titantpp,thp \
+  --titan-candidates mid_lmm \
+  --thp-candidates small,base \
+  --epochs 300 \
+  --seeds 42,52,62 \
+  --lr 1e-3
+```
+
+현재 `overfit`, `qty-ablation`, `yellow-resolution`은 통합 CLI에서
+`common/modes/` 모듈로 직접 위임됩니다. root-level 개별 실행 파일은 제거했으므로,
+아래처럼 새 진입점에서 실행하면 됩니다.
+
+```bash
+python simple_lab_test/search/tpp_experiment.py overfit --help
+python simple_lab_test/search/tpp_experiment.py qty-ablation --help
+python simple_lab_test/search/tpp_experiment.py yellow-resolution --help
+```
+
+다음 refactor step에서는 이 세 모드의 내부 중복 로직도 `common/runner.py`로
+조금씩 흡수하면 됩니다.
 
 Marked target A/B:
 
@@ -55,7 +112,7 @@ python simple_lab_test/search/titan_rmtpp_ab_test.py \
 Marked target long epoch:
 
 ```bash
-python simple_lab_test/search/titan_rmtpp_long_epoch_scale_eval.py \
+python simple_lab_test/search/tpp_experiment.py long-epoch \
   --datasets intermittent \
   --epochs 100 \
   --seeds 42,52,62 \
@@ -65,7 +122,7 @@ python simple_lab_test/search/titan_rmtpp_long_epoch_scale_eval.py \
 Marked target Titan candidate sweep:
 
 ```bash
-python simple_lab_test/search/titan_rmtpp_long_epoch_scale_eval.py \
+python simple_lab_test/search/tpp_experiment.py long-epoch \
   --datasets intermittent \
   --titan-candidates small_deep_lmm,mid_lmm \
   --rmtpp-hidden-dim 64 \
@@ -84,7 +141,7 @@ python simple_lab_test/search/titan_rmtpp_long_epoch_scale_eval.py \
 Marked target quantity loss ablation:
 
 ```bash
-python simple_lab_test/search/tpp_qty_loss_ablation.py \
+python simple_lab_test/search/tpp_experiment.py qty-ablation \
   --datasets intermittent \
   --epochs 30 \
   --seeds 42,52,62 \
@@ -94,7 +151,7 @@ python simple_lab_test/search/tpp_qty_loss_ablation.py \
 Yellow-trip daily/hourly benchmark:
 
 ```bash
-python simple_lab_test/search/yellow_trip_resolution_ab_test.py \
+python simple_lab_test/search/tpp_experiment.py yellow-resolution \
   --resolutions daily,hourly \
   --models rmtpp,titantpp \
   --titan-candidates mid_lmm,mid_deep_lmm \

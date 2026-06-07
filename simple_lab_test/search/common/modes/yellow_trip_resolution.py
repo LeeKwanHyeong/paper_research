@@ -8,7 +8,8 @@ Why this script exists:
 3. this runner rebuilds yellow-trip as daily/hourly marked event sequences and
    checks whether longer, more heterogeneous sequences make TitanTPP useful
 
-The training loop intentionally reuses `titan_rmtpp_long_epoch_scale_eval.py`.
+The training loop intentionally reuses the long-epoch helper hosted in
+`simple_lab_test.search.common.modes.long_epoch_legacy`.
 That keeps checkpoints, validation-NLL decomposition, and scale-wise quantity
 metrics identical to the long-epoch validation script.
 """
@@ -73,7 +74,7 @@ from simple_lab_test.search.titan_rmtpp_ab_test import (
     markdown_table_from_df,
     persist_rows,
 )
-from simple_lab_test.search.titan_rmtpp_long_epoch_scale_eval import (
+from simple_lab_test.search.common.modes.long_epoch_legacy import (
     LongEpochConfig,
     LongRunConfig,
     aggregate_scale_metrics,
