@@ -96,6 +96,75 @@ def clone_state_dict(model: torch.nn.Module) -> dict[str, torch.Tensor]:
     return {name: value.detach().cpu().clone() for name, value in model.state_dict().items()}
 
 
+def atomic_torch_save(payload: dict[str, Any], path: Path) -> None:
+    """
+    Write a torch checkpoint through a temporary file before replacing it.
+
+    Long GPU runs can be interrupted at awkward moments. Saving atomically keeps
+    `last_epoch_state.pt` from becoming half-written if the process is killed
+    during checkpoint serialization.
+    """
+    ensure_dir(path.parent)
+    tmp_path = path.with_name(f"{path.name}.tmp")
+    torch.save(payload, tmp_path)
+    tmp_path.replace(path)
+
+
+def torch_load_checkpoint(path: Path, *, map_location: str | torch.device) -> dict[str, Any]:
+    """
+    Load a full training checkpoint across PyTorch versions.
+
+    Recent PyTorch versions may default toward weights-only loading. Resume
+    checkpoints contain optimizer/history/RNG state, so we explicitly request a
+    full load when the installed version supports that argument.
+    """
+    try:
+        return torch.load(path, map_location=map_location, weights_only=False)
+    except TypeError:
+        return torch.load(path, map_location=map_location)
+
+
+def capture_rng_state() -> dict[str, Any]:
+    """
+    Persist RNG states so resumed epochs stay as close as possible to an
+    uninterrupted run.
+    """
+    state: dict[str, Any] = {
+        "python": random.getstate(),
+        "numpy": np.random.get_state(),
+        "torch": torch.get_rng_state(),
+    }
+    if torch.cuda.is_available():
+        state["cuda"] = torch.cuda.get_rng_state_all()
+    return state
+
+
+def restore_rng_state(state: dict[str, Any] | None) -> None:
+    """
+    Restore RNG states saved in an epoch checkpoint.
+    """
+    if not state:
+        return
+    if "python" in state:
+        random.setstate(state["python"])
+    if "numpy" in state:
+        np.random.set_state(state["numpy"])
+    if "torch" in state:
+        # `torch.set_rng_state` only accepts a CPU ByteTensor. Resume
+        # checkpoints may be loaded with a CUDA map_location on GPU servers, so
+        # keep this defensive conversion in place.
+        torch_state = state["torch"]
+        if isinstance(torch_state, torch.Tensor):
+            torch_state = torch_state.detach().cpu()
+        torch.set_rng_state(torch_state)
+    if torch.cuda.is_available() and "cuda" in state:
+        cuda_states = [
+            cuda_state.detach().cpu() if isinstance(cuda_state, torch.Tensor) else cuda_state
+            for cuda_state in state["cuda"]
+        ]
+        torch.cuda.set_rng_state_all(cuda_states)
+
+
 def finite_or_default(value: Any, default: float) -> float:
     try:
         value_float = float(value)
@@ -394,6 +463,49 @@ def save_checkpoint(
     )
 
 
+def save_epoch_resume_checkpoint(
+    *,
+    path: Path,
+    epoch: int,
+    model: torch.nn.Module,
+    optimizer: torch.optim.Optimizer,
+    history: list[dict[str, Any]],
+    best_score: float,
+    best_val_nll: float,
+    best_score_state: dict[str, torch.Tensor] | None,
+    best_val_nll_state: dict[str, torch.Tensor] | None,
+    cfg: ExperimentConfig,
+    run_cfg: RunConfig,
+    training_cfg: TrainingConfig,
+    rmtpp_cfg: RMTPPConfig,
+    encoder_cfg: Any,
+) -> None:
+    """
+    Save enough state to resume a partially completed run after the last
+    finished epoch.
+    """
+    atomic_torch_save(
+        {
+            "checkpoint_type": "epoch_resume",
+            "epoch": int(epoch),
+            "model_state_dict": clone_state_dict(model),
+            "optimizer_state_dict": optimizer.state_dict(),
+            "history": history,
+            "best_score": float(best_score),
+            "best_val_nll": float(best_val_nll),
+            "best_score_state_dict": best_score_state,
+            "best_val_nll_state_dict": best_val_nll_state,
+            "experiment_config": to_jsonable(cfg),
+            "run_config": to_jsonable(run_cfg),
+            "training_config": to_jsonable(training_cfg),
+            "rmtpp_config": to_jsonable(rmtpp_cfg),
+            "encoder_config": to_jsonable(encoder_cfg),
+            "rng_state": capture_rng_state(),
+        },
+        path,
+    )
+
+
 def train_one_run(
     *,
     cfg: ExperimentConfig,
@@ -409,6 +521,7 @@ def train_one_run(
     summary_path = run_paths.metrics_dir / "summary.json"
     history_json_path = run_paths.metrics_dir / "history.json"
     history_parquet_path = run_paths.metrics_dir / "history.parquet"
+    resume_checkpoint_path = run_paths.checkpoint_dir / "last_epoch_state.pt"
     log_path = run_paths.logs_dir / "train.log"
     manifest_path = run_paths.manifest_dir / "run_config.json"
 
@@ -441,9 +554,53 @@ def train_one_run(
     best_val_nll = float("inf")
     best_score_state: dict[str, torch.Tensor] | None = None
     best_val_nll_state: dict[str, torch.Tensor] | None = None
+    start_epoch = 1
+
+    if not cfg.force_rerun and resume_checkpoint_path.exists():
+        try:
+            resume_payload = torch_load_checkpoint(
+                resume_checkpoint_path,
+                # Load resume payloads on CPU first. Model/optimizer states can
+                # be moved by their load_state_dict paths, while RNG states must
+                # remain CPU ByteTensors for PyTorch's RNG restore APIs.
+                map_location="cpu",
+            )
+            loaded_epoch = int(resume_payload.get("epoch", 0))
+            if loaded_epoch > 0:
+                model.load_state_dict(resume_payload["model_state_dict"])
+                optimizer.load_state_dict(resume_payload["optimizer_state_dict"])
+                history = list(resume_payload.get("history", []))
+                best_score = float(resume_payload.get("best_score", best_score))
+                best_val_nll = float(resume_payload.get("best_val_nll", best_val_nll))
+                best_score_state = resume_payload.get("best_score_state_dict")
+                best_val_nll_state = resume_payload.get("best_val_nll_state_dict")
+                restore_rng_state(resume_payload.get("rng_state"))
+                start_epoch = min(loaded_epoch + 1, training_cfg.epochs + 1)
+                logger.info(
+                    "Resuming run from epoch checkpoint | dataset=%s model=%s candidate=%s seed=%s "
+                    "last_epoch=%s target_epochs=%s",
+                    run_cfg.dataset_name,
+                    run_cfg.model_name,
+                    run_cfg.candidate_name,
+                    run_cfg.seed,
+                    loaded_epoch,
+                    training_cfg.epochs,
+                )
+        except Exception as exc:
+            logger.warning(
+                "Could not load resume checkpoint; restarting this run from epoch 1. path=%s error=%r",
+                resume_checkpoint_path,
+                exc,
+            )
 
     with tee_training_output(log_path):
-        for epoch in range(1, training_cfg.epochs + 1):
+        if start_epoch > 1:
+            print(
+                f"[resume] loaded {resume_checkpoint_path} | "
+                f"next_epoch={start_epoch} | target_epochs={training_cfg.epochs}"
+            )
+
+        for epoch in range(start_epoch, training_cfg.epochs + 1):
             model.train()
             running = 0.0
             steps = 0
@@ -500,6 +657,27 @@ def train_one_run(
                 best_val_nll = val_nll
                 best_val_nll_state = clone_state_dict(model)
 
+            # Keep the visible history files fresh for monitoring, and keep a
+            # separate full resume checkpoint for interrupted long GPU jobs.
+            pl.DataFrame(history).write_parquet(history_parquet_path)
+            save_json({"history": history}, history_json_path)
+            save_epoch_resume_checkpoint(
+                path=resume_checkpoint_path,
+                epoch=epoch,
+                model=model,
+                optimizer=optimizer,
+                history=history,
+                best_score=best_score,
+                best_val_nll=best_val_nll,
+                best_score_state=best_score_state,
+                best_val_nll_state=best_val_nll_state,
+                cfg=cfg,
+                run_cfg=run_cfg,
+                training_cfg=training_cfg,
+                rmtpp_cfg=rmtpp_cfg,
+                encoder_cfg=encoder_cfg,
+            )
+
     final_state = clone_state_dict(model)
     best_score_state = best_score_state or final_state
     best_val_nll_state = best_val_nll_state or final_state
@@ -528,6 +706,7 @@ def train_one_run(
         "titan_profile": run_cfg.titan_profile,
         "loss_mode": cfg.loss_mode,
         "run_dir": str(run_paths.run_dir),
+        "resume_checkpoint_path": str(resume_checkpoint_path),
         "best_score_checkpoint_path": str(run_paths.checkpoint_dir / "best_score_model.pt"),
         "best_val_nll_checkpoint_path": str(run_paths.checkpoint_dir / "best_val_nll_model.pt"),
         "final_checkpoint_path": str(run_paths.checkpoint_dir / "final_model.pt"),

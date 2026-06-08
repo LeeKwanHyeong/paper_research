@@ -24,10 +24,15 @@ def canonical_model_name(model_name: str) -> str:
     """
     normalized = model_name.strip().lower()
     aliases = {
+        "transformer_hawkes_process": "thp",
         "transformer_hawkes": "thp",
         "transformerhawkes": "thp",
         "transformerhawkesprocess": "thp",
         "transformer_hawkes_tpp": "thp",
+        "transformerhawkestpp": "thp",
+        "transformerhawkes_tpp": "thp",
+        "transformerhawkestemporalpointprocess": "thp",
+        "transformerhawkesprocess_tpp": "thp",
     }
     return aliases.get(normalized, normalized)
 

@@ -28,6 +28,7 @@ Marked target 기본값:
 | 파일 | 목적 | 언제 쓰는가 |
 | --- | --- | --- |
 | `tpp_experiment.py` | 통합 실험 CLI | 앞으로 모델/데이터셋이 늘어나는 본 실험 진입점 |
+| `common/modes/model_test.py` | synthetic batch 기반 모델 인터페이스 테스트 | 새 TPP 모델 추가 후 forward/NLL/head smoke test |
 | `common/runner.py` | `long-epoch` 공통 train/eval/report runner | 본 비교, THP 포함 장기 학습, scale-wise MAE |
 | `common/models.py` | RMTPP/TitanTPP/THP model registry | 새 비교 모델 추가 시 먼저 수정할 곳 |
 | `common/modes/` | 기존 overfit, qty-ablation, yellow-resolution 실행 모듈 | 이전 실험을 통합 CLI 아래에서 유지할 때 |
@@ -84,6 +85,27 @@ python simple_lab_test/search/tpp_experiment.py long-epoch \
   --epochs 300 \
   --seeds 42,52,62 \
   --lr 1e-3
+```
+
+TransformerHawkesTPP 모델 smoke test:
+
+```bash
+python simple_lab_test/search/tpp_experiment.py model-test \
+  --models TransformerHawkesTPP \
+  --thp-candidates small \
+  --device cpu \
+  --left-pad
+```
+
+세 모델 인터페이스를 한 번에 확인:
+
+```bash
+python simple_lab_test/search/tpp_experiment.py model-test \
+  --models rmtpp,titantpp,thp \
+  --titan-candidates small_lmm \
+  --thp-candidates small \
+  --device cpu \
+  --left-pad
 ```
 
 현재 `overfit`, `qty-ablation`, `yellow-resolution`은 통합 CLI에서

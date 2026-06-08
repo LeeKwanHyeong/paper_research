@@ -56,6 +56,7 @@ PROJECT_ROOT = ensure_project_root_on_path(THIS_FILE)
 import torch
 
 from simple_lab_test.search.common.configs import ExperimentConfig
+from simple_lab_test.search.common.modes.model_test import run_model_test
 from simple_lab_test.search.common.models import canonical_model_name
 from simple_lab_test.search.common.runner import run_long_epoch_experiment
 
@@ -181,6 +182,47 @@ def add_shared_long_epoch_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--stop-on-error", action="store_true")
 
 
+def add_model_test_args(parser: argparse.ArgumentParser) -> None:
+    """
+    Add synthetic interface-test options for RMTPP/TitanTPP/THP models.
+    """
+    parser.add_argument(
+        "--output-dir",
+        default=str(PROJECT_ROOT / "search_artifacts" / "tpp_model_test"),
+        help="Directory where model-test summary files will be written.",
+    )
+    parser.add_argument(
+        "--models",
+        default="thp",
+        help="Comma-separated model names. Supported: rmtpp,titantpp,thp.",
+    )
+    parser.add_argument(
+        "--titan-candidates",
+        default="small_lmm",
+        help="Comma-separated Titan candidates used when --models includes titantpp.",
+    )
+    parser.add_argument(
+        "--thp-candidates",
+        default="small",
+        help="Comma-separated THP candidates. Supported defaults: small,base,deep,wide.",
+    )
+    parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--batch-size", type=int, default=2)
+    parser.add_argument("--seq-len", type=int, default=8)
+    parser.add_argument("--num-marks", type=int, default=6)
+    parser.add_argument("--scale-base", type=float, default=10.0)
+    parser.add_argument("--rmtpp-rnn-type", default="gru", choices=["rnn", "gru", "lstm"])
+    parser.add_argument("--rmtpp-hidden-dim", type=int, default=64)
+    parser.add_argument("--rmtpp-mark-emb-dim", type=int, default=32)
+    parser.add_argument(
+        "--left-pad",
+        action="store_true",
+        help="Include left-padded rows in the synthetic batch to stress THP attention masks.",
+    )
+    parser.add_argument("--stop-on-error", action="store_true")
+
+
 def build_long_epoch_config(args: argparse.Namespace) -> ExperimentConfig:
     """
     Convert validated CLI args into the dataclass used by shared runners.
@@ -230,6 +272,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     add_shared_long_epoch_args(long_parser)
 
+    model_test_parser = subparsers.add_parser(
+        "model-test",
+        help="Run a fast synthetic interface test for RMTPP, TitanTPP, and TransformerHawkesTPP.",
+    )
+    add_model_test_args(model_test_parser)
+
     # Temporary migration bridge: these commands now live under common/modes
     # while we move their internals into shared utilities one mode at a time.
     for command in ("overfit", "qty-ablation", "yellow-resolution"):
@@ -259,6 +307,23 @@ def main() -> None:
         cfg = build_long_epoch_config(args)
         print(f"Unified TPP Experiment Configuration:: {cfg}")
         run_long_epoch_experiment(cfg)
+        return
+
+    if args.command == "model-test":
+        if unknown_args:
+            parser.error(f"unrecognized arguments for model-test: {' '.join(unknown_args)}")
+        rows = run_model_test(args)
+        for row in rows:
+            if row.get("status") == "success":
+                print(
+                    "[model-test] "
+                    f"{row['model_name']}:{row['candidate_name']} "
+                    f"hidden={row['hidden_shape']} "
+                    f"nll={row['nll']:.6f} "
+                    f"qty_hat_mean={row['qty_hat_mean']:.6f}"
+                )
+            else:
+                print(f"[model-test][FAILED] {row['model_name']}:{row['candidate_name']} {row.get('error')}")
         return
 
     if args.command in LEGACY_MODULE_BY_COMMAND:
