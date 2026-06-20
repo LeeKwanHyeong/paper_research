@@ -152,7 +152,24 @@ def eval_next_event_classic(model, loader: DataLoader, device: str) -> Dict[str,
         "_nll_steps": total,
     }
 
-def eval_next_event_week_lookback(model, loader: DataLoader, device: str) -> Dict[str, float]:
+def _forward_with_optional_mask(model, marks: torch.Tensor, dts: torch.Tensor, mask: torch.Tensor):
+    """
+    THP uses the padding mask, while RMTPP/TitanTPP keep the older two-argument
+    forward signature. This small adapter keeps evaluation code shared.
+    """
+    try:
+        return model.forward(marks, dts, mask=mask)
+    except TypeError:
+        return model.forward(marks, dts)
+
+
+def eval_next_event_week_lookback(
+    model,
+    loader: DataLoader,
+    device: str,
+    *,
+    target_only_nll: bool = False,
+) -> Dict[str, float]:
     """
     Week-lookback + padding/mask 버전 평가.
     Dataset이 (marks, dts, mask, part_idx)를 반환.
@@ -187,27 +204,32 @@ def eval_next_event_week_lookback(model, loader: DataLoader, device: str) -> Dic
             values = values.to(device) if values is not None else None
 
             # --------------------- NLL -----------------------
-            out = model.nll(marks, dts, values=values, mask=mask)
-            # out: {"nll", "nll_time", "nll_marker", "steps"...} 형태라고 가정
-            steps = float(
-                out.get("steps", mask[:, 1:].sum()).item() if hasattr(out.get("steps", None), "item") else out.get(
-                    "steps", mask[:, 1:].sum().item()))
-            # steps가 tensor일 수도 있어서 안전 처리
-            if steps <= 0:
-                steps = float(mask[:, 1:].sum().item())
+            # Legacy validation reports the average NLL across every transition
+            # inside the padded window. Fixed train/validation/test splits should
+            # instead score only the final target transition; otherwise test NLL
+            # can be dominated by repeated train-context transitions.
+            if not target_only_nll:
+                out = model.nll(marks, dts, values=values, mask=mask)
+                # out: {"nll", "nll_time", "nll_marker", "steps"...} 형태라고 가정
+                steps = float(
+                    out.get("steps", mask[:, 1:].sum()).item() if hasattr(out.get("steps", None), "item") else out.get(
+                        "steps", mask[:, 1:].sum().item()))
+                # steps가 tensor일 수도 있어서 안전 처리
+                if steps <= 0:
+                    steps = float(mask[:, 1:].sum().item())
 
-            sum_nll_time += float(out["nll_time"].item()) * steps
-            sum_nll_marker += float(out["nll_marker"].item()) * steps
-            sum_nll_total += float(out["nll"].item()) * steps
-            sum_value_loss += float(out["value_loss"].item()) * steps
-            sum_steps += steps
+                sum_nll_time += float(out["nll_time"].item()) * steps
+                sum_nll_marker += float(out["nll_marker"].item()) * steps
+                sum_nll_total += float(out["nll"].item()) * steps
+                sum_value_loss += float(out["value_loss"].item()) * steps
+                sum_steps += steps
 
             # --------------------- Marker -----------------------
             valid = mask[:, -1] & mask[:, -2]
             if valid.sum().item() == 0:
                 continue
 
-            h = model.forward(marks, dts)     # (B, Lmax, H)
+            h = _forward_with_optional_mask(model, marks, dts, mask)     # (B, Lmax, H)
             h_prev = h[:, -2, :]              # (B, H)
             y_mk   = marks[:, -1]             # (B,)
             y_dt   = dts[:, -1].float()       # (B,)
@@ -226,6 +248,18 @@ def eval_next_event_week_lookback(model, loader: DataLoader, device: str) -> Dic
 
             # ---- mark acc ----
             logits = model.mark_head(h_prev)      # (Bv, K_with_pad)
+            if target_only_nll:
+                log_y = -F.cross_entropy(logits, y_mk, reduction="none")
+                logf_dt = model.log_f_dt(h_prev, y_dt)
+                sum_nll_marker += float((-log_y).sum().item())
+                sum_nll_time += float((-logf_dt).sum().item())
+                sum_nll_total += float(((-log_y) + (-logf_dt)).sum().item())
+                if y_val is not None and getattr(model.cfg, "use_value_head", False):
+                    value_hat_for_nll = model.predict_value(h_prev)
+                    value_loss = F.huber_loss(value_hat_for_nll, y_val, reduction="none")
+                    sum_value_loss += float(value_loss.sum().item())
+                sum_steps += float(y_mk.numel())
+
             # The final class is reserved for PAD, so exclude it from inference.
             logits = logits[..., :pad_id]
             pred = torch.argmax(logits, dim=-1)
@@ -323,6 +357,71 @@ def make_week_lookback_loaders(marked_df: pl.DataFrame, training_config: Trainin
     train/validation split used by the trainers.
     """
     return _make_week_lookback_loaders(marked_df, training_config)
+
+
+def make_fixed_split_week_lookback_loaders(
+    marked_df: pl.DataFrame,
+    training_config: TrainingConfig,
+    *,
+    split_col: str = "chronological_split",
+):
+    """
+    Build train/validation/test loaders from a pre-split event table.
+
+    Unlike the legacy `val_ratio` path, this uses the full chronological series
+    as observed context and selects samples by the target event's split label.
+    That keeps validation/test evaluation realistic: a validation target may
+    condition on earlier train events, and a test target may condition on
+    earlier train/validation/test observations.
+    """
+    train_ds = RMTPPWeekLookbackDataset(
+        marked_df,
+        lookback_weeks=training_config.lookback,
+        max_seq_len=training_config.max_seq_len,
+        val_ratio=training_config.val_ratio,
+        mode="all",
+        split_col=split_col,
+        target_splits={"train"},
+    )
+    val_ds = RMTPPWeekLookbackDataset(
+        marked_df,
+        lookback_weeks=training_config.lookback,
+        max_seq_len=training_config.max_seq_len,
+        val_ratio=training_config.val_ratio,
+        mode="all",
+        split_col=split_col,
+        target_splits={"validation"},
+    )
+    test_ds = RMTPPWeekLookbackDataset(
+        marked_df,
+        lookback_weeks=training_config.lookback,
+        max_seq_len=training_config.max_seq_len,
+        val_ratio=training_config.val_ratio,
+        mode="all",
+        split_col=split_col,
+        target_splits={"test"},
+    )
+
+    train_loader = DataLoader(
+        train_ds,
+        batch_size=training_config.batch_size,
+        shuffle=True,
+        collate_fn=collate_week_lookback,
+        drop_last=True,
+    )
+    val_loader = DataLoader(
+        val_ds,
+        batch_size=training_config.batch_size,
+        shuffle=False,
+        collate_fn=collate_week_lookback,
+    )
+    test_loader = DataLoader(
+        test_ds,
+        batch_size=training_config.batch_size,
+        shuffle=False,
+        collate_fn=collate_week_lookback,
+    )
+    return train_loader, val_loader, test_loader
 
 
 def _make_classic_next_event_loaders(marked_df: pl.DataFrame, training_config: TrainingConfig):

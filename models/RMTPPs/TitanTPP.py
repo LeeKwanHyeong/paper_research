@@ -10,14 +10,22 @@ class TitanTPP(nn.Module):
     '''
     Titan-Based TPPs Model
     - Backbone: Titan MemoryEncoder (replaces RNN)
-    - Memory: Optional LMM (Local Memory Matching) for retrieving past patterns
+    - Memory: selectable memory_mode for ablation and final validation
     - Head: Standard TPPs intensity and marker prediction heads
     '''
+    VALID_MEMORY_MODES = {
+        "none",
+        "static_lmm",
+        "contextual_ttm",
+        "series_lmm",
+        "hybrid_lmm_ttm",
+    }
 
     def __init__(self, cfg: RMTPPConfig, titan_cfg: TitanConfig):
         super().__init__()
         self.cfg = cfg
         self.titan_cfg = titan_cfg
+        self.memory_mode = self._resolve_memory_mode(titan_cfg)
 
         self.emb = nn.Embedding(cfg.num_marks, cfg.mark_emb_dim)    # marker embedding
 
@@ -36,13 +44,17 @@ class TitanTPP(nn.Module):
             contextual_mem_size = titan_cfg.contextual_mem_size,
             persistent_mem_size = titan_cfg.persistent_mem_size,
             dropout = titan_cfg.dropout,
+            use_context_update = bool(getattr(titan_cfg, "use_context_update", False)),
             use_pos_emb = True,
             max_len = getattr(titan_cfg, 'max_len', 512),
             use_causal = titan_cfg.use_causal
         )
 
-        # LMM (Local Memory Matchinig)
-        self.use_lmm = getattr(titan_cfg, 'use_lmm', False)
+        # LMM (Local Memory Matching)
+        # static_lmm      : use the learnable LMM memory bank
+        # series_lmm      : use caller-provided per-series memory when available
+        # hybrid_lmm_ttm  : combine contextual TTM with LMM retrieval
+        self.use_lmm = self.memory_mode in {"static_lmm", "series_lmm", "hybrid_lmm_ttm"}
         if self.use_lmm:
             self.lmm = LMM(
                 d_model = titan_cfg.d_model,
@@ -64,6 +76,41 @@ class TitanTPP(nn.Module):
 
         # Initialize weights
         self._init_stable()
+
+    @classmethod
+    def _resolve_memory_mode(cls, titan_cfg: TitanConfig) -> str:
+        """
+        Resolve the official TitanTPP memory mode.
+
+        Older experiment configs only had `use_lmm`; keeping this fallback lets
+        legacy candidate names continue to run while new experiments can compare
+        memory mechanisms explicitly through `memory_mode`.
+        """
+        raw_mode = getattr(titan_cfg, "memory_mode", None)
+        if raw_mode is None or str(raw_mode).strip().lower() in {"", "auto"}:
+            raw_mode = "static_lmm" if bool(getattr(titan_cfg, "use_lmm", False)) else "none"
+
+        mode = str(raw_mode).strip().lower()
+        aliases = {
+            "no_memory": "none",
+            "no_lmm": "none",
+            "lmm": "static_lmm",
+            "ttm": "contextual_ttm",
+            "contextual": "contextual_ttm",
+            "hybrid": "hybrid_lmm_ttm",
+        }
+        mode = aliases.get(mode, mode)
+        if mode not in cls.VALID_MEMORY_MODES:
+            available = ", ".join(sorted(cls.VALID_MEMORY_MODES))
+            raise ValueError(f"Unsupported TitanTPP memory_mode='{raw_mode}'. Available: {available}")
+        return mode
+
+    @property
+    def uses_contextual_ttm(self) -> bool:
+        """
+        True when the encoder is allowed to maintain online contextual memory.
+        """
+        return self.memory_mode in {"contextual_ttm", "hybrid_lmm_ttm"}
 
     def _init_stable(self):
         # v_t, mark_head를 너무 크게 시작하지 않게
@@ -132,7 +179,23 @@ class TitanTPP(nn.Module):
         qty_per_mark = torch.pow(scale_base, log_qty)
         return (mark_probs * qty_per_mark).sum(dim=-1)
 
-    def forward(self, marks: torch.Tensor, dts: torch.Tensor) -> torch.Tensor:
+    @torch.no_grad()
+    def reset_contextual_memory(self) -> None:
+        """
+        Reset Titan encoder contextual memory for series-wise online evaluation.
+        """
+        reset = getattr(self.encoder, "reset_contextual_memory", None)
+        if callable(reset):
+            reset()
+
+    def forward(
+        self,
+        marks: torch.Tensor,
+        dts: torch.Tensor,
+        *,
+        update_context_memory: Optional[bool] = None,
+        series_memory: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         """
         Process input sequence through Embedding -> Titan Encoder -> LMM
         :returns
@@ -147,14 +210,65 @@ class TitanTPP(nn.Module):
         x = torch.cat([emb, dt_feat], dim = -1)  # [B, L, Input_Dim]
 
         # 2. Titan Encoder
-        # Ensure 'MemoryEncoder' or 'MemoryAttention' applies causal masking
-        h = self.encoder(x) # [B, L, D]
+        # Contextual TTM is stateful, so we only update memory when the caller
+        # explicitly asks for it. This avoids cross-series leakage in shuffled
+        # mini-batch training.
+        if self.uses_contextual_ttm and update_context_memory is None:
+            # Self-contained online pass for ordinary train/validation windows.
+            # The memory is reset at window boundaries and updated token by
+            # token, so each position can only attend to previous tokens through
+            # contextual memory. This keeps the path leakage-safe for shuffled
+            # mini-batches while making memory_mode visible in standard metrics.
+            h = self._encode_window_with_contextual_ttm(x)
+        else:
+            should_update_context = bool(update_context_memory) and self.uses_contextual_ttm
+            h = self.encoder(x, update_context_memory=should_update_context) # [B, L, D]
 
-        # 3. LMM (Long-term Pattern Retrieval)
-        if self.use_lmm:
+        # 3. LMM / retrieved memory branch
+        if self.memory_mode == "static_lmm":
             h = self.lmm(h)
+        elif self.memory_mode == "series_lmm":
+            # Series memory is expected to be built by the runner from past
+            # events of the same entity. If absent, this mode degrades safely
+            # to the pure encoder path instead of using unrelated static memory.
+            if series_memory is not None:
+                h = self.lmm(h, memory=series_memory)
+        elif self.memory_mode == "hybrid_lmm_ttm":
+            # Hybrid mode combines contextual memory in the encoder with LMM.
+            # When a series-specific memory is supplied, it takes precedence;
+            # otherwise the learnable static LMM bank is used as a fallback.
+            h = self.lmm(h, memory=series_memory)
 
         return h
+
+    def _encode_window_with_contextual_ttm(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Encode one mini-batch window with online contextual memory.
+
+        This path approximates Titan test-time memory during normal training:
+        memory is local to the current window, updated from already-observed
+        tokens, and cleared before returning so batches remain independent.
+        """
+        reset = getattr(self.encoder, "reset_contextual_memory", None)
+        if callable(reset):
+            reset()
+
+        outputs = []
+        for step in range(x.size(1)):
+            h_step = self.encoder(
+                x[:, step:step + 1, :],
+                update_context_memory=True,
+                position_offset=step,
+            )
+            outputs.append(h_step)
+
+        if callable(reset):
+            reset()
+
+        if not outputs:
+            d_model = int(self.encoder.input_proj.out_features)
+            return x.new_empty((x.size(0), 0, d_model))
+        return torch.cat(outputs, dim=1)
 
     def log_f_dt(self, h_j: torch.Tensor, dt_next: torch.Tensor) -> torch.Tensor:
         '''
@@ -184,6 +298,7 @@ class TitanTPP(nn.Module):
         dts: torch.Tensor,
         values: Optional[torch.Tensor] = None,
         mask: Optional[torch.Tensor] = None,
+        series_memory: Optional[torch.Tensor] = None,
     ) -> Dict[str, torch.Tensor]:
         """
         Compute negative log-likelihood for a batch.
@@ -200,7 +315,7 @@ class TitanTPP(nn.Module):
         if mask is None:
             mask = torch.ones((B, L), device = marks.device, dtype = torch.bool)
 
-        h = self.forward(marks, dts) # [B, L, H]
+        h = self.forward(marks, dts, series_memory=series_memory) # [B, L, H]
 
         h_j = h[:, :-1, :]                      # [B, L-1, H]
         y_next = marks[:, 1:]                   # [B, L-1]

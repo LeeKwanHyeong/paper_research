@@ -88,6 +88,16 @@ class MemoryAttention(nn.Module):
         """
         self._ctx_mem = self._ctx_buf.update(self._ctx_mem, x_detached)
 
+    @torch.no_grad()
+    def reset_contextual_memory(self) -> None:
+        """
+        Clear the contextual memory buffer.
+
+        TTM-Lite uses one online memory stream per series. Resetting here keeps
+        memory from one part/grid cell from leaking into another series.
+        """
+        self._ctx_mem = None
+
     def _split_heads(self, t: torch.Tensor) -> torch.Tensor:
         # [B, T, D] -> [B, H, T, Hd]
         B, T, D = t.shape

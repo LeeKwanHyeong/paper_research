@@ -240,21 +240,30 @@ class RMTPPWeekLookbackDataset(Dataset):
         lookback_weeks: int = 52,
         max_seq_len: int = 64,      # (context events within W weeks) + 1(target) 를 담을 최대 길이
         val_ratio: float = 0.2,
-        mode: str = "train",        # "train" | "val"  (target index 기준 split)
+        mode: str = "train",        # "train" | "val" | "all"  (target index 기준 split)
         pad_id: int | None = None,  # None이면 K_real(=mark.max+1)로 자동 설정
         clip_dt_min1: bool = True,
+        split_col: str = "chronological_split",
+        target_splits: set[str] | tuple[str, ...] | list[str] | None = None,
     ):
-        assert mode in ("train", "val")
+        assert mode in ("train", "val", "all")
         self.W = int(lookback_weeks)
         self.max_len = int(max_seq_len)
         self.val_ratio = float(val_ratio)
         self.mode = mode
+        self.target_splits = set(target_splits) if target_splits is not None else None
 
         df = marked_df.sort(["oper_part_no", "seq"])
 
         if clip_dt_min1:
             df = df.with_columns(
                 pl.col("delta_t").cast(pl.Int32).clip(1, None).alias("delta_t")
+            )
+
+        if self.target_splits is not None and split_col not in df.columns:
+            raise ValueError(
+                f"target_splits={sorted(self.target_splits)} requires split column "
+                f"'{split_col}', but the marked dataframe does not contain it."
             )
 
         # mark range 확인 → pad_id 자동 설정
@@ -270,6 +279,7 @@ class RMTPPWeekLookbackDataset(Dataset):
                   pl.col("delta_t").cast(pl.Float32).alias("dt_list"),
                   pl.col("mark").cast(pl.Int32).alias("mk_list"),
                   pl.col("scale_residual").cast(pl.Float32).alias("val_list") if "scale_residual" in df.columns else pl.lit(None).alias("val_list"),
+                  pl.col(split_col).cast(pl.Utf8).alias("split_list") if split_col in df.columns else pl.lit(None).alias("split_list"),
               ])
         )
 
@@ -278,6 +288,7 @@ class RMTPPWeekLookbackDataset(Dataset):
         self.dt_lists = grouped["dt_list"].to_list()
         self.mk_lists = grouped["mk_list"].to_list()
         self.val_lists = grouped["val_list"].to_list()
+        self.split_lists = grouped["split_list"].to_list()
 
         # 샘플 인덱스: (part_idx, context_end_idx=i)
         self.index = []
@@ -289,6 +300,19 @@ class RMTPPWeekLookbackDataset(Dataset):
             k = int(np.floor(n * (1.0 - self.val_ratio)))  # target_idx >= k -> val
             for i in range(0, n - 1):  # target exists at i+1
                 target_idx = i + 1
+                if self.target_splits is not None:
+                    # Fixed-split experiments keep the full observed history as
+                    # context, but only score/train samples whose target row
+                    # belongs to the requested chronological split.
+                    target_split = self.split_lists[p_idx][target_idx]
+                    if target_split in self.target_splits:
+                        self.index.append((p_idx, i))
+                    continue
+
+                if self.mode == "all":
+                    self.index.append((p_idx, i))
+                    continue
+
                 if self.mode == "train":
                     if target_idx < k:
                         self.index.append((p_idx, i))
@@ -424,4 +448,3 @@ def time_split_events(marked_df: pl.DataFrame, val_ratio: float = 0.2) -> tuple[
     val_df   = df2.filter(pl.col("rn") >= pl.col("k")).drop(["n", "k", "rn"])
 
     return train_df, val_df
-

@@ -34,6 +34,15 @@ class TitanConfig:
     # -------------------------
     # Memory (attention-side)
     # -------------------------
+    # TitanTPP memory behavior is selected explicitly so experiments can
+    # compare encoder-only, static memory, contextual TTM, and hybrid variants.
+    # Supported values:
+    # - "none": pure causal Titan encoder without memory tokens
+    # - "static_lmm": learnable persistent/static memory
+    # - "contextual_ttm": online contextual memory updated by the caller
+    # - "series_lmm": retrieved per-series memory supplied by the caller
+    # - "hybrid_lmm_ttm": contextual memory plus LMM retrieval
+    memory_mode: str = "static_lmm"
     contextual_mem_size: int = 32
     persistent_mem_size: int = 32
     use_context_update: bool = False
@@ -67,4 +76,3 @@ class TitanConfig:
     # -------------------------
     clamp_min: Optional[float] = 0.0
     clamp_max: Optional[float] = None
-

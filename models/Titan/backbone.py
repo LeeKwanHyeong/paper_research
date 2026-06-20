@@ -57,6 +57,20 @@ class TitanBackbone(nn.Module):
         x = x + self.drop2(h)
         return x
 
+    @torch.no_grad()
+    def update_contextual_memory(self, x_detached: torch.Tensor) -> None:
+        """
+        Append observed hidden tokens to this block's contextual memory.
+        """
+        self.attn.update_contextual_memory(x_detached.detach())
+
+    @torch.no_grad()
+    def reset_contextual_memory(self) -> None:
+        """
+        Clear this block's contextual memory state.
+        """
+        self.attn.reset_contextual_memory()
+
 
 class MemoryEncoder(nn.Module):
     """
@@ -106,29 +120,62 @@ class MemoryEncoder(nn.Module):
         else:
             self.register_parameter("pos_emb", None)
 
-    def _get_pos(self, L: int, device: torch.device, dtype: torch.dtype) -> torch.Tensor:
+    def _get_pos(
+        self,
+        L: int,
+        device: torch.device,
+        dtype: torch.dtype,
+        *,
+        offset: int = 0,
+    ) -> torch.Tensor:
         if self.pos_emb is None:
             return torch.zeros(1, L, self.input_proj.out_features, device=device, dtype=dtype)
 
-        if L <= self.pos_emb.size(1):
-            return self.pos_emb[:, :L, :].to(device=device, dtype=dtype)
+        offset = max(int(offset), 0)
+        end = offset + int(L)
+
+        if end <= self.pos_emb.size(1):
+            return self.pos_emb[:, offset:end, :].to(device=device, dtype=dtype)
 
         # interpolate if longer than max_len
         pe = self.pos_emb.to(device=device, dtype=dtype)     # [1, max_len, D]
         pe_t = pe.transpose(1, 2)                            # [1, D, max_len]
-        pe_i = F.interpolate(pe_t, size=L, mode="linear", align_corners=False)
-        return pe_i.transpose(1, 2)                          # [1, L, D]
+        pe_i = F.interpolate(pe_t, size=end, mode="linear", align_corners=False)
+        return pe_i.transpose(1, 2)[:, offset:end, :]         # [1, L, D]
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    @torch.no_grad()
+    def reset_contextual_memory(self) -> None:
+        """
+        Clear every layer's contextual memory state.
+        """
+        for layer in self.layers:
+            layer.reset_contextual_memory()
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        *,
+        update_context_memory: Optional[bool] = None,
+        position_offset: int = 0,
+    ) -> torch.Tensor:
         # x: [B, L, input_dim]
         x = self.input_proj(x)  # [B, L, D]
 
         if self.use_pos_emb:
             L = x.size(1)
-            x = x + self._get_pos(L, x.device, x.dtype)
+            x = x + self._get_pos(L, x.device, x.dtype, offset=position_offset)
+
+        should_update = (
+            bool(update_context_memory)
+            if update_context_memory is not None
+            else bool(self.training and self.use_context_update)
+        )
 
         for layer in self.layers:
             x = layer(x)
-            if self.training and self.use_context_update:
-                layer.attn.update_contextual_memory(x.detach())
+            if should_update:
+                # TTM-Lite updates memory only after processing observed tokens.
+                # Callers must avoid passing future target tokens when this flag
+                # is enabled.
+                layer.update_contextual_memory(x.detach())
         return x
