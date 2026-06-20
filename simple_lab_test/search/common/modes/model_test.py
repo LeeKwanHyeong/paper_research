@@ -12,12 +12,12 @@ from simple_lab_test.search.common.models import (
     build_model,
     canonical_model_name,
     default_thp_candidates,
+    default_titan_candidates,
     find_candidate_by_name,
     make_rmtpp_proxy_candidate,
 )
 from simple_lab_test.search.common.runner import forward_model, set_global_seed
-from simple_lab_test.search.titan_hparam_search import (
-    default_titan_candidates,
+from simple_lab_test.search.common.experiment_utils import (
     ensure_dir,
     save_json,
     to_jsonable,

@@ -1,17 +1,10 @@
 """
-Automated TitanTPP hyperparameter search for the magnitude-factorized TPP setup.
+Shared dataset, cache, and model-config utilities for TPP experiments.
 
-This runner is designed to be a durable experiment script rather than a
-notebook-only utility. The full flow is:
-
-1. materialize dataset-specific raw event tables
-2. build cached magnitude-marked datasets for several log bases
-3. run a short coarse search over curated Titan presets
-4. refine the best coarse-search combinations with more epochs and seeds
-5. persist histories, checkpoints, leaderboards, and best-summary files
-
-The module is intentionally verbose because this file is expected to be read and
-reused as an experiment blueprint.
+The original hyperparameter-search script has been removed from the search
+root. Its reusable parts live here so `tpp_experiment.py` can remain the single
+user-facing CLI while long-epoch, overfit, and ablation modes share one
+dataset/cache implementation.
 """
 
 from __future__ import annotations
@@ -77,21 +70,19 @@ class DatasetSpec:
     """
     Dataset-specific knobs for event-table construction.
 
-    `marked_target` uses the already episode-collapsed and magnitude-marked
-    intermittent target table, while `yellow_trip` first needs to be aggregated
-    into weekly pickup-count series.
+    `marked_target`, `yellow_trip_hourly`, and `insta_market_basket` are already
+    event tables. Raw taxi-log aggregation is intentionally kept outside
+    simple_lab_test in `simple_lab_test/notebooks/preprocessing/yellow_trip.ipynb`.
     """
     name: str
     parquet_path: str
     kind: str
     max_series: Optional[int] = None
-    yellow_grid_size_deg: float = 0.01
-    yellow_min_active_weeks: int = 20
-    yellow_vendor: int = 0
-    yellow_min_lon: float = -75.0
-    yellow_max_lon: float = -72.0
-    yellow_min_lat: float = 40.0
-    yellow_max_lat: float = 42.0
+    split_with_path: Optional[str] = None
+    split_train_path: Optional[str] = None
+    split_validation_path: Optional[str] = None
+    split_test_path: Optional[str] = None
+    split_manifest_path: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -112,6 +103,7 @@ class TitanCandidate:
     mem_topk: int
     use_pos_emb: bool = True
     use_causal: bool = True
+    memory_mode: str = "auto"
 
 
 @dataclass(frozen=True)
@@ -262,9 +254,15 @@ def sanitize_float_label(value: float) -> str:
 # ---------------------------------------------------------------------------
 
 MARKED_TARGET_KIND = "marked_target"
+INSTA_MARKET_BASKET_KIND = "insta_market_basket"
+YELLOW_TRIP_HOURLY_KIND = "yellow_trip_hourly"
+YELLOW_TRIP_HOURLY_LOOKBACK_BUCKETS = 168
 MARKED_TARGET_DEFAULT_SCALE_BASE = 2.0
 MARKED_TARGET_LOOKBACK_WEEKS = 52
 MARKED_TARGET_MAX_SEQ_LEN = 16
+# Marked-target sequences are short, so old experiments forced a small batch.
+# In fixed-split GPU runs this under-utilizes modern GPUs; keep the short
+# lookback/max length override, but let the CLI batch size pass through.
 MARKED_TARGET_BATCH_SIZE = 64
 MARKED_TARGET_TITAN_CANDIDATES = frozenset({"small_no_lmm", "small_lmm"})
 MARKED_TARGET_REQUIRED_COLUMNS = frozenset(
@@ -287,12 +285,21 @@ def is_marked_target_kind(dataset_kind: str) -> bool:
 
 def search_config_for_dataset(search_cfg: SearchConfig, dataset_kind: str) -> SearchConfig:
     """
-    Apply dataset-specific runtime overrides without changing yellow-trip runs.
+    Apply dataset-specific runtime overrides.
 
     The marked target table has only about 21k episode-level events, so the
-    model and loader should stay intentionally small. Yellow-trip keeps whatever
-    was passed through CLI/defaults.
+    model and loader should stay intentionally small. Hourly yellow-trip needs
+    at least one week of hourly context to expose temporal patterns.
     """
+    if dataset_kind == YELLOW_TRIP_HOURLY_KIND:
+        return replace(
+            search_cfg,
+            # Historical name, new meaning: for hourly yellow-trip this is the
+            # number of event-time buckets in the lookback window.
+            lookback_weeks=max(int(search_cfg.lookback_weeks), YELLOW_TRIP_HOURLY_LOOKBACK_BUCKETS),
+            max_seq_len=max(int(search_cfg.max_seq_len), 256),
+        )
+
     if not is_marked_target_kind(dataset_kind):
         return search_cfg
 
@@ -300,7 +307,6 @@ def search_config_for_dataset(search_cfg: SearchConfig, dataset_kind: str) -> Se
         search_cfg,
         lookback_weeks=MARKED_TARGET_LOOKBACK_WEEKS,
         max_seq_len=MARKED_TARGET_MAX_SEQ_LEN,
-        batch_size=MARKED_TARGET_BATCH_SIZE,
     )
 
 
@@ -339,119 +345,79 @@ def default_dataset_specs() -> list[DatasetSpec]:
     return [
         DatasetSpec(
             name="intermittent",
-            parquet_path=str(PROJECT_ROOT / "sample_data" / "marked_target_df.parquet"),
+            parquet_path=str(PROJECT_ROOT / "sample_data" / "head_office" / "marked_target_df.parquet"),
             kind=MARKED_TARGET_KIND,
+            split_with_path=str(PROJECT_ROOT / "sample_data" / "head_office" / "marked_target_with_split.parquet"),
+            split_train_path=str(PROJECT_ROOT / "sample_data" / "head_office" / "marked_target_train.parquet"),
+            split_validation_path=str(PROJECT_ROOT / "sample_data" / "head_office" / "marked_target_validation.parquet"),
+            split_test_path=str(PROJECT_ROOT / "sample_data" / "head_office" / "marked_target_test.parquet"),
+            split_manifest_path=str(PROJECT_ROOT / "sample_data" / "head_office" / "marked_target_split_manifest.json"),
         ),
         DatasetSpec(
-            name="yellow_trip",
-            parquet_path=str(PROJECT_ROOT / "sample_data" / "yellow_trip.parquet"),
-            kind="yellow_trip",
+            name="yellow_trip_hourly",
+            parquet_path=str(PROJECT_ROOT / "sample_data" / "new_york_taxi" / "yellow_trip_hourly.parquet"),
+            kind=YELLOW_TRIP_HOURLY_KIND,
+            split_with_path=str(PROJECT_ROOT / "sample_data" / "new_york_taxi" / "yellow_trip_hourly_with_split.parquet"),
+            split_train_path=str(PROJECT_ROOT / "sample_data" / "new_york_taxi" / "yellow_trip_hourly_train.parquet"),
+            split_validation_path=str(PROJECT_ROOT / "sample_data" / "new_york_taxi" / "yellow_trip_hourly_validation.parquet"),
+            split_test_path=str(PROJECT_ROOT / "sample_data" / "new_york_taxi" / "yellow_trip_hourly_test.parquet"),
+            split_manifest_path=str(PROJECT_ROOT / "sample_data" / "new_york_taxi" / "yellow_trip_hourly_split_manifest.json"),
+        ),
+        DatasetSpec(
+            name="insta_market_basket",
+            parquet_path=str(
+                PROJECT_ROOT
+                / "sample_data"
+                / "insta_market_basket"
+                / "instacart_marked_target_df.parquet"
+            ),
+            kind=INSTA_MARKET_BASKET_KIND,
+            split_with_path=str(
+                PROJECT_ROOT
+                / "sample_data"
+                / "insta_market_basket"
+                / "instacart_marked_target_with_split.parquet"
+            ),
+            split_train_path=str(
+                PROJECT_ROOT
+                / "sample_data"
+                / "insta_market_basket"
+                / "instacart_marked_target_train.parquet"
+            ),
+            split_validation_path=str(
+                PROJECT_ROOT
+                / "sample_data"
+                / "insta_market_basket"
+                / "instacart_marked_target_validation.parquet"
+            ),
+            split_test_path=str(
+                PROJECT_ROOT
+                / "sample_data"
+                / "insta_market_basket"
+                / "instacart_marked_target_test.parquet"
+            ),
+            split_manifest_path=str(
+                PROJECT_ROOT
+                / "sample_data"
+                / "insta_market_basket"
+                / "instacart_marked_target_split_manifest.json"
+            ),
         ),
     ]
 
 
 def default_titan_candidates() -> list[TitanCandidate]:
     """
-    Curated preset search space for TitanTPP.
+    Backward-compatible access to the shared TitanTPP candidate registry.
 
-    Instead of a huge cartesian product, we start with a compact but diverse
-    preset family. This keeps the search tractable while still varying the most
-    important Titan dimensions and LMM usage.
+    New experiment code should import `default_titan_candidates` from
+    `simple_lab_test.search.common.models`. This wrapper keeps older scripts
+    and notebooks working while the project moves model candidates into the
+    model registry.
     """
+    from simple_lab_test.search.common.models import default_titan_candidates as _default_titan_candidates
 
-    return [
-        TitanCandidate(
-            name="small_no_lmm",
-            d_model=64,
-            n_layers=2,
-            n_heads=4,
-            d_ff=128,
-            dropout=0.1,
-            contextual_mem_size=16,
-            persistent_mem_size=16,
-            use_lmm=False,
-            mem_size=64,
-            mem_topk=4,
-        ),
-        TitanCandidate(
-            name="small_lmm",
-            d_model=64,
-            n_layers=2,
-            n_heads=4,
-            d_ff=128,
-            dropout=0.1,
-            contextual_mem_size=16,
-            persistent_mem_size=16,
-            use_lmm=True,
-            mem_size=64,
-            mem_topk=4,
-        ),
-        TitanCandidate(
-            name="small_deep_lmm",
-            d_model=64,
-            n_layers=3,
-            n_heads=4,
-            d_ff=256,
-            dropout=0.1,
-            contextual_mem_size=16,
-            persistent_mem_size=16,
-            use_lmm=True,
-            mem_size=64,
-            mem_topk=4,
-        ),
-        TitanCandidate(
-            name="mid_no_lmm",
-            d_model=128,
-            n_layers=2,
-            n_heads=4,
-            d_ff=256,
-            dropout=0.1,
-            contextual_mem_size=32,
-            persistent_mem_size=32,
-            use_lmm=False,
-            mem_size=128,
-            mem_topk=8,
-        ),
-        TitanCandidate(
-            name="mid_lmm",
-            d_model=128,
-            n_layers=2,
-            n_heads=4,
-            d_ff=256,
-            dropout=0.1,
-            contextual_mem_size=32,
-            persistent_mem_size=32,
-            use_lmm=True,
-            mem_size=128,
-            mem_topk=8,
-        ),
-        TitanCandidate(
-            name="mid_deep_lmm",
-            d_model=128,
-            n_layers=3,
-            n_heads=8,
-            d_ff=512,
-            dropout=0.1,
-            contextual_mem_size=32,
-            persistent_mem_size=32,
-            use_lmm=True,
-            mem_size=128,
-            mem_topk=8,
-        ),
-        TitanCandidate(
-            name="mid_dropout_lmm",
-            d_model=128,
-            n_layers=2,
-            n_heads=4,
-            d_ff=256,
-            dropout=0.2,
-            contextual_mem_size=32,
-            persistent_mem_size=32,
-            use_lmm=True,
-            mem_size=128,
-            mem_topk=8,
-        ),
-    ]
+    return _default_titan_candidates()
 
 
 # ---------------------------------------------------------------------------
@@ -472,13 +438,16 @@ def dataset_variant_key(spec: DatasetSpec) -> str:
             return "parts_all"
         return f"parts_{spec.max_series}"
 
-    grid_label = sanitize_float_label(spec.yellow_grid_size_deg)
-    series_label = "all" if spec.max_series is None else str(spec.max_series)
-    return (
-        f"vendor_{spec.yellow_vendor}_grid_{grid_label}"
-        f"_minweeks_{spec.yellow_min_active_weeks}"
-        f"_entities_{series_label}"
-    )
+    if spec.kind == INSTA_MARKET_BASKET_KIND:
+        if spec.max_series is None:
+            return "users_all"
+        return f"users_{spec.max_series}"
+
+    if spec.kind == YELLOW_TRIP_HOURLY_KIND:
+        series_label = "all" if spec.max_series is None else str(spec.max_series)
+        return f"hourly_events_entities_{series_label}"
+
+    raise ValueError(f"Unsupported dataset kind for cache key: {spec.kind}")
 
 
 def filter_top_series(raw_df: pl.DataFrame, *, key_col: str, max_series: Optional[int]) -> pl.DataFrame:
@@ -562,99 +531,56 @@ def prepare_marked_target_events(
     return marked_df.sort(["oper_part_no", "seq"])
 
 
-def prepare_yellow_trip_events(spec: DatasetSpec) -> pl.DataFrame:
+def prepare_yellow_trip_hourly_events(spec: DatasetSpec) -> pl.DataFrame:
     """
-    Convert raw taxi trips into weekly event-count sequences.
+    Load the preprocessed hourly yellow-trip event table.
 
-    We spatially bucket pickups into grid cells, count weekly demand per grid
-    cell, and then map those counts into the common event-table schema used by
-    RMTPP/TitanTPP training.
+    The raw pickup-log aggregation is intentionally performed in
+    `simple_lab_test/notebooks/preprocessing/yellow_trip.ipynb`. Keeping this loader thin makes the
+    experiment code easier to explain: it consumes an event table, then rebuilds
+    magnitude marks and residuals from `demand_qty` exactly like the other
+    datasets.
     """
-    raw_df = pl.read_parquet(spec.parquet_path)
+    required_columns = {"oper_part_no", "demand_dt", "seq", "demand_qty"}
+    event_df = pl.read_parquet(spec.parquet_path)
+    missing = sorted(required_columns - set(event_df.columns))
+    if missing:
+        raise ValueError(
+            "yellow_trip_hourly.parquet is missing required columns: "
+            f"{missing}. Regenerate it with simple_lab_test/notebooks/preprocessing/yellow_trip.ipynb."
+        )
 
-    if spec.yellow_vendor in (1, 2):
-        raw_df = raw_df.filter(pl.col("VendorID") == int(spec.yellow_vendor))
-
-    weekly = (
-        raw_df.with_columns([
-            pl.col("tpep_pickup_datetime")
-            .str.strptime(pl.Datetime, strict=False)
-            .alias("pickup_dt"),
-            pl.col("pickup_longitude").cast(pl.Float64).alias("pickup_lon"),
-            pl.col("pickup_latitude").cast(pl.Float64).alias("pickup_lat"),
+    event_df = (
+        event_df.select([
+            pl.col("oper_part_no").cast(pl.String),
+            pl.col("demand_dt").cast(pl.Int64),
+            pl.col("seq").cast(pl.Int64),
+            pl.col("demand_qty").cast(pl.Float64),
         ])
-        .filter(
-            pl.col("pickup_dt").is_not_null()
-            & pl.col("pickup_lon").is_not_null()
-            & pl.col("pickup_lat").is_not_null()
-            & pl.col("pickup_lon").is_between(spec.yellow_min_lon, spec.yellow_max_lon)
-            & pl.col("pickup_lat").is_between(spec.yellow_min_lat, spec.yellow_max_lat)
-        )
-        .with_columns([
-            (pl.col("pickup_lon") / spec.yellow_grid_size_deg).floor().cast(pl.Int64).alias("gx"),
-            (pl.col("pickup_lat") / spec.yellow_grid_size_deg).floor().cast(pl.Int64).alias("gy"),
-            pl.col("pickup_dt").dt.truncate("1w").alias("week_start"),
-        ])
-        .with_columns(
-            (pl.col("gx").cast(pl.String) + pl.lit("_") + pl.col("gy").cast(pl.String)).alias("oper_part_no")
-        )
-        .group_by(["oper_part_no", "week_start"], maintain_order=True)
-        .agg(pl.len().cast(pl.Float64).alias("demand_qty"))
-    )
-
-    week_map = (
-        weekly.select("week_start")
-        .unique()
-        .sort("week_start")
-        .with_row_index("seq", offset=1)
-        .with_columns(
-            pl.col("week_start").dt.strftime("%Y%m%d").cast(pl.Int64).alias("demand_dt")
-        )
-    )
-
-    weekly = (
-        weekly.join(week_map, on="week_start", how="left")
-        .select(["oper_part_no", "demand_dt", "seq", "demand_qty"])
+        .filter(pl.col("demand_qty") > 0)
         .sort(["oper_part_no", "seq"])
     )
+    return filter_top_series(event_df, key_col="oper_part_no", max_series=spec.max_series)
 
-    series_stats = (
-        weekly.group_by("oper_part_no")
-        .agg([
-            pl.len().alias("active_weeks"),
-            pl.col("demand_qty").sum().alias("total_demand"),
-        ])
-        .sort(["active_weeks", "total_demand"], descending=[True, True])
-    )
 
-    if series_stats.height == 0:
-        raise ValueError(
-            "yellow_trip preprocessing produced no valid weekly entities. "
-            "Please check the coordinate/time filters."
-        )
+def prepare_insta_market_basket_events(spec: DatasetSpec) -> pl.DataFrame:
+    """
+    Load the Instacart-derived basket-count demand table.
 
-    max_active_weeks = int(series_stats.select(pl.col("active_weeks").max()).item())
-    requested_min_active_weeks = int(spec.yellow_min_active_weeks)
-    effective_min_active_weeks = min(requested_min_active_weeks, max_active_weeks)
-
-    if requested_min_active_weeks > max_active_weeks:
-        print(
-            "[yellow_trip][WARN] "
-            f"requested yellow_min_active_weeks={requested_min_active_weeks} "
-            f"but max active weeks in this parquet is only {max_active_weeks}. "
-            f"Falling back to effective_min_active_weeks={effective_min_active_weeks}."
-        )
-
-    eligible_series = (
-        series_stats
-        .filter(pl.col("active_weeks") >= effective_min_active_weeks)
-    )
-
-    if spec.max_series is not None:
-        eligible_series = eligible_series.head(spec.max_series)
-
-    weekly = weekly.join(eligible_series.select("oper_part_no"), on="oper_part_no", how="inner")
-    return weekly.sort(["oper_part_no", "seq"])
+    The preprocessing notebook writes multiple Instacart artifacts. The
+    training path intentionally uses `instacart_marked_target_df.parquet`
+    because it has the same core event columns as the head-office target table.
+    We only keep the raw quantity/time columns here; the downstream magnitude
+    pipeline rebuilds `mark` and `scale_residual` from `demand_qty` so the
+    experiment stays aligned with the magnitude-factorized TPP formulation.
+    """
+    raw_df = pl.read_parquet(spec.parquet_path).select([
+        "oper_part_no",
+        "demand_dt",
+        "seq",
+        "demand_qty",
+    ])
+    return filter_top_series(raw_df, key_col="oper_part_no", max_series=spec.max_series)
 
 
 def prepare_raw_events(spec: DatasetSpec) -> pl.DataFrame:
@@ -665,8 +591,10 @@ def prepare_raw_events(spec: DatasetSpec) -> pl.DataFrame:
         return prepare_marked_target_events(spec)
     if spec.kind == "intermittent":
         return prepare_intermittent_events(spec)
-    if spec.kind == "yellow_trip":
-        return prepare_yellow_trip_events(spec)
+    if spec.kind == YELLOW_TRIP_HOURLY_KIND:
+        return prepare_yellow_trip_hourly_events(spec)
+    if spec.kind == INSTA_MARKET_BASKET_KIND:
+        return prepare_insta_market_basket_events(spec)
     raise ValueError(f"Unsupported dataset kind: {spec.kind}")
 
 
@@ -724,6 +652,153 @@ def build_premarked_target_meta(
         "marked_distribution_path": str(marked_dist_path),
         "premarked": True,
     }
+
+
+def fixed_split_available(spec: DatasetSpec) -> bool:
+    """
+    Return whether a dataset spec has the precomputed split artifacts needed for
+    final train/validation/test experiments.
+    """
+    required_paths = [
+        spec.split_with_path,
+        spec.split_train_path,
+        spec.split_validation_path,
+        spec.split_test_path,
+        spec.split_manifest_path,
+    ]
+    return all(path is not None and Path(path).exists() for path in required_paths)
+
+
+def prepare_fixed_split_marked_dataset(
+    spec: DatasetSpec,
+    scale_base: float,
+    search_cfg: SearchConfig,
+    logger: logging.Logger,
+) -> tuple[pl.DataFrame, dict[str, Any], Path]:
+    """
+    Load the precomputed train/validation/test event table for final evaluation.
+
+    The split notebooks fit magnitude marks on train rows only, then write a
+    single `*_with_split.parquet` file with a `chronological_split` target label.
+    We keep that one table intact because validation/test targets should still
+    condition on the earlier observed train history.
+    """
+    if not fixed_split_available(spec):
+        raise FileNotFoundError(
+            f"Dataset={spec.name} does not have complete fixed-split artifacts. "
+            "Run the preprocessing split notebook before using --split-mode fixed."
+        )
+
+    cache_root = ensure_dir(Path(search_cfg.base_dir) / "cache" / spec.name / "fixed_split")
+    marked_cache_path = cache_root / f"marked_fixed_base_{sanitize_float_label(scale_base)}.parquet"
+    meta_json_path = cache_root / f"meta_fixed_base_{sanitize_float_label(scale_base)}.json"
+    raw_dist_path = cache_root / f"raw_dist_fixed_base_{sanitize_float_label(scale_base)}.parquet"
+    marked_dist_path = cache_root / f"marked_dist_fixed_base_{sanitize_float_label(scale_base)}.parquet"
+
+    if marked_cache_path.exists() and meta_json_path.exists() and not search_cfg.force_rerun:
+        marked_df = pl.read_parquet(marked_cache_path)
+        with open(meta_json_path, "r", encoding="utf-8") as f:
+            meta = json.load(f)
+        return marked_df, meta, cache_root
+
+    assert spec.split_manifest_path is not None
+    assert spec.split_with_path is not None
+    with open(spec.split_manifest_path, "r", encoding="utf-8") as f:
+        split_manifest = json.load(f)
+
+    manifest_base = float(split_manifest["magnitude_rule"]["scale_base"])
+    if abs(float(scale_base) - manifest_base) > 1e-9:
+        raise ValueError(
+            f"Fixed split for dataset={spec.name} was created with scale_base={manifest_base}, "
+            f"but the requested profile uses scale_base={scale_base}. Rebuild splits or use a matching profile."
+        )
+
+    required_columns = {
+        "oper_part_no",
+        "demand_dt",
+        "seq",
+        "delta_t",
+        "demand_qty",
+        "mark",
+        "scale_residual",
+        "chronological_split",
+    }
+    marked_df = pl.read_parquet(spec.split_with_path)
+    missing = sorted(required_columns - set(marked_df.columns))
+    if missing:
+        raise ValueError(f"Fixed split file for dataset={spec.name} is missing columns: {missing}")
+
+    marked_df = filter_top_series(marked_df, key_col="oper_part_no", max_series=spec.max_series)
+    marked_df = marked_df.sort(["oper_part_no", "seq"])
+
+    # Use the actually loaded mark range so optional max-series subsets keep the
+    # model PAD id aligned with the DataLoader's observed vocabulary.
+    max_order = int(marked_df.select(pl.col("mark").max()).item())
+    min_order = int(marked_df.select(pl.col("mark").min()).item())
+    distribution = (
+        marked_df.group_by("mark")
+        .agg(pl.len().alias("count"))
+        .sort("mark")
+        .with_columns((pl.col("count") / pl.col("count").sum()).alias("ratio"))
+    )
+    split_counts = (
+        marked_df.group_by("chronological_split")
+        .agg([
+            pl.len().alias("rows"),
+            pl.col("oper_part_no").n_unique().alias("series"),
+            pl.col("demand_qty").median().alias("qty_median"),
+            pl.col("demand_qty").quantile(0.95).alias("qty_p95"),
+            pl.col("demand_qty").max().alias("qty_max"),
+        ])
+        .sort("chronological_split")
+    )
+    split_mark_counts = (
+        marked_df.group_by(["chronological_split", "mark"])
+        .agg(pl.len().alias("rows"))
+        .sort(["chronological_split", "mark"])
+    )
+
+    distribution.write_parquet(marked_dist_path)
+    distribution.write_parquet(raw_dist_path)
+    marked_df.write_parquet(marked_cache_path)
+
+    residual_max = float(marked_df.select(pl.col("scale_residual").max()).item())
+    if residual_max > 1.0 and search_cfg.value_head_activation == "sigmoid":
+        logger.warning(
+            "Fixed split dataset=%s has scale_residual max %.4f, but value_head_activation=sigmoid. "
+            "Tail-merged quantities above residual=1 may be underfit; consider --value-head-activation identity.",
+            spec.name,
+            residual_max,
+        )
+
+    meta = {
+        "scale_base": float(scale_base),
+        "min_order": min_order,
+        "max_order": max_order,
+        "num_marks": max_order + 2,
+        "dataset_name": spec.name,
+        "dataset_kind": spec.kind,
+        "source_path": spec.split_with_path,
+        "raw_rows": int(marked_df.height),
+        "series_count": int(marked_df["oper_part_no"].n_unique()),
+        "raw_distribution_path": str(raw_dist_path),
+        "marked_distribution_path": str(marked_dist_path),
+        "premarked": True,
+        "split_mode": "fixed",
+        "split_manifest_path": spec.split_manifest_path,
+        "split_artifacts": {
+            "with_split": spec.split_with_path,
+            "train": spec.split_train_path,
+            "validation": spec.split_validation_path,
+            "test": spec.split_test_path,
+        },
+        "split_counts": split_counts.to_dicts(),
+        "split_mark_counts": split_mark_counts.to_dicts(),
+        "scale_residual_min": float(marked_df.select(pl.col("scale_residual").min()).item()),
+        "scale_residual_max": residual_max,
+    }
+    save_json(meta, meta_json_path)
+    return marked_df, meta, cache_root
 
 
 def prepare_marked_dataset(
@@ -881,6 +956,11 @@ def build_titan_config(search_cfg: SearchConfig, candidate: TitanCandidate) -> T
     """
     Expand a compact Titan candidate preset into the full model config.
     """
+    memory_mode = normalize_titan_memory_mode(candidate)
+    uses_contextual_memory = memory_mode in {"contextual_ttm", "hybrid_lmm_ttm"}
+    uses_static_attention_memory = memory_mode == "static_lmm"
+    uses_lmm = memory_mode in {"static_lmm", "series_lmm", "hybrid_lmm_ttm"}
+
     return TitanConfig(
         lookback=search_cfg.lookback_weeks,
         horizon=27,
@@ -889,15 +969,44 @@ def build_titan_config(search_cfg: SearchConfig, candidate: TitanCandidate) -> T
         n_heads=candidate.n_heads,
         d_ff=candidate.d_ff,
         dropout=candidate.dropout,
-        contextual_mem_size=candidate.contextual_mem_size,
-        persistent_mem_size=candidate.persistent_mem_size,
+        memory_mode=memory_mode,
+        contextual_mem_size=candidate.contextual_mem_size if uses_contextual_memory else 0,
+        persistent_mem_size=candidate.persistent_mem_size if uses_static_attention_memory else 0,
+        use_context_update=uses_contextual_memory,
         use_pos_emb=candidate.use_pos_emb,
         max_len=search_cfg.max_seq_len,
-        use_lmm=candidate.use_lmm,
+        use_lmm=uses_lmm,
         mem_size=candidate.mem_size,
         mem_topk=candidate.mem_topk,
         use_causal=candidate.use_causal,
     )
+
+
+def normalize_titan_memory_mode(candidate: TitanCandidate) -> str:
+    """
+    Resolve the memory mode stored in a candidate preset.
+
+    Legacy presets used only `use_lmm`; `memory_mode="auto"` keeps those
+    names runnable while newer presets expose the memory mechanism directly.
+    """
+    raw_mode = str(getattr(candidate, "memory_mode", "auto") or "auto").strip().lower()
+    if raw_mode == "auto":
+        return "static_lmm" if bool(candidate.use_lmm) else "none"
+
+    aliases = {
+        "no_memory": "none",
+        "no_lmm": "none",
+        "lmm": "static_lmm",
+        "ttm": "contextual_ttm",
+        "contextual": "contextual_ttm",
+        "hybrid": "hybrid_lmm_ttm",
+    }
+    mode = aliases.get(raw_mode, raw_mode)
+    valid_modes = {"none", "static_lmm", "contextual_ttm", "series_lmm", "hybrid_lmm_ttm"}
+    if mode not in valid_modes:
+        available = ", ".join(sorted(valid_modes))
+        raise ValueError(f"Unsupported TitanCandidate memory_mode='{raw_mode}'. Available: {available}")
+    return mode
 
 
 def summarize_history(history: list[dict[str, Any]]) -> dict[str, Any]:
@@ -1298,10 +1407,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--datasets",
-        default="intermittent,yellow_trip",
+        default="intermittent,yellow_trip_hourly",
         help=(
-            "Comma-separated dataset names to run. Available: intermittent,yellow_trip. "
-            "The intermittent label loads sample_data/marked_target_df.parquet."
+            "Comma-separated dataset names to run. Available: "
+            "intermittent,yellow_trip_hourly,insta_market_basket. "
+            "yellow_trip_hourly must be generated by the preprocessing notebook first. "
+            "The intermittent label loads sample_data/head_office/marked_target_df.parquet."
         ),
     )
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
@@ -1332,7 +1443,7 @@ def main() -> None:
             continue
         if spec.name == "intermittent":
             spec = DatasetSpec(**{**asdict(spec), "max_series": args.intermittent_max_series})
-        elif spec.name == "yellow_trip":
+        elif spec.name == "yellow_trip_hourly":
             spec = DatasetSpec(**{**asdict(spec), "max_series": args.yellow_max_series})
         dataset_specs.append(spec)
 
@@ -1472,7 +1583,3 @@ def main() -> None:
     )
 
     logger.info("Stage 2 complete. Best overall combo:\n%s", stage2_combo_df.head(1))
-
-
-if __name__ == "__main__":
-    main()

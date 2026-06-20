@@ -9,9 +9,9 @@ which covers:
 3. best-validation-NLL checkpointing
 4. scale-wise quantity error reporting
 
-The legacy mode implementations now live under `simple_lab_test.search.common`
-so the project exposes one user-facing experiment command while we continue to
-deduplicate internals safely.
+Auxiliary modes live under `simple_lab_test.search.common.modes`, so the
+project exposes one user-facing experiment command while shared internals stay
+easy to reuse.
 """
 
 from __future__ import annotations
@@ -67,7 +67,6 @@ ALLOWED_MODELS = {"rmtpp", "titantpp", "thp"}
 LEGACY_MODULE_BY_COMMAND = {
     "overfit": "simple_lab_test.search.common.modes.overfit",
     "qty-ablation": "simple_lab_test.search.common.modes.qty_loss_ablation",
-    "yellow-resolution": "simple_lab_test.search.common.modes.yellow_trip_resolution",
 }
 
 
@@ -119,8 +118,12 @@ def add_shared_long_epoch_args(parser: argparse.ArgumentParser) -> None:
     )
     parser.add_argument(
         "--datasets",
-        default="intermittent,yellow_trip",
-        help="Comma-separated dataset names. Currently: intermittent,yellow_trip.",
+        default="intermittent,yellow_trip_hourly",
+        help=(
+            "Comma-separated dataset names. Supported in long-epoch mode: "
+            "intermittent,yellow_trip_hourly,insta_market_basket. "
+            "Run simple_lab_test/notebooks/preprocessing/yellow_trip.ipynb before using yellow_trip_hourly."
+        ),
     )
     parser.add_argument(
         "--models",
@@ -152,6 +155,12 @@ def add_shared_long_epoch_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--max-seq-len", type=int, default=defaults.max_seq_len)
     parser.add_argument("--intermittent-max-series", type=int, default=None)
     parser.add_argument("--yellow-max-series", type=int, default=None)
+    parser.add_argument(
+        "--insta-max-series",
+        type=int,
+        default=None,
+        help="Optional number of top Instacart user series to keep. Omit for all eligible users.",
+    )
     parser.add_argument("--rmtpp-rnn-type", default=defaults.rmtpp_rnn_type, choices=["rnn", "gru", "lstm"])
     parser.add_argument("--rmtpp-mark-emb-dim", type=int, default=defaults.rmtpp_mark_emb_dim)
     parser.add_argument(
@@ -161,10 +170,37 @@ def add_shared_long_epoch_args(parser: argparse.ArgumentParser) -> None:
         help="Optional fixed RMTPP decoder hidden size. Use 0 to mirror the active candidate d_model.",
     )
     parser.add_argument(
+        "--split-mode",
+        default=defaults.split_mode,
+        choices=["internal", "fixed"],
+        help=(
+            "internal: rebuild the legacy train/validation split from one event table. "
+            "fixed: consume *_with_split.parquet and keep test held out for final evaluation."
+        ),
+    )
+    parser.add_argument(
+        "--value-head-activation",
+        default=defaults.value_head_activation,
+        choices=["sigmoid", "identity"],
+        help=(
+            "Activation for residual/scale value head. Use identity when tail-order "
+            "merging can produce scale_residual values above 1."
+        ),
+    )
+    parser.add_argument(
         "--loss-mode",
         default=defaults.loss_mode,
         choices=["residual_only", "hybrid", "qty_only"],
         help="TPP quantity objective. Main paper runs should usually keep residual_only.",
+    )
+    parser.add_argument(
+        "--test-time-memory",
+        default=defaults.test_time_memory,
+        choices=["none", "contextual"],
+        help=(
+            "Optional TitanTPP TTM-Lite evaluation. 'contextual' keeps a "
+            "series-wise online contextual memory during validation/test metric export."
+        ),
     )
     parser.add_argument("--analysis-scale-base", type=float, default=defaults.analysis_scale_base)
     parser.add_argument(
@@ -245,10 +281,14 @@ def build_long_epoch_config(args: argparse.Namespace) -> ExperimentConfig:
         max_seq_len=int(args.max_seq_len),
         intermittent_max_series=_parse_optional_positive_int(args.intermittent_max_series),
         yellow_max_series=_parse_optional_positive_int(args.yellow_max_series),
+        insta_max_series=_parse_optional_positive_int(args.insta_max_series),
+        split_mode=args.split_mode,
         rmtpp_rnn_type=args.rmtpp_rnn_type,
         rmtpp_mark_emb_dim=int(args.rmtpp_mark_emb_dim),
         rmtpp_hidden_dim=_parse_optional_positive_int(args.rmtpp_hidden_dim),
+        value_head_activation=args.value_head_activation,
         loss_mode=args.loss_mode,
+        test_time_memory=args.test_time_memory,
         analysis_scale_base=float(args.analysis_scale_base),
         analysis_tail_order=int(args.analysis_tail_order),
         eval_selections=_csv_tuple(args.eval_selections),
@@ -278,15 +318,15 @@ def build_parser() -> argparse.ArgumentParser:
     )
     add_model_test_args(model_test_parser)
 
-    # Temporary migration bridge: these commands now live under common/modes
-    # while we move their internals into shared utilities one mode at a time.
-    for command in ("overfit", "qty-ablation", "yellow-resolution"):
-        legacy_parser = subparsers.add_parser(
+    # Auxiliary experiment modes live under common/modes and are dispatched
+    # through the unified CLI so users do not need separate root scripts.
+    for command in ("overfit", "qty-ablation"):
+        mode_parser = subparsers.add_parser(
             command,
             add_help=False,
-            help=f"Temporary passthrough to the legacy {command} runner.",
+            help=f"Run the {command} experiment mode.",
         )
-        legacy_parser.add_argument("legacy_args", nargs=argparse.REMAINDER)
+        mode_parser.add_argument("mode_args", nargs=argparse.REMAINDER)
 
     return parser
 
@@ -328,12 +368,12 @@ def main() -> None:
 
     if args.command in LEGACY_MODULE_BY_COMMAND:
         module_name = LEGACY_MODULE_BY_COMMAND[args.command]
-        # Keep passthrough explicit in logs so unified-vs-mode execution is easy
-        # to distinguish when reviewing remote terminal output later.
+        # Keep delegation explicit in logs so mode execution is easy to
+        # distinguish when reviewing remote terminal output later.
         print(f"[tpp_experiment] Delegating '{args.command}' to {module_name}", flush=True)
         # `argparse.REMAINDER` and `parse_known_args` can reorder unknown
-        # option/value pairs. The legacy mode parsers expect original argv
-        # order, so slice it directly from the selected subcommand.
+        # option/value pairs. The mode parsers expect original argv order, so
+        # slice it directly from the selected subcommand.
         command_idx = sys.argv.index(args.command)
         passthrough_args = sys.argv[command_idx + 1:]
         module = importlib.import_module(module_name)

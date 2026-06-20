@@ -68,18 +68,18 @@ from simple_lab_test.common.pathing import ensure_project_root_on_path
 
 PROJECT_ROOT = ensure_project_root_on_path(THIS_FILE)
 
-from simple_lab_test.search.titan_hparam_search import (
+from simple_lab_test.search.common.models import default_titan_candidates
+from simple_lab_test.search.common.experiment_utils import (
     MARKED_TARGET_MAX_SEQ_LEN,
     MARKED_TARGET_TITAN_CANDIDATES,
     TitanCandidate,
     build_logger,
-    default_titan_candidates,
     ensure_dir,
     is_marked_target_kind,
     save_json,
     to_jsonable,
 )
-from simple_lab_test.search.titan_rmtpp_ab_test import (
+from simple_lab_test.search.common.benchmark_utils import (
     build_marked_cache,
     default_profile_map,
     find_candidate_by_name,
@@ -158,7 +158,7 @@ def apply_experiment_preset(args: argparse.Namespace) -> argparse.Namespace:
             "base_dir",
             str(PROJECT_ROOT / "search_artifacts" / "tpp_overfit_yellow_trip_full_long"),
         )
-        set_preset_default(args, "--datasets", "datasets", "yellow_trip")
+        set_preset_default(args, "--datasets", "datasets", "yellow_trip_hourly")
         set_preset_default(args, "--epochs", "epochs", 300)
         set_preset_default(args, "--lr", "lr", 1e-3)
         set_preset_default(args, "--max-seq-lens", "max_seq_lens", "250")
@@ -176,7 +176,7 @@ def apply_experiment_preset(args: argparse.Namespace) -> argparse.Namespace:
             "base_dir",
             str(PROJECT_ROOT / "search_artifacts" / "tpp_overfit_yellow_trip_subset_stress"),
         )
-        set_preset_default(args, "--datasets", "datasets", "yellow_trip")
+        set_preset_default(args, "--datasets", "datasets", "yellow_trip_hourly")
         set_preset_default(args, "--epochs", "epochs", 300)
         set_preset_default(args, "--lr", "lr", 1e-3)
         set_preset_default(args, "--yellow-max-series", "yellow_max_series", 120)
@@ -306,6 +306,8 @@ def load_overfit_histories(run_rows: list[dict[str, Any]]) -> pl.DataFrame:
                 "train_loss": float(epoch_row["train_loss"]),
                 "score": float(epoch_row["score"]),
                 "val_nll": float(epoch_row["val_nll"]),
+                "val_nll_marker": float(epoch_row.get("val_nll_marker", float("nan"))),
+                "val_nll_time": float(epoch_row.get("val_nll_time", float("nan"))),
                 "qty_mae": float(epoch_row["qty_mae"]),
                 "dt_mae": float(epoch_row["dt_mae"]),
                 "mark_acc": float(epoch_row["mark_acc"]),
@@ -376,7 +378,7 @@ def build_overfit_tables(
 
 def save_overfit_curve_plots(history_df: pl.DataFrame, plots_dir: Path) -> None:
     """
-    Plot train loss and validation NLL by configuration.
+    Plot train loss and decomposed validation NLL by configuration.
     """
     if history_df.height == 0:
         return
@@ -391,7 +393,10 @@ def save_overfit_curve_plots(history_df: pl.DataFrame, plots_dir: Path) -> None:
             if model_df.height == 0:
                 continue
 
-            fig, axes = plt.subplots(1, 2, figsize=(16, 5))
+            # The split NLL curves reveal whether overfitting or continued
+            # learning is driven by mark prediction or event-time likelihood.
+            fig, axes = plt.subplots(2, 2, figsize=(16, 9))
+            axes_flat = axes.flatten()
             for config_id in model_df["config_id"].unique().to_list():
                 config_df = (
                     model_df.filter(pl.col("config_id") == config_id)
@@ -399,17 +404,23 @@ def save_overfit_curve_plots(history_df: pl.DataFrame, plots_dir: Path) -> None:
                     .agg([
                         pl.mean("train_loss").alias("train_loss"),
                         pl.mean("val_nll").alias("val_nll"),
+                        pl.mean("val_nll_marker").alias("val_nll_marker"),
+                        pl.mean("val_nll_time").alias("val_nll_time"),
                     ])
                     .sort("epoch")
                 )
                 epochs = config_df["epoch"].to_list()
                 short_label = str(config_id).replace("rmtpp_", "").replace("titan_", "")
-                axes[0].plot(epochs, config_df["train_loss"].to_list(), label=short_label, linewidth=1.8)
-                axes[1].plot(epochs, config_df["val_nll"].to_list(), label=short_label, linewidth=1.8)
+                axes_flat[0].plot(epochs, config_df["train_loss"].to_list(), label=short_label, linewidth=1.8)
+                axes_flat[1].plot(epochs, config_df["val_nll"].to_list(), label=short_label, linewidth=1.8)
+                axes_flat[2].plot(epochs, config_df["val_nll_marker"].to_list(), label=short_label, linewidth=1.8)
+                axes_flat[3].plot(epochs, config_df["val_nll_time"].to_list(), label=short_label, linewidth=1.8)
 
-            axes[0].set_title("Train Loss")
-            axes[1].set_title("Validation NLL")
-            for ax in axes:
+            axes_flat[0].set_title("Train Loss")
+            axes_flat[1].set_title("Validation NLL")
+            axes_flat[2].set_title("Validation Marker NLL")
+            axes_flat[3].set_title("Validation Time NLL")
+            for ax in axes_flat:
                 ax.set_xlabel("Epoch")
                 ax.grid(alpha=0.25)
                 ax.legend(fontsize=7)
@@ -484,7 +495,7 @@ def parse_args() -> argparse.Namespace:
             "a smaller yellow-trip subset."
         ),
     )
-    parser.add_argument("--datasets", default="intermittent,yellow_trip")
+    parser.add_argument("--datasets", default="intermittent,yellow_trip_hourly")
     parser.add_argument("--models", default="rmtpp,titantpp")
     parser.add_argument("--titan-profile", default="dataset_best", choices=["dataset_best", "overall", "score_priority"])
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")

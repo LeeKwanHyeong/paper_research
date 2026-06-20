@@ -7,7 +7,7 @@ Why this script exists:
 3. split quantity MAE by true demand scale so extreme quantities do not hide
    performance on small and medium demand events
 
-This is intentionally separate from `titan_rmtpp_ab_test.py`. The existing
+This is intentionally separate from the benchmark helper module. The existing
 A/B runner remains the main 30-epoch benchmark, while this file is a follow-up
 validation runner for the professor's convergence and scale-error questions.
 """
@@ -63,7 +63,8 @@ PROJECT_ROOT = ensure_project_root_on_path(THIS_FILE)
 from models.RMTPPs.RMTPP import RMTPP
 from models.RMTPPs.TitanTPP import TitanTPP
 from models.RMTPPs.config import RMTPPConfig
-from simple_lab_test.search.titan_hparam_search import (
+from simple_lab_test.search.common.models import default_titan_candidates
+from simple_lab_test.search.common.experiment_utils import (
     DatasetSpec,
     SearchConfig,
     TitanCandidate,
@@ -71,14 +72,13 @@ from simple_lab_test.search.titan_hparam_search import (
     build_rmtpp_config,
     build_titan_config,
     build_training_config,
-    default_titan_candidates,
     ensure_dir,
     save_json,
     sanitize_float_label,
     tee_training_output,
     to_jsonable,
 )
-from simple_lab_test.search.titan_rmtpp_ab_test import (
+from simple_lab_test.search.common.benchmark_utils import (
     build_marked_cache,
     default_profile_map,
     find_candidate_by_name,
@@ -1392,8 +1392,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--datasets",
-        default="intermittent,yellow_trip",
-        help="Comma-separated dataset names to evaluate.",
+        default="intermittent,yellow_trip_hourly",
+        help=(
+            "Comma-separated dataset names to evaluate. Use yellow_trip_hourly "
+            "after simple_lab_test/notebooks/preprocessing/yellow_trip.ipynb."
+        ),
     )
     parser.add_argument(
         "--titan-profile",

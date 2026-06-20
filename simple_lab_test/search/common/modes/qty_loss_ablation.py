@@ -76,7 +76,8 @@ PROJECT_ROOT = ensure_project_root_on_path(THIS_FILE)
 from models.RMTPPs.RMTPP import RMTPP
 from models.RMTPPs.TitanTPP import TitanTPP
 from models.RMTPPs.config import RMTPPConfig
-from simple_lab_test.search.titan_hparam_search import (
+from simple_lab_test.search.common.models import default_titan_candidates
+from simple_lab_test.search.common.experiment_utils import (
     DatasetSpec,
     SearchConfig,
     TitanCandidate,
@@ -85,7 +86,6 @@ from simple_lab_test.search.titan_hparam_search import (
     build_titan_config,
     build_training_config,
     default_dataset_specs,
-    default_titan_candidates,
     ensure_dir,
     prepare_marked_dataset,
     sanitize_float_label,
@@ -104,17 +104,20 @@ from utils.training import eval_next_event_week_lookback, make_week_lookback_loa
 
 BEST_TITAN_BY_DATASET = {
     "intermittent": {"scale_base": 2.0, "candidate_name": "small_lmm"},
-    "yellow_trip": {"scale_base": 10.0, "candidate_name": "mid_lmm"},
+    "yellow_trip_hourly": {"scale_base": 10.0, "candidate_name": "mid_lmm"},
+    "insta_market_basket": {"scale_base": 2.0, "candidate_name": "mid_lmm"},
 }
 
 BEST_TITAN_OVERALL = {
     "intermittent": {"scale_base": 2.0, "candidate_name": "small_lmm"},
-    "yellow_trip": {"scale_base": 10.0, "candidate_name": "mid_lmm"},
+    "yellow_trip_hourly": {"scale_base": 10.0, "candidate_name": "mid_lmm"},
+    "insta_market_basket": {"scale_base": 2.0, "candidate_name": "mid_lmm"},
 }
 
 BEST_TITAN_SCORE_PRIORITY = {
     "intermittent": {"scale_base": 2.0, "candidate_name": "small_lmm"},
-    "yellow_trip": {"scale_base": 4.0, "candidate_name": "mid_deep_lmm"},
+    "yellow_trip_hourly": {"scale_base": 4.0, "candidate_name": "mid_deep_lmm"},
+    "insta_market_basket": {"scale_base": 2.0, "candidate_name": "mid_lmm"},
 }
 
 LOSS_MODE_ORDER = ["residual_only", "hybrid", "qty_only"]
@@ -154,6 +157,7 @@ class QtyAblationConfig:
     qty_scale_quantile: float = 0.95
     intermittent_max_series: int | None = None
     yellow_max_series: int | None = None
+    insta_max_series: int | None = None
     force_rerun: bool = False
     stop_on_error: bool = False
     rmtpp_rnn_type: str = "gru"
@@ -281,8 +285,10 @@ def make_dataset_specs(cfg: QtyAblationConfig, selected_names: set[str]) -> list
             continue
         if spec.name == "intermittent":
             spec = DatasetSpec(**{**asdict(spec), "max_series": cfg.intermittent_max_series})
-        elif spec.name == "yellow_trip":
+        elif spec.name == "yellow_trip_hourly":
             spec = DatasetSpec(**{**asdict(spec), "max_series": cfg.yellow_max_series})
+        elif spec.name == "insta_market_basket":
+            spec = DatasetSpec(**{**asdict(spec), "max_series": cfg.insta_max_series})
         specs.append(spec)
     return specs
 
@@ -1128,6 +1134,8 @@ def load_all_histories(run_rows: list[dict[str, Any]]) -> pl.DataFrame:
                 "epoch": int(epoch_row["epoch"]),
                 "score": float(epoch_row["score"]),
                 "val_nll": float(epoch_row["val_nll"]),
+                "val_nll_marker": float(epoch_row.get("val_nll_marker", float("nan"))),
+                "val_nll_time": float(epoch_row.get("val_nll_time", float("nan"))),
                 "qty_mae": float(epoch_row["qty_mae"]),
                 "dt_mae": float(epoch_row["dt_mae"]),
                 "mark_acc": float(epoch_row["mark_acc"]),
@@ -1144,9 +1152,13 @@ def save_learning_curve_plots(history_df: pl.DataFrame, plots_dir: Path) -> None
         return
 
     ensure_dir(plots_dir)
+    # Total NLL can move for two different reasons: mark classification or
+    # event-time likelihood. Keep both terms visible in ablation plots.
     curve_metrics = [
         ("score", "Validation Score"),
         ("val_nll", "Validation NLL"),
+        ("val_nll_marker", "Validation Marker NLL"),
+        ("val_nll_time", "Validation Time NLL"),
         ("qty_mae", "Validation Qty MAE"),
     ]
     colors = {
@@ -1162,8 +1174,13 @@ def save_learning_curve_plots(history_df: pl.DataFrame, plots_dir: Path) -> None
                 & (pl.col("model_name") == model_name)
             )
 
-            fig, axes = plt.subplots(1, len(curve_metrics), figsize=(18, 5))
-            for ax, (metric, title) in zip(axes, curve_metrics):
+            fig, axes = plt.subplots(2, 3, figsize=(18, 9))
+            axes_flat = axes.flatten()
+            for ax, (metric, title) in zip(axes_flat, curve_metrics):
+                if metric not in group_df.columns:
+                    ax.set_title(f"{title} (missing)")
+                    ax.axis("off")
+                    continue
                 for loss_mode in LOSS_MODE_ORDER:
                     mode_df = group_df.filter(pl.col("loss_mode") == loss_mode)
                     if mode_df.height == 0:
@@ -1193,6 +1210,8 @@ def save_learning_curve_plots(history_df: pl.DataFrame, plots_dir: Path) -> None
                 ax.set_xlabel("Epoch")
                 ax.grid(alpha=0.25)
                 ax.legend()
+            for ax in axes_flat[len(curve_metrics):]:
+                ax.axis("off")
 
             fig.suptitle(f"{dataset_name}: {model_name.upper()} learning curves", fontsize=14)
             fig.tight_layout(rect=(0, 0, 1, 0.96))
@@ -1265,8 +1284,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--datasets",
-        default="intermittent,yellow_trip",
-        help="Comma-separated dataset names to evaluate.",
+        default="intermittent,yellow_trip_hourly",
+        help=(
+            "Comma-separated dataset names to evaluate. Supported: "
+            "intermittent,yellow_trip_hourly,insta_market_basket. Use "
+            "yellow_trip_hourly after simple_lab_test/notebooks/preprocessing/yellow_trip.ipynb."
+        ),
     )
     parser.add_argument(
         "--models",
@@ -1305,6 +1328,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--intermittent-max-series", type=int, default=None)
     parser.add_argument("--yellow-max-series", type=int, default=None)
+    parser.add_argument("--insta-max-series", type=int, default=None)
     parser.add_argument("--force-rerun", action="store_true")
     parser.add_argument("--stop-on-error", action="store_true")
     return parser.parse_args()
@@ -1340,6 +1364,7 @@ def main() -> None:
         qty_scale_quantile=args.qty_scale_quantile,
         intermittent_max_series=args.intermittent_max_series,
         yellow_max_series=args.yellow_max_series,
+        insta_max_series=args.insta_max_series,
         force_rerun=args.force_rerun,
         stop_on_error=args.stop_on_error,
     )

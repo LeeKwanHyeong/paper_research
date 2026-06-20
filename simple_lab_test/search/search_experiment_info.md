@@ -17,16 +17,13 @@ simple_lab_test/search/
       model_test.py
       overfit.py
       qty_loss_ablation.py
-      yellow_trip_resolution.py
       long_epoch_legacy.py
-  titan_hparam_search.py
-  titan_rmtpp_ab_test.py
-  compare_log_bases_distribution.py
+  tpp_experiment.py
 ```
 
 `tpp_experiment.py`가 통합 CLI입니다. `long-epoch`는 `common/runner.py`의 공통
-runner를 사용합니다. `overfit`, `qty-ablation`, `yellow-resolution`은 기존
-실험 구현을 `common/modes/` 아래로 이동한 상태이며, 앞으로 중복 함수를
+runner를 사용합니다. `overfit`, `qty-ablation`은 기존 실험 구현을
+`common/modes/` 아래로 이동한 상태이며, 앞으로 중복 함수를
 `common/runner.py`로 더 흡수하면 됩니다.
 
 ## Model Registry
@@ -37,6 +34,7 @@ runner를 사용합니다. `overfit`, `qty-ablation`, `yellow-resolution`은 기
 | --- | --- |
 | `canonical_model_name()` | CLI alias를 내부 모델명으로 정규화 |
 | `default_thp_candidates()` | TransformerHawkesTPP preset 정의 |
+| `default_titan_candidates()` | TitanTPP preset 정의 |
 | `build_project_rmtpp_config()` | 모든 encoder family가 공유하는 decoder/time/value config 생성 |
 | `build_model()` | `rmtpp`, `titantpp`, `thp` 인스턴스 생성 |
 | `model_run_label()` | plot/report용 model label 생성 |
@@ -57,6 +55,59 @@ transformer_hawkes
 transformer_hawkes_process
 transformer_hawkes_tpp
 TransformerHawkesTPP
+```
+
+## TitanTPP Memory Modes
+
+TitanTPP는 `TitanConfig.memory_mode`를 공식 실험 축으로 사용합니다. 기존에는
+candidate 이름의 `use_lmm=True/False`로 memory 사용 여부를 간접 표현했지만, 이제
+각 run metadata에 memory mode가 직접 저장됩니다.
+
+| memory mode | 구현 내용 |
+| --- | --- |
+| `none` | attention-side memory와 LMM을 끈 pure causal Titan encoder |
+| `static_lmm` | learnable persistent/static memory와 LMM memory bank 사용 |
+| `contextual_ttm` | window 내부에서 token을 순차 처리하며 과거 token을 contextual memory로 업데이트 |
+| `series_lmm` | runner가 per-series memory를 주입할 수 있는 hook. 기본 long-epoch에서는 memory 미주입 시 fallback |
+| `hybrid_lmm_ttm` | contextual TTM path와 LMM retrieval을 함께 사용 |
+
+대표 candidate:
+
+```text
+small_no_lmm              -> memory_mode=none
+small_lmm                 -> memory_mode=static_lmm
+small_contextual_ttm      -> memory_mode=contextual_ttm
+small_hybrid_lmm_ttm      -> memory_mode=hybrid_lmm_ttm
+mid_no_lmm                -> memory_mode=none
+mid_lmm                   -> memory_mode=static_lmm
+mid_contextual_ttm        -> memory_mode=contextual_ttm
+mid_hybrid_lmm_ttm        -> memory_mode=hybrid_lmm_ttm
+```
+
+`series_lmm`은 모델 hook은 존재하지만, 현재 공통 long-epoch runner는 아직
+series-specific memory tensor를 구성해 주입하지 않습니다. 따라서 논문용 본 비교에서는
+`none`, `static_lmm`, `contextual_ttm`, `hybrid_lmm_ttm`을 우선 screening 대상으로 둡니다.
+
+## TTM-Lite Evaluation
+
+`long-epoch`는 TitanTPP에 대해 선택적 Test-Time Memory Lite 평가도 지원합니다.
+`--test-time-memory contextual`을 켜면 validation/test metric export 시 series별
+contextual memory를 reset하고, 관측된 이벤트만 online update합니다. 이 기능은
+checkpoint 추가 평가용이며, 학습 loss나 RMTPP/THP 모델 구조는 바꾸지 않습니다.
+
+```bash
+python simple_lab_test/search/tpp_experiment.py long-epoch \
+  --datasets yellow_trip_hourly \
+  --models rmtpp,titantpp,thp \
+  --test-time-memory contextual
+```
+
+결과 파일:
+
+```text
+runs/.../metrics/ttm_contextual_best_val_nll.json
+runs/.../metrics/ttm_contextual_best_val_nll.csv
+runs/.../metrics/ttm_contextual_best_val_nll.parquet
 ```
 
 ## TransformerHawkesTPP Integration
@@ -90,7 +141,7 @@ python simple_lab_test/search/tpp_experiment.py model-test \
 ### Intermittent
 
 CLI에서는 계속 `intermittent`라고 부르지만, search 실험에서는
-`sample_data/marked_target_df.parquet`를 읽습니다.
+`sample_data/head_office/marked_target_df.parquet`를 읽습니다.
 
 필수 컬럼:
 
@@ -110,7 +161,7 @@ effective config:
 | scale base | `2.0` |
 | lookback | `52` |
 | max seq len | `16` |
-| batch size | `64` |
+| batch size | CLI `--batch-size` 값을 사용 |
 | allowed Titan candidates in hparam search | `small_no_lmm`, `small_lmm` |
 
 중요 구현 위치:
@@ -124,19 +175,11 @@ effective config:
 
 ### Yellow Trip
 
-기본 A/B와 long-epoch는 기존 weekly grid-cell event setup을 유지합니다.
-sequence가 너무 짧은 문제를 검증하기 위해 `yellow-resolution`에서 daily/hourly
-event sequence를 별도로 만듭니다.
-
-주요 옵션:
-
-| 옵션 | 의미 |
-| --- | --- |
-| `--resolutions daily,hourly` | daily/hourly event sequence 생성 |
-| `--grid-size-deg` | pickup location grid 크기 |
-| `--max-series` | eligible series 수 제한. `0`이면 전체 |
-| `--hourly-lookback-buckets` | hourly sequence lookback |
-| `--daily-lookback-buckets` | daily sequence lookback |
+`tpp_experiment.py long-epoch --datasets yellow_trip_hourly`은
+`simple_lab_test/notebooks/preprocessing/yellow_trip.ipynb`로 생성한 hourly grid-cell event table을 읽습니다.
+raw `yellow_trip.parquet`을 simple_lab_test 내부에서 다시 변환하지 않습니다.
+변환 조건을 바꿔야 하면 root-level preprocessing notebook에서
+`yellow_trip_hourly.parquet`을 재생성합니다.
 
 ## Unified CLI Details
 
@@ -244,30 +287,19 @@ loss mode:
 이 실험은 본 논문의 main comparison이 아니라 quantity objective 설계를 검증하는
 ablation입니다.
 
-### `yellow-resolution`
+## Unified Entrypoint
 
-위치:
+이제 search root의 standalone 실험 파일은 `tpp_experiment.py`로 통합합니다.
+기존 `titan_hparam_search.py`, `titan_rmtpp_ab_test.py`,
+`compare_log_bases_distribution.py`에서 쓰던 공통 로직은
+`common/experiment_utils.py`와 `common/benchmark_utils.py`로 이동했습니다.
 
-```text
-common/modes/yellow_trip_resolution.py
-```
-
-역할:
-
-| 항목 | 내용 |
+| 목적 | 현재 실행 방식 |
 | --- | --- |
-| 목적 | weekly yellow-trip sequence가 너무 짧은지 검증 |
-| daily | day bucket 기준 event sequence |
-| hourly | hour bucket 기준 event sequence |
-| 비교 모델 | 현재 RMTPP/TitanTPP 중심 |
-
-## Standalone Scripts
-
-| 스크립트 | 유지 이유 |
-| --- | --- |
-| `titan_hparam_search.py` | TitanConfig와 scale base 탐색용. dataset/cache builder도 제공 |
-| `titan_rmtpp_ab_test.py` | 기존 30 epoch RMTPP vs TitanTPP benchmark 재현용 |
-| `compare_log_bases_distribution.py` | raw log base 분포 sanity check |
+| Titan/RMTPP/THP 본 비교 | `tpp_experiment.py long-epoch` |
+| Titan 후보 비교 | `tpp_experiment.py long-epoch --titan-candidates ...` |
+| RMTPP vs TitanTPP A/B | `tpp_experiment.py long-epoch --models rmtpp,titantpp` |
+| log base별 mark 분포 확인 | cache 하위 `raw_dist_base_*.parquet`, `marked_dist_base_*.parquet` 확인 |
 
 ## Removed Root-Level Experiment Scripts
 
@@ -278,7 +310,6 @@ common/modes/yellow_trip_resolution.py
 | `titan_rmtpp_long_epoch_scale_eval.py` | `tpp_experiment.py long-epoch` |
 | `tpp_overfit_diagnostic.py` | `tpp_experiment.py overfit` |
 | `tpp_qty_loss_ablation.py` | `tpp_experiment.py qty-ablation` |
-| `yellow_trip_resolution_ab_test.py` | `tpp_experiment.py yellow-resolution` |
 
 ## Interpretation Notes
 

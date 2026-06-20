@@ -10,12 +10,12 @@ from models.RMTPPs.TitanTPP import TitanTPP
 from models.RMTPPs.TransformerHawkesTPP import TransformerHawkesTPP
 from models.RMTPPs.config import RMTPPConfig, THPConfig
 from simple_lab_test.search.common.configs import ExperimentConfig, RunConfig, THPCandidate
-from simple_lab_test.search.titan_hparam_search import (
+from simple_lab_test.search.common.experiment_utils import (
     TitanCandidate,
     build_rmtpp_config,
     build_titan_config,
 )
-from simple_lab_test.search.titan_rmtpp_ab_test import make_search_cfg
+from simple_lab_test.search.common.benchmark_utils import make_search_cfg
 
 
 def canonical_model_name(model_name: str) -> str:
@@ -35,6 +35,200 @@ def canonical_model_name(model_name: str) -> str:
         "transformerhawkesprocess_tpp": "thp",
     }
     return aliases.get(normalized, normalized)
+
+
+def default_titan_candidates() -> list[TitanCandidate]:
+    """
+    Curated TitanTPP presets shared by all experiment runners.
+
+    Keeping Titan and THP candidates in this registry makes model comparison
+    scripts easier to extend: new candidates should be added here first, then
+    selected from CLI arguments such as `--titan-candidates`.
+    """
+    return [
+        TitanCandidate(
+            name="small_no_lmm",
+            d_model=64,
+            n_layers=2,
+            n_heads=4,
+            d_ff=128,
+            dropout=0.1,
+            contextual_mem_size=16,
+            persistent_mem_size=16,
+            use_lmm=False,
+            mem_size=64,
+            mem_topk=4,
+            memory_mode="none",
+        ),
+        TitanCandidate(
+            name="small_lmm",
+            d_model=64,
+            n_layers=2,
+            n_heads=4,
+            d_ff=128,
+            dropout=0.1,
+            contextual_mem_size=16,
+            persistent_mem_size=16,
+            use_lmm=True,
+            mem_size=64,
+            mem_topk=4,
+            memory_mode="static_lmm",
+        ),
+        TitanCandidate(
+            name="small_contextual_ttm",
+            d_model=64,
+            n_layers=2,
+            n_heads=4,
+            d_ff=128,
+            dropout=0.1,
+            contextual_mem_size=16,
+            persistent_mem_size=0,
+            use_lmm=False,
+            mem_size=64,
+            mem_topk=4,
+            memory_mode="contextual_ttm",
+        ),
+        TitanCandidate(
+            name="small_hybrid_lmm_ttm",
+            d_model=64,
+            n_layers=2,
+            n_heads=4,
+            d_ff=128,
+            dropout=0.1,
+            contextual_mem_size=16,
+            persistent_mem_size=0,
+            use_lmm=True,
+            mem_size=64,
+            mem_topk=4,
+            memory_mode="hybrid_lmm_ttm",
+        ),
+        TitanCandidate(
+            name="small_series_lmm",
+            d_model=64,
+            n_layers=2,
+            n_heads=4,
+            d_ff=128,
+            dropout=0.1,
+            contextual_mem_size=0,
+            persistent_mem_size=0,
+            use_lmm=True,
+            mem_size=64,
+            mem_topk=4,
+            memory_mode="series_lmm",
+        ),
+        TitanCandidate(
+            name="small_deep_lmm",
+            d_model=64,
+            n_layers=3,
+            n_heads=4,
+            d_ff=256,
+            dropout=0.1,
+            contextual_mem_size=16,
+            persistent_mem_size=16,
+            use_lmm=True,
+            mem_size=64,
+            mem_topk=4,
+            memory_mode="static_lmm",
+        ),
+        TitanCandidate(
+            name="mid_no_lmm",
+            d_model=128,
+            n_layers=2,
+            n_heads=4,
+            d_ff=256,
+            dropout=0.1,
+            contextual_mem_size=32,
+            persistent_mem_size=32,
+            use_lmm=False,
+            mem_size=128,
+            mem_topk=8,
+            memory_mode="none",
+        ),
+        TitanCandidate(
+            name="mid_lmm",
+            d_model=128,
+            n_layers=2,
+            n_heads=4,
+            d_ff=256,
+            dropout=0.1,
+            contextual_mem_size=32,
+            persistent_mem_size=32,
+            use_lmm=True,
+            mem_size=128,
+            mem_topk=8,
+            memory_mode="static_lmm",
+        ),
+        TitanCandidate(
+            name="mid_contextual_ttm",
+            d_model=128,
+            n_layers=2,
+            n_heads=4,
+            d_ff=256,
+            dropout=0.1,
+            contextual_mem_size=32,
+            persistent_mem_size=0,
+            use_lmm=False,
+            mem_size=128,
+            mem_topk=8,
+            memory_mode="contextual_ttm",
+        ),
+        TitanCandidate(
+            name="mid_hybrid_lmm_ttm",
+            d_model=128,
+            n_layers=2,
+            n_heads=4,
+            d_ff=256,
+            dropout=0.1,
+            contextual_mem_size=32,
+            persistent_mem_size=0,
+            use_lmm=True,
+            mem_size=128,
+            mem_topk=8,
+            memory_mode="hybrid_lmm_ttm",
+        ),
+        TitanCandidate(
+            name="mid_series_lmm",
+            d_model=128,
+            n_layers=2,
+            n_heads=4,
+            d_ff=256,
+            dropout=0.1,
+            contextual_mem_size=0,
+            persistent_mem_size=0,
+            use_lmm=True,
+            mem_size=128,
+            mem_topk=8,
+            memory_mode="series_lmm",
+        ),
+        TitanCandidate(
+            name="mid_deep_lmm",
+            d_model=128,
+            n_layers=3,
+            n_heads=8,
+            d_ff=512,
+            dropout=0.1,
+            contextual_mem_size=32,
+            persistent_mem_size=32,
+            use_lmm=True,
+            mem_size=128,
+            mem_topk=8,
+            memory_mode="static_lmm",
+        ),
+        TitanCandidate(
+            name="mid_dropout_lmm",
+            d_model=128,
+            n_layers=2,
+            n_heads=4,
+            d_ff=256,
+            dropout=0.2,
+            contextual_mem_size=32,
+            persistent_mem_size=32,
+            use_lmm=True,
+            mem_size=128,
+            mem_topk=8,
+            memory_mode="static_lmm",
+        ),
+    ]
 
 
 def default_thp_candidates() -> list[THPCandidate]:

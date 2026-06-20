@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
 import torch
+import torch.nn.functional as F
 
 from models.RMTPPs.config import RMTPPConfig
 from simple_lab_test.search.common.configs import ExperimentConfig, RunConfig, RunPaths
@@ -17,23 +18,23 @@ from simple_lab_test.search.common.models import (
     build_model,
     canonical_model_name,
     default_thp_candidates,
+    default_titan_candidates,
     find_candidate_by_name,
     flatten_candidate,
     make_rmtpp_proxy_candidate,
     model_run_label,
 )
-from simple_lab_test.search.titan_hparam_search import (
+from simple_lab_test.search.common.experiment_utils import (
     DatasetSpec,
     build_logger,
     build_training_config,
-    default_titan_candidates,
     ensure_dir,
     save_json,
     sanitize_float_label,
     tee_training_output,
     to_jsonable,
 )
-from simple_lab_test.search.titan_rmtpp_ab_test import (
+from simple_lab_test.search.common.benchmark_utils import (
     build_marked_cache,
     default_profile_map,
     make_dataset_specs,
@@ -41,7 +42,12 @@ from simple_lab_test.search.titan_rmtpp_ab_test import (
     markdown_table_from_df,
     persist_rows,
 )
-from utils.training import TrainingConfig, eval_next_event_week_lookback, make_week_lookback_loaders
+from utils.training import (
+    TrainingConfig,
+    eval_next_event_week_lookback,
+    make_fixed_split_week_lookback_loaders,
+    make_week_lookback_loaders,
+)
 
 
 def set_global_seed(seed: int) -> None:
@@ -68,12 +74,28 @@ def build_run_paths(cfg: ExperimentConfig, run_cfg: RunConfig) -> RunPaths:
     Keep output paths stable across all model families.
     """
     base_label = sanitize_float_label(run_cfg.scale_base)
-    run_dir = (
+    dataset_path_name = run_cfg.dataset_name
+    if run_cfg.dataset_kind in {"yellow_trip_daily", "yellow_trip_hourly"}:
+        # Keep yellow-trip resolution variants in separate run folders so raw
+        # weekly/daily artifacts cannot be reused as false cache hits.
+        dataset_path_name = run_cfg.dataset_kind
+
+    run_dir_base = (
         Path(cfg.base_dir)
         / "runs"
-        / run_cfg.dataset_name
+        / dataset_path_name
         / canonical_model_name(run_cfg.model_name)
         / f"lossmode_{cfg.loss_mode}"
+    )
+    if getattr(cfg, "split_mode", "internal") != "internal":
+        run_dir_base = run_dir_base / f"split_{cfg.split_mode}"
+    if getattr(cfg, "value_head_activation", "sigmoid") != "sigmoid":
+        run_dir_base = run_dir_base / f"value_{cfg.value_head_activation}"
+    if cfg.test_time_memory != "none":
+        run_dir_base = run_dir_base / f"ttm_{cfg.test_time_memory}"
+
+    run_dir = (
+        run_dir_base
         / f"profile_{run_cfg.titan_profile}"
         / f"base_{base_label}"
         / run_cfg.candidate_name
@@ -223,6 +245,17 @@ def compute_training_loss(
             + getattr(model.cfg, "lambda_qty", 0.25) * out["qty_loss"]
         )
     raise ValueError(f"Unsupported loss_mode: {loss_mode}")
+
+
+def score_from_metrics(metrics: dict[str, Any]) -> float:
+    """
+    Shared validation/test score used for checkpoint selection and reporting.
+    """
+    return float(
+        metrics["mark_acc"]
+        - 0.01 * metrics["dt_mae"]
+        - 0.001 * metrics["qty_mae"]
+    )
 
 
 def summarize_history(history: list[dict[str, Any]]) -> dict[str, Any]:
@@ -416,9 +449,262 @@ def evaluate_scale_wise_qty(
     return pl.DataFrame(rows)
 
 
+def _series_list_from_marked_df(marked_df: pl.DataFrame) -> list[dict[str, Any]]:
+    """
+    Convert marked events into Python lists for series-wise online evaluation.
+    """
+    grouped = (
+        marked_df.sort(["oper_part_no", "seq"])
+        .with_columns(pl.col("delta_t").cast(pl.Float32).clip(1, None).alias("delta_t"))
+        .group_by("oper_part_no", maintain_order=True)
+        .agg([
+            pl.col("seq").cast(pl.Int32).alias("seq_list"),
+            pl.col("delta_t").cast(pl.Float32).alias("dt_list"),
+            pl.col("mark").cast(pl.Int64).alias("mk_list"),
+            pl.col("scale_residual").cast(pl.Float32).alias("val_list")
+            if "scale_residual" in marked_df.columns
+            else pl.lit(None).alias("val_list"),
+        ])
+    )
+    return grouped.to_dicts()
+
+
+@torch.no_grad()
+def _forward_titantpp_observed_tokens(
+    *,
+    model: torch.nn.Module,
+    marks: np.ndarray,
+    dts: np.ndarray,
+    device: str,
+    update_context_memory: bool,
+) -> torch.Tensor:
+    """
+    Run TitanTPP on already-observed tokens with optional memory update.
+    """
+    marks_t = torch.as_tensor(marks, dtype=torch.long, device=device).view(1, -1)
+    dts_t = torch.as_tensor(dts, dtype=torch.float32, device=device).view(1, -1)
+    return model.forward(
+        marks_t,
+        dts_t,
+        update_context_memory=bool(update_context_memory),
+    )
+
+
+@torch.no_grad()
+def evaluate_titantpp_contextual_ttm(
+    *,
+    model: torch.nn.Module,
+    marked_df: pl.DataFrame,
+    training_cfg: TrainingConfig,
+    selection: str,
+) -> dict[str, Any]:
+    """
+    Evaluate TitanTPP with series-wise online contextual memory.
+
+    This is TTM-Lite: no gradients or parameter adaptation are used at test
+    time. For each series, we reset memory, warm it with train-prefix events,
+    predict validation events in chronological order, and update memory only
+    after the true target event becomes observed.
+    """
+    if canonical_model_name(type(model).__name__) != "titantpp" and not hasattr(model, "reset_contextual_memory"):
+        raise TypeError("TTM-Lite contextual evaluation requires TitanTPP-like contextual memory methods.")
+
+    model.eval()
+    device = str(training_cfg.device)
+    pad_id = int(model.cfg.num_marks - 1)
+    max_len = max(int(training_cfg.max_seq_len), 1)
+    lookback = max(int(training_cfg.lookback), 1)
+    val_ratio = float(training_cfg.val_ratio)
+
+    total = 0
+    correct = 0
+    dt_abs = 0.0
+    dt_sq = 0.0
+    value_abs = 0.0
+    qty_abs = 0.0
+    sum_nll_time = 0.0
+    sum_nll_marker = 0.0
+    sum_nll_total = 0.0
+    sum_value_loss = 0.0
+    warmup_events = 0
+    update_events = 0
+    evaluated_series = 0
+
+    for series in _series_list_from_marked_df(marked_df):
+        seq = np.asarray(series["seq_list"], dtype=np.int32)
+        dts = np.asarray(series["dt_list"], dtype=np.float32)
+        marks = np.asarray(series["mk_list"], dtype=np.int64)
+        val_list = series.get("val_list")
+        values = None if val_list is None else np.asarray(val_list, dtype=np.float32)
+        n = int(len(seq))
+        if n < 2:
+            continue
+
+        split_idx = int(np.floor(n * (1.0 - val_ratio)))
+        first_target = max(1, split_idx)
+        if first_target >= n:
+            continue
+
+        reset_memory = getattr(model, "reset_contextual_memory", None)
+        if callable(reset_memory):
+            reset_memory()
+
+        # Warm the online memory with training-prefix observations only. Chunk
+        # long prefixes so position embeddings and memory size remain bounded.
+        if split_idx > 0:
+            for start in range(0, split_idx, max_len):
+                end = min(split_idx, start + max_len)
+                if end <= start:
+                    continue
+                _forward_titantpp_observed_tokens(
+                    model=model,
+                    marks=marks[start:end],
+                    dts=dts[start:end],
+                    device=device,
+                    update_context_memory=True,
+                )
+                warmup_events += int(end - start)
+
+        series_had_eval = False
+        for target_idx in range(first_target, n):
+            context_end = target_idx - 1
+            left_seq = int(seq[context_end]) - (lookback - 1)
+            context_start = int(np.searchsorted(seq, left_seq, side="left"))
+            context_idx = np.arange(context_start, context_end + 1, dtype=np.int32)
+            if context_idx.size == 0:
+                continue
+            if context_idx.size > max_len:
+                context_idx = context_idx[-max_len:]
+
+            h = _forward_titantpp_observed_tokens(
+                model=model,
+                marks=marks[context_idx],
+                dts=dts[context_idx],
+                device=device,
+                update_context_memory=False,
+            )
+            h_prev = h[:, -1, :]
+            y_mk = torch.tensor([int(marks[target_idx])], dtype=torch.long, device=device)
+            if int(y_mk.item()) == pad_id:
+                continue
+            y_dt = torch.tensor([float(dts[target_idx])], dtype=torch.float32, device=device)
+
+            logits_full = model.mark_head(h_prev)
+            log_y = -F.cross_entropy(logits_full, y_mk, reduction="none")
+            logf_dt = model.log_f_dt(h_prev, y_dt)
+            sum_nll_marker += float((-log_y).sum().item())
+            sum_nll_time += float((-logf_dt).sum().item())
+            sum_nll_total += float(((-log_y) + (-logf_dt)).sum().item())
+
+            logits = logits_full[..., :pad_id]
+            pred = torch.argmax(logits, dim=-1)
+            correct += int((pred == y_mk).sum().item())
+            total += 1
+
+            u = torch.full((1,), 0.5, device=device).clamp_min(model.cfg.eps)
+            dt_hat = model.sample_next_dt(h_prev, u=u).clamp_min(1.0)
+            dt_err = (dt_hat - y_dt).abs()
+            dt_abs += float(dt_err.sum().item())
+            dt_sq += float(((dt_hat - y_dt) ** 2).sum().item())
+
+            if values is not None and getattr(model.cfg, "use_value_head", False):
+                y_val = torch.tensor([float(values[target_idx])], dtype=torch.float32, device=device)
+                value_hat = model.predict_value(h_prev)
+                value_loss = F.huber_loss(value_hat, y_val, reduction="none")
+                sum_value_loss += float(value_loss.sum().item())
+                value_abs += float((value_hat - y_val).abs().sum().item())
+
+                qty_hat = model.reconstruct_qty(pred, value_hat)
+                qty_true = model.reconstruct_qty(y_mk, y_val)
+                qty_abs += float((qty_hat - qty_true).abs().sum().item())
+
+            # Now the target is observed, so it can be written to memory for
+            # future validation targets from the same series.
+            _forward_titantpp_observed_tokens(
+                model=model,
+                marks=marks[target_idx:target_idx + 1],
+                dts=dts[target_idx:target_idx + 1],
+                device=device,
+                update_context_memory=True,
+            )
+            update_events += 1
+            series_had_eval = True
+
+        if series_had_eval:
+            evaluated_series += 1
+
+    reset_memory = getattr(model, "reset_contextual_memory", None)
+    if callable(reset_memory):
+        reset_memory()
+
+    mark_acc = correct / max(total, 1)
+    dt_mae = dt_abs / max(total, 1)
+    dt_rmse = float(np.sqrt(dt_sq / max(total, 1)))
+    value_mae = value_abs / max(total, 1)
+    qty_mae = qty_abs / max(total, 1)
+    val_nll_time = sum_nll_time / max(total, 1)
+    val_nll_marker = sum_nll_marker / max(total, 1)
+    val_nll = sum_nll_total / max(total, 1)
+    val_value_loss = sum_value_loss / max(total, 1)
+    score = mark_acc - 0.01 * dt_mae - 0.001 * qty_mae
+
+    return {
+        "selection": selection,
+        "test_time_memory": "contextual",
+        "score": float(score),
+        "mark_acc": float(mark_acc),
+        "dt_mae": float(dt_mae),
+        "dt_rmse": float(dt_rmse),
+        "value_mae": float(value_mae),
+        "qty_mae": float(qty_mae),
+        "val_nll_time": float(val_nll_time),
+        "val_nll_marker": float(val_nll_marker),
+        "val_nll": float(val_nll),
+        "val_value_loss": float(val_value_loss),
+        "_total": int(total),
+        "_correct": int(correct),
+        "_nll_steps": int(total),
+        "evaluated_series": int(evaluated_series),
+        "warmup_events": int(warmup_events),
+        "contextual_update_events": int(update_events),
+    }
+
+
 def scale_metric_paths(run_paths: RunPaths, selection: str) -> tuple[Path, Path]:
     stem = f"scale_wise_{selection}"
     return run_paths.metrics_dir / f"{stem}.csv", run_paths.metrics_dir / f"{stem}.parquet"
+
+
+def test_metric_paths(run_paths: RunPaths, selection: str) -> tuple[Path, Path, Path]:
+    """
+    Per-checkpoint held-out test metrics for fixed-split experiments.
+    """
+    stem = f"test_metrics_{selection}"
+    return (
+        run_paths.metrics_dir / f"{stem}.json",
+        run_paths.metrics_dir / f"{stem}.csv",
+        run_paths.metrics_dir / f"{stem}.parquet",
+    )
+
+
+def test_scale_metric_paths(run_paths: RunPaths, selection: str) -> tuple[Path, Path]:
+    """
+    Scale-wise held-out test quantity metrics for fixed-split experiments.
+    """
+    stem = f"test_scale_wise_{selection}"
+    return run_paths.metrics_dir / f"{stem}.csv", run_paths.metrics_dir / f"{stem}.parquet"
+
+
+def ttm_metric_paths(run_paths: RunPaths, selection: str) -> tuple[Path, Path, Path]:
+    """
+    Per-checkpoint TTM-Lite metric files.
+    """
+    stem = f"ttm_contextual_{selection}"
+    return (
+        run_paths.metrics_dir / f"{stem}.json",
+        run_paths.metrics_dir / f"{stem}.csv",
+        run_paths.metrics_dir / f"{stem}.parquet",
+    )
 
 
 def cached_run_is_complete(*, cfg: ExperimentConfig, run_cfg: RunConfig, run_paths: RunPaths) -> bool:
@@ -431,9 +717,29 @@ def cached_run_is_complete(*, cfg: ExperimentConfig, run_cfg: RunConfig, run_pat
         csv_path, parquet_path = scale_metric_paths(run_paths, selection)
         if not (csv_path.exists() and parquet_path.exists()):
             return False
+        if getattr(cfg, "split_mode", "internal") == "fixed":
+            test_json_path, test_csv_path, test_parquet_path = test_metric_paths(run_paths, selection)
+            test_scale_csv_path, test_scale_parquet_path = test_scale_metric_paths(run_paths, selection)
+            if not (
+                test_json_path.exists()
+                and test_csv_path.exists()
+                and test_parquet_path.exists()
+                and test_scale_csv_path.exists()
+                and test_scale_parquet_path.exists()
+            ):
+                return False
+        if cfg.test_time_memory == "contextual" and canonical_model_name(run_cfg.model_name) == "titantpp":
+            json_path, ttm_csv_path, ttm_parquet_path = ttm_metric_paths(run_paths, selection)
+            if not (json_path.exists() and ttm_csv_path.exists() and ttm_parquet_path.exists()):
+                return False
     with open(summary_path, "r", encoding="utf-8") as f:
         cached_summary = json.load(f)
-    return int(cached_summary.get("epochs", -1)) == int(run_cfg.epochs)
+    return (
+        int(cached_summary.get("epochs", -1)) == int(run_cfg.epochs)
+        and str(cached_summary.get("test_time_memory", "none")) == str(cfg.test_time_memory)
+        and str(cached_summary.get("split_mode", "internal")) == str(getattr(cfg, "split_mode", "internal"))
+        and str(cached_summary.get("value_head_activation", "sigmoid")) == str(cfg.value_head_activation)
+    )
 
 
 def save_checkpoint(
@@ -532,7 +838,25 @@ def train_one_run(
     set_global_seed(run_cfg.seed)
     search_cfg = make_search_cfg(cfg, run_cfg.dataset_kind)
     training_cfg = make_training_cfg(cfg, run_cfg.dataset_kind)
-    train_loader, val_loader = make_week_lookback_loaders(marked_df, training_cfg)
+    test_loader = None
+    if getattr(cfg, "split_mode", "internal") == "fixed":
+        train_loader, val_loader, test_loader = make_fixed_split_week_lookback_loaders(
+            marked_df,
+            training_cfg,
+        )
+        logger.info(
+            "Using fixed chronological splits | dataset=%s train_samples=%s validation_samples=%s test_samples=%s "
+            "| batch_size=%s max_seq_len=%s lookback=%s",
+            run_cfg.dataset_name,
+            len(train_loader.dataset),
+            len(val_loader.dataset),
+            len(test_loader.dataset),
+            training_cfg.batch_size,
+            training_cfg.max_seq_len,
+            training_cfg.lookback,
+        )
+    else:
+        train_loader, val_loader = make_week_lookback_loaders(marked_df, training_cfg)
     model, rmtpp_cfg, encoder_cfg = build_model(cfg=cfg, run_cfg=run_cfg, marked_meta=marked_meta)
 
     save_json(
@@ -544,6 +868,11 @@ def train_one_run(
             "rmtpp_config": rmtpp_cfg,
             "encoder_config": encoder_cfg,
             "marked_meta": marked_meta,
+            "loader_sample_counts": {
+                "train": len(train_loader.dataset),
+                "validation": len(val_loader.dataset),
+                "test": len(test_loader.dataset) if test_loader is not None else None,
+            },
         },
         manifest_path,
     )
@@ -623,12 +952,13 @@ def train_one_run(
                 steps += 1
 
             train_loss = running / max(steps, 1)
-            val_metrics = eval_next_event_week_lookback(model, val_loader, training_cfg.device)
-            score = (
-                val_metrics["mark_acc"]
-                - 0.01 * val_metrics["dt_mae"]
-                - 0.001 * val_metrics["qty_mae"]
+            val_metrics = eval_next_event_week_lookback(
+                model,
+                val_loader,
+                training_cfg.device,
+                target_only_nll=getattr(cfg, "split_mode", "internal") == "fixed",
             )
+            score = score_from_metrics(val_metrics)
             epoch_record = {
                 "epoch": epoch,
                 "train_loss": float(train_loss),
@@ -705,6 +1035,9 @@ def train_one_run(
         "analysis_tail_order": int(cfg.analysis_tail_order),
         "titan_profile": run_cfg.titan_profile,
         "loss_mode": cfg.loss_mode,
+        "split_mode": cfg.split_mode,
+        "value_head_activation": cfg.value_head_activation,
+        "test_time_memory": cfg.test_time_memory,
         "run_dir": str(run_paths.run_dir),
         "resume_checkpoint_path": str(resume_checkpoint_path),
         "best_score_checkpoint_path": str(run_paths.checkpoint_dir / "best_score_model.pt"),
@@ -755,11 +1088,110 @@ def train_one_run(
             pl.lit(run_cfg.candidate_name).alias("titan_candidate_name"),
             pl.lit(run_cfg.seed).alias("seed"),
             pl.lit(selection).alias("selection"),
+            pl.lit("validation").alias("eval_split"),
             pl.lit(run_cfg.scale_base).alias("model_scale_base"),
         ])
         csv_path, parquet_path = scale_metric_paths(run_paths, selection)
         scale_df.write_csv(csv_path)
         scale_df.write_parquet(parquet_path)
+
+        if test_loader is not None:
+            test_metrics = eval_next_event_week_lookback(
+                model,
+                test_loader,
+                training_cfg.device,
+                target_only_nll=True,
+            )
+            test_score = score_from_metrics(test_metrics)
+            test_row = {
+                "dataset_name": run_cfg.dataset_name,
+                "dataset_kind": run_cfg.dataset_kind,
+                "model_name": canonical_model_name(run_cfg.model_name),
+                "candidate_name": run_cfg.candidate_name,
+                "titan_candidate_name": run_cfg.candidate_name,
+                "seed": int(run_cfg.seed),
+                "selection": selection,
+                "score": float(test_score),
+                **{
+                    key: float(value) if isinstance(value, (int, float, np.floating)) else value
+                    for key, value in test_metrics.items()
+                },
+            }
+            test_json_path, test_csv_path, test_parquet_path = test_metric_paths(run_paths, selection)
+            save_json(test_row, test_json_path)
+            test_df = pl.DataFrame([{key: to_jsonable(value) for key, value in test_row.items()}])
+            test_df.write_csv(test_csv_path)
+            test_df.write_parquet(test_parquet_path)
+
+            # Keep concise test metrics on the run summary so leaderboard rows can
+            # directly expose the final held-out performance used in the paper.
+            summary[f"test_{selection}_score"] = float(test_score)
+            summary[f"test_{selection}_nll"] = float(test_metrics["val_nll"])
+            summary[f"test_{selection}_nll_marker"] = float(test_metrics["val_nll_marker"])
+            summary[f"test_{selection}_nll_time"] = float(test_metrics["val_nll_time"])
+            summary[f"test_{selection}_value_loss"] = float(test_metrics["val_value_loss"])
+            summary[f"test_{selection}_qty_mae"] = float(test_metrics["qty_mae"])
+            summary[f"test_{selection}_value_mae"] = float(test_metrics["value_mae"])
+            summary[f"test_{selection}_dt_mae"] = float(test_metrics["dt_mae"])
+            summary[f"test_{selection}_dt_rmse"] = float(test_metrics["dt_rmse"])
+            summary[f"test_{selection}_mark_acc"] = float(test_metrics["mark_acc"])
+            summary[f"test_{selection}_total"] = int(test_metrics["_total"])
+            summary[f"test_{selection}_nll_steps"] = float(test_metrics["_nll_steps"])
+
+            test_scale_df = evaluate_scale_wise_qty(
+                model=model,
+                val_loader=test_loader,
+                device=training_cfg.device,
+                analysis_scale_base=cfg.analysis_scale_base,
+                analysis_tail_order=cfg.analysis_tail_order,
+            ).with_columns([
+                pl.lit(run_cfg.dataset_name).alias("dataset_name"),
+                pl.lit(run_cfg.dataset_kind).alias("dataset_kind"),
+                pl.lit(canonical_model_name(run_cfg.model_name)).alias("model_name"),
+                pl.lit(run_cfg.candidate_name).alias("candidate_name"),
+                pl.lit(run_cfg.candidate_name).alias("titan_candidate_name"),
+                pl.lit(run_cfg.seed).alias("seed"),
+                pl.lit(selection).alias("selection"),
+                pl.lit("test").alias("eval_split"),
+                pl.lit(run_cfg.scale_base).alias("model_scale_base"),
+            ])
+            test_scale_csv_path, test_scale_parquet_path = test_scale_metric_paths(run_paths, selection)
+            test_scale_df.write_csv(test_scale_csv_path)
+            test_scale_df.write_parquet(test_scale_parquet_path)
+
+        if cfg.test_time_memory == "contextual" and canonical_model_name(run_cfg.model_name) == "titantpp":
+            ttm_metrics = evaluate_titantpp_contextual_ttm(
+                model=model,
+                marked_df=marked_df,
+                training_cfg=training_cfg,
+                selection=selection,
+            )
+            json_path, ttm_csv_path, ttm_parquet_path = ttm_metric_paths(run_paths, selection)
+            save_json(ttm_metrics, json_path)
+            ttm_df = pl.DataFrame([{key: to_jsonable(value) for key, value in ttm_metrics.items()}])
+            ttm_df.write_csv(ttm_csv_path)
+            ttm_df.write_parquet(ttm_parquet_path)
+
+            prefix = f"ttm_contextual_{selection}"
+            for metric_name in (
+                "score",
+                "val_nll",
+                "val_nll_time",
+                "val_nll_marker",
+                "val_value_loss",
+                "mark_acc",
+                "dt_mae",
+                "dt_rmse",
+                "value_mae",
+                "qty_mae",
+                "_total",
+                "_correct",
+                "_nll_steps",
+                "evaluated_series",
+                "warmup_events",
+                "contextual_update_events",
+            ):
+                summary[f"{prefix}_{metric_name}"] = ttm_metrics[metric_name]
 
     save_json(summary, summary_path)
     logger.info(
@@ -788,6 +1220,9 @@ def build_error_row(run_cfg: RunConfig, exc: Exception) -> dict[str, Any]:
         "epochs": int(run_cfg.epochs),
         "scale_base": float(run_cfg.scale_base),
         "titan_profile": run_cfg.titan_profile,
+        "split_mode": "unavailable_after_failure",
+        "value_head_activation": "unavailable_after_failure",
+        "test_time_memory": "unavailable_after_failure",
         "error": repr(exc),
         **flatten_candidate(run_cfg.candidate),
     }
@@ -919,6 +1354,8 @@ def load_all_histories(run_rows: list[dict[str, Any]]) -> pl.DataFrame:
                 "epoch": int(epoch_row["epoch"]),
                 "score": float(epoch_row["score"]),
                 "val_nll": float(epoch_row["val_nll"]),
+                "val_nll_marker": float(epoch_row.get("val_nll_marker", float("nan"))),
+                "val_nll_time": float(epoch_row.get("val_nll_time", float("nan"))),
                 "qty_mae": float(epoch_row["qty_mae"]),
                 "dt_mae": float(epoch_row["dt_mae"]),
                 "mark_acc": float(epoch_row["mark_acc"]),
@@ -945,42 +1382,113 @@ def load_all_scale_metrics(run_rows: list[dict[str, Any]], selections: Iterable[
     return pl.concat(frames, how="vertical_relaxed")
 
 
+def load_all_test_metrics(run_rows: list[dict[str, Any]], selections: Iterable[str]) -> pl.DataFrame:
+    frames: list[pl.DataFrame] = []
+    for row in run_rows:
+        if row.get("status") != "success":
+            continue
+        metrics_dir = Path(str(row["run_dir"])) / "metrics"
+        for selection in selections:
+            parquet_path = metrics_dir / f"test_metrics_{selection}.parquet"
+            csv_path = metrics_dir / f"test_metrics_{selection}.csv"
+            if parquet_path.exists():
+                frames.append(pl.read_parquet(parquet_path))
+            elif csv_path.exists():
+                frames.append(pl.read_csv(csv_path))
+    if not frames:
+        return pl.DataFrame()
+    return pl.concat(frames, how="vertical_relaxed")
+
+
+def load_all_test_scale_metrics(run_rows: list[dict[str, Any]], selections: Iterable[str]) -> pl.DataFrame:
+    frames: list[pl.DataFrame] = []
+    for row in run_rows:
+        if row.get("status") != "success":
+            continue
+        metrics_dir = Path(str(row["run_dir"])) / "metrics"
+        for selection in selections:
+            parquet_path = metrics_dir / f"test_scale_wise_{selection}.parquet"
+            csv_path = metrics_dir / f"test_scale_wise_{selection}.csv"
+            if parquet_path.exists():
+                frames.append(pl.read_parquet(parquet_path))
+            elif csv_path.exists():
+                frames.append(pl.read_csv(csv_path))
+    if not frames:
+        return pl.DataFrame()
+    return pl.concat(frames, how="vertical_relaxed")
+
+
+def aggregate_test_metrics(test_df: pl.DataFrame) -> pl.DataFrame:
+    if test_df.height == 0:
+        return pl.DataFrame()
+    return (
+        test_df.group_by(["dataset_name", "model_name", "candidate_name", "selection"])
+        .agg([
+            pl.len().alias("run_count"),
+            pl.mean("score").alias("mean_test_score"),
+            pl.std("score").fill_null(0.0).alias("std_test_score"),
+            pl.mean("val_nll").alias("mean_test_nll"),
+            pl.std("val_nll").fill_null(0.0).alias("std_test_nll"),
+            pl.mean("val_nll_marker").alias("mean_test_nll_marker"),
+            pl.mean("val_nll_time").alias("mean_test_nll_time"),
+            pl.mean("qty_mae").alias("mean_test_qty_mae"),
+            pl.std("qty_mae").fill_null(0.0).alias("std_test_qty_mae"),
+            pl.mean("dt_mae").alias("mean_test_dt_mae"),
+            pl.mean("mark_acc").alias("mean_test_mark_acc"),
+            pl.mean("value_mae").alias("mean_test_value_mae"),
+            pl.mean("_total").alias("mean_test_total"),
+            pl.mean("_nll_steps").alias("mean_test_nll_steps"),
+        ])
+        .sort(["dataset_name", "selection", "model_name", "candidate_name"])
+    )
+
+
 def aggregate_run_rows(rows: list[dict[str, Any]]) -> tuple[pl.DataFrame, pl.DataFrame]:
     run_df = pl.DataFrame([{key: to_jsonable(value) for key, value in row.items()} for row in rows])
     success_df = run_df.filter(pl.col("status") == "success")
     if success_df.height == 0:
         return run_df, pl.DataFrame()
 
+    agg_exprs = [
+        pl.first("dataset_kind").alias("dataset_kind"),
+        pl.first("scale_base").alias("scale_base"),
+        pl.first("lr").alias("lr"),
+        pl.first("batch_size").alias("batch_size"),
+        pl.first("lookback_weeks").alias("lookback_weeks"),
+        pl.first("max_seq_len").alias("max_seq_len"),
+        pl.first("analysis_scale_base").alias("analysis_scale_base"),
+        pl.first("titan_profile").alias("titan_profile"),
+        pl.first("split_mode").alias("split_mode"),
+        pl.first("value_head_activation").alias("value_head_activation"),
+        pl.first("test_time_memory").alias("test_time_memory"),
+        pl.len().alias("run_count"),
+        pl.mean("best_val_nll").alias("mean_best_val_nll"),
+        pl.std("best_val_nll").fill_null(0.0).alias("std_best_val_nll"),
+        pl.mean("best_val_nll_epoch").alias("mean_best_val_nll_epoch"),
+        pl.mean("best_val_nll_score").alias("mean_best_val_nll_score"),
+        pl.mean("best_val_nll_qty_mae").alias("mean_best_val_nll_qty_mae"),
+        pl.std("best_val_nll_qty_mae").fill_null(0.0).alias("std_best_val_nll_qty_mae"),
+        pl.mean("best_val_nll_dt_mae").alias("mean_best_val_nll_dt_mae"),
+        pl.mean("best_val_nll_mark_acc").alias("mean_best_val_nll_mark_acc"),
+        pl.mean("best_score").alias("mean_best_score"),
+        pl.std("best_score").fill_null(0.0).alias("std_best_score"),
+        pl.mean("best_score_epoch").alias("mean_best_score_epoch"),
+        pl.mean("best_score_val_nll").alias("mean_best_score_val_nll"),
+        pl.mean("best_score_qty_mae").alias("mean_best_score_qty_mae"),
+        pl.mean("final_val_nll").alias("mean_final_val_nll"),
+        pl.mean("final_qty_mae").alias("mean_final_qty_mae"),
+        pl.mean("final_score").alias("mean_final_score"),
+        pl.mean("final_train_loss").alias("mean_final_train_loss"),
+    ]
+    for selection in ("best_val_nll", "best_score", "final"):
+        for metric in ("score", "val_nll", "qty_mae", "dt_mae", "mark_acc", "evaluated_series"):
+            col = f"ttm_contextual_{selection}_{metric}"
+            if col in success_df.columns:
+                agg_exprs.append(pl.mean(col).alias(f"mean_{col}"))
+
     summary_df = (
         success_df.group_by(["dataset_name", "model_name", "candidate_name"])
-        .agg([
-            pl.first("dataset_kind").alias("dataset_kind"),
-            pl.first("scale_base").alias("scale_base"),
-            pl.first("lr").alias("lr"),
-            pl.first("batch_size").alias("batch_size"),
-            pl.first("lookback_weeks").alias("lookback_weeks"),
-            pl.first("max_seq_len").alias("max_seq_len"),
-            pl.first("analysis_scale_base").alias("analysis_scale_base"),
-            pl.first("titan_profile").alias("titan_profile"),
-            pl.len().alias("run_count"),
-            pl.mean("best_val_nll").alias("mean_best_val_nll"),
-            pl.std("best_val_nll").fill_null(0.0).alias("std_best_val_nll"),
-            pl.mean("best_val_nll_epoch").alias("mean_best_val_nll_epoch"),
-            pl.mean("best_val_nll_score").alias("mean_best_val_nll_score"),
-            pl.mean("best_val_nll_qty_mae").alias("mean_best_val_nll_qty_mae"),
-            pl.std("best_val_nll_qty_mae").fill_null(0.0).alias("std_best_val_nll_qty_mae"),
-            pl.mean("best_val_nll_dt_mae").alias("mean_best_val_nll_dt_mae"),
-            pl.mean("best_val_nll_mark_acc").alias("mean_best_val_nll_mark_acc"),
-            pl.mean("best_score").alias("mean_best_score"),
-            pl.std("best_score").fill_null(0.0).alias("std_best_score"),
-            pl.mean("best_score_epoch").alias("mean_best_score_epoch"),
-            pl.mean("best_score_val_nll").alias("mean_best_score_val_nll"),
-            pl.mean("best_score_qty_mae").alias("mean_best_score_qty_mae"),
-            pl.mean("final_val_nll").alias("mean_final_val_nll"),
-            pl.mean("final_qty_mae").alias("mean_final_qty_mae"),
-            pl.mean("final_score").alias("mean_final_score"),
-            pl.mean("final_train_loss").alias("mean_final_train_loss"),
-        ])
+        .agg(agg_exprs)
         .sort(["dataset_name", "model_name", "candidate_name"])
     )
     return success_df, summary_df
@@ -1060,9 +1568,13 @@ def save_learning_curve_plots(history_df: pl.DataFrame, plots_dir: Path) -> None
     if history_df.height == 0:
         return
     ensure_dir(plots_dir)
+    # Total NLL alone hides whether the gain/loss comes from mark prediction or
+    # event-time density, so we plot both decomposed likelihood terms as well.
     curve_metrics = [
         ("score", "Validation Score"),
         ("val_nll", "Validation NLL"),
+        ("val_nll_marker", "Validation Marker NLL"),
+        ("val_nll_time", "Validation Time NLL"),
         ("qty_mae", "Validation Qty MAE"),
     ]
     palette = ["#5DA5DA", "#F17CB0", "#60BD68", "#B276B2", "#F15854", "#DECF3F", "#FAA43A"]
@@ -1077,8 +1589,13 @@ def save_learning_curve_plots(history_df: pl.DataFrame, plots_dir: Path) -> None
             .alias("run_label")
         )
         run_labels = dataset_df["run_label"].unique().sort().to_list()
-        fig, axes = plt.subplots(1, len(curve_metrics), figsize=(18, 5))
-        for ax, (metric, title) in zip(axes, curve_metrics):
+        fig, axes = plt.subplots(2, 3, figsize=(18, 9))
+        axes_flat = axes.flatten()
+        for ax, (metric, title) in zip(axes_flat, curve_metrics):
+            if metric not in dataset_df.columns:
+                ax.set_title(f"{title} (missing)")
+                ax.axis("off")
+                continue
             for idx, run_label in enumerate(run_labels):
                 run_df = dataset_df.filter(pl.col("run_label") == run_label)
                 agg_df = (
@@ -1101,6 +1618,8 @@ def save_learning_curve_plots(history_df: pl.DataFrame, plots_dir: Path) -> None
             ax.set_xlabel("Epoch")
             ax.grid(alpha=0.25)
             ax.legend()
+        for ax in axes_flat[len(curve_metrics):]:
+            ax.axis("off")
         fig.suptitle(f"{dataset_name}: Learning Curves", fontsize=14)
         fig.tight_layout(rect=(0, 0, 1, 0.96))
         fig.savefig(plots_dir / f"{dataset_name}_learning_curves.png", dpi=200, bbox_inches="tight")
@@ -1174,6 +1693,8 @@ def save_outputs(
     summary_df: pl.DataFrame,
     delta_df: pl.DataFrame,
     scale_summary_df: pl.DataFrame,
+    test_summary_df: pl.DataFrame,
+    test_scale_summary_df: pl.DataFrame,
     paper_dir: Path,
 ) -> None:
     ensure_dir(paper_dir)
@@ -1186,6 +1707,12 @@ def save_outputs(
     if scale_summary_df.width > 0:
         scale_summary_df.write_csv(paper_dir / "paper_table_scale_wise_mae.csv")
         scale_summary_df.write_parquet(paper_dir / "paper_table_scale_wise_mae.parquet")
+    if test_summary_df.width > 0:
+        test_summary_df.write_csv(paper_dir / "paper_table_test_metrics.csv")
+        test_summary_df.write_parquet(paper_dir / "paper_table_test_metrics.parquet")
+    if test_scale_summary_df.width > 0:
+        test_scale_summary_df.write_csv(paper_dir / "paper_table_test_scale_wise_mae.csv")
+        test_scale_summary_df.write_parquet(paper_dir / "paper_table_test_scale_wise_mae.parquet")
 
     report_lines = [
         "# Unified TPP Experiment Report",
@@ -1201,6 +1728,14 @@ def save_outputs(
         "## Scale-wise Quantity Errors",
         "",
         markdown_table_from_df(scale_summary_df),
+        "",
+        "## Held-out Test Metrics",
+        "",
+        markdown_table_from_df(test_summary_df),
+        "",
+        "## Held-out Test Scale-wise Quantity Errors",
+        "",
+        markdown_table_from_df(test_scale_summary_df),
         "",
     ]
     (paper_dir / "report.md").write_text("\n".join(report_lines), encoding="utf-8")
@@ -1266,6 +1801,10 @@ def run_long_epoch_experiment(cfg: ExperimentConfig) -> None:
     history_df = load_all_histories(run_rows)
     scale_df = load_all_scale_metrics(run_rows, cfg.eval_selections)
     scale_summary_df = aggregate_scale_metrics(scale_df)
+    test_df = load_all_test_metrics(run_rows, cfg.eval_selections)
+    test_summary_df = aggregate_test_metrics(test_df)
+    test_scale_df = load_all_test_scale_metrics(run_rows, cfg.eval_selections)
+    test_scale_summary_df = aggregate_scale_metrics(test_scale_df)
 
     if run_df.width > 0:
         run_df.write_parquet(leaderboard_dir / "runs.parquet")
@@ -1285,13 +1824,28 @@ def run_long_epoch_experiment(cfg: ExperimentConfig) -> None:
     if scale_summary_df.width > 0:
         scale_summary_df.write_parquet(leaderboard_dir / "scale_wise_summary.parquet")
         scale_summary_df.write_csv(leaderboard_dir / "scale_wise_summary.csv")
+    if test_df.width > 0:
+        test_df.write_parquet(leaderboard_dir / "test_metrics.parquet")
+        test_df.write_csv(leaderboard_dir / "test_metrics.csv")
+    if test_summary_df.width > 0:
+        test_summary_df.write_parquet(leaderboard_dir / "test_summary.parquet")
+        test_summary_df.write_csv(leaderboard_dir / "test_summary.csv")
+    if test_scale_df.width > 0:
+        test_scale_df.write_parquet(leaderboard_dir / "test_scale_wise_metrics.parquet")
+        test_scale_df.write_csv(leaderboard_dir / "test_scale_wise_metrics.csv")
+    if test_scale_summary_df.width > 0:
+        test_scale_summary_df.write_parquet(leaderboard_dir / "test_scale_wise_summary.parquet")
+        test_scale_summary_df.write_csv(leaderboard_dir / "test_scale_wise_summary.csv")
 
     save_learning_curve_plots(history_df, plots_dir)
     save_scale_metric_plots(scale_summary_df, plots_dir)
+    save_scale_metric_plots(test_scale_summary_df, plots_dir / "test")
     save_outputs(
         summary_df=summary_df,
         delta_df=delta_df,
         scale_summary_df=scale_summary_df,
+        test_summary_df=test_summary_df,
+        test_scale_summary_df=test_scale_summary_df,
         paper_dir=paper_dir,
     )
     logger.info("Unified long-epoch experiment complete. Summary rows:\n%s", summary_df)
