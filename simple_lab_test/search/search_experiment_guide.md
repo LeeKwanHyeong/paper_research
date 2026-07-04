@@ -28,11 +28,13 @@ python simple_lab_test/search/tpp_experiment.py {subcommand} ...
 | --- | --- | ---:| ---:| --- | --- |
 | `intermittent` | `sample_data/head_office/marked_target_df.parquet` | 242,888 | 23,387 | mean 10.39, median 6, p95 35, max 110 | median 2, p95 16, max 5,000 |
 | `yellow_trip_hourly` | `sample_data/new_york_taxi/yellow_trip_hourly.parquet` | 55,119 | 131 | mean 420.76, median 405, p95 743, max 744 | median 7, p95 1,547, max 6,489 |
-| `insta_market_basket` | `sample_data/insta_market_basket/instacart_marked_target_df.parquet` | 3,279,521 | 206,209 | mean 15.90, median 10, p95 50, max 100 | median 8, p95 25, max 177 |
+| `insta_market_basket` | `sample_data/insta_market_basket/instacart_marked_target_with_split.parquet` | 3,279,521 | 206,209 | mean 15.90, median 10, p95 50, max 100 | median 8, p95 25, max 177 |
 
 주의할 점:
 
 - 대화에서는 `insta_market`이라고 줄여 부를 수 있지만, CLI 값은 `insta_market_basket`입니다.
+- Instacart 원본 `instacart_marked_target_df.parquet`의 `mark`는 department id이므로 직접 학습에 쓰지 않습니다.
+- Instacart fixed split 실험은 `mark=0..7`, `scale_residual=[0,1)`, `qty=2^(mark+scale_residual)` 계약을 만족하는 `instacart_marked_target_with_split.parquet`을 사용합니다.
 - `yellow_trip_hourly`는 raw `yellow_trip.parquet`을 직접 학습하지 않습니다.
 - `yellow_trip_hourly`는 `simple_lab_test/notebooks/preprocessing/yellow_trip.ipynb`에서 미리 생성해야 합니다.
 - 세 데이터셋 모두 최종 학습 target은 `demand_qty` 기반 magnitude mark와 residual입니다.
@@ -432,6 +434,59 @@ paper_outputs/paper_table_metrics.csv
 paper_outputs/paper_table_deltas.csv
 paper_outputs/paper_table_best_modes.csv
 paper_outputs/plots/
+```
+
+### Value-Conditioned Marked TPP Ablation
+
+Instacart plateau 분석을 위해 baseline은 유지하되, event history 입력에 과거 quantity state를
+추가하는 optional ablation을 열어두었습니다. 이 옵션은 TPP를 fixed-interval forecasting으로
+바꾸지 않습니다. 여전히 next mark, next time, next value residual을 예측하며, encoder input에
+이미 관측된 과거 `scale_residual_t` 또는 `log_base(qty_t)`만 추가합니다.
+
+누수 방지 규칙:
+
+- week-lookback loader는 context 뒤에 target event를 append합니다.
+- value-conditioned forward에서는 마지막 target row의 value를 입력에서 제거합니다.
+- 허용되는 입력은 이미 관측된 history value뿐입니다.
+
+권장 variant:
+
+| variant | CLI option |
+| --- | --- |
+| `baseline` | `--value-input-mode none --train-loss-scope all --loss-mode residual_only` |
+| `target_only` | `--value-input-mode none --train-loss-scope target_only --loss-mode residual_only` |
+| `value_conditioned` | `--value-input-mode residual` 또는 `log_qty`, `--train-loss-scope target_only --loss-mode residual_only` |
+| `value_conditioned_hybrid` | `--value-input-mode residual` 또는 `log_qty`, `--train-loss-scope target_only --loss-mode hybrid` |
+
+Instacart value-conditioned hybrid smoke/full run 예시:
+
+```bash
+python simple_lab_test/search/tpp_experiment.py long-epoch \
+  --base-dir search_artifacts/insta_value_conditioned_hybrid_e200 \
+  --datasets insta_market_basket \
+  --models titantpp \
+  --titan-candidates small_no_lmm,small_lmm,mid_no_lmm,mid_lmm \
+  --epochs 200 \
+  --seeds 42 \
+  --lr 1e-3 \
+  --batch-size 512 \
+  --max-seq-len 64 \
+  --split-mode fixed \
+  --value-head-activation identity \
+  --value-input-mode residual \
+  --train-loss-scope target_only \
+  --loss-mode hybrid \
+  --eval-selections best_val_nll,best_score,final \
+  --device cuda
+```
+
+추가 산출물:
+
+```text
+runs/.../metrics/validation_mark_confusion_{selection}.csv
+runs/.../metrics/test_mark_confusion_{selection}.csv
+runs/.../metrics/scale_wise_{selection}.csv
+runs/.../metrics/test_scale_wise_{selection}.csv
 ```
 
 ## 6. Preprocessing And Unified Entrypoint
