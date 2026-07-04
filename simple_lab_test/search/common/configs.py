@@ -66,6 +66,9 @@ class ExperimentConfig:
     rmtpp_hidden_dim: int | None = None
     value_head_activation: str = "sigmoid"
     loss_mode: str = "residual_only"
+    value_input_mode: str = "none"
+    value_input_emb_dim: int = 8
+    train_loss_scope: str = "all"
     test_time_memory: str = "none"
     analysis_scale_base: float = 10.0
     analysis_tail_order: int = 4

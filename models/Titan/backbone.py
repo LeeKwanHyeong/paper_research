@@ -9,6 +9,23 @@ import torch.nn.functional as F
 from models.Titan import MemoryAttention
 
 
+def _summarize_context_update(x: torch.Tensor, mode: str) -> torch.Tensor:
+    """
+    Select what a processed chunk contributes to contextual memory.
+
+    `all` reproduces the previous behavior. `last` and `mean` compress each
+    chunk to one token so chunked TTM can reduce memory-attention cost too.
+    """
+    normalized = str(mode or "all").strip().lower()
+    if normalized == "all":
+        return x
+    if normalized == "last":
+        return x[:, -1:, :]
+    if normalized == "mean":
+        return x.mean(dim=1, keepdim=True)
+    raise ValueError("context_memory_update must be one of: all, last, mean")
+
+
 class TitanBackbone(nn.Module):
     """
     Titan block (pre-norm):
@@ -157,6 +174,7 @@ class MemoryEncoder(nn.Module):
         *,
         update_context_memory: Optional[bool] = None,
         position_offset: int = 0,
+        context_memory_update: str = "all",
     ) -> torch.Tensor:
         # x: [B, L, input_dim]
         x = self.input_proj(x)  # [B, L, D]
@@ -177,5 +195,6 @@ class MemoryEncoder(nn.Module):
                 # TTM-Lite updates memory only after processing observed tokens.
                 # Callers must avoid passing future target tokens when this flag
                 # is enabled.
-                layer.update_contextual_memory(x.detach())
+                memory_update = _summarize_context_update(x, context_memory_update)
+                layer.update_contextual_memory(memory_update.detach())
         return x

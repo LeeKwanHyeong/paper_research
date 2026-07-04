@@ -48,6 +48,7 @@ from utils.training import (
     make_fixed_split_week_lookback_loaders,
     make_week_lookback_loaders,
 )
+from models.RMTPPs.value_conditioning import mask_appended_target_value
 
 
 def set_global_seed(seed: int) -> None:
@@ -91,6 +92,16 @@ def build_run_paths(cfg: ExperimentConfig, run_cfg: RunConfig) -> RunPaths:
         run_dir_base = run_dir_base / f"split_{cfg.split_mode}"
     if getattr(cfg, "value_head_activation", "sigmoid") != "sigmoid":
         run_dir_base = run_dir_base / f"value_{cfg.value_head_activation}"
+    if getattr(cfg, "value_input_mode", "none") != "none":
+        run_dir_base = (
+            run_dir_base
+            / f"valueinput_{cfg.value_input_mode}"
+            / f"valueemb_{int(cfg.value_input_emb_dim)}"
+        )
+    if getattr(cfg, "train_loss_scope", "all") != "all":
+        run_dir_base = run_dir_base / f"trainscope_{cfg.train_loss_scope}"
+    if abs(float(getattr(cfg, "lambda_dt", 1.0)) - 1.0) > 1e-12:
+        run_dir_base = run_dir_base / f"lambdadt_{sanitize_float_label(cfg.lambda_dt)}"
     if cfg.test_time_memory != "none":
         run_dir_base = run_dir_base / f"ttm_{cfg.test_time_memory}"
 
@@ -202,6 +213,7 @@ def forward_model(
     marks: torch.Tensor,
     dts: torch.Tensor,
     mask: torch.Tensor | None = None,
+    values: torch.Tensor | None = None,
 ) -> torch.Tensor:
     """
     Call forward with mask when a model supports it.
@@ -209,10 +221,14 @@ def forward_model(
     RMTPP/TitanTPP historically accept `(marks, dts)`, while THP benefits from
     the padding mask. This adapter keeps evaluators model-agnostic.
     """
+    input_values = mask_appended_target_value(values, mask)
     try:
-        return model.forward(marks, dts, mask=mask)
+        return model.forward(marks, dts, values=input_values, mask=mask)
     except TypeError:
-        return model.forward(marks, dts)
+        try:
+            return model.forward(marks, dts, values=input_values)
+        except TypeError:
+            return model.forward(marks, dts)
 
 
 def compute_training_loss(
@@ -356,7 +372,7 @@ def evaluate_scale_wise_qty(
             continue
 
         valid = mask[:, -1] & mask[:, -2]
-        h = forward_model(model, marks, dts, mask)
+        h = forward_model(model, marks, dts, mask, values)
         h_prev = h[:, -2, :]
         y_mk = marks[:, -1]
         y_dt = dts[:, -1].float()
@@ -449,6 +465,69 @@ def evaluate_scale_wise_qty(
     return pl.DataFrame(rows)
 
 
+@torch.no_grad()
+def evaluate_mark_confusion(
+    *,
+    model: torch.nn.Module,
+    val_loader: Iterable,
+    device: str,
+) -> pl.DataFrame:
+    """
+    Count predicted mark by true mark on the final next-event target.
+
+    This is especially useful for Instacart, where tail quantity marks can be
+    hidden by aggregate accuracy if the model keeps predicting central bins.
+    """
+    model.eval()
+    pad_id = int(model.cfg.num_marks - 1)
+    counts: dict[tuple[int, int], int] = {}
+    true_totals: dict[int, int] = {}
+
+    for marks, dts, mask, _, values in val_loader:
+        marks = marks.to(device)
+        dts = dts.to(device)
+        mask = mask.to(device)
+        values = values.to(device) if values is not None else None
+
+        valid = mask[:, -1] & mask[:, -2]
+        if valid.sum().item() == 0:
+            continue
+
+        h = forward_model(model, marks, dts, mask, values)
+        h_prev = h[:, -2, :]
+        y_mk = marks[:, -1]
+        valid = valid & (y_mk != pad_id)
+        if valid.sum().item() == 0:
+            continue
+
+        logits = model.mark_head(h_prev[valid])[..., :pad_id]
+        pred_mk = torch.argmax(logits, dim=-1).detach().cpu().tolist()
+        true_mk = y_mk[valid].detach().cpu().tolist()
+
+        for true_value, pred_value in zip(true_mk, pred_mk):
+            true_int = int(true_value)
+            pred_int = int(pred_value)
+            counts[(true_int, pred_int)] = counts.get((true_int, pred_int), 0) + 1
+            true_totals[true_int] = true_totals.get(true_int, 0) + 1
+
+    rows = []
+    for (true_mark, pred_mark), count in sorted(counts.items()):
+        true_total = max(int(true_totals.get(true_mark, 0)), 1)
+        rows.append({
+            "true_mark": int(true_mark),
+            "pred_mark": int(pred_mark),
+            "count": int(count),
+            "share_within_true": float(count / true_total),
+        })
+    schema = {
+        "true_mark": pl.Int64,
+        "pred_mark": pl.Int64,
+        "count": pl.Int64,
+        "share_within_true": pl.Float64,
+    }
+    return pl.DataFrame(rows, schema=schema)
+
+
 def _series_list_from_marked_df(marked_df: pl.DataFrame) -> list[dict[str, Any]]:
     """
     Convert marked events into Python lists for series-wise online evaluation.
@@ -475,6 +554,7 @@ def _forward_titantpp_observed_tokens(
     model: torch.nn.Module,
     marks: np.ndarray,
     dts: np.ndarray,
+    values: np.ndarray | None = None,
     device: str,
     update_context_memory: bool,
 ) -> torch.Tensor:
@@ -483,9 +563,15 @@ def _forward_titantpp_observed_tokens(
     """
     marks_t = torch.as_tensor(marks, dtype=torch.long, device=device).view(1, -1)
     dts_t = torch.as_tensor(dts, dtype=torch.float32, device=device).view(1, -1)
+    values_t = None
+    if values is not None:
+        values_t = torch.as_tensor(values, dtype=torch.float32, device=device).view(1, -1)
+    mask_t = torch.ones_like(marks_t, dtype=torch.bool)
     return model.forward(
         marks_t,
         dts_t,
+        values=values_t,
+        mask=mask_t,
         update_context_memory=bool(update_context_memory),
     )
 
@@ -560,6 +646,7 @@ def evaluate_titantpp_contextual_ttm(
                     model=model,
                     marks=marks[start:end],
                     dts=dts[start:end],
+                    values=None if values is None else values[start:end],
                     device=device,
                     update_context_memory=True,
                 )
@@ -580,6 +667,7 @@ def evaluate_titantpp_contextual_ttm(
                 model=model,
                 marks=marks[context_idx],
                 dts=dts[context_idx],
+                values=None if values is None else values[context_idx],
                 device=device,
                 update_context_memory=False,
             )
@@ -624,6 +712,7 @@ def evaluate_titantpp_contextual_ttm(
                 model=model,
                 marks=marks[target_idx:target_idx + 1],
                 dts=dts[target_idx:target_idx + 1],
+                values=None if values is None else values[target_idx:target_idx + 1],
                 device=device,
                 update_context_memory=True,
             )
@@ -692,6 +781,14 @@ def test_scale_metric_paths(run_paths: RunPaths, selection: str) -> tuple[Path, 
     Scale-wise held-out test quantity metrics for fixed-split experiments.
     """
     stem = f"test_scale_wise_{selection}"
+    return run_paths.metrics_dir / f"{stem}.csv", run_paths.metrics_dir / f"{stem}.parquet"
+
+
+def confusion_metric_paths(run_paths: RunPaths, selection: str, eval_split: str) -> tuple[Path, Path]:
+    """
+    Mark confusion matrix path for validation/test target transitions.
+    """
+    stem = f"{eval_split}_mark_confusion_{selection}"
     return run_paths.metrics_dir / f"{stem}.csv", run_paths.metrics_dir / f"{stem}.parquet"
 
 
@@ -939,7 +1036,13 @@ def train_one_run(
                 dts = dts.to(training_cfg.device)
                 mask = mask.to(training_cfg.device)
                 values = values.to(training_cfg.device) if values is not None else None
-                out = model.nll(marks, dts, values=values, mask=mask)
+                out = model.nll(
+                    marks,
+                    dts,
+                    values=values,
+                    mask=mask,
+                    loss_scope=cfg.train_loss_scope,
+                )
                 loss = compute_training_loss(model=model, out=out, training_cfg=training_cfg)
 
                 optimizer.zero_grad(set_to_none=True)
@@ -1037,6 +1140,10 @@ def train_one_run(
         "loss_mode": cfg.loss_mode,
         "split_mode": cfg.split_mode,
         "value_head_activation": cfg.value_head_activation,
+        "value_input_mode": cfg.value_input_mode,
+        "value_input_emb_dim": int(cfg.value_input_emb_dim),
+        "train_loss_scope": cfg.train_loss_scope,
+        "lambda_dt": float(cfg.lambda_dt),
         "test_time_memory": cfg.test_time_memory,
         "run_dir": str(run_paths.run_dir),
         "resume_checkpoint_path": str(resume_checkpoint_path),
@@ -1094,6 +1201,29 @@ def train_one_run(
         csv_path, parquet_path = scale_metric_paths(run_paths, selection)
         scale_df.write_csv(csv_path)
         scale_df.write_parquet(parquet_path)
+
+        confusion_df = evaluate_mark_confusion(
+            model=model,
+            val_loader=val_loader,
+            device=training_cfg.device,
+        ).with_columns([
+            pl.lit(run_cfg.dataset_name).alias("dataset_name"),
+            pl.lit(run_cfg.dataset_kind).alias("dataset_kind"),
+            pl.lit(canonical_model_name(run_cfg.model_name)).alias("model_name"),
+            pl.lit(run_cfg.candidate_name).alias("candidate_name"),
+            pl.lit(run_cfg.candidate_name).alias("titan_candidate_name"),
+            pl.lit(run_cfg.seed).alias("seed"),
+            pl.lit(selection).alias("selection"),
+            pl.lit("validation").alias("eval_split"),
+            pl.lit(run_cfg.scale_base).alias("model_scale_base"),
+        ])
+        confusion_csv_path, confusion_parquet_path = confusion_metric_paths(
+            run_paths,
+            selection,
+            "validation",
+        )
+        confusion_df.write_csv(confusion_csv_path)
+        confusion_df.write_parquet(confusion_parquet_path)
 
         if test_loader is not None:
             test_metrics = eval_next_event_week_lookback(
@@ -1158,6 +1288,29 @@ def train_one_run(
             test_scale_csv_path, test_scale_parquet_path = test_scale_metric_paths(run_paths, selection)
             test_scale_df.write_csv(test_scale_csv_path)
             test_scale_df.write_parquet(test_scale_parquet_path)
+
+            test_confusion_df = evaluate_mark_confusion(
+                model=model,
+                val_loader=test_loader,
+                device=training_cfg.device,
+            ).with_columns([
+                pl.lit(run_cfg.dataset_name).alias("dataset_name"),
+                pl.lit(run_cfg.dataset_kind).alias("dataset_kind"),
+                pl.lit(canonical_model_name(run_cfg.model_name)).alias("model_name"),
+                pl.lit(run_cfg.candidate_name).alias("candidate_name"),
+                pl.lit(run_cfg.candidate_name).alias("titan_candidate_name"),
+                pl.lit(run_cfg.seed).alias("seed"),
+                pl.lit(selection).alias("selection"),
+                pl.lit("test").alias("eval_split"),
+                pl.lit(run_cfg.scale_base).alias("model_scale_base"),
+            ])
+            test_confusion_csv_path, test_confusion_parquet_path = confusion_metric_paths(
+                run_paths,
+                selection,
+                "test",
+            )
+            test_confusion_df.write_csv(test_confusion_csv_path)
+            test_confusion_df.write_parquet(test_confusion_parquet_path)
 
         if cfg.test_time_memory == "contextual" and canonical_model_name(run_cfg.model_name) == "titantpp":
             ttm_metrics = evaluate_titantpp_contextual_ttm(

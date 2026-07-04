@@ -89,6 +89,51 @@ def default_titan_candidates() -> list[TitanCandidate]:
             memory_mode="contextual_ttm",
         ),
         TitanCandidate(
+            name="small_contextual_ttm_p8",
+            d_model=64,
+            n_layers=2,
+            n_heads=4,
+            d_ff=128,
+            dropout=0.1,
+            contextual_mem_size=16,
+            persistent_mem_size=0,
+            use_lmm=False,
+            mem_size=64,
+            mem_topk=4,
+            memory_mode="contextual_ttm",
+            ttm_chunk_size=8,
+        ),
+        TitanCandidate(
+            name="small_contextual_ttm_p16",
+            d_model=64,
+            n_layers=2,
+            n_heads=4,
+            d_ff=128,
+            dropout=0.1,
+            contextual_mem_size=16,
+            persistent_mem_size=0,
+            use_lmm=False,
+            mem_size=64,
+            mem_topk=4,
+            memory_mode="contextual_ttm",
+            ttm_chunk_size=16,
+        ),
+        TitanCandidate(
+            name="small_contextual_ttm_p32",
+            d_model=64,
+            n_layers=2,
+            n_heads=4,
+            d_ff=128,
+            dropout=0.1,
+            contextual_mem_size=16,
+            persistent_mem_size=0,
+            use_lmm=False,
+            mem_size=64,
+            mem_topk=4,
+            memory_mode="contextual_ttm",
+            ttm_chunk_size=32,
+        ),
+        TitanCandidate(
             name="small_hybrid_lmm_ttm",
             d_model=64,
             n_layers=2,
@@ -295,6 +340,9 @@ def build_project_rmtpp_config(
             "mark_emb_dim": cfg.rmtpp_mark_emb_dim,
             "rnn_hidden_dim": int(hidden_dim),
             "loss_mode": cfg.loss_mode,
+            "value_input_mode": cfg.value_input_mode,
+            "value_input_emb_dim": int(cfg.value_input_emb_dim),
+            "train_loss_scope": cfg.train_loss_scope,
         }
     )
 
@@ -317,8 +365,6 @@ def build_model(
     search_cfg = make_search_cfg(cfg, run_cfg.dataset_kind)
 
     if model_name == "rmtpp":
-        if cfg.loss_mode != "residual_only":
-            raise ValueError("RMTPP baseline supports residual_only in the unified long-epoch runner.")
         model = RMTPP(rmtpp_cfg).to(cfg.device)
         return model, rmtpp_cfg, None
 

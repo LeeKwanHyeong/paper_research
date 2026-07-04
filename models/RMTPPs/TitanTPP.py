@@ -3,6 +3,11 @@ from typing import Optional, Dict
 from torch import nn
 import torch
 from models.RMTPPs.config import RMTPPConfig
+from models.RMTPPs.value_conditioning import (
+    apply_transition_loss_scope,
+    build_value_input_feature,
+    mask_appended_target_value,
+)
 from models.Titan import TitanConfig, MemoryEncoder, LMM
 import torch.nn.functional as F
 
@@ -20,17 +25,26 @@ class TitanTPP(nn.Module):
         "series_lmm",
         "hybrid_lmm_ttm",
     }
+    VALID_TTM_MEMORY_UPDATES = {"all", "last", "mean"}
 
     def __init__(self, cfg: RMTPPConfig, titan_cfg: TitanConfig):
         super().__init__()
         self.cfg = cfg
         self.titan_cfg = titan_cfg
         self.memory_mode = self._resolve_memory_mode(titan_cfg)
+        self.ttm_chunk_size = self._resolve_ttm_chunk_size(titan_cfg)
+        self.ttm_memory_update = self._resolve_ttm_memory_update(titan_cfg)
 
         self.emb = nn.Embedding(cfg.num_marks, cfg.mark_emb_dim)    # marker embedding
 
-        # Input dim = Mark Embedding + Log-Time (1 dim)
+        self.use_value_input = str(getattr(cfg, "value_input_mode", "none")).lower() != "none"
+        if self.use_value_input:
+            self.value_input_proj = nn.Linear(1, int(cfg.value_input_emb_dim))
+
+        # Input dim = Mark Embedding + Log-Time (1 dim) + optional value feature
         input_dim = cfg.mark_emb_dim + 1
+        if self.use_value_input:
+            input_dim += int(cfg.value_input_emb_dim)
         d_model = titan_cfg.d_model
 
         # Titan Backbone
@@ -111,6 +125,31 @@ class TitanTPP(nn.Module):
         True when the encoder is allowed to maintain online contextual memory.
         """
         return self.memory_mode in {"contextual_ttm", "hybrid_lmm_ttm"}
+
+    @staticmethod
+    def _resolve_ttm_chunk_size(titan_cfg: TitanConfig) -> int:
+        """
+        Resolve how many tokens are encoded before updating contextual memory.
+
+        A value of 1 is the original exact token-wise TTM path. Larger values
+        are chunked/patch-style approximations that improve GPU utilization by
+        reducing repeated encoder calls.
+        """
+        chunk_size = int(getattr(titan_cfg, "ttm_chunk_size", 1) or 1)
+        if chunk_size < 1:
+            raise ValueError("ttm_chunk_size must be >= 1")
+        return chunk_size
+
+    @classmethod
+    def _resolve_ttm_memory_update(cls, titan_cfg: TitanConfig) -> str:
+        """
+        Resolve how each processed TTM chunk is summarized into memory.
+        """
+        mode = str(getattr(titan_cfg, "ttm_memory_update", "all") or "all").strip().lower()
+        if mode not in cls.VALID_TTM_MEMORY_UPDATES:
+            available = ", ".join(sorted(cls.VALID_TTM_MEMORY_UPDATES))
+            raise ValueError(f"Unsupported ttm_memory_update='{mode}'. Available: {available}")
+        return mode
 
     def _init_stable(self):
         # v_t, mark_head를 너무 크게 시작하지 않게
@@ -193,6 +232,8 @@ class TitanTPP(nn.Module):
         marks: torch.Tensor,
         dts: torch.Tensor,
         *,
+        values: Optional[torch.Tensor] = None,
+        mask: Optional[torch.Tensor] = None,
         update_context_memory: Optional[bool] = None,
         series_memory: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
@@ -207,7 +248,18 @@ class TitanTPP(nn.Module):
         emb = self.emb(marks)                           # [B, L, E]
         # dt_feat = dts.unsqueeze(-1).float()             # [B, L, 1]
         dt_feat = torch.log1p(dts.clamp_min(0).float()).unsqueeze(-1)
-        x = torch.cat([emb, dt_feat], dim = -1)  # [B, L, Input_Dim]
+        features = [emb, dt_feat]
+        value_feat = build_value_input_feature(
+            marks=marks,
+            values=values,
+            cfg=self.cfg,
+            mask=mask,
+        )
+        if value_feat is not None:
+            # Value-conditioned marked TPP: append already-observed quantity
+            # state without changing the next-event prediction heads.
+            features.append(self.value_input_proj(value_feat.unsqueeze(-1)))
+        x = torch.cat(features, dim = -1)  # [B, L, Input_Dim]
 
         # 2. Titan Encoder
         # Contextual TTM is stateful, so we only update memory when the caller
@@ -215,14 +267,18 @@ class TitanTPP(nn.Module):
         # mini-batch training.
         if self.uses_contextual_ttm and update_context_memory is None:
             # Self-contained online pass for ordinary train/validation windows.
-            # The memory is reset at window boundaries and updated token by
-            # token, so each position can only attend to previous tokens through
-            # contextual memory. This keeps the path leakage-safe for shuffled
-            # mini-batches while making memory_mode visible in standard metrics.
+            # The memory is reset at window boundaries and updated by chunk.
+            # A chunk size of 1 reproduces exact token-wise TTM; larger chunks
+            # reduce repeated encoder calls while causal attention still keeps
+            # future tokens hidden inside each chunk.
             h = self._encode_window_with_contextual_ttm(x)
         else:
             should_update_context = bool(update_context_memory) and self.uses_contextual_ttm
-            h = self.encoder(x, update_context_memory=should_update_context) # [B, L, D]
+            h = self.encoder(
+                x,
+                update_context_memory=should_update_context,
+                context_memory_update=self.ttm_memory_update,
+            ) # [B, L, D]
 
         # 3. LMM / retrieved memory branch
         if self.memory_mode == "static_lmm":
@@ -245,22 +301,25 @@ class TitanTPP(nn.Module):
         """
         Encode one mini-batch window with online contextual memory.
 
-        This path approximates Titan test-time memory during normal training:
-        memory is local to the current window, updated from already-observed
-        tokens, and cleared before returning so batches remain independent.
+        This path approximates Titan test-time memory during normal training.
+        Memory is local to the current window, updated from already-observed
+        chunks, and cleared before returning so batches remain independent.
         """
         reset = getattr(self.encoder, "reset_contextual_memory", None)
         if callable(reset):
             reset()
 
         outputs = []
-        for step in range(x.size(1)):
-            h_step = self.encoder(
-                x[:, step:step + 1, :],
+        chunk_size = min(self.ttm_chunk_size, max(int(x.size(1)), 1))
+        for start in range(0, x.size(1), chunk_size):
+            end = min(start + chunk_size, x.size(1))
+            h_chunk = self.encoder(
+                x[:, start:end, :],
                 update_context_memory=True,
-                position_offset=step,
+                position_offset=start,
+                context_memory_update=self.ttm_memory_update,
             )
-            outputs.append(h_step)
+            outputs.append(h_chunk)
 
         if callable(reset):
             reset()
@@ -299,6 +358,7 @@ class TitanTPP(nn.Module):
         values: Optional[torch.Tensor] = None,
         mask: Optional[torch.Tensor] = None,
         series_memory: Optional[torch.Tensor] = None,
+        loss_scope: Optional[str] = None,
     ) -> Dict[str, torch.Tensor]:
         """
         Compute negative log-likelihood for a batch.
@@ -315,12 +375,23 @@ class TitanTPP(nn.Module):
         if mask is None:
             mask = torch.ones((B, L), device = marks.device, dtype = torch.bool)
 
-        h = self.forward(marks, dts, series_memory=series_memory) # [B, L, H]
+        input_values = mask_appended_target_value(values, mask)
+        h = self.forward(
+            marks,
+            dts,
+            values=input_values,
+            mask=mask,
+            series_memory=series_memory,
+        ) # [B, L, H]
 
         h_j = h[:, :-1, :]                      # [B, L-1, H]
         y_next = marks[:, 1:]                   # [B, L-1]
         dt_next = dts[:, 1:].float()            # [B, L-1]
         step_mask = mask[:, 1:] & mask[:, :-1]  # exist target & exist context
+        step_mask = apply_transition_loss_scope(
+            step_mask,
+            loss_scope or getattr(self.cfg, "train_loss_scope", "all"),
+        )
 
         # Marker log-prob (paper equation 10.)
         logits = self.mark_head(h_j)            # [B, L-1, K]

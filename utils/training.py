@@ -9,6 +9,7 @@ from data_loader.event_seq_data_module import time_split_events, RMTPPDataset, c
 from models.RMTPPs.RMTPP import RMTPP
 from models.RMTPPs.TitanTPP import TitanTPP
 from models.RMTPPs.TransformerHawkesTPP import TransformerHawkesTPP
+from models.RMTPPs.value_conditioning import mask_appended_target_value
 import numpy as np
 import polars as pl
 
@@ -152,15 +153,25 @@ def eval_next_event_classic(model, loader: DataLoader, device: str) -> Dict[str,
         "_nll_steps": total,
     }
 
-def _forward_with_optional_mask(model, marks: torch.Tensor, dts: torch.Tensor, mask: torch.Tensor):
+def _forward_with_optional_mask(
+    model,
+    marks: torch.Tensor,
+    dts: torch.Tensor,
+    mask: torch.Tensor,
+    values: torch.Tensor | None = None,
+):
     """
     THP uses the padding mask, while RMTPP/TitanTPP keep the older two-argument
     forward signature. This small adapter keeps evaluation code shared.
     """
+    input_values = mask_appended_target_value(values, mask)
     try:
-        return model.forward(marks, dts, mask=mask)
+        return model.forward(marks, dts, values=input_values, mask=mask)
     except TypeError:
-        return model.forward(marks, dts)
+        try:
+            return model.forward(marks, dts, values=input_values)
+        except TypeError:
+            return model.forward(marks, dts)
 
 
 def eval_next_event_week_lookback(
@@ -209,7 +220,7 @@ def eval_next_event_week_lookback(
             # instead score only the final target transition; otherwise test NLL
             # can be dominated by repeated train-context transitions.
             if not target_only_nll:
-                out = model.nll(marks, dts, values=values, mask=mask)
+                out = model.nll(marks, dts, values=values, mask=mask, loss_scope="all")
                 # out: {"nll", "nll_time", "nll_marker", "steps"...} 형태라고 가정
                 steps = float(
                     out.get("steps", mask[:, 1:].sum()).item() if hasattr(out.get("steps", None), "item") else out.get(
@@ -229,7 +240,7 @@ def eval_next_event_week_lookback(
             if valid.sum().item() == 0:
                 continue
 
-            h = _forward_with_optional_mask(model, marks, dts, mask)     # (B, Lmax, H)
+            h = _forward_with_optional_mask(model, marks, dts, mask, values)     # (B, Lmax, H)
             h_prev = h[:, -2, :]              # (B, H)
             y_mk   = marks[:, -1]             # (B,)
             y_dt   = dts[:, -1].float()       # (B,)

@@ -5,6 +5,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from models.RMTPPs.config import RMTPPConfig
+from models.RMTPPs.value_conditioning import (
+    apply_transition_loss_scope,
+    build_value_input_feature,
+    mask_appended_target_value,
+)
 
 
 class RMTPP(nn.Module):
@@ -29,7 +34,13 @@ class RMTPP(nn.Module):
 
         self.emb = nn.Embedding(cfg.num_marks, cfg.mark_emb_dim) # marker embedding
 
+        self.use_value_input = str(getattr(cfg, "value_input_mode", "none")).lower() != "none"
+        if self.use_value_input:
+            self.value_input_proj = nn.Linear(1, int(cfg.value_input_emb_dim))
+
         rnn_in_dim = cfg.mark_emb_dim + 1
+        if self.use_value_input:
+            rnn_in_dim += int(cfg.value_input_emb_dim)
         if cfg.rnn_type == 'rnn':
             self.rnn = nn.RNN(
                 input_size = rnn_in_dim,
@@ -111,14 +122,56 @@ class RMTPP(nn.Module):
         )
         return torch.pow(scale_base, log_qty)
 
-    def forward(self, marks: torch.Tensor, dts: torch.Tensor) -> torch.Tensor:
+    def expected_qty_from_logits(
+        self,
+        logits_no_pad: torch.Tensor,
+        value_residual: torch.Tensor,
+    ) -> torch.Tensor:
+        """
+        Differentiable expected quantity used by optional hybrid qty loss.
+        """
+        mark_probs = torch.softmax(logits_no_pad, dim=-1)
+        real_mark_count = logits_no_pad.size(-1)
+        mark_grid = torch.arange(
+            real_mark_count,
+            device=logits_no_pad.device,
+            dtype=value_residual.dtype,
+        ).view(1, 1, real_mark_count)
+        log_qty = mark_grid + value_residual.unsqueeze(-1)
+        scale_base = torch.as_tensor(
+            self.cfg.scale_base,
+            dtype=value_residual.dtype,
+            device=value_residual.device,
+        )
+        qty_per_mark = torch.pow(scale_base, log_qty)
+        return (mark_probs * qty_per_mark).sum(dim=-1)
+
+    def forward(
+        self,
+        marks: torch.Tensor,
+        dts: torch.Tensor,
+        *,
+        values: Optional[torch.Tensor] = None,
+        mask: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         """
         :returns [B, L, H]
         """
         # marks: [B, L], dts: [B, L]
         emb = self.emb(marks)                           # [B, L, E]
         dt_feat = dts.unsqueeze(-1).float()             # [B, L, 1]
-        x = torch.cat([emb, dt_feat], dim = -1)  # [B, L, E + 1]
+        features = [emb, dt_feat]
+        value_feat = build_value_input_feature(
+            marks=marks,
+            values=values,
+            cfg=self.cfg,
+            mask=mask,
+        )
+        if value_feat is not None:
+            # Value-conditioned ablation: only observed history values should
+            # reach this point. nll/eval callers mask the appended target value.
+            features.append(self.value_input_proj(value_feat.unsqueeze(-1)))
+        x = torch.cat(features, dim = -1)  # [B, L, E + 1 (+ value feature)]
 
         out, _ = self.rnn(x)                            # [B, L, H]
         return out
@@ -164,6 +217,7 @@ class RMTPP(nn.Module):
         dts: torch.Tensor,
         values: Optional[torch.Tensor] = None,
         mask: Optional[torch.Tensor] = None,
+        loss_scope: Optional[str] = None,
     ) -> Dict[str, torch.Tensor]:
         """
         Compute negative log-likelihood for a batch.
@@ -180,12 +234,17 @@ class RMTPP(nn.Module):
         if mask is None:
             mask = torch.ones((B, L), device = marks.device, dtype = torch.bool)
 
-        h = self.forward(marks, dts) # [B, L, H]
+        input_values = mask_appended_target_value(values, mask)
+        h = self.forward(marks, dts, values=input_values, mask=mask) # [B, L, H]
 
         h_j = h[:, :-1, :]                      # [B, L-1, H]
         y_next = marks[:, 1:]                   # [B, L-1]
         dt_next = dts[:, 1:].float()            # [B, L-1]
         step_mask = mask[:, 1:] & mask[:, :-1]  # exist target & exist context
+        step_mask = apply_transition_loss_scope(
+            step_mask,
+            loss_scope or getattr(self.cfg, "train_loss_scope", "all"),
+        )
 
         # Marker log-prob (paper equation 10.)
         logits = self.mark_head(h_j)            # [B, L-1, K]
@@ -206,9 +265,28 @@ class RMTPP(nn.Module):
             value_sq = F.huber_loss(value_hat, value_next, reduction="none")
             value_sq = value_sq * step_mask
             value_loss = value_sq.sum() / step_mask.sum().clamp_min(1)
+
+            pad_id = int(self.cfg.num_marks - 1)
+            logits_real = logits[..., :pad_id]
+            expected_qty = self.expected_qty_from_logits(logits_real, value_hat)
+            true_qty = self.reconstruct_qty(y_next.clamp_max(pad_id - 1), value_next)
+
+            qty_scale_value = torch.as_tensor(
+                float(max(getattr(self.cfg, "qty_scale_value", 1.0), 1.0)),
+                device=true_qty.device,
+                dtype=true_qty.dtype,
+            )
+            qty_sq = F.huber_loss(
+                expected_qty / qty_scale_value,
+                true_qty / qty_scale_value,
+                reduction="none",
+            )
+            qty_sq = qty_sq * step_mask
+            qty_loss = qty_sq.sum() / step_mask.sum().clamp_min(1)
         else:
             value_hat = None
             value_loss = torch.zeros((), device=marks.device, dtype=torch.float32)
+            qty_loss = torch.zeros((), device=marks.device, dtype=torch.float32)
 
         # apply mask
         logp_y = log_y * step_mask
@@ -224,6 +302,7 @@ class RMTPP(nn.Module):
             'nll_marker': nll_marker,
             'nll_time': nll_time,
             'value_loss': value_loss,
+            'qty_loss': qty_loss,
             'value_hat': value_hat,
             'steps': step_mask.sum(),
         }

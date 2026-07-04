@@ -31,6 +31,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from models.RMTPPs.config import RMTPPConfig, THPConfig
+from models.RMTPPs.value_conditioning import (
+    apply_transition_loss_scope,
+    build_value_input_feature,
+    mask_appended_target_value,
+)
 
 
 class THPEncoderLayer(nn.Module):
@@ -117,6 +122,9 @@ class THPTemporalEncoder(nn.Module):
             thp_cfg.d_model,
             padding_idx=self.pad_id,
         )
+        self.use_value_input = str(getattr(rmtpp_cfg, "value_input_mode", "none")).lower() != "none"
+        if self.use_value_input:
+            self.value_input_proj = nn.Linear(1, thp_cfg.d_model)
         position_vec = torch.tensor(
             [math.pow(10000.0, 2.0 * (i // 2) / thp_cfg.d_model) for i in range(thp_cfg.d_model)],
             dtype=torch.float32,
@@ -163,6 +171,7 @@ class THPTemporalEncoder(nn.Module):
         self,
         marks: torch.Tensor,
         dts: torch.Tensor,
+        values: Optional[torch.Tensor] = None,
         mask: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         if mask is None:
@@ -174,6 +183,16 @@ class THPTemporalEncoder(nn.Module):
         temporal = self._temporal_encoding(event_time, mask)
 
         x = self.event_emb(marks.clamp(min=0, max=self.pad_id))
+        value_feat = build_value_input_feature(
+            marks=marks,
+            values=values,
+            cfg=self.rmtpp_cfg,
+            mask=mask,
+        )
+        if value_feat is not None:
+            # THP keeps a fixed d_model token stream, so the value-conditioned
+            # quantity mark is added as another token-level embedding.
+            x = x + self.value_input_proj(value_feat.unsqueeze(-1))
         blocked_mask = self._blocked_attention_mask(mask)
 
         for layer in self.layer_stack:
@@ -235,9 +254,10 @@ class TransformerHawkesTPP(nn.Module):
         self,
         marks: torch.Tensor,
         dts: torch.Tensor,
+        values: Optional[torch.Tensor] = None,
         mask: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
-        return self.encoder(marks, dts, mask=mask)
+        return self.encoder(marks, dts, values=values, mask=mask)
 
     def predict_value(self, h_j: torch.Tensor) -> torch.Tensor:
         value_raw = self.value_head(h_j).squeeze(-1)
@@ -256,6 +276,30 @@ class TransformerHawkesTPP(nn.Module):
             device=log_qty.device,
         )
         return torch.pow(scale_base, log_qty)
+
+    def expected_qty_from_logits(
+        self,
+        logits_no_pad: torch.Tensor,
+        value_residual: torch.Tensor,
+    ) -> torch.Tensor:
+        """
+        Differentiable expected quantity for optional hybrid qty supervision.
+        """
+        mark_probs = torch.softmax(logits_no_pad, dim=-1)
+        real_mark_count = logits_no_pad.size(-1)
+        mark_grid = torch.arange(
+            real_mark_count,
+            device=logits_no_pad.device,
+            dtype=value_residual.dtype,
+        ).view(1, 1, real_mark_count)
+        log_qty = mark_grid + value_residual.unsqueeze(-1)
+        scale_base = torch.as_tensor(
+            self.cfg.scale_base,
+            dtype=value_residual.dtype,
+            device=value_residual.device,
+        )
+        qty_per_mark = torch.pow(scale_base, log_qty)
+        return (mark_probs * qty_per_mark).sum(dim=-1)
 
     def log_f_dt(self, h_j: torch.Tensor, dt_next: torch.Tensor) -> torch.Tensor:
         w = self._w_pos()
@@ -276,16 +320,22 @@ class TransformerHawkesTPP(nn.Module):
         dts: torch.Tensor,
         values: Optional[torch.Tensor] = None,
         mask: Optional[torch.Tensor] = None,
+        loss_scope: Optional[str] = None,
     ) -> Dict[str, torch.Tensor]:
         B, L = marks.shape
         if mask is None:
             mask = marks.ne(int(self.cfg.num_marks - 1))
 
-        h = self.forward(marks, dts, mask=mask)
+        input_values = mask_appended_target_value(values, mask)
+        h = self.forward(marks, dts, values=input_values, mask=mask)
         h_j = h[:, :-1, :]
         y_next = marks[:, 1:]
         dt_next = dts[:, 1:].float()
         step_mask = mask[:, 1:] & mask[:, :-1]
+        step_mask = apply_transition_loss_scope(
+            step_mask,
+            loss_scope or getattr(self.cfg, "train_loss_scope", "all"),
+        )
 
         logits = self.mark_head(h_j)
         log_y = -F.cross_entropy(
@@ -300,9 +350,26 @@ class TransformerHawkesTPP(nn.Module):
             value_hat = self.predict_value(h_j)
             value_sq = F.huber_loss(value_hat, value_next, reduction="none")
             value_loss = (value_sq * step_mask).sum() / step_mask.sum().clamp_min(1)
+
+            pad_id = int(self.cfg.num_marks - 1)
+            logits_real = logits[..., :pad_id]
+            expected_qty = self.expected_qty_from_logits(logits_real, value_hat)
+            true_qty = self.reconstruct_qty(y_next.clamp_max(pad_id - 1), value_next)
+            qty_scale_value = torch.as_tensor(
+                float(max(getattr(self.cfg, "qty_scale_value", 1.0), 1.0)),
+                device=true_qty.device,
+                dtype=true_qty.dtype,
+            )
+            qty_sq = F.huber_loss(
+                expected_qty / qty_scale_value,
+                true_qty / qty_scale_value,
+                reduction="none",
+            )
+            qty_loss = (qty_sq * step_mask).sum() / step_mask.sum().clamp_min(1)
         else:
             value_hat = None
             value_loss = torch.zeros((), device=marks.device, dtype=torch.float32)
+            qty_loss = torch.zeros((), device=marks.device, dtype=torch.float32)
 
         logp_y = log_y * step_mask
         logf_dt = logf_dt * step_mask
@@ -315,6 +382,7 @@ class TransformerHawkesTPP(nn.Module):
             "nll_marker": nll_marker,
             "nll_time": nll_time,
             "value_loss": value_loss,
+            "qty_loss": qty_loss,
             "value_hat": value_hat,
             "steps": step_mask.sum(),
         }

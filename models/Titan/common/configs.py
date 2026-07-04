@@ -46,6 +46,14 @@ class TitanConfig:
     contextual_mem_size: int = 32
     persistent_mem_size: int = 32
     use_context_update: bool = False
+    # Contextual TTM update granularity.
+    # - ttm_chunk_size=1 keeps the original token-wise exact update path.
+    # - larger chunks reduce repeated encoder calls while preserving causal
+    #   attention inside each chunk.
+    # - ttm_memory_update controls what each chunk contributes to memory.
+    #   Supported values: "all", "last", "mean".
+    ttm_chunk_size: int = 1
+    ttm_memory_update: str = "all"
 
     # -------------------------
     # Positional embedding (encoder)

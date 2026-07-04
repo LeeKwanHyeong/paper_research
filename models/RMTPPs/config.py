@@ -12,6 +12,15 @@ class RMTPPConfig:
     scale_base: float = 10.0
     use_value_head: bool = True
     value_head_activation: Literal['sigmoid', 'identity'] = 'sigmoid'
+    # Optional value-conditioned marked TPP input.
+    # - none: original baseline, input is mark + dt only
+    # - residual: append past observed scale_residual_t
+    # - log_qty: append past observed log_base(qty_t) = mark_t + scale_residual_t
+    value_input_mode: Literal['none', 'residual', 'log_qty'] = 'none'
+    value_input_emb_dim: int = 8
+    # all: train on every valid transition inside a window
+    # target_only: train only on the final next-event transition, matching fixed validation/test
+    train_loss_scope: Literal['all', 'target_only'] = 'all'
     # Loss configuration:
     # - residual_only: current baseline objective
     # - hybrid: residual supervision + direct quantity supervision

@@ -104,6 +104,8 @@ class TitanCandidate:
     use_pos_emb: bool = True
     use_causal: bool = True
     memory_mode: str = "auto"
+    ttm_chunk_size: int = 1
+    ttm_memory_update: str = "all"
 
 
 @dataclass(frozen=True)
@@ -613,6 +615,98 @@ def has_positive_events(raw_events: pl.DataFrame) -> bool:
     return bool(positive_count and positive_count > 0)
 
 
+def validate_fixed_split_quantity_contract(
+    *,
+    marked_df: pl.DataFrame,
+    spec: DatasetSpec,
+    scale_base: float,
+) -> dict[str, Any]:
+    """
+    Validate the magnitude-factorized quantity contract used by TPP decoders.
+
+    RMTPP/TitanTPP reconstruct demand as
+        qty = scale_base ** (mark + scale_residual)
+    so fixed-split files must store `mark` as a magnitude order, not as an
+    unrelated categorical label such as an Instacart department id.
+    """
+    if marked_df.height == 0:
+        raise ValueError(f"Fixed split dataset={spec.name} is empty.")
+
+    positive_rows = int(marked_df.select((pl.col("demand_qty") > 0).sum()).item())
+    if positive_rows != marked_df.height:
+        raise ValueError(
+            f"Fixed split dataset={spec.name} contains non-positive demand rows. "
+            "Magnitude reconstruction requires demand_qty > 0 for every event."
+        )
+
+    stats = marked_df.select(
+        pl.col("mark").min().alias("mark_min"),
+        pl.col("mark").max().alias("mark_max"),
+        pl.col("mark").n_unique().alias("mark_n_unique"),
+        pl.col("scale_residual").min().alias("scale_residual_min"),
+        pl.col("scale_residual").max().alias("scale_residual_max"),
+        pl.col("scale_residual").is_null().sum().alias("scale_residual_nulls"),
+    ).to_dicts()[0]
+
+    if int(stats["mark_min"]) < 0:
+        raise ValueError(f"Fixed split dataset={spec.name} has negative mark values.")
+    if int(stats["scale_residual_nulls"]) > 0:
+        raise ValueError(f"Fixed split dataset={spec.name} has null scale_residual values.")
+
+    # Use log/exp instead of `base ** expr` for stable vectorized Polars support.
+    reconstructed = (
+        marked_df.select(
+            (
+                (
+                    (pl.col("mark").cast(pl.Float64) + pl.col("scale_residual").cast(pl.Float64))
+                    * math.log(float(scale_base))
+                )
+                .exp()
+                .alias("reconstructed_qty")
+            ),
+            pl.col("demand_qty").cast(pl.Float64).alias("demand_qty"),
+        )
+        .with_columns([
+            (pl.col("reconstructed_qty") - pl.col("demand_qty")).abs().alias("abs_error"),
+            (
+                (pl.col("reconstructed_qty") - pl.col("demand_qty")).abs()
+                / pl.col("demand_qty").clip(1e-12, None)
+            ).alias("rel_error"),
+        ])
+        .select(
+            pl.col("abs_error").max().alias("reconstruction_max_abs_error"),
+            pl.col("abs_error").mean().alias("reconstruction_mean_abs_error"),
+            pl.col("rel_error").max().alias("reconstruction_max_rel_error"),
+            pl.col("rel_error").mean().alias("reconstruction_mean_rel_error"),
+        )
+        .to_dicts()[0]
+    )
+
+    max_abs_error = float(reconstructed["reconstruction_max_abs_error"])
+    max_rel_error = float(reconstructed["reconstruction_max_rel_error"])
+    if max_abs_error > 1e-5 and max_rel_error > 1e-6:
+        raise ValueError(
+            f"Fixed split dataset={spec.name} violates quantity reconstruction contract: "
+            f"max_abs_error={max_abs_error:.6g}, max_rel_error={max_rel_error:.6g}. "
+            "Check that mark=floor(log_base(demand_qty)) and "
+            "scale_residual=log_base(demand_qty)-mark."
+        )
+
+    if spec.kind == INSTA_MARKET_BASKET_KIND:
+        residual_min = float(stats["scale_residual_min"])
+        residual_max = float(stats["scale_residual_max"])
+        if residual_min < -1e-9 or residual_max >= 1.0 + 1e-9:
+            raise ValueError(
+                "Instacart fixed split should use non-merged log2 residuals in [0, 1). "
+                f"Observed range=[{residual_min:.6g}, {residual_max:.6g}]."
+            )
+
+    return {
+        **{key: to_jsonable(value) for key, value in stats.items()},
+        **{key: to_jsonable(value) for key, value in reconstructed.items()},
+    }
+
+
 def build_premarked_target_meta(
     *,
     marked_df: pl.DataFrame,
@@ -730,6 +824,22 @@ def prepare_fixed_split_marked_dataset(
 
     marked_df = filter_top_series(marked_df, key_col="oper_part_no", max_series=spec.max_series)
     marked_df = marked_df.sort(["oper_part_no", "seq"])
+    quantity_contract = validate_fixed_split_quantity_contract(
+        marked_df=marked_df,
+        spec=spec,
+        scale_base=scale_base,
+    )
+    logger.info(
+        "Validated fixed split quantity contract | dataset=%s source=%s mark_range=[%s,%s] "
+        "residual_range=[%.6f,%.6f] max_abs_error=%.6g",
+        spec.name,
+        spec.split_with_path,
+        quantity_contract["mark_min"],
+        quantity_contract["mark_max"],
+        float(quantity_contract["scale_residual_min"]),
+        float(quantity_contract["scale_residual_max"]),
+        float(quantity_contract["reconstruction_max_abs_error"]),
+    )
 
     # Use the actually loaded mark range so optional max-series subsets keep the
     # model PAD id aligned with the DataLoader's observed vocabulary.
@@ -796,6 +906,7 @@ def prepare_fixed_split_marked_dataset(
         "split_mark_counts": split_mark_counts.to_dicts(),
         "scale_residual_min": float(marked_df.select(pl.col("scale_residual").min()).item()),
         "scale_residual_max": residual_max,
+        "quantity_contract": quantity_contract,
     }
     save_json(meta, meta_json_path)
     return marked_df, meta, cache_root
@@ -973,6 +1084,8 @@ def build_titan_config(search_cfg: SearchConfig, candidate: TitanCandidate) -> T
         contextual_mem_size=candidate.contextual_mem_size if uses_contextual_memory else 0,
         persistent_mem_size=candidate.persistent_mem_size if uses_static_attention_memory else 0,
         use_context_update=uses_contextual_memory,
+        ttm_chunk_size=candidate.ttm_chunk_size,
+        ttm_memory_update=candidate.ttm_memory_update,
         use_pos_emb=candidate.use_pos_emb,
         max_len=search_cfg.max_seq_len,
         use_lmm=uses_lmm,

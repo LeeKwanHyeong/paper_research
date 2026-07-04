@@ -104,6 +104,10 @@ def _validate_long_epoch_args(args: argparse.Namespace) -> None:
             "Unsupported eval selections: "
             f"{unsupported_selections}. Allowed: {sorted(ALLOWED_EVAL_SELECTIONS)}"
         )
+    if float(args.lambda_dt) < 0.0:
+        raise ValueError("--lambda-dt must be non-negative.")
+    if int(args.value_input_emb_dim) <= 0:
+        raise ValueError("--value-input-emb-dim must be positive.")
 
 
 def add_shared_long_epoch_args(parser: argparse.ArgumentParser) -> None:
@@ -149,6 +153,12 @@ def add_shared_long_epoch_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--epochs", type=int, default=defaults.epochs)
     parser.add_argument("--lr", type=float, default=defaults.lr)
+    parser.add_argument(
+        "--lambda-dt",
+        type=float,
+        default=defaults.lambda_dt,
+        help="Weight for the continuous-time likelihood term in the training objective.",
+    )
     parser.add_argument("--batch-size", type=int, default=defaults.batch_size)
     parser.add_argument("--seeds", default="42,52,62", help="Comma-separated random seeds.")
     parser.add_argument("--lookback-weeks", type=int, default=defaults.lookback_weeks)
@@ -192,6 +202,30 @@ def add_shared_long_epoch_args(parser: argparse.ArgumentParser) -> None:
         default=defaults.loss_mode,
         choices=["residual_only", "hybrid", "qty_only"],
         help="TPP quantity objective. Main paper runs should usually keep residual_only.",
+    )
+    parser.add_argument(
+        "--value-input-mode",
+        default=defaults.value_input_mode,
+        choices=["none", "residual", "log_qty"],
+        help=(
+            "Optional value-conditioned marked TPP input. 'none' keeps the baseline; "
+            "'residual' adds past scale_residual; 'log_qty' adds past log_base(qty)."
+        ),
+    )
+    parser.add_argument(
+        "--value-input-emb-dim",
+        type=int,
+        default=defaults.value_input_emb_dim,
+        help="Projection dimension for optional value-conditioned input features.",
+    )
+    parser.add_argument(
+        "--train-loss-scope",
+        default=defaults.train_loss_scope,
+        choices=["all", "target_only"],
+        help=(
+            "all: train on every transition in the window. target_only: train only "
+            "on the final next-event transition, matching fixed validation/test."
+        ),
     )
     parser.add_argument(
         "--test-time-memory",
@@ -275,6 +309,7 @@ def build_long_epoch_config(args: argparse.Namespace) -> ExperimentConfig:
         thp_candidates=_csv_tuple(args.thp_candidates),
         epochs=int(args.epochs),
         lr=float(args.lr),
+        lambda_dt=float(args.lambda_dt),
         batch_size=int(args.batch_size),
         seeds=_csv_tuple(args.seeds, cast=int),
         lookback_weeks=int(args.lookback_weeks),
@@ -288,6 +323,9 @@ def build_long_epoch_config(args: argparse.Namespace) -> ExperimentConfig:
         rmtpp_hidden_dim=_parse_optional_positive_int(args.rmtpp_hidden_dim),
         value_head_activation=args.value_head_activation,
         loss_mode=args.loss_mode,
+        value_input_mode=args.value_input_mode,
+        value_input_emb_dim=int(args.value_input_emb_dim),
+        train_loss_scope=args.train_loss_scope,
         test_time_memory=args.test_time_memory,
         analysis_scale_base=float(args.analysis_scale_base),
         analysis_tail_order=int(args.analysis_tail_order),
