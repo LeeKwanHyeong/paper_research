@@ -1,8 +1,22 @@
+import math
 from typing import Optional, Dict
 
 from torch import nn
 import torch
 from models.RMTPPs.config import RMTPPConfig
+from models.RMTPPs.marker_losses import masked_normalized_ranked_probability_score
+from models.RMTPPs.magnitude_normalization import (
+    MagnitudeContext,
+    build_causal_revin_magnitude_context,
+    build_causal_shrinkage_revin_magnitude_context,
+    build_global_magnitude_context,
+    build_raw_global_magnitude_context,
+    denormalize_magnitude,
+    normalized_magnitude_target,
+    reconstruct_log2_quantity,
+    reconstruct_raw_quantity,
+    safe_exp2,
+)
 from models.RMTPPs.value_conditioning import (
     apply_transition_loss_scope,
     build_value_input_feature,
@@ -26,6 +40,16 @@ class TitanTPP(nn.Module):
         "hybrid_lmm_ttm",
     }
     VALID_TTM_MEMORY_UPDATES = {"all", "last", "mean"}
+    VALID_VALUE_HEAD_MODES = {"shared", "mark_conditioned_experts"}
+    VALID_QTY_MARK_GRADIENT_MODES = {"coupled", "detached"}
+    VALID_VALUE_ENCODER_GRADIENT_MODES = {"coupled", "detached"}
+    VALID_MARKER_LOSS_MODES = {"ce", "ce_rps"}
+    VALID_QTY_DECODER_MODES = {"mark_residual", "direct_log_qty", "direct_raw_qty"}
+    VALID_MAGNITUDE_NORM_MODES = {
+        "global",
+        "causal_revin",
+        "causal_shrinkage_revin",
+    }
 
     def __init__(self, cfg: RMTPPConfig, titan_cfg: TitanConfig):
         super().__init__()
@@ -36,14 +60,28 @@ class TitanTPP(nn.Module):
         self.ttm_memory_update = self._resolve_ttm_memory_update(titan_cfg)
 
         self.emb = nn.Embedding(cfg.num_marks, cfg.mark_emb_dim)    # marker embedding
+        self.num_real_marks = int(cfg.num_marks - 1)
+        if self.num_real_marks < 1:
+            raise ValueError("TitanTPP requires at least one real mark plus PAD.")
+        self.qty_decoder_mode = self._resolve_qty_decoder_mode(cfg)
+        self.magnitude_norm_mode = self._resolve_magnitude_norm_mode(cfg)
+        self.use_direct_magnitude = self.qty_decoder_mode in {
+            "direct_log_qty",
+            "direct_raw_qty",
+        }
+        self.use_direct_raw_quantity = self.qty_decoder_mode == "direct_raw_qty"
 
         self.use_value_input = str(getattr(cfg, "value_input_mode", "none")).lower() != "none"
-        if self.use_value_input:
+        if self.use_direct_magnitude:
+            self.magnitude_input_proj = nn.Linear(1, int(cfg.magnitude_input_emb_dim))
+        elif self.use_value_input:
             self.value_input_proj = nn.Linear(1, int(cfg.value_input_emb_dim))
 
         # Input dim = Mark Embedding + Log-Time (1 dim) + optional value feature
         input_dim = cfg.mark_emb_dim + 1
-        if self.use_value_input:
+        if self.use_direct_magnitude:
+            input_dim += int(cfg.magnitude_input_emb_dim)
+        elif self.use_value_input:
             input_dim += int(cfg.value_input_emb_dim)
         d_model = titan_cfg.d_model
 
@@ -79,8 +117,23 @@ class TitanTPP(nn.Module):
         # Prediction Heads (RMTPPs Standards)
         # Next Marker Prediction
         self.mark_head = nn.Linear(d_model, cfg.num_marks)
-        # Value head predicts the residual part of log10(qty).
-        self.value_head = nn.Linear(d_model, 1)
+        self.value_head_mode = self._resolve_value_head_mode(cfg)
+        self.qty_mark_gradient_mode = self._resolve_qty_mark_gradient_mode(cfg)
+        self.value_encoder_gradient_mode = self._resolve_value_encoder_gradient_mode(cfg)
+        self.marker_loss_mode = self._resolve_marker_loss_mode(cfg)
+        self.lambda_ordinal = float(getattr(cfg, "lambda_ordinal", 0.0))
+        self._validate_gradient_mode_combination()
+        self._validate_marker_loss_combination()
+        self._validate_quantity_decoder_combination()
+        if self.use_direct_magnitude:
+            self.magnitude_head = nn.Linear(d_model, 1)
+        else:
+            # Legacy head predicts the residual part of log_base(qty).
+            self.value_head = nn.Linear(d_model, 1)
+        if not self.use_direct_magnitude and self.value_head_mode == "mark_conditioned_experts":
+            rng_state = torch.random.get_rng_state()
+            self.value_mark_delta_head = nn.Linear(d_model, self.num_real_marks)
+            torch.random.set_rng_state(rng_state)
 
         # Next Time Intensity Parameters
         # v_t: vector, b_t: scalar, w_t: scalr (>0 enforced by softplus)
@@ -90,6 +143,160 @@ class TitanTPP(nn.Module):
 
         # Initialize weights
         self._init_stable()
+
+    @classmethod
+    def _resolve_value_head_mode(cls, cfg: RMTPPConfig) -> str:
+        mode = str(getattr(cfg, "value_head_mode", "shared") or "shared").strip().lower()
+        if mode not in cls.VALID_VALUE_HEAD_MODES:
+            available = ", ".join(sorted(cls.VALID_VALUE_HEAD_MODES))
+            raise ValueError(
+                f"Unsupported TitanTPP value_head_mode='{mode}'. Available: {available}"
+            )
+        return mode
+
+    @classmethod
+    def _resolve_qty_mark_gradient_mode(cls, cfg: RMTPPConfig) -> str:
+        mode = str(
+            getattr(cfg, "qty_mark_gradient_mode", "coupled") or "coupled"
+        ).strip().lower()
+        if mode not in cls.VALID_QTY_MARK_GRADIENT_MODES:
+            available = ", ".join(sorted(cls.VALID_QTY_MARK_GRADIENT_MODES))
+            raise ValueError(
+                "Unsupported TitanTPP qty_mark_gradient_mode="
+                f"'{mode}'. Available: {available}"
+            )
+        return mode
+
+    @classmethod
+    def _resolve_value_encoder_gradient_mode(cls, cfg: RMTPPConfig) -> str:
+        mode = str(
+            getattr(cfg, "value_encoder_gradient_mode", "coupled") or "coupled"
+        ).strip().lower()
+        if mode not in cls.VALID_VALUE_ENCODER_GRADIENT_MODES:
+            available = ", ".join(sorted(cls.VALID_VALUE_ENCODER_GRADIENT_MODES))
+            raise ValueError(
+                "Unsupported TitanTPP value_encoder_gradient_mode="
+                f"'{mode}'. Available: {available}"
+            )
+        return mode
+
+    def _validate_gradient_mode_combination(self) -> None:
+        if self.value_encoder_gradient_mode != "detached":
+            return
+        if (
+            self.value_head_mode != "mark_conditioned_experts"
+            or self.qty_mark_gradient_mode != "detached"
+        ):
+            raise ValueError(
+                "value_encoder_gradient_mode='detached' requires "
+                "value_head_mode='mark_conditioned_experts' and "
+                "qty_mark_gradient_mode='detached'."
+            )
+
+    @classmethod
+    def _resolve_marker_loss_mode(cls, cfg: RMTPPConfig) -> str:
+        mode = str(getattr(cfg, "marker_loss_mode", "ce") or "ce").strip().lower()
+        if mode not in cls.VALID_MARKER_LOSS_MODES:
+            available = ", ".join(sorted(cls.VALID_MARKER_LOSS_MODES))
+            raise ValueError(
+                f"Unsupported TitanTPP marker_loss_mode='{mode}'. Available: {available}"
+            )
+        return mode
+
+    def _validate_marker_loss_combination(self) -> None:
+        if not math.isfinite(self.lambda_ordinal) or self.lambda_ordinal < 0.0:
+            raise ValueError("lambda_ordinal must be finite and non-negative.")
+        if self.marker_loss_mode == "ce" and self.lambda_ordinal != 0.0:
+            raise ValueError("marker_loss_mode='ce' requires lambda_ordinal=0.")
+        if self.marker_loss_mode == "ce_rps" and self.lambda_ordinal <= 0.0:
+            raise ValueError("marker_loss_mode='ce_rps' requires lambda_ordinal>0.")
+
+    @classmethod
+    def _resolve_qty_decoder_mode(cls, cfg: RMTPPConfig) -> str:
+        mode = str(getattr(cfg, "qty_decoder_mode", "mark_residual") or "mark_residual").strip().lower()
+        if mode not in cls.VALID_QTY_DECODER_MODES:
+            available = ", ".join(sorted(cls.VALID_QTY_DECODER_MODES))
+            raise ValueError(
+                f"Unsupported TitanTPP qty_decoder_mode='{mode}'. Available: {available}"
+            )
+        return mode
+
+    @classmethod
+    def _resolve_magnitude_norm_mode(cls, cfg: RMTPPConfig) -> str:
+        mode = str(getattr(cfg, "magnitude_norm_mode", "global") or "global").strip().lower()
+        if mode not in cls.VALID_MAGNITUDE_NORM_MODES:
+            available = ", ".join(sorted(cls.VALID_MAGNITUDE_NORM_MODES))
+            raise ValueError(
+                f"Unsupported TitanTPP magnitude_norm_mode='{mode}'. Available: {available}"
+            )
+        return mode
+
+    def _validate_quantity_decoder_combination(self) -> None:
+        if not self.use_direct_magnitude:
+            return
+        decoder_label = self.qty_decoder_mode
+        if not bool(getattr(self.cfg, "use_value_head", True)):
+            raise ValueError(f"{decoder_label} requires use_value_head=True.")
+        if not math.isclose(float(self.cfg.scale_base), 2.0, rel_tol=0.0, abs_tol=1e-12):
+            raise ValueError(f"{decoder_label} requires scale_base=2.0.")
+        if str(getattr(self.cfg, "train_loss_scope", "all")) != "target_only":
+            raise ValueError(f"{decoder_label} requires train_loss_scope='target_only'.")
+        if str(getattr(self.cfg, "loss_mode", "residual_only")) != "hybrid":
+            raise ValueError(f"{decoder_label} requires loss_mode='hybrid'.")
+        if str(getattr(self.cfg, "value_input_mode", "none")) != "none":
+            raise ValueError(
+                f"{decoder_label} owns the continuous input and requires value_input_mode='none'."
+            )
+        if self.marker_loss_mode != "ce" or self.lambda_ordinal != 0.0:
+            raise ValueError(f"{decoder_label} requires plain marker CE and lambda_ordinal=0.")
+        if self.value_head_mode != "shared":
+            raise ValueError(f"{decoder_label} does not combine with mark-conditioned value experts.")
+        if self.qty_mark_gradient_mode != "coupled" or self.value_encoder_gradient_mode != "coupled":
+            raise ValueError(f"{decoder_label} does not combine with detached V3 gradient routes.")
+        if self.memory_mode in {"contextual_ttm", "hybrid_lmm_ttm"}:
+            raise ValueError(f"{decoder_label} does not support contextual TTM.")
+        if int(getattr(self.cfg, "magnitude_input_emb_dim", 0)) <= 0:
+            raise ValueError("magnitude_input_emb_dim must be positive.")
+        values = (
+            float(getattr(self.cfg, "magnitude_global_mean", float("nan"))),
+            float(getattr(self.cfg, "magnitude_global_var", float("nan"))),
+            float(getattr(self.cfg, "magnitude_global_std", float("nan"))),
+            float(getattr(self.cfg, "magnitude_sigma_floor", float("nan"))),
+            float(getattr(self.cfg, "lambda_magnitude", float("nan"))),
+        )
+        if not all(math.isfinite(value) for value in values):
+            raise ValueError("Direct magnitude constants and lambda must be finite.")
+        if values[1] < 0.0 or values[2] <= 0.0 or values[3] <= 0.0 or values[4] <= 0.0:
+            raise ValueError("Magnitude std, sigma floor, and lambda must be positive.")
+
+        if self.qty_decoder_mode == "direct_log_qty":
+            if self.magnitude_norm_mode != "global":
+                raise ValueError("direct_log_qty supports only global normalization.")
+        else:
+            if str(getattr(self.cfg, "magnitude_center_mode", "mean")) != "mean":
+                raise ValueError("direct_raw_qty requires magnitude_center_mode='mean'.")
+            if bool(getattr(self.cfg, "magnitude_revin_affine", False)):
+                raise ValueError("direct_raw_qty requires magnitude_revin_affine=False.")
+            if str(getattr(self.cfg, "magnitude_stat_context_mode", "none")) != "none":
+                raise ValueError("direct_raw_qty requires magnitude_stat_context_mode='none'.")
+            revin_eps = float(getattr(self.cfg, "magnitude_revin_eps", float("nan")))
+            shrinkage_k = float(getattr(self.cfg, "magnitude_shrinkage_k", float("nan")))
+            if not math.isfinite(revin_eps) or revin_eps <= 0.0:
+                raise ValueError("direct_raw_qty requires positive finite magnitude_revin_eps.")
+            if not math.isfinite(shrinkage_k) or shrinkage_k <= 0.0:
+                raise ValueError("direct_raw_qty requires positive finite magnitude_shrinkage_k.")
+
+        if self.use_direct_raw_quantity:
+            return
+        clamp_min = float(getattr(self.cfg, "magnitude_exp_clamp_min", -2.0))
+        clamp_max = float(getattr(self.cfg, "magnitude_exp_clamp_max", 15.0))
+        if not math.isfinite(clamp_min) or not math.isfinite(clamp_max) or clamp_min >= clamp_max:
+            raise ValueError("Magnitude exp2 clamp bounds must be finite and increasing.")
+
+    def _value_branch_hidden(self, h_j: torch.Tensor) -> torch.Tensor:
+        if self.value_encoder_gradient_mode == "detached":
+            return h_j.detach()
+        return h_j
 
     @classmethod
     def _resolve_memory_mode(cls, titan_cfg: TitanConfig) -> str:
@@ -156,8 +363,16 @@ class TitanTPP(nn.Module):
         nn.init.normal_(self.v_t.weight, mean=0.0, std=0.01)
         nn.init.normal_(self.mark_head.weight, mean=0.0, std=0.02)
         nn.init.zeros_(self.mark_head.bias)
-        nn.init.normal_(self.value_head.weight, mean=0.0, std=0.02)
-        nn.init.zeros_(self.value_head.bias)
+        if hasattr(self, "value_head"):
+            nn.init.normal_(self.value_head.weight, mean=0.0, std=0.02)
+            nn.init.zeros_(self.value_head.bias)
+        if hasattr(self, "magnitude_head"):
+            nn.init.normal_(self.magnitude_head.weight, mean=0.0, std=0.02)
+            nn.init.zeros_(self.magnitude_head.bias)
+        if hasattr(self, "value_mark_delta_head"):
+            # V3 starts exactly on the V2 shared-head function.
+            nn.init.zeros_(self.value_mark_delta_head.weight)
+            nn.init.zeros_(self.value_mark_delta_head.bias)
 
         # w_raw를 음수로 시작하면 softplus(w_raw)가 작게 시작 -> wd가 작아져 폭주 억제
         with torch.no_grad():
@@ -170,14 +385,50 @@ class TitanTPP(nn.Module):
     def _clamped_exp(self, x: torch.Tensor) -> torch.Tensor:
         return torch.exp(torch.clamp(x, max = self.cfg.exp_clamp))
 
-    def predict_value(self, h_j: torch.Tensor) -> torch.Tensor:
-        """
-        Predict the residual component of log_base(qty).
-        """
-        value_raw = self.value_head(h_j).squeeze(-1)
+    def _activate_value(self, value_raw: torch.Tensor) -> torch.Tensor:
         if self.cfg.value_head_activation == "sigmoid":
             return torch.sigmoid(value_raw)
         return value_raw
+
+    def predict_value_by_mark(self, h_j: torch.Tensor) -> torch.Tensor:
+        """
+        Predict one residual per real next mark.
+
+        Shared mode expands the original V2 value prediction without adding
+        parameters. V3 adds zero-initialized per-mark deltas to that shared
+        prediction.
+        """
+        if self.use_direct_magnitude:
+            raise RuntimeError("Legacy residual prediction is disabled in direct magnitude mode.")
+        shared_raw = self.value_head(h_j)
+        if self.value_head_mode == "mark_conditioned_experts":
+            value_raw = shared_raw + self.value_mark_delta_head(h_j)
+        else:
+            value_raw = shared_raw.expand(*shared_raw.shape[:-1], self.num_real_marks)
+        return self._activate_value(value_raw)
+
+    def predict_value(
+        self,
+        h_j: torch.Tensor,
+        marks: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        """
+        Predict one residual for each hidden state.
+
+        Existing shared-head callers preserve V2 behavior. In V3, callers can
+        provide explicit marks; otherwise the model uses its predicted mark.
+        """
+        if self.use_direct_magnitude:
+            raise RuntimeError("Legacy residual prediction is disabled in direct magnitude mode.")
+        if self.value_head_mode == "shared":
+            return self._activate_value(self.value_head(h_j).squeeze(-1))
+
+        if marks is None:
+            logits_real = self.mark_head(h_j)[..., :self.num_real_marks]
+            marks = torch.argmax(logits_real, dim=-1)
+        values_by_mark = self.predict_value_by_mark(h_j)
+        safe_marks = marks.long().clamp(min=0, max=self.num_real_marks - 1)
+        return values_by_mark.gather(-1, safe_marks.unsqueeze(-1)).squeeze(-1)
 
     def reconstruct_log_qty(self, mark: torch.Tensor, value_residual: torch.Tensor) -> torch.Tensor:
         return mark.float() + value_residual.float()
@@ -199,17 +450,30 @@ class TitanTPP(nn.Module):
         """
         Build a differentiable quantity estimate from mark probabilities.
 
-        We intentionally avoid argmax-mark reconstruction here so direct
-        quantity supervision can still update the mark head during training.
+        We avoid argmax-mark reconstruction so the estimate stays
+        differentiable. The configured gradient mode decides whether direct
+        quantity supervision can also update the mark-probability gate.
         """
         mark_probs = torch.softmax(logits_no_pad, dim=-1)
+        if self.qty_mark_gradient_mode == "detached":
+            # V3b keeps the V3a forward estimate but prevents quantity loss
+            # from directly optimizing the mark-probability gate.
+            mark_probs = mark_probs.detach()
         real_mark_count = logits_no_pad.size(-1)
         mark_grid = torch.arange(
             real_mark_count,
             device=logits_no_pad.device,
             dtype=value_residual.dtype,
-        ).view(1, 1, real_mark_count)
-        log_qty = mark_grid + value_residual.unsqueeze(-1)
+        ).view(*([1] * (logits_no_pad.ndim - 1)), real_mark_count)
+        if value_residual.ndim == logits_no_pad.ndim - 1:
+            value_by_mark = value_residual.unsqueeze(-1)
+        elif value_residual.shape == logits_no_pad.shape:
+            value_by_mark = value_residual
+        else:
+            raise ValueError(
+                "value_residual must have shape [B, L] or [B, L, num_real_marks]."
+            )
+        log_qty = mark_grid + value_by_mark
         scale_base = torch.as_tensor(
             self.cfg.scale_base,
             dtype=value_residual.dtype,
@@ -217,6 +481,99 @@ class TitanTPP(nn.Module):
         )
         qty_per_mark = torch.pow(scale_base, log_qty)
         return (mark_probs * qty_per_mark).sum(dim=-1)
+
+    def build_magnitude_context(
+        self,
+        marks: torch.Tensor,
+        values: torch.Tensor,
+        mask: torch.Tensor,
+    ) -> MagnitudeContext:
+        """Build the stateless causal context shared by input and decoder."""
+        if not self.use_direct_magnitude:
+            raise RuntimeError("Magnitude context is only available in direct decoder mode.")
+        if self.qty_decoder_mode == "direct_log_qty":
+            return build_global_magnitude_context(
+                marks,
+                values,
+                mask,
+                num_real_marks=self.num_real_marks,
+                global_mean=float(self.cfg.magnitude_global_mean),
+                global_std=float(self.cfg.magnitude_global_std),
+                sigma_floor=float(self.cfg.magnitude_sigma_floor),
+            )
+        if self.magnitude_norm_mode == "global":
+            return build_raw_global_magnitude_context(
+                marks,
+                values,
+                mask,
+                num_real_marks=self.num_real_marks,
+                global_mean=float(self.cfg.magnitude_global_mean),
+                global_std=float(self.cfg.magnitude_global_std),
+                sigma_floor=float(self.cfg.magnitude_sigma_floor),
+            )
+        if self.magnitude_norm_mode == "causal_revin":
+            return build_causal_revin_magnitude_context(
+                marks,
+                values,
+                mask,
+                num_real_marks=self.num_real_marks,
+                revin_eps=float(self.cfg.magnitude_revin_eps),
+            )
+        if self.magnitude_norm_mode == "causal_shrinkage_revin":
+            return build_causal_shrinkage_revin_magnitude_context(
+                marks,
+                values,
+                mask,
+                num_real_marks=self.num_real_marks,
+                global_mean=float(self.cfg.magnitude_global_mean),
+                global_var=float(self.cfg.magnitude_global_var),
+                sigma_floor=float(self.cfg.magnitude_sigma_floor),
+                shrinkage_k=float(self.cfg.magnitude_shrinkage_k),
+            )
+        raise RuntimeError(f"Unsupported active magnitude norm mode: {self.magnitude_norm_mode}")
+
+    def predict_direct_magnitude(
+        self,
+        h_j: torch.Tensor,
+        *,
+        marks: torch.Tensor,
+        values: torch.Tensor,
+        mask: torch.Tensor,
+        context: MagnitudeContext | None = None,
+    ) -> dict[str, torch.Tensor | MagnitudeContext]:
+        """Predict normalized magnitude and reconstruct its quantity domain."""
+        if not self.use_direct_magnitude:
+            raise RuntimeError("Direct magnitude prediction requires a direct decoder mode.")
+        context = context or self.build_magnitude_context(marks, values, mask)
+        normalized = self.magnitude_head(h_j).squeeze(-1)
+        denormalized = denormalize_magnitude(normalized, context)
+        if self.use_direct_raw_quantity:
+            affine_qty = denormalized
+            qty = affine_qty.clamp_min(0.0)
+            log_qty = torch.log2(qty.clamp_min(float(self.cfg.eps)))
+        else:
+            log_qty = denormalized
+            qty = safe_exp2(
+                log_qty,
+                clamp_min=float(self.cfg.magnitude_exp_clamp_min),
+                clamp_max=float(self.cfg.magnitude_exp_clamp_max),
+            )
+            affine_qty = qty
+        for name, tensor in {
+            "normalized magnitude": normalized,
+            "affine quantity": affine_qty,
+            "quantity": qty,
+        }.items():
+            if not torch.isfinite(tensor).all():
+                raise FloatingPointError(f"Direct {name} prediction contains NaN or Inf.")
+        return {
+            "normalized": normalized,
+            "denormalized": denormalized,
+            "log_qty": log_qty,
+            "affine_qty": affine_qty,
+            "qty": qty,
+            "context": context,
+        }
 
     @torch.no_grad()
     def reset_contextual_memory(self) -> None:
@@ -236,6 +593,7 @@ class TitanTPP(nn.Module):
         mask: Optional[torch.Tensor] = None,
         update_context_memory: Optional[bool] = None,
         series_memory: Optional[torch.Tensor] = None,
+        magnitude_context: Optional[MagnitudeContext] = None,
     ) -> torch.Tensor:
         """
         Process input sequence through Embedding -> Titan Encoder -> LMM
@@ -244,18 +602,38 @@ class TitanTPP(nn.Module):
         """
         # marks: [B, L], dts: [B, L]
 
-        # 1. Embeddings
-        emb = self.emb(marks)                           # [B, L, E]
+        # 1. Embeddings. Canonicalize masked tokens so arbitrary padding values
+        # cannot affect direct-magnitude predictions.
+        feature_marks = marks
+        feature_dts = dts
+        if mask is not None:
+            feature_marks = marks.masked_fill(~mask, int(self.cfg.num_marks - 1))
+            feature_dts = dts.masked_fill(~mask, 0)
+        emb = self.emb(feature_marks)                   # [B, L, E]
         # dt_feat = dts.unsqueeze(-1).float()             # [B, L, 1]
-        dt_feat = torch.log1p(dts.clamp_min(0).float()).unsqueeze(-1)
+        dt_feat = torch.log1p(feature_dts.clamp_min(0).float()).unsqueeze(-1)
         features = [emb, dt_feat]
-        value_feat = build_value_input_feature(
-            marks=marks,
-            values=values,
-            cfg=self.cfg,
-            mask=mask,
-        )
-        if value_feat is not None:
+        if self.use_direct_magnitude:
+            if values is None or mask is None:
+                raise ValueError("Direct magnitude forward requires values and mask.")
+            magnitude_context = magnitude_context or self.build_magnitude_context(
+                marks,
+                values,
+                mask,
+            )
+            features.append(
+                self.magnitude_input_proj(
+                    magnitude_context.normalized_history.unsqueeze(-1)
+                )
+            )
+        else:
+            value_feat = build_value_input_feature(
+                marks=marks,
+                values=values,
+                cfg=self.cfg,
+                mask=mask,
+            )
+        if not self.use_direct_magnitude and value_feat is not None:
             # Value-conditioned marked TPP: append already-observed quantity
             # state without changing the next-event prediction heads.
             features.append(self.value_input_proj(value_feat.unsqueeze(-1)))
@@ -375,6 +753,11 @@ class TitanTPP(nn.Module):
         if mask is None:
             mask = torch.ones((B, L), device = marks.device, dtype = torch.bool)
 
+        magnitude_context = None
+        if self.use_direct_magnitude:
+            if values is None:
+                raise ValueError("Direct magnitude nll requires residual values.")
+            magnitude_context = self.build_magnitude_context(marks, values, mask)
         input_values = mask_appended_target_value(values, mask)
         h = self.forward(
             marks,
@@ -382,6 +765,7 @@ class TitanTPP(nn.Module):
             values=input_values,
             mask=mask,
             series_memory=series_memory,
+            magnitude_context=magnitude_context,
         ) # [B, L, H]
 
         h_j = h[:, :-1, :]                      # [B, L-1, H]
@@ -404,10 +788,89 @@ class TitanTPP(nn.Module):
         # Time log-density
         logf_dt = self.log_f_dt(h_j, dt_next)   # [B, L-1]
 
-        # Residual regression for quantity reconstruction.
-        if values is not None and self.cfg.use_value_head:
+        magnitude_loss = torch.zeros((), device=marks.device, dtype=torch.float32)
+        log_qty_hat = None
+        qty_affine_hat = None
+        qty_hat = None
+
+        # Direct magnitude regression bypasses predicted marks for quantity.
+        if self.use_direct_magnitude:
+            assert values is not None
+            assert magnitude_context is not None
+            if self.use_direct_raw_quantity:
+                magnitude_target = reconstruct_raw_quantity(
+                    y_next,
+                    values[:, 1:].float(),
+                    num_real_marks=self.num_real_marks,
+                )
+                target_log_qty = torch.log2(magnitude_target.clamp_min(float(self.cfg.eps)))
+            else:
+                target_log_qty = reconstruct_log2_quantity(
+                    y_next,
+                    values[:, 1:].float(),
+                    num_real_marks=self.num_real_marks,
+                )
+                magnitude_target = target_log_qty
+            direct = self.predict_direct_magnitude(
+                h_j,
+                marks=marks,
+                values=values,
+                mask=mask,
+                context=magnitude_context,
+            )
+            normalized_hat = direct["normalized"]
+            log_qty_hat = direct["log_qty"]
+            qty_affine_hat = direct["affine_qty"]
+            qty_hat = direct["qty"]
+            assert isinstance(normalized_hat, torch.Tensor)
+            assert isinstance(log_qty_hat, torch.Tensor)
+            assert isinstance(qty_affine_hat, torch.Tensor)
+            assert isinstance(qty_hat, torch.Tensor)
+            normalized_target = normalized_magnitude_target(
+                magnitude_target,
+                magnitude_context,
+            )
+            magnitude_step = F.huber_loss(
+                normalized_hat,
+                normalized_target,
+                reduction="none",
+            )
+            magnitude_loss = (magnitude_step * step_mask).sum() / step_mask.sum().clamp_min(1)
+            value_hat = None
+            value_by_mark = None
+            value_loss = torch.zeros((), device=marks.device, dtype=torch.float32)
+            if self.use_direct_raw_quantity:
+                true_qty = magnitude_target
+                expected_qty_for_loss = qty_affine_hat
+            else:
+                true_qty = safe_exp2(
+                    target_log_qty,
+                    clamp_min=float(self.cfg.magnitude_exp_clamp_min),
+                    clamp_max=float(self.cfg.magnitude_exp_clamp_max),
+                )
+                expected_qty_for_loss = qty_hat
+
+            qty_scale_value = torch.as_tensor(
+                float(max(getattr(self.cfg, "qty_scale_value", 1.0), 1.0)),
+                device=true_qty.device,
+                dtype=true_qty.dtype,
+            )
+            qty_sq = F.huber_loss(
+                expected_qty_for_loss / qty_scale_value,
+                true_qty / qty_scale_value,
+                reduction="none",
+            )
+            qty_loss = (qty_sq * step_mask).sum() / step_mask.sum().clamp_min(1)
+
+        # Legacy residual regression for mark-factorized quantity reconstruction.
+        elif values is not None and self.cfg.use_value_head:
             value_next = values[:, 1:].float()
-            value_hat = self.predict_value(h_j)
+            value_by_mark = self.predict_value_by_mark(self._value_branch_hidden(h_j))
+            safe_next_marks = y_next.clamp(min=0, max=self.num_real_marks - 1)
+            value_hat = value_by_mark.gather(
+                -1,
+                safe_next_marks.unsqueeze(-1),
+            ).squeeze(-1)
             # value_sq = F.smooth_l1_loss(value_hat, value_next, reduction="none")
             value_sq = F.huber_loss(value_hat, value_next, reduction="none")
             value_sq = value_sq * step_mask
@@ -418,7 +881,7 @@ class TitanTPP(nn.Module):
             # while still allowing development-time experiments on qty loss.
             pad_id = int(self.cfg.num_marks - 1)
             logits_real = logits[..., :pad_id]
-            expected_qty = self.expected_qty_from_logits(logits_real, value_hat)
+            expected_qty = self.expected_qty_from_logits(logits_real, value_by_mark)
             true_qty = self.reconstruct_qty(y_next.clamp_max(pad_id - 1), value_next)
 
             qty_scale_value = torch.as_tensor(
@@ -435,6 +898,7 @@ class TitanTPP(nn.Module):
             qty_loss = qty_sq.sum() / step_mask.sum().clamp_min(1)
         else:
             value_hat = None
+            value_by_mark = None
             value_loss = torch.zeros((), device=marks.device, dtype=torch.float32)
             qty_loss = torch.zeros((), device=marks.device, dtype=torch.float32)
 
@@ -446,14 +910,38 @@ class TitanTPP(nn.Module):
         nll_marker = -logp_y.sum() / (step_mask.sum().clamp_min(1))
         nll_time = -logf_dt.sum() / (step_mask.sum().clamp_min(1))
         nll_total = nll_marker + nll_time
+        ordinal_marker_loss = masked_normalized_ranked_probability_score(
+            logits,
+            y_next,
+            step_mask,
+            num_real_marks=self.num_real_marks,
+        )
+        ordinal_weight = self.lambda_ordinal if self.marker_loss_mode == "ce_rps" else 0.0
+        marker_train_loss = nll_marker + ordinal_weight * ordinal_marker_loss
 
         loss_mode = getattr(self.cfg, "loss_mode", "residual_only")
-        if loss_mode == "residual_only":
-            total_loss = nll_total + value_loss
+        if self.use_direct_magnitude:
+            total_loss = (
+                marker_train_loss
+                + nll_time
+                + float(self.cfg.lambda_magnitude) * magnitude_loss
+                + getattr(self.cfg, "lambda_qty", 0.25) * qty_loss
+            )
+        elif loss_mode == "residual_only":
+            total_loss = marker_train_loss + nll_time + value_loss
         elif loss_mode == "hybrid":
-            total_loss = nll_total + value_loss + getattr(self.cfg, "lambda_qty", 0.25) * qty_loss
+            total_loss = (
+                marker_train_loss
+                + nll_time
+                + value_loss
+                + getattr(self.cfg, "lambda_qty", 0.25) * qty_loss
+            )
         elif loss_mode == "qty_only":
-            total_loss = nll_total + getattr(self.cfg, "lambda_qty", 0.25) * qty_loss
+            total_loss = (
+                marker_train_loss
+                + nll_time
+                + getattr(self.cfg, "lambda_qty", 0.25) * qty_loss
+            )
         else:
             raise ValueError(f"Unsupported loss_mode: {loss_mode}")
 
@@ -461,10 +949,17 @@ class TitanTPP(nn.Module):
             'nll': nll_total,
             'nll_marker': nll_marker,
             'nll_time': nll_time,
+            'ordinal_marker_loss': ordinal_marker_loss,
+            'marker_train_loss': marker_train_loss,
             'value_loss': value_loss,
+            'magnitude_loss': magnitude_loss,
             'qty_loss': qty_loss,
             'total_loss': total_loss,
             'value_hat': value_hat,
+            'value_by_mark': value_by_mark,
+            'log_qty_hat': log_qty_hat,
+            'qty_affine_hat': qty_affine_hat,
+            'qty_hat': qty_hat,
             'steps': step_mask.sum(),
         }
 

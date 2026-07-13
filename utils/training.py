@@ -9,12 +9,66 @@ from data_loader.event_seq_data_module import time_split_events, RMTPPDataset, c
 from models.RMTPPs.RMTPP import RMTPP
 from models.RMTPPs.TitanTPP import TitanTPP
 from models.RMTPPs.TransformerHawkesTPP import TransformerHawkesTPP
-from models.RMTPPs.value_conditioning import mask_appended_target_value
+from models.RMTPPs.marker_losses import normalized_ranked_probability_score
+from models.RMTPPs.magnitude_normalization import normalized_magnitude_target
+from models.RMTPPs.value_conditioning import (
+    mask_appended_target_value,
+    predict_value_for_marks,
+)
 import numpy as np
 import polars as pl
 
 from models.RMTPPs.config import RMTPPConfig, THPConfig
 from models.Titan import TitanConfig
+
+
+def _mark_metrics_from_confusion(confusion: np.ndarray) -> Dict[str, float]:
+    total = int(confusion.sum())
+    if total <= 0:
+        return {
+            "mark_balanced_accuracy": float("nan"),
+            "mark_macro_f1": float("nan"),
+            "mark_mae": float("nan"),
+            "mark_adjacent_accuracy": float("nan"),
+            "mark_pred_0_share": float("nan"),
+            "mark_0_recall": float("nan"),
+            "mark_1_recall": float("nan"),
+        }
+
+    true_counts = confusion.sum(axis=1)
+    pred_counts = confusion.sum(axis=0)
+    correct = np.diag(confusion)
+    recall = np.divide(
+        correct,
+        true_counts,
+        out=np.zeros_like(correct, dtype=np.float64),
+        where=true_counts > 0,
+    )
+    precision = np.divide(
+        correct,
+        pred_counts,
+        out=np.zeros_like(correct, dtype=np.float64),
+        where=pred_counts > 0,
+    )
+    f1 = np.divide(
+        2.0 * precision * recall,
+        precision + recall,
+        out=np.zeros_like(recall),
+        where=(precision + recall) > 0,
+    )
+    supported = true_counts > 0
+    marks = np.arange(confusion.shape[0])
+    distance = np.abs(marks[:, None] - marks[None, :])
+
+    return {
+        "mark_balanced_accuracy": float(recall[supported].mean()),
+        "mark_macro_f1": float(f1[supported].mean()),
+        "mark_mae": float((confusion * distance).sum() / total),
+        "mark_adjacent_accuracy": float(confusion[distance <= 1].sum() / total),
+        "mark_pred_0_share": float(pred_counts[0] / total),
+        "mark_0_recall": float(recall[0]),
+        "mark_1_recall": float(recall[1]) if confusion.shape[0] > 1 else float("nan"),
+    }
 
 
 @dataclass
@@ -90,6 +144,9 @@ def eval_next_event_classic(model, loader: DataLoader, device: str) -> Dict[str,
     sum_nll_marker = 0.0
     sum_nll_total = 0.0
     sum_value_loss = 0.0
+    sum_ordinal_marker_loss = 0.0
+    num_real_marks = int(model.cfg.num_marks - 1)
+    mark_confusion = np.zeros((num_real_marks, num_real_marks), dtype=np.int64)
 
     with torch.no_grad():
         for x_mk, x_dt, y_mk, y_dt, _, _, y_val in loader:
@@ -105,15 +162,26 @@ def eval_next_event_classic(model, loader: DataLoader, device: str) -> Dict[str,
             logits = model.mark_head(h_last)
             log_y = -F.cross_entropy(logits, y_mk, reduction='none')
             logf_dt = model.log_f_dt(h_last, y_dt)
+            ordinal_scores = normalized_ranked_probability_score(
+                logits,
+                y_mk,
+                num_real_marks=num_real_marks,
+            )
 
             sum_nll_marker += float((-log_y).sum().item())
             sum_nll_time += float((-logf_dt).sum().item())
             sum_nll_total += float(((-log_y) + (-logf_dt)).sum().item())
+            sum_ordinal_marker_loss += float(ordinal_scores.sum().item())
 
             logits = logits[..., : model.cfg.num_marks - 1]
             pred = torch.argmax(logits, dim=-1)
             correct += (pred == y_mk).sum().item()
             total += y_mk.numel()
+            np.add.at(
+                mark_confusion,
+                (y_mk.detach().cpu().numpy(), pred.detach().cpu().numpy()),
+                1,
+            )
 
             u = torch.full_like(y_dt, 0.5, device=device).clamp_min(model.cfg.eps)
             dt_hat = model.sample_next_dt(h_last, u=u).clamp_min(1.0)
@@ -123,12 +191,13 @@ def eval_next_event_classic(model, loader: DataLoader, device: str) -> Dict[str,
             dt_sq += ((dt_hat - y_dt) ** 2).sum().item()
 
             if y_val is not None and getattr(model.cfg, "use_value_head", False):
-                value_hat = model.predict_value(h_last)
+                value_hat = predict_value_for_marks(model, h_last, y_mk)
                 value_loss = F.huber_loss(value_hat, y_val, reduction="none")
                 sum_value_loss += float(value_loss.sum().item())
                 value_abs += (value_hat - y_val).abs().sum().item()
 
-                qty_hat = model.reconstruct_qty(pred, value_hat)
+                qty_value_hat = predict_value_for_marks(model, h_last, pred)
+                qty_hat = model.reconstruct_qty(pred, qty_value_hat)
                 qty_true = model.reconstruct_qty(y_mk, y_val)
                 qty_abs += (qty_hat - qty_true).abs().sum().item()
 
@@ -147,7 +216,9 @@ def eval_next_event_classic(model, loader: DataLoader, device: str) -> Dict[str,
         "val_nll_time": sum_nll_time / max(total, 1),
         "val_nll_marker": sum_nll_marker / max(total, 1),
         "val_nll": sum_nll_total / max(total, 1),
+        "val_ordinal_marker_loss": sum_ordinal_marker_loss / max(total, 1),
         "val_value_loss": sum_value_loss / max(total, 1),
+        **_mark_metrics_from_confusion(mark_confusion),
         "_total": total,
         "_correct": correct,
         "_nll_steps": total,
@@ -198,14 +269,37 @@ def eval_next_event_week_lookback(
     dt_sq = 0.0
     value_abs = 0.0
     qty_abs = 0.0
+    qty_sq = 0.0
+    qty_true_abs = 0.0
+    log_qty_abs = 0.0
+    log_qty_sq = 0.0
 
     sum_nll_time = 0.0
     sum_nll_marker = 0.0
     sum_nll_total = 0.0
     sum_value_loss = 0.0
+    sum_magnitude_loss = 0.0
     sum_steps = 0.0
+    sum_ordinal_marker_loss = 0.0
+    sum_ordinal_steps = 0.0
 
     pad_id = int(model.cfg.num_marks - 1)
+    use_direct_magnitude = bool(getattr(model, "use_direct_magnitude", False))
+    use_direct_raw_quantity = bool(getattr(model, "use_direct_raw_quantity", False))
+    raw_affine_negative = 0
+    raw_affine_count = 0
+    magnitude_centers: list[float] = []
+    magnitude_scales: list[float] = []
+    normalized_target_abs: list[float] = []
+    normalized_target_nonfinite = 0
+    scale_floor_count = 0
+    context_buckets = {
+        "1": {"count": 0, "qty_abs": 0.0, "log_abs": 0.0},
+        "2_4": {"count": 0, "qty_abs": 0.0, "log_abs": 0.0},
+        "5_8": {"count": 0, "qty_abs": 0.0, "log_abs": 0.0},
+        "9_plus": {"count": 0, "qty_abs": 0.0, "log_abs": 0.0},
+    }
+    mark_confusion = np.zeros((pad_id, pad_id), dtype=np.int64)
 
     with torch.no_grad():
         for marks, dts, mask, _, values in loader:
@@ -233,9 +327,15 @@ def eval_next_event_week_lookback(
                 sum_nll_marker += float(out["nll_marker"].item()) * steps
                 sum_nll_total += float(out["nll"].item()) * steps
                 sum_value_loss += float(out["value_loss"].item()) * steps
+                if use_direct_magnitude:
+                    sum_magnitude_loss += float(out["magnitude_loss"].item()) * steps
                 sum_steps += steps
+                if "ordinal_marker_loss" in out:
+                    sum_ordinal_marker_loss += float(out["ordinal_marker_loss"].item()) * steps
+                    sum_ordinal_steps += steps
 
             # --------------------- Marker -----------------------
+            context_counts = (mask.sum(dim=1) - 1).clamp_min(0)
             valid = mask[:, -1] & mask[:, -2]
             if valid.sum().item() == 0:
                 continue
@@ -246,6 +346,33 @@ def eval_next_event_week_lookback(
             y_dt   = dts[:, -1].float()       # (B,)
             y_val  = values[:, -1].float() if values is not None else None
 
+            direct_prediction = None
+            direct_magnitude_step = None
+            if use_direct_magnitude:
+                if values is None:
+                    raise ValueError("Direct magnitude evaluation requires residual values.")
+                direct_prediction = model.predict_direct_magnitude(
+                    h_prev,
+                    marks=marks,
+                    values=values,
+                    mask=mask,
+                )
+                target_log_qty_all = y_mk.float() + y_val
+                target_magnitude_all = (
+                    torch.exp2(target_log_qty_all)
+                    if use_direct_raw_quantity
+                    else target_log_qty_all
+                )
+                normalized_target_all = normalized_magnitude_target(
+                    target_magnitude_all,
+                    direct_prediction["context"],
+                )
+                direct_magnitude_step = F.huber_loss(
+                    direct_prediction["normalized"],
+                    normalized_target_all,
+                    reduction="none",
+                )
+
             # valid 필터 + 혹시 모를 PAD target 제거
             valid = valid & (y_mk != pad_id)
             if valid.sum().item() == 0:
@@ -254,6 +381,7 @@ def eval_next_event_week_lookback(
             h_prev = h_prev[valid]
             y_mk   = y_mk[valid]
             y_dt   = y_dt[valid]
+            context_counts = context_counts[valid]
             if y_val is not None:
                 y_val = y_val[valid]
 
@@ -262,11 +390,21 @@ def eval_next_event_week_lookback(
             if target_only_nll:
                 log_y = -F.cross_entropy(logits, y_mk, reduction="none")
                 logf_dt = model.log_f_dt(h_prev, y_dt)
+                ordinal_scores = normalized_ranked_probability_score(
+                    logits,
+                    y_mk,
+                    num_real_marks=pad_id,
+                )
                 sum_nll_marker += float((-log_y).sum().item())
                 sum_nll_time += float((-logf_dt).sum().item())
                 sum_nll_total += float(((-log_y) + (-logf_dt)).sum().item())
-                if y_val is not None and getattr(model.cfg, "use_value_head", False):
-                    value_hat_for_nll = model.predict_value(h_prev)
+                sum_ordinal_marker_loss += float(ordinal_scores.sum().item())
+                sum_ordinal_steps += float(y_mk.numel())
+                if use_direct_magnitude:
+                    assert direct_magnitude_step is not None
+                    sum_magnitude_loss += float(direct_magnitude_step[valid].sum().item())
+                elif y_val is not None and getattr(model.cfg, "use_value_head", False):
+                    value_hat_for_nll = predict_value_for_marks(model, h_prev, y_mk)
                     value_loss = F.huber_loss(value_hat_for_nll, y_val, reduction="none")
                     sum_value_loss += float(value_loss.sum().item())
                 sum_steps += float(y_mk.numel())
@@ -276,6 +414,11 @@ def eval_next_event_week_lookback(
             pred = torch.argmax(logits, dim=-1)
             correct += (pred == y_mk).sum().item()
             total += y_mk.numel()
+            np.add.at(
+                mark_confusion,
+                (y_mk.detach().cpu().numpy(), pred.detach().cpu().numpy()),
+                1,
+            )
 
             # ---- dt point estimate: median(u=0.5) ----
             u = torch.full((y_dt.size(0),), 0.5, device=device).clamp_min(model.cfg.eps)
@@ -285,19 +428,92 @@ def eval_next_event_week_lookback(
             dt_abs += err.sum().item()
             dt_sq  += ((dt_hat - y_dt) ** 2).sum().item()
 
-            if y_val is not None and getattr(model.cfg, "use_value_head", False):
-                value_hat = model.predict_value(h_prev)
+            if use_direct_magnitude:
+                assert direct_prediction is not None
+                qty_hat = direct_prediction["qty"][valid]
+                log_qty_hat = direct_prediction["log_qty"][valid]
+                true_log_qty = y_mk.float() + y_val
+                if use_direct_raw_quantity:
+                    qty_true = torch.exp2(true_log_qty)
+                else:
+                    qty_true = torch.exp2(
+                        true_log_qty.clamp(
+                            min=float(model.cfg.magnitude_exp_clamp_min),
+                            max=float(model.cfg.magnitude_exp_clamp_max),
+                        )
+                    )
+                qty_error = qty_hat - qty_true
+                qty_abs += qty_error.abs().sum().item()
+                qty_sq += qty_error.square().sum().item()
+                qty_true_abs += qty_true.abs().sum().item()
+                log_error = log_qty_hat - true_log_qty
+                log_qty_abs += log_error.abs().sum().item()
+                log_qty_sq += (log_error ** 2).sum().item()
+
+                if use_direct_raw_quantity:
+                    affine_qty = direct_prediction["affine_qty"][valid]
+                    raw_affine_negative += int((affine_qty < 0.0).sum().item())
+                    raw_affine_count += int(affine_qty.numel())
+                    context = direct_prediction["context"]
+                    centers = context.center.squeeze(-1)[valid]
+                    scales = context.scale.squeeze(-1)[valid]
+                    counts = context.context_count.squeeze(-1)[valid]
+                    context_counts = counts
+                    normalized_targets = normalized_target_all[valid]
+                    finite_normalized = torch.isfinite(normalized_targets)
+                    normalized_target_nonfinite += int((~finite_normalized).sum().item())
+                    magnitude_centers.extend(centers.detach().cpu().tolist())
+                    magnitude_scales.extend(scales.detach().cpu().tolist())
+                    normalized_target_abs.extend(
+                        normalized_targets[finite_normalized].abs().detach().cpu().tolist()
+                    )
+                    floor = float(model.cfg.magnitude_sigma_floor)
+                    if getattr(model, "magnitude_norm_mode", "global") != "causal_revin":
+                        scale_floor_count += int(
+                            (scales <= floor * (1.0 + 1e-6)).sum().item()
+                        )
+            elif y_val is not None and getattr(model.cfg, "use_value_head", False):
+                value_hat = predict_value_for_marks(model, h_prev, y_mk)
                 value_abs += (value_hat - y_val).abs().sum().item()
 
-                qty_hat = model.reconstruct_qty(pred, value_hat)
+                qty_value_hat = predict_value_for_marks(model, h_prev, pred)
+                qty_hat = model.reconstruct_qty(pred, qty_value_hat)
                 qty_true = model.reconstruct_qty(y_mk, y_val)
-                qty_abs += (qty_hat - qty_true).abs().sum().item()
+                qty_error = qty_hat - qty_true
+                qty_abs += qty_error.abs().sum().item()
+                qty_sq += qty_error.square().sum().item()
+                qty_true_abs += qty_true.abs().sum().item()
+                log_error = torch.log2(qty_hat.clamp_min(model.cfg.eps)) - torch.log2(
+                    qty_true.clamp_min(model.cfg.eps)
+                )
+                log_qty_abs += log_error.abs().sum().item()
+                log_qty_sq += (log_error ** 2).sum().item()
+
+            if y_val is not None and (
+                use_direct_magnitude or getattr(model.cfg, "use_value_head", False)
+            ):
+                for bucket_name, bucket_mask in {
+                    "1": context_counts == 1,
+                    "2_4": (context_counts >= 2) & (context_counts <= 4),
+                    "5_8": (context_counts >= 5) & (context_counts <= 8),
+                    "9_plus": context_counts >= 9,
+                }.items():
+                    if not bucket_mask.any():
+                        continue
+                    bucket = context_buckets[bucket_name]
+                    bucket["count"] += int(bucket_mask.sum().item())
+                    bucket["qty_abs"] += float(qty_error[bucket_mask].abs().sum().item())
+                    bucket["log_abs"] += float(log_error[bucket_mask].abs().sum().item())
 
     acc = correct / max(total, 1)
     mae = dt_abs / max(total, 1)
     rmse = float(np.sqrt(dt_sq / max(total, 1)))
-    value_mae = value_abs / max(total, 1)
+    value_mae = float("nan") if use_direct_magnitude else value_abs / max(total, 1)
     qty_mae = qty_abs / max(total, 1)
+    qty_rmse = float(np.sqrt(qty_sq / max(total, 1)))
+    qty_wape = qty_abs / max(qty_true_abs, float(model.cfg.eps))
+    log_qty_mae = log_qty_abs / max(total, 1)
+    log_qty_rmse = float(np.sqrt(log_qty_sq / max(total, 1)))
 
     # step-weighted mean nll
     if sum_steps <= 0:
@@ -308,22 +524,68 @@ def eval_next_event_week_lookback(
         val_nll_time = sum_nll_time / sum_steps
         val_nll_marker = sum_nll_marker / sum_steps
         val_nll_total = sum_nll_total / sum_steps
-        val_value_loss = sum_value_loss / sum_steps
+        val_value_loss = (
+            float("nan") if use_direct_magnitude else sum_value_loss / sum_steps
+        )
+    val_magnitude_loss = (
+        sum_magnitude_loss / sum_steps
+        if use_direct_magnitude and sum_steps > 0
+        else float("nan")
+    )
+    val_ordinal_marker_loss = (
+        sum_ordinal_marker_loss / sum_ordinal_steps
+        if sum_ordinal_steps > 0
+        else float("nan")
+    )
 
-    return {
+    metrics = {
         "mark_acc": acc,
         "dt_mae": mae,
         "dt_rmse": rmse,
         "value_mae": value_mae,
         "qty_mae": qty_mae,
+        "qty_rmse": qty_rmse,
+        "qty_wape": qty_wape,
+        "log_qty_mae": log_qty_mae,
+        "log_qty_rmse": log_qty_rmse,
         "val_nll_time": val_nll_time,
         "val_nll_marker": val_nll_marker,
         "val_nll": val_nll_total,
+        "val_ordinal_marker_loss": val_ordinal_marker_loss,
         "val_value_loss": val_value_loss if sum_steps > 0 else float("nan"),
+        "val_magnitude_loss": val_magnitude_loss,
+        **_mark_metrics_from_confusion(mark_confusion),
         "_total": total,
         "_correct": correct,
         "_nll_steps": sum_steps,
     }
+    if use_direct_raw_quantity:
+        def percentile(values_list: list[float], q: float) -> float:
+            if not values_list:
+                return float("nan")
+            return float(np.percentile(np.asarray(values_list, dtype=np.float64), q))
+
+        metrics.update({
+            "preclamp_negative_share": raw_affine_negative / max(raw_affine_count, 1),
+            "magnitude_center_p01": percentile(magnitude_centers, 1),
+            "magnitude_center_p50": percentile(magnitude_centers, 50),
+            "magnitude_center_p95": percentile(magnitude_centers, 95),
+            "magnitude_center_p99": percentile(magnitude_centers, 99),
+            "magnitude_scale_p01": percentile(magnitude_scales, 1),
+            "magnitude_scale_p50": percentile(magnitude_scales, 50),
+            "magnitude_scale_p95": percentile(magnitude_scales, 95),
+            "magnitude_scale_p99": percentile(magnitude_scales, 99),
+            "magnitude_scale_floor_share": scale_floor_count / max(raw_affine_count, 1),
+            "normalized_target_abs_p95": percentile(normalized_target_abs, 95),
+            "normalized_target_abs_p99": percentile(normalized_target_abs, 99),
+            "normalized_target_nonfinite_count": normalized_target_nonfinite,
+        })
+    for bucket_name, bucket in context_buckets.items():
+        count = max(int(bucket["count"]), 1)
+        metrics[f"context_{bucket_name}_count"] = int(bucket["count"])
+        metrics[f"context_{bucket_name}_qty_mae"] = float(bucket["qty_abs"]) / count
+        metrics[f"context_{bucket_name}_log_qty_mae"] = float(bucket["log_abs"]) / count
+    return metrics
 
 
 def _make_week_lookback_loaders(marked_df: pl.DataFrame, training_config: TrainingConfig):
@@ -504,11 +766,22 @@ def _train_classic_next_event_model(model, train_loader: DataLoader, val_loader:
             h = model.forward(x_mk, x_dt)
             h_last = h[:, -1, :]
 
-            loss_marker = F.cross_entropy(model.mark_head(h_last), y_mk)
+            marker_logits = model.mark_head(h_last)
+            loss_marker = F.cross_entropy(marker_logits, y_mk)
+            if getattr(model.cfg, "marker_loss_mode", "ce") == "ce_rps":
+                ordinal_marker_loss = normalized_ranked_probability_score(
+                    marker_logits,
+                    y_mk,
+                    num_real_marks=int(model.cfg.num_marks - 1),
+                ).mean()
+                loss_marker = (
+                    loss_marker
+                    + float(getattr(model.cfg, "lambda_ordinal", 0.0)) * ordinal_marker_loss
+                )
             loss_time = -model.log_f_dt(h_last, y_dt).mean()
 
             if y_val is not None and getattr(model.cfg, "use_value_head", False):
-                value_hat = model.predict_value(h_last)
+                value_hat = predict_value_for_marks(model, h_last, y_mk)
                 value_loss = F.huber_loss(value_hat, y_val, reduction="mean")
             else:
                 value_loss = torch.zeros((), device=training_config.device, dtype=torch.float32)
@@ -596,23 +869,31 @@ def _train_week_lookback_model(model, train_loader: DataLoader, val_loader: Data
 
             out = model.nll(marks, dts, values=values, mask=mask)
             loss_mode = getattr(model.cfg, "loss_mode", "residual_only")
+            marker_train_loss = out.get("marker_train_loss", out["nll_marker"])
             if "total_loss" in out:
-                if loss_mode == "residual_only":
+                if getattr(model, "use_direct_magnitude", False):
                     loss = (
-                        out["nll_marker"]
+                        marker_train_loss
+                        + training_config.lambda_dt * out["nll_time"]
+                        + float(model.cfg.lambda_magnitude) * out["magnitude_loss"]
+                        + float(model.cfg.lambda_qty) * out["qty_loss"]
+                    )
+                elif loss_mode == "residual_only":
+                    loss = (
+                        marker_train_loss
                         + training_config.lambda_value * out["value_loss"]
                         + training_config.lambda_dt * out["nll_time"]
                     )
                 elif loss_mode == "hybrid":
                     loss = (
-                        out["nll_marker"]
+                        marker_train_loss
                         + training_config.lambda_value * out["value_loss"]
                         + training_config.lambda_dt * out["nll_time"]
                         + getattr(model.cfg, "lambda_qty", 0.25) * out["qty_loss"]
                     )
                 elif loss_mode == "qty_only":
                     loss = (
-                        out["nll_marker"]
+                        marker_train_loss
                         + training_config.lambda_dt * out["nll_time"]
                         + getattr(model.cfg, "lambda_qty", 0.25) * out["qty_loss"]
                     )
@@ -620,7 +901,7 @@ def _train_week_lookback_model(model, train_loader: DataLoader, val_loader: Data
                     raise ValueError(f"Unsupported loss_mode: {loss_mode}")
             else:
                 loss = (
-                    out["nll_marker"]
+                    marker_train_loss
                     + training_config.lambda_value * out["value_loss"]
                     + training_config.lambda_dt * out["nll_time"]
                 )

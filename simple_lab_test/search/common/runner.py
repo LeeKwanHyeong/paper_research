@@ -48,7 +48,10 @@ from utils.training import (
     make_fixed_split_week_lookback_loaders,
     make_week_lookback_loaders,
 )
-from models.RMTPPs.value_conditioning import mask_appended_target_value
+from models.RMTPPs.value_conditioning import (
+    mask_appended_target_value,
+    predict_value_for_marks,
+)
 
 
 def set_global_seed(seed: int) -> None:
@@ -70,6 +73,125 @@ def make_training_cfg(cfg: ExperimentConfig, dataset_kind: str | None = None) ->
     return build_training_config(search_cfg, epochs=cfg.epochs)
 
 
+def attach_train_global_magnitude_stats(
+    *,
+    marked_df: pl.DataFrame,
+    marked_meta: dict[str, Any],
+    cfg: ExperimentConfig,
+    run_cfg: RunConfig,
+) -> dict[str, Any]:
+    """Freeze direct-decoder global moments from fixed-split train events only."""
+    effective_meta = dict(marked_meta)
+    decoder_mode = str(getattr(cfg, "qty_decoder_mode", "mark_residual"))
+    if decoder_mode not in {"direct_log_qty", "direct_raw_qty"}:
+        return effective_meta
+    if not np.isclose(float(run_cfg.scale_base), 2.0, rtol=0.0, atol=1e-12):
+        raise ValueError(f"{decoder_mode} requires scale_base=2.0.")
+
+    required = {"chronological_split", "mark", "scale_residual"}
+    missing = sorted(required - set(marked_df.columns))
+    if missing:
+        raise ValueError(f"Direct magnitude train-global statistics require columns: {missing}")
+    train_factorized = (
+        marked_df.lazy()
+        .filter(pl.col("chronological_split") == "train")
+        .select(
+            (pl.col("mark").cast(pl.Float64) + pl.col("scale_residual").cast(pl.Float64))
+            .alias("factorized_qty")
+        )
+        .collect()["factorized_qty"]
+        .to_numpy()
+    )
+    if train_factorized.size == 0:
+        raise ValueError("Direct magnitude train-global statistics found no train events.")
+    if not np.isfinite(train_factorized).all():
+        raise ValueError("Factorized train quantities must be finite.")
+
+    if decoder_mode == "direct_raw_qty":
+        train_magnitude = np.exp2(train_factorized)
+        domain = "raw_qty"
+    else:
+        train_magnitude = train_factorized
+        domain = "log2_qty"
+    if not np.isfinite(train_magnitude).all():
+        raise ValueError(f"Train-global {domain} values must be finite.")
+
+    global_mean = float(train_magnitude.mean())
+    global_var = float(train_magnitude.var())
+    global_std = float(np.sqrt(global_var))
+    if not np.isfinite(global_std) or global_std <= 0.0:
+        raise ValueError(f"Train-global {domain} standard deviation must be positive.")
+    sigma_floor = float(cfg.magnitude_sigma_floor)
+    if decoder_mode == "direct_raw_qty":
+        sigma_floor = max(0.001 * global_std, 1e-4)
+    effective_meta.update({
+        "magnitude_domain": domain,
+        "magnitude_norm_mode": str(cfg.magnitude_norm_mode),
+        "magnitude_stats_source_split": "train",
+        "magnitude_train_event_count": int(train_magnitude.size),
+        "magnitude_global_mean": global_mean,
+        "magnitude_global_var": global_var,
+        "magnitude_global_std": global_std,
+        "magnitude_sigma_floor": sigma_floor,
+    })
+    return effective_meta
+
+
+def magnitude_artifact_identity(cfg: ExperimentConfig) -> dict[str, Any]:
+    """Return direct-magnitude fields that must travel with every artifact row."""
+    decoder_mode = str(cfg.qty_decoder_mode)
+    if decoder_mode == "direct_raw_qty":
+        domain = "raw_qty"
+    elif decoder_mode == "direct_log_qty":
+        domain = "log2_qty"
+    else:
+        domain = "mark_residual"
+    return {
+        "magnitude_domain": domain,
+        "magnitude_sigma_floor": float(cfg.magnitude_sigma_floor),
+        "magnitude_revin_eps": float(cfg.magnitude_revin_eps),
+        "magnitude_shrinkage_k": float(cfg.magnitude_shrinkage_k),
+        "magnitude_center_mode": str(cfg.magnitude_center_mode),
+        "magnitude_revin_affine": bool(cfg.magnitude_revin_affine),
+        "magnitude_stat_context_mode": str(cfg.magnitude_stat_context_mode),
+    }
+
+
+def magnitude_artifact_columns(cfg: ExperimentConfig) -> list[pl.Expr]:
+    return [pl.lit(value).alias(name) for name, value in magnitude_artifact_identity(cfg).items()]
+
+
+RAW_MAGNITUDE_DIAGNOSTIC_NAMES = (
+    "qty_rmse",
+    "qty_wape",
+    "preclamp_negative_share",
+    "magnitude_center_p01",
+    "magnitude_center_p50",
+    "magnitude_center_p95",
+    "magnitude_center_p99",
+    "magnitude_scale_p01",
+    "magnitude_scale_p50",
+    "magnitude_scale_p95",
+    "magnitude_scale_p99",
+    "magnitude_scale_floor_share",
+    "normalized_target_abs_p95",
+    "normalized_target_abs_p99",
+    "normalized_target_nonfinite_count",
+    "context_1_count",
+    "context_1_qty_mae",
+    "context_1_log_qty_mae",
+    "context_2_4_count",
+    "context_2_4_qty_mae",
+    "context_2_4_log_qty_mae",
+    "context_5_8_count",
+    "context_5_8_qty_mae",
+    "context_5_8_log_qty_mae",
+    "context_9_plus_count",
+    "context_9_plus_qty_mae",
+    "context_9_plus_log_qty_mae",
+)
+
+
 def build_run_paths(cfg: ExperimentConfig, run_cfg: RunConfig) -> RunPaths:
     """
     Keep output paths stable across all model families.
@@ -88,10 +210,50 @@ def build_run_paths(cfg: ExperimentConfig, run_cfg: RunConfig) -> RunPaths:
         / canonical_model_name(run_cfg.model_name)
         / f"lossmode_{cfg.loss_mode}"
     )
+    if getattr(cfg, "qty_decoder_mode", "mark_residual") != "mark_residual":
+        run_dir_base = (
+            run_dir_base
+            / f"qtydecoder_{cfg.qty_decoder_mode}"
+            / f"magnorm_{cfg.magnitude_norm_mode}"
+            / f"magemb_{int(cfg.magnitude_input_emb_dim)}"
+            / f"lambdamag_{sanitize_float_label(cfg.lambda_magnitude)}"
+            / f"magsigmafloor_{sanitize_float_label(cfg.magnitude_sigma_floor)}"
+        )
+        if cfg.qty_decoder_mode == "direct_raw_qty":
+            run_dir_base = (
+                run_dir_base
+                / "domain_raw_qty"
+                / f"center_{cfg.magnitude_center_mode}"
+                / f"affine_{str(bool(cfg.magnitude_revin_affine)).lower()}"
+                / f"statcontext_{cfg.magnitude_stat_context_mode}"
+                / f"revineps_{sanitize_float_label(cfg.magnitude_revin_eps)}"
+            )
+            if cfg.magnitude_norm_mode == "causal_shrinkage_revin":
+                run_dir_base = run_dir_base / (
+                    f"k_{sanitize_float_label(cfg.magnitude_shrinkage_k)}"
+                )
+        else:
+            run_dir_base = run_dir_base / (
+                "magexpclamp_"
+                f"{sanitize_float_label(cfg.magnitude_exp_clamp_min)}_"
+                f"{sanitize_float_label(cfg.magnitude_exp_clamp_max)}"
+            )
     if getattr(cfg, "split_mode", "internal") != "internal":
         run_dir_base = run_dir_base / f"split_{cfg.split_mode}"
     if getattr(cfg, "value_head_activation", "sigmoid") != "sigmoid":
         run_dir_base = run_dir_base / f"value_{cfg.value_head_activation}"
+    if getattr(cfg, "value_head_mode", "shared") != "shared":
+        run_dir_base = run_dir_base / f"valuehead_{cfg.value_head_mode}"
+    if getattr(cfg, "qty_mark_gradient_mode", "coupled") != "coupled":
+        run_dir_base = run_dir_base / f"qtymarkgrad_{cfg.qty_mark_gradient_mode}"
+    if getattr(cfg, "value_encoder_gradient_mode", "coupled") != "coupled":
+        run_dir_base = run_dir_base / f"valueencgrad_{cfg.value_encoder_gradient_mode}"
+    if getattr(cfg, "marker_loss_mode", "ce") != "ce":
+        run_dir_base = (
+            run_dir_base
+            / f"markloss_{cfg.marker_loss_mode}"
+            / f"lambdaord_{sanitize_float_label(cfg.lambda_ordinal)}"
+        )
     if getattr(cfg, "value_input_mode", "none") != "none":
         run_dir_base = (
             run_dir_base
@@ -241,22 +403,30 @@ def compute_training_loss(
     Project-standard training objective shared by compatible TPP models.
     """
     loss_mode = getattr(model.cfg, "loss_mode", "residual_only")
+    marker_train_loss = out.get("marker_train_loss", out["nll_marker"])
+    if getattr(model, "use_direct_magnitude", False):
+        return (
+            marker_train_loss
+            + training_cfg.lambda_dt * out["nll_time"]
+            + float(model.cfg.lambda_magnitude) * out["magnitude_loss"]
+            + float(model.cfg.lambda_qty) * out["qty_loss"]
+        )
     if loss_mode == "residual_only":
         return (
-            out["nll_marker"]
+            marker_train_loss
             + training_cfg.lambda_value * out["value_loss"]
             + training_cfg.lambda_dt * out["nll_time"]
         )
     if loss_mode == "hybrid":
         return (
-            out["nll_marker"]
+            marker_train_loss
             + training_cfg.lambda_value * out["value_loss"]
             + training_cfg.lambda_dt * out["nll_time"]
             + getattr(model.cfg, "lambda_qty", 0.25) * out["qty_loss"]
         )
     if loss_mode == "qty_only":
         return (
-            out["nll_marker"]
+            marker_train_loss
             + training_cfg.lambda_dt * out["nll_time"]
             + getattr(model.cfg, "lambda_qty", 0.25) * out["qty_loss"]
         )
@@ -297,7 +467,7 @@ def summarize_history(history: list[dict[str, Any]]) -> dict[str, Any]:
     )
     final_row = history[-1]
 
-    return {
+    summary = {
         "best_score_epoch": int(best_score_row["epoch"]),
         "best_score": float(best_score_row["score"]),
         "best_score_val_nll": float(best_score_row["val_nll"]),
@@ -311,14 +481,45 @@ def summarize_history(history: list[dict[str, Any]]) -> dict[str, Any]:
         "best_val_nll_dt_mae": float(min_nll_row["dt_mae"]),
         "best_val_nll_mark_acc": float(min_nll_row["mark_acc"]),
         "best_val_nll_value_mae": float(min_nll_row["value_mae"]),
+        "best_val_nll_log_qty_mae": float(min_nll_row.get("log_qty_mae", float("nan"))),
+        "best_val_nll_log_qty_rmse": float(min_nll_row.get("log_qty_rmse", float("nan"))),
+        "best_val_nll_magnitude_loss": float(
+            min_nll_row.get("val_magnitude_loss", float("nan"))
+        ),
+        "best_val_nll_ordinal_marker_loss": float(
+            min_nll_row.get("val_ordinal_marker_loss", float("nan"))
+        ),
+        "best_val_nll_mark_balanced_accuracy": float(
+            min_nll_row.get("mark_balanced_accuracy", float("nan"))
+        ),
+        "best_val_nll_mark_macro_f1": float(min_nll_row.get("mark_macro_f1", float("nan"))),
+        "best_val_nll_mark_mae": float(min_nll_row.get("mark_mae", float("nan"))),
+        "best_val_nll_mark_adjacent_accuracy": float(
+            min_nll_row.get("mark_adjacent_accuracy", float("nan"))
+        ),
+        "best_val_nll_mark_0_recall": float(min_nll_row.get("mark_0_recall", float("nan"))),
+        "best_val_nll_mark_1_recall": float(min_nll_row.get("mark_1_recall", float("nan"))),
         "final_epoch": int(final_row["epoch"]),
         "final_train_loss": float(final_row["train_loss"]),
         "final_score": float(final_row["score"]),
         "final_val_nll": float(final_row["val_nll"]),
         "final_qty_mae": float(final_row["qty_mae"]),
+        "final_log_qty_mae": float(final_row.get("log_qty_mae", float("nan"))),
+        "final_log_qty_rmse": float(final_row.get("log_qty_rmse", float("nan"))),
+        "final_magnitude_loss": float(final_row.get("val_magnitude_loss", float("nan"))),
         "final_dt_mae": float(final_row["dt_mae"]),
         "final_mark_acc": float(final_row["mark_acc"]),
+        "final_ordinal_marker_loss": float(
+            final_row.get("val_ordinal_marker_loss", float("nan"))
+        ),
+        "final_mark_mae": float(final_row.get("mark_mae", float("nan"))),
     }
+    for metric_name in RAW_MAGNITUDE_DIAGNOSTIC_NAMES:
+        if metric_name in min_nll_row:
+            summary[f"best_val_nll_{metric_name}"] = float(min_nll_row[metric_name])
+        if metric_name in final_row:
+            summary[f"final_{metric_name}"] = float(final_row[metric_name])
+    return summary
 
 
 def scale_label(order: int, *, base: float, tail_order: int) -> str:
@@ -382,6 +583,18 @@ def evaluate_scale_wise_qty(
         if valid.sum().item() == 0:
             continue
 
+        if getattr(model, "use_direct_magnitude", False):
+            direct = model.predict_direct_magnitude(
+                h_prev,
+                marks=marks,
+                values=values,
+                mask=mask,
+            )
+            qty_hat_all = direct["qty"]
+            log_qty_hat_all = direct["log_qty"]
+            if not isinstance(qty_hat_all, torch.Tensor) or not isinstance(log_qty_hat_all, torch.Tensor):
+                raise TypeError("Direct magnitude decoder must return tensor predictions.")
+
         h_prev = h_prev[valid]
         y_mk = y_mk[valid]
         y_dt = y_dt[valid]
@@ -389,16 +602,29 @@ def evaluate_scale_wise_qty(
 
         logits = model.mark_head(h_prev)[..., :pad_id]
         pred_mk = torch.argmax(logits, dim=-1)
-        value_hat = model.predict_value(h_prev)
-        qty_hat = model.reconstruct_qty(pred_mk, value_hat)
-        qty_true = model.reconstruct_qty(y_mk, y_val)
+        if getattr(model, "use_direct_magnitude", False):
+            qty_hat = qty_hat_all[valid]
+            log_qty_hat = log_qty_hat_all[valid]
+            true_log_qty = y_mk.float() + y_val
+            if getattr(model, "use_direct_raw_quantity", False):
+                qty_true = torch.exp2(true_log_qty)
+            else:
+                qty_true = torch.exp2(
+                    true_log_qty.clamp(
+                        min=float(model.cfg.magnitude_exp_clamp_min),
+                        max=float(model.cfg.magnitude_exp_clamp_max),
+                    )
+                )
+        else:
+            value_hat = predict_value_for_marks(model, h_prev, pred_mk)
+            qty_hat = model.reconstruct_qty(pred_mk, value_hat)
+            qty_true = model.reconstruct_qty(y_mk, y_val)
+            log_qty_hat = torch.log2(qty_hat.clamp_min(eps))
+            true_log_qty = torch.log2(qty_true.clamp_min(eps))
 
         abs_err = (qty_hat - qty_true).abs()
         sq_err = (qty_hat - qty_true) ** 2
-        log_abs_err = (
-            torch.log(qty_hat.clamp_min(eps))
-            - torch.log(qty_true.clamp_min(eps))
-        ).abs() / log_base
+        log_abs_err = (log_qty_hat - true_log_qty).abs() * (np.log(2.0) / log_base)
 
         u = torch.full((y_dt.size(0),), 0.5, device=device).clamp_min(model.cfg.eps)
         dt_hat = model.sample_next_dt(h_prev, u=u).clamp_min(1.0)
@@ -526,6 +752,45 @@ def evaluate_mark_confusion(
         "share_within_true": pl.Float64,
     }
     return pl.DataFrame(rows, schema=schema)
+
+
+def summarize_mark_confusion(
+    confusion_df: pl.DataFrame,
+    *,
+    num_real_marks: int,
+) -> pl.DataFrame:
+    """Build support-aware per-class metrics from a confusion artifact."""
+    class_count = int(num_real_marks)
+    matrix = np.zeros((class_count, class_count), dtype=np.int64)
+    for row in confusion_df.iter_rows(named=True):
+        true_mark = int(row["true_mark"])
+        pred_mark = int(row["pred_mark"])
+        if 0 <= true_mark < class_count and 0 <= pred_mark < class_count:
+            matrix[true_mark, pred_mark] += int(row["count"])
+
+    total = int(matrix.sum())
+    true_counts = matrix.sum(axis=1)
+    pred_counts = matrix.sum(axis=0)
+    correct = np.diag(matrix)
+    rows: list[dict[str, Any]] = []
+    for mark in range(class_count):
+        true_count = int(true_counts[mark])
+        pred_count = int(pred_counts[mark])
+        precision = float(correct[mark] / pred_count) if pred_count else 0.0
+        recall = float(correct[mark] / true_count) if true_count else 0.0
+        f1 = 2.0 * precision * recall / (precision + recall) if precision + recall else 0.0
+        rows.append({
+            "mark": mark,
+            "true_count": true_count,
+            "true_share": float(true_count / total) if total else 0.0,
+            "pred_count": pred_count,
+            "pred_share": float(pred_count / total) if total else 0.0,
+            "correct_count": int(correct[mark]),
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+        })
+    return pl.DataFrame(rows)
 
 
 def _series_list_from_marked_df(marked_df: pl.DataFrame) -> list[dict[str, Any]]:
@@ -697,12 +962,13 @@ def evaluate_titantpp_contextual_ttm(
 
             if values is not None and getattr(model.cfg, "use_value_head", False):
                 y_val = torch.tensor([float(values[target_idx])], dtype=torch.float32, device=device)
-                value_hat = model.predict_value(h_prev)
+                value_hat = predict_value_for_marks(model, h_prev, y_mk)
                 value_loss = F.huber_loss(value_hat, y_val, reduction="none")
                 sum_value_loss += float(value_loss.sum().item())
                 value_abs += float((value_hat - y_val).abs().sum().item())
 
-                qty_hat = model.reconstruct_qty(pred, value_hat)
+                qty_value_hat = predict_value_for_marks(model, h_prev, pred)
+                qty_hat = model.reconstruct_qty(pred, qty_value_hat)
                 qty_true = model.reconstruct_qty(y_mk, y_val)
                 qty_abs += float((qty_hat - qty_true).abs().sum().item())
 
@@ -792,6 +1058,11 @@ def confusion_metric_paths(run_paths: RunPaths, selection: str, eval_split: str)
     return run_paths.metrics_dir / f"{stem}.csv", run_paths.metrics_dir / f"{stem}.parquet"
 
 
+def mark_class_metric_paths(run_paths: RunPaths, selection: str, eval_split: str) -> tuple[Path, Path]:
+    stem = f"{eval_split}_mark_class_metrics_{selection}"
+    return run_paths.metrics_dir / f"{stem}.csv", run_paths.metrics_dir / f"{stem}.parquet"
+
+
 def ttm_metric_paths(run_paths: RunPaths, selection: str) -> tuple[Path, Path, Path]:
     """
     Per-checkpoint TTM-Lite metric files.
@@ -804,7 +1075,13 @@ def ttm_metric_paths(run_paths: RunPaths, selection: str) -> tuple[Path, Path, P
     )
 
 
-def cached_run_is_complete(*, cfg: ExperimentConfig, run_cfg: RunConfig, run_paths: RunPaths) -> bool:
+def cached_run_is_complete(
+    *,
+    cfg: ExperimentConfig,
+    run_cfg: RunConfig,
+    run_paths: RunPaths,
+    effective_marked_meta: dict[str, Any] | None = None,
+) -> bool:
     summary_path = run_paths.metrics_dir / "summary.json"
     history_path = run_paths.metrics_dir / "history.json"
     nll_checkpoint_path = run_paths.checkpoint_dir / "best_val_nll_model.pt"
@@ -831,11 +1108,77 @@ def cached_run_is_complete(*, cfg: ExperimentConfig, run_cfg: RunConfig, run_pat
                 return False
     with open(summary_path, "r", encoding="utf-8") as f:
         cached_summary = json.load(f)
+    magnitude_stats_match = True
+    if cfg.qty_decoder_mode in {"direct_log_qty", "direct_raw_qty"}:
+        if effective_marked_meta is None:
+            return False
+        for summary_key, meta_key in (
+            ("magnitude_global_mean", "magnitude_global_mean"),
+            ("magnitude_global_var", "magnitude_global_var"),
+            ("magnitude_global_std", "magnitude_global_std"),
+            ("magnitude_effective_sigma_floor", "magnitude_sigma_floor"),
+        ):
+            cached_value = cached_summary.get(summary_key)
+            current_value = effective_marked_meta.get(meta_key)
+            if cached_value is None or current_value is None or not np.isclose(
+                float(cached_value),
+                float(current_value),
+                rtol=1e-12,
+                atol=1e-12,
+            ):
+                magnitude_stats_match = False
+                break
     return (
+        magnitude_stats_match
+        and
         int(cached_summary.get("epochs", -1)) == int(run_cfg.epochs)
         and str(cached_summary.get("test_time_memory", "none")) == str(cfg.test_time_memory)
         and str(cached_summary.get("split_mode", "internal")) == str(getattr(cfg, "split_mode", "internal"))
         and str(cached_summary.get("value_head_activation", "sigmoid")) == str(cfg.value_head_activation)
+        and str(cached_summary.get("value_head_mode", "shared")) == str(cfg.value_head_mode)
+        and str(cached_summary.get("qty_mark_gradient_mode", "coupled"))
+        == str(cfg.qty_mark_gradient_mode)
+        and str(cached_summary.get("value_encoder_gradient_mode", "coupled"))
+        == str(cfg.value_encoder_gradient_mode)
+        and str(cached_summary.get("marker_loss_mode", "ce")) == str(cfg.marker_loss_mode)
+        and abs(
+            float(cached_summary.get("lambda_ordinal", 0.0)) - float(cfg.lambda_ordinal)
+        ) <= 1e-12
+        and str(cached_summary.get("qty_decoder_mode", "mark_residual"))
+        == str(cfg.qty_decoder_mode)
+        and str(cached_summary.get("magnitude_norm_mode", "global"))
+        == str(cfg.magnitude_norm_mode)
+        and int(cached_summary.get("magnitude_input_emb_dim", 8))
+        == int(cfg.magnitude_input_emb_dim)
+        and abs(
+            float(cached_summary.get("lambda_magnitude", 1.0)) - float(cfg.lambda_magnitude)
+        ) <= 1e-12
+        and abs(
+            float(cached_summary.get("magnitude_sigma_floor", 0.0014535461338152059))
+            - float(cfg.magnitude_sigma_floor)
+        ) <= 1e-12
+        and abs(
+            float(cached_summary.get("magnitude_revin_eps", 1e-5))
+            - float(cfg.magnitude_revin_eps)
+        ) <= 1e-12
+        and abs(
+            float(cached_summary.get("magnitude_shrinkage_k", 8.0))
+            - float(cfg.magnitude_shrinkage_k)
+        ) <= 1e-12
+        and str(cached_summary.get("magnitude_center_mode", "mean"))
+        == str(cfg.magnitude_center_mode)
+        and bool(cached_summary.get("magnitude_revin_affine", False))
+        == bool(cfg.magnitude_revin_affine)
+        and str(cached_summary.get("magnitude_stat_context_mode", "none"))
+        == str(cfg.magnitude_stat_context_mode)
+        and abs(
+            float(cached_summary.get("magnitude_exp_clamp_min", -2.0))
+            - float(cfg.magnitude_exp_clamp_min)
+        ) <= 1e-12
+        and abs(
+            float(cached_summary.get("magnitude_exp_clamp_max", 15.0))
+            - float(cfg.magnitude_exp_clamp_max)
+        ) <= 1e-12
     )
 
 
@@ -909,6 +1252,42 @@ def save_epoch_resume_checkpoint(
     )
 
 
+def validate_resume_magnitude_identity(
+    *,
+    resume_payload: dict[str, Any],
+    current_cfg: RMTPPConfig,
+) -> None:
+    """Reject a direct-decoder resume checkpoint with stale normalization state."""
+    if current_cfg.qty_decoder_mode not in {"direct_log_qty", "direct_raw_qty"}:
+        return
+    stored_cfg = resume_payload.get("rmtpp_config")
+    if not isinstance(stored_cfg, dict):
+        raise ValueError("Direct magnitude resume checkpoint has no rmtpp_config identity.")
+    identity_fields = (
+        "qty_decoder_mode",
+        "magnitude_norm_mode",
+        "magnitude_global_mean",
+        "magnitude_global_var",
+        "magnitude_global_std",
+        "magnitude_sigma_floor",
+        "magnitude_revin_eps",
+        "magnitude_shrinkage_k",
+        "magnitude_center_mode",
+        "magnitude_revin_affine",
+        "magnitude_stat_context_mode",
+    )
+    current_values = to_jsonable(current_cfg)
+    mismatched = [
+        name
+        for name in identity_fields
+        if stored_cfg.get(name) != current_values.get(name)
+    ]
+    if mismatched:
+        raise ValueError(
+            "Resume magnitude identity mismatch: " + ", ".join(mismatched)
+        )
+
+
 def train_one_run(
     *,
     cfg: ExperimentConfig,
@@ -927,10 +1306,35 @@ def train_one_run(
     resume_checkpoint_path = run_paths.checkpoint_dir / "last_epoch_state.pt"
     log_path = run_paths.logs_dir / "train.log"
     manifest_path = run_paths.manifest_dir / "run_config.json"
+    effective_marked_meta = attach_train_global_magnitude_stats(
+        marked_df=marked_df,
+        marked_meta=marked_meta,
+        cfg=cfg,
+        run_cfg=run_cfg,
+    )
 
-    if not cfg.force_rerun and cached_run_is_complete(cfg=cfg, run_cfg=run_cfg, run_paths=run_paths):
+    if not cfg.force_rerun and cached_run_is_complete(
+        cfg=cfg,
+        run_cfg=run_cfg,
+        run_paths=run_paths,
+        effective_marked_meta=effective_marked_meta,
+    ):
         with open(summary_path, "r", encoding="utf-8") as f:
-            return json.load(f)
+            cached_summary = json.load(f)
+        cached_summary.setdefault("value_head_mode", "shared")
+        cached_summary.setdefault("qty_mark_gradient_mode", "coupled")
+        cached_summary.setdefault("value_encoder_gradient_mode", "coupled")
+        cached_summary.setdefault("marker_loss_mode", "ce")
+        cached_summary.setdefault("lambda_ordinal", 0.0)
+        cached_summary.setdefault("qty_decoder_mode", "mark_residual")
+        cached_summary.setdefault("magnitude_norm_mode", "global")
+        cached_summary.setdefault("lambda_magnitude", 1.0)
+        cached_summary.setdefault("magnitude_revin_eps", 1e-5)
+        cached_summary.setdefault("magnitude_shrinkage_k", 8.0)
+        cached_summary.setdefault("magnitude_center_mode", "mean")
+        cached_summary.setdefault("magnitude_revin_affine", False)
+        cached_summary.setdefault("magnitude_stat_context_mode", "none")
+        return cached_summary
 
     set_global_seed(run_cfg.seed)
     search_cfg = make_search_cfg(cfg, run_cfg.dataset_kind)
@@ -954,7 +1358,23 @@ def train_one_run(
         )
     else:
         train_loader, val_loader = make_week_lookback_loaders(marked_df, training_cfg)
-    model, rmtpp_cfg, encoder_cfg = build_model(cfg=cfg, run_cfg=run_cfg, marked_meta=marked_meta)
+    if cfg.qty_decoder_mode in {"direct_log_qty", "direct_raw_qty"}:
+        logger.info(
+            "Direct magnitude stats | decoder=%s norm=%s domain=%s split=train "
+            "count=%s mean=%.8f std=%.8f floor=%.8f",
+            cfg.qty_decoder_mode,
+            cfg.magnitude_norm_mode,
+            effective_marked_meta["magnitude_domain"],
+            effective_marked_meta["magnitude_train_event_count"],
+            effective_marked_meta["magnitude_global_mean"],
+            effective_marked_meta["magnitude_global_std"],
+            effective_marked_meta["magnitude_sigma_floor"],
+        )
+    model, rmtpp_cfg, encoder_cfg = build_model(
+        cfg=cfg,
+        run_cfg=run_cfg,
+        marked_meta=effective_marked_meta,
+    )
 
     save_json(
         {
@@ -964,7 +1384,7 @@ def train_one_run(
             "training_config": training_cfg,
             "rmtpp_config": rmtpp_cfg,
             "encoder_config": encoder_cfg,
-            "marked_meta": marked_meta,
+            "marked_meta": effective_marked_meta,
             "loader_sample_counts": {
                 "train": len(train_loader.dataset),
                 "validation": len(val_loader.dataset),
@@ -990,6 +1410,10 @@ def train_one_run(
                 # be moved by their load_state_dict paths, while RNG states must
                 # remain CPU ByteTensors for PyTorch's RNG restore APIs.
                 map_location="cpu",
+            )
+            validate_resume_magnitude_identity(
+                resume_payload=resume_payload,
+                current_cfg=rmtpp_cfg,
             )
             loaded_epoch = int(resume_payload.get("epoch", 0))
             if loaded_epoch > 0:
@@ -1140,6 +1564,30 @@ def train_one_run(
         "loss_mode": cfg.loss_mode,
         "split_mode": cfg.split_mode,
         "value_head_activation": cfg.value_head_activation,
+        "value_head_mode": cfg.value_head_mode,
+        "qty_mark_gradient_mode": cfg.qty_mark_gradient_mode,
+        "value_encoder_gradient_mode": cfg.value_encoder_gradient_mode,
+        "marker_loss_mode": cfg.marker_loss_mode,
+        "lambda_ordinal": float(cfg.lambda_ordinal),
+        "qty_decoder_mode": cfg.qty_decoder_mode,
+        "magnitude_norm_mode": cfg.magnitude_norm_mode,
+        "magnitude_input_emb_dim": int(cfg.magnitude_input_emb_dim),
+        "lambda_magnitude": float(cfg.lambda_magnitude),
+        "magnitude_sigma_floor": float(cfg.magnitude_sigma_floor),
+        "magnitude_effective_sigma_floor": effective_marked_meta.get("magnitude_sigma_floor"),
+        "magnitude_revin_eps": float(cfg.magnitude_revin_eps),
+        "magnitude_shrinkage_k": float(cfg.magnitude_shrinkage_k),
+        "magnitude_center_mode": cfg.magnitude_center_mode,
+        "magnitude_revin_affine": bool(cfg.magnitude_revin_affine),
+        "magnitude_stat_context_mode": cfg.magnitude_stat_context_mode,
+        "magnitude_domain": effective_marked_meta.get("magnitude_domain"),
+        "magnitude_exp_clamp_min": float(cfg.magnitude_exp_clamp_min),
+        "magnitude_exp_clamp_max": float(cfg.magnitude_exp_clamp_max),
+        "magnitude_stats_source_split": effective_marked_meta.get("magnitude_stats_source_split"),
+        "magnitude_train_event_count": effective_marked_meta.get("magnitude_train_event_count"),
+        "magnitude_global_mean": effective_marked_meta.get("magnitude_global_mean"),
+        "magnitude_global_var": effective_marked_meta.get("magnitude_global_var"),
+        "magnitude_global_std": effective_marked_meta.get("magnitude_global_std"),
         "value_input_mode": cfg.value_input_mode,
         "value_input_emb_dim": int(cfg.value_input_emb_dim),
         "train_loss_scope": cfg.train_loss_scope,
@@ -1150,9 +1598,9 @@ def train_one_run(
         "best_score_checkpoint_path": str(run_paths.checkpoint_dir / "best_score_model.pt"),
         "best_val_nll_checkpoint_path": str(run_paths.checkpoint_dir / "best_val_nll_model.pt"),
         "final_checkpoint_path": str(run_paths.checkpoint_dir / "final_model.pt"),
-        "num_marks": int(marked_meta["num_marks"]),
-        "max_order": int(marked_meta["max_order"]),
-        "series_count": int(marked_meta["series_count"]),
+        "num_marks": int(effective_marked_meta["num_marks"]),
+        "max_order": int(effective_marked_meta["max_order"]),
+        "series_count": int(effective_marked_meta["series_count"]),
         "rmtpp_rnn_type": cfg.rmtpp_rnn_type,
         "rmtpp_hidden_dim": int(rmtpp_cfg.rnn_hidden_dim),
         "rmtpp_mark_emb_dim": int(rmtpp_cfg.mark_emb_dim),
@@ -1194,6 +1642,15 @@ def train_one_run(
             pl.lit(run_cfg.candidate_name).alias("candidate_name"),
             pl.lit(run_cfg.candidate_name).alias("titan_candidate_name"),
             pl.lit(run_cfg.seed).alias("seed"),
+            pl.lit(cfg.value_head_mode).alias("value_head_mode"),
+            pl.lit(cfg.qty_mark_gradient_mode).alias("qty_mark_gradient_mode"),
+            pl.lit(cfg.value_encoder_gradient_mode).alias("value_encoder_gradient_mode"),
+            pl.lit(cfg.marker_loss_mode).alias("marker_loss_mode"),
+            pl.lit(float(cfg.lambda_ordinal)).alias("lambda_ordinal"),
+            pl.lit(cfg.qty_decoder_mode).alias("qty_decoder_mode"),
+            pl.lit(cfg.magnitude_norm_mode).alias("magnitude_norm_mode"),
+            pl.lit(float(cfg.lambda_magnitude)).alias("lambda_magnitude"),
+            *magnitude_artifact_columns(cfg),
             pl.lit(selection).alias("selection"),
             pl.lit("validation").alias("eval_split"),
             pl.lit(run_cfg.scale_base).alias("model_scale_base"),
@@ -1213,6 +1670,14 @@ def train_one_run(
             pl.lit(run_cfg.candidate_name).alias("candidate_name"),
             pl.lit(run_cfg.candidate_name).alias("titan_candidate_name"),
             pl.lit(run_cfg.seed).alias("seed"),
+            pl.lit(cfg.value_head_mode).alias("value_head_mode"),
+            pl.lit(cfg.qty_mark_gradient_mode).alias("qty_mark_gradient_mode"),
+            pl.lit(cfg.value_encoder_gradient_mode).alias("value_encoder_gradient_mode"),
+            pl.lit(cfg.marker_loss_mode).alias("marker_loss_mode"),
+            pl.lit(float(cfg.lambda_ordinal)).alias("lambda_ordinal"),
+            pl.lit(cfg.qty_decoder_mode).alias("qty_decoder_mode"),
+            pl.lit(cfg.magnitude_norm_mode).alias("magnitude_norm_mode"),
+            pl.lit(float(cfg.lambda_magnitude)).alias("lambda_magnitude"),
             pl.lit(selection).alias("selection"),
             pl.lit("validation").alias("eval_split"),
             pl.lit(run_cfg.scale_base).alias("model_scale_base"),
@@ -1224,6 +1689,29 @@ def train_one_run(
         )
         confusion_df.write_csv(confusion_csv_path)
         confusion_df.write_parquet(confusion_parquet_path)
+        mark_class_df = summarize_mark_confusion(
+            confusion_df,
+            num_real_marks=int(rmtpp_cfg.num_marks - 1),
+        ).with_columns([
+            pl.lit(run_cfg.dataset_name).alias("dataset_name"),
+            pl.lit(canonical_model_name(run_cfg.model_name)).alias("model_name"),
+            pl.lit(run_cfg.candidate_name).alias("candidate_name"),
+            pl.lit(run_cfg.seed).alias("seed"),
+            pl.lit(cfg.marker_loss_mode).alias("marker_loss_mode"),
+            pl.lit(float(cfg.lambda_ordinal)).alias("lambda_ordinal"),
+            pl.lit(cfg.qty_decoder_mode).alias("qty_decoder_mode"),
+            pl.lit(cfg.magnitude_norm_mode).alias("magnitude_norm_mode"),
+            pl.lit(float(cfg.lambda_magnitude)).alias("lambda_magnitude"),
+            pl.lit(selection).alias("selection"),
+            pl.lit("validation").alias("eval_split"),
+        ])
+        mark_class_csv_path, mark_class_parquet_path = mark_class_metric_paths(
+            run_paths,
+            selection,
+            "validation",
+        )
+        mark_class_df.write_csv(mark_class_csv_path)
+        mark_class_df.write_parquet(mark_class_parquet_path)
 
         if test_loader is not None:
             test_metrics = eval_next_event_week_lookback(
@@ -1240,6 +1728,15 @@ def train_one_run(
                 "candidate_name": run_cfg.candidate_name,
                 "titan_candidate_name": run_cfg.candidate_name,
                 "seed": int(run_cfg.seed),
+                "value_head_mode": cfg.value_head_mode,
+                "qty_mark_gradient_mode": cfg.qty_mark_gradient_mode,
+                "value_encoder_gradient_mode": cfg.value_encoder_gradient_mode,
+                "marker_loss_mode": cfg.marker_loss_mode,
+                "lambda_ordinal": float(cfg.lambda_ordinal),
+                "qty_decoder_mode": cfg.qty_decoder_mode,
+                "magnitude_norm_mode": cfg.magnitude_norm_mode,
+                "lambda_magnitude": float(cfg.lambda_magnitude),
+                **magnitude_artifact_identity(cfg),
                 "selection": selection,
                 "score": float(test_score),
                 **{
@@ -1259,12 +1756,30 @@ def train_one_run(
             summary[f"test_{selection}_nll"] = float(test_metrics["val_nll"])
             summary[f"test_{selection}_nll_marker"] = float(test_metrics["val_nll_marker"])
             summary[f"test_{selection}_nll_time"] = float(test_metrics["val_nll_time"])
+            summary[f"test_{selection}_ordinal_marker_loss"] = float(
+                test_metrics["val_ordinal_marker_loss"]
+            )
             summary[f"test_{selection}_value_loss"] = float(test_metrics["val_value_loss"])
+            summary[f"test_{selection}_magnitude_loss"] = float(
+                test_metrics["val_magnitude_loss"]
+            )
+            summary[f"test_{selection}_log_qty_mae"] = float(test_metrics["log_qty_mae"])
+            summary[f"test_{selection}_log_qty_rmse"] = float(test_metrics["log_qty_rmse"])
             summary[f"test_{selection}_qty_mae"] = float(test_metrics["qty_mae"])
             summary[f"test_{selection}_value_mae"] = float(test_metrics["value_mae"])
             summary[f"test_{selection}_dt_mae"] = float(test_metrics["dt_mae"])
             summary[f"test_{selection}_dt_rmse"] = float(test_metrics["dt_rmse"])
             summary[f"test_{selection}_mark_acc"] = float(test_metrics["mark_acc"])
+            for metric_name in (
+                "mark_balanced_accuracy",
+                "mark_macro_f1",
+                "mark_mae",
+                "mark_adjacent_accuracy",
+                "mark_pred_0_share",
+                "mark_0_recall",
+                "mark_1_recall",
+            ):
+                summary[f"test_{selection}_{metric_name}"] = float(test_metrics[metric_name])
             summary[f"test_{selection}_total"] = int(test_metrics["_total"])
             summary[f"test_{selection}_nll_steps"] = float(test_metrics["_nll_steps"])
 
@@ -1281,6 +1796,15 @@ def train_one_run(
                 pl.lit(run_cfg.candidate_name).alias("candidate_name"),
                 pl.lit(run_cfg.candidate_name).alias("titan_candidate_name"),
                 pl.lit(run_cfg.seed).alias("seed"),
+                pl.lit(cfg.value_head_mode).alias("value_head_mode"),
+                pl.lit(cfg.qty_mark_gradient_mode).alias("qty_mark_gradient_mode"),
+                pl.lit(cfg.value_encoder_gradient_mode).alias("value_encoder_gradient_mode"),
+                pl.lit(cfg.marker_loss_mode).alias("marker_loss_mode"),
+                pl.lit(float(cfg.lambda_ordinal)).alias("lambda_ordinal"),
+                pl.lit(cfg.qty_decoder_mode).alias("qty_decoder_mode"),
+                pl.lit(cfg.magnitude_norm_mode).alias("magnitude_norm_mode"),
+                pl.lit(float(cfg.lambda_magnitude)).alias("lambda_magnitude"),
+                *magnitude_artifact_columns(cfg),
                 pl.lit(selection).alias("selection"),
                 pl.lit("test").alias("eval_split"),
                 pl.lit(run_cfg.scale_base).alias("model_scale_base"),
@@ -1300,6 +1824,14 @@ def train_one_run(
                 pl.lit(run_cfg.candidate_name).alias("candidate_name"),
                 pl.lit(run_cfg.candidate_name).alias("titan_candidate_name"),
                 pl.lit(run_cfg.seed).alias("seed"),
+                pl.lit(cfg.value_head_mode).alias("value_head_mode"),
+                pl.lit(cfg.qty_mark_gradient_mode).alias("qty_mark_gradient_mode"),
+                pl.lit(cfg.value_encoder_gradient_mode).alias("value_encoder_gradient_mode"),
+                pl.lit(cfg.marker_loss_mode).alias("marker_loss_mode"),
+                pl.lit(float(cfg.lambda_ordinal)).alias("lambda_ordinal"),
+                pl.lit(cfg.qty_decoder_mode).alias("qty_decoder_mode"),
+                pl.lit(cfg.magnitude_norm_mode).alias("magnitude_norm_mode"),
+                pl.lit(float(cfg.lambda_magnitude)).alias("lambda_magnitude"),
                 pl.lit(selection).alias("selection"),
                 pl.lit("test").alias("eval_split"),
                 pl.lit(run_cfg.scale_base).alias("model_scale_base"),
@@ -1311,6 +1843,29 @@ def train_one_run(
             )
             test_confusion_df.write_csv(test_confusion_csv_path)
             test_confusion_df.write_parquet(test_confusion_parquet_path)
+            test_mark_class_df = summarize_mark_confusion(
+                test_confusion_df,
+                num_real_marks=int(rmtpp_cfg.num_marks - 1),
+            ).with_columns([
+                pl.lit(run_cfg.dataset_name).alias("dataset_name"),
+                pl.lit(canonical_model_name(run_cfg.model_name)).alias("model_name"),
+                pl.lit(run_cfg.candidate_name).alias("candidate_name"),
+                pl.lit(run_cfg.seed).alias("seed"),
+                pl.lit(cfg.marker_loss_mode).alias("marker_loss_mode"),
+                pl.lit(float(cfg.lambda_ordinal)).alias("lambda_ordinal"),
+                pl.lit(cfg.qty_decoder_mode).alias("qty_decoder_mode"),
+                pl.lit(cfg.magnitude_norm_mode).alias("magnitude_norm_mode"),
+                pl.lit(float(cfg.lambda_magnitude)).alias("lambda_magnitude"),
+                pl.lit(selection).alias("selection"),
+                pl.lit("test").alias("eval_split"),
+            ])
+            test_mark_class_csv_path, test_mark_class_parquet_path = mark_class_metric_paths(
+                run_paths,
+                selection,
+                "test",
+            )
+            test_mark_class_df.write_csv(test_mark_class_csv_path)
+            test_mark_class_df.write_parquet(test_mark_class_parquet_path)
 
         if cfg.test_time_memory == "contextual" and canonical_model_name(run_cfg.model_name) == "titantpp":
             ttm_metrics = evaluate_titantpp_contextual_ttm(
@@ -1361,7 +1916,7 @@ def train_one_run(
     return summary
 
 
-def build_error_row(run_cfg: RunConfig, exc: Exception) -> dict[str, Any]:
+def build_error_row(cfg: ExperimentConfig, run_cfg: RunConfig, exc: Exception) -> dict[str, Any]:
     return {
         "status": "failed",
         "dataset_name": run_cfg.dataset_name,
@@ -1375,6 +1930,14 @@ def build_error_row(run_cfg: RunConfig, exc: Exception) -> dict[str, Any]:
         "titan_profile": run_cfg.titan_profile,
         "split_mode": "unavailable_after_failure",
         "value_head_activation": "unavailable_after_failure",
+        "value_head_mode": cfg.value_head_mode,
+        "qty_mark_gradient_mode": cfg.qty_mark_gradient_mode,
+        "value_encoder_gradient_mode": cfg.value_encoder_gradient_mode,
+        "marker_loss_mode": cfg.marker_loss_mode,
+        "lambda_ordinal": float(cfg.lambda_ordinal),
+        "qty_decoder_mode": cfg.qty_decoder_mode,
+        "magnitude_norm_mode": cfg.magnitude_norm_mode,
+        "lambda_magnitude": float(cfg.lambda_magnitude),
         "test_time_memory": "unavailable_after_failure",
         "error": repr(exc),
         **flatten_candidate(run_cfg.candidate),
@@ -1472,7 +2035,7 @@ def run_long_epoch_benchmark(
                         logger=logger,
                     )
                 except Exception as exc:
-                    row = build_error_row(run_cfg, exc)
+                    row = build_error_row(cfg, run_cfg, exc)
                     logger.exception(
                         "Run failed | dataset=%s model=%s candidate=%s seed=%s",
                         spec.name,
@@ -1503,15 +2066,56 @@ def load_all_histories(run_rows: list[dict[str, Any]]) -> pl.DataFrame:
                 "model_name": row["model_name"],
                 "candidate_name": row["candidate_name"],
                 "titan_candidate_name": row["candidate_name"],
+                "value_head_mode": row.get("value_head_mode", "shared"),
+                "qty_mark_gradient_mode": row.get("qty_mark_gradient_mode", "coupled"),
+                "value_encoder_gradient_mode": row.get(
+                    "value_encoder_gradient_mode", "coupled"
+                ),
+                "marker_loss_mode": row.get("marker_loss_mode", "ce"),
+                "lambda_ordinal": float(row.get("lambda_ordinal", 0.0)),
+                "qty_decoder_mode": row.get("qty_decoder_mode", "mark_residual"),
+                "magnitude_norm_mode": row.get("magnitude_norm_mode", "global"),
+                "lambda_magnitude": float(row.get("lambda_magnitude", 1.0)),
+                "magnitude_domain": row.get("magnitude_domain", "mark_residual"),
+                "magnitude_sigma_floor": float(
+                    row.get("magnitude_sigma_floor", 0.0014535461338152059)
+                ),
+                "magnitude_revin_eps": float(row.get("magnitude_revin_eps", 1e-5)),
+                "magnitude_shrinkage_k": float(row.get("magnitude_shrinkage_k", 8.0)),
+                "magnitude_center_mode": row.get("magnitude_center_mode", "mean"),
+                "magnitude_revin_affine": bool(row.get("magnitude_revin_affine", False)),
+                "magnitude_stat_context_mode": row.get(
+                    "magnitude_stat_context_mode", "none"
+                ),
                 "seed": int(row["seed"]),
                 "epoch": int(epoch_row["epoch"]),
                 "score": float(epoch_row["score"]),
                 "val_nll": float(epoch_row["val_nll"]),
                 "val_nll_marker": float(epoch_row.get("val_nll_marker", float("nan"))),
                 "val_nll_time": float(epoch_row.get("val_nll_time", float("nan"))),
+                "val_ordinal_marker_loss": float(
+                    epoch_row.get("val_ordinal_marker_loss", float("nan"))
+                ),
                 "qty_mae": float(epoch_row["qty_mae"]),
+                "qty_rmse": float(epoch_row.get("qty_rmse", float("nan"))),
+                "qty_wape": float(epoch_row.get("qty_wape", float("nan"))),
+                "log_qty_mae": float(epoch_row.get("log_qty_mae", float("nan"))),
+                "log_qty_rmse": float(epoch_row.get("log_qty_rmse", float("nan"))),
+                "val_magnitude_loss": float(
+                    epoch_row.get("val_magnitude_loss", float("nan"))
+                ),
                 "dt_mae": float(epoch_row["dt_mae"]),
                 "mark_acc": float(epoch_row["mark_acc"]),
+                "mark_balanced_accuracy": float(
+                    epoch_row.get("mark_balanced_accuracy", float("nan"))
+                ),
+                "mark_macro_f1": float(epoch_row.get("mark_macro_f1", float("nan"))),
+                "mark_mae": float(epoch_row.get("mark_mae", float("nan"))),
+                "mark_adjacent_accuracy": float(
+                    epoch_row.get("mark_adjacent_accuracy", float("nan"))
+                ),
+                "mark_0_recall": float(epoch_row.get("mark_0_recall", float("nan"))),
+                "mark_1_recall": float(epoch_row.get("mark_1_recall", float("nan"))),
                 "train_loss": float(epoch_row["train_loss"]),
             })
     return pl.DataFrame(history_rows) if history_rows else pl.DataFrame()
@@ -1571,11 +2175,98 @@ def load_all_test_scale_metrics(run_rows: list[dict[str, Any]], selections: Iter
     return pl.concat(frames, how="vertical_relaxed")
 
 
+def with_magnitude_identity_defaults(frame: pl.DataFrame) -> pl.DataFrame:
+    """Backfill new identity columns when aggregating older artifacts."""
+    defaults = {
+        "magnitude_sigma_floor": 0.0014535461338152059,
+        "magnitude_revin_eps": 1e-5,
+        "magnitude_shrinkage_k": 8.0,
+        "magnitude_center_mode": "mean",
+        "magnitude_revin_affine": False,
+        "magnitude_stat_context_mode": "none",
+    }
+    for name, value in defaults.items():
+        if name not in frame.columns:
+            frame = frame.with_columns(pl.lit(value).alias(name))
+    if "magnitude_domain" not in frame.columns:
+        frame = frame.with_columns(
+            pl.when(pl.col("qty_decoder_mode") == "direct_raw_qty")
+            .then(pl.lit("raw_qty"))
+            .when(pl.col("qty_decoder_mode") == "direct_log_qty")
+            .then(pl.lit("log2_qty"))
+            .otherwise(pl.lit("mark_residual"))
+            .alias("magnitude_domain")
+        )
+    return frame
+
+
+MAGNITUDE_GROUP_COLUMNS = [
+    "magnitude_domain",
+    "magnitude_sigma_floor",
+    "magnitude_revin_eps",
+    "magnitude_shrinkage_k",
+    "magnitude_center_mode",
+    "magnitude_revin_affine",
+    "magnitude_stat_context_mode",
+]
+
+
 def aggregate_test_metrics(test_df: pl.DataFrame) -> pl.DataFrame:
     if test_df.height == 0:
         return pl.DataFrame()
+    if "value_head_mode" not in test_df.columns:
+        test_df = test_df.with_columns(pl.lit("shared").alias("value_head_mode"))
+    if "qty_mark_gradient_mode" not in test_df.columns:
+        test_df = test_df.with_columns(
+            pl.lit("coupled").alias("qty_mark_gradient_mode")
+        )
+    if "value_encoder_gradient_mode" not in test_df.columns:
+        test_df = test_df.with_columns(
+            pl.lit("coupled").alias("value_encoder_gradient_mode")
+        )
+    if "marker_loss_mode" not in test_df.columns:
+        test_df = test_df.with_columns(pl.lit("ce").alias("marker_loss_mode"))
+    if "lambda_ordinal" not in test_df.columns:
+        test_df = test_df.with_columns(pl.lit(0.0).alias("lambda_ordinal"))
+    if "qty_decoder_mode" not in test_df.columns:
+        test_df = test_df.with_columns(pl.lit("mark_residual").alias("qty_decoder_mode"))
+    if "magnitude_norm_mode" not in test_df.columns:
+        test_df = test_df.with_columns(pl.lit("global").alias("magnitude_norm_mode"))
+    if "lambda_magnitude" not in test_df.columns:
+        test_df = test_df.with_columns(pl.lit(1.0).alias("lambda_magnitude"))
+    test_df = with_magnitude_identity_defaults(test_df)
+    for metric_name in (
+        "val_ordinal_marker_loss",
+        "mark_balanced_accuracy",
+        "mark_macro_f1",
+        "mark_mae",
+        "mark_adjacent_accuracy",
+        "mark_pred_0_share",
+        "mark_0_recall",
+        "mark_1_recall",
+        "log_qty_mae",
+        "log_qty_rmse",
+        "val_magnitude_loss",
+        *RAW_MAGNITUDE_DIAGNOSTIC_NAMES,
+    ):
+        if metric_name not in test_df.columns:
+            test_df = test_df.with_columns(pl.lit(float("nan")).alias(metric_name))
     return (
-        test_df.group_by(["dataset_name", "model_name", "candidate_name", "selection"])
+        test_df.group_by([
+            "dataset_name",
+            "model_name",
+            "candidate_name",
+            "value_head_mode",
+            "qty_mark_gradient_mode",
+            "value_encoder_gradient_mode",
+            "marker_loss_mode",
+            "lambda_ordinal",
+            "qty_decoder_mode",
+            "magnitude_norm_mode",
+            "lambda_magnitude",
+            *MAGNITUDE_GROUP_COLUMNS,
+            "selection",
+        ])
         .agg([
             pl.len().alias("run_count"),
             pl.mean("score").alias("mean_test_score"),
@@ -1584,13 +2275,28 @@ def aggregate_test_metrics(test_df: pl.DataFrame) -> pl.DataFrame:
             pl.std("val_nll").fill_null(0.0).alias("std_test_nll"),
             pl.mean("val_nll_marker").alias("mean_test_nll_marker"),
             pl.mean("val_nll_time").alias("mean_test_nll_time"),
+            pl.mean("val_ordinal_marker_loss").alias("mean_test_ordinal_marker_loss"),
             pl.mean("qty_mae").alias("mean_test_qty_mae"),
             pl.std("qty_mae").fill_null(0.0).alias("std_test_qty_mae"),
+            pl.mean("log_qty_mae").alias("mean_test_log_qty_mae"),
+            pl.mean("log_qty_rmse").alias("mean_test_log_qty_rmse"),
+            pl.mean("val_magnitude_loss").alias("mean_test_magnitude_loss"),
             pl.mean("dt_mae").alias("mean_test_dt_mae"),
             pl.mean("mark_acc").alias("mean_test_mark_acc"),
+            pl.mean("mark_balanced_accuracy").alias("mean_test_mark_balanced_accuracy"),
+            pl.mean("mark_macro_f1").alias("mean_test_mark_macro_f1"),
+            pl.mean("mark_mae").alias("mean_test_mark_mae"),
+            pl.mean("mark_adjacent_accuracy").alias("mean_test_mark_adjacent_accuracy"),
+            pl.mean("mark_pred_0_share").alias("mean_test_mark_pred_0_share"),
+            pl.mean("mark_0_recall").alias("mean_test_mark_0_recall"),
+            pl.mean("mark_1_recall").alias("mean_test_mark_1_recall"),
             pl.mean("value_mae").alias("mean_test_value_mae"),
             pl.mean("_total").alias("mean_test_total"),
             pl.mean("_nll_steps").alias("mean_test_nll_steps"),
+            *[
+                pl.mean(metric_name).alias(f"mean_test_{metric_name}")
+                for metric_name in RAW_MAGNITUDE_DIAGNOSTIC_NAMES
+            ],
         ])
         .sort(["dataset_name", "selection", "model_name", "candidate_name"])
     )
@@ -1601,6 +2307,21 @@ def aggregate_run_rows(rows: list[dict[str, Any]]) -> tuple[pl.DataFrame, pl.Dat
     success_df = run_df.filter(pl.col("status") == "success")
     if success_df.height == 0:
         return run_df, pl.DataFrame()
+    if "value_encoder_gradient_mode" not in success_df.columns:
+        success_df = success_df.with_columns(
+            pl.lit("coupled").alias("value_encoder_gradient_mode")
+        )
+    if "marker_loss_mode" not in success_df.columns:
+        success_df = success_df.with_columns(pl.lit("ce").alias("marker_loss_mode"))
+    if "lambda_ordinal" not in success_df.columns:
+        success_df = success_df.with_columns(pl.lit(0.0).alias("lambda_ordinal"))
+    if "qty_decoder_mode" not in success_df.columns:
+        success_df = success_df.with_columns(pl.lit("mark_residual").alias("qty_decoder_mode"))
+    if "magnitude_norm_mode" not in success_df.columns:
+        success_df = success_df.with_columns(pl.lit("global").alias("magnitude_norm_mode"))
+    if "lambda_magnitude" not in success_df.columns:
+        success_df = success_df.with_columns(pl.lit(1.0).alias("lambda_magnitude"))
+    success_df = with_magnitude_identity_defaults(success_df)
 
     agg_exprs = [
         pl.first("dataset_kind").alias("dataset_kind"),
@@ -1633,6 +2354,30 @@ def aggregate_run_rows(rows: list[dict[str, Any]]) -> tuple[pl.DataFrame, pl.Dat
         pl.mean("final_score").alias("mean_final_score"),
         pl.mean("final_train_loss").alias("mean_final_train_loss"),
     ]
+    for metric_name in (
+        "best_val_nll_ordinal_marker_loss",
+        "best_val_nll_mark_balanced_accuracy",
+        "best_val_nll_mark_macro_f1",
+        "best_val_nll_mark_mae",
+        "best_val_nll_mark_adjacent_accuracy",
+        "best_val_nll_mark_0_recall",
+        "best_val_nll_mark_1_recall",
+        "final_ordinal_marker_loss",
+        "final_mark_mae",
+        "best_val_nll_log_qty_mae",
+        "best_val_nll_log_qty_rmse",
+        "best_val_nll_magnitude_loss",
+        "final_log_qty_mae",
+        "final_log_qty_rmse",
+        "final_magnitude_loss",
+    ):
+        if metric_name in success_df.columns:
+            agg_exprs.append(pl.mean(metric_name).alias(f"mean_{metric_name}"))
+    for prefix in ("best_val_nll", "final"):
+        for metric_name in RAW_MAGNITUDE_DIAGNOSTIC_NAMES:
+            column_name = f"{prefix}_{metric_name}"
+            if column_name in success_df.columns:
+                agg_exprs.append(pl.mean(column_name).alias(f"mean_{column_name}"))
     for selection in ("best_val_nll", "best_score", "final"):
         for metric in ("score", "val_nll", "qty_mae", "dt_mae", "mark_acc", "evaluated_series"):
             col = f"ttm_contextual_{selection}_{metric}"
@@ -1640,7 +2385,20 @@ def aggregate_run_rows(rows: list[dict[str, Any]]) -> tuple[pl.DataFrame, pl.Dat
                 agg_exprs.append(pl.mean(col).alias(f"mean_{col}"))
 
     summary_df = (
-        success_df.group_by(["dataset_name", "model_name", "candidate_name"])
+        success_df.group_by([
+            "dataset_name",
+            "model_name",
+            "candidate_name",
+            "value_head_mode",
+            "qty_mark_gradient_mode",
+            "value_encoder_gradient_mode",
+            "marker_loss_mode",
+            "lambda_ordinal",
+            "qty_decoder_mode",
+            "magnitude_norm_mode",
+            "lambda_magnitude",
+            *MAGNITUDE_GROUP_COLUMNS,
+        ])
         .agg(agg_exprs)
         .sort(["dataset_name", "model_name", "candidate_name"])
     )
@@ -1690,11 +2448,41 @@ def build_delta_table(summary_df: pl.DataFrame, baseline_model: str = "rmtpp") -
 def aggregate_scale_metrics(scale_df: pl.DataFrame) -> pl.DataFrame:
     if scale_df.height == 0:
         return pl.DataFrame()
+    if "value_head_mode" not in scale_df.columns:
+        scale_df = scale_df.with_columns(pl.lit("shared").alias("value_head_mode"))
+    if "qty_mark_gradient_mode" not in scale_df.columns:
+        scale_df = scale_df.with_columns(
+            pl.lit("coupled").alias("qty_mark_gradient_mode")
+        )
+    if "value_encoder_gradient_mode" not in scale_df.columns:
+        scale_df = scale_df.with_columns(
+            pl.lit("coupled").alias("value_encoder_gradient_mode")
+        )
+    if "marker_loss_mode" not in scale_df.columns:
+        scale_df = scale_df.with_columns(pl.lit("ce").alias("marker_loss_mode"))
+    if "lambda_ordinal" not in scale_df.columns:
+        scale_df = scale_df.with_columns(pl.lit(0.0).alias("lambda_ordinal"))
+    if "qty_decoder_mode" not in scale_df.columns:
+        scale_df = scale_df.with_columns(pl.lit("mark_residual").alias("qty_decoder_mode"))
+    if "magnitude_norm_mode" not in scale_df.columns:
+        scale_df = scale_df.with_columns(pl.lit("global").alias("magnitude_norm_mode"))
+    if "lambda_magnitude" not in scale_df.columns:
+        scale_df = scale_df.with_columns(pl.lit(1.0).alias("lambda_magnitude"))
+    scale_df = with_magnitude_identity_defaults(scale_df)
     return (
         scale_df.group_by([
             "dataset_name",
             "model_name",
             "candidate_name",
+            "value_head_mode",
+            "qty_mark_gradient_mode",
+            "value_encoder_gradient_mode",
+            "marker_loss_mode",
+            "lambda_ordinal",
+            "qty_decoder_mode",
+            "magnitude_norm_mode",
+            "lambda_magnitude",
+            *MAGNITUDE_GROUP_COLUMNS,
             "selection",
             "scale_order",
             "scale_label",
@@ -1717,9 +2505,26 @@ def aggregate_scale_metrics(scale_df: pl.DataFrame) -> pl.DataFrame:
     )
 
 
+def quantity_run_label(row: dict[str, Any]) -> str:
+    label = model_run_label(str(row["model_name"]), str(row["candidate_name"]))
+    decoder_mode = str(row.get("qty_decoder_mode", "mark_residual"))
+    if decoder_mode in {"direct_log_qty", "direct_raw_qty"}:
+        domain = "log" if decoder_mode == "direct_log_qty" else "raw"
+        label += f" [{domain}/{row.get('magnitude_norm_mode', 'global')}]"
+    return label
+
+
 def save_learning_curve_plots(history_df: pl.DataFrame, plots_dir: Path) -> None:
     if history_df.height == 0:
         return
+    if "qty_decoder_mode" not in history_df.columns:
+        history_df = history_df.with_columns(
+            pl.lit("mark_residual").alias("qty_decoder_mode")
+        )
+    if "magnitude_norm_mode" not in history_df.columns:
+        history_df = history_df.with_columns(
+            pl.lit("global").alias("magnitude_norm_mode")
+        )
     ensure_dir(plots_dir)
     # Total NLL alone hides whether the gain/loss comes from mark prediction or
     # event-time density, so we plot both decomposed likelihood terms as well.
@@ -1728,21 +2533,37 @@ def save_learning_curve_plots(history_df: pl.DataFrame, plots_dir: Path) -> None
         ("val_nll", "Validation NLL"),
         ("val_nll_marker", "Validation Marker NLL"),
         ("val_nll_time", "Validation Time NLL"),
+        ("val_ordinal_marker_loss", "Validation Normalized RPS"),
+        ("mark_mae", "Validation Mark MAE"),
         ("qty_mae", "Validation Qty MAE"),
+        ("log_qty_mae", "Validation Log2 Qty MAE"),
+        ("val_magnitude_loss", "Validation Magnitude Loss"),
     ]
     palette = ["#5DA5DA", "#F17CB0", "#60BD68", "#B276B2", "#F15854", "#DECF3F", "#FAA43A"]
 
     for dataset_name in history_df["dataset_name"].unique().to_list():
         dataset_df = history_df.filter(pl.col("dataset_name") == dataset_name).with_columns(
-            pl.struct(["model_name", "candidate_name"])
+            pl.struct([
+                "model_name",
+                "candidate_name",
+                "qty_decoder_mode",
+                "magnitude_norm_mode",
+            ])
             .map_elements(
-                lambda row: model_run_label(str(row["model_name"]), str(row["candidate_name"])),
+                quantity_run_label,
                 return_dtype=pl.Utf8,
             )
             .alias("run_label")
         )
         run_labels = dataset_df["run_label"].unique().sort().to_list()
-        fig, axes = plt.subplots(2, 3, figsize=(18, 9))
+        ncols = 3
+        nrows = int(np.ceil(len(curve_metrics) / ncols))
+        fig, axes = plt.subplots(
+            nrows,
+            ncols,
+            figsize=(18, 4.5 * nrows),
+            squeeze=False,
+        )
         axes_flat = axes.flatten()
         for ax, (metric, title) in zip(axes_flat, curve_metrics):
             if metric not in dataset_df.columns:
@@ -1789,9 +2610,14 @@ def save_scale_metric_plots(scale_summary_df: pl.DataFrame, plots_dir: Path) -> 
             dataset_df = scale_summary_df.filter(
                 (pl.col("dataset_name") == dataset_name) & (pl.col("selection") == selection)
             ).with_columns(
-                pl.struct(["model_name", "candidate_name"])
+                pl.struct([
+                    "model_name",
+                    "candidate_name",
+                    "qty_decoder_mode",
+                    "magnitude_norm_mode",
+                ])
                 .map_elements(
-                    lambda row: model_run_label(str(row["model_name"]), str(row["candidate_name"])),
+                    quantity_run_label,
                     return_dtype=pl.Utf8,
                 )
                 .alias("run_label")

@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import math
 import os
 import sys
 from pathlib import Path
@@ -108,6 +109,96 @@ def _validate_long_epoch_args(args: argparse.Namespace) -> None:
         raise ValueError("--lambda-dt must be non-negative.")
     if int(args.value_input_emb_dim) <= 0:
         raise ValueError("--value-input-emb-dim must be positive.")
+    lambda_ordinal = float(args.lambda_ordinal)
+    if not math.isfinite(lambda_ordinal) or lambda_ordinal < 0.0:
+        raise ValueError("--lambda-ordinal must be finite and non-negative.")
+    if args.marker_loss_mode == "ce" and lambda_ordinal != 0.0:
+        raise ValueError("--marker-loss-mode ce requires --lambda-ordinal 0.")
+    if args.marker_loss_mode == "ce_rps":
+        if models != {"titantpp"}:
+            raise ValueError(
+                "--marker-loss-mode ce_rps currently supports TitanTPP-only runs. "
+                "Use --models titantpp."
+            )
+        if lambda_ordinal <= 0.0:
+            raise ValueError("--marker-loss-mode ce_rps requires --lambda-ordinal > 0.")
+    if args.qty_decoder_mode in {"direct_log_qty", "direct_raw_qty"}:
+        decoder_mode = str(args.qty_decoder_mode)
+        datasets = set(_csv_tuple(args.datasets))
+        if models != {"titantpp"}:
+            raise ValueError(f"--qty-decoder-mode {decoder_mode} supports TitanTPP-only runs.")
+        unsupported_datasets = sorted(datasets - {"intermittent", "insta_market_basket"})
+        if unsupported_datasets:
+            raise ValueError(
+                f"{decoder_mode} currently supports log2-factorized datasets only: "
+                f"intermittent,insta_market_basket. Unsupported: {unsupported_datasets}"
+            )
+        if args.split_mode != "fixed":
+            raise ValueError(f"{decoder_mode} requires --split-mode fixed.")
+        if args.train_loss_scope != "target_only":
+            raise ValueError(f"{decoder_mode} requires --train-loss-scope target_only.")
+        if args.loss_mode != "hybrid":
+            raise ValueError(f"{decoder_mode} requires --loss-mode hybrid.")
+        if args.value_input_mode != "none":
+            raise ValueError(f"{decoder_mode} requires --value-input-mode none.")
+        if args.marker_loss_mode != "ce" or lambda_ordinal != 0.0:
+            raise ValueError(f"{decoder_mode} requires plain marker CE.")
+        if args.value_head_mode != "shared":
+            raise ValueError(f"{decoder_mode} does not combine with mark-conditioned experts.")
+        if args.qty_mark_gradient_mode != "coupled" or args.value_encoder_gradient_mode != "coupled":
+            raise ValueError(f"{decoder_mode} does not combine with detached V3 routes.")
+        if args.test_time_memory != "none":
+            raise ValueError(f"{decoder_mode} does not support contextual test-time memory.")
+        if decoder_mode == "direct_log_qty" and args.magnitude_norm_mode != "global":
+            raise ValueError("The first direct_log_qty activation supports only global M0 normalization.")
+        if decoder_mode == "direct_raw_qty":
+            if args.magnitude_center_mode != "mean":
+                raise ValueError("direct_raw_qty requires --magnitude-center-mode mean.")
+            if args.magnitude_revin_affine:
+                raise ValueError("direct_raw_qty requires --no-magnitude-revin-affine.")
+            if args.magnitude_stat_context_mode != "none":
+                raise ValueError("direct_raw_qty requires --magnitude-stat-context-mode none.")
+    if int(args.magnitude_input_emb_dim) <= 0:
+        raise ValueError("--magnitude-input-emb-dim must be positive.")
+    for name in (
+        "lambda_magnitude",
+        "magnitude_sigma_floor",
+        "magnitude_revin_eps",
+        "magnitude_shrinkage_k",
+        "magnitude_exp_clamp_min",
+        "magnitude_exp_clamp_max",
+    ):
+        if not math.isfinite(float(getattr(args, name))):
+            raise ValueError(f"--{name.replace('_', '-')} must be finite.")
+    if (
+        float(args.lambda_magnitude) <= 0.0
+        or float(args.magnitude_sigma_floor) <= 0.0
+        or float(args.magnitude_revin_eps) <= 0.0
+        or float(args.magnitude_shrinkage_k) <= 0.0
+    ):
+        raise ValueError("Magnitude lambda, scale constants, and shrinkage k must be positive.")
+    if float(args.magnitude_exp_clamp_min) >= float(args.magnitude_exp_clamp_max):
+        raise ValueError("Magnitude exp2 clamp min must be smaller than max.")
+    if args.qty_mark_gradient_mode == "detached" and models != {"titantpp"}:
+        raise ValueError(
+            "--qty-mark-gradient-mode detached currently supports TitanTPP-only runs. "
+            "Use --models titantpp."
+        )
+    if args.value_encoder_gradient_mode == "detached":
+        if models != {"titantpp"}:
+            raise ValueError(
+                "--value-encoder-gradient-mode detached currently supports "
+                "TitanTPP-only runs. Use --models titantpp."
+            )
+        if (
+            args.value_head_mode != "mark_conditioned_experts"
+            or args.qty_mark_gradient_mode != "detached"
+        ):
+            raise ValueError(
+                "--value-encoder-gradient-mode detached requires "
+                "--value-head-mode mark_conditioned_experts and "
+                "--qty-mark-gradient-mode detached."
+            )
 
 
 def add_shared_long_epoch_args(parser: argparse.ArgumentParser) -> None:
@@ -198,6 +289,99 @@ def add_shared_long_epoch_args(parser: argparse.ArgumentParser) -> None:
         ),
     )
     parser.add_argument(
+        "--value-head-mode",
+        default=defaults.value_head_mode,
+        choices=["shared", "mark_conditioned_experts"],
+        help=(
+            "Value residual head architecture. 'shared' preserves V2; "
+            "'mark_conditioned_experts' enables the V3 shared-plus-delta head."
+        ),
+    )
+    parser.add_argument(
+        "--qty-mark-gradient-mode",
+        default=defaults.qty_mark_gradient_mode,
+        choices=["coupled", "detached"],
+        help=(
+            "Gradient policy for the expected-quantity mark gate. 'coupled' preserves "
+            "V2/V3a; 'detached' enables V3b without changing forward values."
+        ),
+    )
+    parser.add_argument(
+        "--value-encoder-gradient-mode",
+        default=defaults.value_encoder_gradient_mode,
+        choices=["coupled", "detached"],
+        help=(
+            "Gradient policy at the value-to-encoder boundary. 'coupled' preserves "
+            "V2/V3a/V3b; 'detached' enables V3c without changing forward values."
+        ),
+    )
+    parser.add_argument(
+        "--marker-loss-mode",
+        default=defaults.marker_loss_mode,
+        choices=["ce", "ce_rps"],
+        help="Marker objective. 'ce_rps' keeps CE and adds normalized ordinal RPS.",
+    )
+    parser.add_argument(
+        "--lambda-ordinal",
+        type=float,
+        default=defaults.lambda_ordinal,
+        help="Weight of normalized RPS when --marker-loss-mode ce_rps is active.",
+    )
+    parser.add_argument(
+        "--qty-decoder-mode",
+        default=defaults.qty_decoder_mode,
+        choices=["mark_residual", "direct_log_qty", "direct_raw_qty"],
+        help="Exclusive quantity decoder for legacy, log-domain, or raw-domain quantity.",
+    )
+    parser.add_argument(
+        "--magnitude-norm-mode",
+        default=defaults.magnitude_norm_mode,
+        choices=["global", "causal_revin", "causal_shrinkage_revin"],
+        help="Stateless magnitude normalization used by the direct decoder.",
+    )
+    parser.add_argument(
+        "--magnitude-input-emb-dim",
+        type=int,
+        default=defaults.magnitude_input_emb_dim,
+    )
+    parser.add_argument("--lambda-magnitude", type=float, default=defaults.lambda_magnitude)
+    parser.add_argument(
+        "--magnitude-sigma-floor",
+        type=float,
+        default=defaults.magnitude_sigma_floor,
+    )
+    parser.add_argument("--magnitude-revin-eps", type=float, default=defaults.magnitude_revin_eps)
+    parser.add_argument(
+        "--magnitude-shrinkage-k",
+        type=float,
+        default=defaults.magnitude_shrinkage_k,
+    )
+    parser.add_argument(
+        "--magnitude-center-mode",
+        default=defaults.magnitude_center_mode,
+        choices=["mean"],
+    )
+    parser.add_argument(
+        "--magnitude-revin-affine",
+        action=argparse.BooleanOptionalAction,
+        default=defaults.magnitude_revin_affine,
+    )
+    parser.add_argument(
+        "--magnitude-stat-context-mode",
+        default=defaults.magnitude_stat_context_mode,
+        choices=["none"],
+    )
+    parser.add_argument(
+        "--magnitude-exp-clamp-min",
+        type=float,
+        default=defaults.magnitude_exp_clamp_min,
+    )
+    parser.add_argument(
+        "--magnitude-exp-clamp-max",
+        type=float,
+        default=defaults.magnitude_exp_clamp_max,
+    )
+    parser.add_argument(
         "--loss-mode",
         default=defaults.loss_mode,
         choices=["residual_only", "hybrid", "qty_only"],
@@ -282,6 +466,51 @@ def add_model_test_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--seq-len", type=int, default=8)
     parser.add_argument("--num-marks", type=int, default=6)
     parser.add_argument("--scale-base", type=float, default=10.0)
+    parser.add_argument(
+        "--value-head-mode",
+        default="shared",
+        choices=["shared", "mark_conditioned_experts"],
+    )
+    parser.add_argument(
+        "--qty-mark-gradient-mode",
+        default="coupled",
+        choices=["coupled", "detached"],
+    )
+    parser.add_argument(
+        "--value-encoder-gradient-mode",
+        default="coupled",
+        choices=["coupled", "detached"],
+    )
+    parser.add_argument(
+        "--marker-loss-mode",
+        default="ce",
+        choices=["ce", "ce_rps"],
+    )
+    parser.add_argument("--lambda-ordinal", type=float, default=0.0)
+    parser.add_argument(
+        "--qty-decoder-mode",
+        default="mark_residual",
+        choices=["mark_residual", "direct_log_qty", "direct_raw_qty"],
+    )
+    parser.add_argument(
+        "--magnitude-norm-mode",
+        default="global",
+        choices=["global", "causal_revin", "causal_shrinkage_revin"],
+    )
+    parser.add_argument("--magnitude-input-emb-dim", type=int, default=8)
+    parser.add_argument("--lambda-magnitude", type=float, default=1.0)
+    parser.add_argument("--magnitude-sigma-floor", type=float, default=0.0014535461338152059)
+    parser.add_argument("--magnitude-revin-eps", type=float, default=1e-5)
+    parser.add_argument("--magnitude-shrinkage-k", type=float, default=8.0)
+    parser.add_argument("--magnitude-center-mode", default="mean", choices=["mean"])
+    parser.add_argument(
+        "--magnitude-revin-affine",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+    )
+    parser.add_argument("--magnitude-stat-context-mode", default="none", choices=["none"])
+    parser.add_argument("--magnitude-exp-clamp-min", type=float, default=-2.0)
+    parser.add_argument("--magnitude-exp-clamp-max", type=float, default=15.0)
     parser.add_argument("--rmtpp-rnn-type", default="gru", choices=["rnn", "gru", "lstm"])
     parser.add_argument("--rmtpp-hidden-dim", type=int, default=64)
     parser.add_argument("--rmtpp-mark-emb-dim", type=int, default=32)
@@ -322,6 +551,23 @@ def build_long_epoch_config(args: argparse.Namespace) -> ExperimentConfig:
         rmtpp_mark_emb_dim=int(args.rmtpp_mark_emb_dim),
         rmtpp_hidden_dim=_parse_optional_positive_int(args.rmtpp_hidden_dim),
         value_head_activation=args.value_head_activation,
+        value_head_mode=args.value_head_mode,
+        qty_mark_gradient_mode=args.qty_mark_gradient_mode,
+        value_encoder_gradient_mode=args.value_encoder_gradient_mode,
+        marker_loss_mode=args.marker_loss_mode,
+        lambda_ordinal=float(args.lambda_ordinal),
+        qty_decoder_mode=args.qty_decoder_mode,
+        magnitude_norm_mode=args.magnitude_norm_mode,
+        magnitude_input_emb_dim=int(args.magnitude_input_emb_dim),
+        lambda_magnitude=float(args.lambda_magnitude),
+        magnitude_sigma_floor=float(args.magnitude_sigma_floor),
+        magnitude_revin_eps=float(args.magnitude_revin_eps),
+        magnitude_shrinkage_k=float(args.magnitude_shrinkage_k),
+        magnitude_center_mode=args.magnitude_center_mode,
+        magnitude_revin_affine=bool(args.magnitude_revin_affine),
+        magnitude_stat_context_mode=args.magnitude_stat_context_mode,
+        magnitude_exp_clamp_min=float(args.magnitude_exp_clamp_min),
+        magnitude_exp_clamp_max=float(args.magnitude_exp_clamp_max),
         loss_mode=args.loss_mode,
         value_input_mode=args.value_input_mode,
         value_input_emb_dim=int(args.value_input_emb_dim),

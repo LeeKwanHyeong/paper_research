@@ -5,6 +5,34 @@ from typing import Any
 import torch
 
 
+def predict_value_for_marks(
+    model: Any,
+    h: torch.Tensor,
+    marks: torch.Tensor,
+) -> torch.Tensor:
+    """
+    Select residual predictions for explicit next marks.
+
+    TitanTPP V3 exposes one residual per real mark. Shared-head models keep the
+    legacy behavior through the `predict_value` fallback.
+    """
+    predict_by_mark = getattr(model, "predict_value_by_mark", None)
+    if not callable(predict_by_mark):
+        return model.predict_value(h)
+
+    values_by_mark = predict_by_mark(h)
+    if values_by_mark.ndim != h.ndim:
+        raise ValueError(
+            "predict_value_by_mark must return shape [..., num_real_marks]."
+        )
+    real_mark_count = int(values_by_mark.size(-1))
+    if real_mark_count < 1:
+        raise ValueError("predict_value_by_mark returned no real-mark experts.")
+
+    safe_marks = marks.long().clamp(min=0, max=real_mark_count - 1)
+    return values_by_mark.gather(-1, safe_marks.unsqueeze(-1)).squeeze(-1)
+
+
 def restrict_to_last_transition(step_mask: torch.Tensor) -> torch.Tensor:
     """
     Keep only the final valid autoregressive transition in each sample.
