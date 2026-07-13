@@ -14,7 +14,11 @@
 - tmux session: `titantpp_q3_insta_e1_0714`
 - runner: `simple_lab_test/search/scripts/run_titantpp_q3_insta_smoke_e1_0714.sh`
 - artifact root: `search_artifacts/model_enhancement_titantpp_q3_insta_smoke_e1_0714`
-- 상태: `prepared; 5090 source sync, CUDA preflight, and tmux launch pending`
+- 실행 준비 commit: `d552b7749c0e3836c277338dc44d82de50589e82`
+- source 검증 시각: `2026-07-14 08:41:54 KST`
+- CUDA·데이터 preflight 시각: `2026-07-14 08:44:52 KST`
+- 실제 실행 시작 시각: `2026-07-14 08:45:33 KST`
+- 상태: `in progress; Q2 epoch-1 entry confirmed, continuous monitoring stopped`
 
 ## 실험 목적
 
@@ -84,6 +88,25 @@ conda activate ai_env
   -s titantpp_q3_insta_e1_0714 \
   "bash /home/leekwanhyeong/workspace/paper_research/simple_lab_test/search/scripts/run_titantpp_q3_insta_smoke_e1_0714.sh"
 ```
+
+## 실행 시작 확인
+
+- `d552b77` 변경 파일 4개를 5090 비-Git 작업 복사본에 rsync했고 checksum
+  dry-run에서 변경 파일이 없음을 확인했다.
+- 로컬·원격 SHA256 4개가 모두 일치하고 runner 권한은 `755`다.
+- `source_sync_manifest.json`에 full revision, Q3 구현 revision, 파일별 SHA256과
+  검증 시각을 기록했다.
+- Preflight는 RTX 5090 idle `41 MiB / 0%`, PyTorch `2.11.0+cu130`, CUDA `13.0`,
+  실제 CUDA tensor allocation을 통과했다.
+- Instacart fixed-split 파일 5개, top-20 `2,000 rows / 20 series`, quantity
+  reconstruction max error `1.42e-14`, loader samples `1380/300/300`을 확인했다.
+- Q2/Q3a/Q3b/Q3c CLI contract가 모두 통과했다.
+- 초기 확인에서 Q2는 같은 split과 train-only raw statistics를 사용해 epoch 1을
+  완료했고 Python GPU process `676 MiB`를 확인했다.
+- Conda `libtinfo.so.6` version warning이 출력됐지만 tmux, runner, CUDA 계산과 Q2
+  epoch는 정상 동작했다. Runtime failure 근거로 보지 않는다.
+- 초기 진입 확인 뒤 지속 polling을 중단했다. Q3a/Q3b/Q3c 완료 여부와 전체 gate는
+  사용자 요청 시 단회 확인한다.
 
 ## Acceptance Gate
 

@@ -1588,8 +1588,15 @@ Implementation status (`2026-07-14`):
 - the runner records independent variant status, root/variant manifests and
   logs, cache-safe paths, and success/failure sentinels; the gate is explicitly
   limited to actual-data integration rather than performance ranking
-- 5090 source sync, CUDA preflight, tmux launch, Intermittent, multi-seed, and
-  held-out Q3 experiments have not started
+- preparation revision `d552b77` and its four file checksums are verified on the
+  non-Git 5090 working copy and preserved in `source_sync_manifest.json`
+- RTX 5090 / PyTorch `2.11.0+cu130` CUDA allocation, fixed-split files, top-20
+  quantity contract, exact loader samples `1380/300/300`, and all four CLI
+  contracts passed preflight
+- tmux `titantpp_q3_insta_e1_0714` started at `2026-07-14 08:45:33 KST`; the
+  one-time check observed Q2 epoch 1 completion and an active CUDA process
+- continuous monitoring has stopped; Q3a/Q3b/Q3c completion is unconfirmed and
+  Intermittent, multi-seed, and held-out Q3 experiments have not started
 
 Detailed ADR:
 

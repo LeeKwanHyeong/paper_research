@@ -1,6 +1,6 @@
 # ADR: TitanTPP Q3 Factorial Gradient Routing And Dual-Domain Quantity Loss
 
-- Status: 5090 CUDA gate passed; Instacart e1 integration prepared
+- Status: 5090 CUDA gate passed; Instacart e1 integration in progress
 - Date: 2026-07-13
 - Scope: Intermittent TitanTPP direct raw-quantity branch
 - Predecessor: `adr-titantpp-raw-quantity-revin-q0-q1-q2.md`
@@ -471,11 +471,20 @@ multi-seed promotion.
 - The start record freezes tmux `titantpp_q3_insta_e1_0714`, artifact root
   `model_enhancement_titantpp_q3_insta_smoke_e1_0714`, expected sample counts
   `1380/300/300`, artifact reading order, and the integration-only gate.
-- Source sync, CUDA preflight, tmux launch, Intermittent, multi-seed, and
-  held-out Q3 experiments have not started.
+- Preparation revision `d552b77` was checksum-verified on 5090. The source
+  manifest records four exact file hashes and the prior Q3 implementation
+  revision `14c2978` for the non-Git remote working copy.
+- The CUDA/data preflight passed on RTX 5090 with PyTorch `2.11.0+cu130`, exact
+  top-20 loader samples `1380/300/300`, and all four factorial CLI contracts.
+- Tmux `titantpp_q3_insta_e1_0714` started at `2026-07-14 08:45:33 KST`. The
+  one-time initial check observed Q2 complete epoch 1 on the expected split and
+  train-only raw statistics with an active CUDA process.
+- Continuous monitoring stopped after the initial check. Q3a/Q3b/Q3c completion,
+  Intermittent, multi-seed, and held-out Q3 experiments remain unconfirmed or
+  unstarted as applicable.
 
 ## Next Step
 
-Sync the preparation revision to 5090, run the CUDA/data preflight, and start the
-matched Q2/Q3a/Q3b/Q3c Instacart top-20 e1 fixed-split integration gate in tmux.
-Do not start Intermittent e50 before this gate passes.
+Check completion only when requested, sync the Instacart artifacts locally, and
+read them in protocol order before deciding the integration gate. Do not start
+Intermittent e50 before this gate passes.
