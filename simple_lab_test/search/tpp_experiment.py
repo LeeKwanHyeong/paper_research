@@ -158,10 +158,38 @@ def _validate_long_epoch_args(args: argparse.Namespace) -> None:
                 raise ValueError("direct_raw_qty requires --no-magnitude-revin-affine.")
             if args.magnitude_stat_context_mode != "none":
                 raise ValueError("direct_raw_qty requires --magnitude-stat-context-mode none.")
+    q3_active = (
+        args.magnitude_encoder_gradient_mode != "coupled"
+        or args.magnitude_aux_loss_mode != "none"
+    )
+    if q3_active:
+        if models != {"titantpp"}:
+            raise ValueError("Q3 magnitude modes require --models titantpp.")
+        if args.qty_decoder_mode != "direct_raw_qty":
+            raise ValueError("Q3 magnitude modes require --qty-decoder-mode direct_raw_qty.")
+        if args.magnitude_norm_mode != "causal_shrinkage_revin":
+            raise ValueError(
+                "Q3 magnitude modes require --magnitude-norm-mode "
+                "causal_shrinkage_revin."
+            )
+        if not (
+            math.isclose(float(args.lambda_log_qty), 0.25, rel_tol=0.0, abs_tol=1e-12)
+            and math.isclose(
+                float(args.log_qty_huber_delta), 1.0, rel_tol=0.0, abs_tol=1e-12
+            )
+            and math.isclose(float(args.log_qty_floor), 1.0, rel_tol=0.0, abs_tol=1e-12)
+        ):
+            raise ValueError(
+                "Q3 modes require --lambda-log-qty 0.25, "
+                "--log-qty-huber-delta 1.0, and --log-qty-floor 1.0."
+            )
     if int(args.magnitude_input_emb_dim) <= 0:
         raise ValueError("--magnitude-input-emb-dim must be positive.")
     for name in (
         "lambda_magnitude",
+        "lambda_log_qty",
+        "log_qty_huber_delta",
+        "log_qty_floor",
         "magnitude_sigma_floor",
         "magnitude_revin_eps",
         "magnitude_shrinkage_k",
@@ -172,11 +200,17 @@ def _validate_long_epoch_args(args: argparse.Namespace) -> None:
             raise ValueError(f"--{name.replace('_', '-')} must be finite.")
     if (
         float(args.lambda_magnitude) <= 0.0
+        or float(args.lambda_log_qty) <= 0.0
+        or float(args.log_qty_huber_delta) <= 0.0
+        or float(args.log_qty_floor) <= 0.0
         or float(args.magnitude_sigma_floor) <= 0.0
         or float(args.magnitude_revin_eps) <= 0.0
         or float(args.magnitude_shrinkage_k) <= 0.0
     ):
-        raise ValueError("Magnitude lambda, scale constants, and shrinkage k must be positive.")
+        raise ValueError(
+            "Magnitude lambdas, log-loss constants, scale constants, and shrinkage k "
+            "must be positive."
+        )
     if float(args.magnitude_exp_clamp_min) >= float(args.magnitude_exp_clamp_max):
         raise ValueError("Magnitude exp2 clamp min must be smaller than max.")
     if args.qty_mark_gradient_mode == "detached" and models != {"titantpp"}:
@@ -346,6 +380,25 @@ def add_shared_long_epoch_args(parser: argparse.ArgumentParser) -> None:
     )
     parser.add_argument("--lambda-magnitude", type=float, default=defaults.lambda_magnitude)
     parser.add_argument(
+        "--magnitude-encoder-gradient-mode",
+        default=defaults.magnitude_encoder_gradient_mode,
+        choices=["coupled", "detached"],
+        help="Gradient route from direct magnitude losses into the Titan encoder.",
+    )
+    parser.add_argument(
+        "--magnitude-aux-loss-mode",
+        default=defaults.magnitude_aux_loss_mode,
+        choices=["none", "log_huber"],
+        help="Optional Q3 low-quantity auxiliary objective.",
+    )
+    parser.add_argument("--lambda-log-qty", type=float, default=defaults.lambda_log_qty)
+    parser.add_argument(
+        "--log-qty-huber-delta",
+        type=float,
+        default=defaults.log_qty_huber_delta,
+    )
+    parser.add_argument("--log-qty-floor", type=float, default=defaults.log_qty_floor)
+    parser.add_argument(
         "--magnitude-sigma-floor",
         type=float,
         default=defaults.magnitude_sigma_floor,
@@ -499,6 +552,19 @@ def add_model_test_args(parser: argparse.ArgumentParser) -> None:
     )
     parser.add_argument("--magnitude-input-emb-dim", type=int, default=8)
     parser.add_argument("--lambda-magnitude", type=float, default=1.0)
+    parser.add_argument(
+        "--magnitude-encoder-gradient-mode",
+        default="coupled",
+        choices=["coupled", "detached"],
+    )
+    parser.add_argument(
+        "--magnitude-aux-loss-mode",
+        default="none",
+        choices=["none", "log_huber"],
+    )
+    parser.add_argument("--lambda-log-qty", type=float, default=0.25)
+    parser.add_argument("--log-qty-huber-delta", type=float, default=1.0)
+    parser.add_argument("--log-qty-floor", type=float, default=1.0)
     parser.add_argument("--magnitude-sigma-floor", type=float, default=0.0014535461338152059)
     parser.add_argument("--magnitude-revin-eps", type=float, default=1e-5)
     parser.add_argument("--magnitude-shrinkage-k", type=float, default=8.0)
@@ -560,6 +626,11 @@ def build_long_epoch_config(args: argparse.Namespace) -> ExperimentConfig:
         magnitude_norm_mode=args.magnitude_norm_mode,
         magnitude_input_emb_dim=int(args.magnitude_input_emb_dim),
         lambda_magnitude=float(args.lambda_magnitude),
+        magnitude_encoder_gradient_mode=args.magnitude_encoder_gradient_mode,
+        magnitude_aux_loss_mode=args.magnitude_aux_loss_mode,
+        lambda_log_qty=float(args.lambda_log_qty),
+        log_qty_huber_delta=float(args.log_qty_huber_delta),
+        log_qty_floor=float(args.log_qty_floor),
         magnitude_sigma_floor=float(args.magnitude_sigma_floor),
         magnitude_revin_eps=float(args.magnitude_revin_eps),
         magnitude_shrinkage_k=float(args.magnitude_shrinkage_k),

@@ -1562,9 +1562,16 @@ Implementation status (`2026-07-13`):
 
 - architecture, loss, gradient, artifact, focused-test, seed-42, multi-seed, and
   held-out contracts are complete
-- Q3 model code and tests are not implemented
-- no Q3 CUDA, Instacart, Intermittent, multi-seed, or held-out experiment has
-  started
+- independent magnitude-to-encoder routing and raw-domain log2 Huber auxiliary
+  are implemented without new parameters or state-dict changes
+- config, CLI, model construction, training/evaluation loss, path, manifest,
+  checkpoint, cache/resume, history, summary, and scale-wise identity are wired
+- focused Q3 tests passed `19/19`; the complete search suite passed `104/104`
+- local CPU Q2/Q3a/Q3b/Q3c model-tests all passed with identical parameter count
+  `78,111`, NLL, magnitude loss, and quantity predictions; Q3b/Q3c alone report
+  the active log auxiliary
+- 5090 CUDA, Instacart, Intermittent, multi-seed, and held-out Q3 experiments
+  have not started
 
 Detailed ADR:
 

@@ -74,6 +74,11 @@ class ExperimentConfig:
     magnitude_norm_mode: str = "global"
     magnitude_input_emb_dim: int = 8
     lambda_magnitude: float = 1.0
+    magnitude_encoder_gradient_mode: str = "coupled"
+    magnitude_aux_loss_mode: str = "none"
+    lambda_log_qty: float = 0.25
+    log_qty_huber_delta: float = 1.0
+    log_qty_floor: float = 1.0
     magnitude_sigma_floor: float = 0.0014535461338152059
     magnitude_revin_eps: float = 1e-5
     magnitude_shrinkage_k: float = 8.0

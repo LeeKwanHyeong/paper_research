@@ -50,6 +50,8 @@ class TitanTPP(nn.Module):
         "causal_revin",
         "causal_shrinkage_revin",
     }
+    VALID_MAGNITUDE_ENCODER_GRADIENT_MODES = {"coupled", "detached"}
+    VALID_MAGNITUDE_AUX_LOSS_MODES = {"none", "log_huber"}
 
     def __init__(self, cfg: RMTPPConfig, titan_cfg: TitanConfig):
         super().__init__()
@@ -122,9 +124,17 @@ class TitanTPP(nn.Module):
         self.value_encoder_gradient_mode = self._resolve_value_encoder_gradient_mode(cfg)
         self.marker_loss_mode = self._resolve_marker_loss_mode(cfg)
         self.lambda_ordinal = float(getattr(cfg, "lambda_ordinal", 0.0))
+        self.magnitude_encoder_gradient_mode = (
+            self._resolve_magnitude_encoder_gradient_mode(cfg)
+        )
+        self.magnitude_aux_loss_mode = self._resolve_magnitude_aux_loss_mode(cfg)
+        self.lambda_log_qty = float(getattr(cfg, "lambda_log_qty", 0.25))
+        self.log_qty_huber_delta = float(getattr(cfg, "log_qty_huber_delta", 1.0))
+        self.log_qty_floor = float(getattr(cfg, "log_qty_floor", 1.0))
         self._validate_gradient_mode_combination()
         self._validate_marker_loss_combination()
         self._validate_quantity_decoder_combination()
+        self._validate_magnitude_q3_combination()
         if self.use_direct_magnitude:
             self.magnitude_head = nn.Linear(d_model, 1)
         else:
@@ -231,6 +241,32 @@ class TitanTPP(nn.Module):
             )
         return mode
 
+    @classmethod
+    def _resolve_magnitude_encoder_gradient_mode(cls, cfg: RMTPPConfig) -> str:
+        mode = str(
+            getattr(cfg, "magnitude_encoder_gradient_mode", "coupled") or "coupled"
+        ).strip().lower()
+        if mode not in cls.VALID_MAGNITUDE_ENCODER_GRADIENT_MODES:
+            available = ", ".join(sorted(cls.VALID_MAGNITUDE_ENCODER_GRADIENT_MODES))
+            raise ValueError(
+                "Unsupported TitanTPP magnitude_encoder_gradient_mode="
+                f"'{mode}'. Available: {available}"
+            )
+        return mode
+
+    @classmethod
+    def _resolve_magnitude_aux_loss_mode(cls, cfg: RMTPPConfig) -> str:
+        mode = str(
+            getattr(cfg, "magnitude_aux_loss_mode", "none") or "none"
+        ).strip().lower()
+        if mode not in cls.VALID_MAGNITUDE_AUX_LOSS_MODES:
+            available = ", ".join(sorted(cls.VALID_MAGNITUDE_AUX_LOSS_MODES))
+            raise ValueError(
+                f"Unsupported TitanTPP magnitude_aux_loss_mode='{mode}'. "
+                f"Available: {available}"
+            )
+        return mode
+
     def _validate_quantity_decoder_combination(self) -> None:
         if not self.use_direct_magnitude:
             return
@@ -293,8 +329,53 @@ class TitanTPP(nn.Module):
         if not math.isfinite(clamp_min) or not math.isfinite(clamp_max) or clamp_min >= clamp_max:
             raise ValueError("Magnitude exp2 clamp bounds must be finite and increasing.")
 
+    def _validate_magnitude_q3_combination(self) -> None:
+        values = (
+            self.lambda_log_qty,
+            self.log_qty_huber_delta,
+            self.log_qty_floor,
+        )
+        if not all(math.isfinite(value) and value > 0.0 for value in values):
+            raise ValueError(
+                "lambda_log_qty, log_qty_huber_delta, and log_qty_floor "
+                "must be positive and finite."
+            )
+
+        q3_active = (
+            self.magnitude_encoder_gradient_mode != "coupled"
+            or self.magnitude_aux_loss_mode != "none"
+        )
+        if not q3_active:
+            return
+        if not self.use_direct_raw_quantity:
+            raise ValueError(
+                "Q3 magnitude gradient and auxiliary modes require direct_raw_qty."
+            )
+        if self.magnitude_norm_mode != "causal_shrinkage_revin":
+            raise ValueError(
+                "Q3 magnitude gradient and auxiliary modes require "
+                "causal_shrinkage_revin."
+            )
+        frozen = (
+            math.isclose(self.lambda_log_qty, 0.25, rel_tol=0.0, abs_tol=1e-12)
+            and math.isclose(
+                self.log_qty_huber_delta, 1.0, rel_tol=0.0, abs_tol=1e-12
+            )
+            and math.isclose(self.log_qty_floor, 1.0, rel_tol=0.0, abs_tol=1e-12)
+        )
+        if not frozen:
+            raise ValueError(
+                "Q3 modes require frozen lambda_log_qty=0.25, "
+                "log_qty_huber_delta=1.0, and log_qty_floor=1.0."
+            )
+
     def _value_branch_hidden(self, h_j: torch.Tensor) -> torch.Tensor:
         if self.value_encoder_gradient_mode == "detached":
+            return h_j.detach()
+        return h_j
+
+    def _magnitude_branch_hidden(self, h_j: torch.Tensor) -> torch.Tensor:
+        if self.magnitude_encoder_gradient_mode == "detached":
             return h_j.detach()
         return h_j
 
@@ -545,7 +626,7 @@ class TitanTPP(nn.Module):
         if not self.use_direct_magnitude:
             raise RuntimeError("Direct magnitude prediction requires a direct decoder mode.")
         context = context or self.build_magnitude_context(marks, values, mask)
-        normalized = self.magnitude_head(h_j).squeeze(-1)
+        normalized = self.magnitude_head(self._magnitude_branch_hidden(h_j)).squeeze(-1)
         denormalized = denormalize_magnitude(normalized, context)
         if self.use_direct_raw_quantity:
             affine_qty = denormalized
@@ -574,6 +655,28 @@ class TitanTPP(nn.Module):
             "qty": qty,
             "context": context,
         }
+
+    def log_qty_auxiliary_step(
+        self,
+        qty_affine: torch.Tensor,
+        true_qty: torch.Tensor,
+    ) -> torch.Tensor:
+        """Return the unmasked Q3 log2 Huber term without changing raw decoding."""
+        if self.magnitude_aux_loss_mode != "log_huber":
+            return torch.zeros_like(qty_affine)
+        floor = torch.as_tensor(
+            self.log_qty_floor,
+            dtype=qty_affine.dtype,
+            device=qty_affine.device,
+        )
+        log_hat = torch.log2(qty_affine.clamp_min(floor))
+        log_true = torch.log2(true_qty.clamp_min(floor))
+        return F.huber_loss(
+            log_hat,
+            log_true,
+            reduction="none",
+            delta=self.log_qty_huber_delta,
+        )
 
     @torch.no_grad()
     def reset_contextual_memory(self) -> None:
@@ -789,6 +892,7 @@ class TitanTPP(nn.Module):
         logf_dt = self.log_f_dt(h_j, dt_next)   # [B, L-1]
 
         magnitude_loss = torch.zeros((), device=marks.device, dtype=torch.float32)
+        log_qty_aux_loss = torch.zeros((), device=marks.device, dtype=torch.float32)
         log_qty_hat = None
         qty_affine_hat = None
         qty_hat = None
@@ -861,6 +965,13 @@ class TitanTPP(nn.Module):
                 reduction="none",
             )
             qty_loss = (qty_sq * step_mask).sum() / step_mask.sum().clamp_min(1)
+            log_qty_aux_step = self.log_qty_auxiliary_step(
+                expected_qty_for_loss,
+                true_qty,
+            )
+            log_qty_aux_loss = (
+                (log_qty_aux_step * step_mask).sum() / step_mask.sum().clamp_min(1)
+            )
 
         # Legacy residual regression for mark-factorized quantity reconstruction.
         elif values is not None and self.cfg.use_value_head:
@@ -926,6 +1037,7 @@ class TitanTPP(nn.Module):
                 + nll_time
                 + float(self.cfg.lambda_magnitude) * magnitude_loss
                 + getattr(self.cfg, "lambda_qty", 0.25) * qty_loss
+                + self.lambda_log_qty * log_qty_aux_loss
             )
         elif loss_mode == "residual_only":
             total_loss = marker_train_loss + nll_time + value_loss
@@ -954,6 +1066,7 @@ class TitanTPP(nn.Module):
             'value_loss': value_loss,
             'magnitude_loss': magnitude_loss,
             'qty_loss': qty_loss,
+            'log_qty_aux_loss': log_qty_aux_loss,
             'total_loss': total_loss,
             'value_hat': value_hat,
             'value_by_mark': value_by_mark,

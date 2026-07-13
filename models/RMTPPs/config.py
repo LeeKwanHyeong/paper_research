@@ -34,6 +34,15 @@ class RMTPPConfig:
     ] = 'global'
     magnitude_input_emb_dim: int = 8
     lambda_magnitude: float = 1.0
+    # Q3 keeps the direct raw-quantity forward pass fixed while controlling
+    # whether magnitude losses can update the shared Titan encoder.
+    magnitude_encoder_gradient_mode: Literal['coupled', 'detached'] = 'coupled'
+    # The optional log2 Huber term protects low quantities without moving
+    # normalization, inputs, or decoding out of the raw-quantity domain.
+    magnitude_aux_loss_mode: Literal['none', 'log_huber'] = 'none'
+    lambda_log_qty: float = 0.25
+    log_qty_huber_delta: float = 1.0
+    log_qty_floor: float = 1.0
     magnitude_global_mean: float = 0.0
     magnitude_global_var: float = 1.0
     magnitude_global_std: float = 1.0

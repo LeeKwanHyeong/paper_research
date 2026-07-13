@@ -148,6 +148,11 @@ def magnitude_artifact_identity(cfg: ExperimentConfig) -> dict[str, Any]:
         domain = "mark_residual"
     return {
         "magnitude_domain": domain,
+        "magnitude_encoder_gradient_mode": str(cfg.magnitude_encoder_gradient_mode),
+        "magnitude_aux_loss_mode": str(cfg.magnitude_aux_loss_mode),
+        "lambda_log_qty": float(cfg.lambda_log_qty),
+        "log_qty_huber_delta": float(cfg.log_qty_huber_delta),
+        "log_qty_floor": float(cfg.log_qty_floor),
         "magnitude_sigma_floor": float(cfg.magnitude_sigma_floor),
         "magnitude_revin_eps": float(cfg.magnitude_revin_eps),
         "magnitude_shrinkage_k": float(cfg.magnitude_shrinkage_k),
@@ -223,6 +228,11 @@ def build_run_paths(cfg: ExperimentConfig, run_cfg: RunConfig) -> RunPaths:
             run_dir_base = (
                 run_dir_base
                 / "domain_raw_qty"
+                / f"magencgrad_{cfg.magnitude_encoder_gradient_mode}"
+                / f"magaux_{cfg.magnitude_aux_loss_mode}"
+                / f"lambdalogqty_{sanitize_float_label(cfg.lambda_log_qty)}"
+                / f"logqtydelta_{sanitize_float_label(cfg.log_qty_huber_delta)}"
+                / f"logqtyfloor_{sanitize_float_label(cfg.log_qty_floor)}"
                 / f"center_{cfg.magnitude_center_mode}"
                 / f"affine_{str(bool(cfg.magnitude_revin_affine)).lower()}"
                 / f"statcontext_{cfg.magnitude_stat_context_mode}"
@@ -410,6 +420,7 @@ def compute_training_loss(
             + training_cfg.lambda_dt * out["nll_time"]
             + float(model.cfg.lambda_magnitude) * out["magnitude_loss"]
             + float(model.cfg.lambda_qty) * out["qty_loss"]
+            + float(model.cfg.lambda_log_qty) * out["log_qty_aux_loss"]
         )
     if loss_mode == "residual_only":
         return (
@@ -486,6 +497,9 @@ def summarize_history(history: list[dict[str, Any]]) -> dict[str, Any]:
         "best_val_nll_magnitude_loss": float(
             min_nll_row.get("val_magnitude_loss", float("nan"))
         ),
+        "best_val_nll_log_qty_aux_loss": float(
+            min_nll_row.get("val_log_qty_aux_loss", float("nan"))
+        ),
         "best_val_nll_ordinal_marker_loss": float(
             min_nll_row.get("val_ordinal_marker_loss", float("nan"))
         ),
@@ -507,6 +521,9 @@ def summarize_history(history: list[dict[str, Any]]) -> dict[str, Any]:
         "final_log_qty_mae": float(final_row.get("log_qty_mae", float("nan"))),
         "final_log_qty_rmse": float(final_row.get("log_qty_rmse", float("nan"))),
         "final_magnitude_loss": float(final_row.get("val_magnitude_loss", float("nan"))),
+        "final_log_qty_aux_loss": float(
+            final_row.get("val_log_qty_aux_loss", float("nan"))
+        ),
         "final_dt_mae": float(final_row["dt_mae"]),
         "final_mark_acc": float(final_row["mark_acc"]),
         "final_ordinal_marker_loss": float(
@@ -1153,6 +1170,21 @@ def cached_run_is_complete(
         and abs(
             float(cached_summary.get("lambda_magnitude", 1.0)) - float(cfg.lambda_magnitude)
         ) <= 1e-12
+        and str(cached_summary.get("magnitude_encoder_gradient_mode", "coupled"))
+        == str(cfg.magnitude_encoder_gradient_mode)
+        and str(cached_summary.get("magnitude_aux_loss_mode", "none"))
+        == str(cfg.magnitude_aux_loss_mode)
+        and abs(
+            float(cached_summary.get("lambda_log_qty", 0.25))
+            - float(cfg.lambda_log_qty)
+        ) <= 1e-12
+        and abs(
+            float(cached_summary.get("log_qty_huber_delta", 1.0))
+            - float(cfg.log_qty_huber_delta)
+        ) <= 1e-12
+        and abs(
+            float(cached_summary.get("log_qty_floor", 1.0)) - float(cfg.log_qty_floor)
+        ) <= 1e-12
         and abs(
             float(cached_summary.get("magnitude_sigma_floor", 0.0014535461338152059))
             - float(cfg.magnitude_sigma_floor)
@@ -1275,12 +1307,24 @@ def validate_resume_magnitude_identity(
         "magnitude_center_mode",
         "magnitude_revin_affine",
         "magnitude_stat_context_mode",
+        "magnitude_encoder_gradient_mode",
+        "magnitude_aux_loss_mode",
+        "lambda_log_qty",
+        "log_qty_huber_delta",
+        "log_qty_floor",
     )
     current_values = to_jsonable(current_cfg)
+    legacy_defaults = {
+        "magnitude_encoder_gradient_mode": "coupled",
+        "magnitude_aux_loss_mode": "none",
+        "lambda_log_qty": 0.25,
+        "log_qty_huber_delta": 1.0,
+        "log_qty_floor": 1.0,
+    }
     mismatched = [
         name
         for name in identity_fields
-        if stored_cfg.get(name) != current_values.get(name)
+        if stored_cfg.get(name, legacy_defaults.get(name)) != current_values.get(name)
     ]
     if mismatched:
         raise ValueError(
@@ -1329,6 +1373,11 @@ def train_one_run(
         cached_summary.setdefault("qty_decoder_mode", "mark_residual")
         cached_summary.setdefault("magnitude_norm_mode", "global")
         cached_summary.setdefault("lambda_magnitude", 1.0)
+        cached_summary.setdefault("magnitude_encoder_gradient_mode", "coupled")
+        cached_summary.setdefault("magnitude_aux_loss_mode", "none")
+        cached_summary.setdefault("lambda_log_qty", 0.25)
+        cached_summary.setdefault("log_qty_huber_delta", 1.0)
+        cached_summary.setdefault("log_qty_floor", 1.0)
         cached_summary.setdefault("magnitude_revin_eps", 1e-5)
         cached_summary.setdefault("magnitude_shrinkage_k", 8.0)
         cached_summary.setdefault("magnitude_center_mode", "mean")
@@ -1454,6 +1503,8 @@ def train_one_run(
             model.train()
             running = 0.0
             steps = 0
+            running_log_qty_aux = 0.0
+            log_qty_aux_steps = 0
 
             for marks, dts, mask, _, values in train_loader:
                 marks = marks.to(training_cfg.device)
@@ -1477,8 +1528,16 @@ def train_one_run(
 
                 running += float(loss.item())
                 steps += 1
+                if "log_qty_aux_loss" in out:
+                    running_log_qty_aux += float(out["log_qty_aux_loss"].item())
+                    log_qty_aux_steps += 1
 
             train_loss = running / max(steps, 1)
+            train_log_qty_aux_loss = (
+                running_log_qty_aux / log_qty_aux_steps
+                if log_qty_aux_steps > 0
+                else float("nan")
+            )
             val_metrics = eval_next_event_week_lookback(
                 model,
                 val_loader,
@@ -1489,6 +1548,7 @@ def train_one_run(
             epoch_record = {
                 "epoch": epoch,
                 "train_loss": float(train_loss),
+                "train_log_qty_aux_loss": float(train_log_qty_aux_loss),
                 "score": float(score),
                 **{
                     key: float(value) if isinstance(value, (int, float, np.floating)) else value
@@ -1502,7 +1562,9 @@ def train_one_run(
                 f"score={score:.8f} | val_nll={val_metrics['val_nll']:.8f} | "
                 f"val_acc={val_metrics['mark_acc']:.8f} | "
                 f"val_dt_mae={val_metrics['dt_mae']:.8f} | "
-                f"val_qty_mae={val_metrics['qty_mae']:.8f}"
+                f"val_qty_mae={val_metrics['qty_mae']:.8f} | "
+                f"train_log_qty_aux={train_log_qty_aux_loss:.8f} | "
+                f"val_log_qty_aux={val_metrics['val_log_qty_aux_loss']:.8f}"
             )
 
             if score > best_score:
@@ -1573,6 +1635,11 @@ def train_one_run(
         "magnitude_norm_mode": cfg.magnitude_norm_mode,
         "magnitude_input_emb_dim": int(cfg.magnitude_input_emb_dim),
         "lambda_magnitude": float(cfg.lambda_magnitude),
+        "magnitude_encoder_gradient_mode": cfg.magnitude_encoder_gradient_mode,
+        "magnitude_aux_loss_mode": cfg.magnitude_aux_loss_mode,
+        "lambda_log_qty": float(cfg.lambda_log_qty),
+        "log_qty_huber_delta": float(cfg.log_qty_huber_delta),
+        "log_qty_floor": float(cfg.log_qty_floor),
         "magnitude_sigma_floor": float(cfg.magnitude_sigma_floor),
         "magnitude_effective_sigma_floor": effective_marked_meta.get("magnitude_sigma_floor"),
         "magnitude_revin_eps": float(cfg.magnitude_revin_eps),
@@ -1763,6 +1830,9 @@ def train_one_run(
             summary[f"test_{selection}_magnitude_loss"] = float(
                 test_metrics["val_magnitude_loss"]
             )
+            summary[f"test_{selection}_log_qty_aux_loss"] = float(
+                test_metrics["val_log_qty_aux_loss"]
+            )
             summary[f"test_{selection}_log_qty_mae"] = float(test_metrics["log_qty_mae"])
             summary[f"test_{selection}_log_qty_rmse"] = float(test_metrics["log_qty_rmse"])
             summary[f"test_{selection}_qty_mae"] = float(test_metrics["qty_mae"])
@@ -1938,6 +2008,7 @@ def build_error_row(cfg: ExperimentConfig, run_cfg: RunConfig, exc: Exception) -
         "qty_decoder_mode": cfg.qty_decoder_mode,
         "magnitude_norm_mode": cfg.magnitude_norm_mode,
         "lambda_magnitude": float(cfg.lambda_magnitude),
+        **magnitude_artifact_identity(cfg),
         "test_time_memory": "unavailable_after_failure",
         "error": repr(exc),
         **flatten_candidate(run_cfg.candidate),
@@ -2076,6 +2147,13 @@ def load_all_histories(run_rows: list[dict[str, Any]]) -> pl.DataFrame:
                 "qty_decoder_mode": row.get("qty_decoder_mode", "mark_residual"),
                 "magnitude_norm_mode": row.get("magnitude_norm_mode", "global"),
                 "lambda_magnitude": float(row.get("lambda_magnitude", 1.0)),
+                "magnitude_encoder_gradient_mode": row.get(
+                    "magnitude_encoder_gradient_mode", "coupled"
+                ),
+                "magnitude_aux_loss_mode": row.get("magnitude_aux_loss_mode", "none"),
+                "lambda_log_qty": float(row.get("lambda_log_qty", 0.25)),
+                "log_qty_huber_delta": float(row.get("log_qty_huber_delta", 1.0)),
+                "log_qty_floor": float(row.get("log_qty_floor", 1.0)),
                 "magnitude_domain": row.get("magnitude_domain", "mark_residual"),
                 "magnitude_sigma_floor": float(
                     row.get("magnitude_sigma_floor", 0.0014535461338152059)
@@ -2103,6 +2181,12 @@ def load_all_histories(run_rows: list[dict[str, Any]]) -> pl.DataFrame:
                 "log_qty_rmse": float(epoch_row.get("log_qty_rmse", float("nan"))),
                 "val_magnitude_loss": float(
                     epoch_row.get("val_magnitude_loss", float("nan"))
+                ),
+                "train_log_qty_aux_loss": float(
+                    epoch_row.get("train_log_qty_aux_loss", float("nan"))
+                ),
+                "val_log_qty_aux_loss": float(
+                    epoch_row.get("val_log_qty_aux_loss", float("nan"))
                 ),
                 "dt_mae": float(epoch_row["dt_mae"]),
                 "mark_acc": float(epoch_row["mark_acc"]),
@@ -2178,6 +2262,11 @@ def load_all_test_scale_metrics(run_rows: list[dict[str, Any]], selections: Iter
 def with_magnitude_identity_defaults(frame: pl.DataFrame) -> pl.DataFrame:
     """Backfill new identity columns when aggregating older artifacts."""
     defaults = {
+        "magnitude_encoder_gradient_mode": "coupled",
+        "magnitude_aux_loss_mode": "none",
+        "lambda_log_qty": 0.25,
+        "log_qty_huber_delta": 1.0,
+        "log_qty_floor": 1.0,
         "magnitude_sigma_floor": 0.0014535461338152059,
         "magnitude_revin_eps": 1e-5,
         "magnitude_shrinkage_k": 8.0,
@@ -2202,6 +2291,11 @@ def with_magnitude_identity_defaults(frame: pl.DataFrame) -> pl.DataFrame:
 
 MAGNITUDE_GROUP_COLUMNS = [
     "magnitude_domain",
+    "magnitude_encoder_gradient_mode",
+    "magnitude_aux_loss_mode",
+    "lambda_log_qty",
+    "log_qty_huber_delta",
+    "log_qty_floor",
     "magnitude_sigma_floor",
     "magnitude_revin_eps",
     "magnitude_shrinkage_k",
@@ -2247,6 +2341,7 @@ def aggregate_test_metrics(test_df: pl.DataFrame) -> pl.DataFrame:
         "log_qty_mae",
         "log_qty_rmse",
         "val_magnitude_loss",
+        "val_log_qty_aux_loss",
         *RAW_MAGNITUDE_DIAGNOSTIC_NAMES,
     ):
         if metric_name not in test_df.columns:
@@ -2281,6 +2376,7 @@ def aggregate_test_metrics(test_df: pl.DataFrame) -> pl.DataFrame:
             pl.mean("log_qty_mae").alias("mean_test_log_qty_mae"),
             pl.mean("log_qty_rmse").alias("mean_test_log_qty_rmse"),
             pl.mean("val_magnitude_loss").alias("mean_test_magnitude_loss"),
+            pl.mean("val_log_qty_aux_loss").alias("mean_test_log_qty_aux_loss"),
             pl.mean("dt_mae").alias("mean_test_dt_mae"),
             pl.mean("mark_acc").alias("mean_test_mark_acc"),
             pl.mean("mark_balanced_accuracy").alias("mean_test_mark_balanced_accuracy"),
@@ -2367,9 +2463,11 @@ def aggregate_run_rows(rows: list[dict[str, Any]]) -> tuple[pl.DataFrame, pl.Dat
         "best_val_nll_log_qty_mae",
         "best_val_nll_log_qty_rmse",
         "best_val_nll_magnitude_loss",
+        "best_val_nll_log_qty_aux_loss",
         "final_log_qty_mae",
         "final_log_qty_rmse",
         "final_magnitude_loss",
+        "final_log_qty_aux_loss",
     ):
         if metric_name in success_df.columns:
             agg_exprs.append(pl.mean(metric_name).alias(f"mean_{metric_name}"))

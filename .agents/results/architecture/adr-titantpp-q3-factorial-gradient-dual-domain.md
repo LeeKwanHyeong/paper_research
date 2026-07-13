@@ -1,6 +1,6 @@
 # ADR: TitanTPP Q3 Factorial Gradient Routing And Dual-Domain Quantity Loss
 
-- Status: Accepted design; implementation not started
+- Status: Implemented locally; 5090 CUDA gate pending
 - Date: 2026-07-13
 - Scope: Intermittent TitanTPP direct raw-quantity branch
 - Predecessor: `adr-titantpp-raw-quantity-revin-q0-q1-q2.md`
@@ -433,8 +433,25 @@ imbalance, and their interaction while preserving Q2's raw-domain RevIN
 semantics. The cost is one fresh Q2 control and three Q3 e50 runs before any
 multi-seed promotion.
 
+## Implementation Evidence
+
+- Added independent `magnitude_encoder_gradient_mode` and
+  `magnitude_aux_loss_mode` axes without adding parameters or changing state-dict
+  keys.
+- Added the masked log2 Huber auxiliary as a separate metric and training term;
+  likelihood `nll` remains marker CE plus time NLL.
+- Propagated Q3 identity through CLI, model config, run paths, manifests,
+  checkpoints, cache/resume checks, histories, summaries, and scale-wise rows.
+- Focused Q3 contract tests passed `19/19`; the complete search suite passed
+  `104/104`.
+- Local CPU model-tests for Q2/Q3a/Q3b/Q3c all succeeded with parameter count
+  `78,111` and identical NLL, magnitude loss, and quantity predictions. Only
+  Q3b/Q3c reported the active log auxiliary loss, as designed.
+- No 5090 CUDA, Instacart, Intermittent, multi-seed, or held-out Q3 experiment
+  has started.
+
 ## Next Step
 
-Implement the two orthogonal config axes, focused forward/loss/gradient tests,
-and full artifact identity. Do not start Intermittent e50 before local tests,
-5090 CUDA model-test, and Instacart e1 integration pass.
+Run the matched Q2/Q3a/Q3b/Q3c model-test on 5090 CUDA, then complete the
+Instacart e1 integration gate. Do not start Intermittent e50 before both gates
+pass.

@@ -279,6 +279,7 @@ def eval_next_event_week_lookback(
     sum_nll_total = 0.0
     sum_value_loss = 0.0
     sum_magnitude_loss = 0.0
+    sum_log_qty_aux_loss = 0.0
     sum_steps = 0.0
     sum_ordinal_marker_loss = 0.0
     sum_ordinal_steps = 0.0
@@ -329,6 +330,7 @@ def eval_next_event_week_lookback(
                 sum_value_loss += float(out["value_loss"].item()) * steps
                 if use_direct_magnitude:
                     sum_magnitude_loss += float(out["magnitude_loss"].item()) * steps
+                    sum_log_qty_aux_loss += float(out["log_qty_aux_loss"].item()) * steps
                 sum_steps += steps
                 if "ordinal_marker_loss" in out:
                     sum_ordinal_marker_loss += float(out["ordinal_marker_loss"].item()) * steps
@@ -348,6 +350,7 @@ def eval_next_event_week_lookback(
 
             direct_prediction = None
             direct_magnitude_step = None
+            direct_log_qty_aux_step = None
             if use_direct_magnitude:
                 if values is None:
                     raise ValueError("Direct magnitude evaluation requires residual values.")
@@ -371,6 +374,10 @@ def eval_next_event_week_lookback(
                     direct_prediction["normalized"],
                     normalized_target_all,
                     reduction="none",
+                )
+                direct_log_qty_aux_step = model.log_qty_auxiliary_step(
+                    direct_prediction["affine_qty"],
+                    target_magnitude_all,
                 )
 
             # valid 필터 + 혹시 모를 PAD target 제거
@@ -402,7 +409,11 @@ def eval_next_event_week_lookback(
                 sum_ordinal_steps += float(y_mk.numel())
                 if use_direct_magnitude:
                     assert direct_magnitude_step is not None
+                    assert direct_log_qty_aux_step is not None
                     sum_magnitude_loss += float(direct_magnitude_step[valid].sum().item())
+                    sum_log_qty_aux_loss += float(
+                        direct_log_qty_aux_step[valid].sum().item()
+                    )
                 elif y_val is not None and getattr(model.cfg, "use_value_head", False):
                     value_hat_for_nll = predict_value_for_marks(model, h_prev, y_mk)
                     value_loss = F.huber_loss(value_hat_for_nll, y_val, reduction="none")
@@ -532,6 +543,11 @@ def eval_next_event_week_lookback(
         if use_direct_magnitude and sum_steps > 0
         else float("nan")
     )
+    val_log_qty_aux_loss = (
+        sum_log_qty_aux_loss / sum_steps
+        if use_direct_magnitude and sum_steps > 0
+        else float("nan")
+    )
     val_ordinal_marker_loss = (
         sum_ordinal_marker_loss / sum_ordinal_steps
         if sum_ordinal_steps > 0
@@ -554,6 +570,7 @@ def eval_next_event_week_lookback(
         "val_ordinal_marker_loss": val_ordinal_marker_loss,
         "val_value_loss": val_value_loss if sum_steps > 0 else float("nan"),
         "val_magnitude_loss": val_magnitude_loss,
+        "val_log_qty_aux_loss": val_log_qty_aux_loss,
         **_mark_metrics_from_confusion(mark_confusion),
         "_total": total,
         "_correct": correct,
@@ -877,6 +894,7 @@ def _train_week_lookback_model(model, train_loader: DataLoader, val_loader: Data
                         + training_config.lambda_dt * out["nll_time"]
                         + float(model.cfg.lambda_magnitude) * out["magnitude_loss"]
                         + float(model.cfg.lambda_qty) * out["qty_loss"]
+                        + float(model.cfg.lambda_log_qty) * out["log_qty_aux_loss"]
                     )
                 elif loss_mode == "residual_only":
                     loss = (

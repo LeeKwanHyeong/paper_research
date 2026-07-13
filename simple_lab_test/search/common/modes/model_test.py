@@ -144,6 +144,17 @@ def selected_model_jobs(args: Any) -> list[tuple[str, str, Any]]:
             raise ValueError(f"{decoder_mode} model-test requires plain marker CE.")
         if decoder_mode == "direct_log_qty" and args.magnitude_norm_mode != "global":
             raise ValueError("direct_log_qty model-test supports only global normalization.")
+    q3_active = (
+        args.magnitude_encoder_gradient_mode != "coupled"
+        or args.magnitude_aux_loss_mode != "none"
+    )
+    if q3_active:
+        if set(model_names) != {"titantpp"}:
+            raise ValueError("Q3 magnitude modes support TitanTPP-only model tests.")
+        if args.qty_decoder_mode != "direct_raw_qty":
+            raise ValueError("Q3 magnitude modes require direct_raw_qty.")
+        if args.magnitude_norm_mode != "causal_shrinkage_revin":
+            raise ValueError("Q3 magnitude modes require causal_shrinkage_revin.")
     if not jobs:
         raise ValueError("No model jobs selected.")
     return jobs
@@ -203,6 +214,11 @@ def run_one_model_test(
         magnitude_norm_mode=str(args.magnitude_norm_mode),
         magnitude_input_emb_dim=int(args.magnitude_input_emb_dim),
         lambda_magnitude=float(args.lambda_magnitude),
+        magnitude_encoder_gradient_mode=str(args.magnitude_encoder_gradient_mode),
+        magnitude_aux_loss_mode=str(args.magnitude_aux_loss_mode),
+        lambda_log_qty=float(args.lambda_log_qty),
+        log_qty_huber_delta=float(args.log_qty_huber_delta),
+        log_qty_floor=float(args.log_qty_floor),
         magnitude_sigma_floor=float(args.magnitude_sigma_floor),
         magnitude_revin_eps=float(args.magnitude_revin_eps),
         magnitude_shrinkage_k=float(args.magnitude_shrinkage_k),
@@ -280,6 +296,7 @@ def run_one_model_test(
             assert_finite_tensor(key, out[key])
     if args.qty_decoder_mode in {"direct_log_qty", "direct_raw_qty"}:
         assert_finite_tensor("magnitude_loss", out["magnitude_loss"])
+        assert_finite_tensor("log_qty_aux_loss", out["log_qty_aux_loss"])
 
     h_prev = h[:, -2, :]
     pad_id = int(model.cfg.num_marks - 1)
@@ -325,6 +342,9 @@ def run_one_model_test(
         "nll_time": float(out["nll_time"].item()),
         "value_loss": float(out["value_loss"].item()),
         "magnitude_loss": float(out.get("magnitude_loss", torch.tensor(float("nan"))).item()),
+        "log_qty_aux_loss": float(
+            out.get("log_qty_aux_loss", torch.tensor(float("nan"))).item()
+        ),
         "ordinal_marker_loss": (
             float(out["ordinal_marker_loss"].item())
             if "ordinal_marker_loss" in out
@@ -347,6 +367,17 @@ def run_one_model_test(
         "qty_decoder_mode": str(getattr(model.cfg, "qty_decoder_mode", "mark_residual")),
         "magnitude_norm_mode": str(getattr(model.cfg, "magnitude_norm_mode", "global")),
         "lambda_magnitude": float(getattr(model.cfg, "lambda_magnitude", 1.0)),
+        "magnitude_encoder_gradient_mode": str(
+            getattr(model.cfg, "magnitude_encoder_gradient_mode", "coupled")
+        ),
+        "magnitude_aux_loss_mode": str(
+            getattr(model.cfg, "magnitude_aux_loss_mode", "none")
+        ),
+        "lambda_log_qty": float(getattr(model.cfg, "lambda_log_qty", 0.25)),
+        "log_qty_huber_delta": float(
+            getattr(model.cfg, "log_qty_huber_delta", 1.0)
+        ),
+        "log_qty_floor": float(getattr(model.cfg, "log_qty_floor", 1.0)),
         "magnitude_revin_eps": float(getattr(model.cfg, "magnitude_revin_eps", 1e-5)),
         "magnitude_shrinkage_k": float(getattr(model.cfg, "magnitude_shrinkage_k", 8.0)),
         "magnitude_center_mode": str(getattr(model.cfg, "magnitude_center_mode", "mean")),
