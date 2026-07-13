@@ -17,7 +17,7 @@
 - 실행 준비 commit: `f4cc2235e16ae75433bdf6be1767a38b328cbaec`
 - 실제 실행 시작 시각: `2026-07-13 23:04:19 KST`
 - 실행 종료 시각: `2026-07-13 23:04:26 KST`
-- 상태: `execution complete; local artifact sync complete; gate analysis pending`
+- 상태: `CUDA model-test gate passed; Instacart e1 integration pending`
 
 ## 실험 목적
 
@@ -98,7 +98,19 @@ conda activate ai_env
 - 로컬 `experiment_manifest.json`, `source_sync_manifest.json`, 네 variant의
   `model_test_summary.json`을 parse했고 모든 row가 `status=success`였다.
 - 로컬 동기화 검증 시각: `2026-07-14 07:52:55 KST`
-- 이 단계에서는 scalar-loss identity나 CUDA acceptance gate를 아직 판정하지 않았다.
+- Scalar-loss, config, shape, parameter, prediction identity를 분석했고 CUDA gate를
+  통과로 판정했다.
+
+## CUDA Gate 분석 결과
+
+- 분석 시각: `2026-07-14 08:00 KST`
+- Q2/Q3a scalar row는 gradient mode를 제외하면 exact match다.
+- Q3b/Q3c scalar row는 gradient mode를 제외하면 exact match다.
+- 네 variant는 parameter `78,111`, hidden `[4,16,64]`, NLL, magnitude/raw loss,
+  quantity/time prediction이 동일하다.
+- Q2/Q3a log auxiliary는 `0`; Q3b/Q3c는 `3.797908068`로 동일하다.
+- 판정: `5090 CUDA model-test gate passed`
+- 상세 결과: `titantpp_q3_cuda_model_test_result_0714.md`
 
 ## 사전 Acceptance Gate
 
@@ -122,6 +134,7 @@ seed-42 validation-only screening에서만 수행하며 held-out test는 계속 
 - 최초 반영 시각: `2026-07-13 22:59 KST`
 - 실행 상태 반영 시각: `2026-07-13 23:05 KST`
 - 완료·동기화 상태 반영 시각: `2026-07-14 07:53 KST`
+- CUDA gate 결과 반영 시각: `2026-07-14 08:00 KST`
 - 세부 페이지: [TitanTPP Q3 Factorial CUDA Model Test](https://app.notion.com/p/39cbbe40561381e591b0d021d028c4bd)
 - 상위 위치: `5. Model Design Enhancement > 2026-07-13 > Step 13`
 - 검증: 상위 page block, Q3 계약 상태, Model Enhancement Strategy의 다음 작업을

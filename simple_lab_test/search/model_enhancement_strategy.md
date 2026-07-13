@@ -1576,8 +1576,12 @@ Implementation status (`2026-07-13`):
   initial check observed Q2/Q3a/Q3b success and Q3c model-test entry
 - the run completed at `2026-07-13 23:04:26 KST` with success sentinel, aggregate
   exit code `0`, and all four variant exit codes equal to `0`
-- all 13 artifact files are synced locally with valid JSON/status rows; scalar
-  identity and the final CUDA gate remain unanalyzed
+- all 13 artifact files are synced locally; parameter/shape/config identity,
+  paired scalar-loss equality, finite values, and JSON/CSV consistency passed
+- Q2/Q3a are exact no-aux scalar matches and Q3b/Q3c are exact positive-log-aux
+  scalar matches; total-loss recomputation error is at most `1.58e-6`
+- the 5090 CUDA runtime and artifact identity gate passed; this is not an
+  actual-data performance result
 - Instacart, Intermittent, multi-seed, and held-out Q3 experiments have not
   started
 

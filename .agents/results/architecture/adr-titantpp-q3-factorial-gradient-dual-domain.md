@@ -1,6 +1,6 @@
 # ADR: TitanTPP Q3 Factorial Gradient Routing And Dual-Domain Quantity Loss
 
-- Status: 5090 CUDA execution complete; artifact analysis pending
+- Status: 5090 CUDA gate passed; Instacart integration pending
 - Date: 2026-07-13
 - Scope: Intermittent TitanTPP direct raw-quantity branch
 - Predecessor: `adr-titantpp-raw-quantity-revin-q0-q1-q2.md`
@@ -455,13 +455,20 @@ multi-seed promotion.
   observed Q2/Q3a/Q3b exit successfully and Q3c enter its model-test.
 - The run ended at `2026-07-13 23:04:26 KST` with `MODEL_TEST_SUCCESS`, aggregate
   exit code `0`, and all four variant exit codes equal to `0`.
-- All 13 artifact files were synced locally and their JSON structure/status rows
-  validated. Scalar-loss identity and the final CUDA gate have not been analyzed.
+- All 13 artifact files were synced locally. The four variants have identical
+  parameter count `78,111`, hidden shape `[4,16,64]`, NLL components,
+  magnitude/raw losses, and quantity/time prediction summaries.
+- Q2/Q3a are exact scalar matches with zero log auxiliary. Q3b/Q3c are exact
+  scalar matches with the same positive log auxiliary `3.797908067703247`.
+  CLI/RMTPP config differs only in the intended gradient/aux factors and output
+  path; encoder config is identical.
+- Total-loss recomputation agrees within `1.58e-6` FP32 accumulation error. The
+  5090 CUDA runtime and artifact identity gate passed.
 - Instacart, Intermittent, multi-seed, and held-out Q3 experiments have not
   started.
 
 ## Next Step
 
-Read the synced artifacts in protocol order and decide the CUDA gate. Then
-complete the Instacart e1 integration gate. Do not start Intermittent e50 before
-both gates pass.
+Prepare and run the matched Q2/Q3a/Q3b/Q3c Instacart top-20 e1 fixed-split
+integration gate. Do not start Intermittent e50 before the integration gate
+passes.
