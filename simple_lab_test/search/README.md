@@ -17,6 +17,7 @@
 | `common/modes/model_test.py` | synthetic batch 기반 model interface smoke test |
 | `common/modes/overfit.py` | overfitting/capacity diagnostic |
 | `common/modes/qty_loss_ablation.py` | `residual_only`, `hybrid`, `qty_only` loss ablation |
+| `../../TEST_SESSION_PROTOCOL.md` | 5090/5080 GPU 서버 실행, tmux, artifact sync, Notion 기록 템플릿 |
 
 아래 root-level 파일들은 삭제되었습니다. 기능은 `tpp_experiment.py` subcommand와
 `common/` 모듈로 이동했습니다.
@@ -145,6 +146,99 @@ keeps held-out test metrics separate from validation checkpoint selection.
 The runner writes `leaderboard/test_metrics.csv`, `leaderboard/test_summary.csv`,
 `leaderboard/test_scale_wise_summary.csv`, and matching paper tables under
 `paper_outputs/`.
+
+TitanTPP V5a keeps categorical CE and adds normalized ordinal RPS without
+changing the marker head or inference path. The default `ce` mode keeps the
+legacy V2 path; V5a uses the distinct `markloss_ce_rps/lambdaord_0p1` run path.
+
+```bash
+python simple_lab_test/search/tpp_experiment.py model-test \
+  --models titantpp \
+  --titan-candidates small_lmm \
+  --device cpu \
+  --seq-len 16 \
+  --num-marks 12 \
+  --rmtpp-hidden-dim 64 \
+  --marker-loss-mode ce_rps \
+  --lambda-ordinal 0.10 \
+  --left-pad
+```
+
+The corresponding Intermittent screening keeps the confirmed V2 architecture
+and changes only the marker objective:
+
+```bash
+python simple_lab_test/search/tpp_experiment.py long-epoch \
+  --base-dir search_artifacts/model_enhancement_v5a_inter_short_e50 \
+  --datasets intermittent \
+  --models titantpp \
+  --titan-candidates small_lmm \
+  --epochs 50 \
+  --seeds 42 \
+  --lr 1e-3 \
+  --batch-size 128 \
+  --lookback-weeks 52 \
+  --max-seq-len 16 \
+  --split-mode fixed \
+  --value-head-activation identity \
+  --value-head-mode shared \
+  --qty-mark-gradient-mode coupled \
+  --value-encoder-gradient-mode coupled \
+  --value-input-mode residual \
+  --train-loss-scope target_only \
+  --loss-mode hybrid \
+  --marker-loss-mode ce_rps \
+  --lambda-ordinal 0.10 \
+  --eval-selections best_val_nll,best_score,final \
+  --device cuda
+```
+
+`nll_marker` remains categorical CE, `nll` remains marker CE plus time NLL,
+and `ordinal_marker_loss` is stored separately. Validation/test outputs also
+include balanced accuracy, macro F1, mark MAE, adjacent accuracy, mark-0/1
+diagnostics, and per-class marker metric artifacts.
+
+TitanTPP M0 keeps marker/time likelihood heads but replaces the legacy
+mark-residual quantity decoder with exclusive direct `log2(qty)` regression.
+The first activation supports TitanTPP-only, fixed split, target-only loss,
+plain marker CE, and train-global normalization.
+
+```bash
+python simple_lab_test/search/tpp_experiment.py model-test \
+  --models titantpp \
+  --titan-candidates small_lmm \
+  --device cpu \
+  --scale-base 2 \
+  --qty-decoder-mode direct_log_qty \
+  --magnitude-norm-mode global \
+  --left-pad \
+  --stop-on-error
+```
+
+```bash
+python simple_lab_test/search/tpp_experiment.py long-epoch \
+  --base-dir search_artifacts/model_enhancement_m0_inter_short_e50 \
+  --datasets intermittent \
+  --models titantpp \
+  --titan-candidates small_lmm \
+  --epochs 50 \
+  --seeds 42 \
+  --split-mode fixed \
+  --qty-decoder-mode direct_log_qty \
+  --magnitude-norm-mode global \
+  --value-input-mode none \
+  --train-loss-scope target_only \
+  --loss-mode hybrid \
+  --marker-loss-mode ce \
+  --lambda-ordinal 0 \
+  --eval-selections best_val_nll,best_score,final \
+  --device cuda
+```
+
+M0 computes global mean/population variance from train events only and stores
+them in the run manifest, checkpoint config, and summary. Direct runs export
+`magnitude_loss`, `log_qty_mae`, and `log_qty_rmse`; legacy `value_mae` is not
+reinterpreted as a log-quantity metric.
 
 TitanTPP TTM-Lite evaluation can be enabled on the same long-epoch runner:
 
