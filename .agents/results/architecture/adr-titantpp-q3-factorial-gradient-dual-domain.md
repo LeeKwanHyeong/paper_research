@@ -1,6 +1,6 @@
 # ADR: TitanTPP Q3 Factorial Gradient Routing And Dual-Domain Quantity Loss
 
-- Status: 5090 CUDA gate passed; Instacart integration pending
+- Status: 5090 CUDA gate passed; Instacart e1 integration prepared
 - Date: 2026-07-13
 - Scope: Intermittent TitanTPP direct raw-quantity branch
 - Predecessor: `adr-titantpp-raw-quantity-revin-q0-q1-q2.md`
@@ -464,11 +464,18 @@ multi-seed promotion.
   path; encoder config is identical.
 - Total-loss recomputation agrees within `1.58e-6` FP32 accumulation error. The
   5090 CUDA runtime and artifact identity gate passed.
-- Instacart, Intermittent, multi-seed, and held-out Q3 experiments have not
-  started.
+- A matched Instacart top-20 e1 runner now fixes the prior Q0/Q1/Q2 data and
+  training budget while crossing only magnitude encoder gradient routing and
+  log-auxiliary mode. It records a root manifest, independent variant status,
+  per-variant logs, and success/failure sentinels.
+- The start record freezes tmux `titantpp_q3_insta_e1_0714`, artifact root
+  `model_enhancement_titantpp_q3_insta_smoke_e1_0714`, expected sample counts
+  `1380/300/300`, artifact reading order, and the integration-only gate.
+- Source sync, CUDA preflight, tmux launch, Intermittent, multi-seed, and
+  held-out Q3 experiments have not started.
 
 ## Next Step
 
-Prepare and run the matched Q2/Q3a/Q3b/Q3c Instacart top-20 e1 fixed-split
-integration gate. Do not start Intermittent e50 before the integration gate
-passes.
+Sync the preparation revision to 5090, run the CUDA/data preflight, and start the
+matched Q2/Q3a/Q3b/Q3c Instacart top-20 e1 fixed-split integration gate in tmux.
+Do not start Intermittent e50 before this gate passes.

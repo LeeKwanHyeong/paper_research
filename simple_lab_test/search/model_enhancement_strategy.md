@@ -1558,7 +1558,7 @@ candidate, preferring a single intervention over Q3c. If none passes, retain V2.
 Only a frozen selected candidate advances to strict matched V2/Q2/candidate
 seeds `42,52,62`; held-out test remains locked until that gate passes.
 
-Implementation status (`2026-07-13`):
+Implementation status (`2026-07-14`):
 
 - architecture, loss, gradient, artifact, focused-test, seed-42, multi-seed, and
   held-out contracts are complete
@@ -1582,8 +1582,14 @@ Implementation status (`2026-07-13`):
   scalar matches; total-loss recomputation error is at most `1.58e-6`
 - the 5090 CUDA runtime and artifact identity gate passed; this is not an
   actual-data performance result
-- Instacart, Intermittent, multi-seed, and held-out Q3 experiments have not
-  started
+- the matched Instacart top-20 e1 runner and start record are prepared with the
+  prior `1380/300/300` fixed-split sample contract, identical Q2 normalization
+  and training budget, and only the two Q3 factorial axes varying
+- the runner records independent variant status, root/variant manifests and
+  logs, cache-safe paths, and success/failure sentinels; the gate is explicitly
+  limited to actual-data integration rather than performance ranking
+- 5090 source sync, CUDA preflight, tmux launch, Intermittent, multi-seed, and
+  held-out Q3 experiments have not started
 
 Detailed ADR:
 

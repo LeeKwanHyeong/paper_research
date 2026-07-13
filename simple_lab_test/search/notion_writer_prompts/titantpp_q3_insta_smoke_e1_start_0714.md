@@ -1,0 +1,105 @@
+# TitanTPP Q3 Factorial Instacart Top-20 e1 Smoke 시작
+
+`5. Model Design Enhancement` 아래에 세부 페이지
+`TitanTPP Q3 Factorial Instacart Top-20 e1 Smoke`를 생성한다. 상위 history에는
+제목 2 `2026-07-14 | Q3 Actual-Data Integration` 아래 제목 3
+`Step 1. Q3 Factorial Instacart Top-20 e1 Smoke`로 연결한다.
+
+## 실험 시작 정보
+
+- 시작 기록 시각: `2026-07-14 08:33 KST`
+- 실행 서버: `5090` (`192.168.0.71`, user `leekwanhyeong`)
+- 프로젝트 경로: `/home/leekwanhyeong/workspace/paper_research`
+- Conda 환경: `ai_env`
+- tmux session: `titantpp_q3_insta_e1_0714`
+- runner: `simple_lab_test/search/scripts/run_titantpp_q3_insta_smoke_e1_0714.sh`
+- artifact root: `search_artifacts/model_enhancement_titantpp_q3_insta_smoke_e1_0714`
+- 상태: `prepared; 5090 source sync, CUDA preflight, and tmux launch pending`
+
+## 실험 목적
+
+5090 synthetic CUDA gate를 통과한 Q2/Q3a/Q3b/Q3c를 실제 Instacart fixed-split
+DataLoader에 연결한다. 이전 Q0/Q1/Q2 top-20 e1 smoke와 같은 split, series, seed,
+학습 예산을 유지하고 Q3의 두 요인만 바꿔 actual-data backward, checkpoint,
+cache/resume identity, loss logging, summary, scale-wise export가 모두 동작하는지 확인한다.
+
+이 단계는 실제 데이터 통합 smoke다. 한 epoch 수치로 Q3 성능, gradient detachment 효과,
+log2 auxiliary 효과를 판정하지 않으며 Intermittent 데이터도 열지 않는다.
+
+## Factorial 계약
+
+| Variant | Magnitude encoder gradient | Log2 auxiliary | 역할 |
+|---|---|---|---|
+| Q2 control | `coupled` | `none` | 같은 revision의 fresh control |
+| Q3a | `detached` | `none` | gradient-routing integration |
+| Q3b | `coupled` | `log_huber` | dual-domain loss integration |
+| Q3c | `detached` | `log_huber` | combined interaction integration |
+
+네 변형은 같은 `direct_raw_qty` decoder, Q2 `causal_shrinkage_revin`, state-dict
+구조와 parameter count를 사용한다. Q2/Q3a 및 Q3b/Q3c는 같은 초기 가중치에서 forward
+scalar가 같지만, 한 번의 backward 이후에는 gradient route가 달라지므로 epoch 1 metric
+동일성을 요구하지 않는다.
+
+## 고정 조건
+
+| 항목 | 값 |
+|---|---:|
+| dataset / split | `insta_market_basket` top-20 / `fixed` |
+| expected train / validation / test samples | `1380 / 300 / 300` |
+| model / candidate | `TitanTPP / small_lmm` |
+| epochs / seed | `1 / 42` |
+| LR / batch | `1e-3 / 16` |
+| lookback / max sequence | `10 weeks / 16` |
+| decoder / normalization | `direct_raw_qty / causal_shrinkage_revin` |
+| loss scope / mode | `target_only / hybrid` |
+| marker objective | plain CE |
+| lambda magnitude / quantity | `1.0 / 0.25` |
+| lambda log quantity / Huber delta / floor | `0.25 / 1.0 / 1.0` |
+| RevIN epsilon / shrinkage k | `1e-5 / 8` |
+| sigma floor constant | `0.0550124034288891` |
+| center / affine / stat context | `mean / false / none` |
+| selections | `best_val_nll,best_score,final` |
+
+Normalization mode와 raw context statistics는 네 변형에서 동일하다. Global raw moments와
+effective floor는 같은 Instacart fixed train split으로만 계산하며 validation/test row를
+통계에 포함하지 않는다.
+
+## 실험 계획
+
+1. 준비 커밋을 5090 비-Git 작업 복사본에 동기화하고 checksum/source manifest를 남긴다.
+2. RTX 5090, `ai_env`, CUDA linker, split parquet, CLI 계약을 preflight한다.
+3. Q2, Q3a, Q3b, Q3c를 같은 설정으로 순차 실행한다.
+4. 각 변형의 sample count, raw statistics, parameter count와 variant identity를 대조한다.
+5. Epoch 1 backward, checkpoint, cache/resume identity와 새 loss logging을 확인한다.
+6. Manifest, log, summary, test summary, histories, scale-wise metrics, plots 순서로 읽는다.
+7. Integration gate만 판정하고 e1 metric으로 후보를 선택하지 않는다.
+
+## 실행 명령어
+
+```bash
+ssh 5090
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate ai_env
+/opt/miniconda3/envs/ai_env/bin/tmux new-session -d \
+  -s titantpp_q3_insta_e1_0714 \
+  "bash /home/leekwanhyeong/workspace/paper_research/simple_lab_test/search/scripts/run_titantpp_q3_insta_smoke_e1_0714.sh"
+```
+
+## Acceptance Gate
+
+- Q2/Q3a/Q3b/Q3c 모두 exit code 0과 `SMOKE_SUCCESS`
+- NaN, Inf loss, Traceback, CUDA runtime error/OOM 없음
+- 네 run의 fixed split, series/sample count, seed, batch, lookback, max sequence가 동일
+- `magnitude_stats_source_split=train`이며 raw global moments/effective floor가 동일
+- parameter count와 state-dict 구조가 동일하고 variant path/config는 두 실험 요인만 다름
+- Q2/Q3a의 log auxiliary는 0, Q3b/Q3c의 log auxiliary는 positive finite
+- Epoch 1 train/validation loss와 raw magnitude diagnostics가 finite
+- best validation NLL, best score, final checkpoint와 history가 생성됨
+- validation/test summary, scale-wise metrics, report와 plots가 생성됨
+
+## 해석 제한
+
+Top-20 e1은 actual-data 경로와 artifact 계약 확인용이다. Q2와 Q3a 또는 Q3b와 Q3c의
+epoch 1 metric이 달라도 gradient-routing 학습 효과의 증거로 사용하지 않는다. Held-out
+test output은 export/finite 확인에만 사용하고 모델 선택에 사용하지 않는다. 이 gate가
+통과한 뒤에만 Intermittent seed-42 e50 validation-only screening을 준비한다.
