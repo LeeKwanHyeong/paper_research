@@ -16,7 +16,8 @@
 - 구현 기준 commit: `14c2978`
 - 실행 준비 commit: `f4cc2235e16ae75433bdf6be1767a38b328cbaec`
 - 실제 실행 시작 시각: `2026-07-13 23:04:19 KST`
-- 상태: `in progress; Q3c entry confirmed, continuous monitoring stopped`
+- 실행 종료 시각: `2026-07-13 23:04:26 KST`
+- 상태: `execution complete; local artifact sync complete; gate analysis pending`
 
 ## 실험 목적
 
@@ -88,6 +89,17 @@ conda activate ai_env
   비활성화하며, 해당 경고 이후에도 앞선 variant 계산은 정상 진행됐다.
 - 사용자 요청 전까지 추가 polling이나 결과 판정은 수행하지 않는다.
 
+## 완료 및 로컬 동기화 확인
+
+- 단회 확인 시 tmux session은 정상 종료된 상태였다.
+- `MODEL_TEST_SUCCESS`, 통합 로그 `[exit_code] 0`, Q2/Q3a/Q3b/Q3c 각각의
+  `exit_code=0`을 확인했다.
+- 서버 artifact 13개 파일을 로컬 동일 경로로 rsync했다.
+- 로컬 `experiment_manifest.json`, `source_sync_manifest.json`, 네 variant의
+  `model_test_summary.json`을 parse했고 모든 row가 `status=success`였다.
+- 로컬 동기화 검증 시각: `2026-07-14 07:52:55 KST`
+- 이 단계에서는 scalar-loss identity나 CUDA acceptance gate를 아직 판정하지 않았다.
+
 ## 사전 Acceptance Gate
 
 - 네 variant가 모두 `status=success`, `device=cuda`여야 한다.
@@ -109,6 +121,7 @@ seed-42 validation-only screening에서만 수행하며 held-out test는 계속 
 
 - 최초 반영 시각: `2026-07-13 22:59 KST`
 - 실행 상태 반영 시각: `2026-07-13 23:05 KST`
+- 완료·동기화 상태 반영 시각: `2026-07-14 07:53 KST`
 - 세부 페이지: [TitanTPP Q3 Factorial CUDA Model Test](https://app.notion.com/p/39cbbe40561381e591b0d021d028c4bd)
 - 상위 위치: `5. Model Design Enhancement > 2026-07-13 > Step 13`
 - 검증: 상위 page block, Q3 계약 상태, Model Enhancement Strategy의 다음 작업을

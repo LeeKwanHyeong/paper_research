@@ -1574,8 +1574,12 @@ Implementation status (`2026-07-13`):
   PyTorch `2.11.0+cu130` CUDA preflight passed
 - tmux `titantpp_q3_cuda_0713` started at `2026-07-13 23:04:19 KST`; the one-time
   initial check observed Q2/Q3a/Q3b success and Q3c model-test entry
-- continuous monitoring has stopped; Instacart, Intermittent, multi-seed, and
-  held-out Q3 experiments have not started
+- the run completed at `2026-07-13 23:04:26 KST` with success sentinel, aggregate
+  exit code `0`, and all four variant exit codes equal to `0`
+- all 13 artifact files are synced locally with valid JSON/status rows; scalar
+  identity and the final CUDA gate remain unanalyzed
+- Instacart, Intermittent, multi-seed, and held-out Q3 experiments have not
+  started
 
 Detailed ADR:
 
