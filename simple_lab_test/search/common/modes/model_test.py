@@ -296,7 +296,9 @@ def run_one_model_test(
             assert_finite_tensor(key, out[key])
     if args.qty_decoder_mode in {"direct_log_qty", "direct_raw_qty"}:
         assert_finite_tensor("magnitude_loss", out["magnitude_loss"])
+        assert_finite_tensor("qty_loss", out["qty_loss"])
         assert_finite_tensor("log_qty_aux_loss", out["log_qty_aux_loss"])
+        assert_finite_tensor("total_loss", out["total_loss"])
 
     h_prev = h[:, -2, :]
     pad_id = int(model.cfg.num_marks - 1)
@@ -342,9 +344,11 @@ def run_one_model_test(
         "nll_time": float(out["nll_time"].item()),
         "value_loss": float(out["value_loss"].item()),
         "magnitude_loss": float(out.get("magnitude_loss", torch.tensor(float("nan"))).item()),
+        "qty_loss": float(out.get("qty_loss", torch.tensor(float("nan"))).item()),
         "log_qty_aux_loss": float(
             out.get("log_qty_aux_loss", torch.tensor(float("nan"))).item()
         ),
+        "total_loss": float(out.get("total_loss", torch.tensor(float("nan"))).item()),
         "ordinal_marker_loss": (
             float(out["ordinal_marker_loss"].item())
             if "ordinal_marker_loss" in out
@@ -367,6 +371,7 @@ def run_one_model_test(
         "qty_decoder_mode": str(getattr(model.cfg, "qty_decoder_mode", "mark_residual")),
         "magnitude_norm_mode": str(getattr(model.cfg, "magnitude_norm_mode", "global")),
         "lambda_magnitude": float(getattr(model.cfg, "lambda_magnitude", 1.0)),
+        "lambda_qty": float(getattr(model.cfg, "lambda_qty", 0.25)),
         "magnitude_encoder_gradient_mode": str(
             getattr(model.cfg, "magnitude_encoder_gradient_mode", "coupled")
         ),

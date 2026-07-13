@@ -1570,6 +1570,8 @@ Implementation status (`2026-07-13`):
 - local CPU Q2/Q3a/Q3b/Q3c model-tests all passed with identical parameter count
   `78,111`, NLL, magnitude loss, and quantity predictions; Q3b/Q3c alone report
   the active log auxiliary
+- 5090 Q2/Q3a/Q3b/Q3c CUDA runner, tmux contract, artifact layout, and start
+  record are prepared; remote sync, preflight, and launch are pending
 - 5090 CUDA, Instacart, Intermittent, multi-seed, and held-out Q3 experiments
   have not started
 

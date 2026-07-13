@@ -1,6 +1,6 @@
 # ADR: TitanTPP Q3 Factorial Gradient Routing And Dual-Domain Quantity Loss
 
-- Status: Implemented locally; 5090 CUDA gate pending
+- Status: Implemented locally; 5090 CUDA gate prepared
 - Date: 2026-07-13
 - Scope: Intermittent TitanTPP direct raw-quantity branch
 - Predecessor: `adr-titantpp-raw-quantity-revin-q0-q1-q2.md`
@@ -447,11 +447,13 @@ multi-seed promotion.
 - Local CPU model-tests for Q2/Q3a/Q3b/Q3c all succeeded with parameter count
   `78,111` and identical NLL, magnitude loss, and quantity predictions. Only
   Q3b/Q3c reported the active log auxiliary loss, as designed.
+- The 5090 Q2/Q3a/Q3b/Q3c CUDA runner and start record are prepared with tmux
+  session `titantpp_q3_cuda_0713`; sync, preflight, and launch are pending.
 - No 5090 CUDA, Instacart, Intermittent, multi-seed, or held-out Q3 experiment
   has started.
 
 ## Next Step
 
-Run the matched Q2/Q3a/Q3b/Q3c model-test on 5090 CUDA, then complete the
-Instacart e1 integration gate. Do not start Intermittent e50 before both gates
-pass.
+Sync the preparation commit to 5090 and launch the matched Q2/Q3a/Q3b/Q3c CUDA
+model-test. Then complete the Instacart e1 integration gate. Do not start
+Intermittent e50 before both gates pass.
