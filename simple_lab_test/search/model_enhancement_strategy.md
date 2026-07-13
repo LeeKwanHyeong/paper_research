@@ -1570,10 +1570,12 @@ Implementation status (`2026-07-13`):
 - local CPU Q2/Q3a/Q3b/Q3c model-tests all passed with identical parameter count
   `78,111`, NLL, magnitude loss, and quantity predictions; Q3b/Q3c alone report
   the active log auxiliary
-- 5090 Q2/Q3a/Q3b/Q3c CUDA runner, tmux contract, artifact layout, and start
-  record are prepared; remote sync, preflight, and launch are pending
-- 5090 CUDA, Instacart, Intermittent, multi-seed, and held-out Q3 experiments
-  have not started
+- preparation commit `f4cc223` was checksum-verified on 5090 and the RTX 5090 /
+  PyTorch `2.11.0+cu130` CUDA preflight passed
+- tmux `titantpp_q3_cuda_0713` started at `2026-07-13 23:04:19 KST`; the one-time
+  initial check observed Q2/Q3a/Q3b success and Q3c model-test entry
+- continuous monitoring has stopped; Instacart, Intermittent, multi-seed, and
+  held-out Q3 experiments have not started
 
 Detailed ADR:
 

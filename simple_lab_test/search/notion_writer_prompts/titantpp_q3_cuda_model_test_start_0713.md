@@ -14,7 +14,9 @@
 - tmux session: `titantpp_q3_cuda_0713`
 - artifact root: `search_artifacts/model_enhancement_titantpp_q3_cuda_model_test_0713`
 - 구현 기준 commit: `14c2978`
-- 상태: `prepared; 5090 sync, preflight, and launch pending`
+- 실행 준비 commit: `f4cc2235e16ae75433bdf6be1767a38b328cbaec`
+- 실제 실행 시작 시각: `2026-07-13 23:04:19 KST`
+- 상태: `in progress; Q3c entry confirmed, continuous monitoring stopped`
 
 ## 실험 목적
 
@@ -72,6 +74,20 @@ conda activate ai_env
   bash /home/leekwanhyeong/workspace/paper_research/simple_lab_test/search/scripts/run_titantpp_q3_cuda_model_test_0713.sh"
 ```
 
+## 실행 시작 확인
+
+- `f4cc223`까지의 변경 파일 13개를 rsync한 뒤 checksum dry-run에서 차이가
+  없음을 확인했다.
+- Remote working copy에는 `.git` metadata가 없으므로
+  `source_sync_manifest.json`에 full revision과 검증 시각을 별도로 기록했다.
+- Preflight: RTX 5090 idle `41 MiB`, PyTorch `2.11.0+cu130`, CUDA `13.0`, 실제
+  CUDA tensor allocation 통과.
+- 초기 로그: Q2, Q3a, Q3b는 각각 `exit_code=0`; Q3c model-test 진입과 GPU
+  process를 확인했다.
+- `/tmp/xdg_cache_paper_research/torch/kernels` 생성 실패 경고는 kernel cache만
+  비활성화하며, 해당 경고 이후에도 앞선 variant 계산은 정상 진행됐다.
+- 사용자 요청 전까지 추가 polling이나 결과 판정은 수행하지 않는다.
+
 ## 사전 Acceptance Gate
 
 - 네 variant가 모두 `status=success`, `device=cuda`여야 한다.
@@ -91,7 +107,8 @@ seed-42 validation-only screening에서만 수행하며 held-out test는 계속 
 
 ## Notion 반영 기록
 
-- 반영 시각: `2026-07-13 22:59 KST`
+- 최초 반영 시각: `2026-07-13 22:59 KST`
+- 실행 상태 반영 시각: `2026-07-13 23:05 KST`
 - 세부 페이지: [TitanTPP Q3 Factorial CUDA Model Test](https://app.notion.com/p/39cbbe40561381e591b0d021d028c4bd)
 - 상위 위치: `5. Model Design Enhancement > 2026-07-13 > Step 13`
 - 검증: 상위 page block, Q3 계약 상태, Model Enhancement Strategy의 다음 작업을
