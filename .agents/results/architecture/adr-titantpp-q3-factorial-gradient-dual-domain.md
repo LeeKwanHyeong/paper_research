@@ -1,6 +1,6 @@
 # ADR: TitanTPP Q3 Factorial Gradient Routing And Dual-Domain Quantity Loss
 
-- Status: 5090 CUDA and Instacart integration gates passed; Intermittent seed-42 runner and acceptance contract prepared
+- Status: Intermittent seed-42 screening in progress; V2 reference and fresh Q2 epoch 1 passed
 - Date: 2026-07-13
 - Scope: Intermittent TitanTPP direct raw-quantity branch
 - Predecessor: `adr-titantpp-raw-quantity-revin-q0-q1-q2.md`
@@ -521,11 +521,24 @@ multi-seed promotion.
 - The runner emits an unrounded machine-readable `acceptance_contract.json`
   containing Q2 reproduction, full candidate, mechanism, selection, and
   held-out-lock rules. Q3a or Q3b failure cannot short-circuit Q3c.
-- The preparation is local only. No 5090 sync, preflight, tmux launch, or
-  Intermittent training has occurred yet.
+- Preparation commit `a0a65e5` and all runtime dependencies were checksum-verified
+  on 5090. CUDA/data/reference/CLI preflight passed on the idle RTX 5090.
+- The first launch stopped before training because the validation-reference
+  evaluator treated legacy V2's structurally inapplicable
+  `val_log_qty_aux_loss=NaN` as an active metric. Held-out data was not read, and
+  the failed root log was preserved.
+- Recovery commit `f5851ff` exports inactive mark-residual magnitude metrics as
+  JSON null while retaining finite checks for every active metric. Focused tests
+  passed `25/25` and the full search suite passed `110/110`.
+- The second tmux launch started at `2026-07-15 08:15:07 KST`. V2 validation-only
+  reference completed with exit code zero, and fresh Q2 completed epoch 1 on the
+  frozen split and train-only raw statistics. Continuous monitoring stopped at
+  `08:21:16 KST`; the four-variant screening remains in progress.
+- Test-file hashing remained identity-only. No held-out row, metric, report, or
+  plot was inspected.
 
 ## Next Step
 
-Checksum-sync the preparation commit to 5090, verify CUDA/data/reference identity,
-and start tmux only after the start record is updated with the source revision
-and preflight evidence. Keep multi-seed and held-out execution locked.
+Check completion once only when requested, checksum-sync the artifact locally,
+and apply the frozen validation-only acceptance contract before any multi-seed
+promotion. Keep held-out execution locked.

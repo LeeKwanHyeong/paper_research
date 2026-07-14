@@ -1628,18 +1628,25 @@ Implementation status (`2026-07-14`):
 - the runner writes unrounded Q2 reproduction, full candidate, mechanism,
   selection, and held-out rules to `acceptance_contract.json`; Q3c cannot be
   skipped based on Q3a/Q3b outcomes
-- runner and start record are prepared locally; 5090 sync/preflight, Intermittent
-  training, multi-seed, and held-out Q3 experiments have not started
+- preparation `a0a65e5`, recovery `f5851ff`, source manifests, and all runtime
+  dependencies are checksum-verified on 5090;
+  CUDA/data/reference/CLI preflight passed
+- the first launch stopped before training on a legacy V2 inactive-metric
+  evaluator contract; the fix preserves active finite checks and passed focused
+  `25/25` plus full search `110/110`
+- the second launch started at `2026-07-15 08:15:07 KST`; V2 validation-only
+  reference and fresh Q2 epoch 1 passed on the frozen split
+- the four-variant Intermittent run is in progress with monitoring stopped;
+  multi-seed and held-out Q3 experiments have not started
 
 Next execution order:
 
-1. Checksum-sync the frozen preparation commit to 5090 and write the source
-   manifest.
-2. Run CUDA/data/reference-SHA preflight and update the start record.
-3. Start tmux and verify only V2 reference completion plus fresh Q2 first-epoch
-   entry before stopping continuous monitoring.
-4. Check completion only when requested, sync artifacts, and analyze under the
-   validation-only lock.
+1. Check completion only when requested and keep continuous monitoring off.
+2. Checksum-sync the complete artifact locally and validate manifest/log/status
+   before reading validation outputs.
+3. Analyze summary, histories, validation scale-wise, confusion/class metrics,
+   and validation plots under the validation-only lock.
+4. Apply Q2 reproduction, full candidate, mechanism, and selection gates.
 5. Keep held-out test and multi-seed execution locked until a seed-42 candidate
    satisfies the frozen Q3 gate.
 

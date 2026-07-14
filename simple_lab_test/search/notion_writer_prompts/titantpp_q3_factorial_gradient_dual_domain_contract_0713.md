@@ -164,9 +164,15 @@ Full candidate gate:
   actual-data integration gate
 - 준비 완료: Intermittent fresh Q2/Q3a/Q3b/Q3c seed-42 e50 runner,
   frozen V2/Q2 reference identity와 runtime `acceptance_contract.json`
-- 미완료: 5090 source sync/preflight, Intermittent seed-42 실행과 validation 판정
-- 다음: 준비 commit을 5090에 checksum 동기화하고 CUDA/data/reference SHA
-  preflight 후 tmux 실행
+- 실행 중: `a0a65e5`와 evaluator recovery `f5851ff`를 5090에 checksum
+  동기화했고 CUDA/data/reference/CLI preflight, V2 validation reference, fresh Q2
+  epoch 1이 통과했다
+- recovery: 첫 시도는 legacy V2 inactive `val_log_qty_aux_loss` N/A 처리 계약으로
+  학습 전 중단됐고, active finite check를 유지한 fix가 focused `25/25`, search
+  `110/110`을 통과했다
+- 미완료: Q2/Q3a/Q3b/Q3c e50 완료와 validation-only 판정
+- 다음: 사용자 요청 시 완료 여부를 한 번 확인하고 artifact를 checksum 동기화한 뒤
+  frozen acceptance contract를 적용
 
 ## Intermittent 실행 계약
 

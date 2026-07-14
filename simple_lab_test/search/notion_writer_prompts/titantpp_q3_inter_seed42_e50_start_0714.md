@@ -9,7 +9,8 @@
 ## 준비 상태
 
 - 준비 기록 시각: `2026-07-14 16:22 KST`
-- 실제 실행 시작 시각: `not started`
+- 첫 실행 시도: `2026-07-15 08:11:06 KST` (V2 reference 전용 metric 계약 오류로 학습 전 중단)
+- 실제 실행 시작 시각: `2026-07-15 08:15:07 KST`
 - 실행 서버: `5090` (`192.168.0.71`, user `leekwanhyeong`)
 - 프로젝트 경로: `/home/leekwanhyeong/workspace/paper_research`
 - Conda 환경: `ai_env`
@@ -21,10 +22,19 @@
   `search_artifacts/model_enhancement_v2_inter_validation_reference_q3_0714`
 - Notion page:
   `https://app.notion.com/p/39dbbe405613814ab90acb3f61406daf`
-- 상태: `scaffolded; runner and acceptance contract prepared; not started`
+- 실행 준비 commit: `a0a65e59b4c66e0f9a03cf28c2928ab7f421127c`
+- 실행 source revision: `f5851ff8476f2d01f3fc0a51e02c8f1eef27a418`
+- source checksum 검증 시각: `2026-07-15 08:06:34 KST`
+- evaluator fix checksum 재검증 시각: `2026-07-15 08:13:49 KST`
+- CUDA·data·reference preflight 시각: `2026-07-15 08:08:58 KST`
+- source sync manifest:
+  `search_artifacts/model_enhancement_titantpp_q3_inter_seed42_e50_0714/source_sync_manifest.json`
+- preflight manifest:
+  `search_artifacts/model_enhancement_titantpp_q3_inter_seed42_e50_0714/preflight_manifest.json`
+- 상태: `in progress; V2 reference PASS; fresh Q2 epoch 1 PASS; monitoring stopped`
 
-이번 문서는 실행 전 기록이다. Source revision, source-sync manifest, CUDA/data
-preflight 결과와 실제 시작 시각은 다음 단계에서 5090 동기화 후 추가한다.
+Source revision, source-sync manifest와 CUDA/data/reference preflight를 고정했다.
+V2 validation reference와 fresh Q2 epoch 1 진입을 확인한 뒤 지속 monitoring을 중단했다.
 
 ## 실험 목적
 
@@ -105,6 +115,48 @@ Runner는 V2/Q2 reference와 다섯 fixed-split source SHA, prior
 `SCREENING_SUCCESS`를 학습 전에 확인한다. 하나라도 다르면 exit code `2`로
 중단하며 다른 reference로 자동 대체하지 않는다. Test parquet SHA는 data identity만
 검증하며 target metric이나 row 내용을 분석하지 않는다.
+
+## 5090 Source Sync와 Preflight
+
+- `a0a65e5` changed-file set 5개를 5090 비-Git 작업 복사본에 rsync했다.
+- 로컬·원격 SHA256 5개가 모두 일치하고 checksum dry-run 변경 파일은 `0`개다.
+- Runner 권한은 `755`, recovery evaluator를 포함한 runtime dependency 9개 SHA는
+  로컬과 일치한다.
+- Source manifest는 full revision, Q3 implementation revision, 파일별 SHA와 검증
+  시각을 기록하며 로컬·원격에서 동일하다.
+- RTX 5090은 `41 MiB / 0%`, PyTorch `2.11.0+cu130`, CUDA `13.0`이며 실제 CUDA
+  tensor allocation을 통과했다.
+- 다섯 fixed-split source와 V2 checkpoint/marked parquet, frozen Q2 summary SHA가
+  모두 frozen 값과 일치하고 Q2 `SCREENING_SUCCESS`가 존재한다.
+- Q2/Q3a/Q3b/Q3c remote CLI parser와 두 축 외 common config identity가 통과했다.
+- Target tmux `titantpp_q3_inter_e50_0714`는 비어 있다.
+- 원격 `ai_env`에는 `pytest`가 없어 focused test 재실행은 collection 전에 중단됐다.
+  Dependency를 추가하지 않았고, 로컬 focused `25/25`, search 전체 `110/110` 통과본과
+  remote runtime source SHA가 일치하며 remote parser/config identity가 직접 통과한
+  것으로 대체했다.
+- Test parquet은 SHA identity만 확인했으며 row, metric, report, plot은 읽지 않았다.
+
+## 초기 실행과 Evaluator Recovery
+
+- 첫 시도는 `08:11:06 KST`에 시작했으나 legacy V2의 구조적 N/A인
+  `val_log_qty_aux_loss=NaN`을 active finite metric으로 오판해 `08:11:11`에 학습 전
+  중단됐다. CUDA, data, model training failure는 아니며 held-out은 읽지 않았다.
+- 실패 root log는 `logs/launch_attempt_1_failed.log`로 보존했다.
+- `mark_residual`에서 `val_magnitude_loss`와 `val_log_qty_aux_loss`만 명시적 N/A로
+  처리하고 active metric finite check는 유지했다. Fix는 `f5851ff`로 커밋했고 focused
+  `25/25`, search 전체 `110/110`을 통과했다.
+- Fix 2개 파일을 5090에 checksum 동기화하고 source/preflight manifest를 갱신한 뒤
+  legacy V2 N/A contract를 원격에서 직접 재검증했다.
+- 두 번째 시도는 `08:15:07 KST`에 시작했고 V2 reference가 `08:15:11`에
+  `exit_code=0`, samples `41901`, NLL `5.666520`, marker NLL `0.991274`, log2 MAE
+  `0.588742`, mark accuracy `0.572492`로 완료됐다.
+- Fresh Q2는 fixed split `136256/41901/41344`, train event `159643`, raw mean/std
+  `6.84585607/55.01240343`으로 진입했다.
+- Q2 epoch 1은 train loss `49.851103`, validation NLL `10.523623`, accuracy
+  `0.541133`, DT MAE `36.215743`, quantity MAE `3.142503`으로 완료됐다. Q2의
+  train/validation log auxiliary는 계약대로 모두 `0`이다.
+- `08:21:16 KST` 기준 tmux는 active, Python GPU process는 `712 MiB`이며 지속
+  monitoring을 중단했다. 다음 확인은 사용자 요청 시 한 번만 수행한다.
 
 ## Runtime Acceptance Contract
 
@@ -202,9 +254,12 @@ ssh 5090
 - 로컬 V2/Q2 reference와 다섯 fixed-split source SHA match: `PASS`
   (test parquet은 identity-only hash)
 - focused Q3 regression: `19 passed`
+- evaluator recovery focused / search full: `25 passed / 110 passed`
 - `git diff --check`: `PASS`
-- 5090 source checksum/CUDA/data/reference preflight: `not run`
-- tmux launch/training: `not started`
+- 5090 source checksum/CUDA/data/reference/CLI preflight: `PASS`
+- V2 validation reference: `PASS`
+- fresh Q2 epoch 1: `PASS`
+- tmux launch/training: `in progress; monitoring stopped`
 
 첫 focused test 명령은 project root가 `PYTHONPATH`에 없어 collection 단계에서
 `ModuleNotFoundError: models`가 발생했다. 동일 코드를 `PYTHONPATH=.`로 다시 실행해
@@ -212,6 +267,7 @@ ssh 5090
 
 ## 다음 단계
 
-- 이번 작업: runner, acceptance contract, 시작 기록 준비와 로컬 검증
-- 다음 작업: 준비 commit 5090 동기화, source checksum, CUDA/data preflight
-- 그다음: tmux 실행과 V2 reference·Q2 첫 학습 진입까지만 확인
+- 완료: source sync/preflight, evaluator recovery, V2 reference와 fresh Q2 epoch 1 확인
+- 진행 중: 5090 tmux에서 Q2/Q3a/Q3b/Q3c e50 순차 실행
+- 다음: 사용자 요청 시 완료 여부 단회 확인 및 artifact 로컬 동기화
+- 그다음: validation-only lock 범위에서 acceptance gate와 factorial interaction 분석
