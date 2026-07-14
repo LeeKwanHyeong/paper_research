@@ -20,7 +20,7 @@
 - 실제 실행 시작 시각: `2026-07-14 08:45:33 KST`
 - 실행 종료 시각: `2026-07-14 08:45:53 KST`
 - 완료 단회 확인 시각: `2026-07-14 12:57:58 KST`
-- 상태: `completed and synced; integration analysis pending`
+- 상태: `integration gate passed; performance not ranked`
 
 ## 실험 목적
 
@@ -122,8 +122,53 @@ conda activate ai_env
   일치했다.
 - 네 변형 모두 experiment manifest, summary, test summary, history, validation/test
   scale-wise metrics, report, plot, `best_val_nll` checkpoint를 포함한다.
-- 이 단계에서는 생성·동기화 계약만 확인했다. Metric 해석과 integration gate 판정은
-  protocol artifact reading order에 따른 다음 작업으로 남긴다.
+- 완료·동기화 확인 시점에는 metric 해석을 보류했고, 아래에서 protocol artifact
+  reading order에 따라 integration gate를 별도로 판정했다.
+
+## Artifact 분석 결과
+
+- 분석 시각: `2026-07-14 13:15 KST`
+- 읽기 순서: manifest -> log -> summary -> test summary -> histories ->
+  scale-wise metrics -> report -> plots -> checkpoint/cache identity
+- 네 variant는 모두 fixed split `1380/300/300`, seed `42`, e1, 동일 train-only
+  raw moments와 동일 effective sigma floor `0.0067776913473542024`를 사용했다.
+- Q2/Q3a의 train/validation/test log auxiliary는 정확히 `0`이고, Q3b/Q3c는
+  positive finite 값을 기록했다.
+- summary, history, test export의 적용 가능한 수치는 모두 finite였다. Direct
+  magnitude branch의 legacy `value_mae`와 비어 있는 `100+` scale bucket의 NaN은
+  코드 계약상 N/A이며 loss 또는 prediction 비정상 값이 아니다.
+- validation/test scale bucket count는 각각 `78/222/0/0/0`,
+  `76/224/0/0/0`이며 전체 `300`건과 일치했다. Bucket 가중 집계와 overall metric의
+  최대 차이는 `1.03e-7`이다.
+- checkpoint 3종과 resume state는 variant마다 같은 e1 model state를 보존한다.
+  네 variant 모두 tensor `40`개, parameter `77,626`개, 동일 key/shape이며 모든
+  tensor가 finite다. `magnitude_head`와 `magnitude_input_proj`는 있고 legacy
+  `value_head`는 없다.
+- Root manifest의 `expected_parameter_count=78,111`은 CUDA synthetic gate의
+  `num_marks=12` 값을 actual-data run에 재사용한 메타데이터 오기다. Instacart는
+  PAD 포함 `num_marks=7`이므로 차이 `485 = (12-7) x (32+64+1)`가 정확히
+  mark embedding/head에서 발생하며 실제 parameter count `77,626`이 맞다.
+  Artifact는 수정하지 않았고 재실행 runner의 manifest 계약만 바로잡았다.
+- 요청 sigma floor `0.0550124034288891`과 actual effective floor
+  `0.0067776913473542024`는 서로 다른 필드다. 후자는 Instacart train-global std
+  `6.777691347354202`에서 runner가 계산한 `max(0.001*std, 1e-4)` 값이며 네
+  variant에서 동일하다.
+- Plot 16개는 유효한 PNG다. e1 learning curve는 단일 점을 marker 없이 선으로
+  그려 선이 보이지 않지만 파일 손상이나 학습 실패는 아니다.
+
+## Integration Gate 판정
+
+- actual-data backward/runtime: `PASS`
+- factorial config, loss routing, checkpoint/resume identity: `PASS`
+- summary/history/scale-wise/report/plot artifact contract: `PASS`
+- root manifest parameter-count metadata: `corrected in runner; non-blocking`
+- 종합 판정: `PASS`
+- 성능 우위 및 후보 선택: `not evaluated`
+
+이번 e1 결과는 Q3 variant의 실제 데이터 통합 경로가 정상이라는 근거만 제공한다.
+validation 수치의 variant 간 차이와 held-out test export는 성능 순위나 후보 선택에
+사용하지 않는다. 다음 단계는 같은 frozen contract의 Intermittent Q2/Q3a/Q3b/Q3c
+seed-42 e50 validation-only screening 준비다.
 
 ## Acceptance Gate
 

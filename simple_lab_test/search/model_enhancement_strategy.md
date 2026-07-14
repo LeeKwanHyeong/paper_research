@@ -1602,16 +1602,36 @@ Implementation status (`2026-07-14`):
   no remote/local differences; root metadata and each variant's manifest,
   summary, test summary, history, validation/test scale-wise metrics, report,
   plots, and best-validation-NLL checkpoint satisfy the availability contract
-- the Instacart e1 metrics and integration gate have not yet been interpreted;
-  Intermittent, multi-seed, and held-out Q3 experiments have not started
+- protocol-order analysis confirmed finite runtime, loss, prediction, summary,
+  history, checkpoint/resume, scale-wise, report, and plot contracts; Q2/Q3a
+  keep zero log auxiliary while Q3b/Q3c record positive finite auxiliary values
+- the four checkpoints share 40 tensor keys/shapes and actual parameter count
+  `77,626`, with direct magnitude modules and no legacy value head; all tensors
+  are finite and e1 selection/resume states reconcile exactly
+- root `expected_parameter_count=78,111` was a non-blocking manifest metadata
+  defect inherited from the synthetic `num_marks=12` gate; actual Instacart
+  `num_marks=7` explains the exact 485-parameter difference, and the runner now
+  records actual and synthetic-reference counts separately without rewriting the
+  immutable artifact
+- requested sigma floor `0.0550124034288891` and actual train-derived effective
+  floor `0.0067776913473542024` are correctly separated and identical across
+  variants
+- validation/test scale counts reconcile to 300 targets, weighted scale metrics
+  reconcile within `1.03e-7`, and expected N/A cells are limited to the legacy
+  direct-head value metric and empty 100+ buckets
+- the Instacart actual-data integration gate passed; e1 validation differences
+  and held-out test exports were not used for performance ranking or selection
+- Intermittent, multi-seed, and held-out Q3 experiments have not started
 
 Next execution order:
 
-1. Read the synced Instacart artifacts in protocol order and decide only the
-   actual-data integration gate.
-2. If the gate passes, prepare the matched Intermittent Q2/Q3a/Q3b/Q3c seed-42
-   e50 validation-only runner and start record.
-3. Keep held-out test and multi-seed execution locked until a seed-42 candidate
+1. Prepare the matched Intermittent Q2/Q3a/Q3b/Q3c seed-42 e50 validation-only
+   runner, acceptance contract, and start record.
+2. Checksum-sync the frozen source to 5090, run CUDA/data preflight, and start the
+   tmux job after the start record is complete.
+3. Check completion only when requested, sync artifacts, and analyze under the
+   validation-only lock.
+4. Keep held-out test and multi-seed execution locked until a seed-42 candidate
    satisfies the frozen Q3 gate.
 
 Detailed ADR:

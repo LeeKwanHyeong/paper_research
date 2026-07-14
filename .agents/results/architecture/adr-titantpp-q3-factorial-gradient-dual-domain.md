@@ -1,6 +1,6 @@
 # ADR: TitanTPP Q3 Factorial Gradient Routing And Dual-Domain Quantity Loss
 
-- Status: 5090 CUDA gate passed; Instacart e1 completed and synced; analysis pending
+- Status: 5090 CUDA and Instacart actual-data integration gates passed; Intermittent screening pending
 - Date: 2026-07-13
 - Scope: Intermittent TitanTPP direct raw-quantity branch
 - Predecessor: `adr-titantpp-raw-quantity-revin-q0-q1-q2.md`
@@ -488,12 +488,35 @@ multi-seed promotion.
   and every variant contains its manifest, summary, test summary, history,
   validation/test scale-wise metrics, report, plots, and best-validation-NLL
   checkpoint.
-- This confirms completion and artifact availability only. Metric interpretation,
-  the Instacart integration-gate decision, Intermittent, multi-seed, and held-out
-  Q3 remain pending or unstarted as applicable.
+- Protocol-order analysis found no runtime, loss, prediction, checkpoint, resume,
+  summary, history, scale-wise, report, or plot failure. Q2/Q3a log auxiliary is
+  exactly zero and Q3b/Q3c auxiliary is positive finite in train, validation,
+  and test export.
+- All four actual-data checkpoints have the same 40 tensor keys and shapes,
+  `77,626` parameters, finite tensors, direct magnitude modules, and no legacy
+  value head. Their e1 best-validation-NLL, best-score, final, and resume states
+  are internally exact matches as expected from a one-epoch run.
+- The root manifest's `expected_parameter_count=78,111` was a non-blocking
+  metadata defect copied from the synthetic CUDA gate with `num_marks=12`.
+  Instacart uses `num_marks=7`; the exact `485` difference is the five removed
+  rows in the 32-dimensional mark embedding and 64-dimensional mark head plus
+  bias. The source runner now records actual `77,626` separately from the
+  synthetic `78,111` reference; the immutable run artifact was not rewritten.
+- The requested sigma-floor identity `0.0550124034288891` is distinct from the
+  actual Instacart effective floor `0.0067776913473542024`, computed from the
+  train-only global raw standard deviation. All variants persist the same value.
+- Scale counts reconcile to 300 targets per split and weighted scale metrics
+  reconcile to overall metrics within `1.03e-7`. Legacy direct-head value MAE
+  and empty 100+ buckets are intentional N/A cells, not non-finite model output.
+- All 16 PNG plots are valid. The one-epoch learning curves have no visible line
+  because a single point is rendered without a marker; this is a presentation
+  limitation rather than a training failure.
+- The actual-data integration gate passed. E1 validation differences and held-out
+  test exports were not used for performance ranking or candidate selection.
+  Intermittent, multi-seed, and held-out Q3 experiments remain unstarted.
 
 ## Next Step
 
-Read the synced Instacart artifacts in protocol order and decide the integration
-gate without using e1 metrics for performance ranking. Do not start Intermittent
-e50 before this gate passes.
+Prepare the matched Intermittent Q2/Q3a/Q3b/Q3c seed-42 e50 validation-only
+runner and start record. Keep multi-seed and held-out execution locked until a
+candidate satisfies the frozen seed-42 gate.
