@@ -412,6 +412,20 @@ Current user override (2026-07-13):
 - 작성 후 상위 경로, 제목 2/3 구조, 상세 페이지 링크를 다시 fetch해 검증한다.
 - 실험 기록은 시작 날짜를 제목 2로, 세부 목표와 Step을 제목 3으로 정리한다.
 
+Current user override (2026-07-15):
+
+- Model Enhancement 실험 페이지는 교수님이 빠르게 읽을 수 있도록 `상태`, `목적`,
+  `Factorial 계약`, `고정 조건`, `실행 명령어`, `결과` 순서로만 작성한다.
+- Factorial 실험이 아니면 `Factorial 계약`을 `Variant 계약`으로 바꾸고 비교 대상의
+  차이만 간단히 적는다.
+- `Frozen Reference`, SHA/checksum, source manifest, preflight 상세, acceptance contract
+  내부값, held-out lock 세부 규칙과 디버깅 로그는 Notion 본문에 적지 않는다. 이 정보는
+  local source draft, manifest, ADR과 artifact에 보존한다.
+- 실험 중에는 `결과` 제목만 만들고 본문은 비워 둔다. 실험 완료 후 artifact 분석을
+  마친 시점에만 결과와 해석을 추가한다.
+- 실행 중 오류나 복구가 있었더라도 현재 상태를 이해하는 데 필요한 한 줄만 `상태`에
+  남기고, 상세 원인과 검증 내역은 개발 기록에 둔다.
+
 ```text
 다음 실험 내용을 Notion에 정리해주세요.
 
@@ -424,39 +438,35 @@ Current user override (2026-07-13):
 페이지 제목:
 - <experiment_title>
 
-기준 시각:
+상태:
+- <준비 중 | 실험 중 | 완료 | 중단>
 - 실험 시작 시각: <YYYY-MM-DD HH:MM:SS KST>
-- 실행 서버: <5090_or_5080>
-- tmux session: <session_name>
-- conda env: ai_env
+- 실행 서버 / tmux: <server> / <session_name>
 
-실험 목적:
+목적:
 - <이 실험을 왜 하는지>
-- <교수님 피드백 또는 이전 결과와의 연결>
+- <이번 비교로 확인할 가설>
 
-실험 계획:
+Factorial 계약:
+- <Variant별로 달라지는 축과 역할을 표로 작성>
+- <비교 축 외 조건은 같다는 점을 한 줄로 명시>
+
+고정 조건:
 - dataset: <dataset_list>
 - model: <model_list>
-- candidate: <candidate_list>
-- lr: <lr_list>
-- batch_size: <batch_size>
-- epochs: <epochs>
-- seeds: <seed_list>
+- epochs / seeds: <epochs> / <seed_list>
+- lr / batch_size: <lr_list> / <batch_size>
+- lookback / max_seq_len: <lookback> / <max_seq_len>
 - split_mode: fixed
-- 주요 옵션: <value_input_mode, train_loss_scope, loss_mode, scheduler 등>
+- 주요 model/loss 옵션: <핵심 옵션만 작성>
+- artifact: <artifact_path>
 
 실행 명령어:
-- 아래 `<shell_command>` 자리에 실제 실행 명령 전체를 붙여넣기
 - <shell_command>
 
-결과 작성란:
-- 결과는 학습 완료 후 업데이트 예정
-- 실험 종료 시각은 결과 업데이트 시 추가 예정
-- 확인할 지표: validation/test total NLL, marker NLL, time NLL, mark accuracy, quantity MAE, scale-wise quantity MAE, NaN 여부, best epoch
-
-초기 해석 가설:
-- <예: LR을 키우면 convergence가 빨라지는지 확인>
-- <예: TitanTPP에서만 NaN이 발생하면 encoder/value-head 결합부의 optimization sensitivity로 해석>
+결과:
+- 실험 중에는 제목만 생성하고 본문을 작성하지 않음
+- 완료 후 핵심 결과, 해석과 다음 결정을 간단히 추가
 ```
 
 ## 11. Notion Result Update Prompt Template
@@ -469,15 +479,6 @@ Current user override (2026-07-13):
 대상 페이지:
 - <notion_page_title_or_url>
 
-결과 artifact:
-- local path: /Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/<experiment_name>
-- server path: ~/workspace/paper_research/search_artifacts/<experiment_name>
-
-실험 시간:
-- 실험 시작 시각: <YYYY-MM-DD HH:MM:SS KST>
-- 실험 종료 시각: <YYYY-MM-DD HH:MM:SS KST>
-- 총 소요시간: <hours/minutes>
-
 분석 기준:
 - experiment_manifest.json으로 설정 확인
 - logs/run.log에서 완료 여부와 NaN/Traceback 확인
@@ -487,14 +488,13 @@ Current user override (2026-07-13):
 - scale_wise_summary.csv와 test_scale_wise_summary.csv에서 scale-wise quantity MAE 확인
 - paper_outputs/plots가 있으면 learning curve와 scale-wise plot을 함께 참고
 
-결과 요약에 포함할 내용:
-- 전체 run 완료 여부
-- best setting
-- LR/candidate별 안정성
-- validation과 test의 방향이 일치하는지
-- marker NLL과 time NLL 중 어떤 항이 total NLL을 주도했는지
-- quantity MAE와 scale-wise MAE 해석
-- 다음 실험 액션
+업데이트 규칙:
+- 기존 페이지의 `결과` 제목 아래에만 내용을 추가
+- 완료 여부와 실험 종료 시각
+- Variant별 핵심 metric 비교 표
+- Factorial main effect와 interaction에 대한 짧은 해석
+- acceptance 결과와 다음 결정
+- `Frozen Reference`, checksum, manifest, preflight와 디버깅 상세를 다시 추가하지 않음
 ```
 
 ## 12. Current Interpretation Rules
