@@ -97,6 +97,27 @@ def json_safe_metrics(
     return safe_metrics
 
 
+def undefined_validation_metrics(qty_decoder_mode: str) -> set[str]:
+    """Return metrics that are structurally inapplicable to one decoder family."""
+    if qty_decoder_mode == "mark_residual":
+        return {"val_magnitude_loss", "val_log_qty_aux_loss"}
+    if qty_decoder_mode in {"direct_log_qty", "direct_raw_qty"}:
+        return {"value_mae", "val_value_loss"}
+    raise ValueError(f"Unsupported quantity decoder mode: {qty_decoder_mode}")
+
+
+def assert_finite_applicable_metrics(
+    metrics: dict[str, Any],
+    undefined_metrics: set[str],
+) -> None:
+    """Reject non-finite active metrics while allowing explicit N/A fields."""
+    for name, value in metrics.items():
+        if name.startswith("_") or name in undefined_metrics:
+            continue
+        if not math.isfinite(float(value)):
+            raise FloatingPointError(f"Validation metric is not finite: {name}={value}")
+
+
 def validation_loader(
     marked_df: pl.DataFrame,
     training_cfg: TrainingConfig,
@@ -207,16 +228,8 @@ def main() -> None:
     )
 
     qty_decoder_mode = str(getattr(rmtpp_cfg, "qty_decoder_mode", "mark_residual"))
-    undefined_metrics = (
-        {"value_mae", "val_value_loss"}
-        if qty_decoder_mode == "direct_log_qty"
-        else {"val_magnitude_loss"}
-    )
-    for name, value in metrics.items():
-        if name.startswith("_") or name in undefined_metrics:
-            continue
-        if not math.isfinite(float(value)):
-            raise FloatingPointError(f"Validation metric is not finite: {name}={value}")
+    undefined_metrics = undefined_validation_metrics(qty_decoder_mode)
+    assert_finite_applicable_metrics(metrics, undefined_metrics)
     exported_metrics = json_safe_metrics(metrics, undefined_metrics)
     populated_scale_df = scale_df.filter(pl.col("count") > 0)
     for row in populated_scale_df.iter_rows(named=True):
