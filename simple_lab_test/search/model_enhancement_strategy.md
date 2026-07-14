@@ -1621,17 +1621,26 @@ Implementation status (`2026-07-14`):
   direct-head value metric and empty 100+ buckets
 - the Instacart actual-data integration gate passed; e1 validation differences
   and held-out test exports were not used for performance ranking or selection
-- Intermittent, multi-seed, and held-out Q3 experiments have not started
+- the Intermittent seed-42 runner now fixes fresh Q2/Q3a/Q3b/Q3c at e50,
+  seed 42, batch 128, lookback 52, and max sequence 16; the V2 checkpoint,
+  all five fixed-split source files, and frozen Q2 summary SHA are verified
+  before training
+- the runner writes unrounded Q2 reproduction, full candidate, mechanism,
+  selection, and held-out rules to `acceptance_contract.json`; Q3c cannot be
+  skipped based on Q3a/Q3b outcomes
+- runner and start record are prepared locally; 5090 sync/preflight, Intermittent
+  training, multi-seed, and held-out Q3 experiments have not started
 
 Next execution order:
 
-1. Prepare the matched Intermittent Q2/Q3a/Q3b/Q3c seed-42 e50 validation-only
-   runner, acceptance contract, and start record.
-2. Checksum-sync the frozen source to 5090, run CUDA/data preflight, and start the
-   tmux job after the start record is complete.
-3. Check completion only when requested, sync artifacts, and analyze under the
+1. Checksum-sync the frozen preparation commit to 5090 and write the source
+   manifest.
+2. Run CUDA/data/reference-SHA preflight and update the start record.
+3. Start tmux and verify only V2 reference completion plus fresh Q2 first-epoch
+   entry before stopping continuous monitoring.
+4. Check completion only when requested, sync artifacts, and analyze under the
    validation-only lock.
-4. Keep held-out test and multi-seed execution locked until a seed-42 candidate
+5. Keep held-out test and multi-seed execution locked until a seed-42 candidate
    satisfies the frozen Q3 gate.
 
 Detailed ADR:

@@ -1,6 +1,6 @@
 # ADR: TitanTPP Q3 Factorial Gradient Routing And Dual-Domain Quantity Loss
 
-- Status: 5090 CUDA and Instacart actual-data integration gates passed; Intermittent screening pending
+- Status: 5090 CUDA and Instacart integration gates passed; Intermittent seed-42 runner and acceptance contract prepared
 - Date: 2026-07-13
 - Scope: Intermittent TitanTPP direct raw-quantity branch
 - Predecessor: `adr-titantpp-raw-quantity-revin-q0-q1-q2.md`
@@ -514,9 +514,18 @@ multi-seed promotion.
 - The actual-data integration gate passed. E1 validation differences and held-out
   test exports were not used for performance ranking or candidate selection.
   Intermittent, multi-seed, and held-out Q3 experiments remain unstarted.
+- The Intermittent runner now freezes fresh Q2/Q3a/Q3b/Q3c at e50, seed 42,
+  batch 128, lookback 52, and max sequence 16. It validates the exact V2
+  checkpoint, all five fixed-split source files, and frozen Q2 summary SHA before
+  training. Test-file hashing verifies identity only and does not inspect metrics.
+- The runner emits an unrounded machine-readable `acceptance_contract.json`
+  containing Q2 reproduction, full candidate, mechanism, selection, and
+  held-out-lock rules. Q3a or Q3b failure cannot short-circuit Q3c.
+- The preparation is local only. No 5090 sync, preflight, tmux launch, or
+  Intermittent training has occurred yet.
 
 ## Next Step
 
-Prepare the matched Intermittent Q2/Q3a/Q3b/Q3c seed-42 e50 validation-only
-runner and start record. Keep multi-seed and held-out execution locked until a
-candidate satisfies the frozen seed-42 gate.
+Checksum-sync the preparation commit to 5090, verify CUDA/data/reference identity,
+and start tmux only after the start record is updated with the source revision
+and preflight evidence. Keep multi-seed and held-out execution locked.

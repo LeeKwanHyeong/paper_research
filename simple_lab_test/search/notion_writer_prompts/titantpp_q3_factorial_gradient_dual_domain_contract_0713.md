@@ -9,7 +9,7 @@
   `TitanTPP Q3 Factorial Gradient Routing And Dual-Domain Loss Contract`
 - 작성된 상세 페이지:
   `https://app.notion.com/p/39cbbe40561381cbb5f3c3d2d226a0d7`
-- 현재 상태: `설계 완료, 구현 전`
+- 현재 상태: `CUDA·Instacart integration PASS; Intermittent seed-42 runner와 acceptance contract 준비 완료; 실행 전`
 
 ## 작성 목적
 
@@ -159,10 +159,29 @@ Full candidate gate:
 
 ## 현재 상태와 다음 작업
 
-- 완료: architecture/loss/gradient/artifact/acceptance contract
-- 미완료: Q3 코드, focused test, CUDA, Instacart, Intermittent 실험
-- 다음: `magnitude_encoder_gradient_mode`, `magnitude_aux_loss_mode`, log Huber
-  구현과 focused gradient/loss test 작성
+- 완료: architecture/loss/gradient/artifact/acceptance contract, Q3 구현, focused
+  `19/19`, search 전체 `104/104`, CPU/CUDA model-test, Instacart top-20 e1
+  actual-data integration gate
+- 준비 완료: Intermittent fresh Q2/Q3a/Q3b/Q3c seed-42 e50 runner,
+  frozen V2/Q2 reference identity와 runtime `acceptance_contract.json`
+- 미완료: 5090 source sync/preflight, Intermittent seed-42 실행과 validation 판정
+- 다음: 준비 commit을 5090에 checksum 동기화하고 CUDA/data/reference SHA
+  preflight 후 tmux 실행
+
+## Intermittent 실행 계약
+
+- runner:
+  `simple_lab_test/search/scripts/run_titantpp_q3_inter_seed42_e50_0714.sh`
+- artifact:
+  `search_artifacts/model_enhancement_titantpp_q3_inter_seed42_e50_0714`
+- tmux: `titantpp_q3_inter_e50_0714`
+- Notion start record:
+  `https://app.notion.com/p/39dbbe405613814ab90acb3f61406daf`
+- fresh Q2와 Q3a/Q3b/Q3c를 `e50 / seed 42 / batch 128`로 모두 실행
+- V2 checkpoint, five fixed-split source files, frozen Q2 summary SHA를 학습 전 검증
+- unrounded baseline과 gate ceiling은 runtime `acceptance_contract.json`에 저장
+- seed-42 판정 전 merged/test/report/test-plot artifact는 읽지 않음
+- Q3a/Q3b 결과와 관계없이 Q3c까지 완료한 뒤 interaction을 계산
 
 ## 로컬 근거
 
@@ -171,3 +190,5 @@ Full candidate gate:
 - `simple_lab_test/search/model_enhancement_strategy.md`
 - `models/RMTPPs/TitanTPP.py`
 - `simple_lab_test/search/tests/test_titantpp_direct_raw_quantity.py`
+- `simple_lab_test/search/scripts/run_titantpp_q3_inter_seed42_e50_0714.sh`
+- `simple_lab_test/search/notion_writer_prompts/titantpp_q3_inter_seed42_e50_start_0714.md`
