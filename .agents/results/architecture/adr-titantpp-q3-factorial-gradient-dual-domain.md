@@ -1,6 +1,6 @@
 # ADR: TitanTPP Q3 Factorial Gradient Routing And Dual-Domain Quantity Loss
 
-- Status: 5090 CUDA gate passed; Instacart e1 integration in progress
+- Status: 5090 CUDA gate passed; Instacart e1 completed and synced; analysis pending
 - Date: 2026-07-13
 - Scope: Intermittent TitanTPP direct raw-quantity branch
 - Predecessor: `adr-titantpp-raw-quantity-revin-q0-q1-q2.md`
@@ -479,12 +479,21 @@ multi-seed promotion.
 - Tmux `titantpp_q3_insta_e1_0714` started at `2026-07-14 08:45:33 KST`. The
   one-time initial check observed Q2 complete epoch 1 on the expected split and
   train-only raw statistics with an active CUDA process.
-- Continuous monitoring stopped after the initial check. Q3a/Q3b/Q3c completion,
-  Intermittent, multi-seed, and held-out Q3 experiments remain unconfirmed or
-  unstarted as applicable.
+- The requested one-time completion check found the tmux session closed, no active
+  GPU process, root `SMOKE_SUCCESS`, no failure sentinel, aggregate exit code `0`,
+  and Q2/Q3a/Q3b/Q3c exit codes all equal to `0`. The run ended at
+  `2026-07-14 08:45:53 KST`.
+- The complete artifact root was checksum-synced locally: `388` files, about
+  `18M`, with no changes reported by a checksum dry-run. Root metadata parses,
+  and every variant contains its manifest, summary, test summary, history,
+  validation/test scale-wise metrics, report, plots, and best-validation-NLL
+  checkpoint.
+- This confirms completion and artifact availability only. Metric interpretation,
+  the Instacart integration-gate decision, Intermittent, multi-seed, and held-out
+  Q3 remain pending or unstarted as applicable.
 
 ## Next Step
 
-Check completion only when requested, sync the Instacart artifacts locally, and
-read them in protocol order before deciding the integration gate. Do not start
-Intermittent e50 before this gate passes.
+Read the synced Instacart artifacts in protocol order and decide the integration
+gate without using e1 metrics for performance ranking. Do not start Intermittent
+e50 before this gate passes.

@@ -18,7 +18,9 @@
 - source 검증 시각: `2026-07-14 08:41:54 KST`
 - CUDA·데이터 preflight 시각: `2026-07-14 08:44:52 KST`
 - 실제 실행 시작 시각: `2026-07-14 08:45:33 KST`
-- 상태: `in progress; Q2 epoch-1 entry confirmed, continuous monitoring stopped`
+- 실행 종료 시각: `2026-07-14 08:45:53 KST`
+- 완료 단회 확인 시각: `2026-07-14 12:57:58 KST`
+- 상태: `completed and synced; integration analysis pending`
 
 ## 실험 목적
 
@@ -107,6 +109,21 @@ conda activate ai_env
   epoch는 정상 동작했다. Runtime failure 근거로 보지 않는다.
 - 초기 진입 확인 뒤 지속 polling을 중단했다. Q3a/Q3b/Q3c 완료 여부와 전체 gate는
   사용자 요청 시 단회 확인한다.
+
+## 완료 및 Artifact 동기화 확인
+
+- 요청 시 한 차례만 원격 상태를 확인했다. Tmux session은 종료됐고 실행 중인 GPU
+  process는 없었다.
+- Root `SMOKE_SUCCESS` sentinel과 aggregate exit code `0`을 확인했다. Q2, Q3a,
+  Q3b, Q3c의 개별 exit code도 모두 `0`이며 failure sentinel은 없다.
+- 원격 artifact root를 로컬 같은 경로로 checksum rsync했다. 로컬에는 파일 `388`개,
+  약 `18M`가 있으며 checksum dry-run에서 변경 항목이 없었다.
+- Root manifest, source sync manifest, root log와 variant status가 파싱되고 서로
+  일치했다.
+- 네 변형 모두 experiment manifest, summary, test summary, history, validation/test
+  scale-wise metrics, report, plot, `best_val_nll` checkpoint를 포함한다.
+- 이 단계에서는 생성·동기화 계약만 확인했다. Metric 해석과 integration gate 판정은
+  protocol artifact reading order에 따른 다음 작업으로 남긴다.
 
 ## Acceptance Gate
 

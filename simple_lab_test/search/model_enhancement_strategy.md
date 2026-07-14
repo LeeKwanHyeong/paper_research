@@ -1595,8 +1595,24 @@ Implementation status (`2026-07-14`):
   contracts passed preflight
 - tmux `titantpp_q3_insta_e1_0714` started at `2026-07-14 08:45:33 KST`; the
   one-time check observed Q2 epoch 1 completion and an active CUDA process
-- continuous monitoring has stopped; Q3a/Q3b/Q3c completion is unconfirmed and
+- the requested one-time completion check confirmed root `SMOKE_SUCCESS`, no
+  failure sentinel, aggregate exit code `0`, and Q2/Q3a/Q3b/Q3c exit codes `0`;
+  the run ended at `2026-07-14 08:45:53 KST`
+- all `388` artifact files (`18M`) are synced locally and a checksum dry-run found
+  no remote/local differences; root metadata and each variant's manifest,
+  summary, test summary, history, validation/test scale-wise metrics, report,
+  plots, and best-validation-NLL checkpoint satisfy the availability contract
+- the Instacart e1 metrics and integration gate have not yet been interpreted;
   Intermittent, multi-seed, and held-out Q3 experiments have not started
+
+Next execution order:
+
+1. Read the synced Instacart artifacts in protocol order and decide only the
+   actual-data integration gate.
+2. If the gate passes, prepare the matched Intermittent Q2/Q3a/Q3b/Q3c seed-42
+   e50 validation-only runner and start record.
+3. Keep held-out test and multi-seed execution locked until a seed-42 candidate
+   satisfies the frozen Q3 gate.
 
 Detailed ADR:
 
