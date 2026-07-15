@@ -7,7 +7,7 @@ Notion의 `5. Model Design Enhancement` 아래 기존
 
 ## 상태
 
-- 상태: `학습 및 validation artifact 분석 완료, acceptance 판정 전`
+- 상태: `완료 - V2 유지, Q3a/Q3b/Q3c 미승격`
 - 실행 시작: `2026-07-15 08:15:07 KST`
 - 실행 종료: `2026-07-15 08:46:16 KST`
 - 완료 상태: Q2/Q3a/Q3b/Q3c 모두 `exit_code=0`
@@ -65,3 +65,25 @@ ssh 5090
 ```
 
 ## 결과
+
+네 Variant 모두 정상 종료했고 validation artifact 기준으로 비교했다.
+
+| Model | Total NLL | Raw qty MAE | Log2 qty MAE | Mark accuracy | 결정 |
+| --- | ---: | ---: | ---: | ---: | --- |
+| V2 | 5.6665 | 3.0602 | 0.5887 | 57.249% | 유지 |
+| Q2 | 5.6709 | 2.7629 | 0.6837 | 55.168% | 미승격 |
+| Q3a | 5.6605 | 3.3334 | 0.8757 | 55.178% | 미승격 |
+| Q3b | 5.6341 | 2.6493 | 0.6867 | 54.963% | 미승격 |
+| Q3c | 5.6659 | 3.3862 | 0.7380 | 55.853% | 미승격 |
+
+- Q3a는 gradient 분리만으로 marker 성능을 회복하지 못했고 수량 오차가 커졌다.
+- Q3b는 Total NLL과 raw qty MAE가 가장 낮았지만, NLL 개선은 time head에서 발생했다.
+  Log2·1-9 수량 구간과 marker 기준을 통과하지 못했다.
+- Q3c는 mark-0 편향과 mark-1 recall을 개선했지만 raw·short-history·log2 수량 오차가
+  커져 균형 잡힌 후보로 보기 어렵다.
+- Fresh Q2가 기존 Q2 결과를 재현하지 못해 Q3 효과를 인과적으로 확정하지 않았다.
+
+최종적으로 Q3a/Q3b/Q3c는 모두 acceptance 기준을 통과하지 못해 미승격 처리하고
+Intermittent 기준 모델은 V2로 유지한다. 현재 결론을 위해 full e50 재실행은 하지 않는다.
+향후 Q3를 다시 검토할 때는 strict deterministic control을 적용한 Q2 e3 A/B 재현성
+검증을 먼저 통과해야 한다.
