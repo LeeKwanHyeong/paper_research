@@ -1681,21 +1681,26 @@ Implementation status (`2026-07-15`):
   state digests without reading held-out metrics; focused tests passed `3/3`
 - the concise Notion source draft is prepared under the `5. Model Design
   Enhancement` structure with the result body intentionally empty before launch
+- revision `f6da9af9193f6f5bcd6dd60a711b9e8921593829` is checksum-synced from
+  the verified 5090 baseline `f5851ff`; all 16 changed files match and the
+  checksum dry-run returned zero changes
+- source-manifest identity, five fixed-split hashes, runner mode, RTX 5090 CUDA
+  allocation, and strict deterministic runtime preflight passed
+- tmux `titantpp_q2_strict_e3_0715` started at `2026-07-15 22:53:50 KST`;
+  the one-time initial check observed Run A fixed-split preparation and an
+  active CUDA process, and no continuous polling is active
 - only an explicitly reopened Q3 track may proceed from a passing e3 probe to a
   newly matched deterministic V2/Q2/Q3a/Q3b/Q3c e50 comparison; the historical
   nondeterministic Q2 artifact is context, not its exact numeric target
 
 Next execution order:
 
-1. Commit and sync the prepared revision to 5090, write the source-sync
-   manifest, complete CUDA/data/source preflight,
-   and launch both independent processes in tmux.
-2. On request, perform one completion check, sync artifacts, and verify
+1. On request, perform one completion check, sync artifacts, and verify
    histories, selected epochs, and state digests against the generated exact
    report.
-3. Close Q3 and move to the next model hypothesis unless it is explicitly
+2. Close Q3 and move to the next model hypothesis unless it is explicitly
    reopened after the probe passes; only then prepare the full matched e50 run.
-4. Keep multi-seed and held-out test locked throughout this reproducibility
+3. Keep multi-seed and held-out test locked throughout this reproducibility
    work.
 
 Detailed ADR:

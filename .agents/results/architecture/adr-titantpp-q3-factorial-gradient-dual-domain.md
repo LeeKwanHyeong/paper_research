@@ -773,8 +773,8 @@ Q2 artifact.
 
 ### Strict Infrastructure Implementation (2026-07-15)
 
-The required shared infrastructure is now implemented, but the 5090 Q2 e3 A/B
-probe has not run yet.
+The required shared infrastructure is implemented, and the 5090 Q2 e3 A/B
+probe is now in progress.
 
 - `long-epoch` accepts `--reproducibility-mode standard|strict`; standard keeps
   the legacy path, while strict uses a distinct `repro_strict` path.
@@ -790,10 +790,16 @@ probe has not run yet.
 - summaries and checkpoints record canonical SHA-256 over sorted tensor names,
   dtypes, shapes, and raw bytes for best-score, best-validation-NLL, and final
   states.
-- focused reproducibility tests passed `8/8`, Q3 plus reproducibility tests
-  passed `27/27`, and the complete search suite passed `118/118` locally.
-- the 5090 Q2 e3 probe runner, exact comparator, focused comparator tests, and
-  concise experiment start record are prepared; execution has not started
+- focused reproducibility tests passed `8/8`, comparator tests passed `3/3`,
+  and the complete search suite passed `121/121` locally.
+- revision `f6da9af9193f6f5bcd6dd60a711b9e8921593829` was checksum-synced from
+  the verified 5090 baseline `f5851ff`; all 16 changed files match and the
+  checksum dry-run returned zero changes
+- source-manifest identity, five fixed-split hashes, runner mode, RTX 5090 CUDA
+  allocation, and strict deterministic runtime preflight passed
+- tmux `titantpp_q2_strict_e3_0715` started at `2026-07-15 22:53:50 KST`;
+  the one-time initial check observed Run A fixed-split preparation and an
+  active CUDA process
 - Run A and Run B use separate base directories and fresh sequential Python
   processes; the comparator reads only root/run manifests, summary, history,
   and best-score/best-validation-NLL/final checkpoints
@@ -802,7 +808,7 @@ probe has not run yet.
 
 ## Next Step
 
-Commit and checksum-sync the prepared probe to 5090, write the source-sync
-manifest, complete CUDA/data/source preflight, and launch the tmux session. On
-request, perform one completion check and sync the artifacts. Do not launch a
-full Q3 e50 rerun unless Q3 is explicitly reopened after the probe passes.
+On request, perform one completion check, sync the artifacts, and verify the
+generated exact report against histories, selected epochs, and state digests.
+Do not launch a full Q3 e50 rerun unless Q3 is explicitly reopened after the
+probe passes.
