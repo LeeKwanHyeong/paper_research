@@ -1673,21 +1673,29 @@ Implementation status (`2026-07-15`):
   passed `27/27`, and the complete local search suite passed `118/118`
 - the remaining reopen gate is two independent 5090 Intermittent Q2 e3 strict
   runs with exact histories, selected epochs, and canonical tensor-state digests
+- the strict e3 runner now isolates Run A/Run B into fresh sequential Python
+  processes and separate artifact roots; it requires a matching source-sync
+  manifest plus CUDA and fixed-split hash preflight before training
+- the exact comparator validates strict runtime/config/data identity, compares
+  history JSON bytes and selected epochs, and recomputes all three checkpoint
+  state digests without reading held-out metrics; focused tests passed `3/3`
+- the concise Notion source draft is prepared under the `5. Model Design
+  Enhancement` structure with the result body intentionally empty before launch
 - only an explicitly reopened Q3 track may proceed from a passing e3 probe to a
   newly matched deterministic V2/Q2/Q3a/Q3b/Q3c e50 comparison; the historical
   nondeterministic Q2 artifact is context, not its exact numeric target
 
 Next execution order:
 
-1. Prepare the strict Intermittent Q2 e3 A/B runner, exact comparator, and
-   experiment start record.
-2. Sync the committed revision to 5090, complete CUDA/data/source preflight,
+1. Commit and sync the prepared revision to 5090, write the source-sync
+   manifest, complete CUDA/data/source preflight,
    and launch both independent processes in tmux.
-3. On request, perform one completion check, sync artifacts, and compare exact
-   histories, selected epochs, and state digests.
-4. Close Q3 and move to the next model hypothesis unless it is explicitly
+2. On request, perform one completion check, sync artifacts, and verify
+   histories, selected epochs, and state digests against the generated exact
+   report.
+3. Close Q3 and move to the next model hypothesis unless it is explicitly
    reopened after the probe passes; only then prepare the full matched e50 run.
-5. Keep multi-seed and held-out test locked throughout this reproducibility
+4. Keep multi-seed and held-out test locked throughout this reproducibility
    work.
 
 Detailed ADR:

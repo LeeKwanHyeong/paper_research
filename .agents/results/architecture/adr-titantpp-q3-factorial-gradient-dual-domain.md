@@ -792,10 +792,17 @@ probe has not run yet.
   states.
 - focused reproducibility tests passed `8/8`, Q3 plus reproducibility tests
   passed `27/27`, and the complete search suite passed `118/118` locally.
+- the 5090 Q2 e3 probe runner, exact comparator, focused comparator tests, and
+  concise experiment start record are prepared; execution has not started
+- Run A and Run B use separate base directories and fresh sequential Python
+  processes; the comparator reads only root/run manifests, summary, history,
+  and best-score/best-validation-NLL/final checkpoints
+- the exact gate checks byte-identical history JSON, identical selected epochs,
+  and recomputed canonical state digests while keeping held-out metrics locked
 
 ## Next Step
 
-Prepare and run the two independent strict Intermittent Q2 e3 processes on
-5090, then compare exact history JSON, selected epochs, and canonical state
-digests. Do not launch a full Q3 e50 rerun unless Q3 is explicitly reopened
-after that probe passes.
+Commit and checksum-sync the prepared probe to 5090, write the source-sync
+manifest, complete CUDA/data/source preflight, and launch the tmux session. On
+request, perform one completion check and sync the artifacts. Do not launch a
+full Q3 e50 rerun unless Q3 is explicitly reopened after the probe passes.
