@@ -1642,16 +1642,29 @@ Implementation status (`2026-07-15`):
 - all `562` artifact files (`27,179,501` bytes) are synced locally and a checksum
   dry-run found no remote/local differences; manifest/log/status identity is
   verified without reading held-out result files
-- validation-only metric analysis, multi-seed, and held-out Q3 experiments have
-  not started
+- formal acceptance, multi-seed, and held-out Q3 experiments have not started
+- protocol-order validation analysis is complete: all allowed artifacts
+  reconcile to `41,901` samples, all active metrics are finite, and no held-out
+  output was read
+- fresh Q2 does not reproduce frozen Q2 on raw MAE (`+6.00%`), log2 MAE
+  (`+8.21%`), or mark accuracy (`+1.172%p`), despite total NLL staying within
+  `1%`; causal factorial attribution is therefore not yet reliable
+- Q3b has the best total/time NLL and overall/short raw MAE, but its NLL gain is
+  time-driven, dominant `1-9` MAE and log2 MAE do not improve, and mark-0
+  overprediction worsens
+- Q3c supplies a strong non-additive marker-balance interaction, reducing the
+  Q2 mark-0 share error by `9.592%p` and raising mark-1 recall by `17.722%p`,
+  but raw/short/log2 quantity errors worsen materially
+- no Q3 variant is a balanced winner at this analysis stage; formal acceptance,
+  deterministic-reproduction handling, multi-seed, and held-out remain pending
 
 Next execution order:
 
-1. Analyze summary, histories, validation scale-wise, confusion/class metrics,
-   and validation plots under the validation-only lock.
-2. Apply Q2 reproduction, full candidate, mechanism, and selection gates.
-3. Update only the concise Notion `결과` section after the analysis is frozen.
-4. Keep held-out test and multi-seed execution locked until a seed-42 candidate
+1. Apply Q2 reproduction, full candidate, mechanism, and selection gates.
+2. Decide whether deterministic controls and a matched rerun are required before
+   any multi-seed promotion.
+3. Update only the concise Notion `결과` section after the decision is frozen.
+4. Keep held-out test and multi-seed execution locked until a valid candidate
    satisfies the frozen Q3 gate.
 
 Detailed ADR:

@@ -1,6 +1,6 @@
 # ADR: TitanTPP Q3 Factorial Gradient Routing And Dual-Domain Quantity Loss
 
-- Status: Intermittent seed-42 training complete; validation-only analysis pending
+- Status: Intermittent seed-42 validation artifact analysis complete; formal acceptance pending
 - Date: 2026-07-13
 - Scope: Intermittent TitanTPP direct raw-quantity branch
 - Predecessor: `adr-titantpp-raw-quantity-revin-q0-q1-q2.md`
@@ -541,8 +541,151 @@ multi-seed promotion.
 - Test-file hashing remained identity-only. No held-out row, metric, report, or
   plot was inspected.
 
+## Seed-42 Validation Artifact Analysis (2026-07-15)
+
+### Integrity And Scope
+
+- Root/variant manifests, logs, summaries, histories, validation scale-wise
+  summaries, validation mark class/confusion files, and validation plots were
+  read in protocol order.
+- After excluding `base_dir` and the two intended factorial axes, all four
+  `ExperimentConfig` objects are identical. Every variant has one summary row,
+  exactly 50 history rows with epochs `1..50`, and finite active metrics.
+- Scale and confusion counts each reconcile to `41,901` validation targets.
+  Weighted scale MAE agrees with overall MAE within floating-point tolerance.
+- Normalized-target non-finite count is zero for every variant. Q3a alone has a
+  small pre-clamp negative share (`0.2745%`); the other variants are zero.
+  The `>=10000` scale bucket has zero targets, so its N/A values are expected.
+- The V2 values below come from the validation-only reference generated from
+  checkpoint SHA `1a901eb2...`. No held-out file was read.
+
+### Best-Validation-NLL Comparison
+
+| Variant | Epoch | Total NLL | Marker NLL | Time NLL | Mark acc. | DT MAE |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| V2 | 19 | 5.666520 | 0.991274 | 4.675246 | 57.249% | 42.0646 |
+| Fresh Q2 | 32 | 5.670936 | 0.988991 | 4.681945 | 55.168% | 42.3018 |
+| Q3a | 27 | 5.660492 | 0.989653 | 4.670839 | 55.178% | 42.4310 |
+| Q3b | 40 | 5.634060 | 1.001103 | 4.632958 | 54.963% | 41.5708 |
+| Q3c | 32 | 5.665948 | 0.988030 | 4.677917 | 55.853% | 42.2033 |
+
+| Variant | Raw qty MAE | Log2 qty MAE | History `<=4` raw MAE | Mark-0 share error | Mark-1 recall |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| V2 | 3.060182 | 0.588742 | 2.296124 | 3.850%p | 49.616% |
+| Fresh Q2 | 2.762922 | 0.683652 | 2.122701 | 16.026%p | 24.020% |
+| Q3a | 3.333413 | 0.875693 | 2.759409 | 18.288%p | 19.331% |
+| Q3b | 2.649259 | 0.686737 | 2.002956 | 20.205%p | 20.957% |
+| Q3c | 3.386220 | 0.738020 | 2.817617 | 6.434%p | 41.742% |
+
+Q3b has the best total NLL, time NLL, overall raw MAE, short-history raw
+MAE, and DT MAE. Its total-NLL gain versus fresh Q2 (`-0.036875`) is entirely
+time-driven: time NLL improves by `-0.048987` while marker NLL worsens by
+`+0.012112`. Its raw/short MAE improve by `4.11%/5.64%`, but log2 MAE worsens
+by `0.45%`, mark accuracy falls by `0.205%p`, and mark-0 share error grows by
+`4.179%p`.
+
+Q3a does not support the standalone gradient-isolation hypothesis. Relative to
+fresh Q2, marker accuracy changes by only `+0.010%p`, while raw, log2, and
+short-history MAE worsen by `20.65%`, `28.09%`, and `30.00%`.
+
+Q3c shows a different trade-off. Relative to fresh Q2, mark accuracy improves by
+`0.685%p`, mark-0 share error drops by `9.592%p`, and mark-1 recall rises by
+`17.722%p`. Raw, log2, and short-history MAE nevertheless worsen by `22.56%`,
+`7.95%`, and `32.74%`. It approaches V2's mark distribution but remains below
+V2 accuracy/recall and materially worse in quantity prediction.
+
+### Fresh-Q2 Reproduction Warning
+
+| Metric | Frozen Q2 | Fresh Q2 | Difference |
+| --- | ---: | ---: | ---: |
+| Total NLL | 5.625528 | 5.670936 | +0.807% |
+| Raw qty MAE | 2.606458 | 2.762922 | +6.003% |
+| Log2 qty MAE | 0.631778 | 0.683652 | +8.211% |
+| Mark accuracy | 53.996% | 55.168% | +1.172%p |
+| Best epoch | 46 | 32 | -14 epochs |
+
+Only total NLL is inside the frozen `1%` reproduction tolerance. Raw/log MAE
+and the `0.25%p` mark-accuracy tolerance do not reproduce. The effective model,
+data, and training settings match; the only manifest differences are output
+path and new Q3 fields that are no-ops for Q2. Training losses become very close
+after the first epochs, but validation trajectories and selected epochs remain
+volatile. The current seed helper seeds Python/NumPy/PyTorch but does not enable
+deterministic CUDA algorithms, so GPU nondeterminism is a plausible contributor,
+not a proven sole cause.
+
+This drift is decision-material. Q3b's NLL/raw-MAE effects and Q3c's accuracy
+effect are no larger than the fresh-versus-frozen Q2 movement on the same metric.
+The within-run factorial differences remain useful diagnostics, but they are not
+yet reliable causal effects or promotion evidence.
+
+### History And Stability
+
+- All variants converge sharply during the first `5-10` epochs and then
+  oscillate. Final NLL is worse than best NLL by `0.116-0.192`, so final-epoch
+  comparison would be misleading.
+- Best NLL epochs differ substantially: Q2/Q3a/Q3b/Q3c are `32/27/40/32`.
+  Quantity-optimal, log-optimal, accuracy-optimal, and NLL-optimal epochs also
+  differ within every variant.
+- Log2 quantity MAE has finite but large spikes: maxima are Q2 `1.063`, Q3a
+  `4.463`, Q3b `1.779`, and Q3c `8.869`. Detachment is associated with the two
+  largest spikes; the log-Huber auxiliary does not remove Q3c instability.
+- Q3b's final NLL is `0.191616` above its epoch-40 optimum even though final raw
+  MAE is nearly unchanged, confirming that its late degradation is mainly in
+  the probabilistic heads rather than raw quantity magnitude.
+
+### Scale-Wise Quantity Behavior
+
+Validation shares are `88.666%` for `1-9`, `10.723%` for `10-99`, `0.527%` for
+`100-999`, and `0.084%` for `1000-9999`.
+
+| Variant | `1-9` MAE | `10-99` MAE | `100-999` MAE | `1000-9999` MAE |
+| --- | ---: | ---: | ---: | ---: |
+| V2 | 0.9798 | 9.3186 | 99.9079 | 796.4802 |
+| Fresh Q2 | 1.0833 | 9.2759 | 82.2982 | 447.4009 |
+| Q3a | 1.2486 | 8.2773 | 114.3084 | 880.9077 |
+| Q3b | 1.0921 | 8.5389 | 81.1012 | 404.1697 |
+| Q3c | 1.1365 | 9.0235 | 120.9641 | 925.3099 |
+
+Q3b's overall raw-MAE advantage is not a low-quantity improvement. The dominant
+`1-9` bucket is `11.46%` worse than V2 and `0.81%` worse than fresh Q2. Its gain
+comes from `10-99` and the much rarer tail buckets. Q3a is best on `10-99` but
+regresses both the dominant bucket and tail. Q3c improves `10-99` slightly but
+regresses the dominant `1-9` bucket and both tail buckets versus fresh Q2. Tail
+results, especially the 35-sample `1000-9999` bucket, should not be treated as
+stable single-seed evidence.
+
+### Mark Confusion And Factorial Interaction
+
+The true mark-0 share is `41.180%`. Predicted mark-0 shares are Q2 `57.206%`,
+Q3a `59.469%`, Q3b `61.385%`, and Q3c `47.615%`. Q2/Q3a/Q3b therefore collapse
+toward mark 0 and underpredict the true mark in `32.23%/32.85%/35.27%` of
+validation cases. Q3c lowers underprediction to `28.43%` and has the best Q3
+mark MAE/adjacent accuracy (`0.5038/94.148%`), but V2 remains better
+(`0.4874/94.377%`).
+
+The 2x2 interaction is strongly non-additive. For lower-is-better metrics, the
+interaction is unfavorable for total NLL (`+0.04233`) and raw MAE (`+0.16647`).
+For marker balance it is favorable: mark-0 share-error interaction is
+`-16.033%p`, mark-1-recall interaction is `+25.473%p`, and accuracy interaction
+is `+0.881%p`. The combined variant is therefore a marker-balance mechanism,
+not a balanced quantity-and-TPP winner.
+
+### Plot Review And Assessment
+
+- Learning-curve plots agree with the CSV: rapid initial convergence, persistent
+  validation oscillation, and quantity/log2 spikes are visible.
+- Scale-wise MAE plots use a linear axis dominated by rare high-quantity buckets,
+  so differences in the `1-9` bucket are visually compressed. The table and WAPE
+  panel are required for interpretation.
+- Per-variant plots use independent y-axis ranges and should not be compared by
+  visual slope or bar height alone.
+
+Artifact integrity is ready for the formal gate, but causal attribution and
+promotion are **not ready to share** because fresh Q2 failed the frozen
+reproduction contract and only one seed is available.
+
 ## Next Step
 
-Analyze the allowed validation artifacts in protocol order and apply the frozen
-Q2 reproduction, candidate, mechanism, and selection gates before any multi-seed
-promotion. Keep held-out execution locked.
+Apply the frozen Q2 reproduction, candidate, mechanism, and selection gates.
+Decide whether the failed reproduction gate requires deterministic controls and
+a matched rerun before any multi-seed promotion. Keep held-out execution locked.
