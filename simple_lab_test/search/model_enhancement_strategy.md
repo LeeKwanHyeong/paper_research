@@ -1558,7 +1558,7 @@ candidate, preferring a single intervention over Q3c. If none passes, retain V2.
 Only a frozen selected candidate advances to strict matched V2/Q2/candidate
 seeds `42,52,62`; held-out test remains locked until that gate passes.
 
-Implementation status (`2026-07-14`):
+Implementation status (`2026-07-15`):
 
 - architecture, loss, gradient, artifact, focused-test, seed-42, multi-seed, and
   held-out contracts are complete
@@ -1636,18 +1636,22 @@ Implementation status (`2026-07-14`):
   `25/25` plus full search `110/110`
 - the second launch started at `2026-07-15 08:15:07 KST`; V2 validation-only
   reference and fresh Q2 epoch 1 passed on the frozen split
-- the four-variant Intermittent run is in progress with monitoring stopped;
-  multi-seed and held-out Q3 experiments have not started
+- the four-variant Intermittent run completed at `2026-07-15 08:46:16 KST`;
+  root `SCREENING_SUCCESS` exists, the failure sentinel is absent, and fresh
+  Q2/Q3a/Q3b/Q3c all exited with code zero
+- all `562` artifact files (`27,179,501` bytes) are synced locally and a checksum
+  dry-run found no remote/local differences; manifest/log/status identity is
+  verified without reading held-out result files
+- validation-only metric analysis, multi-seed, and held-out Q3 experiments have
+  not started
 
 Next execution order:
 
-1. Check completion only when requested and keep continuous monitoring off.
-2. Checksum-sync the complete artifact locally and validate manifest/log/status
-   before reading validation outputs.
-3. Analyze summary, histories, validation scale-wise, confusion/class metrics,
+1. Analyze summary, histories, validation scale-wise, confusion/class metrics,
    and validation plots under the validation-only lock.
-4. Apply Q2 reproduction, full candidate, mechanism, and selection gates.
-5. Keep held-out test and multi-seed execution locked until a seed-42 candidate
+2. Apply Q2 reproduction, full candidate, mechanism, and selection gates.
+3. Update only the concise Notion `결과` section after the analysis is frozen.
+4. Keep held-out test and multi-seed execution locked until a seed-42 candidate
    satisfies the frozen Q3 gate.
 
 Detailed ADR:

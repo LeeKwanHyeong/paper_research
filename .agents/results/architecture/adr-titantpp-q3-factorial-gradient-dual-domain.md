@@ -1,6 +1,6 @@
 # ADR: TitanTPP Q3 Factorial Gradient Routing And Dual-Domain Quantity Loss
 
-- Status: Intermittent seed-42 screening in progress; V2 reference and fresh Q2 epoch 1 passed
+- Status: Intermittent seed-42 training complete; validation-only analysis pending
 - Date: 2026-07-13
 - Scope: Intermittent TitanTPP direct raw-quantity branch
 - Predecessor: `adr-titantpp-raw-quantity-revin-q0-q1-q2.md`
@@ -533,12 +533,16 @@ multi-seed promotion.
 - The second tmux launch started at `2026-07-15 08:15:07 KST`. V2 validation-only
   reference completed with exit code zero, and fresh Q2 completed epoch 1 on the
   frozen split and train-only raw statistics. Continuous monitoring stopped at
-  `08:21:16 KST`; the four-variant screening remains in progress.
+  `08:21:16 KST`.
+- The run completed at `2026-07-15 08:46:16 KST` with root
+  `SCREENING_SUCCESS`; fresh Q2/Q3a/Q3b/Q3c all exited with code zero. All `562`
+  artifact files (`27,179,501` bytes) are synced locally, and checksum dry-run
+  found no remote/local differences.
 - Test-file hashing remained identity-only. No held-out row, metric, report, or
   plot was inspected.
 
 ## Next Step
 
-Check completion once only when requested, checksum-sync the artifact locally,
-and apply the frozen validation-only acceptance contract before any multi-seed
+Analyze the allowed validation artifacts in protocol order and apply the frozen
+Q2 reproduction, candidate, mechanism, and selection gates before any multi-seed
 promotion. Keep held-out execution locked.
