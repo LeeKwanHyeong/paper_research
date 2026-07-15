@@ -720,7 +720,10 @@ The resulting selection is therefore V2 by the pre-registered fallback rule,
 not Q2 or a Q3 variant. A full rerun would only be justified to recover a causal
 Q3 mechanism claim, not to decide the current winner.
 
-### Reproducibility Audit
+### Historical Reproducibility Audit
+
+The following findings describe the runner used by the completed Q3 seed-42
+screening, before strict infrastructure was added.
 
 Confirmed:
 
@@ -768,9 +771,31 @@ must derive its relative gates from the newly matched deterministic V2 and Q2
 controls rather than requiring equality with the historical nondeterministic
 Q2 artifact.
 
+### Strict Infrastructure Implementation (2026-07-15)
+
+The required shared infrastructure is now implemented, but the 5090 Q2 e3 A/B
+probe has not run yet.
+
+- `long-epoch` accepts `--reproducibility-mode standard|strict`; standard keeps
+  the legacy path, while strict uses a distinct `repro_strict` path.
+- strict mode requires launcher-provided `PYTHONHASHSEED`,
+  `CUBLAS_WORKSPACE_CONFIG`, and `SOURCE_REVISION`, enables deterministic Torch
+  and cuDNN, and treats resume-integrity errors as failures.
+- train shuffle uses a run-seeded dedicated generator with `num_workers=0`;
+  its state is checkpointed and restored. Grouped series are explicitly sorted
+  by `oper_part_no`.
+- root/run manifests record source revision, runtime and GPU identity,
+  deterministic flags, loader seed, and SHA-256 for every selected dataset
+  source artifact.
+- summaries and checkpoints record canonical SHA-256 over sorted tensor names,
+  dtypes, shapes, and raw bytes for best-score, best-validation-NLL, and final
+  states.
+- focused reproducibility tests passed `8/8`, Q3 plus reproducibility tests
+  passed `27/27`, and the complete search suite passed `118/118` locally.
+
 ## Next Step
 
-Record the concise V2-retained/Q3-not-promoted result in Notion. Implement the
-strict reproducibility mode as shared experiment infrastructure, then validate
-it with the Q2 e3 A/B probe. Do not launch a full Q3 e50 rerun unless Q3 is
-explicitly reopened after that probe passes.
+Prepare and run the two independent strict Intermittent Q2 e3 processes on
+5090, then compare exact history JSON, selected epochs, and canonical state
+digests. Do not launch a full Q3 e50 rerun unless Q3 is explicitly reopened
+after that probe passes.

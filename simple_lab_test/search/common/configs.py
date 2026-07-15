@@ -40,6 +40,7 @@ class ExperimentConfig:
     base_dir: str
     experiment_mode: str = "long-epoch"
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
+    reproducibility_mode: str = "standard"
     lookback_weeks: int = 52
     max_seq_len: int = 256
     batch_size: int = 128

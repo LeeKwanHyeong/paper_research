@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
+import os
+import platform
 import random
 from pathlib import Path
 from typing import Any, Iterable
@@ -54,15 +57,203 @@ from models.RMTPPs.value_conditioning import (
 )
 
 
-def set_global_seed(seed: int) -> None:
+REPRODUCIBILITY_MODES = {"standard", "strict"}
+STRICT_CUBLAS_WORKSPACE_CONFIGS = {":4096:8", ":16:8"}
+
+
+def normalized_reproducibility_mode(mode: str) -> str:
+    normalized = str(mode).strip().lower()
+    if normalized not in REPRODUCIBILITY_MODES:
+        raise ValueError(
+            f"Unsupported reproducibility_mode={mode!r}. "
+            f"Expected one of {sorted(REPRODUCIBILITY_MODES)}."
+        )
+    return normalized
+
+
+def reproducibility_artifact_identity(
+    cfg: ExperimentConfig,
+    *,
+    loader_seed: int | None = None,
+) -> dict[str, Any]:
+    """Return compact identity columns shared by persisted experiment rows."""
+    mode = normalized_reproducibility_mode(cfg.reproducibility_mode)
+    return {
+        "reproducibility_mode": mode,
+        "source_revision": os.environ.get("SOURCE_REVISION"),
+        "train_loader_seed": int(loader_seed) if loader_seed is not None else None,
+    }
+
+
+def reproducibility_artifact_columns(
+    cfg: ExperimentConfig,
+    *,
+    loader_seed: int | None = None,
+) -> list[pl.Expr]:
+    return [
+        pl.lit(value).alias(name)
+        for name, value in reproducibility_artifact_identity(
+            cfg,
+            loader_seed=loader_seed,
+        ).items()
+    ]
+
+
+def reproducibility_runtime_manifest(
+    mode: str,
+    *,
+    loader_seed: int | None = None,
+) -> dict[str, Any]:
+    """Capture the process, Torch, CUDA, and loader settings used by a run."""
+    normalized = normalized_reproducibility_mode(mode)
+    warn_only_getter = getattr(
+        torch,
+        "is_deterministic_algorithms_warn_only_enabled",
+        None,
+    )
+    cuda_devices: list[dict[str, Any]] = []
+    if torch.cuda.is_available():
+        for device_index in range(torch.cuda.device_count()):
+            properties = torch.cuda.get_device_properties(device_index)
+            cuda_devices.append({
+                "index": int(device_index),
+                "name": str(properties.name),
+                "compute_capability": f"{properties.major}.{properties.minor}",
+                "total_memory_bytes": int(properties.total_memory),
+            })
+    return {
+        "mode": normalized,
+        "source_revision": os.environ.get("SOURCE_REVISION"),
+        "python_hash_seed": os.environ.get("PYTHONHASHSEED"),
+        "cublas_workspace_config": os.environ.get("CUBLAS_WORKSPACE_CONFIG"),
+        "python_version": platform.python_version(),
+        "numpy_version": np.__version__,
+        "polars_version": pl.__version__,
+        "torch_version": torch.__version__,
+        "torch_cuda_version": torch.version.cuda,
+        "cudnn_version": torch.backends.cudnn.version(),
+        "torch_deterministic_algorithms": bool(
+            torch.are_deterministic_algorithms_enabled()
+        ),
+        "torch_deterministic_warn_only": (
+            bool(warn_only_getter()) if callable(warn_only_getter) else None
+        ),
+        "cudnn_deterministic": bool(torch.backends.cudnn.deterministic),
+        "cudnn_benchmark": bool(torch.backends.cudnn.benchmark),
+        "cuda_available": bool(torch.cuda.is_available()),
+        "cuda_devices": cuda_devices,
+        "train_loader_seed": int(loader_seed) if loader_seed is not None else None,
+        "train_loader_generator": (
+            "dedicated_torch_generator" if loader_seed is not None else "process_global_rng"
+        ),
+        "train_loader_num_workers": 0,
+        "grouped_series_order": "oper_part_no_ascending",
+    }
+
+
+def configure_reproducibility(mode: str) -> dict[str, Any]:
+    """Enable strict controls only after validating launcher-owned settings."""
+    normalized = normalized_reproducibility_mode(mode)
+    if normalized == "strict":
+        python_hash_seed = os.environ.get("PYTHONHASHSEED")
+        try:
+            parsed_hash_seed = int(python_hash_seed) if python_hash_seed is not None else -1
+        except ValueError as exc:
+            raise RuntimeError(
+                "strict reproducibility requires integer PYTHONHASHSEED before Python starts."
+            ) from exc
+        if not 0 <= parsed_hash_seed <= 2**32 - 1:
+            raise RuntimeError(
+                "strict reproducibility requires PYTHONHASHSEED in [0, 4294967295] "
+                "before Python starts."
+            )
+
+        cublas_config = os.environ.get("CUBLAS_WORKSPACE_CONFIG")
+        if cublas_config not in STRICT_CUBLAS_WORKSPACE_CONFIGS:
+            raise RuntimeError(
+                "strict reproducibility requires CUBLAS_WORKSPACE_CONFIG to be "
+                f"one of {sorted(STRICT_CUBLAS_WORKSPACE_CONFIGS)} before Python starts."
+            )
+        source_revision = os.environ.get("SOURCE_REVISION", "").strip()
+        if (
+            len(source_revision) not in {40, 64}
+            or any(character not in "0123456789abcdefABCDEF" for character in source_revision)
+        ):
+            raise RuntimeError(
+                "strict reproducibility requires SOURCE_REVISION as a full 40- or "
+                "64-character hexadecimal Git revision."
+            )
+
+        torch.use_deterministic_algorithms(True, warn_only=False)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+    return reproducibility_runtime_manifest(normalized)
+
+
+def set_global_seed(seed: int, *, reproducibility_mode: str = "standard") -> None:
     """
     Keep data loader shuffling and model initialization reproducible.
     """
+    configure_reproducibility(reproducibility_mode)
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
+
+
+def sha256_file(path: Path, *, chunk_size: int = 1024 * 1024) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as file_obj:
+        while chunk := file_obj.read(chunk_size):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def build_dataset_source_manifest(
+    dataset_specs: Iterable[DatasetSpec],
+    *,
+    split_mode: str,
+    include_sha256: bool,
+) -> dict[str, list[dict[str, Any]]]:
+    """Record every source artifact that defines the selected dataset split."""
+    result: dict[str, list[dict[str, Any]]] = {}
+    for spec in dataset_specs:
+        if split_mode == "fixed":
+            source_paths = (
+                ("with_split", spec.split_with_path),
+                ("train", spec.split_train_path),
+                ("validation", spec.split_validation_path),
+                ("test", spec.split_test_path),
+                ("split_manifest", spec.split_manifest_path),
+            )
+        else:
+            source_paths = (("event_table", spec.parquet_path),)
+
+        source_rows: list[dict[str, Any]] = []
+        for role, raw_path in source_paths:
+            if raw_path is None:
+                if include_sha256:
+                    raise FileNotFoundError(
+                        f"strict reproducibility requires dataset source role={role} "
+                        f"for dataset={spec.name}."
+                    )
+                continue
+            path = Path(raw_path).expanduser().resolve()
+            exists = path.is_file()
+            if include_sha256 and not exists:
+                raise FileNotFoundError(
+                    f"strict reproducibility cannot hash missing dataset source: {path}"
+                )
+            source_rows.append({
+                "role": role,
+                "path": str(path),
+                "size_bytes": int(path.stat().st_size) if exists else None,
+                "sha256": sha256_file(path) if include_sha256 and exists else None,
+            })
+        result[spec.name] = source_rows
+    return result
 
 
 def make_training_cfg(cfg: ExperimentConfig, dataset_kind: str | None = None) -> TrainingConfig:
@@ -215,6 +406,9 @@ def build_run_paths(cfg: ExperimentConfig, run_cfg: RunConfig) -> RunPaths:
         / canonical_model_name(run_cfg.model_name)
         / f"lossmode_{cfg.loss_mode}"
     )
+    reproducibility_mode = normalized_reproducibility_mode(cfg.reproducibility_mode)
+    if reproducibility_mode != "standard":
+        run_dir_base = run_dir_base / f"repro_{reproducibility_mode}"
     if getattr(cfg, "qty_decoder_mode", "mark_residual") != "mark_residual":
         run_dir_base = (
             run_dir_base
@@ -301,6 +495,34 @@ def clone_state_dict(model: torch.nn.Module) -> dict[str, torch.Tensor]:
     return {name: value.detach().cpu().clone() for name, value in model.state_dict().items()}
 
 
+def canonical_state_dict_sha256(state_dict: dict[str, torch.Tensor]) -> str:
+    """Hash tensor names, metadata, and bytes in a serialization-independent order."""
+    digest = hashlib.sha256()
+    for name in sorted(state_dict):
+        tensor = state_dict[name]
+        if not isinstance(tensor, torch.Tensor):
+            raise TypeError(f"State entry {name!r} is not a tensor.")
+        canonical = tensor.detach().cpu().contiguous()
+        metadata = json.dumps(
+            {
+                "name": name,
+                "dtype": str(canonical.dtype),
+                "shape": list(canonical.shape),
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+        digest.update(len(metadata).to_bytes(8, byteorder="big", signed=False))
+        digest.update(metadata)
+        if canonical.numel() > 0:
+            raw_bytes = canonical.reshape(-1).view(torch.uint8).numpy().tobytes()
+            digest.update(len(raw_bytes).to_bytes(8, byteorder="big", signed=False))
+            digest.update(raw_bytes)
+        else:
+            digest.update((0).to_bytes(8, byteorder="big", signed=False))
+    return digest.hexdigest()
+
+
 def atomic_torch_save(payload: dict[str, Any], path: Path) -> None:
     """
     Write a torch checkpoint through a temporary file before replacing it.
@@ -368,6 +590,16 @@ def restore_rng_state(state: dict[str, Any] | None) -> None:
             for cuda_state in state["cuda"]
         ]
         torch.cuda.set_rng_state_all(cuda_states)
+
+
+def restore_train_loader_generator_state(
+    generator: torch.Generator,
+    state: torch.Tensor | None,
+) -> None:
+    """Restore the dedicated strict-mode sampler RNG from a resume checkpoint."""
+    if state is None:
+        raise ValueError("Strict resume checkpoint has no train loader generator state.")
+    generator.set_state(state.detach().cpu())
 
 
 def finite_or_default(value: Any, default: float) -> float:
@@ -1099,10 +1331,16 @@ def cached_run_is_complete(
     run_paths: RunPaths,
     effective_marked_meta: dict[str, Any] | None = None,
 ) -> bool:
+    reproducibility_mode = normalized_reproducibility_mode(cfg.reproducibility_mode)
     summary_path = run_paths.metrics_dir / "summary.json"
     history_path = run_paths.metrics_dir / "history.json"
     nll_checkpoint_path = run_paths.checkpoint_dir / "best_val_nll_model.pt"
     if not (summary_path.exists() and history_path.exists() and nll_checkpoint_path.exists()):
+        return False
+    if reproducibility_mode == "strict" and not all(
+        (run_paths.checkpoint_dir / f"{selection}_model.pt").exists()
+        for selection in ("best_score", "best_val_nll", "final")
+    ):
         return False
     for selection in cfg.eval_selections:
         csv_path, parquet_path = scale_metric_paths(run_paths, selection)
@@ -1145,8 +1383,23 @@ def cached_run_is_complete(
             ):
                 magnitude_stats_match = False
                 break
+    reproducibility_match = (
+        str(cached_summary.get("reproducibility_mode", "standard"))
+        == reproducibility_mode
+    )
+    if reproducibility_mode == "strict":
+        reproducibility_match = (
+            reproducibility_match
+            and cached_summary.get("source_revision") == os.environ.get("SOURCE_REVISION")
+            and cached_summary.get("train_loader_seed") == int(run_cfg.seed)
+            and all(
+                isinstance(cached_summary.get(f"{selection}_state_sha256"), str)
+                for selection in ("best_score", "best_val_nll", "final")
+            )
+        )
     return (
         magnitude_stats_match
+        and reproducibility_match
         and
         int(cached_summary.get("epochs", -1)) == int(run_cfg.epochs)
         and str(cached_summary.get("test_time_memory", "none")) == str(cfg.test_time_memory)
@@ -1230,6 +1483,7 @@ def save_checkpoint(
         {
             "selection": selection,
             "model_state_dict": model_state,
+            "model_state_sha256": canonical_state_dict_sha256(model_state),
             "experiment_config": to_jsonable(cfg),
             "run_config": to_jsonable(run_cfg),
             "training_config": to_jsonable(training_cfg),
@@ -1257,16 +1511,19 @@ def save_epoch_resume_checkpoint(
     training_cfg: TrainingConfig,
     rmtpp_cfg: RMTPPConfig,
     encoder_cfg: Any,
+    train_loader_generator: torch.Generator | None = None,
 ) -> None:
     """
     Save enough state to resume a partially completed run after the last
     finished epoch.
     """
+    model_state = clone_state_dict(model)
     atomic_torch_save(
         {
             "checkpoint_type": "epoch_resume",
             "epoch": int(epoch),
-            "model_state_dict": clone_state_dict(model),
+            "model_state_dict": model_state,
+            "model_state_sha256": canonical_state_dict_sha256(model_state),
             "optimizer_state_dict": optimizer.state_dict(),
             "history": history,
             "best_score": float(best_score),
@@ -1279,6 +1536,11 @@ def save_epoch_resume_checkpoint(
             "rmtpp_config": to_jsonable(rmtpp_cfg),
             "encoder_config": to_jsonable(encoder_cfg),
             "rng_state": capture_rng_state(),
+            "train_loader_generator_state": (
+                train_loader_generator.get_state()
+                if train_loader_generator is not None
+                else None
+            ),
         },
         path,
     )
@@ -1356,6 +1618,8 @@ def train_one_run(
         cfg=cfg,
         run_cfg=run_cfg,
     )
+    reproducibility_mode = normalized_reproducibility_mode(cfg.reproducibility_mode)
+    train_loader_seed = run_cfg.seed if reproducibility_mode == "strict" else None
 
     if not cfg.force_rerun and cached_run_is_complete(
         cfg=cfg,
@@ -1383,9 +1647,19 @@ def train_one_run(
         cached_summary.setdefault("magnitude_center_mode", "mean")
         cached_summary.setdefault("magnitude_revin_affine", False)
         cached_summary.setdefault("magnitude_stat_context_mode", "none")
+        cached_summary.setdefault("reproducibility_mode", "standard")
+        cached_summary.setdefault("source_revision", None)
+        cached_summary.setdefault("train_loader_seed", None)
         return cached_summary
 
-    set_global_seed(run_cfg.seed)
+    set_global_seed(
+        run_cfg.seed,
+        reproducibility_mode=reproducibility_mode,
+    )
+    train_loader_generator = None
+    if train_loader_seed is not None:
+        train_loader_generator = torch.Generator()
+        train_loader_generator.manual_seed(train_loader_seed)
     search_cfg = make_search_cfg(cfg, run_cfg.dataset_kind)
     training_cfg = make_training_cfg(cfg, run_cfg.dataset_kind)
     test_loader = None
@@ -1393,6 +1667,7 @@ def train_one_run(
         train_loader, val_loader, test_loader = make_fixed_split_week_lookback_loaders(
             marked_df,
             training_cfg,
+            train_generator=train_loader_generator,
         )
         logger.info(
             "Using fixed chronological splits | dataset=%s train_samples=%s validation_samples=%s test_samples=%s "
@@ -1406,7 +1681,11 @@ def train_one_run(
             training_cfg.lookback,
         )
     else:
-        train_loader, val_loader = make_week_lookback_loaders(marked_df, training_cfg)
+        train_loader, val_loader = make_week_lookback_loaders(
+            marked_df,
+            training_cfg,
+            train_generator=train_loader_generator,
+        )
     if cfg.qty_decoder_mode in {"direct_log_qty", "direct_raw_qty"}:
         logger.info(
             "Direct magnitude stats | decoder=%s norm=%s domain=%s split=train "
@@ -1438,6 +1717,16 @@ def train_one_run(
                 "train": len(train_loader.dataset),
                 "validation": len(val_loader.dataset),
                 "test": len(test_loader.dataset) if test_loader is not None else None,
+            },
+            "reproducibility": {
+                **reproducibility_runtime_manifest(
+                    reproducibility_mode,
+                    loader_seed=train_loader_seed,
+                ),
+                "dataset_sources": effective_marked_meta.get(
+                    "reproducibility_dataset_sources",
+                    [],
+                ),
             },
         },
         manifest_path,
@@ -1474,6 +1763,11 @@ def train_one_run(
                 best_score_state = resume_payload.get("best_score_state_dict")
                 best_val_nll_state = resume_payload.get("best_val_nll_state_dict")
                 restore_rng_state(resume_payload.get("rng_state"))
+                if train_loader_generator is not None:
+                    restore_train_loader_generator_state(
+                        train_loader_generator,
+                        resume_payload.get("train_loader_generator_state"),
+                    )
                 start_epoch = min(loaded_epoch + 1, training_cfg.epochs + 1)
                 logger.info(
                     "Resuming run from epoch checkpoint | dataset=%s model=%s candidate=%s seed=%s "
@@ -1486,6 +1780,10 @@ def train_one_run(
                     training_cfg.epochs,
                 )
         except Exception as exc:
+            if reproducibility_mode == "strict":
+                raise RuntimeError(
+                    f"Strict resume checkpoint validation failed: {resume_checkpoint_path}"
+                ) from exc
             logger.warning(
                 "Could not load resume checkpoint; restarting this run from epoch 1. path=%s error=%r",
                 resume_checkpoint_path,
@@ -1595,6 +1893,7 @@ def train_one_run(
                 training_cfg=training_cfg,
                 rmtpp_cfg=rmtpp_cfg,
                 encoder_cfg=encoder_cfg,
+                train_loader_generator=train_loader_generator,
             )
 
     final_state = clone_state_dict(model)
@@ -1606,6 +1905,10 @@ def train_one_run(
 
     summary = {
         "status": "success",
+        **reproducibility_artifact_identity(
+            cfg,
+            loader_seed=train_loader_seed,
+        ),
         "dataset_name": run_cfg.dataset_name,
         "dataset_kind": run_cfg.dataset_kind,
         "model_name": canonical_model_name(run_cfg.model_name),
@@ -1680,6 +1983,10 @@ def train_one_run(
         "best_val_nll": best_val_nll_state,
         "final": final_state,
     }
+    summary.update({
+        f"{selection}_state_sha256": canonical_state_dict_sha256(state)
+        for selection, state in state_by_selection.items()
+    })
     for selection, state in state_by_selection.items():
         save_checkpoint(
             path=run_paths.checkpoint_dir / f"{selection}_model.pt",
@@ -1709,6 +2016,7 @@ def train_one_run(
             pl.lit(run_cfg.candidate_name).alias("candidate_name"),
             pl.lit(run_cfg.candidate_name).alias("titan_candidate_name"),
             pl.lit(run_cfg.seed).alias("seed"),
+            *reproducibility_artifact_columns(cfg, loader_seed=train_loader_seed),
             pl.lit(cfg.value_head_mode).alias("value_head_mode"),
             pl.lit(cfg.qty_mark_gradient_mode).alias("qty_mark_gradient_mode"),
             pl.lit(cfg.value_encoder_gradient_mode).alias("value_encoder_gradient_mode"),
@@ -1737,6 +2045,7 @@ def train_one_run(
             pl.lit(run_cfg.candidate_name).alias("candidate_name"),
             pl.lit(run_cfg.candidate_name).alias("titan_candidate_name"),
             pl.lit(run_cfg.seed).alias("seed"),
+            *reproducibility_artifact_columns(cfg, loader_seed=train_loader_seed),
             pl.lit(cfg.value_head_mode).alias("value_head_mode"),
             pl.lit(cfg.qty_mark_gradient_mode).alias("qty_mark_gradient_mode"),
             pl.lit(cfg.value_encoder_gradient_mode).alias("value_encoder_gradient_mode"),
@@ -1764,6 +2073,7 @@ def train_one_run(
             pl.lit(canonical_model_name(run_cfg.model_name)).alias("model_name"),
             pl.lit(run_cfg.candidate_name).alias("candidate_name"),
             pl.lit(run_cfg.seed).alias("seed"),
+            *reproducibility_artifact_columns(cfg, loader_seed=train_loader_seed),
             pl.lit(cfg.marker_loss_mode).alias("marker_loss_mode"),
             pl.lit(float(cfg.lambda_ordinal)).alias("lambda_ordinal"),
             pl.lit(cfg.qty_decoder_mode).alias("qty_decoder_mode"),
@@ -1795,6 +2105,10 @@ def train_one_run(
                 "candidate_name": run_cfg.candidate_name,
                 "titan_candidate_name": run_cfg.candidate_name,
                 "seed": int(run_cfg.seed),
+                **reproducibility_artifact_identity(
+                    cfg,
+                    loader_seed=train_loader_seed,
+                ),
                 "value_head_mode": cfg.value_head_mode,
                 "qty_mark_gradient_mode": cfg.qty_mark_gradient_mode,
                 "value_encoder_gradient_mode": cfg.value_encoder_gradient_mode,
@@ -1866,6 +2180,7 @@ def train_one_run(
                 pl.lit(run_cfg.candidate_name).alias("candidate_name"),
                 pl.lit(run_cfg.candidate_name).alias("titan_candidate_name"),
                 pl.lit(run_cfg.seed).alias("seed"),
+                *reproducibility_artifact_columns(cfg, loader_seed=train_loader_seed),
                 pl.lit(cfg.value_head_mode).alias("value_head_mode"),
                 pl.lit(cfg.qty_mark_gradient_mode).alias("qty_mark_gradient_mode"),
                 pl.lit(cfg.value_encoder_gradient_mode).alias("value_encoder_gradient_mode"),
@@ -1894,6 +2209,7 @@ def train_one_run(
                 pl.lit(run_cfg.candidate_name).alias("candidate_name"),
                 pl.lit(run_cfg.candidate_name).alias("titan_candidate_name"),
                 pl.lit(run_cfg.seed).alias("seed"),
+                *reproducibility_artifact_columns(cfg, loader_seed=train_loader_seed),
                 pl.lit(cfg.value_head_mode).alias("value_head_mode"),
                 pl.lit(cfg.qty_mark_gradient_mode).alias("qty_mark_gradient_mode"),
                 pl.lit(cfg.value_encoder_gradient_mode).alias("value_encoder_gradient_mode"),
@@ -1921,6 +2237,7 @@ def train_one_run(
                 pl.lit(canonical_model_name(run_cfg.model_name)).alias("model_name"),
                 pl.lit(run_cfg.candidate_name).alias("candidate_name"),
                 pl.lit(run_cfg.seed).alias("seed"),
+                *reproducibility_artifact_columns(cfg, loader_seed=train_loader_seed),
                 pl.lit(cfg.marker_loss_mode).alias("marker_loss_mode"),
                 pl.lit(float(cfg.lambda_ordinal)).alias("lambda_ordinal"),
                 pl.lit(cfg.qty_decoder_mode).alias("qty_decoder_mode"),
@@ -1987,8 +2304,14 @@ def train_one_run(
 
 
 def build_error_row(cfg: ExperimentConfig, run_cfg: RunConfig, exc: Exception) -> dict[str, Any]:
+    loader_seed = (
+        run_cfg.seed
+        if normalized_reproducibility_mode(cfg.reproducibility_mode) == "strict"
+        else None
+    )
     return {
         "status": "failed",
+        **reproducibility_artifact_identity(cfg, loader_seed=loader_seed),
         "dataset_name": run_cfg.dataset_name,
         "dataset_kind": run_cfg.dataset_kind,
         "model_name": canonical_model_name(run_cfg.model_name),
@@ -2137,6 +2460,9 @@ def load_all_histories(run_rows: list[dict[str, Any]]) -> pl.DataFrame:
                 "model_name": row["model_name"],
                 "candidate_name": row["candidate_name"],
                 "titan_candidate_name": row["candidate_name"],
+                "reproducibility_mode": row.get("reproducibility_mode", "standard"),
+                "source_revision": row.get("source_revision"),
+                "train_loader_seed": row.get("train_loader_seed"),
                 "value_head_mode": row.get("value_head_mode", "shared"),
                 "qty_mark_gradient_mode": row.get("qty_mark_gradient_mode", "coupled"),
                 "value_encoder_gradient_mode": row.get(
@@ -2289,6 +2615,23 @@ def with_magnitude_identity_defaults(frame: pl.DataFrame) -> pl.DataFrame:
     return frame
 
 
+def with_reproducibility_identity_defaults(frame: pl.DataFrame) -> pl.DataFrame:
+    """Backfill strict-run identity columns when reading legacy artifacts."""
+    if "reproducibility_mode" not in frame.columns:
+        frame = frame.with_columns(
+            pl.lit("standard").alias("reproducibility_mode")
+        )
+    if "source_revision" not in frame.columns:
+        frame = frame.with_columns(
+            pl.lit(None, dtype=pl.Utf8).alias("source_revision")
+        )
+    if "train_loader_seed" not in frame.columns:
+        frame = frame.with_columns(
+            pl.lit(None, dtype=pl.Int64).alias("train_loader_seed")
+        )
+    return frame
+
+
 MAGNITUDE_GROUP_COLUMNS = [
     "magnitude_domain",
     "magnitude_encoder_gradient_mode",
@@ -2302,6 +2645,11 @@ MAGNITUDE_GROUP_COLUMNS = [
     "magnitude_center_mode",
     "magnitude_revin_affine",
     "magnitude_stat_context_mode",
+]
+
+REPRODUCIBILITY_GROUP_COLUMNS = [
+    "reproducibility_mode",
+    "source_revision",
 ]
 
 
@@ -2329,6 +2677,7 @@ def aggregate_test_metrics(test_df: pl.DataFrame) -> pl.DataFrame:
     if "lambda_magnitude" not in test_df.columns:
         test_df = test_df.with_columns(pl.lit(1.0).alias("lambda_magnitude"))
     test_df = with_magnitude_identity_defaults(test_df)
+    test_df = with_reproducibility_identity_defaults(test_df)
     for metric_name in (
         "val_ordinal_marker_loss",
         "mark_balanced_accuracy",
@@ -2351,6 +2700,7 @@ def aggregate_test_metrics(test_df: pl.DataFrame) -> pl.DataFrame:
             "dataset_name",
             "model_name",
             "candidate_name",
+            *REPRODUCIBILITY_GROUP_COLUMNS,
             "value_head_mode",
             "qty_mark_gradient_mode",
             "value_encoder_gradient_mode",
@@ -2418,6 +2768,7 @@ def aggregate_run_rows(rows: list[dict[str, Any]]) -> tuple[pl.DataFrame, pl.Dat
     if "lambda_magnitude" not in success_df.columns:
         success_df = success_df.with_columns(pl.lit(1.0).alias("lambda_magnitude"))
     success_df = with_magnitude_identity_defaults(success_df)
+    success_df = with_reproducibility_identity_defaults(success_df)
 
     agg_exprs = [
         pl.first("dataset_kind").alias("dataset_kind"),
@@ -2487,6 +2838,7 @@ def aggregate_run_rows(rows: list[dict[str, Any]]) -> tuple[pl.DataFrame, pl.Dat
             "dataset_name",
             "model_name",
             "candidate_name",
+            *REPRODUCIBILITY_GROUP_COLUMNS,
             "value_head_mode",
             "qty_mark_gradient_mode",
             "value_encoder_gradient_mode",
@@ -2567,11 +2919,13 @@ def aggregate_scale_metrics(scale_df: pl.DataFrame) -> pl.DataFrame:
     if "lambda_magnitude" not in scale_df.columns:
         scale_df = scale_df.with_columns(pl.lit(1.0).alias("lambda_magnitude"))
     scale_df = with_magnitude_identity_defaults(scale_df)
+    scale_df = with_reproducibility_identity_defaults(scale_df)
     return (
         scale_df.group_by([
             "dataset_name",
             "model_name",
             "candidate_name",
+            *REPRODUCIBILITY_GROUP_COLUMNS,
             "value_head_mode",
             "qty_mark_gradient_mode",
             "value_encoder_gradient_mode",
@@ -2609,6 +2963,9 @@ def quantity_run_label(row: dict[str, Any]) -> str:
     if decoder_mode in {"direct_log_qty", "direct_raw_qty"}:
         domain = "log" if decoder_mode == "direct_log_qty" else "raw"
         label += f" [{domain}/{row.get('magnitude_norm_mode', 'global')}]"
+    reproducibility_mode = str(row.get("reproducibility_mode", "standard"))
+    if reproducibility_mode != "standard":
+        label += f" [{reproducibility_mode}]"
     return label
 
 
@@ -2623,6 +2980,7 @@ def save_learning_curve_plots(history_df: pl.DataFrame, plots_dir: Path) -> None
         history_df = history_df.with_columns(
             pl.lit("global").alias("magnitude_norm_mode")
         )
+    history_df = with_reproducibility_identity_defaults(history_df)
     ensure_dir(plots_dir)
     # Total NLL alone hides whether the gain/loss comes from mark prediction or
     # event-time density, so we plot both decomposed likelihood terms as well.
@@ -2646,6 +3004,7 @@ def save_learning_curve_plots(history_df: pl.DataFrame, plots_dir: Path) -> None
                 "candidate_name",
                 "qty_decoder_mode",
                 "magnitude_norm_mode",
+                "reproducibility_mode",
             ])
             .map_elements(
                 quantity_run_label,
@@ -2701,6 +3060,7 @@ def save_learning_curve_plots(history_df: pl.DataFrame, plots_dir: Path) -> None
 def save_scale_metric_plots(scale_summary_df: pl.DataFrame, plots_dir: Path) -> None:
     if scale_summary_df.height == 0:
         return
+    scale_summary_df = with_reproducibility_identity_defaults(scale_summary_df)
     ensure_dir(plots_dir)
     palette = ["#5DA5DA", "#F17CB0", "#60BD68", "#B276B2", "#F15854", "#DECF3F", "#FAA43A"]
     for dataset_name in scale_summary_df["dataset_name"].unique().to_list():
@@ -2713,6 +3073,7 @@ def save_scale_metric_plots(scale_summary_df: pl.DataFrame, plots_dir: Path) -> 
                     "candidate_name",
                     "qty_decoder_mode",
                     "magnitude_norm_mode",
+                    "reproducibility_mode",
                 ])
                 .map_elements(
                     quantity_run_label,
@@ -2822,6 +3183,8 @@ def run_long_epoch_experiment(cfg: ExperimentConfig) -> None:
     """
     End-to-end long-epoch experiment entrypoint.
     """
+    reproducibility_mode = normalized_reproducibility_mode(cfg.reproducibility_mode)
+    runtime_reproducibility = configure_reproducibility(reproducibility_mode)
     selected_dataset_names = set(cfg.datasets)
     if not selected_dataset_names:
         raise ValueError("No datasets selected.")
@@ -2829,6 +3192,11 @@ def run_long_epoch_experiment(cfg: ExperimentConfig) -> None:
     dataset_specs = make_dataset_specs(cfg, selected_dataset_names)
     if not dataset_specs:
         raise ValueError("No dataset specs resolved.")
+    dataset_source_manifest = build_dataset_source_manifest(
+        dataset_specs,
+        split_mode=cfg.split_mode,
+        include_sha256=reproducibility_mode == "strict",
+    )
 
     resolved_dataset_names = {spec.name for spec in dataset_specs}
     profile_map = default_profile_map(cfg.titan_profile)
@@ -2854,6 +3222,10 @@ def run_long_epoch_experiment(cfg: ExperimentConfig) -> None:
             "profile_map": profile_map,
             "titan_candidates": default_titan_candidates(),
             "thp_candidates": default_thp_candidates(),
+            "reproducibility": {
+                **runtime_reproducibility,
+                "dataset_sources": dataset_source_manifest,
+            },
         },
         base_dir / "experiment_manifest.json",
     )
@@ -2865,6 +3237,19 @@ def run_long_epoch_experiment(cfg: ExperimentConfig) -> None:
         ab_cfg=cfg,
         logger=logger,
     )
+    marked_cache = {
+        key: (
+            marked_df,
+            {
+                **marked_meta,
+                "reproducibility_dataset_sources": dataset_source_manifest.get(
+                    key[0],
+                    [],
+                ),
+            },
+        )
+        for key, (marked_df, marked_meta) in marked_cache.items()
+    }
     run_rows = run_long_epoch_benchmark(
         cfg=cfg,
         dataset_specs=dataset_specs,

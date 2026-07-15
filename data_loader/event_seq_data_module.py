@@ -149,12 +149,13 @@ class RMTPPDataset(Dataset):
             )
 
         grouped = (
-            df.group_by("oper_part_no")
+            df.group_by("oper_part_no", maintain_order=True)
               .agg([
                   pl.col("delta_t").alias("dt_list"),
                   pl.col("mark").alias("mk_list"),
                   pl.col("scale_residual").alias("val_list") if "scale_residual" in df.columns else pl.lit(None).alias("val_list"),
               ])
+              .sort("oper_part_no")
         )
 
         self.parts = grouped["oper_part_no"].to_list()
@@ -273,7 +274,7 @@ class RMTPPWeekLookbackDataset(Dataset):
         self.pad_id = int(pad_id)
 
         grouped = (
-            df.group_by("oper_part_no")
+            df.group_by("oper_part_no", maintain_order=True)
               .agg([
                   pl.col("seq").cast(pl.Int32).alias("seq_list"),
                   pl.col("delta_t").cast(pl.Float32).alias("dt_list"),
@@ -281,6 +282,7 @@ class RMTPPWeekLookbackDataset(Dataset):
                   pl.col("scale_residual").cast(pl.Float32).alias("val_list") if "scale_residual" in df.columns else pl.lit(None).alias("val_list"),
                   pl.col(split_col).cast(pl.Utf8).alias("split_list") if split_col in df.columns else pl.lit(None).alias("split_list"),
               ])
+              .sort("oper_part_no")
         )
 
         self.parts = grouped["oper_part_no"].to_list()

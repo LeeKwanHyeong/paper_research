@@ -1662,24 +1662,29 @@ Implementation status (`2026-07-15`):
   non-promotion decision because Q3b still fails log2, dominant `1-9`, mark
   accuracy, mark-0 share, and mark-1 recall protections, while Q3a/Q3c fail
   additional quantity protections
-- fresh/frozen Q2 drift still blocks causal attribution: the current helper does
-  not enable strict CUDA algorithms, the shuffled loader has no dedicated
-  generator, and grouped-series order is not explicitly contracted
-- deterministic execution is now a reopen gate rather than an automatic rerun:
-  first implement strict process/CUDA/loader/order manifests, then require two
-  independent Intermittent Q2 e3 runs to have exact histories, selections, and
-  canonical tensor-state digests
+- fresh/frozen Q2 drift still blocks causal attribution; the historical Q3
+  screening runner lacked strict CUDA, dedicated shuffle-generator, and
+  grouped-order contracts
+- explicit `standard|strict` execution is now implemented: strict mode validates
+  launcher environment, enables deterministic Torch/cuDNN, isolates and
+  checkpoints loader RNG, sorts grouped series, records source/data/runtime
+  identity, and writes canonical selection-state digests
+- focused reproducibility tests passed `8/8`, Q3 plus reproducibility tests
+  passed `27/27`, and the complete local search suite passed `118/118`
+- the remaining reopen gate is two independent 5090 Intermittent Q2 e3 strict
+  runs with exact histories, selected epochs, and canonical tensor-state digests
 - only an explicitly reopened Q3 track may proceed from a passing e3 probe to a
   newly matched deterministic V2/Q2/Q3a/Q3b/Q3c e50 comparison; the historical
   nondeterministic Q2 artifact is context, not its exact numeric target
 
 Next execution order:
 
-1. Update the concise Notion `결과` section with V2 retained and all Q3
-   candidates not promoted.
-2. Implement strict deterministic process, CUDA, DataLoader, grouped-order, and
-   manifest controls with focused tests.
-3. Run the 5090 Intermittent Q2 e3 A/B exact-reproduction probe.
+1. Prepare the strict Intermittent Q2 e3 A/B runner, exact comparator, and
+   experiment start record.
+2. Sync the committed revision to 5090, complete CUDA/data/source preflight,
+   and launch both independent processes in tmux.
+3. On request, perform one completion check, sync artifacts, and compare exact
+   histories, selected epochs, and state digests.
 4. Close Q3 and move to the next model hypothesis unless it is explicitly
    reopened after the probe passes; only then prepare the full matched e50 run.
 5. Keep multi-seed and held-out test locked throughout this reproducibility

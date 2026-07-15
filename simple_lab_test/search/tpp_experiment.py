@@ -276,6 +276,16 @@ def add_shared_long_epoch_args(parser: argparse.ArgumentParser) -> None:
         help="Optional comma-separated THP preset names: small,base,deep,wide.",
     )
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+    parser.add_argument(
+        "--reproducibility-mode",
+        default=defaults.reproducibility_mode,
+        choices=["standard", "strict"],
+        help=(
+            "standard preserves the legacy runtime. strict requires launcher-provided "
+            "PYTHONHASHSEED, CUBLAS_WORKSPACE_CONFIG, and SOURCE_REVISION and enables "
+            "deterministic Torch/CUDA and train-loader controls."
+        ),
+    )
     parser.add_argument("--epochs", type=int, default=defaults.epochs)
     parser.add_argument("--lr", type=float, default=defaults.lr)
     parser.add_argument(
@@ -597,6 +607,7 @@ def build_long_epoch_config(args: argparse.Namespace) -> ExperimentConfig:
         base_dir=args.base_dir,
         experiment_mode="long-epoch",
         device=args.device,
+        reproducibility_mode=args.reproducibility_mode,
         datasets=_csv_tuple(args.datasets),
         models=tuple(canonical_model_name(model) for model in _csv_tuple(args.models)),
         titan_profile=args.titan_profile,

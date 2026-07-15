@@ -162,6 +162,35 @@ TransformerHawkesTPP를 같은 marked dataset, split, quantity reconstruction me
 `checkpoints/last_epoch_state.pt`에서 마지막 완료 epoch 다음부터 이어집니다.
 단, `--force-rerun`을 붙이면 resume하지 않고 처음부터 다시 학습합니다.
 
+### Strict Reproducibility Mode
+
+같은 seed의 구조 효과를 exact 비교할 때만 `--reproducibility-mode strict`를
+사용합니다. 일반 실험의 기본값 `standard`와 기존 artifact path는 바뀌지 않습니다.
+
+```bash
+env \
+  PYTHONHASHSEED=42 \
+  CUBLAS_WORKSPACE_CONFIG=:4096:8 \
+  SOURCE_REVISION=<5090에_동기화한_full_commit_sha> \
+  /opt/miniconda3/envs/ai_env/bin/python \
+  ~/workspace/paper_research/simple_lab_test/search/tpp_experiment.py long-epoch \
+  --base-dir ~/workspace/paper_research/search_artifacts/<strict_experiment_name> \
+  --datasets intermittent \
+  --models titantpp \
+  --epochs 3 \
+  --seeds 42 \
+  --split-mode fixed \
+  --reproducibility-mode strict \
+  --device cuda
+```
+
+strict 모드는 launcher 환경을 fail-fast 검증하고, deterministic Torch/cuDNN,
+seed 전용 train-loader generator, 정렬된 series index, loader-state resume를
+강제합니다. `experiment_manifest.json`과 각 `manifest/run_config.json`에는 source/data
+hash 및 runtime identity가, summary/checkpoint에는 selection별 model-state digest가
+남습니다. 두 독립 실행 비교 시 history JSON, selected epoch, 대응 state digest가
+모두 exact match여야 통과입니다.
+
 세 데이터셋 전체 본 비교:
 
 ```bash

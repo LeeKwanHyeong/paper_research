@@ -221,6 +221,45 @@ exec bash
 )
 ```
 
+### 4.1 Strict Deterministic Launch
+
+동일 seed 구조 비교나 exact-reproduction gate에는 long-epoch의 명시적 strict
+모드를 사용한다. 세 환경 변수는 Python 프로세스 안에서 설정하지 말고 launcher의
+`env`에 넣어야 한다. `SOURCE_REVISION`은 5090에 checksum 동기화한 로컬 full commit
+SHA를 사용한다.
+
+```bash
+env \
+  PYTHONHASHSEED=42 \
+  CUBLAS_WORKSPACE_CONFIG=:4096:8 \
+  SOURCE_REVISION=<full_commit_sha> \
+  /opt/miniconda3/envs/ai_env/bin/python \
+  ~/workspace/paper_research/simple_lab_test/search/tpp_experiment.py long-epoch \
+  --base-dir ~/workspace/paper_research/search_artifacts/<experiment_name> \
+  --datasets intermittent \
+  --models titantpp \
+  --epochs <epochs> \
+  --seeds 42 \
+  --split-mode fixed \
+  --reproducibility-mode strict \
+  --device cuda
+```
+
+strict 모드 계약:
+
+- `PYTHONHASHSEED`, `CUBLAS_WORKSPACE_CONFIG`, `SOURCE_REVISION` 누락은 실행 전
+  failure로 처리한다.
+- Torch deterministic algorithms와 deterministic cuDNN을 켜고 cuDNN benchmark를
+  끈다. deterministic operation 오류는 warning으로 낮추지 않는다.
+- train shuffle은 run seed 전용 `torch.Generator`와 `num_workers=0`을 사용하며,
+  resume checkpoint에 loader generator state를 함께 저장한다.
+- grouped series는 `oper_part_no` 오름차순으로 고정한다.
+- root/run manifest에는 source revision, PyTorch/CUDA/GPU, deterministic flags,
+  loader seed와 source dataset SHA-256을 기록한다.
+- summary와 checkpoint에는 selection별 canonical tensor-state SHA-256을 기록한다.
+- strict artifact는 기존 standard cache와 섞이지 않도록 run path의
+  `repro_strict/` 아래에 저장한다.
+
 ## 5. Current Dataset Names
 
 CLI에서 사용하는 dataset 이름은 아래 값으로 통일한다.

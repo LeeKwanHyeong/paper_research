@@ -605,7 +605,12 @@ def eval_next_event_week_lookback(
     return metrics
 
 
-def _make_week_lookback_loaders(marked_df: pl.DataFrame, training_config: TrainingConfig):
+def _make_week_lookback_loaders(
+    marked_df: pl.DataFrame,
+    training_config: TrainingConfig,
+    *,
+    train_generator: torch.Generator | None = None,
+):
     """
     Centralize loader construction so RMTPP and TitanTPP share the exact same
     train/validation split and padding behaviour.
@@ -631,22 +636,34 @@ def _make_week_lookback_loaders(marked_df: pl.DataFrame, training_config: Traini
         shuffle=True,
         collate_fn=collate_week_lookback,
         drop_last=True,
+        num_workers=0,
+        generator=train_generator,
     )
     val_loader = DataLoader(
         val_ds,
         batch_size=training_config.batch_size,
         shuffle=False,
         collate_fn=collate_week_lookback,
+        num_workers=0,
     )
     return train_loader, val_loader
 
 
-def make_week_lookback_loaders(marked_df: pl.DataFrame, training_config: TrainingConfig):
+def make_week_lookback_loaders(
+    marked_df: pl.DataFrame,
+    training_config: TrainingConfig,
+    *,
+    train_generator: torch.Generator | None = None,
+):
     """
     Public wrapper for notebook/analysis code that needs the exact same
     train/validation split used by the trainers.
     """
-    return _make_week_lookback_loaders(marked_df, training_config)
+    return _make_week_lookback_loaders(
+        marked_df,
+        training_config,
+        train_generator=train_generator,
+    )
 
 
 def make_fixed_split_week_lookback_loaders(
@@ -654,6 +671,7 @@ def make_fixed_split_week_lookback_loaders(
     training_config: TrainingConfig,
     *,
     split_col: str = "chronological_split",
+    train_generator: torch.Generator | None = None,
 ):
     """
     Build train/validation/test loaders from a pre-split event table.
@@ -698,18 +716,22 @@ def make_fixed_split_week_lookback_loaders(
         shuffle=True,
         collate_fn=collate_week_lookback,
         drop_last=True,
+        num_workers=0,
+        generator=train_generator,
     )
     val_loader = DataLoader(
         val_ds,
         batch_size=training_config.batch_size,
         shuffle=False,
         collate_fn=collate_week_lookback,
+        num_workers=0,
     )
     test_loader = DataLoader(
         test_ds,
         batch_size=training_config.batch_size,
         shuffle=False,
         collate_fn=collate_week_lookback,
+        num_workers=0,
     )
     return train_loader, val_loader, test_loader
 
