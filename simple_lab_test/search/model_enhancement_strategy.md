@@ -1642,7 +1642,8 @@ Implementation status (`2026-07-15`):
 - all `562` artifact files (`27,179,501` bytes) are synced locally and a checksum
   dry-run found no remote/local differences; manifest/log/status identity is
   verified without reading held-out result files
-- formal acceptance, multi-seed, and held-out Q3 experiments have not started
+- formal seed-42 acceptance is complete with no promoted Q3 candidate;
+  multi-seed and held-out Q3 experiments have not started
 - protocol-order validation analysis is complete: all allowed artifacts
   reconcile to `41,901` samples, all active metrics are finite, and no held-out
   output was read
@@ -1655,17 +1656,34 @@ Implementation status (`2026-07-15`):
 - Q3c supplies a strong non-additive marker-balance interaction, reducing the
   Q2 mark-0 share error by `9.592%p` and raising mark-1 recall by `17.722%p`,
   but raw/short/log2 quantity errors worsen materially
-- no Q3 variant is a balanced winner at this analysis stage; formal acceptance,
-  deterministic-reproduction handling, multi-seed, and held-out remain pending
+- no Q3 variant is a balanced winner; the frozen full gate rejects Q3a/Q3b/Q3c
+  and retains V2 without unlocking multi-seed or held-out evaluation
+- a full deterministic e50 Q3 rerun is not required for the current
+  non-promotion decision because Q3b still fails log2, dominant `1-9`, mark
+  accuracy, mark-0 share, and mark-1 recall protections, while Q3a/Q3c fail
+  additional quantity protections
+- fresh/frozen Q2 drift still blocks causal attribution: the current helper does
+  not enable strict CUDA algorithms, the shuffled loader has no dedicated
+  generator, and grouped-series order is not explicitly contracted
+- deterministic execution is now a reopen gate rather than an automatic rerun:
+  first implement strict process/CUDA/loader/order manifests, then require two
+  independent Intermittent Q2 e3 runs to have exact histories, selections, and
+  canonical tensor-state digests
+- only an explicitly reopened Q3 track may proceed from a passing e3 probe to a
+  newly matched deterministic V2/Q2/Q3a/Q3b/Q3c e50 comparison; the historical
+  nondeterministic Q2 artifact is context, not its exact numeric target
 
 Next execution order:
 
-1. Apply Q2 reproduction, full candidate, mechanism, and selection gates.
-2. Decide whether deterministic controls and a matched rerun are required before
-   any multi-seed promotion.
-3. Update only the concise Notion `결과` section after the decision is frozen.
-4. Keep held-out test and multi-seed execution locked until a valid candidate
-   satisfies the frozen Q3 gate.
+1. Update the concise Notion `결과` section with V2 retained and all Q3
+   candidates not promoted.
+2. Implement strict deterministic process, CUDA, DataLoader, grouped-order, and
+   manifest controls with focused tests.
+3. Run the 5090 Intermittent Q2 e3 A/B exact-reproduction probe.
+4. Close Q3 and move to the next model hypothesis unless it is explicitly
+   reopened after the probe passes; only then prepare the full matched e50 run.
+5. Keep multi-seed and held-out test locked throughout this reproducibility
+   work.
 
 Detailed ADR:
 

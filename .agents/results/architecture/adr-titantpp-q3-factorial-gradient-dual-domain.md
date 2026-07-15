@@ -1,6 +1,6 @@
 # ADR: TitanTPP Q3 Factorial Gradient Routing And Dual-Domain Quantity Loss
 
-- Status: Intermittent seed-42 validation artifact analysis complete; formal acceptance pending
+- Status: Q3a/Q3b/Q3c not promoted; V2 retained; deterministic reopen gate required
 - Date: 2026-07-13
 - Scope: Intermittent TitanTPP direct raw-quantity branch
 - Predecessor: `adr-titantpp-raw-quantity-revin-q0-q1-q2.md`
@@ -680,12 +680,97 @@ not a balanced quantity-and-TPP winner.
 - Per-variant plots use independent y-axis ranges and should not be compared by
   visual slope or bar height alone.
 
-Artifact integrity is ready for the formal gate, but causal attribution and
-promotion are **not ready to share** because fresh Q2 failed the frozen
-reproduction contract and only one seed is available.
+Artifact integrity is sufficient for the conservative non-promotion decision.
+Q3 causal attribution remains **not ready to share** because fresh Q2 failed the
+frozen reproduction contract and only one seed is available.
+
+## Deterministic Matched-Rerun Decision (2026-07-15)
+
+### Decision
+
+Do **not** spend another full e50 budget on Q3 at this stage. Retain V2, reject
+all three Q3 candidates under the frozen seed-42 gate, and keep multi-seed and
+held-out execution locked. This conservative non-promotion decision does not
+depend on attributing the observed differences to Q3 because every candidate
+already fails multiple full-gate conditions.
+
+Deterministic controls are nevertheless required infrastructure before Q3 is
+revived or any future same-seed structural effect is interpreted causally. If
+Q3 is reopened, a short exact-reproduction probe must pass before a new matched
+V2/Q2/Q3 e50 run is allowed. The old nondeterministic frozen Q2 remains
+historical evidence and must not be used as the exact numeric target of a new
+deterministic run.
+
+### Why A Full Rerun Is Not Required For The Current Decision
+
+- Q3a fails the quantity, short-history, log2, low-quantity, accuracy, and mark
+  balance protections. Its detached-only hypothesis is not competitive.
+- Q3b is the closest candidate but still fails five decision-critical gates:
+  log2 MAE `0.686737 > 0.600517`, `1-9` MAE `1.0921 > 0.999348`, mark accuracy
+  `54.963% < 56.999%`, mark-0 share error `20.205%p > 5.850%p`, and mark-1
+  recall `20.957% < 44.616%`.
+- Q3c improves marker balance relative to fresh Q2 but fails overall raw,
+  short-history raw, log2, low-quantity, accuracy, mark-0 share, and mark-1
+  recall protections. Its quantity regressions are too large to promote.
+- The fresh-versus-frozen Q2 drift is larger than the apparent Q3b NLL/raw-MAE
+  effects and the Q3c accuracy effect. It blocks causal claims, but it cannot
+  turn the observed multi-gate failures into promotion evidence.
+
+The resulting selection is therefore V2 by the pre-registered fallback rule,
+not Q2 or a Q3 variant. A full rerun would only be justified to recover a causal
+Q3 mechanism claim, not to decide the current winner.
+
+### Reproducibility Audit
+
+Confirmed:
+
+- fixed-split file hashes, sample counts, train moments, model/optimizer
+  settings, checkpoint policy, and effective Q2 configuration match;
+- frozen and fresh Q2 already diverge at epoch 1 (`48.863899` versus
+  `49.851103` train loss), so this is not only a best-checkpoint tie issue;
+- `set_global_seed` seeds Python, NumPy, CPU Torch, and CUDA Torch but does not
+  enable strict deterministic algorithms;
+- the train DataLoader has `shuffle=True` without a dedicated seeded
+  `torch.Generator`, so shuffle state remains coupled to process-global Torch
+  RNG consumption;
+- CUDA determinism, cuBLAS workspace configuration, and an explicit stable
+  grouped-series ordering are not part of the current experiment manifest.
+
+Not confirmed:
+
+- CUDA nondeterminism is not proven to be the sole root cause;
+- grouped-series order did not vary across four local process checks, although
+  the code still lacks an explicit ordering contract;
+- no held-out artifact was read to investigate the drift.
+
+### Required Reopen Gate
+
+Before any Q3 rerun, implement one explicit strict reproducibility mode that
+records and enforces:
+
+1. `PYTHONHASHSEED` and `CUBLAS_WORKSPACE_CONFIG` before Python starts.
+2. Python/NumPy/Torch seeds, `torch.use_deterministic_algorithms(True)`, and
+   deterministic cuDNN settings with benchmarking disabled.
+3. A dedicated train-loader `torch.Generator` seeded from the run seed and an
+   explicitly sorted grouped-series index.
+4. The exact source revision, PyTorch/CUDA/GPU identity, deterministic flags,
+   loader seed, and dataset hashes in the manifest.
+
+Then run two independent Intermittent Q2 e3 processes on 5090 with the same
+revision, data, configuration, and seed 42. The probe passes only when epoch
+histories, selected epochs, and a canonical tensor-state digest are exactly
+equal. Strict deterministic-operation errors are failures, not warnings. If the
+probe fails, investigate the first differing batch/state and do not run e50.
+
+Only if the probe passes **and** Q3 is explicitly reopened should a new
+deterministic V2/Q2/Q3a/Q3b/Q3c e50 comparison be launched. That comparison
+must derive its relative gates from the newly matched deterministic V2 and Q2
+controls rather than requiring equality with the historical nondeterministic
+Q2 artifact.
 
 ## Next Step
 
-Apply the frozen Q2 reproduction, candidate, mechanism, and selection gates.
-Decide whether the failed reproduction gate requires deterministic controls and
-a matched rerun before any multi-seed promotion. Keep held-out execution locked.
+Record the concise V2-retained/Q3-not-promoted result in Notion. Implement the
+strict reproducibility mode as shared experiment infrastructure, then validate
+it with the Q2 e3 A/B probe. Do not launch a full Q3 e50 rerun unless Q3 is
+explicitly reopened after that probe passes.
