@@ -15,6 +15,8 @@ class RMTPPConfig:
     # shared: one residual prediction reused across all next-mark branches.
     # mark_conditioned_experts: shared residual plus a per-real-mark delta.
     value_head_mode: Literal['shared', 'mark_conditioned_experts'] = 'shared'
+    # mark_conditioned: shared RMTPP intercept plus a zero-init real-mark delta.
+    time_head_mode: Literal['shared', 'mark_conditioned'] = 'shared'
     # coupled: quantity loss updates mark logits through the probability gate.
     # detached: quantity loss treats mark probabilities as fixed gate weights.
     qty_mark_gradient_mode: Literal['coupled', 'detached'] = 'coupled'

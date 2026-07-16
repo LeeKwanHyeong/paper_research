@@ -62,11 +62,13 @@ class ExperimentConfig:
     force_rerun: bool = False
     stop_on_error: bool = False
     split_mode: str = "internal"
+    evaluation_scope: str = "validation_and_test"
     rmtpp_rnn_type: str = "gru"
     rmtpp_mark_emb_dim: int = 32
     rmtpp_hidden_dim: int | None = None
     value_head_activation: str = "sigmoid"
     value_head_mode: str = "shared"
+    time_head_mode: str = "shared"
     qty_mark_gradient_mode: str = "coupled"
     value_encoder_gradient_mode: str = "coupled"
     marker_loss_mode: str = "ce"

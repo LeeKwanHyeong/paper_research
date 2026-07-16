@@ -107,6 +107,8 @@ def _validate_long_epoch_args(args: argparse.Namespace) -> None:
         )
     if float(args.lambda_dt) < 0.0:
         raise ValueError("--lambda-dt must be non-negative.")
+    if args.evaluation_scope == "validation_only" and args.split_mode != "fixed":
+        raise ValueError("--evaluation-scope validation_only requires --split-mode fixed.")
     if int(args.value_input_emb_dim) <= 0:
         raise ValueError("--value-input-emb-dim must be positive.")
     lambda_ordinal = float(args.lambda_ordinal)
@@ -122,6 +124,38 @@ def _validate_long_epoch_args(args: argparse.Namespace) -> None:
             )
         if lambda_ordinal <= 0.0:
             raise ValueError("--marker-loss-mode ce_rps requires --lambda-ordinal > 0.")
+    if args.time_head_mode == "mark_conditioned":
+        if models != {"titantpp"}:
+            raise ValueError(
+                "--time-head-mode mark_conditioned currently supports TitanTPP-only runs."
+            )
+        if args.qty_decoder_mode != "mark_residual":
+            raise ValueError(
+                "--time-head-mode mark_conditioned requires --qty-decoder-mode mark_residual."
+            )
+        if args.marker_loss_mode != "ce" or lambda_ordinal != 0.0:
+            raise ValueError(
+                "--time-head-mode mark_conditioned requires plain marker CE."
+            )
+        supported_value_route = (
+            args.value_head_mode == "shared"
+            and args.qty_mark_gradient_mode == "coupled"
+            and args.value_encoder_gradient_mode == "coupled"
+        ) or (
+            args.value_head_mode == "mark_conditioned_experts"
+            and args.qty_mark_gradient_mode == "detached"
+            and args.value_encoder_gradient_mode == "coupled"
+        )
+        if not supported_value_route:
+            raise ValueError(
+                "--time-head-mode mark_conditioned supports only V4a "
+                "shared/coupled/coupled or V4b "
+                "mark_conditioned_experts/detached/coupled."
+            )
+        if args.test_time_memory != "none":
+            raise ValueError(
+                "--time-head-mode mark_conditioned requires --test-time-memory none."
+            )
     if args.qty_decoder_mode in {"direct_log_qty", "direct_raw_qty"}:
         decoder_mode = str(args.qty_decoder_mode)
         datasets = set(_csv_tuple(args.datasets))
@@ -324,6 +358,15 @@ def add_shared_long_epoch_args(parser: argparse.ArgumentParser) -> None:
         ),
     )
     parser.add_argument(
+        "--evaluation-scope",
+        default=defaults.evaluation_scope,
+        choices=["validation_and_test", "validation_only"],
+        help=(
+            "Whether a fixed-split run exports held-out test metrics after training. "
+            "Use validation_only while a model-selection gate is still locked."
+        ),
+    )
+    parser.add_argument(
         "--value-head-activation",
         default=defaults.value_head_activation,
         choices=["sigmoid", "identity"],
@@ -339,6 +382,15 @@ def add_shared_long_epoch_args(parser: argparse.ArgumentParser) -> None:
         help=(
             "Value residual head architecture. 'shared' preserves V2; "
             "'mark_conditioned_experts' enables the V3 shared-plus-delta head."
+        ),
+    )
+    parser.add_argument(
+        "--time-head-mode",
+        default=defaults.time_head_mode,
+        choices=["shared", "mark_conditioned"],
+        help=(
+            "RMTPP time-head architecture. 'shared' preserves V2/V3; "
+            "'mark_conditioned' enables the V4 shared-plus-delta intercept."
         ),
     )
     parser.add_argument(
@@ -535,6 +587,11 @@ def add_model_test_args(parser: argparse.ArgumentParser) -> None:
         choices=["shared", "mark_conditioned_experts"],
     )
     parser.add_argument(
+        "--time-head-mode",
+        default="shared",
+        choices=["shared", "mark_conditioned"],
+    )
+    parser.add_argument(
         "--qty-mark-gradient-mode",
         default="coupled",
         choices=["coupled", "detached"],
@@ -624,11 +681,13 @@ def build_long_epoch_config(args: argparse.Namespace) -> ExperimentConfig:
         yellow_max_series=_parse_optional_positive_int(args.yellow_max_series),
         insta_max_series=_parse_optional_positive_int(args.insta_max_series),
         split_mode=args.split_mode,
+        evaluation_scope=args.evaluation_scope,
         rmtpp_rnn_type=args.rmtpp_rnn_type,
         rmtpp_mark_emb_dim=int(args.rmtpp_mark_emb_dim),
         rmtpp_hidden_dim=_parse_optional_positive_int(args.rmtpp_hidden_dim),
         value_head_activation=args.value_head_activation,
         value_head_mode=args.value_head_mode,
+        time_head_mode=args.time_head_mode,
         qty_mark_gradient_mode=args.qty_mark_gradient_mode,
         value_encoder_gradient_mode=args.value_encoder_gradient_mode,
         marker_loss_mode=args.marker_loss_mode,

@@ -340,6 +340,7 @@ def build_project_rmtpp_config(
             "mark_emb_dim": cfg.rmtpp_mark_emb_dim,
             "rnn_hidden_dim": int(hidden_dim),
             "value_head_mode": cfg.value_head_mode,
+            "time_head_mode": cfg.time_head_mode,
             "qty_mark_gradient_mode": cfg.qty_mark_gradient_mode,
             "value_encoder_gradient_mode": cfg.value_encoder_gradient_mode,
             "marker_loss_mode": cfg.marker_loss_mode,

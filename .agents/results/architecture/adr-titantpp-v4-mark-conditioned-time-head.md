@@ -1,6 +1,6 @@
 # ADR: TitanTPP V4 Mark-Conditioned Time Head
 
-- Status: Train-only audit passed; constants freeze and focused implementation pending
+- Status: Implemented; local focused gates passed; 5090 integration pending
 - Date: 2026-07-16
 - Scope: TitanTPP probabilistic next-time head
 - Baselines: V2 common baseline and Taxi V3b confirmed enhancement
@@ -79,6 +79,18 @@ The mark-specific delta changes only the intensity intercept. A mark-specific
 `w` is not included in the first version because it increases numerical risk,
 adds sparse parameters, and changes the hazard shape rather than only its
 history- and mark-dependent level.
+
+### Frozen implementation constants (2026-07-16)
+
+- use one hidden-dependent additive delta for each of the `C` real marks
+- implement the delta as `Linear(d_model, C)` with both weight and bias zero-init
+- keep the existing scalar positive slope `w` shared across all marks
+- do not transfer the audit's fitted intercepts or boundary-selected `w=0.001`
+- exclude PAD from the expert table and predicted-mark selection
+- support only V4a `shared/coupled/coupled` and V4b
+  `mark_conditioned_experts/detached/coupled` value routes in the first activation
+- keep marker CE, mark-residual quantity decoding, target-only training, and
+  contextual test-time memory disabled for the focused V4 screen
 
 ## Training And Inference Contract
 
@@ -187,6 +199,25 @@ Before any dataset training:
 6. Config, CLI, run path, cache, manifest, checkpoint, and resume identities
    distinguish shared and mark-conditioned modes.
 
+### Local implementation result (2026-07-16)
+
+- `time_head_mode=shared|mark_conditioned` is connected through RMTPP config,
+  unified CLI, TitanTPP construction, model-test, run path, cache identity,
+  checkpoints, summaries, histories, and validation artifacts
+- conditional likelihood uses the observed real mark, while deterministic
+  sampling without an explicit mark uses the model-predicted real mark and
+  excludes PAD
+- padded and unselected transitions are replaced only for safe expert lookup
+  and remain excluded by the existing transition mask
+- `evaluation_scope=validation_only` creates a distinct run identity and
+  disables held-out test metric export during candidate screening
+- focused and related regression suites passed `96` tests
+- CPU V4a/V4b model-tests both passed with identical zero-init NLL `3.862866`;
+  parameter counts were `297,516` and `298,032`
+
+These checks establish implementation and initial-function equivalence only.
+They do not establish CUDA integration or learned V4 performance.
+
 ## Data And Screening Gates
 
 The first data step is a Taxi train-only audit. Report real-mark support and the
@@ -289,7 +320,7 @@ and validation-first promotion rule.
 ## Next Steps
 
 1. Treat the Taxi train-only audit as complete and keep validation/test locked.
-2. Freeze V4 constants without transferring the diagnostic fit parameters.
-3. Implement `time_head_mode` and focused contract tests.
-4. Run the 5090 CUDA model-test and Instacart top-20 e1 smoke.
-5. Prepare the strict Taxi V2/V3b/V4a/V4b seed-42 e50 validation-only screen.
+2. Treat V4 constants freeze and local focused implementation as complete.
+3. Run the 5090 CUDA model-test and Instacart top-20 e1 smoke.
+4. Run the strict Taxi V2/V3b/V4a/V4b seed-42 e50 validation-only screen.
+5. Keep multi-seed and held-out evaluation locked until a validation pair passes.

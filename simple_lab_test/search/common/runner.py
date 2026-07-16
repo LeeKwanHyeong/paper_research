@@ -48,6 +48,7 @@ from simple_lab_test.search.common.benchmark_utils import (
 from utils.training import (
     TrainingConfig,
     eval_next_event_week_lookback,
+    log_f_dt_for_observed_marks,
     make_fixed_split_week_lookback_loaders,
     make_week_lookback_loaders,
 )
@@ -444,10 +445,14 @@ def build_run_paths(cfg: ExperimentConfig, run_cfg: RunConfig) -> RunPaths:
             )
     if getattr(cfg, "split_mode", "internal") != "internal":
         run_dir_base = run_dir_base / f"split_{cfg.split_mode}"
+    if getattr(cfg, "evaluation_scope", "validation_and_test") != "validation_and_test":
+        run_dir_base = run_dir_base / f"evalscope_{cfg.evaluation_scope}"
     if getattr(cfg, "value_head_activation", "sigmoid") != "sigmoid":
         run_dir_base = run_dir_base / f"value_{cfg.value_head_activation}"
     if getattr(cfg, "value_head_mode", "shared") != "shared":
         run_dir_base = run_dir_base / f"valuehead_{cfg.value_head_mode}"
+    if getattr(cfg, "time_head_mode", "shared") != "shared":
+        run_dir_base = run_dir_base / f"timehead_{cfg.time_head_mode}"
     if getattr(cfg, "qty_mark_gradient_mode", "coupled") != "coupled":
         run_dir_base = run_dir_base / f"qtymarkgrad_{cfg.qty_mark_gradient_mode}"
     if getattr(cfg, "value_encoder_gradient_mode", "coupled") != "coupled":
@@ -1193,7 +1198,7 @@ def evaluate_titantpp_contextual_ttm(
 
             logits_full = model.mark_head(h_prev)
             log_y = -F.cross_entropy(logits_full, y_mk, reduction="none")
-            logf_dt = model.log_f_dt(h_prev, y_dt)
+            logf_dt = log_f_dt_for_observed_marks(model, h_prev, y_dt, y_mk)
             sum_nll_marker += float((-log_y).sum().item())
             sum_nll_time += float((-logf_dt).sum().item())
             sum_nll_total += float(((-log_y) + (-logf_dt)).sum().item())
@@ -1346,7 +1351,11 @@ def cached_run_is_complete(
         csv_path, parquet_path = scale_metric_paths(run_paths, selection)
         if not (csv_path.exists() and parquet_path.exists()):
             return False
-        if getattr(cfg, "split_mode", "internal") == "fixed":
+        if (
+            getattr(cfg, "split_mode", "internal") == "fixed"
+            and getattr(cfg, "evaluation_scope", "validation_and_test")
+            == "validation_and_test"
+        ):
             test_json_path, test_csv_path, test_parquet_path = test_metric_paths(run_paths, selection)
             test_scale_csv_path, test_scale_parquet_path = test_scale_metric_paths(run_paths, selection)
             if not (
@@ -1404,8 +1413,11 @@ def cached_run_is_complete(
         int(cached_summary.get("epochs", -1)) == int(run_cfg.epochs)
         and str(cached_summary.get("test_time_memory", "none")) == str(cfg.test_time_memory)
         and str(cached_summary.get("split_mode", "internal")) == str(getattr(cfg, "split_mode", "internal"))
+        and str(cached_summary.get("evaluation_scope", "validation_and_test"))
+        == str(cfg.evaluation_scope)
         and str(cached_summary.get("value_head_activation", "sigmoid")) == str(cfg.value_head_activation)
         and str(cached_summary.get("value_head_mode", "shared")) == str(cfg.value_head_mode)
+        and str(cached_summary.get("time_head_mode", "shared")) == str(cfg.time_head_mode)
         and str(cached_summary.get("qty_mark_gradient_mode", "coupled"))
         == str(cfg.qty_mark_gradient_mode)
         and str(cached_summary.get("value_encoder_gradient_mode", "coupled"))
@@ -1630,6 +1642,7 @@ def train_one_run(
         with open(summary_path, "r", encoding="utf-8") as f:
             cached_summary = json.load(f)
         cached_summary.setdefault("value_head_mode", "shared")
+        cached_summary.setdefault("time_head_mode", "shared")
         cached_summary.setdefault("qty_mark_gradient_mode", "coupled")
         cached_summary.setdefault("value_encoder_gradient_mode", "coupled")
         cached_summary.setdefault("marker_loss_mode", "ce")
@@ -1650,6 +1663,8 @@ def train_one_run(
         cached_summary.setdefault("reproducibility_mode", "standard")
         cached_summary.setdefault("source_revision", None)
         cached_summary.setdefault("train_loader_seed", None)
+        cached_summary.setdefault("evaluation_scope", "validation_and_test")
+        cached_summary.setdefault("held_out_test_evaluated", True)
         return cached_summary
 
     set_global_seed(
@@ -1663,6 +1678,7 @@ def train_one_run(
     search_cfg = make_search_cfg(cfg, run_cfg.dataset_kind)
     training_cfg = make_training_cfg(cfg, run_cfg.dataset_kind)
     test_loader = None
+    fixed_test_sample_count = None
     if getattr(cfg, "split_mode", "internal") == "fixed":
         train_loader, val_loader, test_loader = make_fixed_split_week_lookback_loaders(
             marked_df,
@@ -1680,6 +1696,12 @@ def train_one_run(
             training_cfg.max_seq_len,
             training_cfg.lookback,
         )
+        fixed_test_sample_count = len(test_loader.dataset)
+        if cfg.evaluation_scope == "validation_only":
+            logger.info(
+                "Held-out test evaluation disabled | evaluation_scope=validation_only"
+            )
+            test_loader = None
     else:
         train_loader, val_loader = make_week_lookback_loaders(
             marked_df,
@@ -1716,8 +1738,10 @@ def train_one_run(
             "loader_sample_counts": {
                 "train": len(train_loader.dataset),
                 "validation": len(val_loader.dataset),
-                "test": len(test_loader.dataset) if test_loader is not None else None,
+                "test": fixed_test_sample_count,
             },
+            "evaluation_scope": cfg.evaluation_scope,
+            "held_out_test_evaluation_enabled": test_loader is not None,
             "reproducibility": {
                 **reproducibility_runtime_manifest(
                     reproducibility_mode,
@@ -1928,8 +1952,11 @@ def train_one_run(
         "titan_profile": run_cfg.titan_profile,
         "loss_mode": cfg.loss_mode,
         "split_mode": cfg.split_mode,
+        "evaluation_scope": cfg.evaluation_scope,
+        "held_out_test_evaluated": False,
         "value_head_activation": cfg.value_head_activation,
         "value_head_mode": cfg.value_head_mode,
+        "time_head_mode": cfg.time_head_mode,
         "qty_mark_gradient_mode": cfg.qty_mark_gradient_mode,
         "value_encoder_gradient_mode": cfg.value_encoder_gradient_mode,
         "marker_loss_mode": cfg.marker_loss_mode,
@@ -2018,6 +2045,8 @@ def train_one_run(
             pl.lit(run_cfg.seed).alias("seed"),
             *reproducibility_artifact_columns(cfg, loader_seed=train_loader_seed),
             pl.lit(cfg.value_head_mode).alias("value_head_mode"),
+            pl.lit(cfg.time_head_mode).alias("time_head_mode"),
+            pl.lit(cfg.evaluation_scope).alias("evaluation_scope"),
             pl.lit(cfg.qty_mark_gradient_mode).alias("qty_mark_gradient_mode"),
             pl.lit(cfg.value_encoder_gradient_mode).alias("value_encoder_gradient_mode"),
             pl.lit(cfg.marker_loss_mode).alias("marker_loss_mode"),
@@ -2047,6 +2076,8 @@ def train_one_run(
             pl.lit(run_cfg.seed).alias("seed"),
             *reproducibility_artifact_columns(cfg, loader_seed=train_loader_seed),
             pl.lit(cfg.value_head_mode).alias("value_head_mode"),
+            pl.lit(cfg.time_head_mode).alias("time_head_mode"),
+            pl.lit(cfg.evaluation_scope).alias("evaluation_scope"),
             pl.lit(cfg.qty_mark_gradient_mode).alias("qty_mark_gradient_mode"),
             pl.lit(cfg.value_encoder_gradient_mode).alias("value_encoder_gradient_mode"),
             pl.lit(cfg.marker_loss_mode).alias("marker_loss_mode"),
@@ -2074,6 +2105,8 @@ def train_one_run(
             pl.lit(run_cfg.candidate_name).alias("candidate_name"),
             pl.lit(run_cfg.seed).alias("seed"),
             *reproducibility_artifact_columns(cfg, loader_seed=train_loader_seed),
+            pl.lit(cfg.time_head_mode).alias("time_head_mode"),
+            pl.lit(cfg.evaluation_scope).alias("evaluation_scope"),
             pl.lit(cfg.marker_loss_mode).alias("marker_loss_mode"),
             pl.lit(float(cfg.lambda_ordinal)).alias("lambda_ordinal"),
             pl.lit(cfg.qty_decoder_mode).alias("qty_decoder_mode"),
@@ -2091,6 +2124,7 @@ def train_one_run(
         mark_class_df.write_parquet(mark_class_parquet_path)
 
         if test_loader is not None:
+            summary["held_out_test_evaluated"] = True
             test_metrics = eval_next_event_week_lookback(
                 model,
                 test_loader,
@@ -2110,6 +2144,8 @@ def train_one_run(
                     loader_seed=train_loader_seed,
                 ),
                 "value_head_mode": cfg.value_head_mode,
+                "time_head_mode": cfg.time_head_mode,
+                "evaluation_scope": cfg.evaluation_scope,
                 "qty_mark_gradient_mode": cfg.qty_mark_gradient_mode,
                 "value_encoder_gradient_mode": cfg.value_encoder_gradient_mode,
                 "marker_loss_mode": cfg.marker_loss_mode,
@@ -2182,6 +2218,8 @@ def train_one_run(
                 pl.lit(run_cfg.seed).alias("seed"),
                 *reproducibility_artifact_columns(cfg, loader_seed=train_loader_seed),
                 pl.lit(cfg.value_head_mode).alias("value_head_mode"),
+                pl.lit(cfg.time_head_mode).alias("time_head_mode"),
+                pl.lit(cfg.evaluation_scope).alias("evaluation_scope"),
                 pl.lit(cfg.qty_mark_gradient_mode).alias("qty_mark_gradient_mode"),
                 pl.lit(cfg.value_encoder_gradient_mode).alias("value_encoder_gradient_mode"),
                 pl.lit(cfg.marker_loss_mode).alias("marker_loss_mode"),
@@ -2211,6 +2249,8 @@ def train_one_run(
                 pl.lit(run_cfg.seed).alias("seed"),
                 *reproducibility_artifact_columns(cfg, loader_seed=train_loader_seed),
                 pl.lit(cfg.value_head_mode).alias("value_head_mode"),
+                pl.lit(cfg.time_head_mode).alias("time_head_mode"),
+                pl.lit(cfg.evaluation_scope).alias("evaluation_scope"),
                 pl.lit(cfg.qty_mark_gradient_mode).alias("qty_mark_gradient_mode"),
                 pl.lit(cfg.value_encoder_gradient_mode).alias("value_encoder_gradient_mode"),
                 pl.lit(cfg.marker_loss_mode).alias("marker_loss_mode"),
@@ -2238,6 +2278,8 @@ def train_one_run(
                 pl.lit(run_cfg.candidate_name).alias("candidate_name"),
                 pl.lit(run_cfg.seed).alias("seed"),
                 *reproducibility_artifact_columns(cfg, loader_seed=train_loader_seed),
+                pl.lit(cfg.time_head_mode).alias("time_head_mode"),
+                pl.lit(cfg.evaluation_scope).alias("evaluation_scope"),
                 pl.lit(cfg.marker_loss_mode).alias("marker_loss_mode"),
                 pl.lit(float(cfg.lambda_ordinal)).alias("lambda_ordinal"),
                 pl.lit(cfg.qty_decoder_mode).alias("qty_decoder_mode"),
@@ -2324,6 +2366,8 @@ def build_error_row(cfg: ExperimentConfig, run_cfg: RunConfig, exc: Exception) -
         "split_mode": "unavailable_after_failure",
         "value_head_activation": "unavailable_after_failure",
         "value_head_mode": cfg.value_head_mode,
+        "time_head_mode": cfg.time_head_mode,
+        "evaluation_scope": cfg.evaluation_scope,
         "qty_mark_gradient_mode": cfg.qty_mark_gradient_mode,
         "value_encoder_gradient_mode": cfg.value_encoder_gradient_mode,
         "marker_loss_mode": cfg.marker_loss_mode,
@@ -2464,6 +2508,10 @@ def load_all_histories(run_rows: list[dict[str, Any]]) -> pl.DataFrame:
                 "source_revision": row.get("source_revision"),
                 "train_loader_seed": row.get("train_loader_seed"),
                 "value_head_mode": row.get("value_head_mode", "shared"),
+                "time_head_mode": row.get("time_head_mode", "shared"),
+                "evaluation_scope": row.get(
+                    "evaluation_scope", "validation_and_test"
+                ),
                 "qty_mark_gradient_mode": row.get("qty_mark_gradient_mode", "coupled"),
                 "value_encoder_gradient_mode": row.get(
                     "value_encoder_gradient_mode", "coupled"
@@ -2658,6 +2706,12 @@ def aggregate_test_metrics(test_df: pl.DataFrame) -> pl.DataFrame:
         return pl.DataFrame()
     if "value_head_mode" not in test_df.columns:
         test_df = test_df.with_columns(pl.lit("shared").alias("value_head_mode"))
+    if "time_head_mode" not in test_df.columns:
+        test_df = test_df.with_columns(pl.lit("shared").alias("time_head_mode"))
+    if "evaluation_scope" not in test_df.columns:
+        test_df = test_df.with_columns(
+            pl.lit("validation_and_test").alias("evaluation_scope")
+        )
     if "qty_mark_gradient_mode" not in test_df.columns:
         test_df = test_df.with_columns(
             pl.lit("coupled").alias("qty_mark_gradient_mode")
@@ -2702,6 +2756,8 @@ def aggregate_test_metrics(test_df: pl.DataFrame) -> pl.DataFrame:
             "candidate_name",
             *REPRODUCIBILITY_GROUP_COLUMNS,
             "value_head_mode",
+            "time_head_mode",
+            "evaluation_scope",
             "qty_mark_gradient_mode",
             "value_encoder_gradient_mode",
             "marker_loss_mode",
@@ -2753,6 +2809,12 @@ def aggregate_run_rows(rows: list[dict[str, Any]]) -> tuple[pl.DataFrame, pl.Dat
     success_df = run_df.filter(pl.col("status") == "success")
     if success_df.height == 0:
         return run_df, pl.DataFrame()
+    if "time_head_mode" not in success_df.columns:
+        success_df = success_df.with_columns(pl.lit("shared").alias("time_head_mode"))
+    if "evaluation_scope" not in success_df.columns:
+        success_df = success_df.with_columns(
+            pl.lit("validation_and_test").alias("evaluation_scope")
+        )
     if "value_encoder_gradient_mode" not in success_df.columns:
         success_df = success_df.with_columns(
             pl.lit("coupled").alias("value_encoder_gradient_mode")
@@ -2840,6 +2902,8 @@ def aggregate_run_rows(rows: list[dict[str, Any]]) -> tuple[pl.DataFrame, pl.Dat
             "candidate_name",
             *REPRODUCIBILITY_GROUP_COLUMNS,
             "value_head_mode",
+            "time_head_mode",
+            "evaluation_scope",
             "qty_mark_gradient_mode",
             "value_encoder_gradient_mode",
             "marker_loss_mode",
@@ -2900,6 +2964,12 @@ def aggregate_scale_metrics(scale_df: pl.DataFrame) -> pl.DataFrame:
         return pl.DataFrame()
     if "value_head_mode" not in scale_df.columns:
         scale_df = scale_df.with_columns(pl.lit("shared").alias("value_head_mode"))
+    if "time_head_mode" not in scale_df.columns:
+        scale_df = scale_df.with_columns(pl.lit("shared").alias("time_head_mode"))
+    if "evaluation_scope" not in scale_df.columns:
+        scale_df = scale_df.with_columns(
+            pl.lit("validation_and_test").alias("evaluation_scope")
+        )
     if "qty_mark_gradient_mode" not in scale_df.columns:
         scale_df = scale_df.with_columns(
             pl.lit("coupled").alias("qty_mark_gradient_mode")
@@ -2927,6 +2997,8 @@ def aggregate_scale_metrics(scale_df: pl.DataFrame) -> pl.DataFrame:
             "candidate_name",
             *REPRODUCIBILITY_GROUP_COLUMNS,
             "value_head_mode",
+            "time_head_mode",
+            "evaluation_scope",
             "qty_mark_gradient_mode",
             "value_encoder_gradient_mode",
             "marker_loss_mode",
@@ -2959,6 +3031,11 @@ def aggregate_scale_metrics(scale_df: pl.DataFrame) -> pl.DataFrame:
 
 def quantity_run_label(row: dict[str, Any]) -> str:
     label = model_run_label(str(row["model_name"]), str(row["candidate_name"]))
+    time_head_mode = str(row.get("time_head_mode", "shared"))
+    if time_head_mode != "shared":
+        label += f" [time/{time_head_mode}]"
+    if str(row.get("evaluation_scope", "validation_and_test")) == "validation_only":
+        label += " [validation-only]"
     decoder_mode = str(row.get("qty_decoder_mode", "mark_residual"))
     if decoder_mode in {"direct_log_qty", "direct_raw_qty"}:
         domain = "log" if decoder_mode == "direct_log_qty" else "raw"
@@ -2972,6 +3049,12 @@ def quantity_run_label(row: dict[str, Any]) -> str:
 def save_learning_curve_plots(history_df: pl.DataFrame, plots_dir: Path) -> None:
     if history_df.height == 0:
         return
+    if "time_head_mode" not in history_df.columns:
+        history_df = history_df.with_columns(pl.lit("shared").alias("time_head_mode"))
+    if "evaluation_scope" not in history_df.columns:
+        history_df = history_df.with_columns(
+            pl.lit("validation_and_test").alias("evaluation_scope")
+        )
     if "qty_decoder_mode" not in history_df.columns:
         history_df = history_df.with_columns(
             pl.lit("mark_residual").alias("qty_decoder_mode")
@@ -3002,6 +3085,8 @@ def save_learning_curve_plots(history_df: pl.DataFrame, plots_dir: Path) -> None
             pl.struct([
                 "model_name",
                 "candidate_name",
+                "time_head_mode",
+                "evaluation_scope",
                 "qty_decoder_mode",
                 "magnitude_norm_mode",
                 "reproducibility_mode",

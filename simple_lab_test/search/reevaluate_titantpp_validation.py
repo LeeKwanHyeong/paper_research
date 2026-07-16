@@ -152,6 +152,7 @@ def main() -> None:
     payload = load_checkpoint(checkpoint_path)
     rmtpp_payload = dict(payload["rmtpp_config"])
     rmtpp_payload.setdefault("value_head_mode", "shared")
+    rmtpp_payload.setdefault("time_head_mode", "shared")
     rmtpp_payload.setdefault("qty_mark_gradient_mode", "coupled")
     rmtpp_payload.setdefault("value_encoder_gradient_mode", "coupled")
     rmtpp_payload.setdefault("marker_loss_mode", "ce")
@@ -161,6 +162,7 @@ def main() -> None:
 
     if (
         rmtpp_cfg.value_head_mode != "shared"
+        or rmtpp_cfg.time_head_mode != "shared"
         or rmtpp_cfg.qty_mark_gradient_mode != "coupled"
         or rmtpp_cfg.value_encoder_gradient_mode != "coupled"
         or rmtpp_cfg.marker_loss_mode != "ce"

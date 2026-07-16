@@ -126,8 +126,8 @@ S0 또는 value-conditioned hybrid 계열은 아래 옵션을 추가한다.
 - The strict Q2 reproducibility infrastructure gate passed and is closed; Q3
   remains closed unless explicitly reopened.
 - V4 mark-conditioned time intensity is selected as the next focused model
-  hypothesis. Its Taxi train-only dependence audit passed; no V4 model training
-  or validation/test evaluation has started.
+  hypothesis. Its Taxi train-only dependence audit and local implementation
+  gates passed; 5090 integration and learned-model screening have not started.
 
 ## 8. Code-State Verification
 
@@ -1821,6 +1821,23 @@ Train-only dependence audit result (`2026-07-16`):
   are not transferred to V4; shared `w`, predicted-mark inference, sparse-mark
   checks, and per-series guardrails remain required
 
+V4 implementation status (`2026-07-16`):
+
+- froze a full real-mark `Linear(d_model, C)` intercept delta with zero weight
+  and bias, shared scalar `w`, no audit-parameter transfer, and no PAD expert
+- first activation permits only V4a shared/coupled/coupled and V4b
+  mark-conditioned-experts/detached/coupled value routes
+- observed marks select conditional time likelihood branches; deployment-style
+  sampling selects the predicted real mark when no explicit mark is supplied
+- `time_head_mode` is connected to CLI, run/cache/checkpoint identity, model-test,
+  summaries, histories, and validation artifacts
+- added `evaluation_scope=validation_only`; it has a distinct run path and
+  suppresses held-out test metric evaluation during screening
+- focused plus existing V3/V5/Q/reproducibility regression tests passed
+  (`96 passed`)
+- CPU V4a/V4b model-tests passed with identical zero-init NLL `3.862866`
+- no 5090 CUDA model-test, dataset smoke, or V4 training result exists yet
+
 Detailed ADR:
 
 ```text
@@ -1830,9 +1847,9 @@ Detailed ADR:
 Next execution order:
 
 1. Taxi train-only next-mark versus delta-time audit - completed, gate passed.
-2. Freeze V4 constants without transferring audit fit parameters.
-3. Implement `time_head_mode` and focused contract tests.
-4. Run the 5090 CUDA model-test and Instacart top-20 e1 smoke.
-5. Run the strict Taxi V2/V3b/V4a/V4b seed-42 e50 validation-only screen.
+2. V4 constants freeze and `time_head_mode` focused implementation - completed.
+3. Run the 5090 CUDA V4a/V4b model-test and Instacart top-20 e1 smoke.
+4. Run the strict Taxi V2/V3b/V4a/V4b seed-42 e50 validation-only screen.
+5. Apply the frozen pairwise acceptance gate using validation artifacts only.
 6. Keep Q3 closed and multi-seed/held-out locked until a new validation gate
    explicitly unlocks them.

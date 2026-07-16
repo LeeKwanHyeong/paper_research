@@ -22,6 +22,18 @@ from models.RMTPPs.config import RMTPPConfig, THPConfig
 from models.Titan import TitanConfig
 
 
+def log_f_dt_for_observed_marks(
+    model: torch.nn.Module,
+    hidden: torch.Tensor,
+    delta_time: torch.Tensor,
+    marks: torch.Tensor,
+) -> torch.Tensor:
+    """Pass observed marks only to models with a conditional time head."""
+    if str(getattr(model, "time_head_mode", "shared")) == "mark_conditioned":
+        return model.log_f_dt(hidden, delta_time, marks=marks)
+    return model.log_f_dt(hidden, delta_time)
+
+
 def _mark_metrics_from_confusion(confusion: np.ndarray) -> Dict[str, float]:
     total = int(confusion.sum())
     if total <= 0:
@@ -161,7 +173,7 @@ def eval_next_event_classic(model, loader: DataLoader, device: str) -> Dict[str,
 
             logits = model.mark_head(h_last)
             log_y = -F.cross_entropy(logits, y_mk, reduction='none')
-            logf_dt = model.log_f_dt(h_last, y_dt)
+            logf_dt = log_f_dt_for_observed_marks(model, h_last, y_dt, y_mk)
             ordinal_scores = normalized_ranked_probability_score(
                 logits,
                 y_mk,
@@ -396,7 +408,7 @@ def eval_next_event_week_lookback(
             logits = model.mark_head(h_prev)      # (Bv, K_with_pad)
             if target_only_nll:
                 log_y = -F.cross_entropy(logits, y_mk, reduction="none")
-                logf_dt = model.log_f_dt(h_prev, y_dt)
+                logf_dt = log_f_dt_for_observed_marks(model, h_prev, y_dt, y_mk)
                 ordinal_scores = normalized_ranked_probability_score(
                     logits,
                     y_mk,
@@ -817,7 +829,7 @@ def _train_classic_next_event_model(model, train_loader: DataLoader, val_loader:
                     loss_marker
                     + float(getattr(model.cfg, "lambda_ordinal", 0.0)) * ordinal_marker_loss
                 )
-            loss_time = -model.log_f_dt(h_last, y_dt).mean()
+            loss_time = -log_f_dt_for_observed_marks(model, h_last, y_dt, y_mk).mean()
 
             if y_val is not None and getattr(model.cfg, "use_value_head", False):
                 value_hat = predict_value_for_marks(model, h_last, y_mk)

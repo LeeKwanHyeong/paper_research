@@ -134,6 +134,32 @@ def selected_model_jobs(args: Any) -> list[tuple[str, str, Any]]:
             )
         if lambda_ordinal <= 0.0:
             raise ValueError("marker_loss_mode='ce_rps' requires lambda_ordinal>0.")
+    if args.time_head_mode == "mark_conditioned":
+        if set(model_names) != {"titantpp"}:
+            raise ValueError(
+                "time_head_mode='mark_conditioned' supports TitanTPP-only model tests."
+            )
+        if args.qty_decoder_mode != "mark_residual":
+            raise ValueError(
+                "time_head_mode='mark_conditioned' requires mark_residual quantity decoding."
+            )
+        if args.marker_loss_mode != "ce" or lambda_ordinal != 0.0:
+            raise ValueError(
+                "time_head_mode='mark_conditioned' requires plain marker CE."
+            )
+        supported_value_route = (
+            args.value_head_mode == "shared"
+            and args.qty_mark_gradient_mode == "coupled"
+            and args.value_encoder_gradient_mode == "coupled"
+        ) or (
+            args.value_head_mode == "mark_conditioned_experts"
+            and args.qty_mark_gradient_mode == "detached"
+            and args.value_encoder_gradient_mode == "coupled"
+        )
+        if not supported_value_route:
+            raise ValueError(
+                "time_head_mode='mark_conditioned' supports only V4a or V4b value routes."
+            )
     if args.qty_decoder_mode in {"direct_log_qty", "direct_raw_qty"}:
         decoder_mode = str(args.qty_decoder_mode)
         if set(model_names) != {"titantpp"}:
@@ -206,6 +232,7 @@ def run_one_model_test(
         rmtpp_mark_emb_dim=args.rmtpp_mark_emb_dim,
         rmtpp_hidden_dim=int(args.rmtpp_hidden_dim),
         value_head_mode=str(args.value_head_mode),
+        time_head_mode=str(args.time_head_mode),
         qty_mark_gradient_mode=str(args.qty_mark_gradient_mode),
         value_encoder_gradient_mode=str(args.value_encoder_gradient_mode),
         marker_loss_mode=str(args.marker_loss_mode),
@@ -360,6 +387,7 @@ def run_one_model_test(
             else float(out["nll_marker"].item())
         ),
         "value_head_mode": str(getattr(model.cfg, "value_head_mode", "shared")),
+        "time_head_mode": str(getattr(model.cfg, "time_head_mode", "shared")),
         "qty_mark_gradient_mode": str(
             getattr(model.cfg, "qty_mark_gradient_mode", "coupled")
         ),

@@ -41,6 +41,7 @@ class TitanTPP(nn.Module):
     }
     VALID_TTM_MEMORY_UPDATES = {"all", "last", "mean"}
     VALID_VALUE_HEAD_MODES = {"shared", "mark_conditioned_experts"}
+    VALID_TIME_HEAD_MODES = {"shared", "mark_conditioned"}
     VALID_QTY_MARK_GRADIENT_MODES = {"coupled", "detached"}
     VALID_VALUE_ENCODER_GRADIENT_MODES = {"coupled", "detached"}
     VALID_MARKER_LOSS_MODES = {"ce", "ce_rps"}
@@ -120,6 +121,7 @@ class TitanTPP(nn.Module):
         # Next Marker Prediction
         self.mark_head = nn.Linear(d_model, cfg.num_marks)
         self.value_head_mode = self._resolve_value_head_mode(cfg)
+        self.time_head_mode = self._resolve_time_head_mode(cfg)
         self.qty_mark_gradient_mode = self._resolve_qty_mark_gradient_mode(cfg)
         self.value_encoder_gradient_mode = self._resolve_value_encoder_gradient_mode(cfg)
         self.marker_loss_mode = self._resolve_marker_loss_mode(cfg)
@@ -133,6 +135,7 @@ class TitanTPP(nn.Module):
         self.log_qty_floor = float(getattr(cfg, "log_qty_floor", 1.0))
         self._validate_gradient_mode_combination()
         self._validate_marker_loss_combination()
+        self._validate_time_head_combination()
         self._validate_quantity_decoder_combination()
         self._validate_magnitude_q3_combination()
         if self.use_direct_magnitude:
@@ -150,6 +153,10 @@ class TitanTPP(nn.Module):
         self.v_t = nn.Linear(d_model, 1, bias = False)  # Depends on History H
         self.b_t = nn.Parameter(torch.zeros(1))                   # Base intensity bias
         self.w_raw = nn.Parameter(torch.zeros(1))                 # Time decay parameter
+        if self.time_head_mode == "mark_conditioned":
+            rng_state = torch.random.get_rng_state()
+            self.time_mark_delta_head = nn.Linear(d_model, self.num_real_marks)
+            torch.random.set_rng_state(rng_state)
 
         # Initialize weights
         self._init_stable()
@@ -161,6 +168,16 @@ class TitanTPP(nn.Module):
             available = ", ".join(sorted(cls.VALID_VALUE_HEAD_MODES))
             raise ValueError(
                 f"Unsupported TitanTPP value_head_mode='{mode}'. Available: {available}"
+            )
+        return mode
+
+    @classmethod
+    def _resolve_time_head_mode(cls, cfg: RMTPPConfig) -> str:
+        mode = str(getattr(cfg, "time_head_mode", "shared") or "shared").strip().lower()
+        if mode not in cls.VALID_TIME_HEAD_MODES:
+            available = ", ".join(sorted(cls.VALID_TIME_HEAD_MODES))
+            raise ValueError(
+                f"Unsupported TitanTPP time_head_mode='{mode}'. Available: {available}"
             )
         return mode
 
@@ -369,6 +386,33 @@ class TitanTPP(nn.Module):
                 "log_qty_huber_delta=1.0, and log_qty_floor=1.0."
             )
 
+    def _validate_time_head_combination(self) -> None:
+        if self.time_head_mode == "shared":
+            return
+        if self.qty_decoder_mode != "mark_residual":
+            raise ValueError(
+                "time_head_mode='mark_conditioned' requires qty_decoder_mode='mark_residual'."
+            )
+        if self.marker_loss_mode != "ce" or self.lambda_ordinal != 0.0:
+            raise ValueError(
+                "time_head_mode='mark_conditioned' requires plain marker CE."
+            )
+        supported_value_route = (
+            self.value_head_mode == "shared"
+            and self.qty_mark_gradient_mode == "coupled"
+            and self.value_encoder_gradient_mode == "coupled"
+        ) or (
+            self.value_head_mode == "mark_conditioned_experts"
+            and self.qty_mark_gradient_mode == "detached"
+            and self.value_encoder_gradient_mode == "coupled"
+        )
+        if not supported_value_route:
+            raise ValueError(
+                "time_head_mode='mark_conditioned' supports only the V4a "
+                "shared/coupled/coupled or V4b "
+                "mark_conditioned_experts/detached/coupled value route."
+            )
+
     def _value_branch_hidden(self, h_j: torch.Tensor) -> torch.Tensor:
         if self.value_encoder_gradient_mode == "detached":
             return h_j.detach()
@@ -454,6 +498,10 @@ class TitanTPP(nn.Module):
             # V3 starts exactly on the V2 shared-head function.
             nn.init.zeros_(self.value_mark_delta_head.weight)
             nn.init.zeros_(self.value_mark_delta_head.bias)
+        if hasattr(self, "time_mark_delta_head"):
+            # V4 starts exactly on its paired shared-time control.
+            nn.init.zeros_(self.time_mark_delta_head.weight)
+            nn.init.zeros_(self.time_mark_delta_head.bias)
 
         # w_raw를 음수로 시작하면 softplus(w_raw)가 작게 시작 -> wd가 작아져 폭주 억제
         with torch.no_grad():
@@ -810,14 +858,59 @@ class TitanTPP(nn.Module):
             return x.new_empty((x.size(0), 0, d_model))
         return torch.cat(outputs, dim=1)
 
-    def log_f_dt(self, h_j: torch.Tensor, dt_next: torch.Tensor) -> torch.Tensor:
+    def _time_intercept(
+        self,
+        h_j: torch.Tensor,
+        marks: Optional[torch.Tensor],
+        *,
+        predict_if_missing: bool,
+    ) -> torch.Tensor:
+        intercept = self.v_t(h_j).squeeze(-1) + self.b_t
+        if self.time_head_mode == "shared":
+            return intercept
+
+        if marks is None:
+            if not predict_if_missing:
+                raise ValueError(
+                    "time_head_mode='mark_conditioned' requires observed marks for log_f_dt."
+                )
+            marks = torch.argmax(
+                self.mark_head(h_j)[..., :self.num_real_marks],
+                dim=-1,
+            )
+        if marks.shape != intercept.shape:
+            raise ValueError(
+                "Time-head marks must match the RMTPP intercept shape: "
+                f"marks={tuple(marks.shape)} intercept={tuple(intercept.shape)}."
+            )
+        if marks.dtype not in {
+            torch.uint8,
+            torch.int8,
+            torch.int16,
+            torch.int32,
+            torch.int64,
+        }:
+            raise TypeError("Time-head marks must use an integer dtype.")
+        invalid = (marks < 0) | (marks >= self.num_real_marks)
+        if bool(invalid.any().item()):
+            raise ValueError("Time-head marks must be real marks and cannot include PAD.")
+
+        deltas = self.time_mark_delta_head(h_j)
+        selected_delta = deltas.gather(-1, marks.long().unsqueeze(-1)).squeeze(-1)
+        return intercept + selected_delta
+
+    def log_f_dt(
+        self,
+        h_j: torch.Tensor,
+        dt_next: torch.Tensor,
+        marks: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         '''
         Calculate log density of the next inter-event time.
         log f(d) = log(lambda(d)) - integral_0^d lambda(u) du
         '''
         w = self._w_pos()
-        # h_j: [B, L-1, D] -> v_t -> [B, L-1, 1] -> squeeze -> [B, L-1]
-        a = self.v_t(h_j).squeeze(-1) + self.b_t
+        a = self._time_intercept(h_j, marks, predict_if_missing=False)
 
         # Numerical stability
         a_c = torch.clamp(a, max=self.cfg.exp_clamp)
@@ -889,7 +982,8 @@ class TitanTPP(nn.Module):
         ).reshape(B, L - 1)                     # [B, L-1] (log P)
 
         # Time log-density
-        logf_dt = self.log_f_dt(h_j, dt_next)   # [B, L-1]
+        time_marks = torch.where(step_mask, y_next, torch.zeros_like(y_next))
+        logf_dt = self.log_f_dt(h_j, dt_next, marks=time_marks)   # [B, L-1]
 
         magnitude_loss = torch.zeros((), device=marks.device, dtype=torch.float32)
         log_qty_aux_loss = torch.zeros((), device=marks.device, dtype=torch.float32)
@@ -1077,7 +1171,12 @@ class TitanTPP(nn.Module):
         }
 
     @torch.no_grad()
-    def sample_next_dt(self, h_j: torch.Tensor, u: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def sample_next_dt(
+        self,
+        h_j: torch.Tensor,
+        u: Optional[torch.Tensor] = None,
+        marks: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         """
         Inverse-CDF sampling for dt when lambda(u) = exp(a + w u).
         Survival: S(d) = exp(-(exp(a)/w) * (exp(w d)-1))
@@ -1086,7 +1185,7 @@ class TitanTPP(nn.Module):
             d = (1/w) log (1 + (w/exp(a)) * (-log U))
         """
         w = self._w_pos()
-        a = self.v_t(h_j).squeeze(-1) + self.b_t
+        a = self._time_intercept(h_j, marks, predict_if_missing=True)
 
         if u is None:
             u = torch.rand_like(a).clamp_min(self.cfg.eps)
