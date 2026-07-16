@@ -1,7 +1,7 @@
 # ADR: TitanTPP V3 Mark-Conditioned Value Head
 
 - Date: 2026-07-10
-- Status: Accepted for implementation
+- Status: Implemented; V3a not promoted; V2 retained
 - Scope: TitanTPP value prediction head and its training/evaluation adapters
 - Method: Design-Twice followed by ADR
 

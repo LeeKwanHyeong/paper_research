@@ -1,7 +1,7 @@
 # ADR: TitanTPP V3b Detached Quantity Gate
 
 - Date: 2026-07-10
-- Status: Accepted for implementation
+- Status: Implemented; Taxi-only confirmed model; not a common baseline replacement
 - Scope: TitanTPP hybrid quantity-loss gradient routing and experiment identity
 - Method: Design-Twice followed by ADR
 
@@ -339,3 +339,15 @@ Negative:
 
 These are screening gates, not final paper claims. Multi-seed validation remains
 required before adopting V3b.
+
+## Final Outcome
+
+The Taxi strict matched-budget e50 comparison completed for seeds `42,52,62`.
+Relative to V2, V3b improved total NLL by `2.335%`, marker NLL by `16.448%`,
+quantity MAE by `49.086%`, value MAE by `27.303%`, and mark accuracy by
+`0.729%p`. Time NLL regressed by `0.181%`, within the predeclared guardrail,
+and all three seeds passed the simultaneous gate.
+
+V3b is therefore retained as the Taxi-specific confirmed model. V2 remains the
+common TitanTPP baseline and the Taxi attribution control. V3b is not promoted
+for Intermittent or Instacart and is not a global V2 replacement.

@@ -12,6 +12,12 @@ Step을 제목 3으로 구성한다.
 
 이 문서는 Model Enhancement Session에서 사용할 TitanTPP 강화 기준선을 고정하기 위한 작업 노트다. Main Developer Session의 실험 runner와 산출물은 그대로 follow-up하되, 이 세션의 초점은 hyperparameter search가 아니라 TitanTPP 모델 구조 강화에 둔다.
 
+현재 모델 승격 상태와 dataset별 baseline의 canonical source는 아래 registry다.
+
+```text
+.agents/results/architecture/titantpp-model-status-baseline-registry.md
+```
+
 ## 1. Baseline Contract
 
 TitanTPP 강화 실험은 아래 세 기준선을 항상 함께 비교한다.
@@ -28,10 +34,13 @@ TitanTPP 강화 실험은 아래 세 기준선을 항상 함께 비교한다.
 - `L0`는 legacy TitanTPP 기준선이다. 새 구조가 기존 TitanTPP보다 좋아졌는지 확인하는 최소 기준이다.
 - `S0`는 multi-seed V1/V2 비교로 확정한 strong baseline이다. 이후 강화 모델은 단순히 L0만 이기는 것이 아니라, 가능하면 S0 대비 개선을 보여야 한다.
 - V1 `residual_only`는 보조 guardrail로 유지한다. 특히 taxi에서 V2의 quantity 이득과 함께 marker NLL/mark accuracy가 회복되는지 확인할 때 사용한다.
+- 현재 active incumbent는 Intermittent/Instacart의 V2와 Taxi의 V3b다. Taxi의 새 replacement 후보는 V3b를 primary로 넘고 V2를 attribution control로 함께 비교한다.
 
 ## 2. Evaluation Protocol
 
-강화 실험은 기본적으로 fixed split과 held-out test를 사용한다.
+강화 실험은 fixed split을 사용하되, 첫 구조 판정은 validation-only로 수행한다.
+사전 gate를 통과해 구조와 coefficient를 freeze한 후보만 multi-seed와 held-out
+test를 순서대로 연다.
 
 | Item | Default |
 | --- | --- |
@@ -42,7 +51,7 @@ TitanTPP 강화 실험은 아래 세 기준선을 항상 함께 비교한다.
 | recommended seeds | `42,52,62` |
 | default train loss scope | `target_only` |
 | auxiliary train loss scope | `all` |
-| test evaluation | `target_only_nll=True` |
+| test evaluation | promotion 전 locked; unlock 후 `target_only_nll=True` |
 
 `target_only`를 기본으로 두는 이유는 weekly window 내부의 dense supervision 효과와 모델 구조 개선 효과가 섞이는 것을 줄이기 위해서다. `all`은 Titan encoder가 window 내부 transition supervision을 받을 때 추가 이득이 있는지 확인하는 보조 실험으로 둔다.
 
@@ -120,14 +129,20 @@ S0 또는 value-conditioned hybrid 계열은 아래 옵션을 추가한다.
 
 ## 7. Current Status
 
-- V2 is retained as the common TitanTPP strong baseline.
-- V3b is retained as the Taxi-specific confirmed value-head enhancement.
-- Intermittent V3/V5 and direct-magnitude Q variants were not promoted.
-- The strict Q2 reproducibility infrastructure gate passed and is closed; Q3
-  remains closed unless explicitly reopened.
-- V4 mark-conditioned time intensity passed its train-only audit and all
-  implementation/integration gates, but failed the Taxi validation promotion
-  gate. V4 is closed without multi-seed or held-out evaluation.
+The canonical state is frozen in
+`.agents/results/architecture/titantpp-model-status-baseline-registry.md`.
+
+| Dataset | Active incumbent | Comparison rule |
+| --- | --- | --- |
+| Intermittent | V2 `small_lmm` | new candidate vs fresh matched V2 |
+| Yellow Trip Hourly / Taxi | V3b `mid_lmm` | replacement vs V3b; attribution vs V2 `mid_lmm` |
+| Instacart | V2 `small_lmm` | new candidate vs fresh matched V2 |
+
+- V2 remains the common TitanTPP strong baseline; V3b is promoted only for Taxi.
+- V3a/V3c/V4/V5a/M0/Q0-Q3 are implemented or evaluated ablations, not active models.
+- V5b and V6 are deferred. M1-M4 and Q3 are closed unless explicitly reopened.
+- The strict Q2 exact A/B gate validates deterministic infrastructure only and does not promote Q2.
+- Instacart `dataset_best=mid_lmm` is a generic runner recommendation; the model-enhancement V2 baseline lock remains `small_lmm`.
 
 ## 8. Code-State Verification
 
@@ -1883,5 +1898,7 @@ Next execution order:
 6. V4 final decision - completed; V4a/V4b rejected, V2 and Taxi V3b retained.
 7. Update the existing `5. Model Design Enhancement` section with the final
    validation result - completed; direct write and refetch verification passed.
-8. Keep Q3 and V4 closed and multi-seed/held-out locked.
-9. Select the next model enhancement hypothesis against V2 and Taxi V3b.
+8. Consolidate the model promotion registry and dataset baseline lock -
+   completed; local and Notion sources aligned.
+9. Keep Q3 and V4 closed and multi-seed/held-out locked.
+10. Select the next model enhancement hypothesis against V2 and Taxi V3b.

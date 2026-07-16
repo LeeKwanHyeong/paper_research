@@ -1,7 +1,7 @@
 # ADR: TitanTPP V3c Detached Value-to-Encoder Route
 
 - Date: 2026-07-12
-- Status: Implemented; focused validation passed
+- Status: Implemented; Intermittent candidate rejected; V2 retained
 - Scope: Intermittent-specific TitanTPP shared-encoder gradient routing
 - Method: Design-Twice followed by ADR
 
@@ -389,3 +389,14 @@ Use the `best_val_nll` held-out test and the matched V2 e50 baseline.
   priority and move to marker imbalance/ordinal-objective analysis.
 - Quantity improves but marker gate fails: keep V2; quantity gain alone is not
   sufficient for Intermittent V3c promotion.
+
+## Final Outcome
+
+The 5090 integration gates and Intermittent seed-42 e50 screening completed.
+V3c recovered `0.307%p` mark accuracy relative to V3b, but remained
+`0.786%p` below V2. Its total NLL (`5.143232`) and quantity MAE (`3.613536`)
+were also worse than V2 (`5.071916` and `3.528298`).
+
+V3c therefore failed the Intermittent promotion gate. Multi-seed confirmation
+was not opened, V2 remains the Intermittent baseline, and the detached
+value-to-encoder route is retained only as a gradient-routing ablation.

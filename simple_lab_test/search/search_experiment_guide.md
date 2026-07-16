@@ -55,6 +55,14 @@ python simple_lab_test/search/tpp_experiment.py {subcommand} ...
 | `yellow_trip_hourly` | 10.0 | effective `lookback=168`, `max_seq_len=256`, `batch_size=128` | GRU, hidden 128 | `mid_lmm`, `mid_deep_lmm` | `small`, `base` | series는 131개뿐이지만 각 sequence가 매우 길고 hourly weekly pattern이 있으므로 168시간 이상 context와 중간 이상 capacity가 필요합니다. |
 | `insta_market_basket` | 2.0 | `max_seq_len=64`, `batch_size=128` or `256` | GRU, hidden 128 | `mid_lmm` | `small`, `base` | user 수가 206k로 매우 많고 p95 length가 50이라 `max_seq_len=64`가 대부분의 history를 커버합니다. quantity tail은 taxi보다 약하므로 log2 + medium capacity가 균형적입니다. |
 
+위 표의 Instacart `mid_lmm`는 generic full-model recommendation입니다. Model
+Enhancement 트랙의 V1/V2 e200 multi-seed 비교에서 고정한 V2 baseline은
+`small_lmm`입니다. 따라서 matched architecture comparison에서는
+`dataset_best`가 선택하는 `mid_lmm`로 baseline을 자동 교체하지 않습니다.
+Instacart `mid_lmm`를 사용하려면 별도 capacity ablation으로 선언하고 같은
+candidate의 fresh control을 함께 실행합니다. Canonical lock은
+`.agents/results/architecture/titantpp-model-status-baseline-registry.md`를 따릅니다.
+
 현재 코드의 dataset-specific override:
 
 | dataset | 자동 적용 |
