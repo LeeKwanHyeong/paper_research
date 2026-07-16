@@ -1,6 +1,6 @@
 # ADR: TitanTPP Q3 Factorial Gradient Routing And Dual-Domain Quantity Loss
 
-- Status: Q3a/Q3b/Q3c not promoted; V2 retained; deterministic reopen gate required
+- Status: Q3a/Q3b/Q3c not promoted; V2 retained; strict reproducibility gate passed and closed
 - Date: 2026-07-13
 - Scope: Intermittent TitanTPP direct raw-quantity branch
 - Predecessor: `adr-titantpp-raw-quantity-revin-q0-q1-q2.md`
@@ -815,6 +815,8 @@ probe is complete.
   `3` for final; all three canonical checkpoint-state digests match exactly
 - an independent comparator rerun against the synced local checkpoints also
   passed `22/22`, so the strict reproducibility infrastructure gate is accepted
+- the gate lifecycle was formally closed as `PASS` on `2026-07-16`; no active
+  experiment or monitoring remains for this probe
 - this gate does not promote Q2, reproduce the historical nondeterministic Q2
   numerically, or alter the retained V2 / non-promoted Q3 decision
 

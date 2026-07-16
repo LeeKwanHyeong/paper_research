@@ -1697,6 +1697,8 @@ Implementation status (`2026-07-15`):
 - the exact report and an independent local rerun both passed all `22/22`
   checks with zero mismatches; history bytes, selected epochs, and all three
   canonical checkpoint-state digests match exactly
+- the strict Q2 reproducibility gate was formally closed as `PASS` on
+  `2026-07-16`; no active experiment or monitoring remains for this probe
 - strict reproducibility infrastructure is accepted, but this does not promote
   Q2, establish equality with historical nondeterministic Q2, or change the V2
   retention and Q3 non-promotion decision
@@ -1706,10 +1708,11 @@ Implementation status (`2026-07-15`):
 
 Next execution order:
 
-1. Keep Q3 closed and move to the next model hypothesis by default.
-2. Only if Q3 is explicitly reopened, prepare a fresh deterministic
+1. Treat the strict Q2 reproducibility gate as closed and keep Q3 closed.
+2. Move to the next model hypothesis by default.
+3. Only if Q3 is explicitly reopened, prepare a fresh deterministic
    V2/Q2/Q3a/Q3b/Q3c e50 comparison using the accepted strict infrastructure.
-3. Keep multi-seed and held-out execution locked until a new validation gate
+4. Keep multi-seed and held-out execution locked until a new validation gate
    explicitly unlocks them.
 
 Detailed ADR:
