@@ -120,13 +120,13 @@ S0 또는 value-conditioned hybrid 계열은 아래 옵션을 추가한다.
 
 ## 7. Current Status
 
-- Step 1, baseline contract is fixed in this document.
-- Step 2, code-state verification is complete.
-- Step 3, S0 smoke reproduction is complete.
-- Step 4, V1/V2 multi-seed baseline experiment is complete.
-- Step 5, artifact analysis and pre-V3 baseline lock are complete.
-- Step 6, V3 mark-conditioned value-head design is complete.
-- Next step is V3 implementation and focused model tests.
+- V2 is retained as the common TitanTPP strong baseline.
+- V3b is retained as the Taxi-specific confirmed value-head enhancement.
+- Intermittent V3/V5 and direct-magnitude Q variants were not promoted.
+- The strict Q2 reproducibility infrastructure gate passed and is closed; Q3
+  remains closed unless explicitly reopened.
+- V4 mark-conditioned time intensity is selected as the next focused model
+  hypothesis. No V4 experiment has started.
 
 ## 8. Code-State Verification
 
@@ -1706,7 +1706,7 @@ Implementation status (`2026-07-15`):
   newly matched deterministic V2/Q2/Q3a/Q3b/Q3c e50 comparison; the historical
   nondeterministic Q2 artifact is context, not its exact numeric target
 
-Next execution order:
+Q3 track closure order:
 
 1. Treat the strict Q2 reproducibility gate as closed and keep Q3 closed.
 2. Move to the next model hypothesis by default.
@@ -1720,3 +1720,97 @@ Detailed ADR:
 ```text
 .agents/results/architecture/adr-titantpp-q3-factorial-gradient-dual-domain.md
 ```
+
+## 23. V4 Mark-Conditioned Time Head Selection And Contract
+
+The next model hypothesis is V4 mark-conditioned time intensity. V2 remains the
+common baseline and Taxi V3b remains the dataset-specific value-head
+enhancement. Q2/Q3 stay closed.
+
+Why V4 is selected before V6:
+
+- every enhancement so far kept one shared RMTPP time head, leaving
+  `f(dt | history, mark)` untested
+- matched Taxi V2/V3b evidence shows V3b's gain is marker-driven while time NLL
+  changes by `+0.181%`, so time modeling remains an independent improvement axis
+- V4 changes one model component and keeps the current data/split contract
+- V6 `series_lmm` is only a model hook; the common long-epoch runner does not
+  construct or inject `series_memory`, so V6 would mix model, data, state, and
+  leakage-control changes
+
+V4 keeps a shared RMTPP base head and adds a zero-initialized real-mark delta to
+the log-intensity intercept:
+
+```text
+a_shared = v_time(h_t) + b_time
+delta = W_mark_time h_t + b_mark_time
+a_k = a_shared + delta_k
+
+log p(k, dt | h_t)
+  = log p(k | h_t) + log f(dt | h_t, k)
+```
+
+The positive slope `w` remains shared. Training time NLL selects the expert with
+the observed next mark, but that mark is not an encoder input. Deterministic
+inference selects the predicted mark first and uses the corresponding time
+branch. This preserves a valid joint marked-TPP likelihood without routing the
+isolated time loss through marker probabilities.
+
+Official 2x2 Taxi factorial:
+
+| Variant | `value_head_mode` | `qty_mark_gradient_mode` | `time_head_mode` | Role |
+| --- | --- | --- | --- | --- |
+| V2 | `shared` | `coupled` | `shared` | common control |
+| V3b | `mark_conditioned_experts` | `detached` | `shared` | Taxi value-head control |
+| V4a | `shared` | `coupled` | `mark_conditioned` | isolated time-head effect |
+| V4b | `mark_conditioned_experts` | `detached` | `mark_conditioned` | combined Taxi candidate |
+
+Implementation contract:
+
+- config/CLI `time_head_mode=shared|mark_conditioned`, default `shared`
+- first activation is TitanTPP-only
+- zero-initialize the mark-time delta and preserve RNG around layer creation
+- keep `v_t`, `b_t`, `w_raw`, marker head, value/quantity loss, Titan profile,
+  split, lookback, and checkpoint policy unchanged
+- `log_f_dt` requires the observed mark only in mark-conditioned likelihood
+  mode; `sample_next_dt` uses an explicit mark or falls back to predicted mark
+- record mode in run path, manifests, cache/resume, checkpoints, histories,
+  summaries, and model-test artifacts
+- PAD is excluded from time experts
+
+Focused gate:
+
+- shared-mode exact regression against current V2
+- zero-initialized V4 exact time-density/sampling equivalence to paired control
+- isolated time loss gives no mark-head gradient and updates only the selected
+  mark-delta row plus shared time/encoder parameters
+- finite and correct behavior for left padding, `target_only`, PAD, and masks
+- closed-form likelihood and predicted-mark sampling checks
+
+Screening policy:
+
+- first run a Taxi train-only next-mark/delta-time dependence audit
+- then run 5090 CUDA model-test and Instacart top-20 e1 smoke
+- first learning screen is strict Taxi seed-42 e50, 2x2, validation-only
+- held-out output is not read before a validation pair passes
+- primary pairwise gate: time NLL improvement at least `0.5%`
+- guardrails: total NLL `<=0.5%` regression, dt MAE `<=1%`, marker NLL
+  `<=2%`, mark accuracy `<=0.25%p`, quantity MAE `<=5%`
+- V4b is the Taxi promotion candidate; V4a remains the attribution control
+- multi-seed and held-out evaluation remain locked until validation passes
+
+Detailed ADR:
+
+```text
+.agents/results/architecture/adr-titantpp-v4-mark-conditioned-time-head.md
+```
+
+Next execution order:
+
+1. Run the Taxi train-only next-mark versus delta-time audit.
+2. Freeze the audit conclusion and V4 constants without validation/test access.
+3. Implement `time_head_mode` and focused contract tests.
+4. Run the 5090 CUDA model-test and Instacart top-20 e1 smoke.
+5. Prepare the strict Taxi V2/V3b/V4a/V4b seed-42 e50 validation-only screen.
+6. Keep Q3 closed and multi-seed/held-out locked until a new validation gate
+   explicitly unlocks them.
