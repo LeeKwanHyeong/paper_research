@@ -1,6 +1,6 @@
 # ADR: TitanTPP V4 Mark-Conditioned Time Head
 
-- Status: Accepted for focused implementation; no experiment started
+- Status: Train-only audit passed; constants freeze and focused implementation pending
 - Date: 2026-07-16
 - Scope: TitanTPP probabilistic next-time head
 - Baselines: V2 common baseline and Taxi V3b confirmed enhancement
@@ -195,6 +195,41 @@ held-out targets are not read for this audit. The audit is diagnostic: it can
 stop V4 before implementation if supported marks show no material conditional
 time separation.
 
+### Train-only audit outcome (2026-07-16)
+
+The audit reconstructed `38,393` fixed-split train next-event targets from
+`131` series and matched the loader target count and decoded mark/delta-time
+values exactly. Validation and held-out targets were not read. Source-quality,
+loader-equivalence, support, and temporal-holdout checks all passed.
+
+All four real marks met the global support rule. Their target counts and shares
+were `20,512/53.426%`, `9,555/24.887%`, `5,475/14.260%`, and
+`2,851/7.426%`. The delta-time median was `1` for every mark, so the signal is
+not a median shift. It is concentrated in the upper tail of mark `0`: its
+`dt > 1` share was `32.61%` in the diagnostic fit partition and `33.36%` in
+the eval partition, versus about `0.2%` for mark `1` and `0%` for marks `2`
+and `3`.
+
+The train-only distribution and likelihood diagnostics were material:
+
+- eta-squared for next mark versus `log1p(dt)` was `0.123197`
+  (`omega-squared=0.123126`)
+- the per-series temporal `80/20` eval NLL changed from `1.577575` for the
+  global intercept to `1.485791` for mark-conditioned intercepts, a `5.818%`
+  improvement
+- the `2,000`-replicate series bootstrap 95% interval was
+  `[4.273%, 7.378%]`
+- `98/131` series (`74.809%`) improved and no eval mark was unseen in fit
+
+All `10/10` predeclared gates passed. This unlocks V4 constants freeze and
+focused implementation, but it is not evidence that a trained V4 improves
+validation or deployment metrics. The diagnostic used the observed next mark
+to evaluate the conditional density; deployment-style delta-time prediction
+must still use the predicted mark. No fitted audit intercept or slope is
+transferred to model initialization. Mark `3` spans only `13` train series and
+`33/131` series worsened in the diagnostic, so sparse-mark and per-series
+guardrails remain required.
+
 After focused tests and a 5090 CUDA model-test plus Instacart top-20 e1 smoke,
 run a strict Taxi seed-42 e50 2x2 validation-only screen. Do not read held-out
 outputs. At the validation-selected checkpoint, a V4 pair passes only if:
@@ -253,8 +288,8 @@ and validation-first promotion rule.
 
 ## Next Steps
 
-1. Run the Taxi train-only next-mark versus delta-time audit.
-2. Freeze the audit conclusion and V4 constants without validation/test access.
+1. Treat the Taxi train-only audit as complete and keep validation/test locked.
+2. Freeze V4 constants without transferring the diagnostic fit parameters.
 3. Implement `time_head_mode` and focused contract tests.
 4. Run the 5090 CUDA model-test and Instacart top-20 e1 smoke.
 5. Prepare the strict Taxi V2/V3b/V4a/V4b seed-42 e50 validation-only screen.

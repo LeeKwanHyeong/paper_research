@@ -6,8 +6,9 @@ Notion의 `5. Model Design Enhancement` 아래에서 제목 2
 
 ## 상태
 
-- 상태: `실험 중`
-- 실험 시작 시각: `2026-07-16 12:36:00 KST`
+- 상태: `완료 - audit gate PASS`
+- 실험 시작 시각: `2026-07-16 12:36:27 KST`
+- 실험 종료 시각: `2026-07-16 12:36:29 KST`
 - 실행 서버 / tmux: `5090 / titantpp_v4_taxi_time_audit_0716`
 
 ## 목적
@@ -44,3 +45,18 @@ ssh 5090 '/opt/miniconda3/envs/ai_env/bin/tmux new-session -d -s titantpp_v4_tax
 ```
 
 ## 결과
+
+- fixed-split train next-event target `38,393건`, 시계열 `131개`를 확인했다.
+  source와 DataLoader의 target 수, mark, delta-time은 모두 일치했다.
+- 실제 mark 비중은 `53.426% / 24.887% / 14.260% / 7.426%`였다.
+  mark별 delta-time 중앙값은 모두 `1`이었고, 차이는 mark `0`의 긴 간격에서
+  주로 나타났다. Eval 구간의 `dt > 1` 비중은 mark `0`이 `33.36%`, 나머지는
+  `0.26% / 0% / 0%`였다.
+- `log1p(delta-time)` eta-squared는 `0.123197`이었다.
+- train 내부 시간순 `80/20` 진단에서 mark-conditioned NLL은 global 대비
+  `5.818%` 개선됐다. Series bootstrap 95% 구간은 `[4.273%, 7.378%]`, 개선
+  시계열 비중은 `74.809%`였다.
+- 사전 정의한 gate `10/10`을 통과해 V4 constants freeze와 구현을 진행한다.
+  다만 이 결과는 V4 validation 성능을 의미하지 않으며, 진단에서 적합한
+  parameter도 모델 초기값으로 사용하지 않는다.
+- validation/test target은 읽지 않았다.

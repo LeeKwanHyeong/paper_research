@@ -126,7 +126,8 @@ S0 또는 value-conditioned hybrid 계열은 아래 옵션을 추가한다.
 - The strict Q2 reproducibility infrastructure gate passed and is closed; Q3
   remains closed unless explicitly reopened.
 - V4 mark-conditioned time intensity is selected as the next focused model
-  hypothesis. No V4 experiment has started.
+  hypothesis. Its Taxi train-only dependence audit passed; no V4 model training
+  or validation/test evaluation has started.
 
 ## 8. Code-State Verification
 
@@ -1799,6 +1800,27 @@ Screening policy:
 - V4b is the Taxi promotion candidate; V4a remains the attribution control
 - multi-seed and held-out evaluation remain locked until validation passes
 
+Train-only dependence audit result (`2026-07-16`):
+
+- the exact fixed-split loader contract produced `38,393` Taxi train targets
+  from `131` series; source and loader-equivalence gates passed
+- all four marks met global support, with shares
+  `53.426/24.887/14.260/7.426%`; validation/test targets were not read
+- delta-time median was `1` for every mark, while mark `0` carried nearly all
+  long-gap variation (`dt > 1` eval share `33.36%` versus `0.26/0/0%`)
+- next mark explained `12.320%` of `log1p(dt)` variance
+  (`eta-squared=0.123197`)
+- a train-internal per-series temporal `80/20` diagnostic improved eval NLL
+  from `1.577575` to `1.485791`, or `5.818%`; the series-bootstrap 95% interval
+  was `[4.273%, 7.378%]`
+- `98/131` series (`74.809%`) improved, no eval mark was unseen, and all
+  `10/10` predeclared gates passed
+- the result supports proceeding to V4 constants freeze and implementation; it
+  does not establish validation/deployment improvement or promote V4
+- the diagnostic used observed-mark branch selection, and its fitted parameters
+  are not transferred to V4; shared `w`, predicted-mark inference, sparse-mark
+  checks, and per-series guardrails remain required
+
 Detailed ADR:
 
 ```text
@@ -1807,10 +1829,10 @@ Detailed ADR:
 
 Next execution order:
 
-1. Run the Taxi train-only next-mark versus delta-time audit.
-2. Freeze the audit conclusion and V4 constants without validation/test access.
+1. Taxi train-only next-mark versus delta-time audit - completed, gate passed.
+2. Freeze V4 constants without transferring audit fit parameters.
 3. Implement `time_head_mode` and focused contract tests.
 4. Run the 5090 CUDA model-test and Instacart top-20 e1 smoke.
-5. Prepare the strict Taxi V2/V3b/V4a/V4b seed-42 e50 validation-only screen.
+5. Run the strict Taxi V2/V3b/V4a/V4b seed-42 e50 validation-only screen.
 6. Keep Q3 closed and multi-seed/held-out locked until a new validation gate
    explicitly unlocks them.
