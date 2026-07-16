@@ -1845,11 +1845,16 @@ V4 implementation status (`2026-07-16`):
   generated, and the smoke is treated only as an integration gate
 - source revision `c5e9cca4241a5579ba0af655c884d6692484ba5a` passed a `20/20`
   local-to-5090 checksum check and the Taxi 2x2 fixed-split preflight
-- strict Taxi V2/V3b/V4a/V4b seed-42 e50 validation-only screening started in
-  tmux `titantpp_v4_taxi_2x2_e50_0716` at `2026-07-16 18:41:44 KST`
-- the initial check confirmed the V2 CUDA process, fixed loader counts
-  `38,393/8,268/8,327`, and held-out evaluation disabled; no continuous
-  monitoring is active
+- strict Taxi V2/V3b/V4a/V4b seed-42 e50 validation-only screening ran from
+  `2026-07-16 18:41:44 KST` to `19:29:29 KST`; all four variants and the
+  comparator exited with code zero
+- fixed loader counts matched `38,393/8,268/8,327`, no held-out test artifact
+  was generated, and all `286` artifact files were synced locally with an empty
+  checksum dry-run
+- the preliminary comparator rejects both V4 pairs: V4a misses the `0.5%` time
+  NLL threshold and DT-MAE guardrail, while V4b misses only the time-NLL
+  threshold (`0.321%` improvement); full history, scale, and confusion analysis
+  remains pending before the final interpretation is recorded
 
 Detailed ADR:
 
@@ -1863,10 +1868,12 @@ Next execution order:
 2. V4 constants freeze and `time_head_mode` focused implementation - completed.
 3. 5090 CUDA V4a/V4b model-test and Instacart top-20 e1 smoke - completed,
    corrected integration gate passed.
-4. Strict Taxi V2/V3b/V4a/V4b seed-42 e50 validation-only screen - in progress.
-5. On request after completion, sync artifacts once and read manifest, log,
-   summary, histories, validation scale/confusion/class metrics, then plots.
-6. Apply the frozen V4a-vs-V2 and V4b-vs-V3b acceptance gates using validation
-   artifacts only.
-7. Keep Q3 closed and multi-seed/held-out locked unless the validation gate
-   explicitly promotes V4b.
+4. Strict Taxi V2/V3b/V4a/V4b seed-42 e50 validation-only screen - completed;
+   artifacts synced and structural checks passed.
+5. Read summary, histories, validation scale/confusion/class metrics, then plots
+   without opening held-out artifacts.
+6. Confirm the preliminary V4a/V4b rejection against the full validation
+   evidence and record the final model decision.
+7. Update the existing `5. Model Design Enhancement` section after analysis.
+8. Keep Q3 closed and multi-seed/held-out locked unless the completed validation
+   analysis provides an explicit promotion basis.

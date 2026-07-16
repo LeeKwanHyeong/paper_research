@@ -6,9 +6,10 @@ Notion의 `5. Model Design Enhancement` 아래 제목 2
 
 ## 상태
 
-- 상태: `실험 중 - V2 첫 CUDA 학습 진입 확인`
+- 상태: `완료 - validation artifact 상세 분석 대기`
 - 실행 서버 / tmux: `5090 / titantpp_v4_taxi_2x2_e50_0716`
 - 실행 시작 시각: `2026-07-16 18:41:44 KST`
+- 실행 종료 시각: `2026-07-16 19:29:29 KST`
 - source revision: `c5e9cca4241a5579ba0af655c884d6692484ba5a`
 
 ## 목적
