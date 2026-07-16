@@ -82,7 +82,7 @@ def validate_variant(root: Path, variant: str, contract: dict[str, str]) -> dict
         f"{variant} smoke summary",
     )
     manifest_path = one_path(
-        list(smoke_root.glob("runs/**/manifests/run_config.json")),
+        list(smoke_root.glob("runs/**/manifest/run_config.json")),
         f"{variant} run manifest",
     )
     history_path = one_path(

@@ -6,9 +6,10 @@ Notion의 `5. Model Design Enhancement` 아래 제목 2
 
 ## 상태
 
-- 상태: `실행 준비`
+- 상태: `실행 중`
 - 실행 서버 / tmux: `5090 / titantpp_v4_cuda_insta_smoke_0716`
-- 실행 시작 시각: `5090 동기화 후 기록`
+- 실행 시작 시각: `2026-07-16 18:32:31 KST`
+- source revision: `51cbad647c27118c18576338aa3ce536ddfbddf0`
 
 ## 목적
 
