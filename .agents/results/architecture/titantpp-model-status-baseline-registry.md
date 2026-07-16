@@ -17,6 +17,7 @@
 | `REFERENCE_ONLY` | 외부 또는 과거 비교 기준이며 새 구조의 기본 시작점은 아님 |
 | `NOT_PROMOTED` | 구현·screening은 완료했지만 acceptance gate를 통과하지 못함 |
 | `CLOSED` | prerequisite 또는 screening 실패로 해당 실험 계열을 종료함 |
+| `SELECTED_HYPOTHESIS` | 다음 설계·audit 대상으로 선택됐지만 구현·성능 승격은 아직 없음 |
 | `DEFERRED` | 설계·scaffold만 있고 승격 판단에 필요한 모델 품질 실험이 없음 |
 | `INFRA_ONLY` | 실행·재현성·artifact 계약만 검증했으며 모델 품질 근거가 아님 |
 
@@ -85,7 +86,7 @@ capacity ablation과 fresh matched control로 취급한다.
 | Q1 | direct raw quantity + canonical causal RevIN | scale collapse 및 validation gate 실패 | `NOT_PROMOTED` | normalization diagnostic |
 | Q2 | direct raw quantity + shrinkage RevIN | raw MAE 개선, low-scale/mark safety 실패 | `NOT_PROMOTED` | normalization foundation only |
 | Q3a/Q3b/Q3c | Q2 gradient routing/log auxiliary factorial | Intermittent validation gate 미통과 | `CLOSED` | implementation retained |
-| V6 | `series_lmm` retrieval hook | model/candidate scaffold만 존재; main runner memory 미주입 | `DEFERRED` | no model-quality claim |
+| V6 | causal pre-window series memory adapter | 다음 가설로 선택; 기존 hook은 미사용, train-only audit 전 | `SELECTED_HYPOTHESIS` | Taxi design/audit only; no quality claim |
 
 ## 5. Decision Evidence
 
@@ -103,6 +104,9 @@ capacity ablation과 fresh matched control로 취급한다.
 - strict Q2 e3 A/B exact comparator의 `22/22` 일치는 deterministic runner의
   `INFRA_ONLY` 통과다. Q2 자체의 성능 승격이나 과거 standard artifact의 exact
   재현을 뜻하지 않는다.
+- V6는 기존 `series_lmm` switch가 아니라 static LMM을 유지하는 zero-init causal
+  pre-window adapter로 선택했다. Taxi train-only audit 통과 전에는 구현·validation을
+  시작하지 않으며 active incumbent는 계속 V3b다.
 
 ## 6. Comparison And Unlock Rules
 

@@ -88,6 +88,13 @@ TitanTPP memory-mode 후보:
 | `series_lmm` | per-series retrieved memory hook. 기본 long-epoch에서는 memory 미주입 시 fallback | `small_series_lmm`, `mid_series_lmm` |
 | `hybrid_lmm_ttm` | contextual TTM + LMM retrieval | `small_hybrid_lmm_ttm`, `mid_hybrid_lmm_ttm` |
 
+V6 선정은 `small_series_lmm` 또는 `mid_series_lmm`을 현재 runner에서 바로
+실행한다는 뜻이 아닙니다. 이 hook은 memory 미주입 시 encoder-only이고, 주입 시
+학습된 static LMM bank를 대체하며 padding mask와 zero-init fusion gate가 없습니다.
+V6는 기존 `small_lmm`/`mid_lmm`을 유지한 채 strictly pre-window same-series
+memory를 별도 masked residual adapter로 추가하는 설계입니다. Train-only audit가
+통과하기 전에는 V6 candidate를 품질 실험에 사용하지 않습니다.
+
 최종 RMTPP/TitanTPP/THP 비교 전에 TitanTPP만 먼저 screening하는 것이 좋습니다.
 이 단계에서는 test 결과를 논문 주장에 직접 쓰기보다, validation 기준으로 TitanTPP
 대표 후보를 고르는 용도로 사용합니다.

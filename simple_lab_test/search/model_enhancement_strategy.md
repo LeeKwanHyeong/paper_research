@@ -140,7 +140,7 @@ The canonical state is frozen in
 
 - V2 remains the common TitanTPP strong baseline; V3b is promoted only for Taxi.
 - V3a/V3c/V4/V5a/M0/Q0-Q3 are implemented or evaluated ablations, not active models.
-- V5b and V6 are deferred. M1-M4 and Q3 are closed unless explicitly reopened.
+- V5b is deferred. V6 causal pre-window series memory is the selected next hypothesis, but remains unimplemented until its Taxi train-only audit passes.
 - The strict Q2 exact A/B gate validates deterministic infrastructure only and does not promote Q2.
 - Instacart `dataset_best=mid_lmm` is a generic runner recommendation; the model-enhancement V2 baseline lock remains `small_lmm`.
 
@@ -1901,4 +1901,56 @@ Next execution order:
 8. Consolidate the model promotion registry and dataset baseline lock -
    completed; local and Notion sources aligned.
 9. Keep Q3 and V4 closed and multi-seed/held-out locked.
-10. Select the next model enhancement hypothesis against V2 and Taxi V3b.
+10. Select the next model enhancement hypothesis against V2 and Taxi V3b -
+    completed; V6 causal pre-window series memory selected for audit.
+11. Run the Taxi train-only V6 memory support and predictiveness audit.
+
+## 24. V6 Causal Pre-Window Series Memory Hypothesis Selection
+
+V6 is selected as the next model hypothesis, but it is not implemented or
+promoted. The first target is Taxi because its mean/median series lengths
+(`420.76/405`) substantially exceed the active 168-hour context, while the same
+131 series recur over time. Intermittent and Instacart are not included in the
+first quality screen.
+
+The existing `series_lmm` candidate is not the selected implementation. The
+runner does not inject memory, supplied memory replaces static LMM, and LMM adds
+the retrieved vector without a mask or learned gate. V6 instead keeps V2/V3b's
+`mid_lmm` static bank and adds strictly pre-window same-series memory through a
+masked residual adapter with a zero-initialized bounded gate.
+
+```text
+h_base = LMM_static(TitanEncoder(x_context))
+r_mem  = MaskedRetrieve(h_base, Project(x_pre_window), memory_mask)
+h_v6   = h_base + tanh(alpha_series) * r_mem
+alpha_series = 0
+```
+
+Taxi factorial:
+
+| Variant | Value head | Quantity-mark route | Series adapter | Role |
+| --- | --- | --- | --- | --- |
+| V2 | shared | coupled | off | common/attribution control |
+| V3b | mark-conditioned experts | detached | off | Taxi incumbent |
+| V6a | shared | coupled | on | isolated memory effect |
+| V6b | mark-conditioned experts | detached | on | Taxi replacement candidate |
+
+Before implementation, a 5090 train-only audit must verify pre-window coverage
+and additional marker/time/quantity signal without reading validation or test.
+Only an audit pass freezes memory budget/top-k and opens implementation. The
+first model-quality screen remains strict seed-42 e50 validation-only; multi-seed
+and held-out stay locked.
+
+Detailed ADR:
+
+```text
+.agents/results/architecture/adr-titantpp-v6-causal-pre-window-series-memory.md
+```
+
+V6 execution order:
+
+1. Taxi train-only pre-window support and predictiveness audit.
+2. Audit-based constants freeze or V6 closure.
+3. Masked zero-init adapter implementation and focused tests only after pass.
+4. 5090 CUDA and Taxi e1 integration gates.
+5. Strict Taxi V2/V3b/V6a/V6b seed-42 e50 validation-only screening.
