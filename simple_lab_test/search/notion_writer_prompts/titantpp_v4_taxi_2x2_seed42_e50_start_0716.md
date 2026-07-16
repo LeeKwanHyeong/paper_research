@@ -72,3 +72,15 @@ ssh 5090 '/opt/miniconda3/envs/ai_env/bin/tmux new-session -d \
   낮은 quantity MAE는 time head보다 기존 value head 효과가 지배적이었다.
 - 최종 결정: 공통 기준선은 V2, Taxi 확정 모델은 V3b 유지. V4a/V4b
   multi-seed와 held-out test는 진행하지 않고 V4를 미승격 종료한다.
+
+## Notion 반영
+
+- 반영 시각: `2026-07-17 06:21:24 KST`
+- 대상: `5. Model Design Enhancement`
+- URL: `https://app.notion.com/p/2e8bbe40561380a88b5eef94e834892e`
+- `2026-07-16 | V4 Mark-Conditioned Time Head` 아래 Step 1-4를 직접 추가했다.
+- 재조회 결과 날짜 섹션 1개, Step 4개, Factorial/selected-checkpoint 표,
+  V4a/V4b gate, history/scale/class 해석, held-out 잠금, 최종 판정이 모두
+  확인됐다.
+- selected-checkpoint 표의 Markdown 정렬 행이 데이터 행으로 표시된 문제는
+  header table로 교체한 뒤 재조회했으며 전체 검증 항목이 통과했다.
