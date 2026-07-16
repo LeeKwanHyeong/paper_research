@@ -86,7 +86,7 @@ capacity ablation과 fresh matched control로 취급한다.
 | Q1 | direct raw quantity + canonical causal RevIN | scale collapse 및 validation gate 실패 | `NOT_PROMOTED` | normalization diagnostic |
 | Q2 | direct raw quantity + shrinkage RevIN | raw MAE 개선, low-scale/mark safety 실패 | `NOT_PROMOTED` | normalization foundation only |
 | Q3a/Q3b/Q3c | Q2 gradient routing/log auxiliary factorial | Intermittent validation gate 미통과 | `CLOSED` | implementation retained |
-| V6 | causal pre-window series memory adapter | 다음 가설로 선택; 기존 hook은 미사용, train-only audit 전 | `SELECTED_HYPOTHESIS` | Taxi design/audit only; no quality claim |
+| V6 | causal pre-window series memory adapter | train-only audit CLI/test/5090 runner 구현; audit 미실행, adapter 미구현 | `SELECTED_HYPOTHESIS` | Taxi design/audit only; no quality claim |
 
 ## 5. Decision Evidence
 
@@ -105,8 +105,9 @@ capacity ablation과 fresh matched control로 취급한다.
   `INFRA_ONLY` 통과다. Q2 자체의 성능 승격이나 과거 standard artifact의 exact
   재현을 뜻하지 않는다.
 - V6는 기존 `series_lmm` switch가 아니라 static LMM을 유지하는 zero-init causal
-  pre-window adapter로 선택했다. Taxi train-only audit 통과 전에는 구현·validation을
-  시작하지 않으며 active incumbent는 계속 V3b다.
+  pre-window adapter로 선택했다. Train-only audit 코드만 구현됐으며 Taxi 결과는
+  아직 읽지 않았다. Audit 통과 전에는 adapter 구현·validation을 시작하지 않고
+  active incumbent는 계속 V3b다.
 
 ## 6. Comparison And Unlock Rules
 

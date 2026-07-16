@@ -1903,7 +1903,9 @@ Next execution order:
 9. Keep Q3 and V4 closed and multi-seed/held-out locked.
 10. Select the next model enhancement hypothesis against V2 and Taxi V3b -
     completed; V6 causal pre-window series memory selected for audit.
-11. Run the Taxi train-only V6 memory support and predictiveness audit.
+11. Implement the Taxi train-only V6 memory support and predictiveness audit -
+    completed; synthetic focused tests passed, 5090 Taxi run pending.
+12. Checksum-sync and run the train-only audit once on 5090.
 
 ## 24. V6 Causal Pre-Window Series Memory Hypothesis Selection
 
@@ -1941,6 +1943,22 @@ Only an audit pass freezes memory budget/top-k and opens implementation. The
 first model-quality screen remains strict seed-42 e50 validation-only; multi-seed
 and held-out stay locked.
 
+The audit implementation reuses the exact week-lookback train target index and
+separates temporal-boundary exclusion from `max_seq_len` exclusion. Series are
+split chronologically into `70% fit / 15% candidate selection / 15% final audit`.
+Window-only and memory-augmented plain linear probes are compared on identical
+targets for marker CE, `log1p(dt)` MAE, and `log2(qty)` MAE. The final train suffix
+is opened only after `M/topk` and the primary metric are selected. This is a
+feasibility diagnostic, not TitanTPP performance evidence.
+
+Implementation paths:
+
+```text
+simple_lab_test/search/analyze_taxi_pre_window_memory_audit.py
+simple_lab_test/search/scripts/run_titantpp_v6_taxi_train_memory_audit_0717.sh
+simple_lab_test/search/tests/test_taxi_pre_window_memory_audit.py
+```
+
 Detailed ADR:
 
 ```text
@@ -1949,8 +1967,9 @@ Detailed ADR:
 
 V6 execution order:
 
-1. Taxi train-only pre-window support and predictiveness audit.
-2. Audit-based constants freeze or V6 closure.
-3. Masked zero-init adapter implementation and focused tests only after pass.
-4. 5090 CUDA and Taxi e1 integration gates.
-5. Strict Taxi V2/V3b/V6a/V6b seed-42 e50 validation-only screening.
+1. Taxi train-only pre-window support and predictiveness audit implementation - completed; Taxi run not started.
+2. Commit, checksum-sync, and execute the audit once on 5090.
+3. Artifact-order analysis and audit-based constants freeze or V6 closure.
+4. Masked zero-init adapter implementation and focused tests only after pass.
+5. 5090 CUDA and Taxi e1 integration gates.
+6. Strict Taxi V2/V3b/V6a/V6b seed-42 e50 validation-only screening.

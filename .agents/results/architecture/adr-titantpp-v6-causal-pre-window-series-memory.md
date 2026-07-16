@@ -1,7 +1,7 @@
 # ADR: TitanTPP V6 Causal Pre-Window Series Memory
 
 - Date: 2026-07-17
-- Status: Selected for train-only audit; not implemented
+- Status: Train-only audit implemented; not executed; model adapter not implemented
 - Scope: TitanTPP series-aware long-horizon memory
 - Baselines: V2 common baseline and Taxi V3b confirmed enhancement
 
@@ -157,6 +157,48 @@ Proceed to constants freeze only if:
 Audit failure closes V6 before implementation. The thresholds are feasibility
 gates, not model-performance claims.
 
+### Frozen Audit Implementation Contract
+
+The audit implementation is available at:
+
+```text
+simple_lab_test/search/analyze_taxi_pre_window_memory_audit.py
+simple_lab_test/search/scripts/run_titantpp_v6_taxi_train_memory_audit_0717.sh
+simple_lab_test/search/tests/test_taxi_pre_window_memory_audit.py
+```
+
+It uses the exact `RMTPPWeekLookbackDataset` train target index and reconstructs
+both the temporal start and the effective start after `max_seq_len` truncation.
+Because `max_seq_len` includes the appended target, at most
+`max_seq_len - 1` active context events remain. External memory contains only
+indices strictly smaller than the effective context start.
+
+The Taxi train targets are partitioned chronologically within each series into
+`70% probe_fit / 15% probe_selection / 15% probe_audit`. The final suffix is not
+used to select `M`, `topk`, the primary metric, or a probe hyperparameter.
+
+The fixed low-capacity probes are:
+
+- plain multinomial logistic regression for next-mark CE
+- ridge regression for next `log1p(delta_t)` MAE
+- ridge regression for next `log2(quantity)` MAE
+- current-window summaries for the baseline input
+- the same summaries plus top-k same-series pre-window aggregates for the
+  augmented input
+
+The retrieval proxy standardizes event keys from the allowed fit prefix only,
+uses the last eight active context events as the query, and evaluates
+`M={16,32,64,128}` with `topk={4,8}`. Candidate ranking first requires the
+selection guard, then maximizes the worst metric improvement, maximizes mean
+improvement, and prefers smaller `M` and `topk`. The strongest selection metric
+is frozen as the final primary metric before opening `probe_audit`.
+
+Focused synthetic tests verify temporal and `max_seq_len` boundaries, exact
+loader target correspondence, chronological partition order, target/future
+invariance, valid-memory sensitivity, coverage denominators, candidate
+tie-breaking, finite probe metrics, and all acceptance checks. These tests do
+not provide Taxi audit evidence. The 5090 train-only run remains pending.
+
 ## Implementation Gate After Audit
 
 If the audit passes, focused tests must verify:
@@ -207,8 +249,10 @@ the first V6 design without tuning on validation.
 
 ## Next Execution Order
 
-1. Implement a Taxi train-only pre-window support and predictiveness audit.
-2. Run the audit on 5090 and freeze or reject `M`, `topk`, and coverage policy.
-3. If the audit passes, implement the masked zero-init adapter and focused tests.
-4. Run 5090 CUDA and Taxi e1 integration gates.
-5. Run strict Taxi V2/V3b/V6a/V6b seed-42 e50 validation-only screening.
+1. Implement a Taxi train-only pre-window support and predictiveness audit - completed; no Taxi result read.
+2. Checksum-sync the implementation and run the audit once on 5090.
+3. Read manifest, log, summary, coverage, candidate metrics, final probe metrics,
+   and plots; freeze or reject `M`, `topk`, and the coverage policy.
+4. If the audit passes, implement the masked zero-init adapter and focused tests.
+5. Run 5090 CUDA and Taxi e1 integration gates.
+6. Run strict Taxi V2/V3b/V6a/V6b seed-42 e50 validation-only screening.

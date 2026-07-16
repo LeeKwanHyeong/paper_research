@@ -95,6 +95,18 @@ V6는 기존 `small_lmm`/`mid_lmm`을 유지한 채 strictly pre-window same-ser
 memory를 별도 masked residual adapter로 추가하는 설계입니다. Train-only audit가
 통과하기 전에는 V6 candidate를 품질 실험에 사용하지 않습니다.
 
+V6 train-only audit은 다음 runner로만 시작합니다. 이 runner는 Taxi train parquet,
+5090, source revision, `lookback=168`, `max_seq_len=256`을 고정합니다. Audit은
+validation/test를 읽지 않으며 모델 학습이나 승격 근거가 아닙니다.
+
+```bash
+SOURCE_REVISION=<checksum_synced_full_sha> \
+PROJECT_ROOT=/home/leekwanhyeong/workspace/paper_research \
+PYTHON_BIN=/opt/miniconda3/envs/ai_env/bin/python \
+TMUX_SESSION=titantpp_v6_taxi_memory_audit_0717 \
+bash simple_lab_test/search/scripts/run_titantpp_v6_taxi_train_memory_audit_0717.sh
+```
+
 최종 RMTPP/TitanTPP/THP 비교 전에 TitanTPP만 먼저 screening하는 것이 좋습니다.
 이 단계에서는 test 결과를 논문 주장에 직접 쓰기보다, validation 기준으로 TitanTPP
 대표 후보를 고르는 용도로 사용합니다.
