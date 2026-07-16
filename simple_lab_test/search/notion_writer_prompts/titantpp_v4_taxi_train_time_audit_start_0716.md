@@ -6,7 +6,8 @@ Notion의 `5. Model Design Enhancement` 아래에서 제목 2
 
 ## 상태
 
-- 상태: `실험 준비`
+- 상태: `실험 중`
+- 실험 시작 시각: `2026-07-16 12:36:00 KST`
 - 실행 서버 / tmux: `5090 / titantpp_v4_taxi_time_audit_0716`
 
 ## 목적
