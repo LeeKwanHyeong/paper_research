@@ -1836,7 +1836,20 @@ V4 implementation status (`2026-07-16`):
 - focused plus existing V3/V5/Q/reproducibility regression tests passed
   (`96 passed`)
 - CPU V4a/V4b model-tests passed with identical zero-init NLL `3.862866`
-- no 5090 CUDA model-test, dataset smoke, or V4 training result exists yet
+- 5090 CUDA V4a/V4b model-tests and Instacart top-20 e1 validation-only smoke
+  completed with all four stages at exit code `0`
+- the first integration validator used the wrong plural manifest directory;
+  the completed artifacts were revalidated without retraining after that path
+  was corrected, and the corrected gate passed
+- Instacart loader counts matched `1,380/300/300`, no held-out test metric was
+  generated, and the smoke is treated only as an integration gate
+- source revision `c5e9cca4241a5579ba0af655c884d6692484ba5a` passed a `20/20`
+  local-to-5090 checksum check and the Taxi 2x2 fixed-split preflight
+- strict Taxi V2/V3b/V4a/V4b seed-42 e50 validation-only screening started in
+  tmux `titantpp_v4_taxi_2x2_e50_0716` at `2026-07-16 18:41:44 KST`
+- the initial check confirmed the V2 CUDA process, fixed loader counts
+  `38,393/8,268/8,327`, and held-out evaluation disabled; no continuous
+  monitoring is active
 
 Detailed ADR:
 
@@ -1848,8 +1861,12 @@ Next execution order:
 
 1. Taxi train-only next-mark versus delta-time audit - completed, gate passed.
 2. V4 constants freeze and `time_head_mode` focused implementation - completed.
-3. Run the 5090 CUDA V4a/V4b model-test and Instacart top-20 e1 smoke.
-4. Run the strict Taxi V2/V3b/V4a/V4b seed-42 e50 validation-only screen.
-5. Apply the frozen pairwise acceptance gate using validation artifacts only.
-6. Keep Q3 closed and multi-seed/held-out locked until a new validation gate
-   explicitly unlocks them.
+3. 5090 CUDA V4a/V4b model-test and Instacart top-20 e1 smoke - completed,
+   corrected integration gate passed.
+4. Strict Taxi V2/V3b/V4a/V4b seed-42 e50 validation-only screen - in progress.
+5. On request after completion, sync artifacts once and read manifest, log,
+   summary, histories, validation scale/confusion/class metrics, then plots.
+6. Apply the frozen V4a-vs-V2 and V4b-vs-V3b acceptance gates using validation
+   artifacts only.
+7. Keep Q3 closed and multi-seed/held-out locked unless the validation gate
+   explicitly promotes V4b.

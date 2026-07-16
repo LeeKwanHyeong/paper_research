@@ -6,10 +6,12 @@ Notion의 `5. Model Design Enhancement` 아래 제목 2
 
 ## 상태
 
-- 상태: `실행 중`
+- 상태: `완료 - corrected validator 재검증 PASS`
 - 실행 서버 / tmux: `5090 / titantpp_v4_cuda_insta_smoke_0716`
 - 실행 시작 시각: `2026-07-16 18:32:31 KST`
-- source revision: `51cbad647c27118c18576338aa3ce536ddfbddf0`
+- 실행 종료 시각: `2026-07-16 18:32:44 KST`
+- 학습 source revision: `51cbad647c27118c18576338aa3ce536ddfbddf0`
+- 재검증 source revision: `c5e9cca4241a5579ba0af655c884d6692484ba5a`
 
 ## 목적
 
@@ -46,3 +48,15 @@ ssh 5090 '/opt/miniconda3/envs/ai_env/bin/tmux new-session -d \
 ```
 
 ## 결과
+
+- V4a/V4b CUDA model-test와 Instacart e1 smoke 네 단계가 모두 exit code `0`으로 종료됐다.
+- CUDA model-test NLL은 두 variant 모두 `3.760483`이었다. 파라미터 수는 V4a
+  `328,236`, V4b `328,752`였다.
+- Instacart validation NLL은 V4a `3.328981`, V4b `3.324357`이었다. Quantity
+  MAE는 각각 `5.617047`, `5.448310`이었다.
+- loader sample은 train/validation/test `1,380/300/300`으로 계약과 일치했고,
+  `held_out_test_evaluated=false`이며 test metric artifact는 생성되지 않았다.
+- 최초 validator는 실제 `manifest/run_config.json`을 `manifests/run_config.json`으로
+  조회해 실패 표시를 남겼다. 학습 재실행 없이 경로만 수정해 재검증했고 `PASS`했다.
+- 이 결과는 통합 동작 확인용이며 V4 성능 승격 근거로 사용하지 않는다. 다음 단계인
+  Taxi validation-only 2x2 screening 진행 조건만 충족했다.

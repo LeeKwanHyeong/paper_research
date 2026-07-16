@@ -6,9 +6,10 @@ Notion의 `5. Model Design Enhancement` 아래 제목 2
 
 ## 상태
 
-- 상태: `실행 준비 - CUDA/Instacart gate 대기`
+- 상태: `실험 중 - V2 첫 CUDA 학습 진입 확인`
 - 실행 서버 / tmux: `5090 / titantpp_v4_taxi_2x2_e50_0716`
-- 실행 시작 시각: `integration gate 통과 후 기록`
+- 실행 시작 시각: `2026-07-16 18:41:44 KST`
+- source revision: `c5e9cca4241a5579ba0af655c884d6692484ba5a`
 
 ## 목적
 
@@ -32,6 +33,8 @@ Notion의 `5. Model Design Enhancement` 아래 제목 2
 - residual input, hybrid loss, target-only, plain marker CE
 - strict reproducibility, `best_val_nll` checkpoint
 - `evaluation_scope=validation_only`
+- source checksum `20/20` 일치, CUDA/Instacart integration gate `PASS`
+- loader sample 계약: train/validation/test `38,393/8,268/8,327`
 - V4 pair별 time NLL `0.5%` 이상 개선
 - total NLL `0.5%`, DT MAE `1%`, marker NLL `2%`, mark accuracy `-0.25%p`,
   quantity MAE `5%` guardrail
