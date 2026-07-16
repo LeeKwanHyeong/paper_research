@@ -1,6 +1,6 @@
 # ADR: TitanTPP V4 Mark-Conditioned Time Head
 
-- Status: Implemented; local focused gates passed; 5090 integration pending
+- Status: Rejected after validation-only screening; implementation retained
 - Date: 2026-07-16
 - Scope: TitanTPP probabilistic next-time head
 - Baselines: V2 common baseline and Taxi V3b confirmed enhancement
@@ -319,8 +319,35 @@ and validation-first promotion rule.
 
 ## Next Steps
 
-1. Treat the Taxi train-only audit as complete and keep validation/test locked.
-2. Treat V4 constants freeze and local focused implementation as complete.
-3. Run the 5090 CUDA model-test and Instacart top-20 e1 smoke.
-4. Run the strict Taxi V2/V3b/V4a/V4b seed-42 e50 validation-only screen.
-5. Keep multi-seed and held-out evaluation locked until a validation pair passes.
+### Validation-only screening outcome (2026-07-16)
+
+All four Taxi seed-42 e50 variants completed on 5090 and reconciled to `8,268`
+validation targets. No held-out artifact was generated or read.
+
+- V4a versus V2 improved selected-checkpoint time NLL by `0.415%`, below the
+  `0.5%` gate, and worsened DT MAE by `4.172%`, failing its guardrail.
+- V4b versus V3b improved selected-checkpoint time NLL by `0.321%`, below the
+  primary gate. Its other guardrails passed.
+- Both comparisons met the time-NLL threshold in only `10/50` epochs. In the
+  final ten epochs, V4a met it twice and V4b once.
+- V4 quantity-MAE gains were not scale-uniform. The `1000-9999` bucket provided
+  `76.77%` of V4a's and `98.11%` of V4b's absolute-error reduction.
+- V4a's raw accuracy gain was majority-mark driven and did not improve balanced
+  accuracy. V4b lost `3.565` percentage points of mark-2 recall.
+
+The train-only audit established exploitable conditional dependence, but the
+learned additive expert did not convert it into a robust validation time-NLL
+gain. V4a and V4b are therefore rejected for promotion. V2 remains the common
+baseline, Taxi V3b remains the confirmed enhancement, and multi-seed plus
+held-out V4 evaluation remain locked.
+
+Detailed evidence:
+
+```text
+.agents/results/analysis/titantpp-v4-taxi-validation-analysis-0716.md
+```
+
+1. Record the rejection in `5. Model Design Enhancement`.
+2. Keep `time_head_mode=mark_conditioned` available only as an experimental mode.
+3. Do not run V4 multi-seed or held-out evaluation without a new predeclared hypothesis.
+4. Select the next model enhancement axis while retaining V2 and Taxi V3b.

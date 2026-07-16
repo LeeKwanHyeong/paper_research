@@ -6,7 +6,7 @@ Notion의 `5. Model Design Enhancement` 아래 제목 2
 
 ## 상태
 
-- 상태: `완료 - validation artifact 상세 분석 대기`
+- 상태: `완료 - V4 미승격`
 - 실행 서버 / tmux: `5090 / titantpp_v4_taxi_2x2_e50_0716`
 - 실행 시작 시각: `2026-07-16 18:41:44 KST`
 - 실행 종료 시각: `2026-07-16 19:29:29 KST`
@@ -53,3 +53,22 @@ ssh 5090 '/opt/miniconda3/envs/ai_env/bin/tmux new-session -d \
 ```
 
 ## 결과
+
+- artifact 무결성: 네 Variant 모두 e50 완료, validation `8,268`건 기준
+  history/scale/class/confusion 집계 일치. held-out test 산출물 없음.
+- V4a vs V2: time NLL `0.415%` 개선으로 목표 `0.5%` 미달, DT MAE
+  `4.172%` 악화로 guardrail 실패.
+- V4b vs V3b: time NLL `0.321%` 개선으로 목표 미달. 나머지 guardrail은
+  통과했지만 primary gate 실패.
+- 50 epoch 전체에서 time NLL `0.5%` gate를 만족한 epoch는 두 pair 모두
+  `10/50`뿐이며, 마지막 10 epoch에서는 V4a `2/10`, V4b `1/10`이었다.
+  mark-conditioned time head 효과가 작고 checkpoint에 민감했다.
+- V4a quantity MAE `26.66%` 개선의 `76.77%`, V4b `12.45%` 개선의
+  `98.11%`가 `1000-9999` 구간에서 발생했다. 전 scale 공통 개선은 아니다.
+- V4a의 mark accuracy `+0.351%p`는 mark 0 중심이며 balanced accuracy는
+  `-0.055%p`였다. V4b는 mark accuracy `-0.169%p`, mark 2 recall
+  `-3.565%p`로 이동했다.
+- Plot에서도 late time NLL의 지속적 분리는 확인되지 않았다. V3b/V4b의
+  낮은 quantity MAE는 time head보다 기존 value head 효과가 지배적이었다.
+- 최종 결정: 공통 기준선은 V2, Taxi 확정 모델은 V3b 유지. V4a/V4b
+  multi-seed와 held-out test는 진행하지 않고 V4를 미승격 종료한다.

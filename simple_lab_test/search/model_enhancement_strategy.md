@@ -125,9 +125,9 @@ S0 또는 value-conditioned hybrid 계열은 아래 옵션을 추가한다.
 - Intermittent V3/V5 and direct-magnitude Q variants were not promoted.
 - The strict Q2 reproducibility infrastructure gate passed and is closed; Q3
   remains closed unless explicitly reopened.
-- V4 mark-conditioned time intensity is selected as the next focused model
-  hypothesis. Its Taxi train-only dependence audit and local implementation
-  gates passed; 5090 integration and learned-model screening have not started.
+- V4 mark-conditioned time intensity passed its train-only audit and all
+  implementation/integration gates, but failed the Taxi validation promotion
+  gate. V4 is closed without multi-seed or held-out evaluation.
 
 ## 8. Code-State Verification
 
@@ -1851,10 +1851,18 @@ V4 implementation status (`2026-07-16`):
 - fixed loader counts matched `38,393/8,268/8,327`, no held-out test artifact
   was generated, and all `286` artifact files were synced locally with an empty
   checksum dry-run
-- the preliminary comparator rejects both V4 pairs: V4a misses the `0.5%` time
-  NLL threshold and DT-MAE guardrail, while V4b misses only the time-NLL
-  threshold (`0.321%` improvement); full history, scale, and confusion analysis
-  remains pending before the final interpretation is recorded
+- the final validation analysis rejects both V4 pairs: V4a improves time NLL
+  only `0.415%` and worsens DT MAE `4.172%`; V4b improves time NLL only
+  `0.321%`, below the primary `0.5%` threshold
+- across 50 epochs, both pairs meet the time-NLL threshold in only `10` epochs;
+  the last-ten counts are V4a `2` and V4b `1`, so the effect is not persistent
+- V4a/V4b quantity gains are tail-driven: the `1000-9999` bucket contributes
+  `76.77%/98.11%` of absolute-error reduction, and neither pair improves every
+  non-empty scale bucket
+- V4a's accuracy gain is majority-mark driven without balanced-accuracy gain;
+  V4b loses `3.565%p` mark-2 recall
+- final decision: retain V2 as the common baseline and V3b as the Taxi-specific
+  confirmed enhancement; close V4 without multi-seed or held-out evaluation
 
 Detailed ADR:
 
@@ -1870,10 +1878,10 @@ Next execution order:
    corrected integration gate passed.
 4. Strict Taxi V2/V3b/V4a/V4b seed-42 e50 validation-only screen - completed;
    artifacts synced and structural checks passed.
-5. Read summary, histories, validation scale/confusion/class metrics, then plots
-   without opening held-out artifacts.
-6. Confirm the preliminary V4a/V4b rejection against the full validation
-   evidence and record the final model decision.
-7. Update the existing `5. Model Design Enhancement` section after analysis.
-8. Keep Q3 closed and multi-seed/held-out locked unless the completed validation
-   analysis provides an explicit promotion basis.
+5. Full histories, validation scale/confusion/class metrics, and plots -
+   completed; held-out lock verified.
+6. V4 final decision - completed; V4a/V4b rejected, V2 and Taxi V3b retained.
+7. Update the existing `5. Model Design Enhancement` section with the final
+   validation result.
+8. Keep Q3 and V4 closed and multi-seed/held-out locked.
+9. Select the next model enhancement hypothesis against V2 and Taxi V3b.
