@@ -771,10 +771,10 @@ must derive its relative gates from the newly matched deterministic V2 and Q2
 controls rather than requiring equality with the historical nondeterministic
 Q2 artifact.
 
-### Strict Infrastructure Implementation (2026-07-15)
+### Strict Infrastructure Implementation And Gate Result (2026-07-15)
 
 The required shared infrastructure is implemented, and the 5090 Q2 e3 A/B
-probe is now in progress.
+probe is complete.
 
 - `long-epoch` accepts `--reproducibility-mode standard|strict`; standard keeps
   the legacy path, while strict uses a distinct `repro_strict` path.
@@ -805,10 +805,22 @@ probe is now in progress.
   and best-score/best-validation-NLL/final checkpoints
 - the exact gate checks byte-identical history JSON, identical selected epochs,
   and recomputed canonical state digests while keeping held-out metrics locked
+- Run A, Run B, and the exact comparator completed with exit code `0`; the run
+  ended at `2026-07-15 22:56:00 KST` without NaN, traceback, or runtime error
+- all `202` artifact files (`13,653,382` bytes) are synced locally and the
+  checksum dry-run found no remote/local differences
+- all `22/22` comparator checks passed with zero mismatches; both histories have
+  SHA-256 `ef854a2882925d8475812e13eb0803de9ed89a5d8ae0b7a880cfc07dc1738a83`
+- both runs selected epoch `2` for best score and best validation NLL and epoch
+  `3` for final; all three canonical checkpoint-state digests match exactly
+- an independent comparator rerun against the synced local checkpoints also
+  passed `22/22`, so the strict reproducibility infrastructure gate is accepted
+- this gate does not promote Q2, reproduce the historical nondeterministic Q2
+  numerically, or alter the retained V2 / non-promoted Q3 decision
 
 ## Next Step
 
-On request, perform one completion check, sync the artifacts, and verify the
-generated exact report against histories, selected epochs, and state digests.
-Do not launch a full Q3 e50 rerun unless Q3 is explicitly reopened after the
-probe passes.
+Keep Q3 closed and move to the next model hypothesis by default. If Q3 is
+explicitly reopened, the infrastructure prerequisite is now satisfied and a
+fresh deterministic V2/Q2/Q3a/Q3b/Q3c e50 comparison may be prepared. Do not
+reuse the historical nondeterministic Q2 artifact as an exact numeric target.

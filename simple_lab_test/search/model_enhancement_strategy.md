@@ -1671,16 +1671,17 @@ Implementation status (`2026-07-15`):
   identity, and writes canonical selection-state digests
 - focused reproducibility tests passed `8/8`, Q3 plus reproducibility tests
   passed `27/27`, and the complete local search suite passed `118/118`
-- the remaining reopen gate is two independent 5090 Intermittent Q2 e3 strict
-  runs with exact histories, selected epochs, and canonical tensor-state digests
+- the Q3 reopen infrastructure gate uses two independent 5090 Intermittent Q2
+  e3 strict runs with exact histories, selected epochs, and canonical
+  tensor-state digests
 - the strict e3 runner now isolates Run A/Run B into fresh sequential Python
   processes and separate artifact roots; it requires a matching source-sync
   manifest plus CUDA and fixed-split hash preflight before training
 - the exact comparator validates strict runtime/config/data identity, compares
   history JSON bytes and selected epochs, and recomputes all three checkpoint
   state digests without reading held-out metrics; focused tests passed `3/3`
-- the concise Notion source draft is prepared under the `5. Model Design
-  Enhancement` structure with the result body intentionally empty before launch
+- the concise Notion source draft is maintained under the `5. Model Design
+  Enhancement` structure and now records the completed gate result
 - revision `f6da9af9193f6f5bcd6dd60a711b9e8921593829` is checksum-synced from
   the verified 5090 baseline `f5851ff`; all 16 changed files match and the
   checksum dry-run returned zero changes
@@ -1689,19 +1690,27 @@ Implementation status (`2026-07-15`):
 - tmux `titantpp_q2_strict_e3_0715` started at `2026-07-15 22:53:50 KST`;
   the one-time initial check observed Run A fixed-split preparation and an
   active CUDA process, and no continuous polling is active
+- Run A, Run B, and the exact comparator completed with exit code `0` at
+  `2026-07-15 22:56:00 KST`; no NaN, traceback, or runtime error was found
+- all `202` artifact files (`13,653,382` bytes) are synced locally and the
+  checksum dry-run found no remote/local differences
+- the exact report and an independent local rerun both passed all `22/22`
+  checks with zero mismatches; history bytes, selected epochs, and all three
+  canonical checkpoint-state digests match exactly
+- strict reproducibility infrastructure is accepted, but this does not promote
+  Q2, establish equality with historical nondeterministic Q2, or change the V2
+  retention and Q3 non-promotion decision
 - only an explicitly reopened Q3 track may proceed from a passing e3 probe to a
   newly matched deterministic V2/Q2/Q3a/Q3b/Q3c e50 comparison; the historical
   nondeterministic Q2 artifact is context, not its exact numeric target
 
 Next execution order:
 
-1. On request, perform one completion check, sync artifacts, and verify
-   histories, selected epochs, and state digests against the generated exact
-   report.
-2. Close Q3 and move to the next model hypothesis unless it is explicitly
-   reopened after the probe passes; only then prepare the full matched e50 run.
-3. Keep multi-seed and held-out test locked throughout this reproducibility
-   work.
+1. Keep Q3 closed and move to the next model hypothesis by default.
+2. Only if Q3 is explicitly reopened, prepare a fresh deterministic
+   V2/Q2/Q3a/Q3b/Q3c e50 comparison using the accepted strict infrastructure.
+3. Keep multi-seed and held-out execution locked until a new validation gate
+   explicitly unlocks them.
 
 Detailed ADR:
 
