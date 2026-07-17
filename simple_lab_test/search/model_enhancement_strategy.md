@@ -140,7 +140,7 @@ The canonical state is frozen in
 
 - V2 remains the common TitanTPP strong baseline; V3b is promoted only for Taxi.
 - V3a/V3c/V4/V5a/M0/Q0-Q3 are implemented or evaluated ablations, not active models.
-- V5b is deferred. V6 causal pre-window series memory is the selected next hypothesis, but remains unimplemented until its Taxi train-only audit passes.
+- V5b is deferred. V6 causal pre-window series memory is the selected next hypothesis; its Taxi train-only audit is running, and the adapter remains unimplemented until the gate passes.
 - The strict Q2 exact A/B gate validates deterministic infrastructure only and does not promote Q2.
 - Instacart `dataset_best=mid_lmm` is a generic runner recommendation; the model-enhancement V2 baseline lock remains `small_lmm`.
 
@@ -1904,10 +1904,12 @@ Next execution order:
 10. Select the next model enhancement hypothesis against V2 and Taxi V3b -
     completed; V6 causal pre-window series memory selected for audit.
 11. Implement the Taxi train-only V6 memory support and predictiveness audit -
-    completed; synthetic focused tests passed, 5090 Taxi run pending.
-12. Checksum-sync commit `6d7ed32` to 5090 - completed, `7/7` files match;
-    tmux not launched.
-13. Run preflight and start the train-only audit once on 5090.
+    completed; synthetic focused tests passed.
+12. Checksum-sync commit `6d7ed32` to 5090 - completed, `7/7` files match.
+13. Run preflight and start the train-only audit once on 5090 - completed;
+    started `2026-07-17 09:27:41 KST`, initial coverage decoding confirmed.
+14. Wait without polling; on request, perform one completion check and sync
+    artifacts before protocol-order analysis.
 
 ## 24. V6 Causal Pre-Window Series Memory Hypothesis Selection
 
@@ -1970,8 +1972,11 @@ Detailed ADR:
 V6 execution order:
 
 1. Taxi train-only pre-window support and predictiveness audit implementation - completed; Taxi result not read.
-2. Commit `6d7ed32` checksum-sync to 5090 - completed, `7/7` files match; tmux not launched.
-3. Dependency, dataset, source-revision, and command preflight followed by one 5090 tmux launch.
+2. Commit `6d7ed32` checksum-sync to 5090 - completed, `7/7` files match.
+3. Dependency, dataset, source-revision, and command preflight followed by one
+   5090 tmux launch - completed; source manifest SHA-256
+   `85365fc8435b4eda3dd11e059f3e5312eea90dd244e6fbee34dd8651ab74e107`,
+   start `2026-07-17 09:27:41 KST`.
 4. Artifact-order analysis and audit-based constants freeze or V6 closure.
 5. Masked zero-init adapter implementation and focused tests only after pass.
 6. 5090 CUDA and Taxi e1 integration gates.

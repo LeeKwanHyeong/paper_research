@@ -1,7 +1,7 @@
 # ADR: TitanTPP V6 Causal Pre-Window Series Memory
 
 - Date: 2026-07-17
-- Status: Train-only audit implemented and checksum-synced to 5090; not executed; model adapter not implemented
+- Status: Train-only audit running on 5090 since 2026-07-17 09:27:41 KST; model adapter not implemented
 - Scope: TitanTPP series-aware long-horizon memory
 - Baselines: V2 common baseline and Taxi V3b confirmed enhancement
 
@@ -197,7 +197,10 @@ Focused synthetic tests verify temporal and `max_seq_len` boundaries, exact
 loader target correspondence, chronological partition order, target/future
 invariance, valid-memory sensitivity, coverage denominators, candidate
 tie-breaking, finite probe metrics, and all acceptance checks. These tests do
-not provide Taxi audit evidence. The 5090 train-only run remains pending.
+not provide Taxi audit evidence. The 5090 train-only run passed source,
+dependency, dataset, runner, and launch-conflict preflight and entered coverage
+decoding at `2026-07-17 09:27:41 KST`. Result artifacts remain unread until a
+user-requested completion check.
 
 ## Implementation Gate After Audit
 
@@ -250,8 +253,10 @@ the first V6 design without tuning on validation.
 ## Next Execution Order
 
 1. Implement a Taxi train-only pre-window support and predictiveness audit - completed; no Taxi result read.
-2. Checksum-sync commit `6d7ed32` to 5090 - completed, `7/7` files match; tmux not launched.
-3. Run dependency, dataset, source-revision, and command preflight; then start the audit once in 5090 tmux.
+2. Checksum-sync commit `6d7ed32` to 5090 - completed, `7/7` files match.
+3. Run dependency, dataset, source-revision, and command preflight; then start
+   the audit once in 5090 tmux - completed; started `2026-07-17 09:27:41 KST`
+   and initial coverage decoding confirmed.
 4. Read manifest, log, summary, coverage, candidate metrics, final probe metrics,
    and plots; freeze or reject `M`, `topk`, and the coverage policy.
 5. If the audit passes, implement the masked zero-init adapter and focused tests.

@@ -10,9 +10,10 @@ Notion location:
 
 ## 상태
 
-준비 중. 시작 기록 시각은 `2026-07-17 09:17:13 KST`이며 실행 위치는
-`5090 / titantpp_v6_taxi_memory_audit_0717`이다. Audit 구현과 5090 source
-동기화는 완료했지만 tmux 실행은 아직 시작하지 않았다.
+실험 중. 실제 시작 시각은 `2026-07-17 09:27:41 KST`이며 실행 위치는
+`5090 / titantpp_v6_taxi_memory_audit_0717`이다. Source·dependency·train-only
+dataset·runner preflight를 통과했고 tmux에서 coverage decoding까지 초기 진입을
+확인했다. 추가 모니터링은 완료 요청 시까지 중단한다.
 
 ## 목적
 
@@ -44,10 +45,11 @@ plain linear estimator를 사용하며 memory 입력만 다르다.
 ## 실행 명령어
 
 ```bash
-SOURCE_REVISION=<synced_commit> \
+SOURCE_REVISION=6d7ed32ff65e91419a6d6ca6d7b28dbb8f73432c \
 PROJECT_ROOT=/home/leekwanhyeong/workspace/paper_research \
 PYTHON_BIN=/opt/miniconda3/envs/ai_env/bin/python \
 TMUX_SESSION=titantpp_v6_taxi_memory_audit_0717 \
+EXECUTION_SERVER=5090 \
 bash simple_lab_test/search/scripts/run_titantpp_v6_taxi_train_memory_audit_0717.sh
 ```
 
@@ -61,7 +63,11 @@ bash simple_lab_test/search/scripts/run_titantpp_v6_taxi_train_memory_audit_0717
 - sync target: `5090:/home/leekwanhyeong/workspace/paper_research`
 - synced files: `7`
 - local/remote SHA-256 match: `7/7 PASS`
-- tmux launched: `false`
+- tmux launched: `true`
+- actual start: `2026-07-17 09:27:41 KST`
+- preflight status: `PASS`
+- source manifest SHA-256:
+  `85365fc8435b4eda3dd11e059f3e5312eea90dd244e6fbee34dd8651ab74e107`
 - Notion direct update: `completed and refetched`
 
 | File | SHA-256 |
@@ -74,9 +80,30 @@ bash simple_lab_test/search/scripts/run_titantpp_v6_taxi_train_memory_audit_0717
 | `simple_lab_test/search/search_experiment_guide.md` | `d4bb1a41a90afc0a69b8cc1bfc7ff3452c51f5897d1424c3b23936e9e6805a8a` |
 | `simple_lab_test/search/tests/test_taxi_pre_window_memory_audit.py` | `9839ff742497b8d1290e9672aec3534718e629b09fa6a90a4b4e2e67d94e5ca0` |
 
+### Preflight And Initial Entry
+
+- dependency: Python `3.12.13`, matplotlib `3.10.8`, numpy `2.1.3`, polars
+  `1.39.3`, sklearn `1.8.0`
+- runner: executable and `bash -n PASS`
+- dataset: train-only `38,524` rows, `131` series, marks `[0,1,2,3]`, SHA-256
+  `0055229740f3f5b612ff8a2a256b1726008918a2ccb453c6bd66909c48ab2cb3`
+- dataset quality: required null `0`, duplicate part/seq `0`, non-train row `0`,
+  invalid mark `0`, non-positive/non-finite quantity `0`, held-out read `false`
+- launch guard before start: tmux session absent, output directory empty
+- source revision gate: remote `.git`은 없는 rsync workspace이므로 Git HEAD가
+  아니라 동기화 파일 `7/7` SHA-256 일치로 판정
+- source manifest:
+  `search_artifacts/model_enhancement_titantpp_v6_taxi_train_memory_audit_0717/source_sync_manifest.json`
+- initial check: tmux active, `logs/audit.log` 생성, `status.json` 생성 전
+- initial log: targets `38,393`, pre-window count `>=8` target share `65.26%`,
+  eligible series share `100%`까지 coverage decoding 진입
+- sklearn logistic probe의 `max_iter=1000` convergence warning이 초기 화면에
+  관찰됐으나 프로세스는 계속 실행 중이다. 최종 artifact 분석에서 수렴 상태와
+  acceptance 영향 여부를 확인한다.
+
 ### Notion Direct Update Result
 
-- reflected at: `2026-07-17 09:19:05 KST`
+- reflected at: `2026-07-17 09:30:49 KST`
 - parent: `5. Model Design Enhancement`
   (`https://app.notion.com/p/2e8bbe40561380a88b5eef94e834892e`)
 - detail page: `TitanTPP V6 Taxi Train-Only Pre-Window Memory Audit`
@@ -87,5 +114,5 @@ bash simple_lab_test/search/scripts/run_titantpp_v6_taxi_train_memory_audit_0717
   (`https://app.notion.com/p/394bbe4056138046bf3bfbc6f4c8c31a`)
 - refetch verification:
   `5. Model Design Enhancement > 2026-07-17 > Step 2` placement,
-  `준비 중 / 5090 sync 완료 / tmux 미실행`, empty result body,
+  `실험 중 / 2026-07-17 09:27:41 KST / 5090 tmux`, empty result body,
   V2 and Taxi V3b incumbent unchanged, and adapter implementation still gated.
