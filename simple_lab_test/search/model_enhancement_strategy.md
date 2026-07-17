@@ -1905,7 +1905,9 @@ Next execution order:
     completed; V6 causal pre-window series memory selected for audit.
 11. Implement the Taxi train-only V6 memory support and predictiveness audit -
     completed; synthetic focused tests passed, 5090 Taxi run pending.
-12. Checksum-sync and run the train-only audit once on 5090.
+12. Checksum-sync commit `6d7ed32` to 5090 - completed, `7/7` files match;
+    tmux not launched.
+13. Run preflight and start the train-only audit once on 5090.
 
 ## 24. V6 Causal Pre-Window Series Memory Hypothesis Selection
 
@@ -1967,9 +1969,10 @@ Detailed ADR:
 
 V6 execution order:
 
-1. Taxi train-only pre-window support and predictiveness audit implementation - completed; Taxi run not started.
-2. Commit, checksum-sync, and execute the audit once on 5090.
-3. Artifact-order analysis and audit-based constants freeze or V6 closure.
-4. Masked zero-init adapter implementation and focused tests only after pass.
-5. 5090 CUDA and Taxi e1 integration gates.
-6. Strict Taxi V2/V3b/V6a/V6b seed-42 e50 validation-only screening.
+1. Taxi train-only pre-window support and predictiveness audit implementation - completed; Taxi result not read.
+2. Commit `6d7ed32` checksum-sync to 5090 - completed, `7/7` files match; tmux not launched.
+3. Dependency, dataset, source-revision, and command preflight followed by one 5090 tmux launch.
+4. Artifact-order analysis and audit-based constants freeze or V6 closure.
+5. Masked zero-init adapter implementation and focused tests only after pass.
+6. 5090 CUDA and Taxi e1 integration gates.
+7. Strict Taxi V2/V3b/V6a/V6b seed-42 e50 validation-only screening.

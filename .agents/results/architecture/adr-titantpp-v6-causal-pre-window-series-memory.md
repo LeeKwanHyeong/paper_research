@@ -1,7 +1,7 @@
 # ADR: TitanTPP V6 Causal Pre-Window Series Memory
 
 - Date: 2026-07-17
-- Status: Train-only audit implemented; not executed; model adapter not implemented
+- Status: Train-only audit implemented and checksum-synced to 5090; not executed; model adapter not implemented
 - Scope: TitanTPP series-aware long-horizon memory
 - Baselines: V2 common baseline and Taxi V3b confirmed enhancement
 
@@ -250,9 +250,10 @@ the first V6 design without tuning on validation.
 ## Next Execution Order
 
 1. Implement a Taxi train-only pre-window support and predictiveness audit - completed; no Taxi result read.
-2. Checksum-sync the implementation and run the audit once on 5090.
-3. Read manifest, log, summary, coverage, candidate metrics, final probe metrics,
+2. Checksum-sync commit `6d7ed32` to 5090 - completed, `7/7` files match; tmux not launched.
+3. Run dependency, dataset, source-revision, and command preflight; then start the audit once in 5090 tmux.
+4. Read manifest, log, summary, coverage, candidate metrics, final probe metrics,
    and plots; freeze or reject `M`, `topk`, and the coverage policy.
-4. If the audit passes, implement the masked zero-init adapter and focused tests.
-5. Run 5090 CUDA and Taxi e1 integration gates.
-6. Run strict Taxi V2/V3b/V6a/V6b seed-42 e50 validation-only screening.
+5. If the audit passes, implement the masked zero-init adapter and focused tests.
+6. Run 5090 CUDA and Taxi e1 integration gates.
+7. Run strict Taxi V2/V3b/V6a/V6b seed-42 e50 validation-only screening.
