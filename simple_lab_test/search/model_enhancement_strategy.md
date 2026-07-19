@@ -142,7 +142,7 @@ The canonical state is frozen in
 - V2 remains the common TitanTPP strong baseline; V3b is promoted only for Taxi.
 - V3a/V3c/V4/V5a/M0/Q0-Q3 are implemented or evaluated ablations, not active models.
 - V5b is deferred. V6 causal pre-window series memory failed its frozen train-only final gate and closed before adapter implementation.
-- V7 causal time-history adapter is the selected post-V6 hypothesis, but remains locked before its train-only time-source isolation audit.
+- V7 causal time-history adapter is the selected post-V6 hypothesis. Its train-only source-isolation audit is implemented locally, while model implementation remains locked until the audit passes.
 - The strict Q2 exact A/B gate validates deterministic infrastructure only and does not promote Q2.
 - Instacart `dataset_best=mid_lmm` is a generic runner recommendation; the model-enhancement V2 baseline lock remains `small_lmm`.
 
@@ -2038,8 +2038,8 @@ a_v7   = v_t(h_base) + b_t + tanh(alpha_time) * delta_time(r_time)
 alpha_time = 0
 ```
 
-V7 is `SELECTED_HYPOTHESIS`, not implemented or promoted. The first gate is a
-Taxi train-only P0/P1/P2 source-isolation audit:
+V7 is `SELECTED_HYPOTHESIS`, not promoted, and its model path is not implemented.
+The first gate is a Taxi train-only P0/P1/P2 source-isolation audit:
 
 | Probe | Added source | Purpose |
 | --- | --- | --- |
@@ -2051,6 +2051,18 @@ P1 must improve pooled rolling-origin `log1p(dt)` MAE by at least `1%`, improve
 at least `2/3` folds, and have a positive series-bootstrap CI lower bound. It
 must also preserve the existing `>=35%` target and `>=80%` series coverage gates.
 P2 cannot pass V7 on P1's behalf. Validation and test are not read.
+
+The Stage-0 audit entrypoint and 5080 runner are now implemented at:
+
+```text
+simple_lab_test/search/analyze_taxi_time_source_isolation_audit.py
+simple_lab_test/search/scripts/run_titantpp_v7_taxi_time_source_audit_0719.sh
+```
+
+It freezes all strictly pre-window temporal moments, three expanding
+rolling-origin folds, fold-local scaler/Ridge fitting, and a seed-42 series
+bootstrap. Six V7 focused tests and fourteen combined V6/V7 audit tests pass
+locally. No 5080 audit result has been read, so Stage 0 remains pending.
 
 If Stage 0 passes, the first model-quality factorial is Taxi
 V2/V3b/V7a/V7b, where V7a is the V2 attribution pair and V7b is the V3b
@@ -2074,13 +2086,11 @@ Detailed ADR:
 
 Next execution order:
 
-1. Implement the Taxi train-only P0/P1/P2 time-source isolation audit and
-   focused rolling-fold/causality tests.
-2. Commit and checksum-sync the required source to 5080.
-3. Run dependency, CUDA, dataset, source-revision, and command preflight; create
+1. Commit the implemented audit and checksum-sync the required source to 5080.
+2. Run dependency, CUDA, dataset, source-revision, and command preflight; create
    a source manifest and start one 5080 tmux audit.
-4. Confirm only initial entry; do not continuously poll.
-5. On request, check completion once, sync artifacts, and analyze them in the
+3. Confirm only initial entry; do not continuously poll.
+4. On request, check completion once, sync artifacts, and analyze them in the
    protocol order.
-6. Pass: freeze the V7 temporal source and implement the adapter. Fail: close V7
+5. Pass: freeze the V7 temporal source and implement the adapter. Fail: close V7
    and reopen V5b design.

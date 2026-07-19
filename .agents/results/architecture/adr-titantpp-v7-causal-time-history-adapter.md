@@ -1,7 +1,7 @@
 # ADR: TitanTPP V7 Causal Time-History Adapter
 
 - Date: 2026-07-19
-- Status: Selected for a train-only source-isolation audit; not implemented
+- Status: Stage-0 audit implemented locally; V7 model implementation locked
 - Scope: Taxi-first TitanTPP time modeling after V6 closure
 - Method: Design-Twice followed by ADR
 - Baselines: V2 common control and Taxi V3b incumbent
@@ -162,6 +162,24 @@ Failure closes V7 before model implementation and returns the next-selection
 decision to V5b. Passing Stage 0 freezes the temporal feature contract and opens
 focused implementation without changing the active incumbent.
 
+### Stage-0 Implementation Status (2026-07-19)
+
+The train-only P0/P1/P2 audit is implemented, but has not been run on 5080 and
+has no experimental result yet:
+
+- entrypoint: `simple_lab_test/search/analyze_taxi_time_source_isolation_audit.py`;
+- 5080 runner: `simple_lab_test/search/scripts/run_titantpp_v7_taxi_time_source_audit_0719.sh`;
+- fixed pooling: all strictly pre-window events summarized by predeclared
+  temporal moments; V6 `M/topk` is not reused;
+- fixed evaluation: three expanding rolling-origin folds, fold-local scaler and
+  Ridge fit, and series bootstrap with seed `42`;
+- focused tests cover source isolation, target/future causality, fold ordering,
+  OOF uniqueness, bootstrap determinism, P1-only promotion, and the complete
+  train-only artifact contract.
+
+Local verification passed `6` V7 focused tests and `14` combined V6/V7 audit
+tests. These are implementation checks only and do not satisfy Stage 0.
+
 ## Taxi Factorial After Stage 0
 
 | Variant | Value head | Quantity-mark route | Time-history adapter | Role |
@@ -262,13 +280,12 @@ Risks:
 
 ## Next Execution Order
 
-1. Implement the train-only P0/P1/P2 time-source isolation audit and focused
-   causal/rolling-fold tests.
-2. Commit locally and checksum-sync only the required tracked files to 5080.
-3. Run the audit once in 5080 tmux after source, dependency, CUDA, dataset, and
+1. Commit the implemented audit and checksum-sync only the required tracked
+   files to 5080.
+2. Run the audit once in 5080 tmux after source, dependency, CUDA, dataset, and
    command preflight; confirm only initial entry.
-4. On request, check completion once and sync artifacts locally.
-5. Read manifest, log, summary, fold metrics, series metrics, and plots; apply
+3. On request, check completion once and sync artifacts locally.
+4. Read manifest, log, summary, fold metrics, series metrics, and plots; apply
    the frozen Stage-0 gate.
-6. If Stage 0 passes, implement V7 and its focused contract tests. If it fails,
+5. If Stage 0 passes, implement V7 and its focused contract tests. If it fails,
    close V7 and reopen the V5b design decision.

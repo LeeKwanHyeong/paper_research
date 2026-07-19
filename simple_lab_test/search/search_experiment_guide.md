@@ -112,10 +112,20 @@ bash simple_lab_test/search/scripts/run_titantpp_v6_taxi_train_memory_audit_0717
 Post-V6 primary hypothesis는 V7 causal time-history adapter입니다. V7은 V6를
 재개하지 않고, strictly pre-window temporal feature만 별도 adapter로 읽어 RMTPP
 time intercept에만 zero-gated delta를 추가하는 설계입니다. 현재 상태는
-`SELECTED_HYPOTHESIS`이며 구현 전입니다. 먼저 Taxi train-only P0/P1/P2
-time-source audit을 통과해야 하므로, 현재 unified CLI에서 V7 option을 임의로
-실행하거나 기존 `series_lmm`, V6 `M64/topk4`로 대체하지 않습니다. 당분간 후속
-실행 서버는 사용자 override에 따라 5080입니다.
+`SELECTED_HYPOTHESIS`이며 모델 구현 전입니다. Taxi train-only P0/P1/P2
+time-source audit과 5080 runner는 구현됐지만 아직 실행 결과는 없습니다. audit을
+통과하기 전에는 unified CLI에 V7 option을 임의로 추가하거나 기존 `series_lmm`,
+V6 `M64/topk4`로 대체하지 않습니다. 당분간 후속 실행 서버는 사용자 override에
+따라 5080입니다.
+
+```bash
+SOURCE_REVISION=<checksum_synced_full_sha> \
+PROJECT_ROOT=/home/leekwanhyeong/workspace/paper_research \
+PYTHON_BIN=/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python \
+TMUX_SESSION=titantpp_v7_taxi_time_source_audit_0719 \
+EXECUTION_SERVER=5080 \
+bash simple_lab_test/search/scripts/run_titantpp_v7_taxi_time_source_audit_0719.sh
+```
 
 최종 RMTPP/TitanTPP/THP 비교 전에 TitanTPP만 먼저 screening하는 것이 좋습니다.
 이 단계에서는 test 결과를 논문 주장에 직접 쓰기보다, validation 기준으로 TitanTPP
