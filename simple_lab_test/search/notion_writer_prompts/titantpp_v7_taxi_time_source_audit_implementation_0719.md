@@ -10,9 +10,9 @@
 
 ## 상태
 
-- 상태: `실행 완료 · artifact 분석 대기`
+- 상태: `완료 · Stage-0 FAIL · V7 종료`
 - audit code와 5080 runner 구현 완료
-- V7 model path는 Stage-0 결과 분석 전까지 미구현·잠금 유지
+- V7 model path는 구현하지 않으며 Taxi V3b 유지
 - 실행 서버 / tmux: `5080 / titantpp_v7_taxi_time_source_audit_0719`
 - 실제 시작 / 종료: `2026-07-19 11:33:58 / 11:34:04 KST`
 
@@ -59,6 +59,22 @@ bash simple_lab_test/search/scripts/run_titantpp_v7_taxi_time_source_audit_0719.
 
 ## 결과
 
+| Probe | Pooled MAE | P0 대비 개선률 | 개선 fold | Series bootstrap 95% CI |
+| --- | ---: | ---: | ---: | ---: |
+| P0 window only | `0.155187` | control | - | - |
+| P1 temporal only | `0.157486` | `-1.4811%` | `1/3` | `[-2.5633%,-0.5181%]` |
+| P2 full attribution | `0.157746` | `-1.6489%` | `1/3` | `[-2.7612%,-0.6235%]` |
+
+- Data, loader, coverage, causality, finite, rolling-fold gate는 모두 통과했다.
+- P1은 pooled `>=1%`, 개선 fold `>=2/3`, bootstrap CI lower `>0`을 모두
+  실패했다. 개선 series도 `54/131`에 그쳤다.
+- Fold별 P1은 `-2.7363%`, `-4.9420%`, `+2.3561%`로 마지막 fold에서만
+  개선돼 시간 구간에 따라 효과 방향이 바뀌었다.
+- P2도 악화됐고 attribution-only이므로 P1 실패를 대체하지 않는다.
+- 최종 판정: V7을 모델 구현 전에 종료한다. V7a/V7b, CUDA/e1/e50,
+  multi-seed와 held-out은 진행하지 않고 Taxi V3b를 유지한다.
+- 다음 작업: 별도 Intermittent V5b class-prior correction 계약 재개.
+
 ## Local Audit Trail
 
 - source revision: `ea874d28aa01c0cef3bccea5efc6daedc9d61764`
@@ -74,5 +90,7 @@ bash simple_lab_test/search/scripts/run_titantpp_v7_taxi_time_source_audit_0719.
 - launch guard: same-name tmux absent, output directory absent
 - audit manifest: `completed`, source revision 일치, 종료 시각
   `2026-07-19T11:34:04.224360+09:00`
-- audit log completion marker: P1 `-1.4811%`, P2 `-1.6489%`, runner gate
-  `FAIL`; protocol artifact 분석 전까지 최종 해석과 Notion 결과 작성은 보류
+- remote/local artifact checksum dry-run: `PASS`
+- independent recalculation: pooled MAE, fold improvements, 2,000-replicate
+  series-bootstrap CI가 summary와 일치
+- official Stage-0 decision: `FAIL`, `close_v7_before_model_implementation_and_revisit_v5b`

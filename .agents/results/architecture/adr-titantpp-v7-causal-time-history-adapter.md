@@ -1,7 +1,7 @@
 # ADR: TitanTPP V7 Causal Time-History Adapter
 
 - Date: 2026-07-19
-- Status: Stage-0 execution completed; artifact analysis pending; V7 model locked
+- Status: Rejected at Stage 0; closed before V7 model implementation
 - Scope: Taxi-first TitanTPP time modeling after V6 closure
 - Method: Design-Twice followed by ADR
 - Baselines: V2 common control and Taxi V3b incumbent
@@ -164,8 +164,7 @@ focused implementation without changing the active incumbent.
 
 ### Stage-0 Implementation Status (2026-07-19)
 
-The train-only P0/P1/P2 audit is implemented and its first 5080 execution is
-complete. Artifact synchronization and protocol-order analysis remain pending:
+The train-only P0/P1/P2 audit was implemented and executed once on 5080:
 
 - entrypoint: `simple_lab_test/search/analyze_taxi_time_source_isolation_audit.py`;
 - 5080 runner: `simple_lab_test/search/scripts/run_titantpp_v7_taxi_time_source_audit_0719.sh`;
@@ -180,9 +179,34 @@ complete. Artifact synchronization and protocol-order analysis remain pending:
 Local verification passed `6` V7 focused tests and `14` combined V6/V7 audit
 tests. Source revision `ea874d2` passed the 5080 dependency, dataset, runner,
 and `8/8` source-checksum preflight. Tmux execution started at
-`2026-07-19 11:33:58 KST` and completed at `11:34:04 KST`. These execution facts
-do not finalize the Stage-0 decision before the artifact-reading protocol is
-completed.
+`2026-07-19 11:33:58 KST` and completed at `11:34:04 KST`. Remote/local
+artifacts matched under checksum dry-run, and the manifest, log, summary, fold,
+bootstrap, series, report, and plots were reviewed in protocol order.
+
+### Stage-0 Result (2026-07-19)
+
+Data and methodology gates passed: source/loader quality, target alignment,
+causality, finiteness, three non-overlapping rolling folds, `65.262%` target
+coverage, and `100%` series coverage all met their frozen contracts.
+
+The P1 primary failed every predictive gate against P0:
+
+- pooled `log1p(dt)` MAE changed from `0.155187` to `0.157486`, an improvement
+  of `-1.4811%` versus the required `>=1%`;
+- fold improvements were `-2.7363%`, `-4.9420%`, and `+2.3561%`, so only `1/3`
+  folds improved versus the required `>=2/3`;
+- the 2,000-replicate series-bootstrap 95% interval was
+  `[-2.5633%, -0.5181%]`, entirely below zero;
+- only `54/131` series improved, while `77/131` worsened.
+
+P2 also worsened pooled MAE by `-1.6489%` with a bootstrap interval of
+`[-2.7612%, -0.6235%]`. P2 is attribution-only and cannot pass P1's gate.
+The late positive fold is therefore treated as regime-specific evidence, not a
+basis for post-hoc source or threshold tuning.
+
+Stage 0 is `FAIL`. Close V7 before implementing the adapter, V7a/V7b, CUDA,
+integration smoke, e50, multi-seed, or held-out stages. Keep Taxi V3b as the
+incumbent and return the next Model Enhancement design decision to V5b.
 
 ## Taxi Factorial After Stage 0
 
@@ -284,9 +308,9 @@ Risks:
 
 ## Next Execution Order
 
-1. On request, sync the completed 5080 artifacts locally.
-2. Read manifest, log, summary, fold metrics, series metrics, and plots; apply
-   the frozen Stage-0 gate.
-3. Update the Notion result section only after the artifact analysis.
-4. If Stage 0 passes, implement V7 and its focused contract tests. If it fails,
-   close V7 and reopen the V5b design decision.
+1. Keep Taxi V3b and do not implement or rerun V7.
+2. Reopen V5b as a separate Intermittent class-prior design task.
+3. Freeze V5b train-only prior estimation, smoothing/capping, training versus
+   inference logits, ordinary-CE reporting, calibration metrics, and acceptance
+   gates before implementation.
+4. Implement and test V5b only after its ADR is accepted.

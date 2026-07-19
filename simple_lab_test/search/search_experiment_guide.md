@@ -112,11 +112,12 @@ bash simple_lab_test/search/scripts/run_titantpp_v6_taxi_train_memory_audit_0717
 Post-V6 primary hypothesis는 V7 causal time-history adapter입니다. V7은 V6를
 재개하지 않고, strictly pre-window temporal feature만 별도 adapter로 읽어 RMTPP
 time intercept에만 zero-gated delta를 추가하는 설계입니다. 현재 상태는
-`SELECTED_HYPOTHESIS`이며 모델 구현 전입니다. Taxi train-only P0/P1/P2
-time-source audit은 5080에서 실행을 완료했지만 artifact 동기화와 protocol-order
-분석 전입니다. Stage-0 판정 전에는 unified CLI에 V7 option을 임의로 추가하거나
-기존 `series_lmm`, V6 `M64/topk4`로 대체하지 않습니다. 당분간 후속 실행 서버는
-사용자 override에 따라 5080입니다.
+`CLOSED`이며 모델은 구현하지 않았습니다. Taxi train-only P0/P1/P2 time-source
+audit은 5080에서 완료·분석됐고 P1 pooled improvement `-1.4811%`,
+개선 fold `1/3`, series-bootstrap CI `[-2.5633%,-0.5181%]`로 Stage-0를
+실패했습니다. V7은 모델 구현 전에 종료하며 unified CLI option, V7a/V7b,
+CUDA/e1/e50을 열지 않습니다. Taxi incumbent는 V3b를 유지하고 다음 별도 설계는
+Intermittent V5b입니다. 당분간 후속 실행 서버는 사용자 override에 따라 5080입니다.
 
 ```bash
 SOURCE_REVISION=<checksum_synced_full_sha> \
@@ -126,6 +127,8 @@ TMUX_SESSION=titantpp_v7_taxi_time_source_audit_0719 \
 EXECUTION_SERVER=5080 \
 bash simple_lab_test/search/scripts/run_titantpp_v7_taxi_time_source_audit_0719.sh
 ```
+
+위 명령은 실행 이력 재현용이며 frozen Stage-0 실패 후 추가 rerun을 열지 않습니다.
 
 최종 RMTPP/TitanTPP/THP 비교 전에 TitanTPP만 먼저 screening하는 것이 좋습니다.
 이 단계에서는 test 결과를 논문 주장에 직접 쓰기보다, validation 기준으로 TitanTPP

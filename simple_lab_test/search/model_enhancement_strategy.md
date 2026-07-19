@@ -142,7 +142,7 @@ The canonical state is frozen in
 - V2 remains the common TitanTPP strong baseline; V3b is promoted only for Taxi.
 - V3a/V3c/V4/V5a/M0/Q0-Q3 are implemented or evaluated ablations, not active models.
 - V5b is deferred. V6 causal pre-window series memory failed its frozen train-only final gate and closed before adapter implementation.
-- V7 causal time-history adapter is the selected post-V6 hypothesis. Its train-only source-isolation audit completed on 5080, while artifact analysis and the Stage-0 decision remain pending and model implementation stays locked.
+- V7 causal time-history adapter failed its frozen train-only Stage-0 source-isolation gate and closed before model implementation. Taxi V3b remains active, and V5b returns as the next separate Intermittent design task.
 - The strict Q2 exact A/B gate validates deterministic infrastructure only and does not promote Q2.
 - Instacart `dataset_best=mid_lmm` is a generic runner recommendation; the model-enhancement V2 baseline lock remains `small_lmm`.
 
@@ -2038,8 +2038,8 @@ a_v7   = v_t(h_base) + b_t + tanh(alpha_time) * delta_time(r_time)
 alpha_time = 0
 ```
 
-V7 is `SELECTED_HYPOTHESIS`, not promoted, and its model path is not implemented.
-The first gate is a Taxi train-only P0/P1/P2 source-isolation audit:
+V7 entered Stage 0 as `SELECTED_HYPOTHESIS`; its model path was not implemented.
+The prerequisite was a Taxi train-only P0/P1/P2 source-isolation audit:
 
 | Probe | Added source | Purpose |
 | --- | --- | --- |
@@ -2064,19 +2064,30 @@ rolling-origin folds, fold-local scaler/Ridge fitting, and a seed-42 series
 bootstrap. Six V7 focused tests and fourteen combined V6/V7 audit tests pass
 locally. Revision `ea874d2` passed `8/8` source checksum, runtime, dataset, and
 runner preflight on 5080. The audit ran from `2026-07-19 11:33:58` to
-`11:34:04 KST`; artifacts have not yet been synchronized or analyzed in the
-required order, so Stage 0 remains pending.
+`11:34:04 KST`; remote/local artifacts matched and were analyzed in protocol
+order.
 
-If Stage 0 passes, the first model-quality factorial is Taxi
-V2/V3b/V7a/V7b, where V7a is the V2 attribution pair and V7b is the V3b
-replacement candidate. All data, candidate, objective, lookback, maximum
-sequence length, optimizer, budget, checkpoint, and strict reproducibility
-conditions stay matched. The seed-42 e50 validation-only gate requires V7b
-versus V3b overall/eligible time-NLL improvements of `>=0.5%/>=1%`, total-NLL
-improvement of `>=0.25%`, and marker, DT, quantity, scale, and eligible-series
-guardrails. Only a pass opens multi-seed and then one frozen held-out audit.
+Stage-0 result:
 
-V5b remains the fallback if V7 Stage 0 fails. A future V5b ADR must freeze
+| Probe | Pooled log1p(dt) MAE | Improvement vs P0 | Improved folds | Series-bootstrap 95% CI | Improved series |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| P0 | `0.155187` | control | - | - | - |
+| P1 temporal only | `0.157486` | `-1.4811%` | `1/3` | `[-2.5633%,-0.5181%]` | `54/131` |
+| P2 full attribution | `0.157746` | `-1.6489%` | `1/3` | `[-2.7612%,-0.6235%]` | `52/131` |
+
+Source, loader, coverage, causal, finite, and rolling-fold contracts all passed,
+but P1 failed all three predictive gates. Its fold effects were
+`-2.7363%/-4.9420%/+2.3561%`; the isolated late-fold gain was not stable enough
+to open model implementation. P2 also failed and cannot substitute for P1.
+Therefore V7 is `CLOSED`, V7a/V7b and all downstream quality stages are not
+opened, and Taxi V3b remains the incumbent.
+
+The planned Taxi V2/V3b/V7a/V7b model-quality factorial is not opened because
+its Stage-0 prerequisite failed. The frozen plan remains in the ADR only as an
+audit trail and must not be executed under a modified temporal source without a
+new hypothesis-selection decision.
+
+V5b is now the next design task after the V7 Stage-0 failure. Its ADR must freeze
 train-only prior estimation, smoothing/capping, train/inference logit semantics,
 and calibration metrics before validation; it must keep reported
 `nll_marker` as ordinary CE and cannot be combined with V5a in its first screen.
@@ -2089,8 +2100,8 @@ Detailed ADR:
 
 Next execution order:
 
-1. On request, synchronize the completed 5080 artifacts locally.
-2. Analyze them in the protocol order and apply the frozen Stage-0 gate.
-3. Update the Notion result section after the analysis.
-4. Pass: freeze the V7 temporal source and implement the adapter. Fail: close V7
-   and reopen V5b design.
+1. Keep Taxi V3b and close V7 without rerun or implementation.
+2. Reopen the Intermittent V5b class-prior contract as a separate design task.
+3. Freeze prior estimation, correction cap/smoothing, train/inference semantics,
+   CE reporting, calibration metrics, and acceptance gate in an ADR.
+4. Implement V5b and focused tests only after the contract is accepted.
