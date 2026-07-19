@@ -141,7 +141,10 @@ The canonical state is frozen in
 
 - V2 remains the common TitanTPP strong baseline; V3b is promoted only for Taxi.
 - V3a/V3c/V4/V5a/M0/Q0-Q3 are implemented or evaluated ablations, not active models.
-- V5b is deferred. V6 causal pre-window series memory failed its frozen train-only final gate and closed before adapter implementation.
+- V5b bounded class-prior contract is frozen as the next Intermittent
+  `SELECTED_HYPOTHESIS`; implementation and quality screening have not started.
+  V6 causal pre-window series memory failed its frozen train-only final gate and
+  closed before adapter implementation.
 - V7 causal time-history adapter failed its frozen train-only Stage-0 source-isolation gate and closed before model implementation. Taxi V3b remains active, and V5b returns as the next separate Intermittent design task.
 - The strict Q2 exact A/B gate validates deterministic infrastructure only and does not promote Q2.
 - Instacart `dataset_best=mid_lmm` is a generic runner recommendation; the model-enhancement V2 baseline lock remains `small_lmm`.
@@ -2022,7 +2025,7 @@ onto a failed branch.
 
 | Candidate | Dataset/problem | Evidence | Risk | Decision |
 | --- | --- | --- | --- | --- |
-| V5b class-prior correction | Intermittent marker imbalance | marks `0-2` are `86.60%` of train targets | the main failure is the high-support mark `0/1` boundary; calibration and marker-NLL semantics need a separate contract | keep deferred |
+| V5b class-prior correction | Intermittent marker imbalance | marks `0-2` are `86.60%` of train targets | the main failure is the high-support mark `0/1` boundary; calibration and marker-NLL semantics need a separate contract | deferred at this selection point; reopened after V7 failure |
 | V7 causal time-history adapter | Taxi time modeling outside the 168-hour window | V6 secondary final `log1p(dt)` MAE improved `2.4696%`, CI `[1.5236%, 3.5050%]` | the old probe mixed time, mark, and quantity features | select for time-only source audit |
 
 This choice does not change the V6 failure. V6's frozen marker primary missed
@@ -2087,21 +2090,99 @@ its Stage-0 prerequisite failed. The frozen plan remains in the ADR only as an
 audit trail and must not be executed under a modified temporal source without a
 new hypothesis-selection decision.
 
-V5b is now the next design task after the V7 Stage-0 failure. Its ADR must freeze
-train-only prior estimation, smoothing/capping, train/inference logit semantics,
-and calibration metrics before validation; it must keep reported
-`nll_marker` as ordinary CE and cannot be combined with V5a in its first screen.
+V5b became the next design task after the V7 Stage-0 failure. Its bounded
+class-prior contract is now frozen in Section 27. Reported `nll_marker` remains
+ordinary CE, inference logits remain unadjusted, and V5b is not combined with
+V5a in its first screen.
 
 Detailed ADR:
 
 ```text
 .agents/results/architecture/adr-titantpp-v7-causal-time-history-adapter.md
+.agents/results/architecture/adr-titantpp-v5b-bounded-class-prior-marker-loss.md
 ```
 
 Next execution order:
 
 1. Keep Taxi V3b and close V7 without rerun or implementation.
-2. Reopen the Intermittent V5b class-prior contract as a separate design task.
-3. Freeze prior estimation, correction cap/smoothing, train/inference semantics,
-   CE reporting, calibration metrics, and acceptance gate in an ADR.
-4. Implement V5b and focused tests only after the contract is accepted.
+2. Keep the frozen V5b design separate from V5a, V3, and rare-tail weighting.
+3. Implement V5b train-prior weighting, calibration metrics, and focused tests.
+4. Run 5080 CUDA and Instacart top-20 e1 integration gates.
+5. Run strict matched Intermittent V2/V5b seed-42 e50 validation-only screening.
+6. Open seeds `42,52,62` and held-out audit only after the preceding gate passes.
+
+## 27. V5b Bounded Class-Prior Contract
+
+The Intermittent fixed train split contains `136,256` next-event targets. Marks
+`0-2` make up `86.60%`, while each mark in `6-10` has less than `1%` support.
+Validation and test class priors remain close to train, with total-variation
+distance `0.0233/0.0253`. V5b therefore targets training competition at the
+high-support mark `0/1` boundary; it does not assume deployment prior shift.
+
+The relevant seed-42 validation evidence is:
+
+| Metric | V2 | V5a | Interpretation |
+| --- | ---: | ---: | --- |
+| mark-0 prediction share | `45.030%` | `58.750%` | V5a over-shifted toward mark 0 |
+| mark-0 recall | `75.543%` | `86.462%` | gain did not preserve mark 1 |
+| mark-1 recall | `49.616%` | `24.664%` | dominant V5a failure |
+| mark accuracy | `57.249%` | `54.820%` | `-2.430%p` regression |
+
+V5b branches directly from Intermittent V2 `small_lmm`. It changes only marker
+training CE:
+
+```text
+pi_k = (n_k + 1) / (N + C)
+eligible_k = pi_k >= 0.01
+w_k = clip(c * pi_k ** -0.5, 0.75, 1.25)  if eligible_k
+w_k = 1.0                                  otherwise
+sum_k pi_k * w_k = 1
+```
+
+The prior is estimated from exact fixed-split train targets only. Marks `0-5`
+are eligible; marks `6-10` stay neutral. The frozen expected weights are:
+
+```text
+mark 0: 0.842424
+mark 1: 0.960742
+marks 2-5: 1.250000
+marks 6-10: 1.000000
+```
+
+The mark-1 to mark-0 relative weight is `1.140450`. PAD is never weighted.
+Per-target weighted CE is averaged by valid transition count; the unit expected
+weight keeps the marker objective scale matched to V2.
+
+Metric and inference contract:
+
+- `nll_marker` remains ordinary unweighted full-logit CE.
+- `nll = nll_marker + nll_time` remains unchanged.
+- `marker_train_loss` is bounded prior-weighted CE only in V5b.
+- forward, argmax, validation, and test use unadjusted logits.
+- logit adjustment is rejected because observed train/validation/test priors
+  are already close and its posterior/calibration semantics are unnecessary.
+- raw multiclass Brier, 15-bin top-label ECE, confidence, and marks `6-10`
+  prediction share are added as diagnostics.
+
+Seed-42 strict validation-only acceptance requires all of the following:
+
+- mark-1 recall `>= +1.00%p` and `1 -> 0` rate `>= 2.00%p` lower;
+- balanced accuracy or macro F1 `>= +0.50%p`, with the other `>= -0.25%p`;
+- mark accuracy `>= -0.25%p`, mark-0 recall `>= -2.00%p`;
+- mark MAE regression `<=1%`, adjacent accuracy `>= -0.25%p`;
+- marks `6-10` prediction-share increase `<=0.50%p`;
+- marker/total/time NLL regression `<=0.5%` each;
+- Brier regression `<=1%`, ECE increase `<=0.50%p`;
+- quantity/value MAE regression `<=2%` and populated-bucket regression `<=5%`.
+
+There is no post-result gamma, cap, support-threshold, or logit-adjustment
+branch. Seed-42 failure closes V5b. A pass opens fresh strict V2/V5b seeds
+`42,52,62`; held-out test stays locked until the multi-seed contract passes.
+
+Current status:
+
+- design and acceptance contract: completed
+- model implementation: not started
+- quality evidence: not started
+- registry: `SELECTED_HYPOTHESIS`
+- active Intermittent incumbent: V2 `small_lmm`

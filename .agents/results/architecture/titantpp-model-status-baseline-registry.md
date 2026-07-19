@@ -57,7 +57,7 @@ baseline을 대체하지 않는다.
 
 | Dataset | Common/attribution control | Active incumbent | Current decision |
 | --- | --- | --- | --- |
-| Intermittent | V2 `small_lmm` | V2 `small_lmm` | V3/V5/M/Q 후보 미승격; 새 후보는 V2와 비교 |
+| Intermittent | V2 `small_lmm` | V2 `small_lmm` | V3/V5a/M/Q 후보 미승격; V5b는 설계만 동결됐으며 새 품질 후보는 V2와 비교 |
 | Yellow Trip Hourly / Taxi | V2 `mid_lmm` | V3b `mid_lmm` | 대체 후보는 V3b를 넘어야 하며 V2는 구조 효과 분리용 control로 함께 유지 |
 | Instacart | V2 `small_lmm` | V2 `small_lmm` | 현재 enhancement 품질 승격 후보 없음; top-20 e1은 integration 근거만 제공 |
 
@@ -79,7 +79,7 @@ capacity ablation과 fresh matched control로 취급한다.
 | V3c | V3b + detached value-to-encoder route | Intermittent seed-42 e50 gate 실패 | `NOT_PROMOTED` | code/gradient ablation only |
 | V4a/V4b | mark-conditioned time intercept | Taxi strict validation-only e50 gate 실패 | `NOT_PROMOTED` | experimental code only |
 | V5a | CE + normalized RPS ordinal auxiliary | Intermittent seed-42 e50 gate 실패 | `NOT_PROMOTED` | objective ablation only |
-| V5b | class-prior correction | fallback idea only | `DEFERRED` | no active experiment |
+| V5b | support-aware bounded class-prior weighted CE | train-only prior, neutral rare tail, unadjusted inference와 gate 설계 동결 | `SELECTED_HYPOTHESIS` | Intermittent; implementation not started |
 | M0 | direct `log2(qty)` + train-global normalization | Intermittent validation gate 실패 | `NOT_PROMOTED` | log-domain negative ablation |
 | M1-M4 | log-domain RevIN family | M0 prerequisite 실패 후 미실행 | `CLOSED` | no active experiment |
 | Q0 | direct raw quantity + global moments | Intermittent validation gate 실패 | `NOT_PROMOTED` | raw-domain control |
@@ -113,9 +113,11 @@ capacity ablation과 fresh matched control로 취급한다.
   series-bootstrap 95% CI `[1.5236%, 3.5050%]`가 양수였다. 이 결과는 V6를
   재승격하지 않으며, mark/quantity를 제외한 temporal pre-window source만 시간
   intercept에 연결하는 V7 Stage-0 audit의 가설 생성 근거로만 사용한다.
-- V5b는 Intermittent class-prior correction fallback으로 유지한다. Post-V6 primary는
-  모델 경계가 더 좁고 양의 train-only temporal 근거가 있는 V7이며, 두 후보를
-  동시에 구현하거나 screening하지 않는다.
+- V7은 Stage-0 실패로 종료됐다. 이후 V5b를 Intermittent의 다음 독립 가설로
+  재선정해 train-only Laplace prior, marks `0-5` bounded square-root weighting,
+  marks `6-10` neutral weight, ordinary CE reporting, unadjusted inference,
+  calibration과 strict acceptance gate를 동결했다. 이는 설계 완료 근거이며 구현이나
+  승격 근거는 아니다.
 
 ## 6. Comparison And Unlock Rules
 
@@ -131,14 +133,18 @@ capacity ablation과 fresh matched control로 취급한다.
 6. 기존 e200 V1/V2와 Taxi V2/V3b matched held-out 결과는 역사적 결정 근거로
    유지한다. 새 인과 비교에서는 과거 수치를 exact control로 재사용하지 않고
    현재 strict runner로 fresh matched baseline을 함께 실행한다.
-7. V7은 V6의 `M64/topk4`, generic memory feature, final marker primary를 재사용하지
-   않는다. 먼저 Taxi train-only P0/P1/P2 time-source isolation gate를 통과해야
-   구현이 열린다.
+7. V7은 train-only P0/P1/P2 source-isolation gate 실패로 종료됐으며 V7a/V7b나
+   후속 Taxi quality run을 열지 않는다.
+8. V5b는 Intermittent V2에서만 분기하고 V5a/V3와 결합하지 않는다. marks `6-10`은
+   weight `1.0`으로 유지하며, seed-42 strict validation-only gate를 통과하기 전에는
+   multi-seed와 held-out test를 열지 않는다.
 
 ## 7. Source Of Truth
 
 - Strategy: `simple_lab_test/search/model_enhancement_strategy.md`
 - Experiment guide: `simple_lab_test/search/search_experiment_guide.md`
 - Architecture ADRs: `.agents/results/architecture/adr-titantpp-*.md`
-- Notion source draft:
-  `simple_lab_test/search/notion_writer_prompts/titantpp_post_v6_candidate_selection_v5b_vs_v7_time_history_0719.md`
+- V5b ADR:
+  `.agents/results/architecture/adr-titantpp-v5b-bounded-class-prior-marker-loss.md`
+- Current Notion source draft:
+  `simple_lab_test/search/notion_writer_prompts/titantpp_v5b_bounded_class_prior_contract_0719.md`

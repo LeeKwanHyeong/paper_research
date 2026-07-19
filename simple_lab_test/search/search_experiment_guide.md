@@ -117,7 +117,11 @@ audit은 5080에서 완료·분석됐고 P1 pooled improvement `-1.4811%`,
 개선 fold `1/3`, series-bootstrap CI `[-2.5633%,-0.5181%]`로 Stage-0를
 실패했습니다. V7은 모델 구현 전에 종료하며 unified CLI option, V7a/V7b,
 CUDA/e1/e50을 열지 않습니다. Taxi incumbent는 V3b를 유지하고 다음 별도 설계는
-Intermittent V5b입니다. 당분간 후속 실행 서버는 사용자 override에 따라 5080입니다.
+Intermittent V5b입니다. V5b는 marks `0-5`에만 train-only bounded square-root
+prior weight를 적용하고 marks `6-10`은 weight `1.0`으로 유지하는 objective-only
+계약까지 동결됐습니다. 구현과 품질 실험은 아직 시작하지 않았고 Intermittent
+incumbent는 V2 `small_lmm`입니다. 당분간 후속 실행 서버는 사용자 override에 따라
+5080입니다.
 
 ```bash
 SOURCE_REVISION=<checksum_synced_full_sha> \
