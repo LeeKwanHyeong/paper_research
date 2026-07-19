@@ -140,7 +140,7 @@ The canonical state is frozen in
 
 - V2 remains the common TitanTPP strong baseline; V3b is promoted only for Taxi.
 - V3a/V3c/V4/V5a/M0/Q0-Q3 are implemented or evaluated ablations, not active models.
-- V5b is deferred. V6 causal pre-window series memory is the selected next hypothesis; its Taxi train-only audit is running, and the adapter remains unimplemented until the gate passes.
+- V5b is deferred. V6 causal pre-window series memory failed its frozen train-only final gate and closed before adapter implementation.
 - The strict Q2 exact A/B gate validates deterministic infrastructure only and does not promote Q2.
 - Instacart `dataset_best=mid_lmm` is a generic runner recommendation; the model-enhancement V2 baseline lock remains `small_lmm`.
 
@@ -1908,8 +1908,12 @@ Next execution order:
 12. Checksum-sync commit `6d7ed32` to 5090 - completed, `7/7` files match.
 13. Run preflight and start the train-only audit once on 5090 - completed;
     started `2026-07-17 09:27:41 KST`, initial coverage decoding confirmed.
-14. Wait without polling; on request, perform one completion check and sync
-    artifacts before protocol-order analysis.
+14. Perform one completion check, checksum-sync artifacts, and analyze in
+    protocol order - completed; independent recomputation passed.
+15. Apply the frozen V6 gate - completed; close V6 before implementation and
+    retain Taxi V3b.
+16. Temporarily move Model Enhancement source sync and follow-up execution to
+    5080 until the user changes the server override.
 
 ## 24. V6 Causal Pre-Window Series Memory Hypothesis Selection
 
@@ -1941,11 +1945,11 @@ Taxi factorial:
 | V6a | shared | coupled | on | isolated memory effect |
 | V6b | mark-conditioned experts | detached | on | Taxi replacement candidate |
 
-Before implementation, a 5090 train-only audit must verify pre-window coverage
-and additional marker/time/quantity signal without reading validation or test.
-Only an audit pass freezes memory budget/top-k and opens implementation. The
-first model-quality screen remains strict seed-42 e50 validation-only; multi-seed
-and held-out stay locked.
+Before implementation, the 5090 train-only audit had to verify pre-window
+coverage and additional marker/time/quantity signal without reading validation
+or test. Only an audit pass could freeze memory budget/top-k and open
+implementation. The final gate failed, so the strict seed-42 e50, multi-seed,
+and held-out stages were never opened.
 
 The audit implementation reuses the exact week-lookback train target index and
 separates temporal-boundary exclusion from `max_seq_len` exclusion. Series are
@@ -1971,13 +1975,40 @@ Detailed ADR:
 
 V6 execution order:
 
-1. Taxi train-only pre-window support and predictiveness audit implementation - completed; Taxi result not read.
+1. Taxi train-only pre-window support and predictiveness audit implementation - completed.
 2. Commit `6d7ed32` checksum-sync to 5090 - completed, `7/7` files match.
 3. Dependency, dataset, source-revision, and command preflight followed by one
    5090 tmux launch - completed; source manifest SHA-256
    `85365fc8435b4eda3dd11e059f3e5312eea90dd244e6fbee34dd8651ab74e107`,
    start `2026-07-17 09:27:41 KST`.
-4. Artifact-order analysis and audit-based constants freeze or V6 closure.
-5. Masked zero-init adapter implementation and focused tests only after pass.
-6. 5090 CUDA and Taxi e1 integration gates.
-7. Strict Taxi V2/V3b/V6a/V6b seed-42 e50 validation-only screening.
+4. Artifact-order analysis and audit-based constants freeze or V6 closure -
+   completed; final gate failed.
+5. Masked zero-init adapter implementation - not opened.
+6. CUDA and Taxi e1 integration gates - not opened.
+7. Strict Taxi V2/V3b/V6a/V6b seed-42 e50 validation-only screening - not opened.
+
+## 25. V6 Taxi Train-Only Audit Final Decision
+
+The audit completed on 5090 at `2026-07-17 09:28:24 KST` with process exit code
+`0`, no traceback, finite target errors, and no validation/test target access.
+Source quality, loader identity, causal ordering, target coverage, series
+coverage, selection, unseen-mark, and non-primary regression checks passed.
+
+Coverage was sufficient: `65.262%` of train targets and all `131` series had at
+least eight pre-window events. The selection partition chose `M=64/topk=4` and
+froze `marker_ce` as the final primary metric. On the untouched final train
+suffix, marker CE improved only `0.6235%` and its series-bootstrap 95% CI was
+`[-1.7265%, 2.9784%]`. Both the `>=1%` primary threshold and positive CI-lower
+bound failed. Time MAE improved `2.4696%`, but switching the primary metric after
+reading the final suffix is not allowed. Quantity MAE changed `-0.2875%` and
+remained inside the guardrail.
+
+Local target-level and series-bootstrap recomputation matched saved artifacts to
+within `4.3e-14`. Logistic probe convergence warnings remain a numerical caveat,
+but no post-result solver change or rerun is opened. Final decision:
+
+- close V6 before model implementation
+- do not freeze `M=64/topk=4` as model constants
+- do not implement V6a/V6b or run CUDA/e1/e50/multi-seed/held-out stages
+- retain V2 as common baseline and Taxi V3b `mid_lmm` as Taxi incumbent
+- use 5080 for subsequent Model Enhancement work until the server override changes

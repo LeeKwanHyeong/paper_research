@@ -63,19 +63,22 @@ Notion Writer 세션이 같은 기준으로 실험을 실행하고 기록하기 
 기본 실행 서버는 `5090`이다. `5090`이 사용 중이거나 보조 실험을 병렬로 돌릴 때만
 `5080`을 사용한다.
 
-Current user override (2026-07-10):
+Current user override (2026-07-19, supersedes 2026-07-10):
 
-- 별도 지시가 있기 전까지 smoke, screening, long-epoch를 포함한 모든 실험은
-  `5090`에서만 실행한다.
-- `5090`이 사용 중이거나 실행 환경에 문제가 있어도 `5080`으로 자동 전환하지
-  않고 상태를 먼저 보고한다.
+- 별도 지시가 있기 전까지 Model Enhancement 작업의 source sync, smoke,
+  screening, long-epoch는 `5080`에서 실행한다.
+- `5090`은 다른 작업에 사용 중이므로 사용자가 명시적으로 요청하기 전에는 새
+  명령이나 실험을 시작하지 않는다.
+- 로컬 커밋을 먼저 만든 뒤 필요한 tracked source와 실험 artifact만
+  `5080:~/workspace/paper_research`에 checksum 동기화한다. `--delete`는 사용하지
+  않는다.
 - 실험 시작 후 초기 설정, GPU process, 첫 학습 진입까지만 확인하고 지속 polling은
   하지 않는다. 결과 확인은 사용자가 요청했을 때 수행한다.
 
 | Priority | Server | Purpose |
 | --- | --- | --- |
-| 1 | `ssh 5090` | 본실험, long-epoch, 최종 비교, heavy TitanTPP sweep |
-| 2 | `ssh 5080` | smoke test, short screening, 보조 ablation, speed baseline |
+| 1 (temporary override) | `ssh 5080` | Model Enhancement source sync와 후속 실험 |
+| 2 (explicit request only) | `ssh 5090` | 기존 본실험 서버; 현재 다른 작업 사용 중 |
 
 공통 원칙:
 
@@ -225,8 +228,8 @@ exec bash
 
 동일 seed 구조 비교나 exact-reproduction gate에는 long-epoch의 명시적 strict
 모드를 사용한다. 세 환경 변수는 Python 프로세스 안에서 설정하지 말고 launcher의
-`env`에 넣어야 한다. `SOURCE_REVISION`은 5090에 checksum 동기화한 로컬 full commit
-SHA를 사용한다.
+`env`에 넣어야 한다. `SOURCE_REVISION`은 선택한 실행 서버에 checksum 동기화한
+로컬 full commit SHA를 사용한다.
 
 ```bash
 env \

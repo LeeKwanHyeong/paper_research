@@ -10,10 +10,9 @@ Notion location:
 
 ## 상태
 
-실험 중. 실제 시작 시각은 `2026-07-17 09:27:41 KST`이며 실행 위치는
-`5090 / titantpp_v6_taxi_memory_audit_0717`이다. Source·dependency·train-only
-dataset·runner preflight를 통과했고 tmux에서 coverage decoding까지 초기 진입을
-확인했다. 추가 모니터링은 완료 요청 시까지 중단한다.
+완료. `2026-07-17 09:27:43 KST`에 시작해 `09:28:24 KST`에 process exit code
+`0`으로 종료됐다. Frozen final gate는 `FAIL`이며 V6는 adapter 구현 전에 종료한다.
+Taxi incumbent는 V3b로 유지한다.
 
 ## 목적
 
@@ -55,6 +54,20 @@ bash simple_lab_test/search/scripts/run_titantpp_v6_taxi_train_memory_audit_0717
 
 ## 결과
 
+- artifact 상태: completed, finite target errors, NaN/Traceback 없음
+- data/loader: source quality와 exact loader target·causal ordering gate 통과
+- held-out: validation/test target read `false`
+- coverage: pre-window event 8개 이상 target `65.262%`, series `100%`
+- selection: `M=64`, `topk=4`, primary `marker_ce`
+- final marker CE: `0.6235%` 개선, 95% CI `[-1.7265%, 2.9784%]`
+- final time MAE: `2.4696%` 개선, 95% CI `[1.5236%, 3.5050%]`
+- final quantity MAE: `0.2875%` 악화, 95% CI `[-0.8713%, 0.2630%]`
+- failed checks: primary improvement `>=1%`, primary bootstrap CI lower bound `>0`
+- 판정: `M64/topk4`를 model constant로 동결하지 않고 V6a/V6b 구현과
+  CUDA/e1/e50/multi-seed/held-out을 열지 않는다. Taxi V3b를 유지한다.
+- caveat: marker logistic probe에서 `max_iter=1000` convergence warning이
+  발생했다. Final suffix를 본 뒤 solver를 바꾸는 rerun은 열지 않는다.
+
 ## Local Audit Trail
 
 ### Source Sync Record
@@ -68,7 +81,7 @@ bash simple_lab_test/search/scripts/run_titantpp_v6_taxi_train_memory_audit_0717
 - preflight status: `PASS`
 - source manifest SHA-256:
   `85365fc8435b4eda3dd11e059f3e5312eea90dd244e6fbee34dd8651ab74e107`
-- Notion direct update: `completed and refetched`
+- Notion direct update: `start and final states completed and refetched`
 
 | File | SHA-256 |
 | --- | --- |
@@ -101,7 +114,7 @@ bash simple_lab_test/search/scripts/run_titantpp_v6_taxi_train_memory_audit_0717
   관찰됐으나 프로세스는 계속 실행 중이다. 최종 artifact 분석에서 수렴 상태와
   acceptance 영향 여부를 확인한다.
 
-### Notion Direct Update Result
+### Notion Start-State Update Result
 
 - reflected at: `2026-07-17 09:30:49 KST`
 - parent: `5. Model Design Enhancement`
@@ -116,3 +129,25 @@ bash simple_lab_test/search/scripts/run_titantpp_v6_taxi_train_memory_audit_0717
   `5. Model Design Enhancement > 2026-07-17 > Step 2` placement,
   `실험 중 / 2026-07-17 09:27:41 KST / 5090 tmux`, empty result body,
   V2 and Taxi V3b incumbent unchanged, and adapter implementation still gated.
+
+### Completion And Artifact Validation
+
+- completion check: `2026-07-19 09:19:17 KST`, 단회 확인
+- remote completion: `2026-07-17 09:28:24 KST`, exit code `0`
+- local sync: artifact `24` files, `886,450` bytes, rsync checksum mode
+- expected audit artifact: manifest, log, summary, quality, coverage, candidate,
+  final target/series metrics, gate, report, plots 모두 존재
+- independent recomputation: candidate `M64/topk4`, target means, coverage,
+  2,000-series bootstrap, gate 재현 `PASS`
+- maximum saved/recomputed absolute delta: `4.3e-14`
+- focused audit tests: `8 passed`
+- final decision: `close_v6_before_model_implementation`
+
+### Final Notion Result Update
+
+- reflected at: `2026-07-19 09:26:39 KST`
+- detail page: completed, gate `FAIL`, final metrics and V6 closure verified
+- parent history: Step 2 status/result verified under `5. Model Design Enhancement`
+- related design: V6 closed before adapter implementation
+- strategy registry: V6 `종료`, Taxi V3b retained
+- refetch verification: `4/4 PASS`

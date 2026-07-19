@@ -86,7 +86,7 @@ capacity ablation과 fresh matched control로 취급한다.
 | Q1 | direct raw quantity + canonical causal RevIN | scale collapse 및 validation gate 실패 | `NOT_PROMOTED` | normalization diagnostic |
 | Q2 | direct raw quantity + shrinkage RevIN | raw MAE 개선, low-scale/mark safety 실패 | `NOT_PROMOTED` | normalization foundation only |
 | Q3a/Q3b/Q3c | Q2 gradient routing/log auxiliary factorial | Intermittent validation gate 미통과 | `CLOSED` | implementation retained |
-| V6 | causal pre-window series memory adapter | train-only preflight 통과 후 5090 audit 실행 중; adapter 미구현 | `SELECTED_HYPOTHESIS` | Taxi design/audit only; no quality claim |
+| V6 | causal pre-window series memory adapter | train-only final primary와 bootstrap gate 실패; adapter 미구현 | `CLOSED` | no active experiment |
 
 ## 5. Decision Evidence
 
@@ -104,12 +104,10 @@ capacity ablation과 fresh matched control로 취급한다.
 - strict Q2 e3 A/B exact comparator의 `22/22` 일치는 deterministic runner의
   `INFRA_ONLY` 통과다. Q2 자체의 성능 승격이나 과거 standard artifact의 exact
   재현을 뜻하지 않는다.
-- V6는 기존 `series_lmm` switch가 아니라 static LMM을 유지하는 zero-init causal
-  pre-window adapter로 선택했다. Train-only audit은 source·dependency·dataset·runner
-  preflight를 통과해 `2026-07-17 09:27:41 KST`부터 5090 tmux에서 실행 중이며,
-  Taxi 결과는 아직 읽지 않았다.
-  Audit 통과 전에는 adapter 구현·validation을 시작하지 않으며 active incumbent는
-  계속 V3b다.
+- V6 train-only audit은 충분한 coverage를 확인했지만, 선택 primary인 marker CE의
+  최종 개선이 `0.6235%`로 `1%` threshold에 미달했고 series-bootstrap 95% CI
+  `[-1.7265%, 2.9784%]`가 0을 포함했다. `M64/topk4`를 동결하지 않고 adapter를
+  구현하지 않은 채 V6를 종료했으며 Taxi incumbent는 V3b로 유지한다.
 
 ## 6. Comparison And Unlock Rules
 

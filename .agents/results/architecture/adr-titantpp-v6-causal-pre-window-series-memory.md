@@ -1,7 +1,7 @@
 # ADR: TitanTPP V6 Causal Pre-Window Series Memory
 
 - Date: 2026-07-17
-- Status: Train-only audit running on 5090 since 2026-07-17 09:27:41 KST; model adapter not implemented
+- Status: Closed before model implementation after train-only audit gate failure
 - Scope: TitanTPP series-aware long-horizon memory
 - Baselines: V2 common baseline and Taxi V3b confirmed enhancement
 
@@ -197,12 +197,40 @@ Focused synthetic tests verify temporal and `max_seq_len` boundaries, exact
 loader target correspondence, chronological partition order, target/future
 invariance, valid-memory sensitivity, coverage denominators, candidate
 tie-breaking, finite probe metrics, and all acceptance checks. These tests do
-not provide Taxi audit evidence. The 5090 train-only run passed source,
-dependency, dataset, runner, and launch-conflict preflight and entered coverage
-decoding at `2026-07-17 09:27:41 KST`. Result artifacts remain unread until a
-user-requested completion check.
+not provide Taxi audit evidence.
 
-## Implementation Gate After Audit
+## Train-Only Audit Result
+
+The 5090 audit ran from `2026-07-17 09:27:43 KST` to
+`2026-07-17 09:28:24 KST` and exited with code `0`. The source and loader gates
+passed, no validation/test targets were read, and all final target errors were
+finite.
+
+- train rows / targets / series: `38,524 / 38,393 / 131`
+- targets with at least eight pre-window events: `65.262%`
+- series with an eligible target: `100%`
+- selected candidate: `M=64`, `topk=4`
+- selection primary metric: `marker_ce`
+- final marker CE improvement: `0.6235%`, below the frozen `1%` threshold
+- marker CE series-bootstrap 95% CI: `[-1.7265%, 2.9784%]`, crossing zero
+- final `log1p(dt)` MAE improvement: `2.4696%`, 95% CI
+  `[1.5236%, 3.5050%]`
+- final `log2(qty)` MAE improvement: `-0.2875%`, within the `-1%` guardrail
+
+Target-level means, candidate ranking, coverage, and the 2,000-replicate series
+bootstrap were recomputed locally. The maximum absolute difference from saved
+summary values was `4.3e-14`, so the stored `FAIL` decision is reproducible.
+
+The marker logistic probes emitted `max_iter=1000` convergence warnings. This is
+retained as a numerical caveat, but it does not reopen the gate: marker CE was
+frozen as primary before the final suffix was read, missed both primary checks,
+and changing the solver after observing the outcome would be post-hoc.
+
+Decision: do not freeze `M=64/topk=4` as TitanTPP constants, do not implement
+V6a/V6b, and do not open CUDA, e1, validation, multi-seed, or held-out stages.
+Retain Taxi V3b `mid_lmm` as the active incumbent.
+
+## Unopened Implementation Gate
 
 If the audit passes, focused tests must verify:
 
@@ -220,7 +248,8 @@ If the audit passes, focused tests must verify:
 
 ## Validation-Only Promotion Gate
 
-After local tests, run a 5090 CUDA model-test and one-epoch Taxi integration
+Had the audit passed, the next stages would have used a CUDA model-test and
+one-epoch Taxi integration
 smoke. The first quality screen is strict Taxi V2/V3b/V6a/V6b seed-42 e50,
 validation-only.
 
@@ -252,13 +281,14 @@ the first V6 design without tuning on validation.
 
 ## Next Execution Order
 
-1. Implement a Taxi train-only pre-window support and predictiveness audit - completed; no Taxi result read.
+1. Implement a Taxi train-only pre-window support and predictiveness audit - completed.
 2. Checksum-sync commit `6d7ed32` to 5090 - completed, `7/7` files match.
 3. Run dependency, dataset, source-revision, and command preflight; then start
    the audit once in 5090 tmux - completed; started `2026-07-17 09:27:41 KST`
    and initial coverage decoding confirmed.
 4. Read manifest, log, summary, coverage, candidate metrics, final probe metrics,
-   and plots; freeze or reject `M`, `topk`, and the coverage policy.
-5. If the audit passes, implement the masked zero-init adapter and focused tests.
-6. Run 5090 CUDA and Taxi e1 integration gates.
-7. Run strict Taxi V2/V3b/V6a/V6b seed-42 e50 validation-only screening.
+   and plots - completed; independent recomputation passed.
+5. Apply the frozen gate - completed; V6 failed and closed before implementation.
+6. Retain Taxi V3b and keep V6 CUDA/e1/e50/multi-seed/held-out stages unopened.
+7. Use 5080 for subsequent Model Enhancement work until the user changes the
+   temporary server override.
