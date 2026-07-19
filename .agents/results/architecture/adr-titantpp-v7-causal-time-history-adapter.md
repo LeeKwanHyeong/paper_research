@@ -1,7 +1,7 @@
 # ADR: TitanTPP V7 Causal Time-History Adapter
 
 - Date: 2026-07-19
-- Status: Stage-0 audit implemented locally; V7 model implementation locked
+- Status: Stage-0 execution completed; artifact analysis pending; V7 model locked
 - Scope: Taxi-first TitanTPP time modeling after V6 closure
 - Method: Design-Twice followed by ADR
 - Baselines: V2 common control and Taxi V3b incumbent
@@ -164,8 +164,8 @@ focused implementation without changing the active incumbent.
 
 ### Stage-0 Implementation Status (2026-07-19)
 
-The train-only P0/P1/P2 audit is implemented, but has not been run on 5080 and
-has no experimental result yet:
+The train-only P0/P1/P2 audit is implemented and its first 5080 execution is
+complete. Artifact synchronization and protocol-order analysis remain pending:
 
 - entrypoint: `simple_lab_test/search/analyze_taxi_time_source_isolation_audit.py`;
 - 5080 runner: `simple_lab_test/search/scripts/run_titantpp_v7_taxi_time_source_audit_0719.sh`;
@@ -178,7 +178,11 @@ has no experimental result yet:
   train-only artifact contract.
 
 Local verification passed `6` V7 focused tests and `14` combined V6/V7 audit
-tests. These are implementation checks only and do not satisfy Stage 0.
+tests. Source revision `ea874d2` passed the 5080 dependency, dataset, runner,
+and `8/8` source-checksum preflight. Tmux execution started at
+`2026-07-19 11:33:58 KST` and completed at `11:34:04 KST`. These execution facts
+do not finalize the Stage-0 decision before the artifact-reading protocol is
+completed.
 
 ## Taxi Factorial After Stage 0
 
@@ -280,12 +284,9 @@ Risks:
 
 ## Next Execution Order
 
-1. Commit the implemented audit and checksum-sync only the required tracked
-   files to 5080.
-2. Run the audit once in 5080 tmux after source, dependency, CUDA, dataset, and
-   command preflight; confirm only initial entry.
-3. On request, check completion once and sync artifacts locally.
-4. Read manifest, log, summary, fold metrics, series metrics, and plots; apply
+1. On request, sync the completed 5080 artifacts locally.
+2. Read manifest, log, summary, fold metrics, series metrics, and plots; apply
    the frozen Stage-0 gate.
-5. If Stage 0 passes, implement V7 and its focused contract tests. If it fails,
+3. Update the Notion result section only after the artifact analysis.
+4. If Stage 0 passes, implement V7 and its focused contract tests. If it fails,
    close V7 and reopen the V5b design decision.

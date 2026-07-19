@@ -142,7 +142,7 @@ The canonical state is frozen in
 - V2 remains the common TitanTPP strong baseline; V3b is promoted only for Taxi.
 - V3a/V3c/V4/V5a/M0/Q0-Q3 are implemented or evaluated ablations, not active models.
 - V5b is deferred. V6 causal pre-window series memory failed its frozen train-only final gate and closed before adapter implementation.
-- V7 causal time-history adapter is the selected post-V6 hypothesis. Its train-only source-isolation audit is implemented locally, while model implementation remains locked until the audit passes.
+- V7 causal time-history adapter is the selected post-V6 hypothesis. Its train-only source-isolation audit completed on 5080, while artifact analysis and the Stage-0 decision remain pending and model implementation stays locked.
 - The strict Q2 exact A/B gate validates deterministic infrastructure only and does not promote Q2.
 - Instacart `dataset_best=mid_lmm` is a generic runner recommendation; the model-enhancement V2 baseline lock remains `small_lmm`.
 
@@ -2062,7 +2062,10 @@ simple_lab_test/search/scripts/run_titantpp_v7_taxi_time_source_audit_0719.sh
 It freezes all strictly pre-window temporal moments, three expanding
 rolling-origin folds, fold-local scaler/Ridge fitting, and a seed-42 series
 bootstrap. Six V7 focused tests and fourteen combined V6/V7 audit tests pass
-locally. No 5080 audit result has been read, so Stage 0 remains pending.
+locally. Revision `ea874d2` passed `8/8` source checksum, runtime, dataset, and
+runner preflight on 5080. The audit ran from `2026-07-19 11:33:58` to
+`11:34:04 KST`; artifacts have not yet been synchronized or analyzed in the
+required order, so Stage 0 remains pending.
 
 If Stage 0 passes, the first model-quality factorial is Taxi
 V2/V3b/V7a/V7b, where V7a is the V2 attribution pair and V7b is the V3b
@@ -2086,11 +2089,8 @@ Detailed ADR:
 
 Next execution order:
 
-1. Commit the implemented audit and checksum-sync the required source to 5080.
-2. Run dependency, CUDA, dataset, source-revision, and command preflight; create
-   a source manifest and start one 5080 tmux audit.
-3. Confirm only initial entry; do not continuously poll.
-4. On request, check completion once, sync artifacts, and analyze them in the
-   protocol order.
-5. Pass: freeze the V7 temporal source and implement the adapter. Fail: close V7
+1. On request, synchronize the completed 5080 artifacts locally.
+2. Analyze them in the protocol order and apply the frozen Stage-0 gate.
+3. Update the Notion result section after the analysis.
+4. Pass: freeze the V7 temporal source and implement the adapter. Fail: close V7
    and reopen V5b design.

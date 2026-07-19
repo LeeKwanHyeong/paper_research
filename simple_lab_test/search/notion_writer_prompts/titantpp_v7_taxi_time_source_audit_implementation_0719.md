@@ -10,11 +10,11 @@
 
 ## 상태
 
-- 상태: `실행 준비 중`
+- 상태: `실행 완료 · artifact 분석 대기`
 - audit code와 5080 runner 구현 완료
-- V7 model path는 Stage-0 통과 전까지 미구현·잠금 유지
+- V7 model path는 Stage-0 결과 분석 전까지 미구현·잠금 유지
 - 실행 서버 / tmux: `5080 / titantpp_v7_taxi_time_source_audit_0719`
-- 실제 5080 실행 시작 시각: 아직 없음
+- 실제 시작 / 종료: `2026-07-19 11:33:58 / 11:34:04 KST`
 
 ## 목적
 
@@ -58,3 +58,21 @@ bash simple_lab_test/search/scripts/run_titantpp_v7_taxi_time_source_audit_0719.
 ```
 
 ## 결과
+
+## Local Audit Trail
+
+- source revision: `ea874d28aa01c0cef3bccea5efc6daedc9d61764`
+- source sync: local/5080 SHA-256 `8/8 PASS`
+- source manifest:
+  `search_artifacts/model_enhancement_titantpp_v7_taxi_time_source_audit_0719/source_sync_manifest.json`
+- source manifest SHA-256:
+  `893ced346bc7c80d8d553090205817c1ce20122acfbfb47461992285f6ba0e41`
+- runtime: Python `3.12.13`, matplotlib `3.10.8`, numpy `2.4.4`, polars
+  `1.39.3`, sklearn `1.8.0`
+- runner: executable, `bash -n PASS`, V6/V7 audit regression `14 passed`
+- dataset: `38,524` rows, `131` series, marks `[0,1,2,3]`, quality gate `PASS`
+- launch guard: same-name tmux absent, output directory absent
+- audit manifest: `completed`, source revision 일치, 종료 시각
+  `2026-07-19T11:34:04.224360+09:00`
+- audit log completion marker: P1 `-1.4811%`, P2 `-1.6489%`, runner gate
+  `FAIL`; protocol artifact 분석 전까지 최종 해석과 Notion 결과 작성은 보류

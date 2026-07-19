@@ -87,7 +87,7 @@ capacity ablation과 fresh matched control로 취급한다.
 | Q2 | direct raw quantity + shrinkage RevIN | raw MAE 개선, low-scale/mark safety 실패 | `NOT_PROMOTED` | normalization foundation only |
 | Q3a/Q3b/Q3c | Q2 gradient routing/log auxiliary factorial | Intermittent validation gate 미통과 | `CLOSED` | implementation retained |
 | V6 | causal pre-window series memory adapter | train-only final primary와 bootstrap gate 실패; adapter 미구현 | `CLOSED` | no active experiment |
-| V7 | causal pre-window time-history adapter | Stage-0 audit 구현·로컬 계약 테스트 완료; 5080 결과 전 | `SELECTED_HYPOTHESIS` | model path locked; Taxi train-only audit only |
+| V7 | causal pre-window time-history adapter | Stage-0 5080 실행 완료; artifact 분석 전 | `SELECTED_HYPOTHESIS` | model path locked; decision pending analysis |
 
 ## 5. Decision Evidence
 
