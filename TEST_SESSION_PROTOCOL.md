@@ -138,7 +138,23 @@ conda activate ai_env
 cd ~/workspace/paper_research
 ```
 
-### 2.2 Secondary: 5080
+### 2.2 Temporary Primary: 5080
+
+2026-07-19 확인된 endpoint와 실행 경로:
+
+| Item | Value |
+| --- | --- |
+| SSH alias | `5080` |
+| Host/IP | `100.118.62.81` |
+| SSH port | `22` |
+| User | `leekwanhyeong` |
+| Project | `/home/leekwanhyeong/workspace/paper_research` |
+| conda env | `/home/leekwanhyeong/miniconda3/envs/ai_env` |
+| Python | `/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python` |
+| tmux | `/usr/bin/tmux` |
+
+5080은 5090과 conda/tmux 절대 경로가 다르다. 비대화형 실행에서는 위 경로를
+명시한다.
 
 ```bash
 ssh 5080

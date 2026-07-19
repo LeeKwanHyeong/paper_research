@@ -71,7 +71,9 @@ multi-seed, held-out 단계는 열지 않고 Taxi V3b를 유지한다.
 - artifact:
   `search_artifacts/model_enhancement_titantpp_v6_taxi_train_memory_audit_0717`
 - completion check: `2026-07-19 09:19:17 KST`, 5090 단회 확인
-- local sync: `24` files, `886,450` bytes, checksum mode
+- local sync: `19` regular files, `886,450` bytes, checksum mode
 - independent validation: `PASS`, maximum absolute delta `4.3e-14`
 - focused audit tests: `8 passed`
 - Notion direct update/refetch: `2026-07-19 09:26:39 KST`, `4/4 PASS`
+- 5080 sync: commit `e61c692`, tracked source `215` files and V6 artifact synced;
+  source `7/7`, artifact `2/2`, dataset SHA checks passed

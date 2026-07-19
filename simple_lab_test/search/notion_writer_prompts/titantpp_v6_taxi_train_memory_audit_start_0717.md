@@ -134,7 +134,7 @@ bash simple_lab_test/search/scripts/run_titantpp_v6_taxi_train_memory_audit_0717
 
 - completion check: `2026-07-19 09:19:17 KST`, 단회 확인
 - remote completion: `2026-07-17 09:28:24 KST`, exit code `0`
-- local sync: artifact `24` files, `886,450` bytes, rsync checksum mode
+- local sync: artifact `19` regular files, `886,450` bytes, rsync checksum mode
 - expected audit artifact: manifest, log, summary, quality, coverage, candidate,
   final target/series metrics, gate, report, plots 모두 존재
 - independent recomputation: candidate `M64/topk4`, target means, coverage,
@@ -151,3 +151,18 @@ bash simple_lab_test/search/scripts/run_titantpp_v6_taxi_train_memory_audit_0717
 - related design: V6 closed before adapter implementation
 - strategy registry: V6 `종료`, Taxi V3b retained
 - refetch verification: `4/4 PASS`
+
+### 5080 Source And Artifact Sync
+
+- synced at: `2026-07-19 09:33:08 KST`
+- source commit: `e61c6925288953908de81a999de3f1fdbc7931f0`
+- destination: `5080:/home/leekwanhyeong/workspace/paper_research`
+- tracked source: `215` files, checksum mode, no delete
+- changed source checksum verification: `7/7 PASS`
+- V6 artifact: `19` regular files, `886,450` bytes
+- artifact manifest/summary checksum verification: `2/2 PASS`
+- Taxi train parquet SHA-256:
+  `0055229740f3f5b612ff8a2a256b1726008918a2ccb453c6bd66909c48ab2cb3`
+- runtime: Python `3.12.13`, PyTorch `2.11.0+cu130`, CUDA `true`, tmux `3.4`
+- remote workspace has no Git metadata; future source gate uses synced commit and
+  file SHA-256 manifest
