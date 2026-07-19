@@ -1,6 +1,6 @@
 # TitanTPP Model Status And Baseline Registry
 
-- Date: 2026-07-17
+- Date: 2026-07-19
 - Scope: Model Enhancement Session
 - Canonical role: 현재 모델 승격 상태와 후속 비교 기준의 단일 기준 문서
 
@@ -87,6 +87,7 @@ capacity ablation과 fresh matched control로 취급한다.
 | Q2 | direct raw quantity + shrinkage RevIN | raw MAE 개선, low-scale/mark safety 실패 | `NOT_PROMOTED` | normalization foundation only |
 | Q3a/Q3b/Q3c | Q2 gradient routing/log auxiliary factorial | Intermittent validation gate 미통과 | `CLOSED` | implementation retained |
 | V6 | causal pre-window series memory adapter | train-only final primary와 bootstrap gate 실패; adapter 미구현 | `CLOSED` | no active experiment |
+| V7 | causal pre-window time-history adapter | Post-V6 비교에서 선택; time-only source audit 전 | `SELECTED_HYPOTHESIS` | Taxi train-only audit only |
 
 ## 5. Decision Evidence
 
@@ -108,6 +109,13 @@ capacity ablation과 fresh matched control로 취급한다.
   최종 개선이 `0.6235%`로 `1%` threshold에 미달했고 series-bootstrap 95% CI
   `[-1.7265%, 2.9784%]`가 0을 포함했다. `M64/topk4`를 동결하지 않고 adapter를
   구현하지 않은 채 V6를 종료했으며 Taxi incumbent는 V3b로 유지한다.
+- V6의 secondary `log1p(dt)` MAE는 최종 train suffix에서 `2.4696%` 개선됐고
+  series-bootstrap 95% CI `[1.5236%, 3.5050%]`가 양수였다. 이 결과는 V6를
+  재승격하지 않으며, mark/quantity를 제외한 temporal pre-window source만 시간
+  intercept에 연결하는 V7 Stage-0 audit의 가설 생성 근거로만 사용한다.
+- V5b는 Intermittent class-prior correction fallback으로 유지한다. Post-V6 primary는
+  모델 경계가 더 좁고 양의 train-only temporal 근거가 있는 V7이며, 두 후보를
+  동시에 구현하거나 screening하지 않는다.
 
 ## 6. Comparison And Unlock Rules
 
@@ -123,6 +131,9 @@ capacity ablation과 fresh matched control로 취급한다.
 6. 기존 e200 V1/V2와 Taxi V2/V3b matched held-out 결과는 역사적 결정 근거로
    유지한다. 새 인과 비교에서는 과거 수치를 exact control로 재사용하지 않고
    현재 strict runner로 fresh matched baseline을 함께 실행한다.
+7. V7은 V6의 `M64/topk4`, generic memory feature, final marker primary를 재사용하지
+   않는다. 먼저 Taxi train-only P0/P1/P2 time-source isolation gate를 통과해야
+   구현이 열린다.
 
 ## 7. Source Of Truth
 
@@ -130,4 +141,4 @@ capacity ablation과 fresh matched control로 취급한다.
 - Experiment guide: `simple_lab_test/search/search_experiment_guide.md`
 - Architecture ADRs: `.agents/results/architecture/adr-titantpp-*.md`
 - Notion source draft:
-  `simple_lab_test/search/notion_writer_prompts/titantpp_model_status_baseline_registry_0717.md`
+  `simple_lab_test/search/notion_writer_prompts/titantpp_post_v6_candidate_selection_v5b_vs_v7_time_history_0719.md`

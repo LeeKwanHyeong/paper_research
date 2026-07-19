@@ -95,6 +95,7 @@ test_score = mark_acc - 0.01 * dt_mae - 0.001 * qty_mae
 | V4 | Mark-conditioned time head | demand scale과 inter-event time의 의존성 반영 |
 | V5 | Ordinal mark modeling | log-scale mark의 순서성을 반영해 class imbalance 완화 |
 | V6 | Series-aware memory | 부품/시계열별 local pattern memory 활용 |
+| V7 | Causal time-history adapter | active window 밖의 temporal history를 time head에만 추가 |
 
 V1/V2는 이미 코드에 상당 부분 준비된 기능이므로 기준선 정리와 실험 조건 고정에 가깝다. 실제 새 모델 구조 개발은 V3, 즉 mark-conditioned value head부터 시작한다.
 
@@ -141,6 +142,7 @@ The canonical state is frozen in
 - V2 remains the common TitanTPP strong baseline; V3b is promoted only for Taxi.
 - V3a/V3c/V4/V5a/M0/Q0-Q3 are implemented or evaluated ablations, not active models.
 - V5b is deferred. V6 causal pre-window series memory failed its frozen train-only final gate and closed before adapter implementation.
+- V7 causal time-history adapter is the selected post-V6 hypothesis, but remains locked before its train-only time-source isolation audit.
 - The strict Q2 exact A/B gate validates deterministic infrastructure only and does not promote Q2.
 - Instacart `dataset_best=mid_lmm` is a generic runner recommendation; the model-enhancement V2 baseline lock remains `small_lmm`.
 
@@ -2012,3 +2014,73 @@ but no post-result solver change or rerun is opened. Final decision:
 - do not implement V6a/V6b or run CUDA/e1/e50/multi-seed/held-out stages
 - retain V2 as common baseline and Taxi V3b `mid_lmm` as Taxi incumbent
 - use 5080 for subsequent Model Enhancement work until the server override changes
+
+## 26. Post-V6 Candidate Selection: V5b Versus V7 Time History
+
+Post-V6 work compares two separate problems rather than composing more changes
+onto a failed branch.
+
+| Candidate | Dataset/problem | Evidence | Risk | Decision |
+| --- | --- | --- | --- | --- |
+| V5b class-prior correction | Intermittent marker imbalance | marks `0-2` are `86.60%` of train targets | the main failure is the high-support mark `0/1` boundary; calibration and marker-NLL semantics need a separate contract | keep deferred |
+| V7 causal time-history adapter | Taxi time modeling outside the 168-hour window | V6 secondary final `log1p(dt)` MAE improved `2.4696%`, CI `[1.5236%, 3.5050%]` | the old probe mixed time, mark, and quantity features | select for time-only source audit |
+
+This choice does not change the V6 failure. V6's frozen marker primary missed
+both its improvement and bootstrap gates, so its generic adapter remains closed
+and `M=64/topk=4` is not reused. V7 is narrower: it excludes mark and quantity
+from pre-window memory, stops the retrieval query gradient at the shared hidden
+state, and adds only a zero-gated scalar delta to the RMTPP time intercept.
+
+```text
+h_base = LMM_static(TitanEncoder(x_active_context))
+r_time = MaskedTimeRetrieve(stop_gradient(h_base), temporal_pre_window, mask)
+a_v7   = v_t(h_base) + b_t + tanh(alpha_time) * delta_time(r_time)
+alpha_time = 0
+```
+
+V7 is `SELECTED_HYPOTHESIS`, not implemented or promoted. The first gate is a
+Taxi train-only P0/P1/P2 source-isolation audit:
+
+| Probe | Added source | Purpose |
+| --- | --- | --- |
+| P0 | none | active-window control |
+| P1 | pre-window temporal fields only | V7 feasibility primary |
+| P2 | pre-window temporal + mark + quantity fields | explain whether non-time fields drove V6 |
+
+P1 must improve pooled rolling-origin `log1p(dt)` MAE by at least `1%`, improve
+at least `2/3` folds, and have a positive series-bootstrap CI lower bound. It
+must also preserve the existing `>=35%` target and `>=80%` series coverage gates.
+P2 cannot pass V7 on P1's behalf. Validation and test are not read.
+
+If Stage 0 passes, the first model-quality factorial is Taxi
+V2/V3b/V7a/V7b, where V7a is the V2 attribution pair and V7b is the V3b
+replacement candidate. All data, candidate, objective, lookback, maximum
+sequence length, optimizer, budget, checkpoint, and strict reproducibility
+conditions stay matched. The seed-42 e50 validation-only gate requires V7b
+versus V3b overall/eligible time-NLL improvements of `>=0.5%/>=1%`, total-NLL
+improvement of `>=0.25%`, and marker, DT, quantity, scale, and eligible-series
+guardrails. Only a pass opens multi-seed and then one frozen held-out audit.
+
+V5b remains the fallback if V7 Stage 0 fails. A future V5b ADR must freeze
+train-only prior estimation, smoothing/capping, train/inference logit semantics,
+and calibration metrics before validation; it must keep reported
+`nll_marker` as ordinary CE and cannot be combined with V5a in its first screen.
+
+Detailed ADR:
+
+```text
+.agents/results/architecture/adr-titantpp-v7-causal-time-history-adapter.md
+```
+
+Next execution order:
+
+1. Implement the Taxi train-only P0/P1/P2 time-source isolation audit and
+   focused rolling-fold/causality tests.
+2. Commit and checksum-sync the required source to 5080.
+3. Run dependency, CUDA, dataset, source-revision, and command preflight; create
+   a source manifest and start one 5080 tmux audit.
+4. Confirm only initial entry; do not continuously poll.
+5. On request, check completion once, sync artifacts, and analyze them in the
+   protocol order.
+6. Pass: freeze the V7 temporal source and implement the adapter. Fail: close V7
+   and reopen V5b design.
