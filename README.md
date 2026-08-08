@@ -97,25 +97,22 @@ RMTPP-matched and THP-matched are adapted baselines. They retain the encoder fam
 
 ### 4.2 Results
 
-Table 2 reports validation performance under the fixed protocol. Lower values are better for validation NLL, quantity MAE, and $\Delta t$ MAE; higher values are better for mark accuracy.
+Table 2 reports validation performance for Intermittent and Taxi, where all three model families have completed the same e300 validation protocol. Lower values are better for validation NLL, quantity MAE, and $\Delta t$ MAE; higher values are better for mark accuracy. Instacart is reserved for the complete three-dataset table after TitanTPP validation finishes under the same protocol.
 
 | Dataset | Model | Val NLL | Qty MAE | Delta-t MAE | Mark acc |
 |---|---|---:|---:|---:|---:|
 | Intermittent | RMTPP-matched | 5.6683 +/- 0.0115 | 2.7408 +/- 0.0493 | 41.8872 +/- 0.5030 | 55.183% +/- 0.236%p |
 | Intermittent | THP-matched | 5.6417 +/- 0.0305 | 2.8812 +/- 0.0177 | 40.5947 +/- 0.3284 | 54.235% +/- 0.637%p |
-| Intermittent | TitanTPP | [validation result] | [validation result] | [validation result] | [validation result] |
+| Intermittent | TitanTPP | 5.6171 +/- 0.0158 | 2.7188 +/- 0.1336 | 41.4268 +/- 0.5581 | 55.194% +/- 1.293%p |
 | Taxi | RMTPP-matched | 1.5803 +/- 0.0032 | 65.8580 +/- 2.4748 | 0.7326 +/- 0.0085 | 91.800% +/- 0.117%p |
 | Taxi | THP-matched | 1.5998 +/- 0.0087 | 87.7508 +/- 2.6771 | 0.7528 +/- 0.0224 | 91.461% +/- 0.202%p |
-| Taxi | TitanTPP | [validation result] | [validation result] | [validation result] | [validation result] |
-| Instacart | RMTPP-matched | 4.3809 +/- 0.0007 | 4.3379 +/- 0.0131 | 5.6690 +/- 0.0094 | 49.940% +/- 0.034%p |
-| Instacart | THP-matched | 4.3881 +/- 0.0009 | 4.3046 +/- 0.0081 | 5.7063 +/- 0.0059 | 49.793% +/- 0.091%p |
-| Instacart | TitanTPP | [validation result] | [validation result] | [validation result] | [validation result] |
+| Taxi | TitanTPP | 1.5458 +/- 0.0048 | 23.7722 +/- 1.0929 | 0.7374 +/- 0.0151 | 92.606% +/- 0.134%p |
 
-The final results paragraph will compare TitanTPP against RMTPP-matched and THP-matched by dataset. The analysis will avoid a uniform dominance claim unless every dataset and metric supports it. For datasets where validation NLL and quantity MAE move in different directions, the paper will report the trade-off directly rather than reducing the outcome to a single winner.
+On Intermittent, TitanTPP obtains the lowest validation NLL and quantity MAE among the three models, while its event-time error remains between RMTPP-matched and THP-matched. On Taxi, TitanTPP obtains the lowest validation NLL, the lowest quantity MAE, and the highest mark accuracy; RMTPP-matched retains a small advantage on $\Delta t$ MAE. These results support a bounded claim: the TitanTPP formulation improves likelihood and quantity reconstruction on the completed comparisons, but event-time prediction still depends on the dataset and metric.
 
-![Validation NLL comparison](paper/results/e300_matched_20260808/figures/validation_nll_comparison.png)
+![Validation NLL comparison](paper/results/e300_matched_20260808/figures/inter_taxi_e300_validation_nll.png)
 
-![Quantity MAE comparison](paper/results/e300_matched_20260808/figures/quantity_mae_comparison.png)
+![Quantity MAE comparison](paper/results/e300_matched_20260808/figures/inter_taxi_e300_quantity_mae.png)
 
 ### 4.3 Ablation and analysis
 
