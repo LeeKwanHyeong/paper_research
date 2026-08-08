@@ -1,9 +1,8 @@
 # TitanTPP: quantity-aware temporal point process modeling for intermittent demand
 
-> Current manuscript version: v0.3  
+> Manuscript version: v0.3  
 > Date: 2026-08-08 KST  
 > Target: ICTC AICA 2026 short-paper manuscript  
-> Versioned source: `paper/titantpp_short_paper_draft_v0_3_manuscript.md`  
 > Structure source: `paper/notion_exports/drafting_revision_final/04_four_page_structure_revision.md`  
 > Evaluation policy: validation-based model selection with held-out test evaluation reserved for the selected final model.
 
