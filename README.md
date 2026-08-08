@@ -27,31 +27,31 @@ Demand quantity also differs from the categorical marks used in many marked TPP 
 
 ### 3.1 Problem setup
 
-For each demand series, a positive-demand event is denoted by \(e_i=(t_i,q_i)\), where \(t_i\) is the event time and \(q_i>0\) is the observed demand quantity. The event history before the next prediction is
+For each demand series, a positive-demand event is denoted by $e_i=(t_i,q_i)$, where $t_i$ is the event time and $q_i>0$ is the observed demand quantity. The event history before the next prediction is
 
-\[
+$$
 \mathcal{H}_i=\{(t_j,q_j)\}_{j=1}^{i}.
-\]
+$$
 
-The inter-event time is \(\Delta t_i=t_i-t_{i-1}\). Given \(\mathcal{H}_i\), the model predicts the next inter-event time \(\Delta t_{i+1}\) and the next quantity \(q_{i+1}\). Zero-demand intervals are not inserted as explicit zero events; their duration is represented through \(\Delta t\). This construction preserves the irregular waiting-time structure while keeping the target focused on positive-demand events.
+The inter-event time is $\Delta t_i=t_i-t_{i-1}$. Given $\mathcal{H}_i$, the model predicts the next inter-event time $\Delta t_{i+1}$ and the next quantity $q_{i+1}$. Zero-demand intervals are not inserted as explicit zero events; their duration is represented through $\Delta t$. This construction preserves the irregular waiting-time structure while keeping the target focused on positive-demand events.
 
-Demand quantities can span several scales, so TitanTPP decomposes quantity into a coarse magnitude mark and a continuous residual. For a dataset-specific base \(b\), the magnitude mark and residual are defined as
+Demand quantities can span several scales, so TitanTPP decomposes quantity into a coarse magnitude mark and a continuous residual. For a dataset-specific base $b$, the magnitude mark and residual are defined as
 
-\[
+$$
 m_i = \min(\lfloor \log_b q_i \rfloor, M),
-\]
+$$
 
-\[
+$$
 r_i = \log_b q_i - m_i.
-\]
+$$
 
 The reconstructed quantity is
 
-\[
+$$
 q_i = b^{m_i+r_i}.
-\]
+$$
 
-This factorization lets the mark classifier model demand scale while the residual decoder preserves variation inside each scale. When the tail class is clipped at \(M\), the residual can exceed the unit interval, allowing large quantities to remain reconstructable.
+This factorization lets the mark classifier model demand scale while the residual decoder preserves variation inside each scale. When the tail class is clipped at $M$, the residual can exceed the unit interval, allowing large quantities to remain reconstructable.
 
 ### 3.2 Limitations of RMTPP-style modeling
 
@@ -63,17 +63,17 @@ Joint learning creates a third concern. Time likelihood, magnitude classificatio
 
 ### 3.3 TitanTPP architecture
 
-TitanTPP follows the same conditional event prediction interface as the matched baselines. Given an event history, an encoder produces a history representation \(h_i\). The model then predicts the magnitude-mark distribution \(p_{i,k}=P(m_{i+1}=k \mid \mathcal{H}_i)\), the inter-event-time distribution, and a residual quantity estimate. The expected quantity prediction is reconstructed as
+TitanTPP follows the same conditional event prediction interface as the matched baselines. Given an event history, an encoder produces a history representation $h_i$. The model then predicts the magnitude-mark distribution $p_{i,k}=P(m_{i+1}=k \mid \mathcal{H}_i)$, the inter-event-time distribution, and a residual quantity estimate. The expected quantity prediction is reconstructed as
 
-\[
+$$
 \widehat{q}_{i+1}=\sum_{k=0}^{M} p_{i,k} b^{k+\widehat{r}_{i,k}}.
-\]
+$$
 
 The training objective combines mark, time, residual, and quantity losses:
 
-\[
+$$
 \mathcal{L}=\mathcal{L}_{\mathrm{mark}}+\lambda_t\mathcal{L}_{\mathrm{time}}+\lambda_r\mathcal{L}_{\mathrm{res}}+\lambda_q\mathcal{L}_{\mathrm{qty}}.
-\]
+$$
 
 The compared models differ mainly in the history encoder under the matched contract. RMTPP-matched employs a GRU encoder, THP-matched employs a Transformer encoder, and TitanTPP employs a Titan-style causal memory-attention encoder with persistent memory. Intermittent and Instacart currently use TitanTPP V2, which adopts a shared residual head and coupled gradient flow. Taxi uses TitanTPP V3b as the current primary model because its quantity distribution benefits from mark-conditioned residual experts and gradient separation. Validation and test do not update memory, and state is not transferred across unrelated demand series.
 
@@ -95,7 +95,7 @@ RMTPP-matched and THP-matched are adapted baselines. They retain the encoder fam
 
 ### 4.2 Results
 
-Table 2 reports the current validation-only comparison. Lower values are better for validation NLL, quantity MAE, and \(\Delta t\) MAE; higher values are better for mark accuracy. TitanTPP rows are preliminary because their epoch budgets and artifact contracts differ from the frozen e300 baseline contract.
+Table 2 reports the current validation-only comparison. Lower values are better for validation NLL, quantity MAE, and $\Delta t$ MAE; higher values are better for mark accuracy. TitanTPP rows are preliminary because their epoch budgets and artifact contracts differ from the frozen e300 baseline contract.
 
 | Dataset | Model | Budget | Val NLL | Qty MAE | Delta-t MAE | Mark acc |
 |---|---|---:|---:|---:|---:|---:|
@@ -111,7 +111,7 @@ Table 2 reports the current validation-only comparison. Lower values are better 
 
 On Intermittent, TitanTPP V2 reports lower validation NLL than RMTPP-matched and THP-matched. Quantity MAE improves over THP but only modestly over RMTPP. This pattern supports the event-likelihood direction more strongly than a broad quantity claim.
 
-Taxi provides the strongest preliminary result. TitanTPP V3b reduces quantity MAE by 52.8% relative to RMTPP-matched and by 64.6% relative to THP-matched. It also reports lower validation NLL and higher mark accuracy than both baselines. Its \(\Delta t\) MAE is slightly worse than RMTPP, so the result should be interpreted as a quantity and mark improvement with a small time-error trade-off.
+Taxi provides the strongest preliminary result. TitanTPP V3b reduces quantity MAE by 52.8% relative to RMTPP-matched and by 64.6% relative to THP-matched. It also reports lower validation NLL and higher mark accuracy than both baselines. Its $\Delta t$ MAE is slightly worse than RMTPP, so the result should be interpreted as a quantity and mark improvement with a small time-error trade-off.
 
 Instacart remains mixed. TitanTPP V2 is close to RMTPP-matched in validation NLL and lies between RMTPP and THP in quantity MAE. The current evidence does not support a strong Instacart claim.
 
