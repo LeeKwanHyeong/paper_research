@@ -16,7 +16,7 @@ This study evaluates TitanTPP on three demand-event datasets with different sequ
 
 ## 2. Related work
 
-Classical temporal point processes model event arrivals through conditional intensity functions, while neural temporal point processes replace hand-crafted history effects with learned representations. RMTPP is a representative recurrent marked temporal point process that embeds event history into a vector before predicting the next event time and mark [1]. Neural Hawkes Process extends this recurrent line with continuous-time LSTM dynamics [2]. These models motivate the event-history formulation adopted in this paper, but they also define the recurrent interface whose limitations become visible in long and quantity-bearing demand sequences.
+Classical temporal point processes model event arrivals through conditional intensity functions, including self-exciting processes in which past events influence future arrivals [11]. Neural temporal point processes replace these hand-crafted history effects with learned representations. RMTPP is a representative recurrent marked temporal point process that embeds event history into a vector before predicting the next event time and mark [1]. Neural Hawkes Process extends this recurrent line with continuous-time LSTM dynamics [2]. These models motivate the event-history formulation adopted in this paper, but they also define the recurrent interface whose limitations become visible in long and quantity-bearing demand sequences.
 
 Attention-based temporal point process models address history representation from a different direction. Self-Attentive Hawkes Process and Transformer Hawkes Process employ self-attention and temporal encodings to represent dependencies among prior events [3,4]. THP is therefore a useful comparison model because it replaces recurrence with attention while retaining a neural TPP objective. More recent memory architectures, including Titans, further motivate long-history modeling beyond fixed recurrent states and bounded attention contexts [5]. TitanTPP should be read as a TPP architecture influenced by this memory-oriented design space rather than as a direct reproduction of the original Titans model.
 
@@ -34,7 +34,7 @@ $$
 
 The inter-event time is $\Delta t_i=t_i-t_{i-1}$. Given $\mathcal{H}_i$, the model predicts the next inter-event time $\Delta t_{i+1}$ and the next quantity $q_{i+1}$. Zero-demand intervals are not inserted as explicit zero events; their duration is represented through $\Delta t$. This construction preserves the irregular waiting-time structure while keeping the target focused on positive-demand events.
 
-Demand quantities can span several scales, so TitanTPP decomposes quantity into a coarse magnitude mark and a continuous residual. For a dataset-specific base $b$, the magnitude mark and residual are defined as
+Demand quantities can span several scales, so TitanTPP decomposes quantity into a coarse magnitude mark and a continuous residual. This design follows the long-standing use of power transformations for skewed positive-valued data [12], but it preserves invertibility through an explicit reconstruction step. For a dataset-specific base $b$, the magnitude mark and residual are defined as
 
 $$
 m_i = \min(\lfloor \log_b q_i \rfloor, M),
@@ -144,3 +144,7 @@ The validation study evaluates RMTPP-matched, THP-matched, and TitanTPP under fi
 [9] J. D. Croston, "Forecasting and Stock Control for Intermittent Demands," Operational Research Quarterly, 1972.
 
 [10] A. C. Türkmen, Y. Wang, and T. Januschowski, "Forecasting intermittent and sparse time series: A unified probabilistic framework via deep renewal processes," PLOS ONE, 2021.
+
+[11] A. G. Hawkes, "Spectra of some self-exciting and mutually exciting point processes," Biometrika, 58(1), 83-90, 1971.
+
+[12] G. E. P. Box and D. R. Cox, "An Analysis of Transformations," Journal of the Royal Statistical Society: Series B, 26(2), 211-252, 1964.

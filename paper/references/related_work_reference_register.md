@@ -1,5 +1,14 @@
 # Related Work reference register
 
+## 3.0 Classical temporal point processes
+
+### Spectra of Some Self-Exciting and Mutually Exciting Point Processes
+
+- **Reference:** Hawkes, A. G. Biometrika, 58(1), 83-90, 1971.
+- **Source:** [Oxford Academic](https://doi.org/10.1093/biomet/58.1.83)
+- **Role:** classical temporal point process와 self-exciting process의 기본 배경을 제공한다.
+- **Boundary:** neural encoder, continuous quantity, demand forecasting을 직접 다루는 문헌은 아니다.
+
 ## 3.1 Recurrent neural temporal point processes
 
 ### Recurrent Marked Temporal Point Processes: Embedding Event History to Vector
@@ -48,6 +57,14 @@
 
 ## 3.3 Event marks and continuous quantity
 
+### An Analysis of Transformations
+
+- **Reference:** Box, G. E. P. and Cox, D. R. Journal of the Royal Statistical Society: Series B,
+  26(2), 211-252, 1964.
+- **Source:** [JSTOR](https://www.jstor.org/stable/2984418)
+- **Role:** skewed positive-valued targets에 power/log 계열 변환을 적용하는 통계적 배경이다.
+- **Boundary:** TitanTPP의 magnitude-mark/residual factorization 자체를 제안한 문헌은 아니다.
+
 ### Decoupled Learning for Factorial Marked Temporal Point Processes
 
 - **Reference:** Wu, W., Yan, J., Yang, X., and Zha, H. KDD, 2018.
@@ -94,4 +111,3 @@
 - **Reference:** Bosser. PhD dissertation, 2024.
 - **Source:** [ORBi](https://orbi.umons.ac.be/handle/20.500.12907/50787)
 - **Role:** marked TPP의 time/mark 공동 학습과 최적화 문제를 연결하는 보조 근거이다.
-
