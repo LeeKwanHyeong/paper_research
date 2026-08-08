@@ -79,6 +79,8 @@ The compared models differ mainly in the history encoder. RMTPP-matched employs 
 
 Figure 1 describes the proposed model flow. Event history enters the TitanTPP encoder, the encoder state feeds time and magnitude-mark heads, and the quantity path reconstructs demand through the mark-residual decoder. Figure 2 visualizes the quantity decomposition, including raw quantity, transformed magnitude mark, residual, and inverse reconstruction.
 
+![TitanTPP architecture](paper/figures/F2_titantpp_architecture_clean.png)
+
 ## 4. Experiments
 
 ### 4.1 Setup

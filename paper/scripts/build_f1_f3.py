@@ -620,6 +620,114 @@ def build_f2() -> None:
     save_figure(fig, "F2_titantpp_architecture")
 
 
+def build_f2_clean() -> None:
+    fig, ax = plt.subplots(figsize=(13.2, 4.8))
+    ax.set_axis_off()
+
+    # Input token.
+    rounded_box(ax, 0.024, 0.36, 0.218, 0.40, facecolor=COLORS["panel"])
+    ax.text(0.050, 0.710, "Input event token", transform=ax.transAxes, fontweight="bold", fontsize=10.0)
+    token_rows = [
+        (0.640, COLORS["orange_light"], COLORS["orange"], r"mark embedding $E(m_i)$"),
+        (0.560, COLORS["olive_light"], COLORS["olive"], r"time gap $\log(1+\Delta t_i)$"),
+        (0.480, COLORS["blue_light"], COLORS["blue"], r"quantity residual $P(r_i)$"),
+    ]
+    for y, face, edge, text_value in token_rows:
+        rounded_box(ax, 0.050, y, 0.166, 0.056, facecolor=face, edgecolor=edge, radius=0.008)
+        ax.text(0.133, y + 0.028, text_value, transform=ax.transAxes, fontsize=7.8, ha="center", va="center")
+    ax.text(
+        0.133,
+        0.415,
+        r"observed history $\mathcal{H}_i$",
+        transform=ax.transAxes,
+        fontsize=8.2,
+        ha="center",
+        color=COLORS["muted"],
+    )
+
+    arrow(ax, (0.244, 0.560), (0.288, 0.560), color=COLORS["blue"], linewidth=1.5)
+
+    # Encoder.
+    rounded_box(ax, 0.290, 0.285, 0.280, 0.555, facecolor=COLORS["blue_light"], edgecolor=COLORS["blue"], linewidth=1.35)
+    ax.text(0.315, 0.785, "Titan history encoder", transform=ax.transAxes, fontweight="bold", fontsize=10.8)
+    ax.text(
+        0.315,
+        0.742,
+        "Causal memory attention over event history.",
+        transform=ax.transAxes,
+        fontsize=7.8,
+        color=COLORS["muted"],
+    )
+    for layer_y, label in (
+        (0.620, "causal memory attention"),
+        (0.500, "feed-forward update"),
+    ):
+        rounded_box(ax, 0.323, layer_y, 0.214, 0.078, facecolor=COLORS["paper"], edgecolor=COLORS["blue"], radius=0.010)
+        ax.text(0.425, layer_y + 0.039, label, transform=ax.transAxes, fontsize=8.6, ha="center", va="center")
+    rounded_box(ax, 0.338, 0.365, 0.184, 0.070, facecolor=COLORS["olive_light"], edgecolor=COLORS["olive"], radius=0.010)
+    ax.text(
+        0.425,
+        0.400,
+        "persistent memory retrieval",
+        transform=ax.transAxes,
+        fontsize=8.1,
+        ha="center",
+        va="center",
+    )
+    ax.text(0.425, 0.315, r"history state $h_i$", transform=ax.transAxes, fontsize=9.2, ha="center", color=COLORS["blue"])
+
+    arrow(ax, (0.572, 0.560), (0.625, 0.560), color=COLORS["blue"], linewidth=1.5)
+
+    # Prediction heads.
+    rounded_box(ax, 0.628, 0.330, 0.180, 0.460, facecolor=COLORS["panel"])
+    ax.text(0.650, 0.742, "Prediction heads", transform=ax.transAxes, fontweight="bold", fontsize=10.2)
+    head_specs = [
+        (0.650, COLORS["orange_light"], COLORS["orange"], "Mark", r"$p_k=P(m_{i+1}=k\mid h_i)$"),
+        (0.535, COLORS["olive_light"], COLORS["olive"], "Time", r"$f(\Delta t_{i+1}\mid h_i)$"),
+        (0.420, COLORS["blue_light"], COLORS["blue"], "Residual", r"$\hat r_{i+1,k}$"),
+    ]
+    for y, face, edge, title, formula in head_specs:
+        rounded_box(ax, 0.650, y, 0.136, 0.078, facecolor=face, edgecolor=edge, radius=0.009)
+        ax.text(0.664, y + 0.050, title, transform=ax.transAxes, fontsize=8.3, fontweight="bold", va="center")
+        ax.text(0.664, y + 0.024, formula, transform=ax.transAxes, fontsize=7.4, va="center", color=COLORS["muted"])
+
+    arrow(ax, (0.810, 0.640), (0.862, 0.640), color=COLORS["orange"], linewidth=1.25)
+    arrow(ax, (0.810, 0.445), (0.862, 0.560), color=COLORS["blue"], linewidth=1.25)
+
+    # Decoder and objective.
+    rounded_box(ax, 0.862, 0.505, 0.110, 0.190, facecolor=COLORS["paper"], edgecolor=COLORS["ink"], linewidth=1.15)
+    ax.text(0.917, 0.660, "Quantity", transform=ax.transAxes, fontsize=9.0, fontweight="bold", ha="center")
+    ax.text(0.917, 0.627, "decoder", transform=ax.transAxes, fontsize=9.0, fontweight="bold", ha="center")
+    ax.text(0.917, 0.572, r"$\hat q=\sum_k p_k b^{k+\hat r_k}$", transform=ax.transAxes, fontsize=8.6, ha="center")
+    ax.text(0.917, 0.525, "continuous quantity", transform=ax.transAxes, fontsize=7.1, ha="center", color=COLORS["muted"])
+
+    rounded_box(ax, 0.628, 0.150, 0.344, 0.120, facecolor=COLORS["orange_light"], edgecolor=COLORS["orange"], linewidth=1.15)
+    ax.text(0.650, 0.232, "Training objective", transform=ax.transAxes, fontsize=9.2, fontweight="bold")
+    ax.text(
+        0.650,
+        0.184,
+        r"$\mathcal{L}_{mark}+\lambda_t\mathcal{L}_{time}+\lambda_r\mathcal{L}_{res}+\lambda_q\mathcal{L}_{qty}$",
+        transform=ax.transAxes,
+        fontsize=8.8,
+    )
+    arrow(ax, (0.718, 0.330), (0.718, 0.272), color=COLORS["muted"], linewidth=1.0)
+    arrow(ax, (0.917, 0.505), (0.917, 0.272), color=COLORS["muted"], linewidth=1.0)
+
+    ax.text(
+        0.026,
+        0.145,
+        "TitanTPP encodes irregular demand-event histories and reconstructs continuous quantity\n"
+        "from magnitude-mark probabilities and residual estimates.",
+        transform=ax.transAxes,
+        fontsize=8.2,
+        color=COLORS["muted"],
+        va="top",
+        linespacing=1.25,
+    )
+
+    save_figure(fig, "F2_titantpp_architecture_clean")
+
+
 def discrete_survival(values: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     finite = values[np.isfinite(values)]
     if finite.size == 0:
@@ -792,8 +900,9 @@ def main() -> None:
     configure_matplotlib()
     build_f1()
     build_f2()
+    build_f2_clean()
     build_f3()
-    print("Built F1-F3 in paper/figures")
+    print("Built F1-F3 and clean F2 in paper/figures")
 
 
 if __name__ == "__main__":

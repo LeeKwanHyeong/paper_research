@@ -33,6 +33,20 @@ the TitanTPP V2 control isolates this specialization from the encoder change.
 
 **Files.** `F2_titantpp_architecture.{svg,pdf,png}`
 
+## F2-clean. TitanTPP architecture for manuscript
+
+**Purpose.** Provide the main paper architecture figure without internal experiment-management
+language or baseline-control notes.
+
+**Caption draft.** TitanTPP architecture for quantity-aware event prediction. Each observed
+event token combines a magnitude mark, an inter-event-time feature, and a quantity residual.
+The Titan history encoder produces a causal history state, which feeds mark, time, and residual
+prediction heads. The quantity decoder reconstructs continuous demand by combining the mark
+probabilities and residual estimates, and the training objective combines mark, time, residual,
+and reconstructed-quantity losses.
+
+**Files.** `F2_titantpp_architecture_clean.{svg,pdf,png}`
+
 ## F3. Quantity and sequence distributions
 
 **Analytical question.** How strongly do the three datasets differ in history length and
