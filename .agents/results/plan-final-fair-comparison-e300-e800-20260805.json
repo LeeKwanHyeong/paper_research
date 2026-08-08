@@ -1,0 +1,336 @@
+{
+  "project_name": "AICA 2026 TitanTPP 최종 공정 비교",
+  "description": "5080 GPU 서버의 ai_env와 tmux에서 4개 비교군의 e300 초안 결과를 먼저 만들고, 사전 정의한 validation 수렴 규칙에 따라 필요한 dataset 단위를 e800까지 재개한다.",
+  "tech_stack": {
+    "frontend": "해당 없음",
+    "backend": "PyTorch 실험 러너",
+    "mobile": "해당 없음",
+    "database": "고정 split Parquet dataset",
+    "infrastructure": "ssh 5080, conda ai_env, tmux, CUDA"
+  },
+  "architecture_decisions": [
+    {
+      "decision": "e300 산출물을 보존하면서 e800으로 연장하는 명시적 continuation 옵션을 추가한다.",
+      "rationale": "현재 run path에 epochs 값이 포함되어 e300과 e800이 서로 다른 경로가 된다. e800 run이 같은 설정의 e300 last_epoch_state.pt를 부모 checkpoint로 검증해 불러오도록 하면 수동 복사 없이 optimizer, RNG, loader generator, history와 best-validation 상태를 보존할 수 있다.",
+      "alternatives_considered": [
+        "e300 checkpoint를 epochs_800 경로로 수동 복사",
+        "run path에서 epochs를 전역 제거",
+        "처음부터 모든 run을 e800으로 실행"
+      ]
+    },
+    {
+      "decision": "연장 여부는 개별 모델이 아니라 dataset 비교 블록 단위로 결정한다.",
+      "rationale": "한 모델만 더 학습시키는 선택 편향을 막고, 같은 dataset 안의 RMTPP original, RMTPP matched, THP matched, TitanTPP에 동일한 최대 학습 예산을 제공한다.",
+      "alternatives_considered": [
+        "dataset/model cell별 선택 연장",
+        "모든 dataset과 모델을 무조건 e800까지 연장"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-1",
+      "agent": "qa",
+      "title": "5080 실행 기준선 확인",
+      "description": "ssh 5080 접속 후 프로젝트 경로, Git branch와 full commit SHA, 작업 트리, conda ai_env, Python/PyTorch/CUDA, GPU 여유 공간, dataset 파일과 split hash를 기록한다.",
+      "priority": 1,
+      "dependencies": [],
+      "estimated_complexity": "low",
+      "acceptance_criteria": [
+        "원격 프로젝트 경로와 source revision이 기록된다.",
+        "ai_env에서 CUDA 사용 가능 여부와 GPU 모델/메모리가 확인된다.",
+        "세 dataset의 fixed-split 입력 파일과 hash가 확인된다.",
+        "기존 tmux/학습 프로세스와 artifact 충돌이 없음을 확인한다."
+      ],
+      "artifacts_expected": [
+        "runtime preflight 기록"
+      ],
+      "scope": []
+    },
+    {
+      "id": "task-2",
+      "agent": "backend",
+      "title": "최종 비교 계약과 실행 행렬 고정",
+      "description": "세 dataset별 4개 primary 비교군과 Taxi V2 control의 후보, value input, loss, head, lookback, max sequence length, seed, split, checkpoint 기준을 하나의 매니페스트로 고정한다.",
+      "priority": 1,
+      "dependencies": [],
+      "estimated_complexity": "medium",
+      "acceptance_criteria": [
+        "primary run은 4 arms x 3 datasets x 3 seeds = 36개로 계산된다.",
+        "Taxi V2 control 3개를 포함한 e300 총 run 수가 39개로 고정된다.",
+        "모든 run은 lr 1e-3, batch 128, fixed split, target_only, identity value head를 공유한다.",
+        "checkpoint 선택은 best validation total NLL로 고정되고 test 기반 재선택이 금지된다.",
+        "데이터 및 모델별 설정이 기존 final comparison contract와 일치한다."
+      ],
+      "artifacts_expected": [
+        "frozen experiment manifest",
+        "run inventory"
+      ],
+      "scope": [
+        "simple_lab_test/search/",
+        "reports/advisor_meeting_after_2026_06_28/"
+      ]
+    },
+    {
+      "id": "task-3",
+      "agent": "backend",
+      "title": "e300에서 e800으로 이어지는 continuation 구현",
+      "description": "예: --resume-from-epochs 300 옵션으로 같은 base-dir과 run identity의 e300 checkpoint를 e800 run의 부모로 불러오고, e800 경로에는 별도 산출물을 기록한다.",
+      "priority": 2,
+      "dependencies": [
+        "task-2"
+      ],
+      "estimated_complexity": "high",
+      "acceptance_criteria": [
+        "e300 artifact는 변경되지 않고 e800 artifact가 별도 생성된다.",
+        "model, optimizer, RNG, train-loader generator, history, best_score와 best_val_nll 상태가 복원된다.",
+        "epochs 외의 설정, source revision 또는 dataset identity가 다르면 fail-fast한다.",
+        "e800 manifest에 parent checkpoint 경로, SHA256, parent epoch와 source revision이 기록된다.",
+        "e800 재실행은 먼저 자체 last_epoch_state.pt를 사용하고 없을 때만 e300 부모를 사용한다."
+      ],
+      "artifacts_expected": [
+        "continuation CLI",
+        "resume provenance manifest"
+      ],
+      "scope": [
+        "simple_lab_test/search/tpp_experiment.py",
+        "simple_lab_test/search/common/runner.py",
+        "simple_lab_test/search/tests/"
+      ]
+    },
+    {
+      "id": "task-4",
+      "agent": "backend",
+      "title": "매니페스트 기반 공정 비교 launcher와 결과 집계 구현",
+      "description": "global CLI 옵션이 다른 RMTPP original/matched, THP matched, TitanTPP V2/V3b를 충돌 없이 순차 실행하고 하나의 비교표로 모으는 launcher를 만든다.",
+      "priority": 2,
+      "dependencies": [
+        "task-2"
+      ],
+      "estimated_complexity": "high",
+      "acceptance_criteria": [
+        "dry-run이 중복 없는 39개 e300 run identity를 출력한다.",
+        "Intermittent와 Instacart는 TitanTPP V2 small_lmm, Taxi primary는 V3b mid_lmm로 고정된다.",
+        "Taxi V2 mid_lmm control이 primary와 별도 표기된다.",
+        "실패한 run은 기록되고 완료된 run은 재실행 시 skip된다.",
+        "validation-only 집계와 held-out test 집계가 분리된다."
+      ],
+      "artifacts_expected": [
+        "final comparison launcher",
+        "run inventory",
+        "aggregate report"
+      ],
+      "scope": [
+        "simple_lab_test/search/",
+        "simple_lab_test/search/tests/"
+      ]
+    },
+    {
+      "id": "task-5",
+      "agent": "qa",
+      "title": "continuation과 실행 계약 테스트",
+      "description": "로컬 CPU 단위 테스트와 짧은 재개 테스트로 e2 후 e5가 epoch 3부터 이어지고, 설정 불일치와 stale checkpoint가 거부되는지 검증한다.",
+      "priority": 3,
+      "dependencies": [
+        "task-3",
+        "task-4"
+      ],
+      "estimated_complexity": "medium",
+      "acceptance_criteria": [
+        "기존 search test가 통과한다.",
+        "continuation happy path와 mismatch rejection test가 통과한다.",
+        "resume history가 1..5로 연속이고 e2 parent artifact가 불변이다.",
+        "39-run inventory와 dataset별 설정 snapshot test가 통과한다."
+      ],
+      "artifacts_expected": [
+        "test log"
+      ],
+      "scope": [
+        "simple_lab_test/search/tests/"
+      ]
+    },
+    {
+      "id": "task-6",
+      "agent": "qa",
+      "title": "5080 CUDA smoke와 tmux 운영 확인",
+      "description": "검증된 source revision을 5080에 동기화하고 titan_final_fair tmux 세션에서 대표 dataset/model을 e1로 실행해 CUDA, 경로, checkpoint, 로그와 재접속을 확인한다.",
+      "priority": 4,
+      "dependencies": [
+        "task-1",
+        "task-5"
+      ],
+      "estimated_complexity": "medium",
+      "acceptance_criteria": [
+        "5080 source revision이 계획에 기록된 SHA와 일치한다.",
+        "tmux detach/reattach 후 학습과 로그가 유지된다.",
+        "대표 RMTPP, THP, TitanTPP run이 CUDA에서 checkpoint와 summary를 생성한다.",
+        "smoke artifact는 본실험 base-dir과 분리된다."
+      ],
+      "artifacts_expected": [
+        "CUDA smoke artifacts",
+        "tmux session record"
+      ],
+      "scope": []
+    },
+    {
+      "id": "task-7",
+      "agent": "backend",
+      "title": "e300 validation-only 초안 비교 실행",
+      "description": "5080의 titan_final_fair tmux 세션에서 한 GPU writer를 사용해 39개 run을 순차 실행한다. 중단 시 같은 명령으로 자체 last_epoch_state.pt에서 재개한다.",
+      "priority": 5,
+      "dependencies": [
+        "task-6"
+      ],
+      "estimated_complexity": "very-high",
+      "acceptance_criteria": [
+        "39개 run 모두 epoch 300 또는 명시적 실패 상태에 도달한다.",
+        "각 성공 run에 manifest, history, best_val_nll checkpoint, last_epoch_state와 summary가 있다.",
+        "NaN/Inf, OOM, dataset identity mismatch가 없다.",
+        "held-out test metric은 연장 결정 전에 집계하거나 열람하지 않는다."
+      ],
+      "artifacts_expected": [
+        "search_artifacts/final_fair_comparison_aica2026",
+        "e300 training logs"
+      ],
+      "scope": []
+    },
+    {
+      "id": "task-8",
+      "agent": "qa",
+      "title": "e300 산출물 검증과 초안 표 고정",
+      "description": "run 수, 설정 hash, seed 완전성, finite metric, checkpoint epoch를 검증하고 e300 snapshot과 mean/std validation 표를 만든다.",
+      "priority": 6,
+      "dependencies": [
+        "task-7"
+      ],
+      "estimated_complexity": "medium",
+      "acceptance_criteria": [
+        "누락/중복 run이 0개다.",
+        "비교 셀마다 seeds 42,52,62가 모두 존재한다.",
+        "e300 artifact snapshot이 이후 e800 연장으로 덮어써지지 않는다.",
+        "초안 표에는 total/mark/time NLL, quantity MAE, value MAE, mark accuracy와 selected epoch가 포함된다."
+      ],
+      "artifacts_expected": [
+        "e300 snapshot",
+        "draft comparison table",
+        "artifact audit report"
+      ],
+      "scope": []
+    },
+    {
+      "id": "task-9",
+      "agent": "qa",
+      "title": "validation 수렴 판정과 e800 대상 고정",
+      "description": "사전 정의한 규칙만으로 dataset별 연장 여부를 결정한다. 한 primary 모델이라도 2/3 seed에서 best epoch가 241~300이거나 epoch 251~300의 best-so-far NLL이 이전 구간 대비 0.5% 이상 개선되면 해당 dataset의 모든 비교군을 e800으로 연장한다.",
+      "priority": 7,
+      "dependencies": [
+        "task-8"
+      ],
+      "estimated_complexity": "medium",
+      "acceptance_criteria": [
+        "판정은 validation history만 읽는다.",
+        "연장 결정 JSON에 규칙, 입력 epoch, seed별 판정과 dataset 최종 판정이 기록된다.",
+        "같은 dataset의 primary 4개 비교군은 동일한 최대 epoch를 받는다.",
+        "Decision 2의 all-e800 문구를 유지할 경우에는 선택 연장 대신 전 run e800으로 전환한다."
+      ],
+      "artifacts_expected": [
+        "extension_decision.json"
+      ],
+      "scope": []
+    },
+    {
+      "id": "task-10",
+      "agent": "backend",
+      "title": "선정 dataset의 e800 continuation 실행",
+      "description": "고정된 extension decision에 따라 해당 dataset 블록의 모든 모델/seed를 e300 parent checkpoint에서 epoch 301부터 800까지 이어서 실행한다.",
+      "priority": 8,
+      "dependencies": [
+        "task-9"
+      ],
+      "estimated_complexity": "very-high",
+      "acceptance_criteria": [
+        "모든 연장 run의 first resumed epoch가 301이다.",
+        "parent checkpoint SHA와 run identity 검증이 통과한다.",
+        "e300 best checkpoint가 더 좋으면 e800 결과에서도 그대로 보존된다.",
+        "연장 대상의 모든 seed가 epoch 800 또는 명시적 실패 상태에 도달한다."
+      ],
+      "artifacts_expected": [
+        "e800 continuation artifacts",
+        "resume audit report"
+      ],
+      "scope": []
+    },
+    {
+      "id": "task-11",
+      "agent": "qa",
+      "title": "held-out test 1회 평가와 논문 증적 작성",
+      "description": "configuration, checkpoint selection과 max epoch가 모두 고정된 뒤 best validation NLL checkpoint를 held-out test에 한 번 평가하고 최종 표, scale breakdown, convergence figure와 claim 문구를 작성한다.",
+      "priority": 9,
+      "dependencies": [
+        "task-10"
+      ],
+      "estimated_complexity": "high",
+      "acceptance_criteria": [
+        "test 결과를 본 뒤 모델 설정, epoch 또는 연장 대상을 변경하지 않는다.",
+        "3-seed mean/std와 seed-level 원자료가 함께 보존된다.",
+        "main table과 dataset/scale breakdown의 수치가 원 artifact와 일치한다.",
+        "TitanTPP 우위 주장은 실제 결과 범위를 넘지 않는다.",
+        "초안에는 e300/e800 정책과 실제 dataset별 최대 epoch가 명시된다."
+      ],
+      "artifacts_expected": [
+        "final paper table",
+        "scale breakdown",
+        "convergence plot",
+        "claim audit"
+      ],
+      "scope": [
+        "reports/",
+        "README.md"
+      ]
+    }
+  ],
+  "api_contracts": [],
+  "data_models": [
+    {
+      "entity": "RunIdentity",
+      "fields": {
+        "experiment": "final_fair_comparison_aica2026",
+        "arm": "rmtpp_original|rmtpp_matched|thp_matched|titantpp_primary|titantpp_control",
+        "dataset": "intermittent|yellow_trip_hourly|insta_market_basket",
+        "candidate": "frozen candidate name",
+        "seed": "42|52|62",
+        "target_epochs": "300|800",
+        "source_revision": "full Git SHA",
+        "dataset_hash": "fixed-split source hash"
+      }
+    },
+    {
+      "entity": "ContinuationProvenance",
+      "fields": {
+        "parent_checkpoint": "absolute or project-relative path",
+        "parent_sha256": "checkpoint digest",
+        "parent_epoch": "300",
+        "resume_epoch": "301",
+        "config_identity_digest": "epochs를 제외한 frozen config digest"
+      }
+    }
+  ],
+  "non_functional_requirements": {
+    "security": [
+      "인증정보와 secret을 artifact 또는 tmux log에 기록하지 않는다."
+    ],
+    "performance": [
+      "5080 단일 GPU에서는 본 학습 writer를 하나만 실행한다.",
+      "완료 run skip과 checkpoint resume로 중복 GPU 계산을 피한다."
+    ],
+    "scalability": [
+      "dataset/arm 단위 재실행과 집계가 가능해야 한다."
+    ]
+  },
+  "testing_strategy": {
+    "unit_tests": "run path, parent checkpoint discovery, config identity, provenance와 39-run matrix를 검증한다.",
+    "integration_tests": "CPU e2->e5 continuation과 5080 CUDA e1 smoke를 수행한다.",
+    "e2e_tests": "tmux에서 e300 run 하나를 중단/재개해 artifact 연속성과 보고서 집계를 확인한다.",
+    "performance_tests": "smoke에서 GPU memory peak와 epoch 소요 시간을 기록해 전체 예상 시간을 계산한다."
+  }
+}

@@ -1,9 +1,8 @@
 # TitanTPP: quantity-aware temporal point process modeling for intermittent demand
 
-> Current final working draft: v0.2 four-page structure  
+> Draft version: v0.2 four-page structure  
 > Date: 2026-08-08 KST  
 > Target: ICTC AICA 2026 short-paper draft  
-> Versioned source: `paper/titantpp_short_paper_draft_v0_2_four_page.md`  
 > Structure source: `paper/notion_exports/drafting_revision_final/04_four_page_structure_revision.md`  
 > Status: validation-only working draft. Held-out test results are not evaluated or reported.
 
@@ -115,9 +114,9 @@ Taxi provides the strongest preliminary result. TitanTPP V3b reduces quantity MA
 
 Instacart remains mixed. TitanTPP V2 is close to RMTPP-matched in validation NLL and lies between RMTPP and THP in quantity MAE. The current evidence does not support a strong Instacart claim.
 
-![Validation NLL comparison](paper/results/e300_matched_20260808/figures/validation_nll_comparison.png)
+![Validation NLL comparison](results/e300_matched_20260808/figures/validation_nll_comparison.png)
 
-![Quantity MAE comparison](paper/results/e300_matched_20260808/figures/quantity_mae_comparison.png)
+![Quantity MAE comparison](results/e300_matched_20260808/figures/quantity_mae_comparison.png)
 
 ### 4.3 Ablation and analysis
 
@@ -150,3 +149,11 @@ The current validation evidence supports a cautious interpretation. RMTPP-matche
 [9] J. D. Croston, "Forecasting and Stock Control for Intermittent Demands," Operational Research Quarterly, 1972.
 
 [10] A. C. Türkmen, Y. Wang, and T. Januschowski, "Forecasting intermittent and sparse time series: A unified probabilistic framework via deep renewal processes," PLOS ONE, 2021.
+
+## Revision notes
+
+- This version follows the five-section four-page structure and intentionally omits a standalone Abstract.
+- The Problem Formulation material is placed inside `3.1 Problem setup`.
+- Related Work is short and placed after Introduction, consistent with the professor feedback.
+- TitanTPP result rows remain preliminary until fresh strict e300 TitanTPP runs are completed.
+- Held-out test results remain locked.
