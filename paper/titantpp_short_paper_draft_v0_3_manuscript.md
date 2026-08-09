@@ -74,7 +74,7 @@ $$
 \mathcal{L}=\mathcal{L}_{\mathrm{mark}}+\lambda_t\mathcal{L}_{\mathrm{time}}+\lambda_r\mathcal{L}_{\mathrm{res}}+\lambda_q\mathcal{L}_{\mathrm{qty}}.
 $$
 
-The compared models differ mainly in the history encoder. RMTPP-matched employs a GRU encoder, THP-matched employs a Transformer encoder, and TitanTPP employs a Titan-style causal memory-attention encoder with persistent memory. Intermittent and Instacart adopt a shared residual head and coupled gradient flow, while Taxi adopts mark-conditioned residual experts and detached quantity-to-mark gradients. Validation and test do not update memory, and state is not transferred across unrelated demand series.
+The compared models differ mainly in the history encoder. RMTPP employs a GRU encoder, THP employs a Transformer encoder, and TitanTPP employs a Titan-style causal memory-attention encoder with persistent memory. Intermittent and Instacart adopt a shared residual head and coupled gradient flow, while Taxi adopts mark-conditioned residual experts and detached quantity-to-mark gradients. Validation and test do not update memory, and state is not transferred across unrelated demand series.
 
 Figure 1 describes the proposed model flow. Event history enters the TitanTPP encoder, the encoder state feeds time and magnitude-mark heads, and the quantity path reconstructs demand through the mark-residual decoder. Figure 2 visualizes the quantity decomposition, including raw quantity, transformed magnitude mark, residual, and inverse reconstruction.
 
@@ -92,7 +92,7 @@ The evaluation uses Intermittent, Taxi, and Instacart demand-event datasets. Int
 | Taxi | 131 | 55,119 | 405 / 743 / 744 | 7 / 1,547 / 6,489 | 4 | 10 |
 | Instacart | 206,209 | 3,279,521 | 10 / 50 / 100 | 8 / 25 / 177 | 8 | 2 |
 
-RMTPP-matched and THP-matched are adapted baselines. They retain the encoder family of each original model, but they share the paper's residual quantity input, hybrid objective, output interface, fixed split, and checkpoint rule. This naming avoids presenting the runs as exact reproductions of the original RMTPP or THP papers. All models use seeds 42, 52, and 62, AdamW with learning rate 0.001, batch size 128, strict reproducibility mode, and minimum validation total NLL as the checkpoint rule. The held-out test split is evaluated once after validation-based model selection.
+RMTPP and THP are used as adapted baselines. Each baseline retains its original encoder family, but it shares the paper's quantity-aware input, output interface, hybrid objective, fixed split, and checkpoint rule. All models use seeds 42, 52, and 62, AdamW with learning rate 0.001, batch size 128, strict reproducibility mode, and minimum validation total NLL as the checkpoint rule. Values are reported as mean ± standard deviation over the three seeds. The held-out test split is evaluated once after validation-based model selection.
 
 ### 4.2 Results
 
@@ -100,14 +100,14 @@ Table 2 reports validation performance for Intermittent and Taxi, where all thre
 
 | Dataset | Model | Val NLL | Qty MAE | Delta-t MAE | Mark acc |
 |---|---|---:|---:|---:|---:|
-| Intermittent | RMTPP-matched | 5.6683 +/- 0.0115 | 2.7408 +/- 0.0493 | 41.8872 +/- 0.5030 | 55.183% +/- 0.236%p |
-| Intermittent | THP-matched | 5.6417 +/- 0.0305 | 2.8812 +/- 0.0177 | 40.5947 +/- 0.3284 | 54.235% +/- 0.637%p |
-| Intermittent | TitanTPP | 5.6171 +/- 0.0158 | 2.7188 +/- 0.1336 | 41.4268 +/- 0.5581 | 55.194% +/- 1.293%p |
-| Taxi | RMTPP-matched | 1.5803 +/- 0.0032 | 65.8580 +/- 2.4748 | 0.7326 +/- 0.0085 | 91.800% +/- 0.117%p |
-| Taxi | THP-matched | 1.5998 +/- 0.0087 | 87.7508 +/- 2.6771 | 0.7528 +/- 0.0224 | 91.461% +/- 0.202%p |
-| Taxi | TitanTPP | 1.5458 +/- 0.0048 | 23.7722 +/- 1.0929 | 0.7374 +/- 0.0151 | 92.606% +/- 0.134%p |
+| Intermittent | RMTPP | 5.6683 ± 0.0115 | 2.7408 ± 0.0493 | 41.8872 ± 0.5030 | 55.183% ± 0.236%p |
+| Intermittent | THP | 5.6417 ± 0.0305 | 2.8812 ± 0.0177 | 40.5947 ± 0.3284 | 54.235% ± 0.637%p |
+| Intermittent | TitanTPP | 5.6171 ± 0.0158 | 2.7188 ± 0.1336 | 41.4268 ± 0.5581 | 55.194% ± 1.293%p |
+| Taxi | RMTPP | 1.5803 ± 0.0032 | 65.8580 ± 2.4748 | 0.7326 ± 0.0085 | 91.800% ± 0.117%p |
+| Taxi | THP | 1.5998 ± 0.0087 | 87.7508 ± 2.6771 | 0.7528 ± 0.0224 | 91.461% ± 0.202%p |
+| Taxi | TitanTPP | 1.5458 ± 0.0048 | 23.7722 ± 1.0929 | 0.7374 ± 0.0151 | 92.606% ± 0.134%p |
 
-On Intermittent, TitanTPP obtains the lowest validation NLL and quantity MAE among the three models, while its event-time error remains between RMTPP-matched and THP-matched. On Taxi, TitanTPP obtains the lowest validation NLL, the lowest quantity MAE, and the highest mark accuracy; RMTPP-matched retains a small advantage on $\Delta t$ MAE. These results support a bounded claim: the TitanTPP formulation improves likelihood and quantity reconstruction on the completed comparisons, but event-time prediction still depends on the dataset and metric.
+On Intermittent, TitanTPP obtains the lowest validation NLL and quantity MAE among the three models, while its event-time error remains between RMTPP and THP. On Taxi, TitanTPP obtains the lowest validation NLL, the lowest quantity MAE, and the highest mark accuracy; RMTPP retains a small advantage on $\Delta t$ MAE. These results support a bounded claim: the TitanTPP formulation improves likelihood and quantity reconstruction on the completed comparisons, but event-time prediction still depends on the dataset and metric.
 
 ![Validation NLL comparison](results/e300_matched_20260808/figures/inter_taxi_e300_validation_nll.png)
 
@@ -115,13 +115,13 @@ On Intermittent, TitanTPP obtains the lowest validation NLL and quantity MAE amo
 
 ### 4.3 Ablation and analysis
 
-The ablation focuses on model components that directly support the proposed formulation. The first analysis compares RMTPP-original and RMTPP-matched to estimate the effect of the quantity interface, although this comparison changes several components and should be interpreted cautiously. The second analysis compares RMTPP-matched, THP-matched, and TitanTPP under the same quantity representation to separate encoder effects. The third analysis focuses on Taxi, where mark-conditioned residual experts and detached quantity-to-mark gradients are used to reduce interference between quantity reconstruction and event likelihood.
+The ablation focuses on model components that directly support the proposed formulation. The first analysis compares RMTPP-original and RMTPP to estimate the effect of the quantity interface, although this comparison changes several components and should be interpreted cautiously. The second analysis compares RMTPP, THP, and TitanTPP under the same quantity representation to separate encoder effects. The third analysis focuses on Taxi, where mark-conditioned residual experts and detached quantity-to-mark gradients are used to reduce interference between quantity reconstruction and event likelihood.
 
 ## 5. Conclusion
 
 This paper formulates intermittent demand forecasting as a marked temporal point process with continuous quantity reconstruction. The formulation exposes two limitations of common neural TPP interfaces: recurrent history compression can be restrictive for long event histories, and categorical marks alone cannot reconstruct within-class demand variation. TitanTPP addresses these limitations through a Titan-style history encoder, a log-magnitude mark, a continuous residual, and a differentiable quantity decoder.
 
-The validation study evaluates RMTPP-matched, THP-matched, and TitanTPP under fixed chronological splits and a shared checkpoint rule. This design separates the proposed quantity-aware formulation from baseline encoder differences while keeping held-out test evaluation reserved for the final selected model. The resulting analysis is intended to support a bounded claim about long-history representation and continuous quantity reconstruction in event-based demand forecasting.
+The validation study evaluates RMTPP, THP, and TitanTPP under fixed chronological splits and a shared checkpoint rule. This design separates the proposed quantity-aware formulation from baseline encoder differences while keeping held-out test evaluation reserved for the final selected model. The resulting analysis is intended to support a bounded claim about long-history representation and continuous quantity reconstruction in event-based demand forecasting.
 
 ## References
 

@@ -27,17 +27,17 @@ DATASET_LABELS = {
 }
 
 MODEL_LABELS = {
-    "rmtpp": "RMTPP-matched",
-    "thp": "THP-matched",
+    "rmtpp": "RMTPP",
+    "thp": "THP",
     "titantpp": "TitanTPP",
 }
 
-MODEL_ORDER = ["RMTPP-matched", "THP-matched", "TitanTPP"]
+MODEL_ORDER = ["RMTPP", "THP", "TitanTPP"]
 DATASET_ORDER = ["Intermittent", "Taxi"]
 
 STYLE = {
-    "RMTPP-matched": {"color": "#5B6770", "hatch": ""},
-    "THP-matched": {"color": "#C96B18", "hatch": "//"},
+    "RMTPP": {"color": "#5B6770", "hatch": ""},
+    "THP": {"color": "#C96B18", "hatch": "//"},
     "TitanTPP": {"color": "#2563EB", "hatch": ""},
 }
 
@@ -85,13 +85,13 @@ def summarize(rows: pd.DataFrame) -> pd.DataFrame:
 
 
 def mean_std(row: pd.Series, metric: str, digits: int = 4) -> str:
-    return f"{row[f'{metric}_mean']:.{digits}f} +/- {row[f'{metric}_std']:.{digits}f}"
+    return f"{row[f'{metric}_mean']:.{digits}f} ± {row[f'{metric}_std']:.{digits}f}"
 
 
 def acc_mean_std(row: pd.Series) -> str:
     mean = row["best_val_nll_mark_acc_mean"] * 100.0
     std = row["best_val_nll_mark_acc_std"] * 100.0
-    return f"{mean:.3f}% +/- {std:.3f}%p"
+    return f"{mean:.3f}% ± {std:.3f}%p"
 
 
 def write_tables(summary: pd.DataFrame) -> None:
