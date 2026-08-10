@@ -1,5 +1,11 @@
 # TitanTPP: quantity-aware temporal point process modeling for intermittent demand
 
+> Manuscript version: v0.4  
+> Date: 2026-08-10 KST  
+> Target: ICTC AICA 2026 short-paper manuscript  
+> Structure source: `paper/notion_exports/drafting_revision_final/04_four_page_structure_revision.md`  
+> Evaluation policy: validation-based model selection with held-out test evaluation reserved for the selected final model.
+
 ## 1. Introduction
 
 Demand for slow-moving items, spare parts, and long-tail retail products is intermittent: long stretches with no orders are punctuated by irregularly timed events of varying size. Standard time-series forecasting represents such data as many zero-valued observations, but this representation can hide the event structure of the problem. In practice, the forecasting task asks two coupled questions. The model must estimate when the next positive-demand event will occur and how large that demand will be. An event-based formulation makes this structure explicit by treating each positive-demand observation as an event with an occurrence time and a quantity.
@@ -72,7 +78,7 @@ The compared models differ mainly in the history encoder. RMTPP employs a GRU en
 
 Figure 1 describes the proposed model flow. Event history enters the TitanTPP encoder, the encoder state feeds time and magnitude-mark heads, and the quantity path reconstructs demand through the mark-residual decoder. Figure 2 visualizes the quantity decomposition, including raw quantity, transformed magnitude mark, residual, and inverse reconstruction.
 
-![TitanTPP architecture](paper/figures/F2_titantpp_architecture_clean.png)
+![TitanTPP architecture](figures/F2_titantpp_architecture_clean.png)
 
 ## 4. Experiments
 
@@ -80,12 +86,11 @@ Figure 1 describes the proposed model flow. Event history enters the TitanTPP en
 
 The evaluation uses Intermittent, Taxi, and Instacart demand-event datasets. Intermittent contains 23,387 part-level sequences and 242,888 positive-demand events. Taxi contains 131 grid-cell sequences and 55,119 pickup events, with a median sequence length of 405 and a p95 length of 743. Instacart contains 206,209 user sequences and 3,279,521 order events. These datasets differ in sequence length and quantity scale, which allows the experiment to separate recurrent-history, attention-history, and quantity-modeling effects.
 
-
-| Dataset      | Sequences |    Events | Seq. length med/p95/max | Quantity med/p95/max | Marks | Base |
-| ------------ | --------: | --------: | ----------------------: | -------------------: | ----: | ---: |
-| Intermittent |    23,387 |   242,888 |            6 / 35 / 110 |       2 / 16 / 5,000 |    11 |    2 |
-| Taxi         |       131 |    55,119 |         405 / 743 / 744 |    7 / 1,547 / 6,489 |     4 |   10 |
-| Instacart    |   206,209 | 3,279,521 |           10 / 50 / 100 |         8 / 25 / 177 |     8 |    2 |
+| Dataset | Sequences | Events | Seq. length med/p95/max | Quantity med/p95/max | Marks | Base |
+|---|---:|---:|---:|---:|---:|---:|
+| Intermittent | 23,387 | 242,888 | 6 / 35 / 110 | 2 / 16 / 5,000 | 11 | 2 |
+| Taxi | 131 | 55,119 | 405 / 743 / 744 | 7 / 1,547 / 6,489 | 4 | 10 |
+| Instacart | 206,209 | 3,279,521 | 10 / 50 / 100 | 8 / 25 / 177 | 8 | 2 |
 
 RMTPP and THP are used as adapted baselines. Each baseline retains its original encoder family, but it shares the paper's quantity-aware input, output interface, hybrid objective, fixed split, and checkpoint rule. All models use seeds 42, 52, and 62, AdamW with learning rate 0.001, batch size 128, strict reproducibility mode, and minimum validation total NLL as the checkpoint rule. Values are reported as mean ± standard deviation over the three seeds. The held-out test split is evaluated once after validation-based model selection.
 
@@ -93,21 +98,20 @@ RMTPP and THP are used as adapted baselines. Each baseline retains its original 
 
 Table 2 reports validation performance for Intermittent and Taxi, where all three model families have completed the same e300 validation protocol. Lower values are better for validation NLL, quantity MAE, and $\Delta t$ MAE; higher values are better for mark accuracy. Instacart is reserved for the complete three-dataset table after TitanTPP validation finishes under the same protocol.
 
-
-| Dataset      | Model    |          Val NLL |           Qty MAE |       Delta-t MAE |           Mark acc |
-| ------------ | -------- | ---------------: | ----------------: | ----------------: | -----------------: |
-| Intermittent | RMTPP    | 5.6683 ± 0.0115 |  2.7408 ± 0.0493 | 41.8872 ± 0.5030 | 55.183% ± 0.236%p |
-| Intermittent | THP      | 5.6417 ± 0.0305 |  2.8812 ± 0.0177 | 40.5947 ± 0.3284 | 54.235% ± 0.637%p |
-| Intermittent | TitanTPP | 5.6171 ± 0.0158 |  2.7188 ± 0.1336 | 41.4268 ± 0.5581 | 55.194% ± 1.293%p |
-| Taxi         | RMTPP    | 1.5803 ± 0.0032 | 65.8580 ± 2.4748 |  0.7326 ± 0.0085 | 91.800% ± 0.117%p |
-| Taxi         | THP      | 1.5998 ± 0.0087 | 87.7508 ± 2.6771 |  0.7528 ± 0.0224 | 91.461% ± 0.202%p |
-| Taxi         | TitanTPP | 1.5458 ± 0.0048 | 23.7722 ± 1.0929 |  0.7374 ± 0.0151 | 92.606% ± 0.134%p |
+| Dataset | Model | Val NLL | Qty MAE | Delta-t MAE | Mark acc |
+|---|---|---:|---:|---:|---:|
+| Intermittent | RMTPP | 5.6683 ± 0.0115 | 2.7408 ± 0.0493 | 41.8872 ± 0.5030 | 55.183% ± 0.236%p |
+| Intermittent | THP | 5.6417 ± 0.0305 | 2.8812 ± 0.0177 | 40.5947 ± 0.3284 | 54.235% ± 0.637%p |
+| Intermittent | TitanTPP | 5.6171 ± 0.0158 | 2.7188 ± 0.1336 | 41.4268 ± 0.5581 | 55.194% ± 1.293%p |
+| Taxi | RMTPP | 1.5803 ± 0.0032 | 65.8580 ± 2.4748 | 0.7326 ± 0.0085 | 91.800% ± 0.117%p |
+| Taxi | THP | 1.5998 ± 0.0087 | 87.7508 ± 2.6771 | 0.7528 ± 0.0224 | 91.461% ± 0.202%p |
+| Taxi | TitanTPP | 1.5458 ± 0.0048 | 23.7722 ± 1.0929 | 0.7374 ± 0.0151 | 92.606% ± 0.134%p |
 
 On Intermittent, TitanTPP obtains the lowest validation NLL and quantity MAE among the three models, while its event-time error remains between RMTPP and THP. On Taxi, TitanTPP obtains the lowest validation NLL, the lowest quantity MAE, and the highest mark accuracy; RMTPP retains a small advantage on $\Delta t$ MAE. These results support a bounded claim: the TitanTPP formulation improves likelihood and quantity reconstruction on the completed comparisons, but event-time prediction still depends on the dataset and metric.
 
-![Validation NLL comparison](paper/results/e300_matched_20260808/figures/inter_taxi_e300_validation_nll.png)
+![Validation NLL comparison](results/e300_matched_20260808/figures/inter_taxi_e300_validation_nll.png)
 
-![Quantity MAE comparison](paper/results/e300_matched_20260808/figures/inter_taxi_e300_quantity_mae.png)
+![Quantity MAE comparison](results/e300_matched_20260808/figures/inter_taxi_e300_quantity_mae.png)
 
 ### 4.3 Ablation and analysis
 
