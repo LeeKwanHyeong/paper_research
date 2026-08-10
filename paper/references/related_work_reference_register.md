@@ -13,7 +13,7 @@
 
 - **Reference:** Daley, D. J. and Vere-Jones, D. An Introduction to the Theory of Point
   Processes, Volume I: Elementary Theory and Methods, 2nd ed. Springer, 2003.
-- **Source:** [Springer](https://link.springer.com/book/10.1007/978-1-4757-2001-3)
+- **Source:** [Springer](https://link.springer.com/book/10.1007/b97277)
 - **Role:** conditional intensity와 point-process history formulation의 표준 이론 배경이다.
 - **Boundary:** neural TPP나 intermittent demand forecasting을 직접 다루는 문헌은 아니다.
 
@@ -68,8 +68,8 @@
 ### An Analysis of Transformations
 
 - **Reference:** Box, G. E. P. and Cox, D. R. Journal of the Royal Statistical Society: Series B,
-  26(2), 211-252, 1964.
-- **Source:** [JSTOR](https://www.jstor.org/stable/2984418)
+  26(2), 211-243, 1964.
+- **Source:** [Oxford Academic](https://academic.oup.com/jrsssb/article/26/2/211/7028064)
 - **Role:** skewed positive-valued targets에 power/log 계열 변환을 적용하는 통계적 배경이다.
 - **Boundary:** TitanTPP의 magnitude-mark/residual factorization 자체를 제안한 문헌은 아니다.
 

@@ -28,6 +28,9 @@ split 순서, mark 분포와 SHA-256이 유효할 때만 T1과 T2를 출력한�
 
 ## Current artifacts
 
+- Manuscript v0.6: professor feedback revision with Taxi and Instacart e300 validation results
+- v0.6 revision notes: applied feedback, evidence boundaries and submission blockers
+- Qualified e300 tables: seed-level and mean/standard-deviation results for Taxi and Instacart
 - T1: fixed-split dataset statistics, task construction and dataset identity
 - T2: matched model configuration and frozen training/evaluation protocol
 - F1: event-based quantity-aware problem formulation
@@ -35,7 +38,7 @@ split 순서, mark 분포와 SHA-256이 유효할 때만 T1과 T2를 출력한�
 - F3: frozen dataset sequence-length and quantity survival distributions
 - Introduction: paragraph outline and claim-evidence map
 - Related Work: recurrent/attention TPP, continuous quantity mark, intermittent-demand 문헌 지도
-- Draft v0.1: Introduction, Related Work, Problem Formulation and Methodology
+- Draft history: section drafts and manuscript versions v0.1 through v0.6
 - Artifact manifest: 39-run frozen contract qualification by dataset, model and seed
 
 ```bash
