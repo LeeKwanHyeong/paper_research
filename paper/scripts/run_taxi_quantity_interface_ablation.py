@@ -92,6 +92,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--bin-count", type=int, default=4)
     parser.add_argument("--lambda-raw", type=float, default=1.0)
     parser.add_argument("--grad-clip", type=float, default=1.0)
+    parser.add_argument("--early-stopping-patience", type=int, default=60)
+    parser.add_argument("--min-epochs", type=int, default=50)
     parser.add_argument("--variants", default=",".join(NEW_VARIANTS))
     parser.add_argument("--seeds", default=",".join(str(seed) for seed in SEEDS))
     parser.add_argument("--max-train-batches", type=int, default=None)
@@ -135,6 +137,19 @@ def parse_str_tuple(value: str) -> tuple[str, ...]:
 
 def clone_state_dict(model: nn.Module) -> dict[str, torch.Tensor]:
     return {name: tensor.detach().cpu().clone() for name, tensor in model.state_dict().items()}
+
+
+def early_stopping_exhausted(
+    history: list[dict[str, Any]],
+    *,
+    min_epochs: int,
+    patience: int,
+) -> bool:
+    if not history or patience < 1:
+        return False
+    current_epoch = int(history[-1]["epoch"])
+    best_epoch = int(min(history, key=lambda row: float(row["val_nll"]))["epoch"])
+    return current_epoch >= min_epochs and current_epoch - best_epoch >= patience
 
 
 def train_quantile_contract(df: pl.DataFrame) -> dict[str, Any]:
@@ -510,6 +525,7 @@ def train_variant_seed(
     history: list[dict[str, Any]] = []
     best_nll = float("inf")
     best_state: dict[str, torch.Tensor] | None = None
+    source_revision_history = [args.source_revision]
     start_epoch = 1
 
     if last_path.exists() and not args.force_rerun:
@@ -520,11 +536,33 @@ def train_variant_seed(
         best_nll = float(payload.get("best_val_nll", best_nll))
         best_state = payload.get("best_state_dict")
         start_epoch = int(payload["epoch"]) + 1
+        previous_revisions = payload.get("source_revision_history") or [
+            payload.get("source_revision")
+        ]
+        source_revision_history = [
+            revision for revision in previous_revisions if revision
+        ]
+        if args.source_revision not in source_revision_history:
+            source_revision_history.append(args.source_revision)
 
     run_dir.mkdir(parents=True, exist_ok=True)
     log_path = run_dir / "train.log"
     started = time.time()
+    stopped_early = early_stopping_exhausted(
+        history,
+        min_epochs=args.min_epochs,
+        patience=args.early_stopping_patience,
+    )
+    if stopped_early:
+        best_epoch = min(history, key=lambda row: float(row["val_nll"]))["epoch"]
+        print(
+            f"[early-stop-resume] variant={variant} seed={seed} "
+            f"current_epoch={history[-1]['epoch']} best_epoch={best_epoch}",
+            flush=True,
+        )
     for epoch in range(start_epoch, args.epochs + 1):
+        if stopped_early:
+            break
         model.train()
         running = 0.0
         batches = 0
@@ -599,9 +637,27 @@ def train_variant_seed(
             "rmtpp_config": {name: getattr(cfg, name) for name in cfg.__dataclass_fields__},
             "interface_meta": interface_meta,
             "source_revision": args.source_revision,
+            "source_revision_history": source_revision_history,
+            "early_stopping_patience": args.early_stopping_patience,
+            "min_epochs": args.min_epochs,
             "evaluation_scope": "validation_only",
             "held_out_test_evaluated": False,
         }, last_path)
+        stopped_early = early_stopping_exhausted(
+            history,
+            min_epochs=args.min_epochs,
+            patience=args.early_stopping_patience,
+        )
+        if stopped_early:
+            best_epoch = min(history, key=lambda row: float(row["val_nll"]))["epoch"]
+            line = (
+                f"[early-stop] variant={variant} seed={seed} "
+                f"current_epoch={epoch} best_epoch={best_epoch} "
+                f"patience={args.early_stopping_patience}"
+            )
+            print(line, flush=True)
+            with log_path.open("a", encoding="utf-8") as handle:
+                handle.write(line + "\n")
 
     if best_state is None:
         raise RuntimeError(f"No best checkpoint selected for {variant}/seed_{seed}")
@@ -625,6 +681,9 @@ def train_variant_seed(
         "rmtpp_config": {name: getattr(cfg, name) for name in cfg.__dataclass_fields__},
         "interface_meta": interface_meta,
         "source_revision": args.source_revision,
+        "source_revision_history": source_revision_history,
+        "early_stopping_patience": args.early_stopping_patience,
+        "min_epochs": args.min_epochs,
         "evaluation_scope": "validation_only",
         "held_out_test_evaluated": False,
     }
@@ -645,6 +704,8 @@ def train_variant_seed(
         "variant_label": VARIANT_LABELS[variant],
         "seed": seed,
         "epochs": args.epochs,
+        "completed_epochs": int(history[-1]["epoch"]),
+        "stopped_early": int(history[-1]["epoch"]) < args.epochs,
         "best_epoch": int(best_epoch),
         "best_val_nll": float(validation["val_nll"]),
         "best_val_qty_mae": float(validation["rows"][0]["qty_mae"]),
@@ -652,6 +713,7 @@ def train_variant_seed(
         "mark_acc": float(validation["mark_acc"]),
         "preclamp_negative_share": float(validation["preclamp_negative_share"]),
         "source_revision": args.source_revision,
+        "source_revision_history": source_revision_history,
         "evaluation_scope": "validation_only",
         "held_out_test_evaluated": False,
         "checkpoint_path": str(best_path),
@@ -735,6 +797,8 @@ def evaluate_proposal(
             "variant_label": VARIANT_LABELS["mark_residual"],
             "seed": seed,
             "epochs": 300,
+            "completed_epochs": 300,
+            "stopped_early": False,
             "best_epoch": int(payload["summary"]["best_val_nll_epoch"]),
             "best_val_nll": float(validation["val_nll"]),
             "best_val_qty_mae": observed,
@@ -872,6 +936,13 @@ def main() -> None:
         "lr": args.lr,
         "lambda_raw": args.lambda_raw,
         "grad_clip": args.grad_clip,
+        "early_stopping": {
+            "enabled": args.early_stopping_patience > 0,
+            "monitor": "val_nll",
+            "patience": args.early_stopping_patience,
+            "min_epochs": args.min_epochs,
+            "restore": "best_val_nll",
+        },
         "lookback_weeks": args.lookback_weeks,
         "max_seq_len": args.max_seq_len,
         "hidden_dim": args.hidden_dim,
