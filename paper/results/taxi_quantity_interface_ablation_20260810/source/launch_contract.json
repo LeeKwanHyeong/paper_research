@@ -1,0 +1,144 @@
+{
+  "batch_size": 128,
+  "checkpoint_selection": "best_val_nll",
+  "data_path": "/home/leekwanhyeong/workspace/paper_research/search_artifacts/final_fair_matched_rmtpp_thp_e300_20260805/yellow_trip_hourly/cache/yellow_trip_hourly/fixed_split/marked_fixed_base_10p0.parquet",
+  "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+  "dataset": "yellow_trip_hourly",
+  "early_stopping": {
+    "enabled": true,
+    "min_epochs": 50,
+    "monitor": "val_nll",
+    "patience": 60,
+    "restore": "best_val_nll"
+  },
+  "epochs": 300,
+  "evaluation_quantity_target": "nearest_integer_demand_qty",
+  "evaluation_scope": "validation_only",
+  "grad_clip": 1.0,
+  "held_out_test_evaluated": false,
+  "hidden_dim": 128,
+  "interfaces": {
+    "direct_raw_mse": {
+      "fitted_on": "train",
+      "history_quantity_input": "log10_within_mark_residual",
+      "loss": "mse_on_train_standardized_raw_quantity",
+      "mode": "direct_raw_mse",
+      "target": "demand_qty",
+      "train_mean": 228.96918803862528,
+      "train_std": 646.3360469996886
+    },
+    "quantile_categorical": {
+      "bin_count": 4,
+      "edges": [
+        2.0,
+        7.0,
+        65.0
+      ],
+      "fitted_on": "train",
+      "mode": "quantile_categorical",
+      "representatives": [
+        1.0,
+        4.0,
+        21.0,
+        456.0
+      ],
+      "train_bin_counts": [
+        13039,
+        6472,
+        9432,
+        9581
+      ]
+    },
+    "uniform_categorical": {
+      "bin_count": 4,
+      "edges": [
+        1581.25,
+        3161.5,
+        4741.75
+      ],
+      "fitted_on": "train",
+      "mode": "uniform_categorical",
+      "representatives": [
+        6.0,
+        2181.0,
+        3674.5,
+        5143.5
+      ],
+      "train_bin_counts": [
+        36621,
+        1415,
+        410,
+        78
+      ]
+    }
+  },
+  "lambda_raw": 1.0,
+  "lookback_weeks": 168,
+  "lr": 0.001,
+  "max_seq_len": 256,
+  "max_train_batches": null,
+  "max_val_batches": null,
+  "proposal_source_revisions": [
+    "726aa64ab0b5478646d11be36fc19dcb224d417e"
+  ],
+  "quantile_contract": {
+    "boundaries": [
+      7.0,
+      686.0,
+      1562.0,
+      3449.0
+    ],
+    "quantiles": [
+      0.5,
+      0.9,
+      0.95,
+      0.99
+    ],
+    "strata": [
+      {
+        "stratum": "le_p50",
+        "stratum_label": "<= 7",
+        "stratum_order": 0
+      },
+      {
+        "stratum": "p50_p90",
+        "stratum_label": "(7, 686]",
+        "stratum_order": 1
+      },
+      {
+        "stratum": "p90_p95",
+        "stratum_label": "(686, 1562]",
+        "stratum_order": 2
+      },
+      {
+        "stratum": "p95_p99",
+        "stratum_label": "(1562, 3449]",
+        "stratum_order": 3
+      },
+      {
+        "stratum": "gt_p99",
+        "stratum_label": "> 3449",
+        "stratum_order": 4
+      }
+    ]
+  },
+  "schema_version": 1,
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "source_revision": "32eb40317d208b050c5dc1b83cabc07e5c99864b",
+  "split_rows": {
+    "test": 8327,
+    "train": 38524,
+    "validation": 8268
+  },
+  "status": "complete",
+  "variants": [
+    "uniform_categorical",
+    "quantile_categorical",
+    "direct_raw_mse",
+    "mark_residual"
+  ]
+}
