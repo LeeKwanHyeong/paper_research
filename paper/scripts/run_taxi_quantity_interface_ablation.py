@@ -373,6 +373,7 @@ def evaluate(
         else:
             raise ValueError(f"Unsupported evaluation variant: {variant}")
 
+        true_qty = torch.round(true_qty)
         true_np = true_qty.detach().cpu().numpy().astype(np.float64)
         pred_np = pred_qty.detach().cpu().numpy().astype(np.float64)
         update_accumulator(overall, true_np, pred_np)
@@ -822,6 +823,11 @@ def main() -> None:
     missing = sorted(required - set(original_df.columns))
     if missing:
         raise ValueError(f"Taxi fixed split is missing columns: {missing}")
+    integral_error = (
+        original_df["demand_qty"] - original_df["demand_qty"].round(0)
+    ).abs().max()
+    if float(integral_error) > 1e-9:
+        raise ValueError("Taxi quantity-interface ablation requires integral demand quantities")
     quantile_contract = train_quantile_contract(original_df)
     train_qty = original_df.filter(
         pl.col("chronological_split") == "train"
@@ -870,6 +876,7 @@ def main() -> None:
         "max_seq_len": args.max_seq_len,
         "hidden_dim": args.hidden_dim,
         "checkpoint_selection": "best_val_nll",
+        "evaluation_quantity_target": "nearest_integer_demand_qty",
         "evaluation_scope": "validation_only",
         "held_out_test_evaluated": False,
         "source_revision": args.source_revision,
