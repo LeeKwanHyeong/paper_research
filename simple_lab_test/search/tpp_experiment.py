@@ -111,6 +111,12 @@ def _validate_long_epoch_args(args: argparse.Namespace) -> None:
         raise ValueError("--evaluation-scope validation_only requires --split-mode fixed.")
     if int(args.value_input_emb_dim) <= 0:
         raise ValueError("--value-input-emb-dim must be positive.")
+    if int(args.early_stopping_patience) < 0:
+        raise ValueError("--early-stopping-patience must be non-negative.")
+    if int(args.min_epochs) < 0:
+        raise ValueError("--min-epochs must be non-negative.")
+    if int(args.early_stopping_patience) > 0 and int(args.min_epochs) < 1:
+        raise ValueError("Early stopping requires --min-epochs >= 1.")
     lambda_ordinal = float(args.lambda_ordinal)
     if not math.isfinite(lambda_ordinal) or lambda_ordinal < 0.0:
         raise ValueError("--lambda-ordinal must be finite and non-negative.")
@@ -332,6 +338,12 @@ def add_shared_long_epoch_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--seeds", default="42,52,62", help="Comma-separated random seeds.")
     parser.add_argument("--lookback-weeks", type=int, default=defaults.lookback_weeks)
     parser.add_argument("--max-seq-len", type=int, default=defaults.max_seq_len)
+    parser.add_argument(
+        "--intermittent-runtime-profile",
+        choices=["legacy", "long"],
+        default=defaults.intermittent_runtime_profile,
+        help="Use long to preserve explicit lookback/max-sequence CLI values for Intermittent.",
+    )
     parser.add_argument("--intermittent-max-series", type=int, default=None)
     parser.add_argument(
         "--intermittent-split-with-path",
@@ -390,6 +402,18 @@ def add_shared_long_epoch_args(parser: argparse.ArgumentParser) -> None:
             "Whether a fixed-split run exports held-out test metrics after training. "
             "Use validation_only while a model-selection gate is still locked."
         ),
+    )
+    parser.add_argument(
+        "--early-stopping-patience",
+        type=int,
+        default=defaults.early_stopping_patience,
+        help="Stop after this many epochs without validation-NLL improvement; 0 disables it.",
+    )
+    parser.add_argument(
+        "--min-epochs",
+        type=int,
+        default=defaults.min_epochs,
+        help="Minimum completed epochs before validation-NLL early stopping can trigger.",
     )
     parser.add_argument(
         "--value-head-activation",
@@ -702,6 +726,7 @@ def build_long_epoch_config(args: argparse.Namespace) -> ExperimentConfig:
         seeds=_csv_tuple(args.seeds, cast=int),
         lookback_weeks=int(args.lookback_weeks),
         max_seq_len=int(args.max_seq_len),
+        intermittent_runtime_profile=args.intermittent_runtime_profile,
         intermittent_max_series=_parse_optional_positive_int(args.intermittent_max_series),
         intermittent_split_with_path=args.intermittent_split_with_path,
         intermittent_split_train_path=args.intermittent_split_train_path,
@@ -712,6 +737,8 @@ def build_long_epoch_config(args: argparse.Namespace) -> ExperimentConfig:
         insta_max_series=_parse_optional_positive_int(args.insta_max_series),
         split_mode=args.split_mode,
         evaluation_scope=args.evaluation_scope,
+        early_stopping_patience=int(args.early_stopping_patience),
+        min_epochs=int(args.min_epochs),
         rmtpp_rnn_type=args.rmtpp_rnn_type,
         rmtpp_mark_emb_dim=int(args.rmtpp_mark_emb_dim),
         rmtpp_hidden_dim=_parse_optional_positive_int(args.rmtpp_hidden_dim),

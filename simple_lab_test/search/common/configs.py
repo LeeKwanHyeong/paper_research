@@ -56,6 +56,7 @@ class ExperimentConfig:
     titan_profile: str = "dataset_best"
     titan_candidates: tuple[str, ...] = ()
     thp_candidates: tuple[str, ...] = ()
+    intermittent_runtime_profile: str = "legacy"
     intermittent_max_series: int | None = None
     intermittent_split_with_path: str | None = None
     intermittent_split_train_path: str | None = None
@@ -66,6 +67,8 @@ class ExperimentConfig:
     insta_max_series: int | None = None
     force_rerun: bool = False
     stop_on_error: bool = False
+    early_stopping_patience: int = 0
+    min_epochs: int = 0
     split_mode: str = "internal"
     evaluation_scope: str = "validation_and_test"
     rmtpp_rnn_type: str = "gru"

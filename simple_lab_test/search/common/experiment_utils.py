@@ -118,6 +118,7 @@ class SearchConfig:
     log_bases: tuple[float, ...] = (10.0, 4.0, 2.0)
     lookback_weeks: int = 52
     max_seq_len: int = 64
+    intermittent_runtime_profile: str = "legacy"
     val_ratio: float = 0.2
     batch_size: int = 128
     lr: float = 3e-4
@@ -304,6 +305,13 @@ def search_config_for_dataset(search_cfg: SearchConfig, dataset_kind: str) -> Se
 
     if not is_marked_target_kind(dataset_kind):
         return search_cfg
+
+    if search_cfg.intermittent_runtime_profile == "long":
+        return replace(
+            search_cfg,
+            lookback_weeks=max(int(search_cfg.lookback_weeks), MARKED_TARGET_LOOKBACK_WEEKS),
+            max_seq_len=max(int(search_cfg.max_seq_len), MARKED_TARGET_MAX_SEQ_LEN),
+        )
 
     return replace(
         search_cfg,

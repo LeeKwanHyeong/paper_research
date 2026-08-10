@@ -219,6 +219,9 @@ def make_search_cfg(ab_cfg: ABConfig, dataset_kind: str | None = None) -> Search
         device=ab_cfg.device,
         lookback_weeks=ab_cfg.lookback_weeks,
         max_seq_len=ab_cfg.max_seq_len,
+        intermittent_runtime_profile=getattr(
+            ab_cfg, "intermittent_runtime_profile", "legacy"
+        ),
         batch_size=ab_cfg.batch_size,
         lr=ab_cfg.lr,
         val_ratio=ab_cfg.val_ratio,

@@ -265,6 +265,27 @@ def make_training_cfg(cfg: ExperimentConfig, dataset_kind: str | None = None) ->
     return build_training_config(search_cfg, epochs=cfg.epochs)
 
 
+def validation_nll_early_stop(
+    history: list[dict[str, Any]],
+    *,
+    min_epochs: int,
+    patience: int,
+) -> bool:
+    if not history or patience < 1:
+        return False
+    current_epoch = int(history[-1]["epoch"])
+    if current_epoch < min_epochs:
+        return False
+    finite_rows = [
+        row for row in history
+        if np.isfinite(float(row.get("val_nll", float("inf"))))
+    ]
+    if not finite_rows:
+        return False
+    best_epoch = min(finite_rows, key=lambda row: float(row["val_nll"]))["epoch"]
+    return current_epoch - int(best_epoch) >= patience
+
+
 def attach_train_global_magnitude_stats(
     *,
     marked_df: pl.DataFrame,
@@ -1415,6 +1436,9 @@ def cached_run_is_complete(
         and str(cached_summary.get("split_mode", "internal")) == str(getattr(cfg, "split_mode", "internal"))
         and str(cached_summary.get("evaluation_scope", "validation_and_test"))
         == str(cfg.evaluation_scope)
+        and int(cached_summary.get("early_stopping_patience", 0))
+        == int(cfg.early_stopping_patience)
+        and int(cached_summary.get("min_epochs", 0)) == int(cfg.min_epochs)
         and str(cached_summary.get("value_head_activation", "sigmoid")) == str(cfg.value_head_activation)
         and str(cached_summary.get("value_head_mode", "shared")) == str(cfg.value_head_mode)
         and str(cached_summary.get("time_head_mode", "shared")) == str(cfg.time_head_mode)
@@ -1763,6 +1787,7 @@ def train_one_run(
     best_score_state: dict[str, torch.Tensor] | None = None
     best_val_nll_state: dict[str, torch.Tensor] | None = None
     start_epoch = 1
+    stopped_early = False
 
     if not cfg.force_rerun and resume_checkpoint_path.exists():
         try:
@@ -1819,6 +1844,18 @@ def train_one_run(
             print(
                 f"[resume] loaded {resume_checkpoint_path} | "
                 f"next_epoch={start_epoch} | target_epochs={training_cfg.epochs}"
+            )
+
+        if validation_nll_early_stop(
+            history,
+            min_epochs=cfg.min_epochs,
+            patience=cfg.early_stopping_patience,
+        ):
+            stopped_early = True
+            start_epoch = training_cfg.epochs + 1
+            print(
+                f"[early-stop-resume] history already satisfies patience="
+                f"{cfg.early_stopping_patience} min_epochs={cfg.min_epochs}"
             )
 
         for epoch in range(start_epoch, training_cfg.epochs + 1):
@@ -1919,6 +1956,17 @@ def train_one_run(
                 encoder_cfg=encoder_cfg,
                 train_loader_generator=train_loader_generator,
             )
+            if validation_nll_early_stop(
+                history,
+                min_epochs=cfg.min_epochs,
+                patience=cfg.early_stopping_patience,
+            ):
+                stopped_early = True
+                print(
+                    f"[early-stop] epoch={epoch} patience={cfg.early_stopping_patience} "
+                    f"min_epochs={cfg.min_epochs}"
+                )
+                break
 
     final_state = clone_state_dict(model)
     best_score_state = best_score_state or final_state
@@ -1942,6 +1990,10 @@ def train_one_run(
         "titan_candidate_name": run_cfg.candidate_name,
         "seed": int(run_cfg.seed),
         "epochs": int(run_cfg.epochs),
+        "trained_epochs": int(history[-1]["epoch"]) if history else 0,
+        "stopped_early": bool(stopped_early),
+        "early_stopping_patience": int(cfg.early_stopping_patience),
+        "min_epochs": int(cfg.min_epochs),
         "lr": float(cfg.lr),
         "batch_size": int(training_cfg.batch_size),
         "lookback_weeks": int(training_cfg.lookback),
