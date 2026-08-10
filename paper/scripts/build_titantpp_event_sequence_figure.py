@@ -199,23 +199,33 @@ def draw_encoder(ax):
     label(ax, x0 + 0.24, y0 + h - 0.33, "TitanTPP history encoder", size=12, weight="bold")
     label(ax, x0 + 0.24, y0 + h - 0.68, "causal memory-attention over event tokens", size=9.3, color=COLORS["muted"])
 
-    layers = [
-        (x0 + 0.5, y0 + 1.73, w - 1.0, 0.42, "memory attention"),
-        (x0 + 0.5, y0 + 1.06, w - 1.0, 0.42, "feed-forward + residual"),
-        (x0 + 0.5, y0 + 0.39, w - 1.0, 0.42, "feed-forward + residual"),
+    block_x, block_y, block_w, block_h = x0 + 0.46, y0 + 0.46, w - 0.92, 1.55
+    add_panel(ax, block_x, block_y, block_w, block_h, fc="#ffffff", ec="#94a3b8", lw=0.9, radius=0.08)
+    label(ax, block_x + block_w / 2, block_y + block_h - 0.24, r"Titan encoder block $\times L$", size=9.5, weight="bold", ha="center")
+
+    sublayers = [
+        (block_x + 0.28, block_y + 0.72, block_w - 0.56, 0.34, "memory attention"),
+        (block_x + 0.28, block_y + 0.18, block_w - 0.56, 0.42, "FFN + residual\nupdate"),
     ]
-    for x, y, bw, bh, txt in layers:
-        add_panel(ax, x, y, bw, bh, fc="#ffffff", ec="#94a3b8", lw=0.9, radius=0.06)
-        center_label(ax, x, y, bw, bh, txt, size=9.2)
-    for upper, lower in zip(layers[:-1], layers[1:]):
-        add_arrow(
-            ax,
-            (upper[0] + upper[2] / 2, upper[1] - 0.02),
-            (lower[0] + lower[2] / 2, lower[1] + lower[3] + 0.02),
-            color=COLORS["slate"],
-            lw=1.2,
-            mutation_scale=9,
-        )
+    for sx, sy, sw, sh, txt in sublayers:
+        add_panel(ax, sx, sy, sw, sh, fc="#f8fafc", ec="#cbd5e1", lw=0.8, radius=0.05)
+        center_label(ax, sx, sy, sw, sh, txt, size=8.1)
+    add_arrow(
+        ax,
+        (block_x + block_w / 2, sublayers[0][1] - 0.02),
+        (block_x + block_w / 2, sublayers[1][1] + sublayers[1][3] + 0.02),
+        color=COLORS["slate"],
+        lw=1.1,
+        mutation_scale=8,
+    )
+    add_arrow(
+        ax,
+        (block_x + block_w / 2, block_y + 0.04),
+        (block_x + block_w / 2, block_y - 0.34),
+        color=COLORS["slate"],
+        lw=1.2,
+        mutation_scale=9,
+    )
     label(ax, x0 + 0.55, y0 + 0.13, r"history state $h_i$", size=9.5)
 
     add_arrow(ax, (9.2, 3.5), (9.92, 5.45), color=COLORS["line"], lw=2.0, rad=-0.07, mutation_scale=14)
