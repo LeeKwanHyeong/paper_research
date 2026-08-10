@@ -333,6 +333,31 @@ def add_shared_long_epoch_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--lookback-weeks", type=int, default=defaults.lookback_weeks)
     parser.add_argument("--max-seq-len", type=int, default=defaults.max_seq_len)
     parser.add_argument("--intermittent-max-series", type=int, default=None)
+    parser.add_argument(
+        "--intermittent-split-with-path",
+        default=None,
+        help="Optional fixed-split with_split parquet override for Intermittent mark-design audits.",
+    )
+    parser.add_argument(
+        "--intermittent-split-train-path",
+        default=None,
+        help="Optional fixed-split train parquet override for Intermittent mark-design audits.",
+    )
+    parser.add_argument(
+        "--intermittent-split-validation-path",
+        default=None,
+        help="Optional fixed-split validation parquet override for Intermittent mark-design audits.",
+    )
+    parser.add_argument(
+        "--intermittent-split-test-path",
+        default=None,
+        help="Optional fixed-split test parquet override for Intermittent mark-design audits.",
+    )
+    parser.add_argument(
+        "--intermittent-split-manifest-path",
+        default=None,
+        help="Optional fixed-split manifest override for Intermittent mark-design audits.",
+    )
     parser.add_argument("--yellow-max-series", type=int, default=None)
     parser.add_argument(
         "--insta-max-series",
@@ -678,6 +703,11 @@ def build_long_epoch_config(args: argparse.Namespace) -> ExperimentConfig:
         lookback_weeks=int(args.lookback_weeks),
         max_seq_len=int(args.max_seq_len),
         intermittent_max_series=_parse_optional_positive_int(args.intermittent_max_series),
+        intermittent_split_with_path=args.intermittent_split_with_path,
+        intermittent_split_train_path=args.intermittent_split_train_path,
+        intermittent_split_validation_path=args.intermittent_split_validation_path,
+        intermittent_split_test_path=args.intermittent_split_test_path,
+        intermittent_split_manifest_path=args.intermittent_split_manifest_path,
         yellow_max_series=_parse_optional_positive_int(args.yellow_max_series),
         insta_max_series=_parse_optional_positive_int(args.insta_max_series),
         split_mode=args.split_mode,

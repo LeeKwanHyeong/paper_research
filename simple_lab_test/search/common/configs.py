@@ -57,6 +57,11 @@ class ExperimentConfig:
     titan_candidates: tuple[str, ...] = ()
     thp_candidates: tuple[str, ...] = ()
     intermittent_max_series: int | None = None
+    intermittent_split_with_path: str | None = None
+    intermittent_split_train_path: str | None = None
+    intermittent_split_validation_path: str | None = None
+    intermittent_split_test_path: str | None = None
+    intermittent_split_manifest_path: str | None = None
     yellow_max_series: int | None = None
     insta_max_series: int | None = None
     force_rerun: bool = False
