@@ -9,6 +9,7 @@ os.environ.setdefault("MPLCONFIGDIR", "/tmp/mplconfig_titantpp_figure")
 os.environ.setdefault("XDG_CACHE_HOME", "/tmp/xdg_cache_titantpp_figure")
 
 import matplotlib.pyplot as plt
+from matplotlib.path import Path as MplPath
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
 
@@ -74,19 +75,57 @@ def add_arrow(
     return arrow
 
 
-def add_poly_arrow(ax, points, *, color="#374151", lw=1.7, mutation_scale=12, zorder=5):
-    """Draw a routed arrow through fixed waypoints without crossing boxes."""
-    for start, end in zip(points[:-2], points[1:-1]):
-        ax.plot([start[0], end[0]], [start[1], end[1]], color=color, lw=lw, zorder=zorder)
-    add_arrow(
-        ax,
-        points[-2],
-        points[-1],
-        color=color,
-        lw=lw,
+def add_poly_arrow(
+    ax,
+    points,
+    *,
+    color="#374151",
+    lw=1.7,
+    mutation_scale=12,
+    corner_radius=0.08,
+    zorder=5,
+):
+    """Draw a routed arrow with rounded orthogonal corners."""
+    vertices = [points[0]]
+    codes = [MplPath.MOVETO]
+
+    for index in range(1, len(points) - 1):
+        previous = points[index - 1]
+        corner = points[index]
+        following = points[index + 1]
+
+        incoming = (corner[0] - previous[0], corner[1] - previous[1])
+        outgoing = (following[0] - corner[0], following[1] - corner[1])
+        incoming_length = (incoming[0] ** 2 + incoming[1] ** 2) ** 0.5
+        outgoing_length = (outgoing[0] ** 2 + outgoing[1] ** 2) ** 0.5
+        radius = min(corner_radius, incoming_length / 2, outgoing_length / 2)
+
+        before = (
+            corner[0] - incoming[0] / incoming_length * radius,
+            corner[1] - incoming[1] / incoming_length * radius,
+        )
+        after = (
+            corner[0] + outgoing[0] / outgoing_length * radius,
+            corner[1] + outgoing[1] / outgoing_length * radius,
+        )
+        vertices.extend([before, corner, after])
+        codes.extend([MplPath.LINETO, MplPath.CURVE3, MplPath.CURVE3])
+
+    vertices.append(points[-1])
+    codes.append(MplPath.LINETO)
+    path = MplPath(vertices, codes)
+    arrow = FancyArrowPatch(
+        path=path,
+        arrowstyle="-|>",
         mutation_scale=mutation_scale,
+        linewidth=lw,
+        color=color,
+        capstyle="round",
+        joinstyle="round",
         zorder=zorder,
     )
+    ax.add_patch(arrow)
+    return arrow
 
 
 def label(
@@ -197,7 +236,14 @@ def draw_encoder(ax):
     x0, y0, w, h = 9.92, 3.98, 3.35, 3.05
     add_panel(ax, x0, y0, w, h, fc="#eef2ff", ec="#4f46e5", lw=1.8, radius=0.18)
     label(ax, x0 + 0.24, y0 + h - 0.33, "TitanTPP history encoder", size=12, weight="bold")
-    label(ax, x0 + 0.24, y0 + h - 0.68, "causal memory-attention over event tokens", size=9.3, color=COLORS["muted"])
+    label(
+        ax,
+        x0 + 0.24,
+        y0 + h - 0.76,
+        "causal memory-attention\n    over event tokens",
+        size=9.1,
+        color=COLORS["muted"],
+    )
 
     block_x, block_y, block_w, block_h = x0 + 0.46, y0 + 0.46, w - 0.92, 1.55
     add_panel(ax, block_x, block_y, block_w, block_h, fc="#ffffff", ec="#94a3b8", lw=0.9, radius=0.08)
@@ -221,15 +267,21 @@ def draw_encoder(ax):
     add_arrow(
         ax,
         (block_x + block_w / 2, block_y + 0.04),
-        (block_x + block_w / 2, block_y - 0.34),
+        (block_x + block_w / 2, y0 + 0.31),
         color=COLORS["slate"],
         lw=1.2,
         mutation_scale=9,
     )
-    label(ax, x0 + 0.55, y0 + 0.13, r"history state $h_i$", size=9.5)
+    label(
+        ax,
+        block_x + block_w / 2,
+        y0 + 0.09,
+        r"history state $h_i$",
+        size=9.5,
+        ha="center",
+    )
 
-    add_arrow(ax, (9.2, 3.5), (9.92, 5.45), color=COLORS["line"], lw=2.0, rad=-0.07, mutation_scale=14)
-    label(ax, 9.0, 4.05, "prefix tokens", size=8.6, color=COLORS["muted"], ha="right")
+    add_arrow(ax, (9.2, 3.66), (9.92, 5.45), color=COLORS["line"], lw=2.0, rad=-0.07, mutation_scale=14)
 
 
 def draw_heads(ax):
@@ -247,9 +299,18 @@ def draw_heads(ax):
     add_arrow(ax, (13.27, 5.44), (14.05, 5.33), color=COLORS["line"], lw=1.7, mutation_scale=12)
     add_arrow(ax, (13.27, 5.13), (14.05, 4.23), color=COLORS["line"], lw=1.7, mutation_scale=12)
 
-    add_panel(ax, 12.05, 2.55, 3.35, 1.02, fc="#fefce8", ec="#ca8a04", lw=1.6, radius=0.1)
-    label(ax, 12.32, 3.23, "Quantity reconstruction", size=11.2, weight="bold")
-    label(ax, 13.73, 2.82, r"$\hat q_{i+1}=\sum_m p_m\,b^{m+\hat r_m}$", size=10.4, ha="center")
+    recon_x, recon_y, recon_w, recon_h = 12.05, 2.34, 3.35, 1.02
+    recon_top = recon_y + recon_h
+    add_panel(ax, recon_x, recon_y, recon_w, recon_h, fc="#fefce8", ec="#ca8a04", lw=1.6, radius=0.1)
+    label(ax, recon_x + 0.27, recon_y + 0.68, "Quantity reconstruction", size=11.2, weight="bold")
+    label(
+        ax,
+        recon_x + recon_w / 2,
+        recon_y + 0.27,
+        r"$\hat q_{i+1}=\sum_m p_m\,b^{m+\hat r_m}$",
+        size=10.4,
+        ha="center",
+    )
 
     add_panel(ax, 14.05, 7.05, 1.35, 0.46, fc="#f8fafc", ec="#94a3b8", lw=1.0, radius=0.05)
     center_label(ax, 14.05, 7.05, 1.35, 0.46, "next-event time", size=8.4, color=COLORS["muted"])
@@ -259,14 +320,14 @@ def draw_heads(ax):
     # cross through the head boxes.
     add_poly_arrow(
         ax,
-        [(15.42, 5.33), (15.72, 5.33), (15.72, 3.78), (15.18, 3.78), (15.08, 3.60)],
+        [(15.42, 5.33), (15.72, 5.33), (15.72, 3.64), (14.93, 3.64), (14.93, recon_top)],
         color=COLORS["green"],
         lw=1.65,
         mutation_scale=11,
     )
     add_poly_arrow(
         ax,
-        [(15.42, 4.23), (15.58, 4.23), (15.58, 3.70), (14.56, 3.70), (14.46, 3.60)],
+        [(15.42, 4.23), (15.56, 4.23), (15.56, 3.51), (14.43, 3.51), (14.43, recon_top)],
         color=COLORS["orange"],
         lw=1.65,
         mutation_scale=11,
@@ -279,6 +340,7 @@ def main() -> None:
             "font.family": "DejaVu Sans",
             "mathtext.fontset": "dejavusans",
             "axes.unicode_minus": False,
+            "svg.fonttype": "none",
         }
     )
     fig, ax = plt.subplots(figsize=(16, 8.6), dpi=220)
@@ -312,9 +374,12 @@ def main() -> None:
     )
 
     png = OUT_DIR / "F1_titantpp_event_sequence_architecture.png"
+    svg = OUT_DIR / "F1_titantpp_event_sequence_architecture.svg"
     fig.savefig(png, bbox_inches="tight", pad_inches=0.18)
+    fig.savefig(svg, bbox_inches="tight", pad_inches=0.18)
     plt.close(fig)
     print(png)
+    print(svg)
 
 
 if __name__ == "__main__":
