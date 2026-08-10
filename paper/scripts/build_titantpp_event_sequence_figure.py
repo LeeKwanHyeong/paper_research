@@ -2,257 +2,308 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+import os
+
+os.environ.setdefault("MPLBACKEND", "Agg")
+os.environ.setdefault("MPLCONFIGDIR", "/tmp/mplconfig_titantpp_figure")
+os.environ.setdefault("XDG_CACHE_HOME", "/tmp/xdg_cache_titantpp_figure")
+
+import matplotlib.pyplot as plt
+from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT_DIR = ROOT / "paper" / "figures"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-W, H = 2400, 1350
+
+COLORS = {
+    "ink": "#111827",
+    "muted": "#526071",
+    "line": "#374151",
+    "slate": "#64748b",
+    "blue": "#2563eb",
+    "green": "#16a34a",
+    "orange": "#ea580c",
+    "red": "#b91c1c",
+    "purple": "#7c3aed",
+    "amber": "#d97706",
+}
 
 
-def font(size: int, bold: bool = False, italic: bool = False) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
-    if italic:
-        candidates = [
-            "/System/Library/Fonts/Supplemental/Arial Italic.ttf",
-            "/System/Library/Fonts/Helvetica.ttc",
-        ]
-    else:
-        candidates = [
-            "/System/Library/Fonts/Supplemental/Arial Bold.ttf" if bold else "/System/Library/Fonts/Supplemental/Arial.ttf",
-            "/System/Library/Fonts/Helvetica.ttc",
-            "/Library/Fonts/Arial.ttf",
-        ]
-    for path in candidates:
-        try:
-            return ImageFont.truetype(path, size=size)
-        except Exception:
-            continue
-    return ImageFont.load_default()
+def add_panel(ax, x, y, w, h, *, fc, ec, lw=1.8, radius=0.12, zorder=1):
+    patch = FancyBboxPatch(
+        (x, y),
+        w,
+        h,
+        boxstyle=f"round,pad=0.025,rounding_size={radius}",
+        linewidth=lw,
+        edgecolor=ec,
+        facecolor=fc,
+        zorder=zorder,
+    )
+    ax.add_patch(patch)
+    return patch
 
 
-TITLE = font(42, bold=True)
-SUBTITLE = font(25)
-LABEL = font(28, bold=True)
-BODY = font(23)
-SMALL = font(20)
-TINY = font(18)
-ITALIC = font(21, italic=True)
-
-
-def text_center(
-    draw: ImageDraw.ImageDraw,
-    xy: tuple[int, int, int, int],
-    text: str,
-    fnt: ImageFont.ImageFont,
-    fill: str = "#111827",
-    spacing: int = 7,
-) -> None:
-    x0, y0, x1, y1 = xy
-    lines = text.split("\n")
-    metrics = [draw.textbbox((0, 0), line, font=fnt) for line in lines]
-    widths = [box[2] - box[0] for box in metrics]
-    heights = [box[3] - box[1] for box in metrics]
-    total_h = sum(heights) + spacing * (len(lines) - 1)
-    y = y0 + ((y1 - y0) - total_h) // 2
-    for line, width, height in zip(lines, widths, heights):
-        draw.text((x0 + ((x1 - x0) - width) // 2, y), line, font=fnt, fill=fill)
-        y += height + spacing
-
-
-def rounded(
-    draw: ImageDraw.ImageDraw,
-    xy: tuple[int, int, int, int],
+def add_arrow(
+    ax,
+    start,
+    end,
     *,
-    fill: str,
-    outline: str,
-    radius: int = 24,
-    width: int = 3,
-) -> None:
-    draw.rounded_rectangle(xy, radius=radius, fill=fill, outline=outline, width=width)
+    color="#374151",
+    lw=1.9,
+    rad=0.0,
+    style="-|>",
+    mutation_scale=13,
+    zorder=5,
+):
+    arrow = FancyArrowPatch(
+        start,
+        end,
+        arrowstyle=style,
+        mutation_scale=mutation_scale,
+        linewidth=lw,
+        color=color,
+        connectionstyle=f"arc3,rad={rad}",
+        shrinkA=2,
+        shrinkB=2,
+        zorder=zorder,
+    )
+    ax.add_patch(arrow)
+    return arrow
 
 
-def arrow(
-    draw: ImageDraw.ImageDraw,
-    start: tuple[int, int],
-    end: tuple[int, int],
+def add_poly_arrow(ax, points, *, color="#374151", lw=1.7, mutation_scale=12, zorder=5):
+    """Draw a routed arrow through fixed waypoints without crossing boxes."""
+    for start, end in zip(points[:-2], points[1:-1]):
+        ax.plot([start[0], end[0]], [start[1], end[1]], color=color, lw=lw, zorder=zorder)
+    add_arrow(
+        ax,
+        points[-2],
+        points[-1],
+        color=color,
+        lw=lw,
+        mutation_scale=mutation_scale,
+        zorder=zorder,
+    )
+
+
+def label(
+    ax,
+    x,
+    y,
+    text,
     *,
-    color: str = "#374151",
-    width: int = 4,
-    head: int = 16,
-) -> None:
-    draw.line([start, end], fill=color, width=width)
-    x0, y0 = start
-    x1, y1 = end
-    dx, dy = x1 - x0, y1 - y0
-    length = max((dx * dx + dy * dy) ** 0.5, 1.0)
-    ux, uy = dx / length, dy / length
-    px, py = -uy, ux
-    p1 = (x1 - ux * head + px * head * 0.55, y1 - uy * head + py * head * 0.55)
-    p2 = (x1 - ux * head - px * head * 0.55, y1 - uy * head - py * head * 0.55)
-    draw.polygon([end, p1, p2], fill=color)
+    size=10,
+    weight="normal",
+    color=None,
+    ha="left",
+    va="center",
+    zorder=10,
+    rotation=0,
+):
+    ax.text(
+        x,
+        y,
+        text,
+        fontsize=size,
+        fontweight=weight,
+        color=color or COLORS["ink"],
+        ha=ha,
+        va=va,
+        rotation=rotation,
+        zorder=zorder,
+    )
 
 
-def dashed_line(
-    draw: ImageDraw.ImageDraw,
-    start: tuple[int, int],
-    end: tuple[int, int],
-    *,
-    fill: str,
-    width: int = 2,
-    dash: int = 12,
-    gap: int = 8,
-) -> None:
-    x0, y0 = start
-    x1, y1 = end
-    dx, dy = x1 - x0, y1 - y0
-    length = max((dx * dx + dy * dy) ** 0.5, 1.0)
-    ux, uy = dx / length, dy / length
-    pos = 0.0
-    while pos < length:
-        seg = min(dash, length - pos)
-        sx, sy = x0 + ux * pos, y0 + uy * pos
-        ex, ey = x0 + ux * (pos + seg), y0 + uy * (pos + seg)
-        draw.line([(sx, sy), (ex, ey)], fill=fill, width=width)
-        pos += dash + gap
+def center_label(ax, x, y, w, h, text, *, size=10, weight="normal", color=None):
+    label(ax, x + w / 2, y + h / 2, text, size=size, weight=weight, color=color, ha="center", va="center")
 
 
-def draw_event_sequence(draw: ImageDraw.ImageDraw) -> None:
-    panel = (80, 200, 1435, 595)
-    rounded(draw, panel, fill="#fffaf0", outline="#d97706", radius=30, width=3)
-    draw.text((110, 228), "Observed quantity-bearing event sequence", font=LABEL, fill="#111827")
-    draw.text((110, 268), "Positive-demand events arrive irregularly; each event carries a quantity.", font=BODY, fill="#4b5563")
-
-    axis_y = 455
-    draw.line([(160, axis_y), (1325, axis_y)], fill="#111827", width=3)
-    arrow(draw, (1325, axis_y), (1385, axis_y), color="#111827", width=3, head=14)
-    draw.text((1340, axis_y + 20), "time", font=SMALL, fill="#111827")
+def draw_event_sequence(ax):
+    x0, y0, w, h = 0.55, 5.42, 8.85, 2.05
+    add_panel(ax, x0, y0, w, h, fc="#fffaf0", ec=COLORS["amber"], lw=1.7, radius=0.16)
+    label(ax, x0 + 0.22, y0 + h - 0.28, "Observed quantity-bearing event sequence", size=12, weight="bold")
+    axis_y = y0 + 0.58
+    ax.plot([x0 + 0.55, x0 + w - 0.35], [axis_y, axis_y], color=COLORS["ink"], lw=1.8, zorder=2)
+    add_arrow(ax, (x0 + w - 0.55, axis_y), (x0 + w - 0.16, axis_y), color=COLORS["ink"], lw=1.6, mutation_scale=11)
+    label(ax, x0 + w - 0.46, axis_y - 0.22, "time", size=8.7)
 
     events = [
-        (225, 3, 2, "#60a5fa"),
-        (390, 12, 4, "#34d399"),
-        (570, 1, 1, "#93c5fd"),
-        (760, 68, 7, "#f59e0b"),
-        (1005, 7, 3, "#a78bfa"),
-        (1220, 145, 9, "#ef4444"),
+        (1.45, 3, 0.28, "#60a5fa"),
+        (2.55, 12, 0.48, "#34d399"),
+        (3.75, 1, 0.18, "#93c5fd"),
+        (4.98, 68, 0.68, "#f59e0b"),
+        (6.55, 7, 0.36, "#a78bfa"),
+        (7.95, 145, 0.82, "#ef4444"),
     ]
-    for idx, (x, qty, height_unit, color) in enumerate(events, start=1):
-        bar_h = 16 * height_unit
-        draw.line([(x, axis_y), (x, axis_y - bar_h)], fill=color, width=11)
-        draw.ellipse((x - 17, axis_y - bar_h - 17, x + 17, axis_y - bar_h + 17), fill=color, outline="#111827", width=2)
-        draw.line([(x, axis_y - bar_h - 17), (x, axis_y - 6)], fill=color, width=5)
-        draw.text((x - 18, axis_y + 18), f"t{idx}", font=SMALL, fill="#111827")
-        draw.text((x - 30, axis_y - bar_h - 58), f"q={qty}", font=SMALL, fill="#111827")
-        if idx > 1:
-            prev_x = events[idx - 2][0]
-            y = axis_y + 76
-            draw.line([(prev_x, y), (x, y)], fill="#64748b", width=2)
-            draw.line([(prev_x, y - 7), (prev_x, y + 7)], fill="#64748b", width=2)
-            draw.line([(x, y - 7), (x, y + 7)], fill="#64748b", width=2)
-            text_center(draw, (prev_x, y + 8, x, y + 36), "Delta t", TINY, fill="#64748b")
+    xs = []
+    for idx, (x, q, bar_h, color) in enumerate(events, start=1):
+        xs.append(x)
+        ax.plot([x, x], [axis_y, axis_y + bar_h], color=color, lw=5.2, solid_capstyle="round", zorder=3)
+        ax.scatter([x], [axis_y + bar_h], s=160, color=color, edgecolors=COLORS["ink"], linewidths=0.8, zorder=4)
+        label(ax, x, axis_y + bar_h + 0.18, rf"$q={q}$", size=8.8, ha="center")
+        label(ax, x, axis_y - 0.22, rf"$t_{idx}$", size=8.8, ha="center")
 
-    draw.text((110, 535), "Observed prefix", font=SMALL, fill="#374151")
-    dashed_line(draw, (1260, 225), (1260, 555), fill="#94a3b8", width=2)
-    draw.text((1278, 228), "next event\nis hidden", font=SMALL, fill="#64748b")
+    brace_y = y0 + 0.24
+    for left, right in zip(xs[:-1], xs[1:]):
+        ax.plot([left, right], [brace_y, brace_y], color=COLORS["slate"], lw=0.8)
+        ax.plot([left, left], [brace_y - 0.05, brace_y + 0.05], color=COLORS["slate"], lw=0.8)
+        ax.plot([right, right], [brace_y - 0.05, brace_y + 0.05], color=COLORS["slate"], lw=0.8)
+        label(ax, (left + right) / 2, brace_y - 0.22, r"$\Delta t$", size=8.6, color=COLORS["slate"], ha="center")
+
+    ax.plot([8.22, 8.22], [y0 + 0.28, y0 + h - 0.12], color="#94a3b8", lw=1.1, ls="--")
+    label(ax, 8.35, y0 + h - 0.45, "next event\nis hidden", size=8.8, color=COLORS["slate"], va="top")
+    label(ax, x0 + 0.22, y0 + 0.48, "observed prefix", size=8.8, color=COLORS["muted"])
 
 
-def draw_tokenization(draw: ImageDraw.ImageDraw) -> None:
-    panel = (80, 680, 1435, 1040)
-    rounded(draw, panel, fill="#f8fafc", outline="#64748b", radius=30, width=3)
-    draw.text((110, 708), "Tokenization of each observed event", font=LABEL, fill="#111827")
+def draw_tokenization(ax):
+    x0, y0, w, h = 0.55, 2.72, 8.85, 1.95
+    add_panel(ax, x0, y0, w, h, fc="#f8fafc", ec=COLORS["slate"], lw=1.6, radius=0.16)
+    label(ax, x0 + 0.22, y0 + h - 0.28, "Tokenization for each observed event", size=12, weight="bold")
 
-    cols = [
-        (185, "inter-event time", "log(1 + Delta t_i)", "#dbeafe", "#2563eb"),
-        (505, "magnitude mark", "m_i = floor(log_b q_i)", "#dcfce7", "#16a34a"),
-        (825, "within-scale residual", "r_i = log_b q_i - m_i", "#ffedd5", "#ea580c"),
-        (1145, "model token", "x_i = concat(time, mark, residual)", "#ede9fe", "#7c3aed"),
+    boxes = [
+        (1.25, y0 + 0.55, 1.65, 0.78, "#dbeafe", COLORS["blue"], "inter-event time", r"$\log(1+\Delta t_i)$"),
+        (3.35, y0 + 0.55, 1.65, 0.78, "#dcfce7", COLORS["green"], "magnitude mark", r"$m_i=\lfloor\log_b q_i\rfloor$"),
+        (5.45, y0 + 0.55, 1.65, 0.78, "#ffedd5", COLORS["orange"], "residual", r"$r_i=\log_b q_i-m_i$"),
+        (7.55, y0 + 0.55, 1.65, 0.78, "#ede9fe", COLORS["purple"], "model token", r"$x_i=[e_{m_i},\,\tau_i,\,W_r r_i]$"),
     ]
-    for x, title, body, fill, outline in cols:
-        rounded(draw, (x, 785, x + 250, 940), fill=fill, outline=outline, radius=18, width=2)
-        text_center(draw, (x + 10, 802, x + 240, 842), title, SMALL, fill="#111827")
-        text_center(draw, (x + 12, 860, x + 238, 925), body, TINY, fill="#1f2937")
+    for x, y, bw, bh, fc, ec, title, formula in boxes:
+        add_panel(ax, x, y, bw, bh, fc=fc, ec=ec, lw=1.2, radius=0.08)
+        label(ax, x + bw / 2, y + bh - 0.2, title, size=8.7, weight="bold", ha="center")
+        label(ax, x + bw / 2, y + 0.24, formula, size=8.9, ha="center")
 
-    arrow(draw, (435, 862), (505, 862), color="#64748b", width=3, head=12)
-    arrow(draw, (755, 862), (825, 862), color="#64748b", width=3, head=12)
-    arrow(draw, (1075, 862), (1145, 862), color="#64748b", width=3, head=12)
-    draw.text((135, 974), "The quantity is not treated as a plain category: mark and residual reconstruct the original scale.", font=BODY, fill="#4b5563")
-
-
-def draw_encoder_and_heads(draw: ImageDraw.ImageDraw) -> None:
-    enc = (1485, 255, 2005, 800)
-    rounded(draw, enc, fill="#eef2ff", outline="#4f46e5", radius=38, width=3)
-    draw.text((1540, 285), "TitanTPP history encoder", font=LABEL, fill="#111827")
-    draw.text((1540, 326), "causal memory-attention over event tokens", font=BODY, fill="#4b5563")
-
-    layer_y = [395, 500, 605]
-    for i, y in enumerate(layer_y, start=1):
-        rounded(draw, (1560, y, 1930, y + 70), fill="#ffffff", outline="#94a3b8", radius=16, width=2)
-        label = "memory attention" if i == 1 else "feed-forward + residual"
-        text_center(draw, (1595, y + 8, 1970, y + 62), label, BODY, fill="#111827")
-        if i < len(layer_y):
-            arrow(draw, (1745, y + 70), (1745, layer_y[i] - 3), color="#475569", width=3, head=11)
-
-    draw.text((1588, 718), "history state h_i", font=BODY, fill="#111827")
-    draw.text((1588, 748), "RMTPP-Q and THP-Q keep the same quantity targets\nbut replace this encoder family.", font=SMALL, fill="#475569")
-
-    arrow(draw, (1365, 862), (1485, 535), color="#374151", width=5, head=18)
-    draw.text((1320, 750), "prefix tokens", font=SMALL, fill="#475569")
-
-    heads = [
-        ((2110, 230, 2325, 360), "time", "next Delta t", "#fee2e2", "#b91c1c"),
-        ((2110, 450, 2325, 580), "mark", "P(next mark)", "#dcfce7", "#16a34a"),
-        ((2110, 670, 2325, 800), "residual", "next residual", "#ffedd5", "#ea580c"),
-    ]
-    for xy, title, body, fill, outline in heads:
-        rounded(draw, xy, fill=fill, outline=outline, radius=20, width=3)
-        draw.text((xy[0] + 22, xy[1] + 20), title, font=LABEL, fill="#111827")
-        text_center(draw, (xy[0] + 10, xy[1] + 64, xy[2] - 10, xy[3] - 15), body, BODY, fill="#1f2937")
-
-    arrow(draw, (2005, 445), (2110, 295), color="#475569", width=4, head=16)
-    arrow(draw, (2005, 535), (2110, 515), color="#475569", width=4, head=16)
-    arrow(draw, (2005, 625), (2110, 735), color="#475569", width=4, head=16)
-
-    recon = (1810, 950, 2325, 1145)
-    rounded(draw, recon, fill="#fefce8", outline="#ca8a04", radius=26, width=3)
-    draw.text((1870, 980), "Quantity reconstruction", font=LABEL, fill="#111827")
-    text_center(
-        draw,
-        (1870, 1030, 2295, 1118),
-        "combine mark probability and residual\nq_hat = E[ base^(mark + residual) ]",
-        BODY,
-        fill="#1f2937",
+    for left, right in zip(boxes[:-1], boxes[1:]):
+        add_arrow(
+            ax,
+            (left[0] + left[2] + 0.02, left[1] + left[3] / 2),
+            (right[0] - 0.04, right[1] + right[3] / 2),
+            color=COLORS["slate"],
+            lw=1.5,
+            mutation_scale=10,
+        )
+    label(
+        ax,
+        x0 + 0.36,
+        y0 + 0.28,
+        "The quantity is represented by a coarse magnitude mark plus a continuous within-mark residual.",
+        size=9.5,
+        color=COLORS["muted"],
     )
-    arrow(draw, (2218, 580), (2025, 950), color="#16a34a", width=4, head=16)
-    arrow(draw, (2218, 800), (2075, 950), color="#ea580c", width=4, head=16)
-    arrow(draw, (2218, 360), (2218, 950), color="#b91c1c", width=3, head=13)
+
+
+def draw_encoder(ax):
+    x0, y0, w, h = 9.92, 3.98, 3.35, 3.05
+    add_panel(ax, x0, y0, w, h, fc="#eef2ff", ec="#4f46e5", lw=1.8, radius=0.18)
+    label(ax, x0 + 0.24, y0 + h - 0.33, "TitanTPP history encoder", size=12, weight="bold")
+    label(ax, x0 + 0.24, y0 + h - 0.68, "causal memory-attention over event tokens", size=9.3, color=COLORS["muted"])
+
+    layers = [
+        (x0 + 0.5, y0 + 1.73, w - 1.0, 0.42, "memory attention"),
+        (x0 + 0.5, y0 + 1.06, w - 1.0, 0.42, "feed-forward + residual"),
+        (x0 + 0.5, y0 + 0.39, w - 1.0, 0.42, "feed-forward + residual"),
+    ]
+    for x, y, bw, bh, txt in layers:
+        add_panel(ax, x, y, bw, bh, fc="#ffffff", ec="#94a3b8", lw=0.9, radius=0.06)
+        center_label(ax, x, y, bw, bh, txt, size=9.2)
+    for upper, lower in zip(layers[:-1], layers[1:]):
+        add_arrow(
+            ax,
+            (upper[0] + upper[2] / 2, upper[1] - 0.02),
+            (lower[0] + lower[2] / 2, lower[1] + lower[3] + 0.02),
+            color=COLORS["slate"],
+            lw=1.2,
+            mutation_scale=9,
+        )
+    label(ax, x0 + 0.55, y0 + 0.13, r"history state $h_i$", size=9.5)
+
+    add_arrow(ax, (9.2, 3.5), (9.92, 5.45), color=COLORS["line"], lw=2.0, rad=-0.07, mutation_scale=14)
+    label(ax, 9.0, 4.05, "prefix tokens", size=8.6, color=COLORS["muted"], ha="right")
+
+
+def draw_heads(ax):
+    heads = {
+        "time": (14.05, 6.02, 1.35, 0.76, "#fee2e2", COLORS["red"], "time", r"$\hat{\Delta t}_{i+1}$"),
+        "mark": (14.05, 4.95, 1.35, 0.76, "#dcfce7", COLORS["green"], "mark", r"$p(m_{i+1}\mid h_i)$"),
+        "residual": (14.05, 3.85, 1.35, 0.76, "#ffedd5", COLORS["orange"], "residual", r"$\hat r_{i+1,m}$"),
+    }
+    for x, y, w, h, fc, ec, title, formula in heads.values():
+        add_panel(ax, x, y, w, h, fc=fc, ec=ec, lw=1.5, radius=0.08)
+        label(ax, x + 0.13, y + h - 0.2, title, size=10.8, weight="bold")
+        label(ax, x + w / 2, y + 0.25, formula, size=9.6, ha="center")
+
+    add_arrow(ax, (13.27, 5.72), (14.05, 6.39), color=COLORS["line"], lw=1.7, mutation_scale=12)
+    add_arrow(ax, (13.27, 5.44), (14.05, 5.33), color=COLORS["line"], lw=1.7, mutation_scale=12)
+    add_arrow(ax, (13.27, 5.13), (14.05, 4.23), color=COLORS["line"], lw=1.7, mutation_scale=12)
+
+    add_panel(ax, 12.05, 2.55, 3.35, 1.02, fc="#fefce8", ec="#ca8a04", lw=1.6, radius=0.1)
+    label(ax, 12.32, 3.23, "Quantity reconstruction", size=11.2, weight="bold")
+    label(ax, 13.73, 2.82, r"$\hat q_{i+1}=\sum_m p_m\,b^{m+\hat r_m}$", size=10.4, ha="center")
+
+    add_panel(ax, 14.05, 7.05, 1.35, 0.46, fc="#f8fafc", ec="#94a3b8", lw=1.0, radius=0.05)
+    center_label(ax, 14.05, 7.05, 1.35, 0.46, "next-event time", size=8.4, color=COLORS["muted"])
+    add_arrow(ax, (14.72, 6.78), (14.72, 7.05), color=COLORS["red"], lw=1.3, mutation_scale=10)
+
+    # Route mark and residual paths around the right side so arrows do not
+    # cross through the head boxes.
+    add_poly_arrow(
+        ax,
+        [(15.42, 5.33), (15.72, 5.33), (15.72, 3.78), (15.18, 3.78), (15.08, 3.60)],
+        color=COLORS["green"],
+        lw=1.65,
+        mutation_scale=11,
+    )
+    add_poly_arrow(
+        ax,
+        [(15.42, 4.23), (15.58, 4.23), (15.58, 3.70), (14.56, 3.70), (14.46, 3.60)],
+        color=COLORS["orange"],
+        lw=1.65,
+        mutation_scale=11,
+    )
 
 
 def main() -> None:
-    img = Image.new("RGB", (W, H), "white")
-    draw = ImageDraw.Draw(img)
+    plt.rcParams.update(
+        {
+            "font.family": "DejaVu Sans",
+            "mathtext.fontset": "dejavusans",
+            "axes.unicode_minus": False,
+        }
+    )
+    fig, ax = plt.subplots(figsize=(16, 8.6), dpi=220)
+    ax.set_xlim(0, 16)
+    ax.set_ylim(0, 9.0)
+    ax.axis("off")
 
-    draw.text((80, 58), "TitanTPP schematic for quantity-bearing event prediction", font=TITLE, fill="#111827")
-    draw.text(
-        (80, 114),
-        "The figure starts from observed demand events, converts each event into a token, and predicts the next time and quantity.",
-        font=SUBTITLE,
-        fill="#4b5563",
+    label(ax, 0.55, 8.63, "TitanTPP schematic for quantity-bearing event prediction", size=16, weight="bold")
+    label(
+        ax,
+        0.55,
+        8.31,
+        "Observed demand events are converted into tokens; the history encoder predicts the next event time and quantity.",
+        size=10.2,
+        color=COLORS["muted"],
     )
 
-    draw_event_sequence(draw)
-    draw_tokenization(draw)
-    draw_encoder_and_heads(draw)
+    draw_event_sequence(ax)
+    draw_tokenization(ax)
+    draw_encoder(ax)
+    draw_heads(ax)
 
-    draw.text(
-        (80, 1242),
-        "Figure 1. Example-driven schematic of TitanTPP. Quantities are split into a coarse magnitude mark and a continuous residual before sequence encoding.",
-        font=ITALIC,
-        fill="#111827",
+    label(
+        ax,
+        0.55,
+        0.42,
+        "Figure 1. Example-driven schematic of TitanTPP. The demand quantity is split into a magnitude mark and a residual before sequence encoding.",
+        size=9.2,
+        color=COLORS["ink"],
+        va="bottom",
     )
 
     png = OUT_DIR / "F1_titantpp_event_sequence_architecture.png"
-    img.save(png)
+    fig.savefig(png, bbox_inches="tight", pad_inches=0.18)
+    plt.close(fig)
     print(png)
 
 
