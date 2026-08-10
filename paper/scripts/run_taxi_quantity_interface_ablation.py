@@ -486,6 +486,8 @@ def train_variant_seed(
         model: RMTPP = RMTPP(cfg)
         representatives = list(interface_meta["representatives"])
     elif variant == "direct_raw_mse":
+        if interface_meta is None:
+            raise ValueError("direct_raw_mse requires train-only normalization metadata")
         num_marks = int(original_df["mark"].max()) + 2
         cfg = base_config(
             num_marks=num_marks,
@@ -494,13 +496,10 @@ def train_variant_seed(
             use_value_head=False,
             value_input_mode="residual",
         )
-        train_qty = original_df.filter(
-            pl.col("chronological_split") == "train"
-        )["demand_qty"].to_numpy().astype(np.float64)
         model = DirectRawRMTPP(
             cfg,
-            raw_mean=float(train_qty.mean()),
-            raw_std=float(train_qty.std()),
+            raw_mean=float(interface_meta["train_mean"]),
+            raw_std=float(interface_meta["train_std"]),
         )
         representatives = None
     else:
@@ -824,8 +823,19 @@ def main() -> None:
     if missing:
         raise ValueError(f"Taxi fixed split is missing columns: {missing}")
     quantile_contract = train_quantile_contract(original_df)
+    train_qty = original_df.filter(
+        pl.col("chronological_split") == "train"
+    )["demand_qty"].to_numpy().astype(np.float64)
     variant_data: dict[str, tuple[pl.DataFrame, dict[str, Any] | None]] = {
-        "direct_raw_mse": (original_df, None),
+        "direct_raw_mse": (original_df, {
+            "mode": "direct_raw_mse",
+            "target": "demand_qty",
+            "loss": "mse_on_train_standardized_raw_quantity",
+            "train_mean": float(train_qty.mean()),
+            "train_std": float(train_qty.std()),
+            "history_quantity_input": "log10_within_mark_residual",
+            "fitted_on": "train",
+        }),
     }
     for variant in ("uniform_categorical", "quantile_categorical"):
         variant_data[variant] = fit_categorical_interface(
@@ -833,6 +843,41 @@ def main() -> None:
             mode=variant,
             bin_count=args.bin_count,
         )
+
+    split_rows = {
+        str(row["chronological_split"]): int(row["len"])
+        for row in original_df.group_by("chronological_split").agg(pl.len()).iter_rows(named=True)
+    }
+    contract = {
+        "schema_version": 1,
+        "status": "running",
+        "dataset": "yellow_trip_hourly",
+        "data_path": str(args.data),
+        "data_sha256": sha256_file(args.data),
+        "split_rows": split_rows,
+        "quantile_contract": quantile_contract,
+        "interfaces": {
+            variant: metadata for variant, (_, metadata) in variant_data.items()
+        },
+        "variants": list(ALL_VARIANTS),
+        "seeds": list(SEEDS),
+        "epochs": args.epochs,
+        "batch_size": args.batch_size,
+        "lr": args.lr,
+        "lambda_raw": args.lambda_raw,
+        "grad_clip": args.grad_clip,
+        "lookback_weeks": args.lookback_weeks,
+        "max_seq_len": args.max_seq_len,
+        "hidden_dim": args.hidden_dim,
+        "checkpoint_selection": "best_val_nll",
+        "evaluation_scope": "validation_only",
+        "held_out_test_evaluated": False,
+        "source_revision": args.source_revision,
+        "proposal_source_revisions": [],
+        "max_train_batches": args.max_train_batches,
+        "max_val_batches": args.max_val_batches,
+    }
+    save_json(args.output_dir / "launch_contract.json", contract)
 
     summaries: list[dict[str, Any]] = []
     seed_rows: list[dict[str, Any]] = []
@@ -863,39 +908,10 @@ def main() -> None:
     write_csv(args.output_dir / "quantity_interface_seed_metrics.csv", seed_rows)
     write_csv(args.output_dir / "quantity_interface_summary.csv", summary_rows)
 
-    split_rows = {
-        str(row["chronological_split"]): int(row["len"])
-        for row in original_df.group_by("chronological_split").agg(pl.len()).iter_rows(named=True)
-    }
-    contract = {
-        "schema_version": 1,
-        "status": "complete",
-        "dataset": "yellow_trip_hourly",
-        "data_path": str(args.data),
-        "data_sha256": sha256_file(args.data),
-        "split_rows": split_rows,
-        "quantile_contract": quantile_contract,
-        "interfaces": {
-            variant: metadata for variant, (_, metadata) in variant_data.items()
-        },
-        "variants": list(ALL_VARIANTS),
-        "seeds": list(SEEDS),
-        "epochs": args.epochs,
-        "batch_size": args.batch_size,
-        "lr": args.lr,
-        "lookback_weeks": args.lookback_weeks,
-        "max_seq_len": args.max_seq_len,
-        "hidden_dim": args.hidden_dim,
-        "checkpoint_selection": "best_val_nll",
-        "evaluation_scope": "validation_only",
-        "held_out_test_evaluated": False,
-        "source_revision": args.source_revision,
-        "proposal_source_revisions": sorted({
-            row["source_revision"] for row in proposal_summaries
-        }),
-        "max_train_batches": args.max_train_batches,
-        "max_val_batches": args.max_val_batches,
-    }
+    contract["status"] = "complete"
+    contract["proposal_source_revisions"] = sorted({
+        row["source_revision"] for row in proposal_summaries
+    })
     save_json(args.output_dir / "launch_contract.json", contract)
     print(f"[complete] output_dir={args.output_dir} runs={len(summaries)}", flush=True)
 
