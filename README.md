@@ -28,7 +28,7 @@ $$
 
 The inter-event time is $\Delta t_i=t_i-t_{i-1}$. Given $\mathcal{H}_i$, the model predicts the next inter-event time $\Delta t_{i+1}$ and the next quantity $q_{i+1}$. Zero-demand intervals are not inserted as explicit zero events; their duration is represented through $\Delta t$. This construction preserves the irregular waiting-time structure while keeping the target focused on positive-demand events.
 
-Demand quantities can span several scales, so TitanTPP decomposes quantity into a coarse magnitude mark and a continuous residual. This design follows the long-standing use of power transformations for skewed positive-valued data [11], but it preserves invertibility through an explicit reconstruction step. For a dataset-specific base $b$, the magnitude mark and residual are defined as
+Positive-demand quantities in the evaluated datasets vary over a wide range, and rare large orders form a long tail. Treating the observed quantity as a single raw regression target can therefore make the objective sensitive to a small number of large events. TitanTPP addresses this issue by changing the representation of quantity before prediction. Instead of regressing directly on $q_i$, it decomposes quantity into a coarse magnitude mark and a continuous residual. This design follows the long-standing use of power transformations for skewed positive-valued data [11], but it keeps the original quantity recoverable through an explicit reconstruction step. For a dataset-specific base $b$, the magnitude mark and residual are defined as
 
 $$
 m_i = \min(\lfloor \log_b q_i \rfloor, M),
@@ -44,35 +44,100 @@ $$
 q_i = b^{m_i+r_i}.
 $$
 
-This factorization lets the mark classifier model demand scale while the residual decoder preserves variation inside each scale. When the tail class is clipped at $M$, the residual can exceed the unit interval, allowing large quantities to remain reconstructable.
+This factorization lets the mark classifier model demand scale while the residual decoder preserves variation inside each scale. When the tail class is clipped at $M$, the residual can exceed the unit interval, allowing large quantities to remain reconstructable without forcing the model to learn the full quantity range through raw regression alone.
 
 ### 3.2 Limitations of RMTPP-style modeling
 
-RMTPP-style modeling compresses event history into a recurrent state. This representation is compact and effective for many marked event sequences, but long demand histories can contain both older seasonal patterns and recent local changes. A single recurrent state may not preserve both forms of information with equal fidelity. The limitation is architectural rather than absolute, so this paper treats it as an empirical motivation and evaluates it on datasets with different sequence-length distributions.
+RMTPP-style modeling encodes event history through a recurrent state. This representation is compact and effective for many marked event sequences, but long demand histories may contain older seasonal patterns as well as recent local changes. Since both signals must pass through the same recurrent update chain, a single hidden state may not preserve them with equal fidelity. This limitation is architectural rather than absolute, so the paper treats it as an empirical motivation and evaluates it on datasets with different sequence-length distributions.
 
-The mark interface introduces a second mismatch. In many TPP applications, a mark denotes a finite event type. In demand prediction, however, the mark must describe a continuous and often skewed quantity. A purely categorical mark discards within-class variation, while direct raw regression can be dominated by large tail events. The proposed mark-residual formulation separates these requirements by predicting coarse scale and continuous residual information together.
+The mark interface introduces a second mismatch. In many TPP applications, a mark denotes a finite event type. In demand prediction, however, the event attribute of interest is a continuous and often skewed quantity. A purely categorical mark discards within-class variation, while direct raw regression can be dominated by large tail events. The proposed mark-residual formulation separates these requirements by predicting coarse scale and within-scale residual information together.
 
-Joint learning creates a third concern. Time likelihood, magnitude classification, and quantity reconstruction optimize related but non-identical objectives. If the same representation receives all gradients without separation, quantity-error updates may alter the representation used for event-time and mark likelihood. TitanTPP therefore introduces a quantity-specific path when the dataset and architecture require it. In the Taxi configuration, mark-conditioned residual experts and detached quantity-to-mark gradients reduce this coupling while retaining the same event prediction interface.
+Joint learning creates a third concern. Time likelihood, magnitude classification, and quantity reconstruction optimize related but non-identical objectives. If the same representation receives all gradients without separation, quantity-error updates may alter the representation used for event-time and mark likelihood. TitanTPP therefore introduces a quantity-specific path when the dataset and architecture require it. In the Taxi configuration, mark-conditioned residual experts and detached quantity-to-mark gradients reduce this coupling while retaining the same next-event prediction interface.
 
 ### 3.3 TitanTPP architecture
 
-TitanTPP follows the same conditional event prediction interface as the matched baselines. Given an event history, an encoder produces a history representation $h_i$. The model then predicts the magnitude-mark distribution $p_{i,k}=P(m_{i+1}=k \mid \mathcal{H}_i)$, the inter-event-time distribution, and a residual quantity estimate. The expected quantity prediction is reconstructed as
+TitanTPP follows the same conditional next-event interface as the matched baselines. Each observed event is represented by its magnitude-mark embedding, transformed inter-event time, and residual feature,
+
+$$
+x_j=[E_m(m_j)\,\|\,\log(1+\Delta t_j)\,\|\,W_r r_j].
+$$
+
+A Titan-style causal memory-attention encoder maps the observed prefix to a history representation $h_i=f_{\theta}(x_1,\ldots,x_i)$. RMTPP and THP share the same target representation in the matched comparison, but they replace this encoder with a GRU or Transformer encoder.
+
+The mark head predicts the next magnitude mark through
+
+$$
+z^m_i=W_m h_i+b_m,\qquad
+p_{i,k}=P(m_{i+1}=k\mid\mathcal{H}_i)=\operatorname{softmax}(z^m_i)_k .
+$$
+
+The time head follows the RMTPP density parameterization. With $a_i=v_t^\top h_i+b_t$ and $w=\operatorname{softplus}(w_{\mathrm{raw}})+\epsilon$, the log-density of the next inter-event time is
+
+$$
+\log f(\Delta t_{i+1}\mid\mathcal{H}_i)
+=a_i+w\Delta t_{i+1}
+-\frac{\exp(a_i)}{w}\left(\exp(w\Delta t_{i+1})-1\right).
+$$
+
+The quantity path predicts a residual value for each candidate magnitude mark. In the shared-head configuration, the same residual prediction is paired with all candidate marks. In the mark-conditioned configuration, the model predicts
+
+$$
+\widehat r_{i,k}=g_{\mathrm{shared}}(h_i)+g_{\mathrm{delta},k}(h_i).
+$$
+
+The expected quantity prediction is reconstructed as
 
 $$
 \widehat{q}_{i+1}=\sum_{k=0}^{M} p_{i,k} b^{k+\widehat{r}_{i,k}}.
 $$
 
-The training objective combines mark, time, residual, and quantity losses:
+For the Taxi configuration, the quantity loss uses $\operatorname{sg}(p_{i,k})$ in the reconstruction gate, where $\operatorname{sg}(\cdot)$ denotes stop-gradient. This leaves the forward quantity estimate unchanged but prevents large quantity errors from updating the mark probabilities through the quantity loss.
+
+The likelihood part of the objective is
 
 $$
-\mathcal{L}=\mathcal{L}_{\mathrm{mark}}+\lambda_t\mathcal{L}_{\mathrm{time}}+\lambda_r\mathcal{L}_{\mathrm{res}}+\lambda_q\mathcal{L}_{\mathrm{qty}}.
+\mathcal{L}_{\mathrm{NLL}}
+=\mathcal{L}_{\mathrm{mark}}+\mathcal{L}_{\mathrm{time}},
 $$
 
-The compared models differ mainly in the history encoder. RMTPP employs a GRU encoder, THP employs a Transformer encoder, and TitanTPP employs a Titan-style causal memory-attention encoder with persistent memory. Intermittent and Instacart adopt a shared residual head and coupled gradient flow, while Taxi adopts mark-conditioned residual experts and detached quantity-to-mark gradients. Validation and test do not update memory, and state is not transferred across unrelated demand series.
+where
 
-Figure 1 describes the proposed model flow. Event history enters the TitanTPP encoder, the encoder state feeds time and magnitude-mark heads, and the quantity path reconstructs demand through the mark-residual decoder. Figure 2 visualizes the quantity decomposition, including raw quantity, transformed magnitude mark, residual, and inverse reconstruction.
+$$
+\mathcal{L}_{\mathrm{mark}}
+=-\frac{1}{N}\sum_i \log p_{i,m_{i+1}},\qquad
+\mathcal{L}_{\mathrm{time}}
+=-\frac{1}{N}\sum_i \log f(\Delta t_{i+1}\mid\mathcal{H}_i).
+$$
 
-![TitanTPP architecture](paper/figures/F2_titantpp_architecture_clean.png)
+Training further includes residual and reconstructed-quantity Huber losses,
+
+$$
+\mathcal{L}_{\mathrm{res}}
+=\frac{1}{N}\sum_i
+\operatorname{Huber}(\widehat r_{i,m_{i+1}},r_{i+1}),
+$$
+
+$$
+\mathcal{L}_{\mathrm{qty}}
+=\frac{1}{N}\sum_i
+\operatorname{Huber}(\widehat q_{i+1},q_{i+1}),
+$$
+
+and the full training loss is
+
+$$
+\mathcal{L}_{\mathrm{train}}
+=\mathcal{L}_{\mathrm{mark}}
++\lambda_t\mathcal{L}_{\mathrm{time}}
++\lambda_r\mathcal{L}_{\mathrm{res}}
++\lambda_q\mathcal{L}_{\mathrm{qty}}.
+$$
+
+Validation model selection uses $\mathcal{L}_{\mathrm{NLL}}$, while quantity MAE and $\Delta t$ MAE are reported as diagnostic metrics. Intermittent and Instacart adopt a shared residual head and coupled gradient flow, while Taxi adopts mark-conditioned residual experts and detached quantity-to-mark gradients. Validation and test do not update memory, and state is not transferred across unrelated demand series.
+
+Figure 1 describes the proposed model flow with an example quantity-bearing event sequence. Observed events are transformed into inter-event times, magnitude marks, and residuals; the encoder summarizes the observed prefix; and the prediction heads produce the next event time, magnitude-mark distribution, and reconstructed quantity.
+
+![TitanTPP event-sequence architecture](paper/figures/F1_titantpp_event_sequence_architecture.png)
 
 ## 4. Experiments
 
