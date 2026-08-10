@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Evaluate Instacart validation quantity errors by train-derived quantiles."""
+"""Evaluate validation quantity errors by train-derived quantiles."""
 
 from __future__ import annotations
 
@@ -72,6 +72,11 @@ METRICS = (
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data", type=Path, required=True)
+    parser.add_argument("--dataset-key", default="insta_market_basket")
+    parser.add_argument("--dataset-label", default="Instacart")
+    parser.add_argument("--artifact-slug", default="instacart")
+    parser.add_argument("--series-col", default="oper_part_no")
+    parser.add_argument("--sequence-col", default="seq")
     parser.add_argument(
         "--checkpoint-root",
         type=Path,
@@ -109,7 +114,11 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-def load_checkpoint(path: Path, device: str) -> tuple[torch.nn.Module, dict[str, Any]]:
+def load_checkpoint(
+    path: Path,
+    device: str,
+    dataset_key: str,
+) -> tuple[torch.nn.Module, dict[str, Any]]:
     payload = torch_load_checkpoint(path, map_location="cpu")
     if payload.get("selection") != "best_val_nll":
         raise ValueError(f"Unexpected checkpoint selection: {path}")
@@ -121,7 +130,7 @@ def load_checkpoint(path: Path, device: str) -> tuple[torch.nn.Module, dict[str,
         raise ValueError(f"Checkpoint is not validation-only: {path}")
     if bool(summary.get("held_out_test_evaluated", True)):
         raise ValueError(f"Held-out test flag is not locked: {path}")
-    if run.get("dataset_name") != "insta_market_basket":
+    if run.get("dataset_name") != dataset_key:
         raise ValueError(f"Unexpected dataset checkpoint: {path}")
     if int(run.get("epochs", -1)) != 300:
         raise ValueError(f"Unexpected epoch budget: {path}")
@@ -163,19 +172,22 @@ def load_checkpoint(path: Path, device: str) -> tuple[torch.nn.Module, dict[str,
     return model, identity
 
 
-def discover_checkpoints(roots: Iterable[Path]) -> list[Path]:
+def discover_checkpoints(
+    roots: Iterable[Path],
+    dataset_key: str,
+) -> list[Path]:
     checkpoints: list[Path] = []
     for root in roots:
         checkpoints.extend(
             path
             for path in root.rglob("best_val_nll_model.pt")
-            if "insta_market_basket" in path.parts
+            if dataset_key in path.parts
             and "epochs_300" in path.parts
             and any(f"seed_{seed}" in path.parts for seed in SEEDS)
         )
     unique = sorted(set(checkpoints))
     if len(unique) != 9:
-        raise ValueError(f"Expected 9 Instacart checkpoints, found {len(unique)}")
+        raise ValueError(f"Expected 9 {dataset_key} checkpoints, found {len(unique)}")
     return unique
 
 
@@ -350,6 +362,10 @@ def evaluate_checkpoint(
         "elapsed_seconds": time.time() - started,
     })
     for spec, accumulator in zip(contract["strata"], strata):
+        if int(accumulator["count"]) < 1:
+            if max_batches is not None:
+                continue
+            raise ValueError(f"Empty quantile stratum: {spec['stratum']}")
         metrics = finalize_accumulator(accumulator)
         rows.append({
             **{key: identity[key] for key in ("model_name", "model_label", "seed")},
@@ -465,12 +481,13 @@ def mean_std(record: dict[str, Any], metric: str, digits: int = 4) -> str:
 
 def write_briefing(
     path: Path,
+    dataset_label: str,
     contract: dict[str, Any],
     summary_rows: list[dict[str, Any]],
     delta_rows: list[dict[str, Any]],
 ) -> None:
     lines = [
-        "# Instacart validation quantity error by train-derived quantiles",
+        f"# {dataset_label} validation quantity error by train-derived quantiles",
         "",
         "- Quantile source: fixed-split train quantities only",
         "- Evaluation target: validation events only",
@@ -483,7 +500,11 @@ def write_briefing(
             for q, value in zip(contract["quantiles"], contract["boundaries"])
         ),
     ]
-    visible_strata = [spec["stratum"] for spec in contract["strata"]]
+    visible_strata = [
+        spec["stratum"]
+        for spec in contract["strata"]
+        if any(row["stratum"] == spec["stratum"] for row in summary_rows)
+    ]
     for key in visible_strata:
         label = next(row["stratum_label"] for row in summary_rows if row["stratum"] == key)
         count = next(row["count"] for row in summary_rows if row["stratum"] == key)
@@ -534,6 +555,8 @@ def write_briefing(
 
 def plot_results(
     output_dir: Path,
+    dataset_label: str,
+    artifact_slug: str,
     contract: dict[str, Any],
     summary_rows: list[dict[str, Any]],
     delta_rows: list[dict[str, Any]],
@@ -622,7 +645,7 @@ def plot_results(
     ax_mae.legend(frameon=False, fontsize=8.5, loc="upper left")
     ax_delta.legend(frameon=False, fontsize=8.5, loc="best")
     fig.suptitle(
-        "Instacart validation quantity error across train-derived quantiles",
+        f"{dataset_label} validation quantity error across train-derived quantiles",
         fontsize=13,
         fontweight="bold",
     )
@@ -638,7 +661,7 @@ def plot_results(
     fig.tight_layout(rect=(0, 0.06, 1, 0.94))
     for suffix in ("png", "pdf", "svg"):
         fig.savefig(
-            output_dir / f"F2_instacart_validation_quantile_mae.{suffix}",
+            output_dir / f"F2_{artifact_slug}_validation_quantile_mae.{suffix}",
             dpi=220 if suffix == "png" else None,
             bbox_inches="tight",
         )
@@ -651,9 +674,16 @@ def main() -> None:
         raise RuntimeError("CUDA was requested but is unavailable")
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    marked_df = pl.read_parquet(args.data).sort(["oper_part_no", "seq"])
+    if not args.artifact_slug.replace("_", "").isalnum():
+        raise ValueError("artifact-slug must contain only letters, digits, and underscores")
+    marked_df = pl.read_parquet(args.data)
+    sort_columns = [args.series_col, args.sequence_col]
+    missing = [column for column in sort_columns if column not in marked_df.columns]
+    if missing:
+        raise ValueError(f"Missing sort columns in dataset: {missing}")
+    marked_df = marked_df.sort(sort_columns)
     contract = train_quantile_contract(marked_df)
-    checkpoints = discover_checkpoints(args.checkpoint_root)
+    checkpoints = discover_checkpoints(args.checkpoint_root, args.dataset_key)
 
     payload = torch_load_checkpoint(checkpoints[0], map_location="cpu")
     loader = make_validation_loader(
@@ -670,7 +700,11 @@ def main() -> None:
     all_rows: list[dict[str, Any]] = []
     identities: list[dict[str, Any]] = []
     for checkpoint in checkpoints:
-        model, identity = load_checkpoint(checkpoint, args.device)
+        model, identity = load_checkpoint(
+            checkpoint,
+            args.device,
+            args.dataset_key,
+        )
         training = identity["training_config"]
         for key in ("lookback", "max_seq_len"):
             if int(training[key]) != int(payload["training_config"][key]):
@@ -708,12 +742,24 @@ def main() -> None:
     summary_rows = summarize(all_rows)
     delta_rows = paired_deltas(all_rows)
     prefix = "smoke_" if args.max_batches is not None else ""
-    write_csv(args.output_dir / f"{prefix}instacart_quantile_seed_metrics.csv", all_rows)
-    write_csv(args.output_dir / f"{prefix}instacart_quantile_summary.csv", summary_rows)
-    write_csv(args.output_dir / f"{prefix}instacart_quantile_paired_deltas.csv", delta_rows)
+    write_csv(
+        args.output_dir / f"{prefix}{args.artifact_slug}_quantile_seed_metrics.csv",
+        all_rows,
+    )
+    write_csv(
+        args.output_dir / f"{prefix}{args.artifact_slug}_quantile_summary.csv",
+        summary_rows,
+    )
+    write_csv(
+        args.output_dir / f"{prefix}{args.artifact_slug}_quantile_paired_deltas.csv",
+        delta_rows,
+    )
 
     contract.update({
         "schema_version": 1,
+        "dataset_key": args.dataset_key,
+        "dataset_label": args.dataset_label,
+        "sort_columns": sort_columns,
         "data_path": str(args.data),
         "data_sha256": sha256_file(args.data),
         "dataset_rows": marked_df.height,
@@ -726,18 +772,26 @@ def main() -> None:
         "max_batches": args.max_batches,
         "checkpoints": identities,
     })
-    (args.output_dir / f"{prefix}quantile_analysis_contract.json").write_text(
+    (args.output_dir / f"{prefix}{args.artifact_slug}_quantile_analysis_contract.json").write_text(
         json.dumps(contract, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
     write_briefing(
-        args.output_dir / f"{prefix}instacart_quantile_briefing.md",
+        args.output_dir / f"{prefix}{args.artifact_slug}_quantile_briefing.md",
+        args.dataset_label,
         contract,
         summary_rows,
         delta_rows,
     )
     if args.max_batches is None:
-        plot_results(args.output_dir, contract, summary_rows, delta_rows)
+        plot_results(
+            args.output_dir,
+            args.dataset_label,
+            args.artifact_slug,
+            contract,
+            summary_rows,
+            delta_rows,
+        )
     print(f"[complete] output_dir={args.output_dir}", flush=True)
 
 
