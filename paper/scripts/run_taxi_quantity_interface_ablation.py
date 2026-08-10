@@ -44,12 +44,20 @@ from simple_lab_test.search.common.runner import (
 
 SEEDS = (42, 52, 62)
 QUANTILES = (0.50, 0.90, 0.95, 0.99)
-NEW_VARIANTS = ("uniform_categorical", "quantile_categorical", "direct_raw_mse")
+NEW_VARIANTS = (
+    "uniform_categorical",
+    "quantile_categorical",
+    "direct_raw_mse",
+    "minmax_sigmoid",
+    "log_regression",
+)
 ALL_VARIANTS = (*NEW_VARIANTS, "mark_residual")
 VARIANT_LABELS = {
     "uniform_categorical": "Uniform bins",
     "quantile_categorical": "Quantile bins",
     "direct_raw_mse": "Raw MSE regression",
+    "minmax_sigmoid": "Min-max + sigmoid regression",
+    "log_regression": "Log-scale regression",
     "mark_residual": "Mark-residual",
 }
 
@@ -76,6 +84,53 @@ class DirectRawRMTPP(RMTPP):
         return affine, affine.clamp_min(0.0)
 
 
+class PositiveRegressionRMTPP(RMTPP):
+    """RMTPP with a quantity head whose reconstruction is nonnegative by design."""
+
+    def __init__(
+        self,
+        cfg: RMTPPConfig,
+        *,
+        mode: str,
+        train_min: float,
+        train_max: float,
+        train_target_mean: float,
+    ):
+        super().__init__(cfg)
+        if mode not in {"minmax_sigmoid", "log_regression"}:
+            raise ValueError(f"Unsupported positive regression mode: {mode}")
+        if not np.isfinite(train_min) or not np.isfinite(train_max) or train_max <= train_min:
+            raise ValueError("Train quantity range must be finite and non-degenerate.")
+        self.regression_mode = mode
+        self.register_buffer("train_min", torch.tensor(float(train_min), dtype=torch.float32))
+        self.register_buffer("train_max", torch.tensor(float(train_max), dtype=torch.float32))
+        self.direct_qty_head = nn.Linear(cfg.rnn_hidden_dim, 1)
+        nn.init.zeros_(self.direct_qty_head.weight)
+        if mode == "minmax_sigmoid":
+            scaled_mean = (train_target_mean - train_min) / (train_max - train_min)
+            scaled_mean = float(np.clip(scaled_mean, 1e-4, 1.0 - 1e-4))
+            initial_bias = float(np.log(scaled_mean / (1.0 - scaled_mean)))
+        else:
+            positive_mean = max(float(train_target_mean), 1e-4)
+            initial_bias = float(np.log(np.expm1(positive_mean)))
+        nn.init.constant_(self.direct_qty_head.bias, initial_bias)
+
+    def predict_quantity(
+        self,
+        hidden: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        raw = self.direct_qty_head(hidden).squeeze(-1)
+        if self.regression_mode == "minmax_sigmoid":
+            transformed = torch.sigmoid(raw)
+            quantity = self.train_min.to(hidden) + (
+                self.train_max.to(hidden) - self.train_min.to(hidden)
+            ) * transformed
+        else:
+            transformed = F.softplus(raw)
+            quantity = torch.expm1(transformed)
+        return transformed, quantity
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data", type=Path, required=True)
@@ -98,6 +153,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seeds", default=",".join(str(seed) for seed in SEEDS))
     parser.add_argument("--max-train-batches", type=int, default=None)
     parser.add_argument("--max-val-batches", type=int, default=None)
+    parser.add_argument("--skip-proposal", action="store_true")
+    parser.add_argument("--allow-partial-contract", action="store_true")
     parser.add_argument("--force-rerun", action="store_true")
     return parser.parse_args()
 
@@ -381,6 +438,10 @@ def evaluate(
             true_qty = model.reconstruct_qty(true_mark, true_value)
             affine, pred_qty = model.predict_raw_quantity(hidden)
             negative_preclamp += int((affine < 0.0).sum().item())
+        elif variant in {"minmax_sigmoid", "log_regression"}:
+            assert isinstance(model, PositiveRegressionRMTPP)
+            true_qty = model.reconstruct_qty(true_mark, true_value)
+            _, pred_qty = model.predict_quantity(hidden)
         elif variant == "mark_residual":
             true_qty = model.reconstruct_qty(true_mark, true_value)
             pred_value = predict_value_for_marks(model, hidden, pred_mark)
@@ -445,6 +506,30 @@ def raw_regression_loss(
     target = (true_qty - model.raw_mean.to(true_qty)) / model.raw_std.to(true_qty)
     normalized = model.direct_qty_head(hidden).squeeze(-1)
     return F.mse_loss(normalized, target)
+
+
+def positive_regression_loss(
+    model: PositiveRegressionRMTPP,
+    marks: torch.Tensor,
+    dts: torch.Tensor,
+    mask: torch.Tensor,
+    values: torch.Tensor,
+) -> torch.Tensor:
+    input_values = mask_appended_target_value(values, mask)
+    hidden = model.forward(marks, dts, values=input_values, mask=mask)[:, -2, :]
+    true_mark = marks[:, -1]
+    true_value = values[:, -1]
+    valid = mask[:, -1] & mask[:, -2] & (true_mark != int(model.cfg.num_marks - 1))
+    hidden = hidden[valid]
+    true_qty = model.reconstruct_qty(true_mark[valid], true_value[valid])
+    transformed, _ = model.predict_quantity(hidden)
+    if model.regression_mode == "minmax_sigmoid":
+        target = (true_qty - model.train_min.to(true_qty)) / (
+            model.train_max.to(true_qty) - model.train_min.to(true_qty)
+        )
+    else:
+        target = torch.log1p(true_qty)
+    return F.mse_loss(transformed, target)
 
 
 def save_json(path: Path, payload: Any) -> None:
@@ -518,6 +603,25 @@ def train_variant_seed(
             raw_std=float(interface_meta["train_std"]),
         )
         representatives = None
+    elif variant in {"minmax_sigmoid", "log_regression"}:
+        if interface_meta is None:
+            raise ValueError(f"{variant} requires train-only transform metadata")
+        num_marks = int(original_df["mark"].max()) + 2
+        cfg = base_config(
+            num_marks=num_marks,
+            hidden_dim=args.hidden_dim,
+            scale_base=10.0,
+            use_value_head=False,
+            value_input_mode="residual",
+        )
+        model = PositiveRegressionRMTPP(
+            cfg,
+            mode=variant,
+            train_min=float(interface_meta["train_min"]),
+            train_max=float(interface_meta["train_max"]),
+            train_target_mean=float(interface_meta["train_target_mean"]),
+        )
+        representatives = None
     else:
         raise ValueError(f"Cannot train unsupported variant: {variant}")
     model.to(args.device)
@@ -580,6 +684,15 @@ def train_variant_seed(
             if variant == "direct_raw_mse":
                 assert isinstance(model, DirectRawRMTPP)
                 loss = loss + args.lambda_raw * raw_regression_loss(
+                    model,
+                    marks,
+                    dts,
+                    mask,
+                    values,
+                )
+            elif variant in {"minmax_sigmoid", "log_regression"}:
+                assert isinstance(model, PositiveRegressionRMTPP)
+                loss = loss + args.lambda_raw * positive_regression_loss(
                     model,
                     marks,
                     dts,
@@ -827,19 +940,24 @@ def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         writer.writerows(rows)
 
 
-def summarize(seed_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def summarize(
+    seed_rows: list[dict[str, Any]],
+    *,
+    variants: tuple[str, ...],
+    seeds: tuple[int, ...],
+) -> list[dict[str, Any]]:
     output = []
     strata = sorted({
         (int(row["stratum_order"]), row["stratum"], row["stratum_label"])
         for row in seed_rows
     })
-    for variant in ALL_VARIANTS:
+    for variant in variants:
         for order, key, label in strata:
             group = [
                 row for row in seed_rows
                 if row["variant"] == variant and row["stratum"] == key
             ]
-            if {int(row["seed"]) for row in group} != set(SEEDS):
+            if {int(row["seed"]) for row in group} != set(seeds):
                 raise ValueError(f"Seed contract failed for {variant}/{key}")
             record = {
                 "variant": variant,
@@ -854,7 +972,7 @@ def summarize(seed_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             for metric in ("qty_mae", "qty_rmse", "qty_bias"):
                 values = [float(row[metric]) for row in group]
                 record[f"{metric}_mean"] = statistics.mean(values)
-                record[f"{metric}_std"] = statistics.stdev(values)
+                record[f"{metric}_std"] = statistics.stdev(values) if len(values) > 1 else 0.0
             output.append(record)
     return output
 
@@ -868,7 +986,7 @@ def main() -> None:
     if unsupported:
         raise ValueError(f"Unsupported train variants: {unsupported}")
     seeds = parse_int_tuple(args.seeds)
-    if set(seeds) != set(SEEDS):
+    if not args.allow_partial_contract and set(seeds) != set(SEEDS):
         raise ValueError(f"Qualified run requires seeds {SEEDS}, received {seeds}")
     if len(args.source_revision) != 40:
         raise ValueError("source-revision must be a 40-character Git SHA")
@@ -906,6 +1024,32 @@ def main() -> None:
             "history_quantity_input": "log10_within_mark_residual",
             "fitted_on": "train",
         }),
+        "minmax_sigmoid": (original_df, {
+            "mode": "minmax_sigmoid",
+            "target": "train_minmax_scaled_demand_qty",
+            "loss": "mse_on_minmax_scaled_quantity",
+            "output_activation": "sigmoid",
+            "inverse_transform": "train_min_plus_range_times_sigmoid",
+            "train_min": float(train_qty.min()),
+            "train_max": float(train_qty.max()),
+            "train_target_mean": float(train_qty.mean()),
+            "history_quantity_input": "log10_within_mark_residual",
+            "support": "closed_train_quantity_range",
+            "fitted_on": "train",
+        }),
+        "log_regression": (original_df, {
+            "mode": "log_regression",
+            "target": "log1p_demand_qty",
+            "loss": "mse_on_log1p_quantity",
+            "output_activation": "softplus",
+            "inverse_transform": "expm1",
+            "train_min": float(train_qty.min()),
+            "train_max": float(train_qty.max()),
+            "train_target_mean": float(np.log1p(train_qty).mean()),
+            "history_quantity_input": "log10_within_mark_residual",
+            "support": "nonnegative",
+            "fitted_on": "train",
+        }),
     }
     for variant in ("uniform_categorical", "quantile_categorical"):
         variant_data[variant] = fit_categorical_interface(
@@ -929,8 +1073,8 @@ def main() -> None:
         "interfaces": {
             variant: metadata for variant, (_, metadata) in variant_data.items()
         },
-        "variants": list(ALL_VARIANTS),
-        "seeds": list(SEEDS),
+        "variants": [*variants, *([] if args.skip_proposal else ["mark_residual"])],
+        "seeds": list(seeds),
         "epochs": args.epochs,
         "batch_size": args.batch_size,
         "lr": args.lr,
@@ -952,6 +1096,7 @@ def main() -> None:
         "held_out_test_evaluated": False,
         "source_revision": args.source_revision,
         "proposal_source_revisions": [],
+        "qualified_seed_contract": set(seeds) == set(SEEDS),
         "max_train_batches": args.max_train_batches,
         "max_val_batches": args.max_val_batches,
     }
@@ -974,14 +1119,17 @@ def main() -> None:
             summaries.append(summary)
             seed_rows.extend(rows)
 
-    proposal_summaries, proposal_rows = evaluate_proposal(
-        args=args,
-        df=original_df,
-        quantile_contract=quantile_contract,
-    )
-    summaries.extend(proposal_summaries)
-    seed_rows.extend(proposal_rows)
-    summary_rows = summarize(seed_rows)
+    proposal_summaries: list[dict[str, Any]] = []
+    if not args.skip_proposal:
+        proposal_summaries, proposal_rows = evaluate_proposal(
+            args=args,
+            df=original_df,
+            quantile_contract=quantile_contract,
+        )
+        summaries.extend(proposal_summaries)
+        seed_rows.extend(proposal_rows)
+    summary_variants = (*variants, *(() if args.skip_proposal else ("mark_residual",)))
+    summary_rows = summarize(seed_rows, variants=summary_variants, seeds=seeds)
     write_csv(args.output_dir / "run_summaries.csv", summaries)
     write_csv(args.output_dir / "quantity_interface_seed_metrics.csv", seed_rows)
     write_csv(args.output_dir / "quantity_interface_summary.csv", summary_rows)
