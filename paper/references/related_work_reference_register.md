@@ -9,6 +9,14 @@
 - **Role:** classical temporal point process와 self-exciting process의 기본 배경을 제공한다.
 - **Boundary:** neural encoder, continuous quantity, demand forecasting을 직접 다루는 문헌은 아니다.
 
+### An Introduction to the Theory of Point Processes
+
+- **Reference:** Daley, D. J. and Vere-Jones, D. An Introduction to the Theory of Point
+  Processes, Volume I: Elementary Theory and Methods, 2nd ed. Springer, 2003.
+- **Source:** [Springer](https://link.springer.com/book/10.1007/978-1-4757-2001-3)
+- **Role:** conditional intensity와 point-process history formulation의 표준 이론 배경이다.
+- **Boundary:** neural TPP나 intermittent demand forecasting을 직접 다루는 문헌은 아니다.
+
 ## 3.1 Recurrent neural temporal point processes
 
 ### Recurrent Marked Temporal Point Processes: Embedding Event History to Vector
@@ -79,8 +87,9 @@
   Mandt, S. NeurIPS, 2025.
 - **Source:** [NeurIPS](https://papers.nips.cc/paper_files/paper/2025/hash/a6c7515ac435277dc92b75a07bb2257c-Abstract-Conference.html)
 - **Role:** discrete event attribute와 continuous event attribute를 서로 다른 head로 모델링하는
-  직접 근거이다.
+  직접 근거가 될 수 있다.
 - **Boundary:** TitanTPP의 log-magnitude/residual factorization 자체를 제안한 문헌은 아니다.
+- **Current manuscript status:** 4-page draft에서는 reference risk와 분량 제약을 줄이기 위해 제외했다.
 
 ## 3.4 Intermittent-demand forecasting as event prediction
 
