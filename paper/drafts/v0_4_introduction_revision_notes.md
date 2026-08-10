@@ -20,6 +20,7 @@ Date: 2026-08-10 KST
    - Previous version moved directly from neural TPPs to RMTPP.
    - v0.4 first explains that neural TPPs improve classical TPPs by learning history representations from event trajectories.
    - RMTPP is then introduced as a representative recurrent neural TPP.
+   - Follow-up refinement separates the limitations of classical TPPs from the three RMTPP-specific challenges used to motivate TitanTPP.
 
 3. The third challenge was reframed.
    - Previous version could read as if joint learning itself were the limitation.
