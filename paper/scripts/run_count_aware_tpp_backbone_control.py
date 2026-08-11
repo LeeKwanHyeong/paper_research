@@ -1,0 +1,945 @@
+#!/usr/bin/env python3
+"""Run the mark-free count-aware TPP backbone control."""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import json
+import math
+import os
+import statistics
+import sys
+import time
+from dataclasses import asdict
+from pathlib import Path
+from typing import Any
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(PROJECT_ROOT))
+
+import numpy as np
+import polars as pl
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+from models.RMTPPs.TransformerHawkesTPP import THPEncoderLayer
+from models.RMTPPs.config import THPConfig
+from models.Titan.backbone import MemoryEncoder
+from models.Titan.common.memory import LMM
+from paper.scripts.run_intermittent_log_backbone_control import (
+    BACKBONES,
+    EXPECTED_DATA_SHA256,
+    EXPECTED_SPLIT_MANIFEST_SHA256,
+    HISTORY_BOUNDARIES,
+    HISTORY_STRATA,
+)
+from paper.scripts.run_taxi_quantity_interface_ablation import (
+    clone_state_dict,
+    make_loader,
+    parse_int_tuple,
+    parse_str_tuple,
+    save_json,
+    set_seed,
+    sha256_file,
+    train_quantile_contract,
+)
+from simple_lab_test.search.common.runner import (
+    canonical_state_dict_sha256,
+    torch_load_checkpoint,
+)
+
+
+SEEDS = (42, 52, 62)
+VARIANT = "count_only_log_regression"
+BACKBONE_LABELS = {
+    "rmtpp": "Count-aware RMTPP",
+    "thp": "Count-aware THP",
+    "titantpp": "Count-aware TitanTPP",
+}
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--data", type=Path, required=True)
+    parser.add_argument("--split-manifest", type=Path, required=True)
+    parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--source-revision", required=True)
+    parser.add_argument("--execution-role", required=True)
+    parser.add_argument("--device", default="cuda")
+    parser.add_argument("--epochs", type=int, default=300)
+    parser.add_argument("--batch-size", type=int, default=128)
+    parser.add_argument("--lr", type=float, default=1e-3)
+    parser.add_argument("--lookback-weeks", type=int, default=520)
+    parser.add_argument("--max-seq-len", type=int, default=256)
+    parser.add_argument("--hidden-dim", type=int, default=64)
+    parser.add_argument("--lambda-log-qty", type=float, default=1.0)
+    parser.add_argument("--grad-clip", type=float, default=1.0)
+    parser.add_argument("--early-stopping-patience", type=int, default=40)
+    parser.add_argument("--min-epochs", type=int, default=40)
+    parser.add_argument("--backbones", default=",".join(BACKBONES))
+    parser.add_argument("--seeds", default=",".join(str(seed) for seed in SEEDS))
+    parser.add_argument("--max-train-batches", type=int, default=None)
+    parser.add_argument("--max-val-batches", type=int, default=None)
+    parser.add_argument("--allow-partial-contract", action="store_true")
+    parser.add_argument("--force-rerun", action="store_true")
+    return parser.parse_args()
+
+
+class SharedTimeCountModel(nn.Module):
+    """Common time-density and continuous-count heads for every backbone."""
+
+    def __init__(self, hidden_dim: int, train_log_mean: float) -> None:
+        super().__init__()
+        if not math.isfinite(train_log_mean) or train_log_mean <= 0.0:
+            raise ValueError("train_log_mean must be finite and positive")
+        self.hidden_dim = int(hidden_dim)
+        self.v_t = nn.Linear(self.hidden_dim, 1, bias=False)
+        self.b_t = nn.Parameter(torch.zeros(1))
+        self.w_raw = nn.Parameter(torch.full((1,), -3.0))
+        self.quantity_head = nn.Linear(self.hidden_dim, 1)
+        nn.init.normal_(self.v_t.weight, mean=0.0, std=0.01)
+        nn.init.zeros_(self.quantity_head.weight)
+        nn.init.constant_(
+            self.quantity_head.bias,
+            float(np.log(np.expm1(train_log_mean))),
+        )
+
+    def encode(
+        self,
+        dts: torch.Tensor,
+        history_quantities: torch.Tensor,
+        mask: torch.Tensor,
+    ) -> torch.Tensor:
+        raise NotImplementedError
+
+    @staticmethod
+    def continuous_features(
+        dts: torch.Tensor,
+        history_quantities: torch.Tensor,
+        mask: torch.Tensor,
+    ) -> torch.Tensor:
+        features = torch.stack(
+            [
+                torch.log1p(dts.float().clamp_min(0.0)),
+                torch.log1p(history_quantities.float().clamp_min(0.0)),
+            ],
+            dim=-1,
+        )
+        return features * mask.unsqueeze(-1).to(dtype=features.dtype)
+
+    def log_f_dt(self, hidden: torch.Tensor, dt_next: torch.Tensor) -> torch.Tensor:
+        w = F.softplus(self.w_raw) + 1e-3
+        intercept = torch.clamp(self.v_t(hidden).squeeze(-1) + self.b_t, max=300.0)
+        exp_intercept = torch.exp(intercept)
+        wd = torch.clamp(w * dt_next, max=10.0)
+        return intercept + wd - (exp_intercept / w) * torch.expm1(wd)
+
+    def predict_quantity(self, hidden: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        log_quantity = F.softplus(self.quantity_head(hidden).squeeze(-1))
+        return log_quantity, torch.expm1(log_quantity)
+
+
+class CountAwareRMTPP(SharedTimeCountModel):
+    def __init__(self, hidden_dim: int, train_log_mean: float) -> None:
+        super().__init__(hidden_dim, train_log_mean)
+        self.input_projection = nn.Linear(2, hidden_dim)
+        self.input_dropout = nn.Dropout(0.1)
+        self.encoder = nn.GRU(hidden_dim, hidden_dim, batch_first=True)
+
+    def encode(
+        self,
+        dts: torch.Tensor,
+        history_quantities: torch.Tensor,
+        mask: torch.Tensor,
+    ) -> torch.Tensor:
+        x = self.input_dropout(self.input_projection(
+            self.continuous_features(dts, history_quantities, mask)
+        ))
+        encoded, _ = self.encoder(x)
+        return encoded * mask.unsqueeze(-1).to(dtype=encoded.dtype)
+
+
+class CountAwareTHP(SharedTimeCountModel):
+    def __init__(self, hidden_dim: int, train_log_mean: float) -> None:
+        super().__init__(hidden_dim, train_log_mean)
+        self.input_projection = nn.Linear(2, hidden_dim)
+        self.encoder_config = THPConfig(
+            d_model=hidden_dim,
+            d_inner=hidden_dim * 4,
+            n_layers=2,
+            n_heads=4,
+            dropout=0.1,
+            normalize_before=False,
+            add_temporal_encoding_each_layer=False,
+            use_rnn=False,
+            d_rnn=hidden_dim,
+        )
+        self.layers = nn.ModuleList([
+            THPEncoderLayer(self.encoder_config)
+            for _ in range(self.encoder_config.n_layers)
+        ])
+
+    @staticmethod
+    def blocked_attention_mask(mask: torch.Tensor) -> torch.Tensor:
+        batch_size, seq_len = mask.shape
+        future = torch.triu(
+            torch.ones(seq_len, seq_len, device=mask.device, dtype=torch.bool),
+            diagonal=1,
+        ).unsqueeze(0)
+        key_padding = (~mask).unsqueeze(1).expand(batch_size, seq_len, seq_len)
+        blocked = future | key_padding
+        positions = torch.arange(seq_len, device=mask.device)
+        blocked[:, positions, positions] = False
+        return blocked
+
+    def encode(
+        self,
+        dts: torch.Tensor,
+        history_quantities: torch.Tensor,
+        mask: torch.Tensor,
+    ) -> torch.Tensor:
+        x = self.input_projection(self.continuous_features(dts, history_quantities, mask))
+        non_pad = mask.unsqueeze(-1).to(dtype=x.dtype)
+        blocked = self.blocked_attention_mask(mask)
+        for layer in self.layers:
+            x = layer(x, non_pad_mask=non_pad, blocked_mask=blocked)
+        return x * non_pad
+
+
+class CountAwareTitanTPP(SharedTimeCountModel):
+    def __init__(self, hidden_dim: int, train_log_mean: float, max_seq_len: int) -> None:
+        super().__init__(hidden_dim, train_log_mean)
+        self.encoder = MemoryEncoder(
+            input_dim=2,
+            d_model=hidden_dim,
+            n_layers=2,
+            n_heads=4,
+            d_ff=hidden_dim * 2,
+            contextual_mem_size=0,
+            persistent_mem_size=16,
+            dropout=0.1,
+            use_context_update=False,
+            use_pos_emb=True,
+            max_len=max_seq_len,
+            use_causal=True,
+        )
+        self.lmm = LMM(d_model=hidden_dim, mem_size=64, topk=4)
+
+    def encode(
+        self,
+        dts: torch.Tensor,
+        history_quantities: torch.Tensor,
+        mask: torch.Tensor,
+    ) -> torch.Tensor:
+        x = self.continuous_features(dts, history_quantities, mask)
+        encoded = self.encoder(x, mask=mask, update_context_memory=False)
+        encoded = self.lmm(encoded)
+        return encoded * mask.unsqueeze(-1).to(dtype=encoded.dtype)
+
+
+def build_model(
+    backbone: str,
+    *,
+    hidden_dim: int,
+    train_log_mean: float,
+    max_seq_len: int,
+) -> tuple[SharedTimeCountModel, dict[str, Any]]:
+    if backbone == "rmtpp":
+        return CountAwareRMTPP(hidden_dim, train_log_mean), {
+            "candidate_name": "count_gru_h64",
+            "rnn_type": "gru",
+            "hidden_dim": hidden_dim,
+        }
+    if backbone == "thp":
+        model = CountAwareTHP(hidden_dim, train_log_mean)
+        return model, {"candidate_name": "count_thp_small", **asdict(model.encoder_config)}
+    if backbone == "titantpp":
+        return CountAwareTitanTPP(hidden_dim, train_log_mean, max_seq_len), {
+            "candidate_name": "count_titan_small_lmm",
+            "d_model": hidden_dim,
+            "n_layers": 2,
+            "n_heads": 4,
+            "d_ff": hidden_dim * 2,
+            "persistent_mem_size": 16,
+            "lmm_mem_size": 64,
+            "lmm_topk": 4,
+            "max_len": max_seq_len,
+        }
+    raise ValueError(f"Unsupported backbone: {backbone}")
+
+
+def prepare_count_frame(frame: pl.DataFrame) -> pl.DataFrame:
+    if frame.filter(pl.col("demand_qty") < 0).height:
+        raise ValueError("Count-aware input requires nonnegative demand_qty")
+    return frame.with_columns([
+        pl.lit(0, dtype=pl.Int32).alias("mark"),
+        pl.col("demand_qty").cast(pl.Float64).alias("scale_residual"),
+    ])
+
+
+def right_pad_batch(
+    dts: torch.Tensor,
+    quantities: torch.Tensor,
+    mask: torch.Tensor,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    batch_size, seq_len = mask.shape
+    positions = torch.arange(seq_len, device=mask.device).expand(batch_size, -1)
+    sort_key = (~mask).long() * seq_len + positions
+    order = torch.argsort(sort_key, dim=1)
+    right_dts = torch.gather(dts, 1, order)
+    right_quantities = torch.gather(quantities, 1, order)
+    right_mask = torch.gather(mask, 1, order)
+    lengths = right_mask.sum(dim=1)
+    if bool((lengths < 2).any()):
+        raise ValueError("Every next-event sample requires at least one history event")
+    return right_dts, right_quantities, right_mask, lengths
+
+
+def target_outputs(
+    model: SharedTimeCountModel,
+    dts: torch.Tensor,
+    mask: torch.Tensor,
+    quantities: torch.Tensor,
+    *,
+    lambda_log_qty: float,
+) -> dict[str, torch.Tensor]:
+    dts, quantities, mask, lengths = right_pad_batch(dts, quantities, mask)
+    batch_ids = torch.arange(dts.size(0), device=dts.device)
+    target_positions = lengths - 1
+    history_positions = lengths - 2
+    history_quantities = quantities.clone()
+    history_quantities[batch_ids, target_positions] = 0.0
+    encoded = model.encode(dts, history_quantities, mask)
+    hidden = encoded[batch_ids, history_positions]
+    true_dt = dts[batch_ids, target_positions].float()
+    true_qty = quantities[batch_ids, target_positions].float()
+    time_loss = -model.log_f_dt(hidden, true_dt)
+    transformed, pred_qty = model.predict_quantity(hidden)
+    log_qty_loss = F.mse_loss(
+        transformed,
+        torch.log1p(true_qty.clamp_min(0.0)),
+        reduction="none",
+    )
+    return {
+        "joint_loss": time_loss + float(lambda_log_qty) * log_qty_loss,
+        "time_loss": time_loss,
+        "log_qty_loss": log_qty_loss,
+        "true_qty": true_qty,
+        "pred_qty": pred_qty,
+        "history_length": lengths - 1,
+    }
+
+
+def empty_accumulator() -> dict[str, float]:
+    return {
+        "count": 0,
+        "joint_sum": 0.0,
+        "time_sum": 0.0,
+        "log_qty_sum": 0.0,
+        "abs_sum": 0.0,
+        "sq_sum": 0.0,
+        "signed_sum": 0.0,
+    }
+
+
+def update_accumulator(
+    accumulator: dict[str, float],
+    *,
+    joint: np.ndarray,
+    time_nll: np.ndarray,
+    log_qty_mse: np.ndarray,
+    true_qty: np.ndarray,
+    pred_qty: np.ndarray,
+) -> None:
+    error = pred_qty - true_qty
+    accumulator["count"] += int(true_qty.size)
+    accumulator["joint_sum"] += float(joint.sum())
+    accumulator["time_sum"] += float(time_nll.sum())
+    accumulator["log_qty_sum"] += float(log_qty_mse.sum())
+    accumulator["abs_sum"] += float(np.abs(error).sum())
+    accumulator["sq_sum"] += float(np.square(error).sum())
+    accumulator["signed_sum"] += float(error.sum())
+
+
+def finalize_accumulator(accumulator: dict[str, float]) -> dict[str, Any]:
+    count = int(accumulator["count"])
+    if count < 1:
+        raise ValueError("Cannot finalize an empty accumulator")
+    return {
+        "count": count,
+        "joint_objective": accumulator["joint_sum"] / count,
+        "time_nll": accumulator["time_sum"] / count,
+        "log_qty_mse": accumulator["log_qty_sum"] / count,
+        "qty_mae": accumulator["abs_sum"] / count,
+        "qty_rmse": float(np.sqrt(accumulator["sq_sum"] / count)),
+        "qty_bias": accumulator["signed_sum"] / count,
+    }
+
+
+@torch.no_grad()
+def evaluate(
+    *,
+    model: SharedTimeCountModel,
+    loader: Any,
+    quantity_contract: dict[str, Any],
+    device: str,
+    lambda_log_qty: float,
+    max_batches: int | None,
+    include_breakdowns: bool,
+) -> dict[str, Any]:
+    model.eval()
+    overall = empty_accumulator()
+    quantity_accumulators = [empty_accumulator() for _ in quantity_contract["strata"]]
+    history_accumulators = [empty_accumulator() for _ in HISTORY_STRATA]
+
+    for batch_index, (_, dts, mask, _, quantities) in enumerate(loader):
+        if max_batches is not None and batch_index >= max_batches:
+            break
+        if quantities is None:
+            raise ValueError("Count-aware evaluation requires raw quantities")
+        dts = dts.to(device)
+        mask = mask.to(device)
+        quantities = quantities.to(device)
+        outputs = target_outputs(
+            model,
+            dts,
+            mask,
+            quantities,
+            lambda_log_qty=lambda_log_qty,
+        )
+        joint = outputs["joint_loss"].cpu().numpy().astype(np.float64)
+        time_nll = outputs["time_loss"].cpu().numpy().astype(np.float64)
+        log_qty_mse = outputs["log_qty_loss"].cpu().numpy().astype(np.float64)
+        true_qty = outputs["true_qty"].cpu().numpy().astype(np.float64)
+        pred_qty = outputs["pred_qty"].cpu().numpy().astype(np.float64)
+        history_length = outputs["history_length"].cpu().numpy().astype(np.int64)
+        update_accumulator(
+            overall,
+            joint=joint,
+            time_nll=time_nll,
+            log_qty_mse=log_qty_mse,
+            true_qty=true_qty,
+            pred_qty=pred_qty,
+        )
+        if not include_breakdowns:
+            continue
+
+        quantity_ids = np.searchsorted(
+            np.asarray(quantity_contract["boundaries"], dtype=np.float64),
+            true_qty,
+            side="left",
+        )
+        history_ids = np.searchsorted(
+            np.asarray(HISTORY_BOUNDARIES, dtype=np.int64),
+            history_length,
+            side="left",
+        )
+        for ids, accumulators in (
+            (quantity_ids, quantity_accumulators),
+            (history_ids, history_accumulators),
+        ):
+            for index, accumulator in enumerate(accumulators):
+                selected = ids == index
+                if selected.any():
+                    update_accumulator(
+                        accumulator,
+                        joint=joint[selected],
+                        time_nll=time_nll[selected],
+                        log_qty_mse=log_qty_mse[selected],
+                        true_qty=true_qty[selected],
+                        pred_qty=pred_qty[selected],
+                    )
+
+    overall_metrics = finalize_accumulator(overall)
+    result: dict[str, Any] = {
+        "val_joint_objective": overall_metrics["joint_objective"],
+        "val_time_nll": overall_metrics["time_nll"],
+        "val_log_qty_mse": overall_metrics["log_qty_mse"],
+        "qty_mae": overall_metrics["qty_mae"],
+        "qty_rmse": overall_metrics["qty_rmse"],
+        "evaluated_count": overall_metrics["count"],
+    }
+    if not include_breakdowns:
+        return result
+
+    result["quantity_rows"] = [
+        {
+            **spec,
+            "share": int(accumulator["count"]) / overall_metrics["count"],
+            **finalize_accumulator(accumulator),
+        }
+        for spec, accumulator in zip(quantity_contract["strata"], quantity_accumulators)
+    ]
+    result["history_rows"] = [
+        {
+            **spec,
+            "share": int(accumulator["count"]) / overall_metrics["count"],
+            **finalize_accumulator(accumulator),
+        }
+        for spec, accumulator in zip(HISTORY_STRATA, history_accumulators)
+    ]
+    return result
+
+
+def early_stopping_exhausted(
+    history: list[dict[str, Any]],
+    *,
+    min_epochs: int,
+    patience: int,
+) -> bool:
+    if not history or patience < 1:
+        return False
+    current_epoch = int(history[-1]["epoch"])
+    best_epoch = int(min(history, key=lambda row: float(row["val_joint_objective"]))["epoch"])
+    return current_epoch >= min_epochs and current_epoch - best_epoch >= patience
+
+
+def train_one(
+    *,
+    args: argparse.Namespace,
+    frame: pl.DataFrame,
+    quantity_contract: dict[str, Any],
+    interface_meta: dict[str, Any],
+    backbone: str,
+    seed: int,
+) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+    run_dir = args.output_dir / "runs" / backbone / VARIANT / f"seed_{seed}"
+    summary_path = run_dir / "summary.json"
+    best_path = run_dir / "best_val_joint_objective_model.pt"
+    last_path = run_dir / "last_epoch_state.pt"
+    if summary_path.exists() and best_path.exists() and not args.force_rerun:
+        payload = json.loads(summary_path.read_text(encoding="utf-8"))
+        quantity_rows = payload.pop("quantity_rows")
+        history_rows = payload.pop("history_rows")
+        return payload, quantity_rows, history_rows
+
+    generator = set_seed(seed)
+    train_loader = make_loader(
+        frame,
+        target_split="train",
+        batch_size=args.batch_size,
+        lookback_weeks=args.lookback_weeks,
+        max_seq_len=args.max_seq_len,
+        shuffle=True,
+        generator=generator,
+    )
+    val_loader = make_loader(
+        frame,
+        target_split="validation",
+        batch_size=args.batch_size,
+        lookback_weeks=args.lookback_weeks,
+        max_seq_len=args.max_seq_len,
+        shuffle=False,
+        generator=None,
+    )
+    model, encoder_config = build_model(
+        backbone,
+        hidden_dim=args.hidden_dim,
+        train_log_mean=float(interface_meta["train_target_mean"]),
+        max_seq_len=args.max_seq_len,
+    )
+    model.to(args.device)
+    parameter_count = sum(parameter.numel() for parameter in model.parameters() if parameter.requires_grad)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
+    history: list[dict[str, Any]] = []
+    best_objective = float("inf")
+    best_state: dict[str, torch.Tensor] | None = None
+    source_revision_history = [args.source_revision]
+    start_epoch = 1
+
+    if last_path.exists() and not args.force_rerun:
+        payload = torch_load_checkpoint(last_path, map_location="cpu")
+        model.load_state_dict(payload["model_state_dict"], strict=True)
+        optimizer.load_state_dict(payload["optimizer_state_dict"])
+        history = list(payload.get("history", []))
+        best_objective = float(payload.get("best_val_joint_objective", best_objective))
+        best_state = payload.get("best_state_dict")
+        start_epoch = int(payload["epoch"]) + 1
+        source_revision_history = [
+            revision for revision in payload.get("source_revision_history", []) if revision
+        ]
+        if args.source_revision not in source_revision_history:
+            source_revision_history.append(args.source_revision)
+
+    run_dir.mkdir(parents=True, exist_ok=True)
+    log_path = run_dir / "train.log"
+    started = time.time()
+    stopped_early = early_stopping_exhausted(
+        history,
+        min_epochs=args.min_epochs,
+        patience=args.early_stopping_patience,
+    )
+    for epoch in range(start_epoch, args.epochs + 1):
+        if stopped_early:
+            break
+        model.train()
+        running = 0.0
+        batches = 0
+        for batch_index, (_, dts, mask, _, quantities) in enumerate(train_loader):
+            if args.max_train_batches is not None and batch_index >= args.max_train_batches:
+                break
+            if quantities is None:
+                raise ValueError("Count-aware training requires raw quantities")
+            outputs = target_outputs(
+                model,
+                dts.to(args.device),
+                mask.to(args.device),
+                quantities.to(args.device),
+                lambda_log_qty=args.lambda_log_qty,
+            )
+            loss = outputs["joint_loss"].mean()
+            optimizer.zero_grad(set_to_none=True)
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), args.grad_clip)
+            optimizer.step()
+            running += float(loss.item())
+            batches += 1
+
+        validation = evaluate(
+            model=model,
+            loader=val_loader,
+            quantity_contract=quantity_contract,
+            device=args.device,
+            lambda_log_qty=args.lambda_log_qty,
+            max_batches=args.max_val_batches,
+            include_breakdowns=False,
+        )
+        epoch_row = {
+            "epoch": epoch,
+            "train_joint_objective": running / max(batches, 1),
+            "val_joint_objective": float(validation["val_joint_objective"]),
+            "val_time_nll": float(validation["val_time_nll"]),
+            "val_log_qty_mse": float(validation["val_log_qty_mse"]),
+            "val_qty_mae": float(validation["qty_mae"]),
+            "val_qty_rmse": float(validation["qty_rmse"]),
+        }
+        history.append(epoch_row)
+        line = (
+            f"[epoch {epoch:03d}] backbone={backbone} seed={seed} "
+            f"train_joint={epoch_row['train_joint_objective']:.8f} "
+            f"val_joint={epoch_row['val_joint_objective']:.8f} "
+            f"time_nll={epoch_row['val_time_nll']:.8f} "
+            f"log_qty_mse={epoch_row['val_log_qty_mse']:.8f} "
+            f"qty_mae={epoch_row['val_qty_mae']:.8f}"
+        )
+        print(line, flush=True)
+        with log_path.open("a", encoding="utf-8") as handle:
+            handle.write(line + "\n")
+        if epoch_row["val_joint_objective"] < best_objective:
+            best_objective = epoch_row["val_joint_objective"]
+            best_state = clone_state_dict(model)
+        save_json(run_dir / "history.json", {"history": history})
+        torch.save({
+            "epoch": epoch,
+            "backbone": backbone,
+            "seed": seed,
+            "model_state_dict": clone_state_dict(model),
+            "optimizer_state_dict": optimizer.state_dict(),
+            "history": history,
+            "best_val_joint_objective": best_objective,
+            "best_state_dict": best_state,
+            "encoder_config": encoder_config,
+            "interface_meta": interface_meta,
+            "source_revision": args.source_revision,
+            "source_revision_history": source_revision_history,
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": False,
+        }, last_path)
+        stopped_early = early_stopping_exhausted(
+            history,
+            min_epochs=args.min_epochs,
+            patience=args.early_stopping_patience,
+        )
+        if stopped_early:
+            best_epoch = min(
+                history,
+                key=lambda row: float(row["val_joint_objective"]),
+            )["epoch"]
+            print(
+                f"[early-stop] backbone={backbone} seed={seed} "
+                f"current_epoch={epoch} best_epoch={best_epoch}",
+                flush=True,
+            )
+
+    if best_state is None:
+        raise RuntimeError(f"No best checkpoint selected for {backbone}/seed_{seed}")
+    model.load_state_dict(best_state, strict=True)
+    validation = evaluate(
+        model=model,
+        loader=val_loader,
+        quantity_contract=quantity_contract,
+        device=args.device,
+        lambda_log_qty=args.lambda_log_qty,
+        max_batches=args.max_val_batches,
+        include_breakdowns=args.max_val_batches is None,
+    )
+    state_digest = canonical_state_dict_sha256(best_state)
+    checkpoint = {
+        "selection": "best_validation_joint_objective",
+        "selection_formula": "time_nll + lambda_log_qty * log1p_quantity_mse",
+        "backbone": backbone,
+        "seed": seed,
+        "model_state_dict": best_state,
+        "model_state_sha256": state_digest,
+        "encoder_config": encoder_config,
+        "interface_meta": interface_meta,
+        "source_revision": args.source_revision,
+        "source_revision_history": source_revision_history,
+        "evaluation_scope": "validation_only",
+        "held_out_test_evaluated": False,
+    }
+    torch.save(checkpoint, best_path)
+    quantity_rows = [{
+        "backbone": backbone,
+        "backbone_label": BACKBONE_LABELS[backbone],
+        "variant": VARIANT,
+        "seed": seed,
+        **row,
+    } for row in validation.get("quantity_rows", [])]
+    history_rows = [{
+        "backbone": backbone,
+        "backbone_label": BACKBONE_LABELS[backbone],
+        "variant": VARIANT,
+        "seed": seed,
+        **row,
+    } for row in validation.get("history_rows", [])]
+    best_epoch = int(min(
+        history,
+        key=lambda row: float(row["val_joint_objective"]),
+    )["epoch"])
+    summary = {
+        "status": "success",
+        "backbone": backbone,
+        "backbone_label": BACKBONE_LABELS[backbone],
+        "variant": VARIANT,
+        "seed": seed,
+        "epochs": args.epochs,
+        "completed_epochs": int(history[-1]["epoch"]),
+        "stopped_early": int(history[-1]["epoch"]) < args.epochs,
+        "best_epoch": best_epoch,
+        "best_val_joint_objective": float(validation["val_joint_objective"]),
+        "best_val_time_nll": float(validation["val_time_nll"]),
+        "best_val_log_qty_mse": float(validation["val_log_qty_mse"]),
+        "best_val_qty_mae": float(validation["qty_mae"]),
+        "best_val_qty_rmse": float(validation["qty_rmse"]),
+        "parameter_count": parameter_count,
+        "source_revision": args.source_revision,
+        "source_revision_history": source_revision_history,
+        "evaluation_scope": "validation_only",
+        "held_out_test_evaluated": False,
+        "checkpoint_path": str(best_path),
+        "checkpoint_state_sha256": state_digest,
+        "elapsed_seconds": time.time() - started,
+        "encoder_config": encoder_config,
+        "interface_meta": interface_meta,
+        "quantity_rows": quantity_rows,
+        "history_rows": history_rows,
+    }
+    save_json(summary_path, summary)
+    returned = dict(summary)
+    returned.pop("quantity_rows")
+    returned.pop("history_rows")
+    return returned, quantity_rows, history_rows
+
+
+def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0]), lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def summarize_breakdowns(
+    rows: list[dict[str, Any]],
+    *,
+    backbones: tuple[str, ...],
+    seeds: tuple[int, ...],
+) -> list[dict[str, Any]]:
+    output = []
+    strata = sorted({
+        (int(row["stratum_order"]), row["stratum"], row["stratum_label"])
+        for row in rows
+    })
+    for backbone in backbones:
+        for order, key, label in strata:
+            group = [
+                row for row in rows
+                if row["backbone"] == backbone and row["stratum"] == key
+            ]
+            if {int(row["seed"]) for row in group} != set(seeds):
+                raise ValueError(f"Seed contract failed for {backbone}/{key}")
+            record = {
+                "backbone": backbone,
+                "backbone_label": BACKBONE_LABELS[backbone],
+                "variant": VARIANT,
+                "stratum_order": order,
+                "stratum": key,
+                "stratum_label": label,
+                "count": int(group[0]["count"]),
+                "share": float(group[0]["share"]),
+                "n_seeds": len(group),
+            }
+            for metric in (
+                "joint_objective",
+                "time_nll",
+                "log_qty_mse",
+                "qty_mae",
+                "qty_rmse",
+                "qty_bias",
+            ):
+                values = [float(row[metric]) for row in group]
+                record[f"{metric}_mean"] = statistics.mean(values)
+                record[f"{metric}_std"] = (
+                    statistics.stdev(values) if len(values) > 1 else 0.0
+                )
+            output.append(record)
+    return output
+
+
+def main() -> None:
+    args = parse_args()
+    if args.device.startswith("cuda") and not torch.cuda.is_available():
+        raise RuntimeError("CUDA was requested but is unavailable")
+    if len(args.source_revision) != 40:
+        raise ValueError("--source-revision must be a 40-character Git SHA")
+    backbones = parse_str_tuple(args.backbones)
+    seeds = parse_int_tuple(args.seeds)
+    if any(backbone not in BACKBONES for backbone in backbones):
+        raise ValueError(f"Unsupported backbone selection: {backbones}")
+    if not args.allow_partial_contract:
+        if set(backbones) != set(BACKBONES) or set(seeds) != set(SEEDS):
+            raise ValueError("Qualified run requires all backbones and seeds 42/52/62")
+    if args.hidden_dim != 64 or args.max_seq_len != 256:
+        raise ValueError("Frozen contract requires hidden_dim=64 and max_seq_len=256")
+    if args.lambda_log_qty != 1.0:
+        raise ValueError("Frozen contract requires lambda_log_qty=1.0")
+
+    data_sha256 = sha256_file(args.data)
+    manifest_sha256 = sha256_file(args.split_manifest)
+    if data_sha256 != EXPECTED_DATA_SHA256:
+        raise ValueError(f"Unexpected fixed-split SHA-256: {data_sha256}")
+    if manifest_sha256 != EXPECTED_SPLIT_MANIFEST_SHA256:
+        raise ValueError(f"Unexpected split-manifest SHA-256: {manifest_sha256}")
+    raw_frame = pl.read_parquet(args.data).sort(["oper_part_no", "seq"])
+    required = {
+        "oper_part_no",
+        "seq",
+        "delta_t",
+        "demand_qty",
+        "chronological_split",
+    }
+    missing = sorted(required - set(raw_frame.columns))
+    if missing:
+        raise ValueError(f"Fixed split is missing columns: {missing}")
+    quantity_contract = train_quantile_contract(raw_frame)
+    train_qty = raw_frame.filter(
+        pl.col("chronological_split") == "train"
+    )["demand_qty"].to_numpy().astype(np.float64)
+    interface_meta = {
+        "mode": "mark_free_count_aware_log_regression",
+        "history_features": ["log1p_delta_t", "log1p_raw_quantity"],
+        "target": "log1p_raw_quantity",
+        "quantity_loss": "mse_on_log1p_quantity",
+        "quantity_output_activation": "softplus",
+        "quantity_inverse_transform": "expm1",
+        "quantity_mark_used": False,
+        "quantity_residual_used": False,
+        "product_type_used": False,
+        "target_quantity_masked_from_history": True,
+        "train_target_mean": float(np.log1p(train_qty).mean()),
+        "fitted_on": "train",
+    }
+    frame = prepare_count_frame(raw_frame)
+    split_rows = {
+        str(row["chronological_split"]): int(row["len"])
+        for row in raw_frame.group_by("chronological_split").agg(pl.len()).iter_rows(named=True)
+    }
+    contract = {
+        "schema_version": 1,
+        "status": "running",
+        "experiment": "mark_free_count_aware_tpp_backbone_control",
+        "dataset": "intermittent_frozen_5000",
+        "data_path": str(args.data.resolve()),
+        "data_sha256": data_sha256,
+        "split_manifest_path": str(args.split_manifest.resolve()),
+        "split_manifest_sha256": manifest_sha256,
+        "split_rows": split_rows,
+        "quantity_contract": quantity_contract,
+        "history_length_contract": {
+            "boundaries": list(HISTORY_BOUNDARIES),
+            "strata": list(HISTORY_STRATA),
+            "definition": "number of observed events before the validation target",
+        },
+        "interface": interface_meta,
+        "backbones": list(backbones),
+        "seeds": list(seeds),
+        "expected_run_count": len(backbones) * len(seeds),
+        "epochs": args.epochs,
+        "batch_size": args.batch_size,
+        "lr": args.lr,
+        "lambda_log_qty": args.lambda_log_qty,
+        "grad_clip": args.grad_clip,
+        "early_stopping": {
+            "monitor": "validation_joint_objective",
+            "formula": "time_nll + lambda_log_qty * log1p_quantity_mse",
+            "min_epochs": args.min_epochs,
+            "patience": args.early_stopping_patience,
+            "restore": "best_validation_joint_objective",
+        },
+        "lookback_weeks": args.lookback_weeks,
+        "max_seq_len": args.max_seq_len,
+        "hidden_dim": args.hidden_dim,
+        "evaluation_scope": "validation_only",
+        "held_out_test_evaluated": False,
+        "source_revision": args.source_revision,
+        "execution_host": os.uname().nodename,
+        "execution_role": args.execution_role,
+        "partial_smoke": args.max_train_batches is not None or args.max_val_batches is not None,
+    }
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    save_json(args.output_dir / "launch_contract.json", contract)
+
+    summaries: list[dict[str, Any]] = []
+    quantity_rows: list[dict[str, Any]] = []
+    history_rows: list[dict[str, Any]] = []
+    for backbone in backbones:
+        for seed in seeds:
+            summary, run_quantity_rows, run_history_rows = train_one(
+                args=args,
+                frame=frame,
+                quantity_contract=quantity_contract,
+                interface_meta=interface_meta,
+                backbone=backbone,
+                seed=seed,
+            )
+            summaries.append(summary)
+            quantity_rows.extend(run_quantity_rows)
+            history_rows.extend(run_history_rows)
+            write_csv(args.output_dir / "run_summaries.csv", summaries)
+            if quantity_rows:
+                write_csv(args.output_dir / "quantity_seed_metrics.csv", quantity_rows)
+            if history_rows:
+                write_csv(args.output_dir / "history_seed_metrics.csv", history_rows)
+
+    if quantity_rows:
+        write_csv(
+            args.output_dir / "quantity_summary.csv",
+            summarize_breakdowns(quantity_rows, backbones=backbones, seeds=seeds),
+        )
+    if history_rows:
+        write_csv(
+            args.output_dir / "history_summary.csv",
+            summarize_breakdowns(history_rows, backbones=backbones, seeds=seeds),
+        )
+    contract["status"] = "complete"
+    contract["completed_run_count"] = len(summaries)
+    contract["held_out_test_evaluated"] = False
+    save_json(args.output_dir / "launch_contract.json", contract)
+    print(f"[complete] output_dir={args.output_dir} runs={len(summaries)}", flush=True)
+
+
+if __name__ == "__main__":
+    main()

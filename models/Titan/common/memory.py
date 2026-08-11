@@ -109,7 +109,11 @@ class MemoryAttention(nn.Module):
         B, H, T, Hd = t.shape
         return t.transpose(1, 2).contiguous().view(B, T, H * Hd)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self,
+        x: torch.Tensor,
+        mask: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         """
         x: [B, L, D]
         is_causal: True for Autoregressive tasks (RMTPPs), False for Seq2Seq Encoder
@@ -142,6 +146,7 @@ class MemoryAttention(nn.Module):
         scores = torch.matmul(qh, kh.transpose(-2, -1)) * self.scale
 
         # --- Causal Masking ---
+        full_mask: torch.Tensor | None = None
         if self.use_causal:
             # Create mask: [L, L + n_mem]
             # Memory part (left side): 1 (Visible)
@@ -156,7 +161,32 @@ class MemoryAttention(nn.Module):
             # 3. Concat -> [L, L + n_mem]
             full_mask = torch.cat([mask_mem, mask_seq], dim=1)
 
-            # Apply Mask (False -> -inf)
+        if mask is not None:
+            if mask.shape != (B, L):
+                raise ValueError(f"Expected attention mask {(B, L)}, got {tuple(mask.shape)}")
+            valid_keys = torch.cat(
+                [
+                    torch.ones(B, n_mem, device=x.device, dtype=torch.bool),
+                    mask.to(device=x.device, dtype=torch.bool),
+                ],
+                dim=1,
+            )
+            key_mask = valid_keys[:, None, None, :]
+            if full_mask is None:
+                full_mask = key_mask
+            else:
+                full_mask = full_mask[None, None, :, :] & key_mask
+
+            # Padded queries are discarded after attention, but an open
+            # diagonal prevents all-masked rows and NaNs when no memory exists.
+            if n_mem == 0:
+                invalid_queries = ~mask.to(device=x.device, dtype=torch.bool)
+                if invalid_queries.any():
+                    full_mask = full_mask.expand(B, 1, L, L).clone()
+                    batch_ids, positions = invalid_queries.nonzero(as_tuple=True)
+                    full_mask[batch_ids, 0, positions, positions] = True
+
+        if full_mask is not None:
             scores = scores.masked_fill(~full_mask, float("-inf"))
 
         att = F.softmax(scores, dim=-1)
@@ -165,6 +195,8 @@ class MemoryAttention(nn.Module):
         out = torch.matmul(att, vh)  # [B, H, L, Hd]
         out = self._merge_heads(out)
         out = self.out_proj(out)
+        if mask is not None:
+            out = out * mask.to(device=out.device, dtype=out.dtype).unsqueeze(-1)
         return out
 
 

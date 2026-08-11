@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "contract_name": "mark_free_count_aware_tpp_backbone_control_v1",
+  "status": "frozen_for_validation_screening",
+  "dataset": {
+    "name": "intermittent_frozen_5000",
+    "data_file": "intermittent_frozen_5000_with_split.parquet",
+    "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+    "split_manifest_file": "intermittent_frozen_5000_split_manifest.json",
+    "split_manifest_sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04",
+    "evaluation_scope": "validation_only",
+    "held_out_test_evaluated": false
+  },
+  "input": {
+    "history_features": [
+      "log1p_delta_t",
+      "log1p_raw_quantity"
+    ],
+    "target_quantity_masked_from_history": true,
+    "quantity_mark_used": false,
+    "quantity_residual_used": false,
+    "product_type_used": false,
+    "internal_event_token": "constant_zero_nonsemantic_frozen"
+  },
+  "backbones": {
+    "rmtpp": "gru_h64",
+    "thp": "small_d64",
+    "titantpp": "small_lmm_d64"
+  },
+  "outputs": {
+    "time": "rmtpp_conditional_density",
+    "quantity_target": "log1p_raw_quantity",
+    "quantity_activation": "softplus",
+    "quantity_inverse": "expm1",
+    "mark_head": false
+  },
+  "objective": {
+    "formula": "time_nll + lambda_log_qty * log1p_quantity_mse",
+    "lambda_log_qty": 1.0,
+    "checkpoint_monitor": "validation_joint_objective",
+    "checkpoint_restore": "best_validation_joint_objective"
+  },
+  "training": {
+    "seeds": [42, 52, 62],
+    "max_epochs": 300,
+    "min_epochs": 40,
+    "early_stopping_patience": 40,
+    "batch_size": 128,
+    "learning_rate": 0.001,
+    "gradient_clip": 1.0,
+    "max_seq_len": 256,
+    "lookback_weeks": 520
+  },
+  "metrics": {
+    "primary": [
+      "time_nll",
+      "log1p_quantity_mse",
+      "quantity_mae",
+      "quantity_rmse"
+    ],
+    "history_boundaries": [64, 128],
+    "quantity_quantiles": [0.5, 0.9, 0.95, 0.99],
+    "report_seed_level": true,
+    "report_mean_std": true
+  },
+  "claim_gates": {
+    "general_count_prediction": {
+      "mean_mae_better_than_both_baselines": true,
+      "mean_rmse_better_than_both_baselines": true,
+      "paired_better_seed_minimum": 2,
+      "max_time_nll_degradation": 0.01
+    },
+    "long_history": {
+      "stratum": "history_gt_128",
+      "mae_and_rmse_better_seed_minimum": 2,
+      "rmse_relative_gain_must_exceed_history_le_64": true
+    }
+  }
+}

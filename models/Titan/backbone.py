@@ -62,16 +62,24 @@ class TitanBackbone(nn.Module):
         )
         self.drop2 = nn.Dropout(dropout)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self,
+        x: torch.Tensor,
+        mask: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         # attn
         h = self.norm1(x)
-        h = self.attn(h)
+        h = self.attn(h, mask=mask)
         x = x + self.drop1(h)
+        if mask is not None:
+            x = x * mask.to(device=x.device, dtype=x.dtype).unsqueeze(-1)
 
         # ff
         h = self.norm2(x)
         h = self.ff(h)
         x = x + self.drop2(h)
+        if mask is not None:
+            x = x * mask.to(device=x.device, dtype=x.dtype).unsqueeze(-1)
         return x
 
     @torch.no_grad()
@@ -172,6 +180,7 @@ class MemoryEncoder(nn.Module):
         self,
         x: torch.Tensor,
         *,
+        mask: Optional[torch.Tensor] = None,
         update_context_memory: Optional[bool] = None,
         position_offset: int = 0,
         context_memory_update: str = "all",
@@ -182,6 +191,8 @@ class MemoryEncoder(nn.Module):
         if self.use_pos_emb:
             L = x.size(1)
             x = x + self._get_pos(L, x.device, x.dtype, offset=position_offset)
+        if mask is not None:
+            x = x * mask.to(device=x.device, dtype=x.dtype).unsqueeze(-1)
 
         should_update = (
             bool(update_context_memory)
@@ -190,7 +201,7 @@ class MemoryEncoder(nn.Module):
         )
 
         for layer in self.layers:
-            x = layer(x)
+            x = layer(x, mask=mask)
             if should_update:
                 # TTM-Lite updates memory only after processing observed tokens.
                 # Callers must avoid passing future target tokens when this flag
