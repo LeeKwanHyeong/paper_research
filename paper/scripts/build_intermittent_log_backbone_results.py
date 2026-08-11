@@ -415,12 +415,13 @@ def write_briefing(
         "- Same frozen 5,000-series split, log1p regression head, seeds, optimizer, and checkpoint rule across all backbones.",
         "- History ranges are fixed at <=64, 65-128, and >128 observed events.",
         "- Held-out test remains locked; this report uses validation only.",
+        "- Event NLL is the sum of mark and time NLL; the log-quantity regression loss is reported separately and is not included in NLL.",
         f"- Source revision: `{contract['source_revision']}`.",
         f"- Data SHA-256: `{contract['data_sha256']}`.",
         "",
         "## Overall Results",
         "",
-        "| Model | NLL | Time NLL | Quantity MAE | Mark accuracy | Parameters |",
+        "| Model | Event NLL (mark + time) | Time NLL | Quantity MAE | Mark accuracy | Parameters |",
         "|---|---:|---:|---:|---:|---:|",
     ]
     for model in MODELS:
@@ -435,7 +436,7 @@ def write_briefing(
         )
     lines.extend([
         "",
-        "## History-Length NLL",
+        "## History-Length Event NLL (Mark + Time)",
         "",
         "| Model | <=64 | 65-128 | >128 |",
         "|---|---:|---:|---:|",
@@ -450,10 +451,10 @@ def write_briefing(
         "",
         "## Pre-Registered Gates",
         "",
-        f"- Overall NLL best: **{overall_nll_gate}**",
+        f"- Overall event NLL best: **{overall_nll_gate}**",
         f"- Overall time NLL best: **{overall_time_gate}**",
-        f"- Paired overall NLL consistency: **{overall_seed_gate}**",
-        f"- Long-history NLL best: **{long_nll_gate}**",
+        f"- Paired overall event NLL consistency: **{overall_seed_gate}**",
+        f"- Long-history event NLL best: **{long_nll_gate}**",
         f"- Long-history time NLL best: **{long_time_gate}**",
         f"- Quantity MAE within 10% of the best baseline: **{quantity_guardrail}**",
         "",

@@ -1,0 +1,128 @@
+{
+  "backbone_candidates": {
+    "rmtpp": "gru_h64",
+    "thp": "small",
+    "titantpp": "small_lmm"
+  },
+  "backbones": [
+    "titantpp"
+  ],
+  "batch_size": 128,
+  "completed_run_count": 3,
+  "data_path": "/home/leekwanhyeong/workspace/paper_research/sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+  "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+  "dataset": "intermittent_frozen_5000",
+  "early_stopping": {
+    "min_epochs": 40,
+    "monitor": "validation_nll",
+    "patience": 40,
+    "restore": "best_val_nll"
+  },
+  "epochs": 300,
+  "evaluation_scope": "validation_only",
+  "execution_host": "RTX5090-server",
+  "execution_role": "titan_models",
+  "expected_run_count": 3,
+  "experiment": "intermittent_log_backbone_control",
+  "grad_clip": 1.0,
+  "held_out_test_evaluated": false,
+  "hidden_dim": 64,
+  "history_length_contract": {
+    "boundaries": [
+      64,
+      128
+    ],
+    "definition": "number of observed events before the validation target",
+    "rationale": "pre-registered architecture-oriented context ranges",
+    "strata": [
+      {
+        "stratum": "history_le_64",
+        "stratum_label": "History <= 64",
+        "stratum_order": 0
+      },
+      {
+        "stratum": "history_65_128",
+        "stratum_label": "History 65-128",
+        "stratum_order": 1
+      },
+      {
+        "stratum": "history_gt_128",
+        "stratum_label": "History > 128",
+        "stratum_order": 2
+      }
+    ]
+  },
+  "interface": {
+    "fitted_on": "train",
+    "history_quantity_input": "log2_within_mark_residual",
+    "inverse_transform": "expm1",
+    "loss": "mse_on_log1p_quantity",
+    "mode": "log_regression",
+    "output_activation": "softplus",
+    "support": "nonnegative",
+    "target": "log1p_demand_qty",
+    "train_max": 477.0,
+    "train_min": 1.0,
+    "train_target_mean": 1.821123902075507
+  },
+  "lambda_log": 1.0,
+  "lookback_weeks": 520,
+  "lr": 0.001,
+  "max_seq_len": 256,
+  "quantity_contract": {
+    "boundaries": [
+      2.0,
+      31.0,
+      46.0,
+      187.0
+    ],
+    "quantiles": [
+      0.5,
+      0.9,
+      0.95,
+      0.99
+    ],
+    "strata": [
+      {
+        "stratum": "le_p50",
+        "stratum_label": "<= 2",
+        "stratum_order": 0
+      },
+      {
+        "stratum": "p50_p90",
+        "stratum_label": "(2, 31]",
+        "stratum_order": 1
+      },
+      {
+        "stratum": "p90_p95",
+        "stratum_label": "(31, 46]",
+        "stratum_order": 2
+      },
+      {
+        "stratum": "p95_p99",
+        "stratum_label": "(46, 187]",
+        "stratum_order": 3
+      },
+      {
+        "stratum": "gt_p99",
+        "stratum_label": "> 187",
+        "stratum_order": 4
+      }
+    ]
+  },
+  "schema_version": 1,
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "source_revision": "8099d07e8fc6d8bcbbd7990f6034fa367f3aee5d",
+  "split_manifest_path": "/home/leekwanhyeong/workspace/paper_research/sample_data/intermittent_v2/intermittent_frozen_5000_split_manifest.json",
+  "split_manifest_sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04",
+  "split_rows": {
+    "test": 88019,
+    "train": 398824,
+    "validation": 86285
+  },
+  "status": "complete"
+}
