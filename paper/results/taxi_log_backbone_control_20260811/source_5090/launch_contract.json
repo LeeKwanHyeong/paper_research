@@ -1,0 +1,112 @@
+{
+  "backbone_candidates": {
+    "thp": "base",
+    "titantpp": "mid_lmm"
+  },
+  "batch_size": 128,
+  "completed_run_count": 6,
+  "data_path": "/home/leekwanhyeong/workspace/paper_research/search_artifacts/final_fair_matched_rmtpp_thp_e300_20260805/yellow_trip_hourly/cache/yellow_trip_hourly/fixed_split/marked_fixed_base_10p0.parquet",
+  "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+  "dataset": "yellow_trip_hourly",
+  "early_stopping": {
+    "min_epochs": 50,
+    "monitor": "validation_nll",
+    "patience": 60,
+    "restore": "best_val_nll"
+  },
+  "epochs": 300,
+  "evaluation_scope": "validation_only",
+  "execution_host": "RTX5090-server",
+  "expected_combined_run_count": 9,
+  "expected_new_run_count": 6,
+  "experiment": "taxi_log_backbone_control",
+  "grad_clip": 1.0,
+  "held_out_test_evaluated": false,
+  "hidden_dim": 128,
+  "interface": {
+    "fitted_on": "train",
+    "history_quantity_input": "log10_within_mark_residual",
+    "inverse_transform": "expm1",
+    "loss": "mse_on_log1p_quantity",
+    "mode": "log_regression",
+    "output_activation": "softplus",
+    "support": "nonnegative",
+    "target": "log1p_demand_qty",
+    "train_max": 6322.0,
+    "train_min": 1.0,
+    "train_target_mean": 2.837734592747447
+  },
+  "lambda_log": 1.0,
+  "lookback_weeks": 168,
+  "lr": 0.001,
+  "max_seq_len": 256,
+  "quantile_contract": {
+    "boundaries": [
+      7.0,
+      686.0,
+      1562.0,
+      3449.0
+    ],
+    "quantiles": [
+      0.5,
+      0.9,
+      0.95,
+      0.99
+    ],
+    "strata": [
+      {
+        "stratum": "le_p50",
+        "stratum_label": "<= 7",
+        "stratum_order": 0
+      },
+      {
+        "stratum": "p50_p90",
+        "stratum_label": "(7, 686]",
+        "stratum_order": 1
+      },
+      {
+        "stratum": "p90_p95",
+        "stratum_label": "(686, 1562]",
+        "stratum_order": 2
+      },
+      {
+        "stratum": "p95_p99",
+        "stratum_label": "(1562, 3449]",
+        "stratum_order": 3
+      },
+      {
+        "stratum": "gt_p99",
+        "stratum_label": "> 3449",
+        "stratum_order": 4
+      }
+    ]
+  },
+  "reference_backbone": "rmtpp",
+  "rmtpp_reference": {
+    "contract_path": "/home/leekwanhyeong/workspace/paper_research/search_artifacts/taxi_positive_regression_control_e300_20260811/log_regression/launch_contract.json",
+    "contract_source_revision": "19ee084161887a1247819c8d535aedb5b5e4aa38",
+    "run_summary_path": "/home/leekwanhyeong/workspace/paper_research/search_artifacts/taxi_positive_regression_control_e300_20260811/log_regression/run_summaries.csv",
+    "seeds": [
+      42,
+      52,
+      62
+    ]
+  },
+  "schema_version": 1,
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "source_revision": "e3c577ed78752ef6d6023801c00dc42ee98fc1c9",
+  "split_rows": {
+    "test": 8327,
+    "train": 38524,
+    "validation": 8268
+  },
+  "status": "complete",
+  "trained_backbones": [
+    "thp",
+    "titantpp"
+  ]
+}
