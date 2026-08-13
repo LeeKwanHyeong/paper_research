@@ -47,6 +47,14 @@ basket size rather than a native line-item quantity.
 - The repository has no explicit data license. This is treated as a redistribution
   restriction, not as a blocker to running and reporting a non-commercial academic
   experiment. The raw workbook is excluded from public paper artifacts.
+- The frozen model table contains 42,695 positive-demand events under a global
+  chronological split: 30,779 train, 6,690 validation, and 5,226 held-out test
+  events. Because the first event of each of the 5,000 item histories cannot serve
+  as a next-event target, the train loader exposes 25,779 training targets. All
+  validation events have prior context and expose 6,690 validation targets.
+- The common count-aware loader smoke test passed with an 84-month lookback and
+  84-token maximum sequence length. Model-facing timestamps, month indices,
+  inter-event intervals, quantities, and split labels are therefore experiment-ready.
 
 ## Auxiliary datasets
 

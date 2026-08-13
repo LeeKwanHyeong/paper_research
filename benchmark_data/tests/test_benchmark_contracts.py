@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pandas as pd
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -31,7 +33,43 @@ def main() -> None:
     assert raf_manifest["audit"]["missing_monthly_values"] == 0
     assert raf_manifest["audit"]["negative_monthly_values"] == 0
     assert raf_manifest["qualification"]["tpp_convertible"] is True
-    assert raf_manifest["qualification"]["publication_status"] == "conditional"
+    assert raf_manifest["qualification"]["publication_status"] == "research_use_with_citation"
+    assert raf_manifest["qualification"]["redistribution_status"] == "not_cleared"
+
+    raf_split_path = ROOT / "data/candidates/raf_spare_parts/raf_spare_parts_split_manifest.json"
+    raf_split = json.loads(raf_split_path.read_text())
+    assert raf_split["split_counts"] == {
+        "train": 30779,
+        "validation": 6690,
+        "test": 5226,
+    }
+    assert raf_split["next_event_target_counts"] == {
+        "train": 25779,
+        "validation": 6690,
+        "test": 5226,
+    }
+    assert raf_split["held_out_policy"]["test_used_for_model_selection"] is False
+    raf_frame = pd.read_parquet(
+        ROOT / "data/candidates/raf_spare_parts/raf_spare_parts_with_split.parquet"
+    )
+    required = {
+        "oper_part_no",
+        "demand_dt",
+        "seq",
+        "demand_qty",
+        "chronological_split",
+        "delta_t",
+    }
+    assert required <= set(raf_frame.columns)
+    assert len(raf_frame) == sum(raf_split["split_counts"].values())
+    assert raf_frame["oper_part_no"].nunique() == 5000
+    assert (raf_frame["demand_qty"] > 0).all()
+    assert not raf_frame.duplicated(["oper_part_no", "seq"]).any()
+    assert set(raf_frame["chronological_split"].unique()) == {
+        "train",
+        "validation",
+        "test",
+    }
 
     for manifest in (retail_manifest, raf_manifest):
         for artifact in manifest["artifacts"].values():

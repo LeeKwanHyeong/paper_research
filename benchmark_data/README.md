@@ -10,7 +10,7 @@ by Git. Contracts, manifests, audit reports, and preprocessing code are tracked.
 |---|---|---|---|
 | Main | Intermittent v2 | Native order quantity | Frozen and experiment-ready |
 | Main | Online Retail II | Native transaction quantity | Prepared under contract v1 |
-| Main candidate | RAF Spare Parts | Native monthly demand | Research use with citation; raw-data redistribution not cleared |
+| Main candidate | RAF Spare Parts | Native monthly demand | Frozen and experiment-ready; raw-data redistribution not cleared |
 | Auxiliary | NYC Taxi Hourly | Derived pickup count per grid-hour | Existing frozen split |
 | Optional auxiliary | Instacart | Derived basket size | Existing frozen split |
 
@@ -38,10 +38,16 @@ benchmark_data/
 
 ```bash
 python3 benchmark_data/scripts/audit_and_prepare_raf.py
+python3 benchmark_data/scripts/verify_raf_model_input.py
 python3 benchmark_data/scripts/prepare_online_retail_ii.py
 python3 benchmark_data/scripts/build_data_inventory.py
 python3 benchmark_data/tests/test_benchmark_contracts.py
 ```
+
+RAF preparation emits a common event table, fixed chronological train/validation/test
+files, and a split manifest under `data/candidates/raf_spare_parts/`. The model-facing
+time unit is one month, and `seq` is the month index from January 1996. The original
+workbook remains excluded from redistribution.
 
 The Online Retail II eligibility rule is fitted on the training interval only.
 Held-out rows never determine SKU inclusion, filtering thresholds, or aggregation

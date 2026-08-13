@@ -24,7 +24,14 @@
     "sequence_unit": "Item Ref no",
     "timestamp": "calendar month",
     "quantity": "monthly demand when demand > 0",
-    "delta_t": "months since the previous positive-demand month"
+    "delta_t": "months since the previous positive-demand month",
+    "model_schema": {
+      "entity": "oper_part_no formatted as RAF::<zero-padded item reference>",
+      "timestamp": "demand_dt as YYYYMMDD integer on the first day of each month",
+      "order": "seq as the 1-based month index from January 1996",
+      "quantity": "demand_qty as an unscaled positive count",
+      "split": "chronological_split"
+    }
   },
   "split": {
     "method": "global chronological month boundary",
@@ -41,5 +48,12 @@
     "test_used_for_filtering": false,
     "test_used_for_threshold_selection": false,
     "test_used_for_model_selection": false
+  },
+  "artifacts": {
+    "with_split": "benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_with_split.parquet",
+    "train": "benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_train.parquet",
+    "validation": "benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_validation.parquet",
+    "test": "benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_test.parquet",
+    "split_manifest": "benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_split_manifest.json"
   }
 }
