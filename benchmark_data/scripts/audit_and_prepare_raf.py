@@ -145,8 +145,13 @@ def main() -> None:
         "qualification": {
             "structural_status": "qualified",
             "tpp_convertible": True,
-            "publication_status": "conditional",
-            "blocker": "No explicit repository license was found; confirm publication reuse permission.",
+            "publication_status": "research_use_with_citation",
+            "redistribution_status": "not_cleared",
+            "usage_note": (
+                "Use for non-commercial academic analysis and report aggregate results "
+                "with repository and provenance citations. Do not redistribute the raw "
+                "workbook because the repository provides no explicit data license."
+            ),
         },
     }
     manifest_path = ROOT / "manifests" / "raf_spare_parts_v1.json"

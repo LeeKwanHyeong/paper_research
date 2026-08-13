@@ -10,7 +10,7 @@ by Git. Contracts, manifests, audit reports, and preprocessing code are tracked.
 |---|---|---|---|
 | Main | Intermittent v2 | Native order quantity | Frozen and experiment-ready |
 | Main | Online Retail II | Native transaction quantity | Prepared under contract v1 |
-| Main candidate | RAF Spare Parts | Native monthly demand | Structurally qualified; usage permission must be checked |
+| Main candidate | RAF Spare Parts | Native monthly demand | Research use with citation; raw-data redistribution not cleared |
 | Auxiliary | NYC Taxi Hourly | Derived pickup count per grid-hour | Existing frozen split |
 | Optional auxiliary | Instacart | Derived basket size | Existing frozen split |
 

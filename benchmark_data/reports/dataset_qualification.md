@@ -3,8 +3,10 @@
 ## Decision
 
 The primary benchmark consists of Intermittent v2 and Online Retail II. RAF Spare
-Parts is structurally suitable and is retained as a main-dataset candidate, but it
-must not be described as publication-cleared until reuse permission is confirmed.
+Parts is structurally suitable and may be used for non-commercial academic analysis
+with repository and provenance citations. The public distribution does not include
+an explicit data license, so the raw workbook must not be redistributed with paper
+artifacts unless separate permission is obtained.
 NYC Taxi Hourly is auxiliary because its quantity is a derived grid-hour pickup
 count. Instacart remains optional auxiliary evidence because its target is a derived
 basket size rather than a native line-item quantity.
@@ -39,8 +41,12 @@ basket size rather than a native line-item quantity.
 - Positive quantity median 2, p95 55, p99 200, and maximum 2,062.
 - Every item has at least three positive-demand months, so positive-event TPP
   conversion is structurally possible.
-- The dataset is a strong intermittent-demand benchmark, but the downloaded GitHub
-  repository has no explicit license. Publication reuse permission remains a blocker.
+- The dataset is a strong intermittent-demand benchmark. Its public repository is
+  explicitly intended for benchmarking and supplies a citation file, which supports
+  academic analysis and reporting of aggregate results.
+- The repository has no explicit data license. This is treated as a redistribution
+  restriction, not as a blocker to running and reporting a non-commercial academic
+  experiment. The raw workbook is excluded from public paper artifacts.
 
 ## Auxiliary datasets
 
@@ -69,7 +75,8 @@ and should not carry the primary count-representation claim.
 ## Paper-facing configuration
 
 1. Main table: Intermittent v2 and Online Retail II.
-2. Add RAF to the main table only after permission and citation verification.
+2. Add RAF to the main table with the repository and original RAF-study citations;
+   publish only derived statistics and model results, not the raw workbook.
 3. Put NYC Taxi Hourly in robustness or supplementary analysis.
 4. Use Instacart only when basket-count generalization adds a necessary argument.
 
@@ -77,8 +84,20 @@ and should not carry the primary count-representation claim.
 
 - Online Retail II: https://archive.ics.uci.edu/dataset/502/online+retail+ii
   (CC BY 4.0; DOI 10.24432/C5CG6D).
-- RAF repository: https://github.com/danieldehaan96/spdf. The repository asks
-  users to cite Daniel de Haan's benchmark repository but does not include an
-  explicit software or data license.
-- Published RAF description: https://pmc.ncbi.nlm.nih.gov/articles/PMC8629246/
-  reports 5,000 parts and 84 monthly periods, consistent with the audited file.
+- RAF data distribution: Daniel de Haan, *GitHub repository for benchmarking spare
+  parts demand forecasting for intermittent demand*, version 1.0.0, 20 September
+  2021, https://github.com/danieldehaan96/spdf. The repository's `CITATION.cff`
+  requests this citation, but the repository contains no explicit data license.
+- Original RAF study: R. H. Teunter and L. Duncan, "Forecasting intermittent
+  demand: a comparative study," *Journal of the Operational Research Society*,
+  60(3), 321-329, 2009. https://doi.org/10.1057/palgrave.jors.2602569.
+- Dataset-characteristics reference: A. A. Syntetos, M. Z. Babai, and N. Altay,
+  "On the demand distributions of spare parts," *International Journal of
+  Production Research*, 50(8), 2101-2117, 2012.
+  https://doi.org/10.1080/00207543.2011.562561. This paper reports the RAF panel as
+  5,000 SKUs with 84 monthly observations, matching the audited workbook.
+- Usage boundary: use the workbook internally for non-commercial academic analysis,
+  cite both the distribution and provenance, and publish only aggregate statistics,
+  transformations, code, and model results. Obtain explicit permission before
+  redistributing the raw workbook or a row-level derivative that substantially
+  reproduces it.
