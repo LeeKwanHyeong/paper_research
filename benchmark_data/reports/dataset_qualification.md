@@ -26,10 +26,16 @@ basket size rather than a native line-item quantity.
 - Native transaction `Quantity`, SKU (`StockCode`), and exact `InvoiceDate`.
 - Cancellations, returns, invalid timestamps, nonpositive prices, and service or
   adjustment codes are removed by a fixed row-level contract.
-- Events sharing a SKU and timestamp are summed.
+- Events sharing a SKU and event hour are summed, yielding 800,330 positive-demand
+  events from 3,125 train-eligible SKUs.
 - Global chronological boundaries define train, validation, and test.
 - SKU eligibility uses only training-period event counts, preventing future leakage.
 - Extreme positive quantities remain in the data and are reported, not silently clipped.
+- The frozen split contains 567,063 train, 94,947 validation, and 138,320 held-out
+  test events. The common loader exposes 563,938, 94,947, and 138,320 next-event
+  targets, respectively.
+- The common count-aware validation-loader smoke test passed with hourly time indices
+  and a maximum history length of 256 tokens.
 
 ## Main candidate
 
@@ -62,13 +68,16 @@ basket size rather than a native line-item quantity.
 
 The target is a derived number of pickups per grid cell and hour. It is useful for
 long sequence and derived-count robustness, but it is not evidence based on a native
-quantity field.
+quantity field. The existing frozen artifact contains 55,119 events across 131 grid
+series and passed hash, split-count, uniqueness, positivity, and loader checks.
 
 ### Instacart
 
 The target is the number of product rows in a user order. It is defensible as basket
 size, but it does not contain native per-line item quantity. It should remain optional
-and should not carry the primary count-representation claim.
+and should not carry the primary count-representation claim. The existing frozen
+artifact contains 3,279,521 orders across 206,209 user histories and passed hash,
+split-count, uniqueness, positivity, and loader checks.
 
 ## Excluded datasets
 
@@ -78,7 +87,7 @@ and should not carry the primary count-representation claim.
 - Amazon, Retweet, StackOverflow, Taobao, and Volcano provide event time and event
   type but no quantity target.
 - The small Walmart Weekly Sales dataset reports revenue, not unit counts.
-- M5 remains pending until Kaggle access and competition-rule acceptance are complete.
+- M5 Walmart is outside the current benchmark scope and is not a pending dependency.
 
 ## Paper-facing configuration
 

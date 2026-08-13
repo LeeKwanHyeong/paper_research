@@ -12,11 +12,12 @@
     {
       "dataset_id": "online_retail_ii",
       "role": "main",
-      "status": "prepared",
+      "status": "frozen_experiment_ready",
       "quantity_provenance": "native_transaction_quantity",
-      "data_path": "benchmark_data/data/main/online_retail_ii/online_retail_ii_positive_events.parquet",
+      "data_path": "benchmark_data/data/main/online_retail_ii/online_retail_ii_with_split.parquet",
       "contract_path": "benchmark_data/contracts/online_retail_ii_v1.json",
-      "manifest_path": "benchmark_data/manifests/online_retail_ii_v1.json"
+      "manifest_path": "benchmark_data/manifests/online_retail_ii_v1.json",
+      "split_manifest_path": "benchmark_data/data/main/online_retail_ii/online_retail_ii_split_manifest.json"
     },
     {
       "dataset_id": "raf_spare_parts",
@@ -33,20 +34,18 @@
       "role": "auxiliary",
       "status": "frozen_experiment_ready",
       "quantity_provenance": "derived_grid_hour_pickup_count",
-      "data_path": "benchmark_data/data/auxiliary/yellow_trip_hourly/yellow_trip_hourly_with_split.parquet"
+      "data_path": "benchmark_data/data/auxiliary/yellow_trip_hourly/yellow_trip_hourly_with_split.parquet",
+      "split_manifest_path": "benchmark_data/data/auxiliary/yellow_trip_hourly/yellow_trip_hourly_split_manifest.json",
+      "audit_manifest_path": "benchmark_data/manifests/auxiliary_frozen_v1.json"
     },
     {
       "dataset_id": "instacart",
       "role": "optional_auxiliary",
       "status": "frozen_experiment_ready",
       "quantity_provenance": "derived_order_basket_size",
-      "data_path": "benchmark_data/data/auxiliary/instacart/instacart_marked_target_with_split.parquet"
-    },
-    {
-      "dataset_id": "m5_walmart",
-      "role": "pending_candidate",
-      "status": "blocked_on_kaggle_access",
-      "quantity_provenance": "native_daily_unit_sales"
+      "data_path": "benchmark_data/data/auxiliary/instacart/instacart_marked_target_with_split.parquet",
+      "split_manifest_path": "benchmark_data/data/auxiliary/instacart/instacart_marked_target_split_manifest.json",
+      "audit_manifest_path": "benchmark_data/manifests/auxiliary_frozen_v1.json"
     }
   ]
 }

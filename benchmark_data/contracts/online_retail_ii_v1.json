@@ -10,10 +10,17 @@
   },
   "event_definition": {
     "sequence_unit": "StockCode",
-    "timestamp": "InvoiceDate",
-    "quantity": "sum(Quantity) for the same StockCode and InvoiceDate",
-    "time_resolution": "transaction timestamp",
-    "sort_order": ["StockCode", "InvoiceDate"]
+    "timestamp": "InvoiceDate floored to the event hour",
+    "quantity": "sum(Quantity) for the same StockCode and event hour",
+    "time_resolution": "hour",
+    "sort_order": ["StockCode", "event_hour"],
+    "model_schema": {
+      "entity": "oper_part_no formatted as ORII::<StockCode>",
+      "timestamp": "demand_dt as YYYYMMDDHH integer",
+      "order": "seq as the 1-based hour index from the first retained event hour",
+      "quantity": "demand_qty as an unscaled positive count",
+      "split": "chronological_split"
+    }
   },
   "row_filters": {
     "quantity": "Quantity > 0",
@@ -23,7 +30,7 @@
     "timestamp": "InvoiceDate parses successfully"
   },
   "aggregation": {
-    "keys": ["StockCode", "InvoiceDate"],
+    "keys": ["StockCode", "event_hour"],
     "quantity_aggregation": "sum",
     "country_aggregation": "first sorted unique value for audit only"
   },
@@ -49,5 +56,12 @@
     "test_used_for_filtering": false,
     "test_used_for_threshold_selection": false,
     "test_used_for_model_selection": false
+  },
+  "artifacts": {
+    "with_split": "benchmark_data/data/main/online_retail_ii/online_retail_ii_with_split.parquet",
+    "train": "benchmark_data/data/main/online_retail_ii/online_retail_ii_train.parquet",
+    "validation": "benchmark_data/data/main/online_retail_ii/online_retail_ii_validation.parquet",
+    "test": "benchmark_data/data/main/online_retail_ii/online_retail_ii_test.parquet",
+    "split_manifest": "benchmark_data/data/main/online_retail_ii/online_retail_ii_split_manifest.json"
   }
 }
