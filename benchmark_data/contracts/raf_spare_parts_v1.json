@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "dataset_id": "raf_spare_parts",
+  "source": {
+    "path": "benchmark_data/data/candidates/raf_spare_parts/raw/RAF data - 7 years demand - 5000 items.xls",
+    "original_local_path": "/Users/igwanhyeong/data/intermittent/RAF data - 7 years demand - 5000 items.xls",
+    "repository": "https://github.com/danieldehaan96/spdf",
+    "citation": "Daniel de Haan, GitHub repository for benchmarking spare parts demand forecasting for intermittent demand, version 1.0.0, 2021-09-20",
+    "license_status": "no explicit repository license found; publication reuse permission requires confirmation"
+  },
+  "source_layout": {
+    "sheet": "Results___7_years_demand_patter",
+    "id_column": "Item Ref no",
+    "description_column": "DESCRIPTION",
+    "lead_time_column": "Lead Time (months)",
+    "price_column": "PRICE (£)",
+    "monthly_columns": "JAN96 through DEC02"
+  },
+  "event_definition": {
+    "sequence_unit": "Item Ref no",
+    "timestamp": "calendar month",
+    "quantity": "monthly demand when demand > 0",
+    "delta_t": "months since the previous positive-demand month"
+  },
+  "split": {
+    "method": "global chronological month boundary",
+    "train_months": 58,
+    "validation_months": 13,
+    "test_months": 13,
+    "boundaries": {
+      "train": "1996-01 through 2000-10",
+      "validation": "2000-11 through 2001-11",
+      "test": "2001-12 through 2002-12"
+    }
+  },
+  "held_out_policy": {
+    "test_used_for_filtering": false,
+    "test_used_for_threshold_selection": false,
+    "test_used_for_model_selection": false
+  }
+}

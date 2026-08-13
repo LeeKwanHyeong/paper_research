@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "dataset_id": "online_retail_ii",
+  "source": {
+    "path": "benchmark_data/data/main/online_retail_ii/raw/online_retail_II.csv",
+    "original_local_path": "/Users/igwanhyeong/data/intermittent/online_retail_II.csv",
+    "source_url": "https://archive.ics.uci.edu/dataset/502/online+retail+ii",
+    "license": "CC BY 4.0",
+    "citation_doi": "10.24432/C5CG6D"
+  },
+  "event_definition": {
+    "sequence_unit": "StockCode",
+    "timestamp": "InvoiceDate",
+    "quantity": "sum(Quantity) for the same StockCode and InvoiceDate",
+    "time_resolution": "transaction timestamp",
+    "sort_order": ["StockCode", "InvoiceDate"]
+  },
+  "row_filters": {
+    "quantity": "Quantity > 0",
+    "price": "Price > 0",
+    "invoice": "Invoice does not start with C after uppercasing",
+    "stock_code": "uppercase StockCode matches ^[0-9]{4,}[A-Z0-9]*$",
+    "timestamp": "InvoiceDate parses successfully"
+  },
+  "aggregation": {
+    "keys": ["StockCode", "InvoiceDate"],
+    "quantity_aggregation": "sum",
+    "country_aggregation": "first sorted unique value for audit only"
+  },
+  "split": {
+    "method": "global chronological timestamp boundary",
+    "train_ratio": 0.7,
+    "validation_ratio": 0.15,
+    "test_ratio": 0.15,
+    "boundary_fit_scope": "all cleaned event timestamps",
+    "eligibility_fit_scope": "train only"
+  },
+  "series_eligibility": {
+    "minimum_train_events": 20,
+    "future_events_used": false
+  },
+  "quantity_policy": {
+    "clipping": false,
+    "winsorization": false,
+    "transform_fitted_on_test": false,
+    "note": "Extreme positive quantities are retained and reported. Any later robust-loss choice must be model-side and train-fitted."
+  },
+  "held_out_policy": {
+    "test_used_for_filtering": false,
+    "test_used_for_threshold_selection": false,
+    "test_used_for_model_selection": false
+  }
+}
