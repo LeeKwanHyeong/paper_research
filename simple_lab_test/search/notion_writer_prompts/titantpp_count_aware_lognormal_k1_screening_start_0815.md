@@ -9,8 +9,9 @@
 
 ## 상태
 
-- 상태: 실험 진행 중
+- 상태: 실험 완료 · K=1 gate 실패 · log-MSE 기준선 유지
 - 실험 시작 시각: `2026-08-15 11:40:56 KST`
+- 실험 종료 시각: `2026-08-16 02:17:39 KST`
 - 실행 서버 / tmux: `5080 / count_lognormal_k1_e300_0815`
 
 ## 목적
@@ -53,3 +54,11 @@ bash simple_lab_test/search/scripts/run_count_aware_lognormal_k1_screening_e300_
 ```
 
 ## 결과
+
+- 네 run 모두 정상 종료했으며 validation `86,285`건, held-out test 미사용 조건이 일치했다. NaN, Traceback, OOM은 없었다.
+- TitanTPP K=1은 log-MSE control 대비 전체 MAE를 `1.8637%` 개선해 최소 `5%` 기준에 미달했다.
+- 전체 RMSE는 `33.2453%`, `q > p99` MAE는 `75.0980%`, Time NLL은 `3.944258` 악화되어 세 safety gate를 모두 실패했다.
+- TitanTPP K=1은 `q <= p95` MAE를 개선했지만 `p95` 이상 tail과 long-history 오차를 손상했다.
+- THP에서도 K=1은 MAE `12.0091%`, RMSE `52.1536%`, Time NLL `0.442550` 악화되어 Titan encoder에 국한된 문제가 아니었다.
+- Negative Gaussian NLL이 joint objective를 지배하고 shared encoder의 time 학습을 손상했다. TitanTPP K=1은 전체 epoch에서 time safety를 한 번도 만족하지 못했다.
+- 최종 판정은 K=1 미채택, multi-seed 및 held-out 중단, mark-free direct log-MSE 기준선 유지다.
