@@ -766,6 +766,7 @@ def evaluate(
             **finalize_accumulator(accumulator),
         }
         for spec, accumulator in zip(quantity_contract["strata"], quantity_accumulators)
+        if int(accumulator["count"]) > 0
     ]
     result["history_rows"] = [
         {
@@ -774,6 +775,7 @@ def evaluate(
             **finalize_accumulator(accumulator),
         }
         for spec, accumulator in zip(HISTORY_STRATA, history_accumulators)
+        if int(accumulator["count"]) > 0
     ]
     return result
 
