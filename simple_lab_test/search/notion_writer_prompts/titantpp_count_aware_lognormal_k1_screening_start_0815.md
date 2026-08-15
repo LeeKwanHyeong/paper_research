@@ -9,8 +9,8 @@
 
 ## 상태
 
-- 상태: 실험 준비 중
-- 실험 준비 시작 시각: `2026-08-15 11:25:53 KST`
+- 상태: 실험 진행 중
+- 실험 시작 시각: `2026-08-15 11:40:56 KST`
 - 실행 서버 / tmux: `5080 / count_lognormal_k1_e300_0815`
 
 ## 목적
@@ -41,7 +41,7 @@
 ## 실행 명령어
 
 ```bash
-SOURCE_REVISION=<checksum_synced_full_sha> \
+SOURCE_REVISION=a70d6af517ac8be6a3631679fe62393544834da5 \
 PROJECT_ROOT=/home/leekwanhyeong/workspace/paper_research \
 PYTHON_BIN=/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python \
 OUTPUT_ROOT=/home/leekwanhyeong/workspace/paper_research/search_artifacts/count_aware_lognormal_k1_screening_e300_20260815 \
