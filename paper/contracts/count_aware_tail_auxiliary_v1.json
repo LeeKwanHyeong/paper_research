@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "status": "audit_passed_lambda_calibration_pending",
+  "dataset": "intermittent_frozen_5000",
+  "evaluation_scope": "validation_only_after_train_only_calibration",
+  "held_out_test_evaluated": false,
+  "baseline": {
+    "variant": "T0-logMSE",
+    "loss": "mse(softplus(location_head(h)), log1p(true_quantity))",
+    "point_prediction": "expm1(softplus(location_head(h)))"
+  },
+  "tail_contract": {
+    "statistics_source": "train_split_only",
+    "tail_definition": "true_quantity > train_p95",
+    "tail_threshold": 46.0,
+    "normalization_scale": 46.0,
+    "prediction_and_target_clip_cap": 187.0,
+    "clip_cap_source": "train_p99",
+    "huber_delta": 1.0,
+    "body_auxiliary_loss": 0.0,
+    "reduction": "mean_over_all_target_events",
+    "formula": "indicator(q>46) * huber(clamp(q_hat,0,187)/46, clamp(q,0,187)/46, delta=1)"
+  },
+  "variants": {
+    "T0-logMSE": {
+      "runner_name": "count_only_log_regression",
+      "tail_auxiliary": false,
+      "tail_gradient_route": "none"
+    },
+    "T1-tail-shared": {
+      "runner_name": "count_only_log_mse_tail_shared",
+      "tail_auxiliary": true,
+      "tail_gradient_route": "quantity_head_and_encoder"
+    },
+    "T2-tail-head-only": {
+      "runner_name": "count_only_log_mse_tail_head_only",
+      "tail_auxiliary": true,
+      "tail_gradient_route": "quantity_head_only_via_detached_hidden",
+      "role": "primary_candidate"
+    }
+  },
+  "lambda_calibration": {
+    "statistics_source": "train_split_only",
+    "backbone": "titantpp",
+    "seed": 42,
+    "warmup_train_batches": 128,
+    "probe_train_batches": 64,
+    "probe_shuffle": false,
+    "parameter_scope": "quantity_head",
+    "target_weighted_gradient_ratio": 0.1,
+    "formula": "0.1 * mean(log_mse_quantity_head_grad_norm) / mean(unweighted_tail_quantity_head_grad_norm)",
+    "minimum": 0.0001,
+    "maximum": 100.0,
+    "validation_metrics_used": false,
+    "frozen_value": null
+  },
+  "implementation_gates": [
+    "lambda_tail=0 matches T0 forward, scalar loss, and gradients",
+    "target quantity remains masked from encoder history",
+    "T2 isolated tail loss gives zero encoder and time-head gradient",
+    "T1 isolated tail loss gives nonzero encoder and quantity-head gradient",
+    "extreme finite quantities produce finite loss and gradients"
+  ],
+  "screening": {
+    "server": "5080",
+    "dataset": "intermittent_frozen_5000",
+    "variants": [
+      "T0-logMSE",
+      "T1-tail-shared",
+      "T2-tail-head-only"
+    ],
+    "seed": 42,
+    "epochs": 300,
+    "checkpoint_selection": "best_validation_joint_objective",
+    "held_out_test_evaluated": false
+  },
+  "acceptance_gate": {
+    "comparison": "fresh matched T0-logMSE",
+    "overall_rmse_or_gt_p99_mae_improvement_min_pct": 5.0,
+    "overall_mae_regression_max_pct": 2.0,
+    "le_p95_mae_regression_max_pct": 2.0,
+    "time_nll_regression_max": 0.01,
+    "finite_required": true
+  },
+  "prior_experiment_distinction": {
+    "Q3": "Q3 used marked direct_raw_qty with causal shrinkage RevIN and a log2 auxiliary; this contract uses mark-free log1p-MSE with capped normalized raw Huber.",
+    "K1": "K1 replaced log-MSE with Gaussian log-likelihood; this contract retains log-MSE and adds only an auxiliary tail term."
+  }
+}

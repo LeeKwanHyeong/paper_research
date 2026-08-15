@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "source_revision": "c3b382bffb1aeb2cf283cc80479182a09f717da7",
+  "data_path": "/Users/igwanhyeong/PycharmProjects/paper_research/sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+  "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+  "split_manifest_path": "/Users/igwanhyeong/PycharmProjects/paper_research/sample_data/intermittent_v2/intermittent_frozen_5000_split_manifest.json",
+  "split_manifest_sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04",
+  "validation_rows_read": 0,
+  "test_rows_read": 0,
+  "summary": {
+    "status": "continue",
+    "scope": "intermittent_train_only",
+    "event_count": 398824,
+    "quantity_min": 1.0,
+    "quantity_max": 477.0,
+    "quantity_mean": 15.064527209997392,
+    "quantity_median": 2.0,
+    "quantiles": {
+      "p90": 31.0,
+      "p95": 46.0,
+      "p99": 187.0
+    },
+    "initial_log_location": 1.8211239020755068,
+    "initial_raw_prediction": 5.17879891387548,
+    "baseline_p95_tail_sample_share": 0.049422803040940363,
+    "baseline_p95_tail_log_mse_share": 0.2580908878286623,
+    "baseline_p95_tail_log_gradient_share": 0.12264533436588626,
+    "unweighted_tail_aux_to_log_gradient_ratio": 0.0028471674763546184,
+    "stop_threshold": {
+      "metric": "p95_tail_absolute_log_location_gradient_share",
+      "maximum": 0.5
+    },
+    "proposed_constants": {
+      "tail_threshold": 46.0,
+      "normalization_scale": 46.0,
+      "clip_cap": 187.0,
+      "huber_delta": 1.0,
+      "tail_definition": "true_quantity > train_p95",
+      "loss_reduction": "mean_over_all_target_events_with_zero_body_terms"
+    },
+    "gate_checks": {
+      "finite": true,
+      "tail_support_at_least_100": true,
+      "p95_tail_does_not_dominate_log_mse_gradient": true,
+      "tail_constants_ordered": true
+    }
+  },
+  "strata": [
+    {
+      "stratum_order": 0,
+      "stratum": "le_p90",
+      "stratum_label": "<= p90 (31)",
+      "count": 362291,
+      "sample_share": 0.908398190680601,
+      "quantity_min": 1.0,
+      "quantity_max": 31.0,
+      "quantity_mean": 7.888114802741443,
+      "log_mse_share": 0.6613055739972408,
+      "log_location_gradient_share": 0.8129035566528364,
+      "unweighted_tail_aux_gradient_share": 0.0
+    },
+    {
+      "stratum_order": 1,
+      "stratum": "p90_p95",
+      "stratum_label": "p90-p95 (31, 46]",
+      "count": 16822,
+      "sample_share": 0.04217900627845867,
+      "quantity_min": 32.0,
+      "quantity_max": 46.0,
+      "quantity_mean": 35.61033170847699,
+      "log_mse_share": 0.08060353817409693,
+      "log_location_gradient_share": 0.06445110898127719,
+      "unweighted_tail_aux_gradient_share": 0.0
+    },
+    {
+      "stratum_order": 2,
+      "stratum": "p95_p99",
+      "stratum_label": "p95-p99 (46, 187]",
+      "count": 15739,
+      "sample_share": 0.0394635227569053,
+      "quantity_min": 47.0,
+      "quantity_max": 187.0,
+      "quantity_mean": 95.90145498443357,
+      "log_mse_share": 0.17393608618597228,
+      "log_location_gradient_share": 0.09064285131392906,
+      "unweighted_tail_aux_gradient_share": 0.7976626939944692
+    },
+    {
+      "stratum_order": 3,
+      "stratum": "gt_p99",
+      "stratum_label": "> p99 (187)",
+      "count": 3972,
+      "sample_share": 0.009959280284035064,
+      "quantity_min": 188.0,
+      "quantity_max": 477.0,
+      "quantity_mean": 262.3041289023162,
+      "log_mse_share": 0.08415480164269003,
+      "log_location_gradient_share": 0.0320024830519572,
+      "unweighted_tail_aux_gradient_share": 0.2023373060055308
+    }
+  ]
+}
