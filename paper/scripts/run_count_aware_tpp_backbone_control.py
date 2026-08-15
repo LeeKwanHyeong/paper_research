@@ -54,11 +54,18 @@ from simple_lab_test.search.common.runner import (
 SEEDS = (42, 52, 62)
 VARIANT = "count_only_log_regression"
 LOGNORMAL_VARIANT = "count_only_lognormal_k1"
+TAIL_SHARED_VARIANT = "count_only_log_mse_tail_shared"
+TAIL_HEAD_ONLY_VARIANT = "count_only_log_mse_tail_head_only"
+TAIL_VARIANTS = (TAIL_SHARED_VARIANT, TAIL_HEAD_ONLY_VARIANT)
 QUANTITY_VARIANT_ALIASES = {
     "log_mse": VARIANT,
     VARIANT: VARIANT,
     "lognormal_k1": LOGNORMAL_VARIANT,
     LOGNORMAL_VARIANT: LOGNORMAL_VARIANT,
+    "tail_shared": TAIL_SHARED_VARIANT,
+    TAIL_SHARED_VARIANT: TAIL_SHARED_VARIANT,
+    "tail_head_only": TAIL_HEAD_ONLY_VARIANT,
+    TAIL_HEAD_ONLY_VARIANT: TAIL_HEAD_ONLY_VARIANT,
 }
 BACKBONE_LABELS = {
     "rmtpp": "Count-aware RMTPP",
@@ -91,6 +98,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--quantity-sigma-floor", type=float, default=1e-3)
     parser.add_argument("--lambda-location-huber", type=float, default=1.0)
     parser.add_argument("--location-huber-delta", type=float, default=0.25)
+    parser.add_argument("--lambda-tail", type=float, default=0.0)
+    parser.add_argument("--tail-threshold", type=float, default=46.0)
+    parser.add_argument("--tail-normalization-scale", type=float, default=46.0)
+    parser.add_argument("--tail-clip-cap", type=float, default=187.0)
+    parser.add_argument("--tail-huber-delta", type=float, default=1.0)
     parser.add_argument("--max-train-batches", type=int, default=None)
     parser.add_argument("--max-val-batches", type=int, default=None)
     parser.add_argument("--allow-partial-contract", action="store_true")
@@ -131,13 +143,18 @@ class SharedTimeCountModel(nn.Module):
         quantity_sigma_floor: float = 1e-3,
         lambda_location_huber: float = 1.0,
         location_huber_delta: float = 0.25,
+        lambda_tail: float = 0.0,
+        tail_threshold: float = 46.0,
+        tail_normalization_scale: float = 46.0,
+        tail_clip_cap: float = 187.0,
+        tail_huber_delta: float = 1.0,
     ) -> None:
         super().__init__()
         if not math.isfinite(train_log_mean) or train_log_mean <= 0.0:
             raise ValueError("train_log_mean must be finite and positive")
         if not math.isfinite(train_log_std) or train_log_std <= 0.0:
             raise ValueError("train_log_std must be finite and positive")
-        if quantity_variant not in {VARIANT, LOGNORMAL_VARIANT}:
+        if quantity_variant not in {VARIANT, LOGNORMAL_VARIANT, *TAIL_VARIANTS}:
             raise ValueError(f"Unsupported quantity_variant: {quantity_variant}")
         if quantity_sigma_floor <= 0.0:
             raise ValueError("quantity_sigma_floor must be positive")
@@ -145,11 +162,24 @@ class SharedTimeCountModel(nn.Module):
             raise ValueError("lambda_location_huber must be nonnegative")
         if location_huber_delta <= 0.0:
             raise ValueError("location_huber_delta must be positive")
+        if lambda_tail < 0.0:
+            raise ValueError("lambda_tail must be nonnegative")
+        if not 0.0 < tail_threshold < tail_clip_cap:
+            raise ValueError("tail_threshold must be positive and below tail_clip_cap")
+        if tail_normalization_scale <= 0.0:
+            raise ValueError("tail_normalization_scale must be positive")
+        if tail_huber_delta <= 0.0:
+            raise ValueError("tail_huber_delta must be positive")
         self.hidden_dim = int(hidden_dim)
         self.quantity_variant = quantity_variant
         self.quantity_sigma_floor = float(quantity_sigma_floor)
         self.lambda_location_huber = float(lambda_location_huber)
         self.location_huber_delta = float(location_huber_delta)
+        self.lambda_tail = float(lambda_tail)
+        self.tail_threshold = float(tail_threshold)
+        self.tail_normalization_scale = float(tail_normalization_scale)
+        self.tail_clip_cap = float(tail_clip_cap)
+        self.tail_huber_delta = float(tail_huber_delta)
         self.v_t = nn.Linear(self.hidden_dim, 1, bias=False)
         self.b_t = nn.Parameter(torch.zeros(1))
         self.w_raw = nn.Parameter(torch.full((1,), -3.0))
@@ -224,6 +254,42 @@ class SharedTimeCountModel(nn.Module):
                 "scale": zeros,
                 "location": location,
                 "point_prediction": point_prediction,
+                "tail_aux_loss": zeros,
+                "tail_indicator": zeros,
+            }
+
+        if self.quantity_variant in TAIL_VARIANTS:
+            tail_hidden = (
+                hidden
+                if self.quantity_variant == TAIL_SHARED_VARIANT
+                else hidden.detach()
+            )
+            _, tail_prediction = self.predict_quantity(tail_hidden)
+            normalized_prediction = tail_prediction.clamp(
+                min=0.0,
+                max=self.tail_clip_cap,
+            ) / self.tail_normalization_scale
+            normalized_target = true_quantity.clamp(
+                min=0.0,
+                max=self.tail_clip_cap,
+            ) / self.tail_normalization_scale
+            tail_indicator = (true_quantity > self.tail_threshold).to(log_mse.dtype)
+            tail_aux_loss = tail_indicator * F.huber_loss(
+                normalized_prediction,
+                normalized_target,
+                reduction="none",
+                delta=self.tail_huber_delta,
+            )
+            return {
+                "train_loss": log_mse + self.lambda_tail * tail_aux_loss,
+                "log_mse": log_mse,
+                "distribution_nll": zeros,
+                "location_huber": zeros,
+                "scale": zeros,
+                "location": location,
+                "point_prediction": point_prediction,
+                "tail_aux_loss": tail_aux_loss,
+                "tail_indicator": tail_indicator,
             }
 
         scale = self.quantity_sigma_floor + F.softplus(
@@ -253,6 +319,8 @@ class SharedTimeCountModel(nn.Module):
             "scale": scale,
             "location": location,
             "point_prediction": point_prediction,
+            "tail_aux_loss": zeros,
+            "tail_indicator": zeros,
         }
 
 
@@ -381,6 +449,11 @@ def build_model(
     quantity_sigma_floor: float = 1e-3,
     lambda_location_huber: float = 1.0,
     location_huber_delta: float = 0.25,
+    lambda_tail: float = 0.0,
+    tail_threshold: float = 46.0,
+    tail_normalization_scale: float = 46.0,
+    tail_clip_cap: float = 187.0,
+    tail_huber_delta: float = 1.0,
 ) -> tuple[SharedTimeCountModel, dict[str, Any]]:
     quantity_kwargs = {
         "train_log_std": train_log_std,
@@ -388,6 +461,11 @@ def build_model(
         "quantity_sigma_floor": quantity_sigma_floor,
         "lambda_location_huber": lambda_location_huber,
         "location_huber_delta": location_huber_delta,
+        "lambda_tail": lambda_tail,
+        "tail_threshold": tail_threshold,
+        "tail_normalization_scale": tail_normalization_scale,
+        "tail_clip_cap": tail_clip_cap,
+        "tail_huber_delta": tail_huber_delta,
     }
     if backbone == "rmtpp":
         return CountAwareRMTPP(hidden_dim, train_log_mean, **quantity_kwargs), {
@@ -473,6 +551,8 @@ def target_outputs(
         "quantity_distribution_nll": quantity["distribution_nll"],
         "quantity_location_huber": quantity["location_huber"],
         "quantity_scale": quantity["scale"],
+        "tail_aux_loss": quantity["tail_aux_loss"],
+        "tail_indicator": quantity["tail_indicator"],
         "true_qty": true_qty,
         "pred_qty": quantity["point_prediction"],
         "history_length": lengths - 1,
@@ -488,6 +568,8 @@ def empty_accumulator() -> dict[str, float]:
         "log_qty_sum": 0.0,
         "distribution_nll_sum": 0.0,
         "location_huber_sum": 0.0,
+        "tail_aux_sum": 0.0,
+        "tail_count": 0,
         "scale_sum": 0.0,
         "abs_sum": 0.0,
         "sq_sum": 0.0,
@@ -504,6 +586,8 @@ def update_accumulator(
     log_qty_mse: np.ndarray,
     distribution_nll: np.ndarray,
     location_huber: np.ndarray,
+    tail_aux_loss: np.ndarray,
+    tail_indicator: np.ndarray,
     scale: np.ndarray,
     true_qty: np.ndarray,
     pred_qty: np.ndarray,
@@ -516,6 +600,8 @@ def update_accumulator(
     accumulator["log_qty_sum"] += float(log_qty_mse.sum())
     accumulator["distribution_nll_sum"] += float(distribution_nll.sum())
     accumulator["location_huber_sum"] += float(location_huber.sum())
+    accumulator["tail_aux_sum"] += float(tail_aux_loss.sum())
+    accumulator["tail_count"] += int(tail_indicator.sum())
     accumulator["scale_sum"] += float(scale.sum())
     accumulator["abs_sum"] += float(np.abs(error).sum())
     accumulator["sq_sum"] += float(np.square(error).sum())
@@ -534,6 +620,8 @@ def finalize_accumulator(accumulator: dict[str, float]) -> dict[str, Any]:
         "log_qty_mse": accumulator["log_qty_sum"] / count,
         "quantity_distribution_nll": accumulator["distribution_nll_sum"] / count,
         "quantity_location_huber": accumulator["location_huber_sum"] / count,
+        "tail_aux_loss": accumulator["tail_aux_sum"] / count,
+        "tail_count": int(accumulator["tail_count"]),
         "quantity_scale_mean": accumulator["scale_sum"] / count,
         "qty_mae": accumulator["abs_sum"] / count,
         "qty_rmse": float(np.sqrt(accumulator["sq_sum"] / count)),
@@ -578,6 +666,8 @@ def evaluate(
         log_qty_mse = outputs["log_qty_loss"].cpu().numpy().astype(np.float64)
         distribution_nll = outputs["quantity_distribution_nll"].cpu().numpy().astype(np.float64)
         location_huber = outputs["quantity_location_huber"].cpu().numpy().astype(np.float64)
+        tail_aux_loss = outputs["tail_aux_loss"].cpu().numpy().astype(np.float64)
+        tail_indicator = outputs["tail_indicator"].cpu().numpy().astype(np.float64)
         scale = outputs["quantity_scale"].cpu().numpy().astype(np.float64)
         true_qty = outputs["true_qty"].cpu().numpy().astype(np.float64)
         pred_qty = outputs["pred_qty"].cpu().numpy().astype(np.float64)
@@ -590,6 +680,8 @@ def evaluate(
             log_qty_mse=log_qty_mse,
             distribution_nll=distribution_nll,
             location_huber=location_huber,
+            tail_aux_loss=tail_aux_loss,
+            tail_indicator=tail_indicator,
             scale=scale,
             true_qty=true_qty,
             pred_qty=pred_qty,
@@ -622,6 +714,8 @@ def evaluate(
                         log_qty_mse=log_qty_mse[selected],
                         distribution_nll=distribution_nll[selected],
                         location_huber=location_huber[selected],
+                        tail_aux_loss=tail_aux_loss[selected],
+                        tail_indicator=tail_indicator[selected],
                         scale=scale[selected],
                         true_qty=true_qty[selected],
                         pred_qty=pred_qty[selected],
@@ -635,6 +729,8 @@ def evaluate(
         "val_log_qty_mse": overall_metrics["log_qty_mse"],
         "val_quantity_distribution_nll": overall_metrics["quantity_distribution_nll"],
         "val_quantity_location_huber": overall_metrics["quantity_location_huber"],
+        "val_tail_aux_loss": overall_metrics["tail_aux_loss"],
+        "val_tail_count": overall_metrics["tail_count"],
         "val_quantity_scale_mean": overall_metrics["quantity_scale_mean"],
         "qty_mae": overall_metrics["qty_mae"],
         "qty_rmse": overall_metrics["qty_rmse"],
@@ -724,6 +820,11 @@ def train_one(
         quantity_sigma_floor=args.quantity_sigma_floor,
         lambda_location_huber=args.lambda_location_huber,
         location_huber_delta=args.location_huber_delta,
+        lambda_tail=args.lambda_tail,
+        tail_threshold=args.tail_threshold,
+        tail_normalization_scale=args.tail_normalization_scale,
+        tail_clip_cap=args.tail_clip_cap,
+        tail_huber_delta=args.tail_huber_delta,
     )
     model.to(args.device)
     parameter_count = sum(parameter.numel() for parameter in model.parameters() if parameter.requires_grad)
@@ -804,6 +905,8 @@ def train_one(
             "val_quantity_location_huber": float(
                 validation["val_quantity_location_huber"]
             ),
+            "val_tail_aux_loss": float(validation["val_tail_aux_loss"]),
+            "val_tail_count": int(validation["val_tail_count"]),
             "val_quantity_scale_mean": float(validation["val_quantity_scale_mean"]),
             "val_qty_mae": float(validation["qty_mae"]),
             "val_qty_rmse": float(validation["qty_rmse"]),
@@ -816,6 +919,7 @@ def train_one(
             f"val_joint={epoch_row['val_joint_objective']:.8f} "
             f"time_nll={epoch_row['val_time_nll']:.8f} "
             f"log_qty_mse={epoch_row['val_log_qty_mse']:.8f} "
+            f"tail_aux={epoch_row['val_tail_aux_loss']:.8f} "
             f"qty_mae={epoch_row['val_qty_mae']:.8f}"
         )
         print(line, flush=True)
@@ -873,12 +977,18 @@ def train_one(
         include_breakdowns=args.max_val_batches is None,
     )
     state_digest = canonical_state_dict_sha256(best_state)
-    selection_formula = (
-        "time_nll + lambda_log_qty * log1p_quantity_mse"
-        if quantity_variant == VARIANT
-        else "time_nll + lambda_log_qty * "
-        "(gaussian_nll_on_log1p_quantity + lambda_location_huber * location_huber)"
-    )
+    if quantity_variant == VARIANT:
+        selection_formula = "time_nll + lambda_log_qty * log1p_quantity_mse"
+    elif quantity_variant in TAIL_VARIANTS:
+        selection_formula = (
+            "time_nll + lambda_log_qty * "
+            "(log1p_quantity_mse + lambda_tail * tail_raw_huber)"
+        )
+    else:
+        selection_formula = (
+            "time_nll + lambda_log_qty * "
+            "(gaussian_nll_on_log1p_quantity + lambda_location_huber * location_huber)"
+        )
     checkpoint = {
         "selection": "best_validation_joint_objective",
         "selection_formula": selection_formula,
@@ -933,7 +1043,14 @@ def train_one(
         "best_val_quantity_location_huber": float(
             validation["val_quantity_location_huber"]
         ),
+        "best_val_tail_aux_loss": float(validation["val_tail_aux_loss"]),
+        "best_val_tail_count": int(validation["val_tail_count"]),
         "best_val_quantity_scale_mean": float(validation["val_quantity_scale_mean"]),
+        "lambda_tail": args.lambda_tail,
+        "tail_threshold": args.tail_threshold,
+        "tail_normalization_scale": args.tail_normalization_scale,
+        "tail_clip_cap": args.tail_clip_cap,
+        "tail_huber_delta": args.tail_huber_delta,
         "best_val_qty_mae": float(validation["qty_mae"]),
         "best_val_qty_rmse": float(validation["qty_rmse"]),
         "parameter_count": parameter_count,
@@ -1007,6 +1124,7 @@ def summarize_breakdowns(
                     "log_qty_mse",
                     "quantity_distribution_nll",
                     "quantity_location_huber",
+                    "tail_aux_loss",
                     "quantity_scale_mean",
                     "qty_mae",
                     "qty_rmse",
@@ -1046,6 +1164,17 @@ def main() -> None:
             raise ValueError("K=1 contract requires lambda_location_huber=1.0")
         if args.location_huber_delta != 0.25:
             raise ValueError("K=1 contract requires location_huber_delta=0.25")
+    if any(variant in TAIL_VARIANTS for variant in quantity_variants):
+        if args.lambda_tail <= 0.0:
+            raise ValueError("Tail variants require a positive lambda_tail")
+        if args.tail_threshold != 46.0:
+            raise ValueError("Tail contract requires tail_threshold=46")
+        if args.tail_normalization_scale != 46.0:
+            raise ValueError("Tail contract requires tail_normalization_scale=46")
+        if args.tail_clip_cap != 187.0:
+            raise ValueError("Tail contract requires tail_clip_cap=187")
+        if args.tail_huber_delta != 1.0:
+            raise ValueError("Tail contract requires tail_huber_delta=1")
 
     data_sha256 = sha256_file(args.data)
     manifest_sha256 = sha256_file(args.split_manifest)
@@ -1100,6 +1229,28 @@ def main() -> None:
             "lambda_location_huber": args.lambda_location_huber,
             "location_huber_delta": args.location_huber_delta,
         },
+        TAIL_SHARED_VARIANT: {
+            **shared_interface,
+            "mode": "mark_free_count_aware_log_mse_tail_shared",
+            "quantity_loss": "log1p_mse_plus_capped_normalized_raw_huber",
+            "tail_gradient_route": "quantity_head_and_encoder",
+            "lambda_tail": args.lambda_tail,
+            "tail_threshold": args.tail_threshold,
+            "tail_normalization_scale": args.tail_normalization_scale,
+            "tail_clip_cap": args.tail_clip_cap,
+            "tail_huber_delta": args.tail_huber_delta,
+        },
+        TAIL_HEAD_ONLY_VARIANT: {
+            **shared_interface,
+            "mode": "mark_free_count_aware_log_mse_tail_head_only",
+            "quantity_loss": "log1p_mse_plus_capped_normalized_raw_huber",
+            "tail_gradient_route": "quantity_head_only_via_detached_hidden",
+            "lambda_tail": args.lambda_tail,
+            "tail_threshold": args.tail_threshold,
+            "tail_normalization_scale": args.tail_normalization_scale,
+            "tail_clip_cap": args.tail_clip_cap,
+            "tail_huber_delta": args.tail_huber_delta,
+        },
     }
     frame = prepare_count_frame(raw_frame)
     split_rows = {
@@ -1109,7 +1260,7 @@ def main() -> None:
     contract = {
         "schema_version": 1,
         "status": "running",
-        "experiment": "mark_free_count_aware_lognormal_k1_screening",
+        "experiment": "mark_free_count_aware_quantity_screening",
         "dataset": "intermittent_frozen_5000",
         "data_path": str(args.data.resolve()),
         "data_sha256": data_sha256,
@@ -1134,6 +1285,14 @@ def main() -> None:
         "batch_size": args.batch_size,
         "lr": args.lr,
         "lambda_log_qty": args.lambda_log_qty,
+        "lambda_tail": args.lambda_tail,
+        "tail_contract": {
+            "threshold": args.tail_threshold,
+            "normalization_scale": args.tail_normalization_scale,
+            "clip_cap": args.tail_clip_cap,
+            "huber_delta": args.tail_huber_delta,
+            "statistics_source_split": "train",
+        },
         "grad_clip": args.grad_clip,
         "early_stopping": {
             "monitor": "validation_joint_objective",
@@ -1141,6 +1300,10 @@ def main() -> None:
                 VARIANT: "time_nll + lambda_log_qty * log1p_quantity_mse",
                 LOGNORMAL_VARIANT: "time_nll + lambda_log_qty * "
                 "(gaussian_nll_on_log1p_quantity + lambda_location_huber * location_huber)",
+                TAIL_SHARED_VARIANT: "time_nll + lambda_log_qty * "
+                "(log1p_quantity_mse + lambda_tail * tail_raw_huber)",
+                TAIL_HEAD_ONLY_VARIANT: "time_nll + lambda_log_qty * "
+                "(log1p_quantity_mse + lambda_tail * tail_raw_huber)",
             },
             "min_epochs": args.min_epochs,
             "patience": args.early_stopping_patience,

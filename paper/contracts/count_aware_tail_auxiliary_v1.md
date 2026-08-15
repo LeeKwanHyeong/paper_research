@@ -62,7 +62,9 @@ encoder로 전달되지 않는다. Time head에는 두 tail variant 모두 직�
 ## Lambda calibration
 
 Validation을 사용하지 않는다. Seed 42 TitanTPP를 train split 128 batch로 warm-up한 뒤,
-shuffle하지 않은 train 64 batch에서 quantity-head gradient norm을 계산한다.
+별도 고정 loader seed `10042`로 섞은 train 64 batch에서 quantity-head gradient norm을
+계산한다. 이 shuffle은 시계열 정렬 순서에 따른 tail 표본 누락을 막기 위한 것이며
+validation/test row는 읽지 않는다.
 
 ```text
 lambda_tail
