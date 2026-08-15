@@ -49,6 +49,7 @@ from simple_lab_test.search.common.runner import (
     canonical_state_dict_sha256,
     torch_load_checkpoint,
 )
+from simple_lab_test.search.common.experiment_utils import filter_top_series
 
 
 SEEDS = (42, 52, 62)
@@ -72,6 +73,18 @@ BACKBONE_LABELS = {
     "thp": "Count-aware THP",
     "titantpp": "Count-aware TitanTPP",
 }
+DATASET_CONTRACTS = {
+    "intermittent_frozen_5000": {
+        "data_sha256": EXPECTED_DATA_SHA256,
+        "split_manifest_sha256": EXPECTED_SPLIT_MANIFEST_SHA256,
+        "max_seq_len": 256,
+    },
+    "insta_market_basket": {
+        "data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+        "split_manifest_sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d",
+        "max_seq_len": 64,
+    },
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -81,6 +94,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--source-revision", required=True)
     parser.add_argument("--execution-role", required=True)
+    parser.add_argument(
+        "--dataset-contract",
+        choices=sorted(DATASET_CONTRACTS),
+        default="intermittent_frozen_5000",
+    )
+    parser.add_argument("--max-series", type=int, default=None)
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--epochs", type=int, default=300)
     parser.add_argument("--batch-size", type=int, default=128)
@@ -1153,8 +1172,19 @@ def main() -> None:
     if not args.allow_partial_contract:
         if set(backbones) != set(BACKBONES) or set(seeds) != set(SEEDS):
             raise ValueError("Qualified run requires all backbones and seeds 42/52/62")
-    if args.hidden_dim != 64 or args.max_seq_len != 256:
-        raise ValueError("Frozen contract requires hidden_dim=64 and max_seq_len=256")
+    dataset_contract = DATASET_CONTRACTS[args.dataset_contract]
+    if args.hidden_dim != 64 or args.max_seq_len != dataset_contract["max_seq_len"]:
+        raise ValueError(
+            "Frozen contract requires hidden_dim=64 and "
+            f"max_seq_len={dataset_contract['max_seq_len']} for {args.dataset_contract}"
+        )
+    if args.max_series is not None and args.max_series < 1:
+        raise ValueError("max_series must be positive")
+    if args.dataset_contract == "intermittent_frozen_5000" and args.max_series is not None:
+        raise ValueError("The qualified Intermittent contract does not allow max_series")
+    if args.dataset_contract == "insta_market_basket":
+        if not args.allow_partial_contract or args.max_series is None:
+            raise ValueError("Instacart is supported only as an explicit max-series smoke")
     if args.lambda_log_qty != 1.0:
         raise ValueError("Frozen contract requires lambda_log_qty=1.0")
     if LOGNORMAL_VARIANT in quantity_variants:
@@ -1178,9 +1208,9 @@ def main() -> None:
 
     data_sha256 = sha256_file(args.data)
     manifest_sha256 = sha256_file(args.split_manifest)
-    if data_sha256 != EXPECTED_DATA_SHA256:
+    if data_sha256 != dataset_contract["data_sha256"]:
         raise ValueError(f"Unexpected fixed-split SHA-256: {data_sha256}")
-    if manifest_sha256 != EXPECTED_SPLIT_MANIFEST_SHA256:
+    if manifest_sha256 != dataset_contract["split_manifest_sha256"]:
         raise ValueError(f"Unexpected split-manifest SHA-256: {manifest_sha256}")
     raw_frame = pl.read_parquet(args.data).sort(["oper_part_no", "seq"])
     required = {
@@ -1193,6 +1223,12 @@ def main() -> None:
     missing = sorted(required - set(raw_frame.columns))
     if missing:
         raise ValueError(f"Fixed split is missing columns: {missing}")
+    if args.max_series is not None:
+        raw_frame = filter_top_series(
+            raw_frame,
+            key_col="oper_part_no",
+            max_series=args.max_series,
+        ).sort(["oper_part_no", "seq"])
     quantity_contract = train_quantile_contract(raw_frame)
     train_qty = raw_frame.filter(
         pl.col("chronological_split") == "train"
@@ -1261,7 +1297,8 @@ def main() -> None:
         "schema_version": 1,
         "status": "running",
         "experiment": "mark_free_count_aware_quantity_screening",
-        "dataset": "intermittent_frozen_5000",
+        "dataset": args.dataset_contract,
+        "max_series": args.max_series,
         "data_path": str(args.data.resolve()),
         "data_sha256": data_sha256,
         "split_manifest_path": str(args.split_manifest.resolve()),
