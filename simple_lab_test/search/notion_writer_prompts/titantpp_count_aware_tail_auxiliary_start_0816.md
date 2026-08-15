@@ -38,7 +38,7 @@ Huber를 추가했을 때 tail 오차를 줄이면서 body와 time modeling을 �
 | Tail | `q > 46` |
 | Raw normalization / cap | 46 / 187 |
 | Huber delta | 1 |
-| Lambda | train-only gradient calibration 결과 사용 |
+| Lambda | 0.09111380335463036 (train-only gradient calibration) |
 | Model | Count-aware TitanTPP small LMM |
 | Epoch / seed | 300 / 42 |
 | Batch / LR | 128 / 1e-3 |
@@ -50,11 +50,10 @@ Huber를 추가했을 때 tail 오차를 줄이면서 body와 time modeling을 �
 
 ```bash
 SOURCE_REVISION=<synced_commit_sha> \
-LAMBDA_TAIL=<train_only_frozen_value> \
+LAMBDA_TAIL=0.09111380335463036 \
 PROJECT_ROOT=/home/leekwanhyeong/workspace/paper_research \
 PYTHON_BIN=/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python \
 bash simple_lab_test/search/scripts/run_count_aware_tail_screening_e300_20260816.sh
 ```
 
 #### 결과
-

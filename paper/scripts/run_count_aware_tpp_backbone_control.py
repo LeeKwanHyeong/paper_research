@@ -58,6 +58,7 @@ LOGNORMAL_VARIANT = "count_only_lognormal_k1"
 TAIL_SHARED_VARIANT = "count_only_log_mse_tail_shared"
 TAIL_HEAD_ONLY_VARIANT = "count_only_log_mse_tail_head_only"
 TAIL_VARIANTS = (TAIL_SHARED_VARIANT, TAIL_HEAD_ONLY_VARIANT)
+FROZEN_TAIL_LAMBDA = 0.09111380335463036
 QUANTITY_VARIANT_ALIASES = {
     "log_mse": VARIANT,
     VARIANT: VARIANT,
@@ -1195,8 +1196,15 @@ def main() -> None:
         if args.location_huber_delta != 0.25:
             raise ValueError("K=1 contract requires location_huber_delta=0.25")
     if any(variant in TAIL_VARIANTS for variant in quantity_variants):
-        if args.lambda_tail <= 0.0:
-            raise ValueError("Tail variants require a positive lambda_tail")
+        if not math.isclose(
+            args.lambda_tail,
+            FROZEN_TAIL_LAMBDA,
+            rel_tol=0.0,
+            abs_tol=1e-15,
+        ):
+            raise ValueError(
+                f"Tail contract requires lambda_tail={FROZEN_TAIL_LAMBDA}"
+            )
         if args.tail_threshold != 46.0:
             raise ValueError("Tail contract requires tail_threshold=46")
         if args.tail_normalization_scale != 46.0:

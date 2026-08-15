@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "audit_passed_lambda_calibration_pending",
+  "status": "lambda_calibrated_cuda_preflight_pending",
   "dataset": "intermittent_frozen_5000",
   "evaluation_scope": "validation_only_after_train_only_calibration",
   "held_out_test_evaluated": false,
@@ -53,7 +53,12 @@
     "minimum": 0.0001,
     "maximum": 100.0,
     "validation_metrics_used": false,
-    "frozen_value": null
+    "frozen_value": 0.09111380335463036,
+    "observed_mean_log_mse_head_gradient_norm": 0.4048230873886496,
+    "observed_mean_tail_head_gradient_norm": 0.4443048939720029,
+    "observed_probe_target_count": 8192,
+    "observed_probe_tail_count": 388,
+    "observed_weighted_gradient_ratio": 0.10000000000000002
   },
   "implementation_gates": [
     "lambda_tail=0 matches T0 forward, scalar loss, and gradients",

@@ -2,9 +2,9 @@
 
 ## 상태와 목적
 
-Intermittent train-only audit를 통과했으며 `lambda_tail`의 train-only gradient
-calibration만 남아 있다. 기존 mark-free `log1p(quantity)` MSE와 point prediction은
-바꾸지 않고, 상위 수량 구간의 raw 오차만 bounded auxiliary loss로 보완한다.
+Intermittent train-only audit와 gradient calibration을 통과했다. 기존 mark-free
+`log1p(quantity)` MSE와 point prediction은 바꾸지 않고, 상위 수량 구간의 raw
+오차만 bounded auxiliary loss로 보완한다.
 
 이 실험의 목적은 log-MSE의 중·저수량 안정성을 유지하면서 RMSE와 상위 수량 MAE를
 개선할 수 있는지 확인하는 것이다. K=1 log-normal NLL은 다시 사용하지 않는다.
@@ -72,6 +72,17 @@ lambda_tail
 ```
 
 수치 안전 범위 `[1e-4, 100]` 안에서 한 번만 고정하고 T1/T2에 동일하게 사용한다.
+
+5080 CUDA calibration에서 log-MSE와 unweighted tail의 quantity-head gradient norm은
+각각 `0.4048230874`, `0.4443048940`이었다. Probe 8,192개 중 tail target은 388개였고,
+최종 고정값은 다음과 같다.
+
+```text
+lambda_tail = 0.09111380335463036
+```
+
+이 값을 적용한 weighted tail/main gradient 비율은 `0.10`이다. Validation/test row는
+calibration에서 읽지 않았다.
 
 ## 기존 실험과의 차이
 
