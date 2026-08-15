@@ -53,6 +53,13 @@ from simple_lab_test.search.common.runner import (
 
 SEEDS = (42, 52, 62)
 VARIANT = "count_only_log_regression"
+LOGNORMAL_VARIANT = "count_only_lognormal_k1"
+QUANTITY_VARIANT_ALIASES = {
+    "log_mse": VARIANT,
+    VARIANT: VARIANT,
+    "lognormal_k1": LOGNORMAL_VARIANT,
+    LOGNORMAL_VARIANT: LOGNORMAL_VARIANT,
+}
 BACKBONE_LABELS = {
     "rmtpp": "Count-aware RMTPP",
     "thp": "Count-aware THP",
@@ -80,6 +87,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--min-epochs", type=int, default=40)
     parser.add_argument("--backbones", default=",".join(BACKBONES))
     parser.add_argument("--seeds", default=",".join(str(seed) for seed in SEEDS))
+    parser.add_argument("--quantity-variants", default=VARIANT)
+    parser.add_argument("--quantity-sigma-floor", type=float, default=1e-3)
+    parser.add_argument("--lambda-location-huber", type=float, default=1.0)
+    parser.add_argument("--location-huber-delta", type=float, default=0.25)
     parser.add_argument("--max-train-batches", type=int, default=None)
     parser.add_argument("--max-val-batches", type=int, default=None)
     parser.add_argument("--allow-partial-contract", action="store_true")
@@ -87,24 +98,79 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def inverse_softplus(value: float) -> float:
+    if not math.isfinite(value) or value <= 0.0:
+        raise ValueError("inverse_softplus requires a finite positive value")
+    return value + math.log(-math.expm1(-value))
+
+
+def normalize_quantity_variants(raw: str) -> tuple[str, ...]:
+    requested = parse_str_tuple(raw)
+    try:
+        normalized = tuple(QUANTITY_VARIANT_ALIASES[name] for name in requested)
+    except KeyError as exc:
+        available = ", ".join(sorted(QUANTITY_VARIANT_ALIASES))
+        raise ValueError(
+            f"Unsupported quantity variant '{exc.args[0]}'. Available: {available}"
+        ) from exc
+    if len(set(normalized)) != len(normalized):
+        raise ValueError(f"Duplicate quantity variants after alias resolution: {normalized}")
+    return normalized
+
+
 class SharedTimeCountModel(nn.Module):
     """Common time-density and continuous-count heads for every backbone."""
 
-    def __init__(self, hidden_dim: int, train_log_mean: float) -> None:
+    def __init__(
+        self,
+        hidden_dim: int,
+        train_log_mean: float,
+        *,
+        train_log_std: float = 1.0,
+        quantity_variant: str = VARIANT,
+        quantity_sigma_floor: float = 1e-3,
+        lambda_location_huber: float = 1.0,
+        location_huber_delta: float = 0.25,
+    ) -> None:
         super().__init__()
         if not math.isfinite(train_log_mean) or train_log_mean <= 0.0:
             raise ValueError("train_log_mean must be finite and positive")
+        if not math.isfinite(train_log_std) or train_log_std <= 0.0:
+            raise ValueError("train_log_std must be finite and positive")
+        if quantity_variant not in {VARIANT, LOGNORMAL_VARIANT}:
+            raise ValueError(f"Unsupported quantity_variant: {quantity_variant}")
+        if quantity_sigma_floor <= 0.0:
+            raise ValueError("quantity_sigma_floor must be positive")
+        if lambda_location_huber < 0.0:
+            raise ValueError("lambda_location_huber must be nonnegative")
+        if location_huber_delta <= 0.0:
+            raise ValueError("location_huber_delta must be positive")
         self.hidden_dim = int(hidden_dim)
+        self.quantity_variant = quantity_variant
+        self.quantity_sigma_floor = float(quantity_sigma_floor)
+        self.lambda_location_huber = float(lambda_location_huber)
+        self.location_huber_delta = float(location_huber_delta)
         self.v_t = nn.Linear(self.hidden_dim, 1, bias=False)
         self.b_t = nn.Parameter(torch.zeros(1))
         self.w_raw = nn.Parameter(torch.full((1,), -3.0))
         self.quantity_head = nn.Linear(self.hidden_dim, 1)
+        if self.quantity_variant == LOGNORMAL_VARIANT:
+            rng_state = torch.random.get_rng_state()
+            self.quantity_scale_head = nn.Linear(self.hidden_dim, 1)
+            torch.random.set_rng_state(rng_state)
         nn.init.normal_(self.v_t.weight, mean=0.0, std=0.01)
         nn.init.zeros_(self.quantity_head.weight)
         nn.init.constant_(
             self.quantity_head.bias,
             float(np.log(np.expm1(train_log_mean))),
         )
+        if self.quantity_variant == LOGNORMAL_VARIANT:
+            initial_scale = max(train_log_std - self.quantity_sigma_floor, 1e-4)
+            nn.init.zeros_(self.quantity_scale_head.weight)
+            nn.init.constant_(
+                self.quantity_scale_head.bias,
+                inverse_softplus(initial_scale),
+            )
 
     def encode(
         self,
@@ -140,10 +206,64 @@ class SharedTimeCountModel(nn.Module):
         log_quantity = F.softplus(self.quantity_head(hidden).squeeze(-1))
         return log_quantity, torch.expm1(log_quantity)
 
+    def quantity_outputs(
+        self,
+        hidden: torch.Tensor,
+        true_quantity: torch.Tensor,
+    ) -> dict[str, torch.Tensor]:
+        location, point_prediction = self.predict_quantity(hidden)
+        target = torch.log1p(true_quantity.clamp_min(0.0))
+        log_mse = F.mse_loss(location, target, reduction="none")
+        zeros = torch.zeros_like(log_mse)
+        if self.quantity_variant == VARIANT:
+            return {
+                "train_loss": log_mse,
+                "log_mse": log_mse,
+                "distribution_nll": zeros,
+                "location_huber": zeros,
+                "scale": zeros,
+                "location": location,
+                "point_prediction": point_prediction,
+            }
+
+        scale = self.quantity_sigma_floor + F.softplus(
+            self.quantity_scale_head(hidden).squeeze(-1)
+        )
+        distribution_nll = 0.5 * torch.square((target - location) / scale)
+        distribution_nll = (
+            distribution_nll
+            + torch.log(scale)
+            + 0.5 * math.log(2.0 * math.pi)
+        )
+        location_huber = F.huber_loss(
+            location,
+            target,
+            reduction="none",
+            delta=self.location_huber_delta,
+        )
+        train_loss = (
+            distribution_nll
+            + self.lambda_location_huber * location_huber
+        )
+        return {
+            "train_loss": train_loss,
+            "log_mse": log_mse,
+            "distribution_nll": distribution_nll,
+            "location_huber": location_huber,
+            "scale": scale,
+            "location": location,
+            "point_prediction": point_prediction,
+        }
+
 
 class CountAwareRMTPP(SharedTimeCountModel):
-    def __init__(self, hidden_dim: int, train_log_mean: float) -> None:
-        super().__init__(hidden_dim, train_log_mean)
+    def __init__(
+        self,
+        hidden_dim: int,
+        train_log_mean: float,
+        **quantity_kwargs: Any,
+    ) -> None:
+        super().__init__(hidden_dim, train_log_mean, **quantity_kwargs)
         self.input_projection = nn.Linear(2, hidden_dim)
         self.input_dropout = nn.Dropout(0.1)
         self.encoder = nn.GRU(hidden_dim, hidden_dim, batch_first=True)
@@ -162,8 +282,13 @@ class CountAwareRMTPP(SharedTimeCountModel):
 
 
 class CountAwareTHP(SharedTimeCountModel):
-    def __init__(self, hidden_dim: int, train_log_mean: float) -> None:
-        super().__init__(hidden_dim, train_log_mean)
+    def __init__(
+        self,
+        hidden_dim: int,
+        train_log_mean: float,
+        **quantity_kwargs: Any,
+    ) -> None:
+        super().__init__(hidden_dim, train_log_mean, **quantity_kwargs)
         self.input_projection = nn.Linear(2, hidden_dim)
         self.encoder_config = THPConfig(
             d_model=hidden_dim,
@@ -209,8 +334,14 @@ class CountAwareTHP(SharedTimeCountModel):
 
 
 class CountAwareTitanTPP(SharedTimeCountModel):
-    def __init__(self, hidden_dim: int, train_log_mean: float, max_seq_len: int) -> None:
-        super().__init__(hidden_dim, train_log_mean)
+    def __init__(
+        self,
+        hidden_dim: int,
+        train_log_mean: float,
+        max_seq_len: int,
+        **quantity_kwargs: Any,
+    ) -> None:
+        super().__init__(hidden_dim, train_log_mean, **quantity_kwargs)
         self.encoder = MemoryEncoder(
             input_dim=2,
             d_model=hidden_dim,
@@ -245,18 +376,35 @@ def build_model(
     hidden_dim: int,
     train_log_mean: float,
     max_seq_len: int,
+    train_log_std: float = 1.0,
+    quantity_variant: str = VARIANT,
+    quantity_sigma_floor: float = 1e-3,
+    lambda_location_huber: float = 1.0,
+    location_huber_delta: float = 0.25,
 ) -> tuple[SharedTimeCountModel, dict[str, Any]]:
+    quantity_kwargs = {
+        "train_log_std": train_log_std,
+        "quantity_variant": quantity_variant,
+        "quantity_sigma_floor": quantity_sigma_floor,
+        "lambda_location_huber": lambda_location_huber,
+        "location_huber_delta": location_huber_delta,
+    }
     if backbone == "rmtpp":
-        return CountAwareRMTPP(hidden_dim, train_log_mean), {
+        return CountAwareRMTPP(hidden_dim, train_log_mean, **quantity_kwargs), {
             "candidate_name": "count_gru_h64",
             "rnn_type": "gru",
             "hidden_dim": hidden_dim,
         }
     if backbone == "thp":
-        model = CountAwareTHP(hidden_dim, train_log_mean)
+        model = CountAwareTHP(hidden_dim, train_log_mean, **quantity_kwargs)
         return model, {"candidate_name": "count_thp_small", **asdict(model.encoder_config)}
     if backbone == "titantpp":
-        return CountAwareTitanTPP(hidden_dim, train_log_mean, max_seq_len), {
+        return CountAwareTitanTPP(
+            hidden_dim,
+            train_log_mean,
+            max_seq_len,
+            **quantity_kwargs,
+        ), {
             "candidate_name": "count_titan_small_lmm",
             "d_model": hidden_dim,
             "n_layers": 2,
@@ -316,18 +464,17 @@ def target_outputs(
     true_dt = dts[batch_ids, target_positions].float()
     true_qty = quantities[batch_ids, target_positions].float()
     time_loss = -model.log_f_dt(hidden, true_dt)
-    transformed, pred_qty = model.predict_quantity(hidden)
-    log_qty_loss = F.mse_loss(
-        transformed,
-        torch.log1p(true_qty.clamp_min(0.0)),
-        reduction="none",
-    )
+    quantity = model.quantity_outputs(hidden, true_qty)
     return {
-        "joint_loss": time_loss + float(lambda_log_qty) * log_qty_loss,
+        "joint_loss": time_loss + float(lambda_log_qty) * quantity["train_loss"],
         "time_loss": time_loss,
-        "log_qty_loss": log_qty_loss,
+        "quantity_train_loss": quantity["train_loss"],
+        "log_qty_loss": quantity["log_mse"],
+        "quantity_distribution_nll": quantity["distribution_nll"],
+        "quantity_location_huber": quantity["location_huber"],
+        "quantity_scale": quantity["scale"],
         "true_qty": true_qty,
-        "pred_qty": pred_qty,
+        "pred_qty": quantity["point_prediction"],
         "history_length": lengths - 1,
     }
 
@@ -337,7 +484,11 @@ def empty_accumulator() -> dict[str, float]:
         "count": 0,
         "joint_sum": 0.0,
         "time_sum": 0.0,
+        "quantity_train_sum": 0.0,
         "log_qty_sum": 0.0,
+        "distribution_nll_sum": 0.0,
+        "location_huber_sum": 0.0,
+        "scale_sum": 0.0,
         "abs_sum": 0.0,
         "sq_sum": 0.0,
         "signed_sum": 0.0,
@@ -349,7 +500,11 @@ def update_accumulator(
     *,
     joint: np.ndarray,
     time_nll: np.ndarray,
+    quantity_train_loss: np.ndarray,
     log_qty_mse: np.ndarray,
+    distribution_nll: np.ndarray,
+    location_huber: np.ndarray,
+    scale: np.ndarray,
     true_qty: np.ndarray,
     pred_qty: np.ndarray,
 ) -> None:
@@ -357,7 +512,11 @@ def update_accumulator(
     accumulator["count"] += int(true_qty.size)
     accumulator["joint_sum"] += float(joint.sum())
     accumulator["time_sum"] += float(time_nll.sum())
+    accumulator["quantity_train_sum"] += float(quantity_train_loss.sum())
     accumulator["log_qty_sum"] += float(log_qty_mse.sum())
+    accumulator["distribution_nll_sum"] += float(distribution_nll.sum())
+    accumulator["location_huber_sum"] += float(location_huber.sum())
+    accumulator["scale_sum"] += float(scale.sum())
     accumulator["abs_sum"] += float(np.abs(error).sum())
     accumulator["sq_sum"] += float(np.square(error).sum())
     accumulator["signed_sum"] += float(error.sum())
@@ -371,7 +530,11 @@ def finalize_accumulator(accumulator: dict[str, float]) -> dict[str, Any]:
         "count": count,
         "joint_objective": accumulator["joint_sum"] / count,
         "time_nll": accumulator["time_sum"] / count,
+        "quantity_train_loss": accumulator["quantity_train_sum"] / count,
         "log_qty_mse": accumulator["log_qty_sum"] / count,
+        "quantity_distribution_nll": accumulator["distribution_nll_sum"] / count,
+        "quantity_location_huber": accumulator["location_huber_sum"] / count,
+        "quantity_scale_mean": accumulator["scale_sum"] / count,
         "qty_mae": accumulator["abs_sum"] / count,
         "qty_rmse": float(np.sqrt(accumulator["sq_sum"] / count)),
         "qty_bias": accumulator["signed_sum"] / count,
@@ -411,7 +574,11 @@ def evaluate(
         )
         joint = outputs["joint_loss"].cpu().numpy().astype(np.float64)
         time_nll = outputs["time_loss"].cpu().numpy().astype(np.float64)
+        quantity_train_loss = outputs["quantity_train_loss"].cpu().numpy().astype(np.float64)
         log_qty_mse = outputs["log_qty_loss"].cpu().numpy().astype(np.float64)
+        distribution_nll = outputs["quantity_distribution_nll"].cpu().numpy().astype(np.float64)
+        location_huber = outputs["quantity_location_huber"].cpu().numpy().astype(np.float64)
+        scale = outputs["quantity_scale"].cpu().numpy().astype(np.float64)
         true_qty = outputs["true_qty"].cpu().numpy().astype(np.float64)
         pred_qty = outputs["pred_qty"].cpu().numpy().astype(np.float64)
         history_length = outputs["history_length"].cpu().numpy().astype(np.int64)
@@ -419,7 +586,11 @@ def evaluate(
             overall,
             joint=joint,
             time_nll=time_nll,
+            quantity_train_loss=quantity_train_loss,
             log_qty_mse=log_qty_mse,
+            distribution_nll=distribution_nll,
+            location_huber=location_huber,
+            scale=scale,
             true_qty=true_qty,
             pred_qty=pred_qty,
         )
@@ -447,7 +618,11 @@ def evaluate(
                         accumulator,
                         joint=joint[selected],
                         time_nll=time_nll[selected],
+                        quantity_train_loss=quantity_train_loss[selected],
                         log_qty_mse=log_qty_mse[selected],
+                        distribution_nll=distribution_nll[selected],
+                        location_huber=location_huber[selected],
+                        scale=scale[selected],
                         true_qty=true_qty[selected],
                         pred_qty=pred_qty[selected],
                     )
@@ -456,7 +631,11 @@ def evaluate(
     result: dict[str, Any] = {
         "val_joint_objective": overall_metrics["joint_objective"],
         "val_time_nll": overall_metrics["time_nll"],
+        "val_quantity_train_loss": overall_metrics["quantity_train_loss"],
         "val_log_qty_mse": overall_metrics["log_qty_mse"],
+        "val_quantity_distribution_nll": overall_metrics["quantity_distribution_nll"],
+        "val_quantity_location_huber": overall_metrics["quantity_location_huber"],
+        "val_quantity_scale_mean": overall_metrics["quantity_scale_mean"],
         "qty_mae": overall_metrics["qty_mae"],
         "qty_rmse": overall_metrics["qty_rmse"],
         "evaluated_count": overall_metrics["count"],
@@ -503,9 +682,10 @@ def train_one(
     quantity_contract: dict[str, Any],
     interface_meta: dict[str, Any],
     backbone: str,
+    quantity_variant: str,
     seed: int,
 ) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
-    run_dir = args.output_dir / "runs" / backbone / VARIANT / f"seed_{seed}"
+    run_dir = args.output_dir / "runs" / backbone / quantity_variant / f"seed_{seed}"
     summary_path = run_dir / "summary.json"
     best_path = run_dir / "best_val_joint_objective_model.pt"
     last_path = run_dir / "last_epoch_state.pt"
@@ -538,7 +718,12 @@ def train_one(
         backbone,
         hidden_dim=args.hidden_dim,
         train_log_mean=float(interface_meta["train_target_mean"]),
+        train_log_std=float(interface_meta["train_target_std"]),
         max_seq_len=args.max_seq_len,
+        quantity_variant=quantity_variant,
+        quantity_sigma_floor=args.quantity_sigma_floor,
+        lambda_location_huber=args.lambda_location_huber,
+        location_huber_delta=args.location_huber_delta,
     )
     model.to(args.device)
     parameter_count = sum(parameter.numel() for parameter in model.parameters() if parameter.requires_grad)
@@ -611,13 +796,22 @@ def train_one(
             "train_joint_objective": running / max(batches, 1),
             "val_joint_objective": float(validation["val_joint_objective"]),
             "val_time_nll": float(validation["val_time_nll"]),
+            "val_quantity_train_loss": float(validation["val_quantity_train_loss"]),
             "val_log_qty_mse": float(validation["val_log_qty_mse"]),
+            "val_quantity_distribution_nll": float(
+                validation["val_quantity_distribution_nll"]
+            ),
+            "val_quantity_location_huber": float(
+                validation["val_quantity_location_huber"]
+            ),
+            "val_quantity_scale_mean": float(validation["val_quantity_scale_mean"]),
             "val_qty_mae": float(validation["qty_mae"]),
             "val_qty_rmse": float(validation["qty_rmse"]),
         }
         history.append(epoch_row)
         line = (
-            f"[epoch {epoch:03d}] backbone={backbone} seed={seed} "
+            f"[epoch {epoch:03d}] backbone={backbone} "
+            f"variant={quantity_variant} seed={seed} "
             f"train_joint={epoch_row['train_joint_objective']:.8f} "
             f"val_joint={epoch_row['val_joint_objective']:.8f} "
             f"time_nll={epoch_row['val_time_nll']:.8f} "
@@ -634,6 +828,7 @@ def train_one(
         torch.save({
             "epoch": epoch,
             "backbone": backbone,
+            "variant": quantity_variant,
             "seed": seed,
             "model_state_dict": clone_state_dict(model),
             "optimizer_state_dict": optimizer.state_dict(),
@@ -658,13 +853,15 @@ def train_one(
                 key=lambda row: float(row["val_joint_objective"]),
             )["epoch"]
             print(
-                f"[early-stop] backbone={backbone} seed={seed} "
+                f"[early-stop] backbone={backbone} variant={quantity_variant} seed={seed} "
                 f"current_epoch={epoch} best_epoch={best_epoch}",
                 flush=True,
             )
 
     if best_state is None:
-        raise RuntimeError(f"No best checkpoint selected for {backbone}/seed_{seed}")
+        raise RuntimeError(
+            f"No best checkpoint selected for {backbone}/{quantity_variant}/seed_{seed}"
+        )
     model.load_state_dict(best_state, strict=True)
     validation = evaluate(
         model=model,
@@ -676,10 +873,17 @@ def train_one(
         include_breakdowns=args.max_val_batches is None,
     )
     state_digest = canonical_state_dict_sha256(best_state)
+    selection_formula = (
+        "time_nll + lambda_log_qty * log1p_quantity_mse"
+        if quantity_variant == VARIANT
+        else "time_nll + lambda_log_qty * "
+        "(gaussian_nll_on_log1p_quantity + lambda_location_huber * location_huber)"
+    )
     checkpoint = {
         "selection": "best_validation_joint_objective",
-        "selection_formula": "time_nll + lambda_log_qty * log1p_quantity_mse",
+        "selection_formula": selection_formula,
         "backbone": backbone,
+        "variant": quantity_variant,
         "seed": seed,
         "model_state_dict": best_state,
         "model_state_sha256": state_digest,
@@ -694,14 +898,14 @@ def train_one(
     quantity_rows = [{
         "backbone": backbone,
         "backbone_label": BACKBONE_LABELS[backbone],
-        "variant": VARIANT,
+        "variant": quantity_variant,
         "seed": seed,
         **row,
     } for row in validation.get("quantity_rows", [])]
     history_rows = [{
         "backbone": backbone,
         "backbone_label": BACKBONE_LABELS[backbone],
-        "variant": VARIANT,
+        "variant": quantity_variant,
         "seed": seed,
         **row,
     } for row in validation.get("history_rows", [])]
@@ -713,7 +917,7 @@ def train_one(
         "status": "success",
         "backbone": backbone,
         "backbone_label": BACKBONE_LABELS[backbone],
-        "variant": VARIANT,
+        "variant": quantity_variant,
         "seed": seed,
         "epochs": args.epochs,
         "completed_epochs": int(history[-1]["epoch"]),
@@ -721,7 +925,15 @@ def train_one(
         "best_epoch": best_epoch,
         "best_val_joint_objective": float(validation["val_joint_objective"]),
         "best_val_time_nll": float(validation["val_time_nll"]),
+        "best_val_quantity_train_loss": float(validation["val_quantity_train_loss"]),
         "best_val_log_qty_mse": float(validation["val_log_qty_mse"]),
+        "best_val_quantity_distribution_nll": float(
+            validation["val_quantity_distribution_nll"]
+        ),
+        "best_val_quantity_location_huber": float(
+            validation["val_quantity_location_huber"]
+        ),
+        "best_val_quantity_scale_mean": float(validation["val_quantity_scale_mean"]),
         "best_val_qty_mae": float(validation["qty_mae"]),
         "best_val_qty_rmse": float(validation["qty_rmse"]),
         "parameter_count": parameter_count,
@@ -756,6 +968,7 @@ def summarize_breakdowns(
     rows: list[dict[str, Any]],
     *,
     backbones: tuple[str, ...],
+    variants: tuple[str, ...],
     seeds: tuple[int, ...],
 ) -> list[dict[str, Any]]:
     output = []
@@ -763,39 +976,48 @@ def summarize_breakdowns(
         (int(row["stratum_order"]), row["stratum"], row["stratum_label"])
         for row in rows
     })
-    for backbone in backbones:
-        for order, key, label in strata:
-            group = [
-                row for row in rows
-                if row["backbone"] == backbone and row["stratum"] == key
-            ]
-            if {int(row["seed"]) for row in group} != set(seeds):
-                raise ValueError(f"Seed contract failed for {backbone}/{key}")
-            record = {
-                "backbone": backbone,
-                "backbone_label": BACKBONE_LABELS[backbone],
-                "variant": VARIANT,
-                "stratum_order": order,
-                "stratum": key,
-                "stratum_label": label,
-                "count": int(group[0]["count"]),
-                "share": float(group[0]["share"]),
-                "n_seeds": len(group),
-            }
-            for metric in (
-                "joint_objective",
-                "time_nll",
-                "log_qty_mse",
-                "qty_mae",
-                "qty_rmse",
-                "qty_bias",
-            ):
-                values = [float(row[metric]) for row in group]
-                record[f"{metric}_mean"] = statistics.mean(values)
-                record[f"{metric}_std"] = (
-                    statistics.stdev(values) if len(values) > 1 else 0.0
-                )
-            output.append(record)
+    for variant in variants:
+        for backbone in backbones:
+            for order, key, label in strata:
+                group = [
+                    row for row in rows
+                    if row["variant"] == variant
+                    and row["backbone"] == backbone
+                    and row["stratum"] == key
+                ]
+                if {int(row["seed"]) for row in group} != set(seeds):
+                    raise ValueError(
+                        f"Seed contract failed for {variant}/{backbone}/{key}"
+                    )
+                record = {
+                    "backbone": backbone,
+                    "backbone_label": BACKBONE_LABELS[backbone],
+                    "variant": variant,
+                    "stratum_order": order,
+                    "stratum": key,
+                    "stratum_label": label,
+                    "count": int(group[0]["count"]),
+                    "share": float(group[0]["share"]),
+                    "n_seeds": len(group),
+                }
+                for metric in (
+                    "joint_objective",
+                    "time_nll",
+                    "quantity_train_loss",
+                    "log_qty_mse",
+                    "quantity_distribution_nll",
+                    "quantity_location_huber",
+                    "quantity_scale_mean",
+                    "qty_mae",
+                    "qty_rmse",
+                    "qty_bias",
+                ):
+                    values = [float(row[metric]) for row in group]
+                    record[f"{metric}_mean"] = statistics.mean(values)
+                    record[f"{metric}_std"] = (
+                        statistics.stdev(values) if len(values) > 1 else 0.0
+                    )
+                output.append(record)
     return output
 
 
@@ -807,6 +1029,7 @@ def main() -> None:
         raise ValueError("--source-revision must be a 40-character Git SHA")
     backbones = parse_str_tuple(args.backbones)
     seeds = parse_int_tuple(args.seeds)
+    quantity_variants = normalize_quantity_variants(args.quantity_variants)
     if any(backbone not in BACKBONES for backbone in backbones):
         raise ValueError(f"Unsupported backbone selection: {backbones}")
     if not args.allow_partial_contract:
@@ -816,6 +1039,13 @@ def main() -> None:
         raise ValueError("Frozen contract requires hidden_dim=64 and max_seq_len=256")
     if args.lambda_log_qty != 1.0:
         raise ValueError("Frozen contract requires lambda_log_qty=1.0")
+    if LOGNORMAL_VARIANT in quantity_variants:
+        if args.quantity_sigma_floor != 1e-3:
+            raise ValueError("K=1 contract requires quantity_sigma_floor=1e-3")
+        if args.lambda_location_huber != 1.0:
+            raise ValueError("K=1 contract requires lambda_location_huber=1.0")
+        if args.location_huber_delta != 0.25:
+            raise ValueError("K=1 contract requires location_huber_delta=0.25")
 
     data_sha256 = sha256_file(args.data)
     manifest_sha256 = sha256_file(args.split_manifest)
@@ -838,19 +1068,38 @@ def main() -> None:
     train_qty = raw_frame.filter(
         pl.col("chronological_split") == "train"
     )["demand_qty"].to_numpy().astype(np.float64)
-    interface_meta = {
-        "mode": "mark_free_count_aware_log_regression",
+    train_log_qty = np.log1p(train_qty)
+    shared_interface = {
         "history_features": ["log1p_delta_t", "log1p_raw_quantity"],
         "target": "log1p_raw_quantity",
-        "quantity_loss": "mse_on_log1p_quantity",
         "quantity_output_activation": "softplus",
         "quantity_inverse_transform": "expm1",
+        "point_prediction": "distribution_median_expm1_location",
+        "point_prediction_shared_by_mae_and_rmse": True,
         "quantity_mark_used": False,
         "quantity_residual_used": False,
         "product_type_used": False,
         "target_quantity_masked_from_history": True,
-        "train_target_mean": float(np.log1p(train_qty).mean()),
+        "train_target_mean": float(train_log_qty.mean()),
+        "train_target_std": float(train_log_qty.std()),
         "fitted_on": "train",
+    }
+    interface_by_variant = {
+        VARIANT: {
+            **shared_interface,
+            "mode": "mark_free_count_aware_log_regression",
+            "quantity_loss": "mse_on_log1p_quantity",
+        },
+        LOGNORMAL_VARIANT: {
+            **shared_interface,
+            "mode": "mark_free_count_aware_lognormal_k1",
+            "quantity_loss": "gaussian_nll_on_log1p_quantity_plus_location_huber",
+            "distribution_components": 1,
+            "quantity_sigma_activation": "softplus_plus_floor",
+            "quantity_sigma_floor": args.quantity_sigma_floor,
+            "lambda_location_huber": args.lambda_location_huber,
+            "location_huber_delta": args.location_huber_delta,
+        },
     }
     frame = prepare_count_frame(raw_frame)
     split_rows = {
@@ -860,7 +1109,7 @@ def main() -> None:
     contract = {
         "schema_version": 1,
         "status": "running",
-        "experiment": "mark_free_count_aware_tpp_backbone_control",
+        "experiment": "mark_free_count_aware_lognormal_k1_screening",
         "dataset": "intermittent_frozen_5000",
         "data_path": str(args.data.resolve()),
         "data_sha256": data_sha256,
@@ -873,10 +1122,14 @@ def main() -> None:
             "strata": list(HISTORY_STRATA),
             "definition": "number of observed events before the validation target",
         },
-        "interface": interface_meta,
+        "quantity_variants": list(quantity_variants),
+        "interfaces": {
+            variant: interface_by_variant[variant]
+            for variant in quantity_variants
+        },
         "backbones": list(backbones),
         "seeds": list(seeds),
-        "expected_run_count": len(backbones) * len(seeds),
+        "expected_run_count": len(quantity_variants) * len(backbones) * len(seeds),
         "epochs": args.epochs,
         "batch_size": args.batch_size,
         "lr": args.lr,
@@ -884,7 +1137,11 @@ def main() -> None:
         "grad_clip": args.grad_clip,
         "early_stopping": {
             "monitor": "validation_joint_objective",
-            "formula": "time_nll + lambda_log_qty * log1p_quantity_mse",
+            "formula_by_variant": {
+                VARIANT: "time_nll + lambda_log_qty * log1p_quantity_mse",
+                LOGNORMAL_VARIANT: "time_nll + lambda_log_qty * "
+                "(gaussian_nll_on_log1p_quantity + lambda_location_huber * location_huber)",
+            },
             "min_epochs": args.min_epochs,
             "patience": args.early_stopping_patience,
             "restore": "best_validation_joint_objective",
@@ -905,34 +1162,46 @@ def main() -> None:
     summaries: list[dict[str, Any]] = []
     quantity_rows: list[dict[str, Any]] = []
     history_rows: list[dict[str, Any]] = []
-    for backbone in backbones:
-        for seed in seeds:
-            summary, run_quantity_rows, run_history_rows = train_one(
-                args=args,
-                frame=frame,
-                quantity_contract=quantity_contract,
-                interface_meta=interface_meta,
-                backbone=backbone,
-                seed=seed,
-            )
-            summaries.append(summary)
-            quantity_rows.extend(run_quantity_rows)
-            history_rows.extend(run_history_rows)
-            write_csv(args.output_dir / "run_summaries.csv", summaries)
-            if quantity_rows:
-                write_csv(args.output_dir / "quantity_seed_metrics.csv", quantity_rows)
-            if history_rows:
-                write_csv(args.output_dir / "history_seed_metrics.csv", history_rows)
+    for quantity_variant in quantity_variants:
+        for backbone in backbones:
+            for seed in seeds:
+                summary, run_quantity_rows, run_history_rows = train_one(
+                    args=args,
+                    frame=frame,
+                    quantity_contract=quantity_contract,
+                    interface_meta=interface_by_variant[quantity_variant],
+                    backbone=backbone,
+                    quantity_variant=quantity_variant,
+                    seed=seed,
+                )
+                summaries.append(summary)
+                quantity_rows.extend(run_quantity_rows)
+                history_rows.extend(run_history_rows)
+                write_csv(args.output_dir / "run_summaries.csv", summaries)
+                if quantity_rows:
+                    write_csv(args.output_dir / "quantity_seed_metrics.csv", quantity_rows)
+                if history_rows:
+                    write_csv(args.output_dir / "history_seed_metrics.csv", history_rows)
 
     if quantity_rows:
         write_csv(
             args.output_dir / "quantity_summary.csv",
-            summarize_breakdowns(quantity_rows, backbones=backbones, seeds=seeds),
+            summarize_breakdowns(
+                quantity_rows,
+                backbones=backbones,
+                variants=quantity_variants,
+                seeds=seeds,
+            ),
         )
     if history_rows:
         write_csv(
             args.output_dir / "history_summary.csv",
-            summarize_breakdowns(history_rows, backbones=backbones, seeds=seeds),
+            summarize_breakdowns(
+                history_rows,
+                backbones=backbones,
+                variants=quantity_variants,
+                seeds=seeds,
+            ),
         )
     contract["status"] = "complete"
     contract["completed_run_count"] = len(summaries)

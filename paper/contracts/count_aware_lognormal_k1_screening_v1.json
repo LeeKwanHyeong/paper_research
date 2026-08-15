@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "contract_name": "count_aware_lognormal_k1_screening_v1",
+  "status": "frozen_for_seed_42_validation_screening",
+  "dataset": {
+    "name": "intermittent_frozen_5000",
+    "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+    "split_manifest_sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04",
+    "evaluation_scope": "validation_only",
+    "held_out_test_evaluated": false
+  },
+  "variants": {
+    "log_mse": {
+      "role": "fresh_matched_control",
+      "target": "log1p_raw_quantity",
+      "loss": "mse",
+      "point_prediction": "expm1(softplus(raw_location))"
+    },
+    "lognormal_k1": {
+      "role": "candidate",
+      "target": "log1p_raw_quantity",
+      "location_activation": "softplus",
+      "scale_activation": "softplus_plus_floor",
+      "scale_floor": 0.001,
+      "distribution_loss": "gaussian_nll_on_log1p_quantity",
+      "location_auxiliary_loss": "huber",
+      "location_huber_delta": 0.25,
+      "lambda_location_huber": 1.0,
+      "point_prediction": "distribution_median_expm1(mu)",
+      "point_prediction_shared_by_mae_and_rmse": true
+    }
+  },
+  "backbones": ["thp", "titantpp"],
+  "training": {
+    "seed": 42,
+    "max_epochs": 300,
+    "min_epochs": 40,
+    "early_stopping_patience": 40,
+    "batch_size": 128,
+    "learning_rate": 0.001,
+    "gradient_clip": 1.0,
+    "lookback_weeks": 520,
+    "max_seq_len": 256,
+    "hidden_dim": 64
+  },
+  "acceptance_gate": {
+    "reference": "fresh_matched_titantpp_log_mse_seed_42",
+    "minimum_overall_mae_improvement_pct": 5.0,
+    "maximum_overall_rmse_regression_pct": 2.0,
+    "maximum_p99_mae_regression_pct": 2.0,
+    "maximum_time_nll_absolute_regression": 0.01,
+    "finite_contract_required": true
+  },
+  "execution": {
+    "server": "5080",
+    "tmux_session": "count_lognormal_k1_e300_0815",
+    "artifact": "search_artifacts/count_aware_lognormal_k1_screening_e300_20260815",
+    "continuous_polling": false
+  }
+}
