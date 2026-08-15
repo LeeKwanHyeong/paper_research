@@ -20,6 +20,19 @@ SPLIT_MANIFEST="${DATA_ROOT}/intermittent_frozen_5000_split_manifest.json"
 [[ -f "${SPLIT_MANIFEST}" ]]
 [[ "${SOURCE_REVISION}" =~ ^[0-9a-f]{40}$ ]]
 
+SOURCE_FILES=(
+  "${PROJECT_ROOT}/paper/contracts/count_aware_lognormal_k1_screening_v1.json"
+  "${PROJECT_ROOT}/paper/contracts/count_aware_lognormal_k1_screening_v1.md"
+  "${PROJECT_ROOT}/paper/scripts/compare_count_aware_lognormal_k1_screening.py"
+  "${PROJECT_ROOT}/paper/scripts/run_count_aware_tpp_backbone_control.py"
+  "${PROJECT_ROOT}/simple_lab_test/search/notion_writer_prompts/titantpp_count_aware_lognormal_k1_screening_start_0815.md"
+  "${PROJECT_ROOT}/simple_lab_test/search/scripts/run_count_aware_lognormal_k1_screening_e300_20260815.sh"
+  "${PROJECT_ROOT}/simple_lab_test/search/tests/test_count_aware_lognormal_k1_contract.py"
+)
+for source_file in "${SOURCE_FILES[@]}"; do
+  [[ -f "${source_file}" ]]
+done
+
 CMD=(
   "${PYTHON_BIN}" "${PROJECT_ROOT}/paper/scripts/run_count_aware_tpp_backbone_control.py"
   --data "${DATA}"
@@ -55,6 +68,12 @@ if [[ "${DRY_RUN}" == "1" ]]; then
 fi
 
 mkdir -p "${OUTPUT_ROOT}/logs"
+{
+  printf 'source_revision=%s\n' "${SOURCE_REVISION}"
+  printf 'execution_role=%s\n' "${EXECUTION_ROLE}"
+  printf 'generated_at_utc=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  sha256sum "${SOURCE_FILES[@]}"
+} > "${OUTPUT_ROOT}/source_manifest.txt"
 export PYTHONHASHSEED=42 CUBLAS_WORKSPACE_CONFIG=:4096:8 CUDA_VISIBLE_DEVICES=0
 export PYTHONUNBUFFERED=1 MPLBACKEND=Agg
 export MPLCONFIGDIR="${MPLCONFIGDIR:-/tmp/mplconfig_lognormal_k1}"
