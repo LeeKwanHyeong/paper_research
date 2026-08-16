@@ -8,8 +8,9 @@
 
 #### 상태
 
-5080 tmux `inter_tail_aux_e300_0816`에서 Intermittent seed-42 e300
-validation-only screening을 진행 중이다. Held-out test와 multi-seed는 잠근다.
+5080 실행은 T0 epoch 100에서 중단했으며 partial artifact는 보존했다. 현재는 5090
+tmux `inter_tail_aux_e300_5090_0816`에서 Intermittent seed-42 e300 validation-only
+screening을 T0부터 fresh rerun 중이다. Held-out test와 multi-seed는 잠근다.
 
 #### 목적
 
@@ -49,18 +50,20 @@ Huber를 추가했을 때 tail 오차를 줄이면서 body와 time modeling을 �
 #### 실행 명령어
 
 ```bash
-SOURCE_REVISION=2e7e99dd4a85c88599b7dcf70b529493c48af12e \
+SOURCE_REVISION=7de638a5c9290f79dae02a40fd22839aba9802e7 \
 LAMBDA_TAIL=0.09111380335463036 \
 PROJECT_ROOT=/home/leekwanhyeong/workspace/paper_research \
-PYTHON_BIN=/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python \
+PYTHON_BIN=/opt/miniconda3/envs/ai_env/bin/python \
+EXECUTION_ROLE=primary_5090 \
+OUTPUT_ROOT=/home/leekwanhyeong/workspace/paper_research/search_artifacts/count_aware_tail_auxiliary_screening_e300_20260816_5090_rerun \
 bash simple_lab_test/search/scripts/run_count_aware_tail_screening_e300_20260816.sh
 ```
 
 #### 결과
 
-- 시작 시각: `2026-08-16 06:51:10 KST`
-- Artifact: `search_artifacts/count_aware_tail_auxiliary_screening_e300_20260816`
+- 5080 최초 실행: `2026-08-16 06:51:10 KST`, T0 epoch 100에서 중단
+- 5090 재시작: `2026-08-16 09:40:47 KST`
+- Artifact: `search_artifacts/count_aware_tail_auxiliary_screening_e300_20260816_5090_rerun`
 - Launch contract: `running`, validation-only, held-out test 미사용
-- Fresh T0 epoch 1: train joint `1.486691`, validation joint `0.828299`, time NLL
-  `0.822056`, quantity MAE `0.843643`
-- 이후 상태는 요청 시 단회 확인한다.
+- Source와 contract checksum 일치, Python compile과 CUDA process 진입 확인
+- 이후 상태는 1시간 heartbeat에서 단회 확인한다.
