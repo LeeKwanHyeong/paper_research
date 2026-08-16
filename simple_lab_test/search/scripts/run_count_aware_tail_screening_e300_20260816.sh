@@ -7,6 +7,7 @@ DATA_ROOT="${DATA_ROOT:-${PROJECT_ROOT}/sample_data/intermittent_v2}"
 OUTPUT_ROOT="${OUTPUT_ROOT:-${PROJECT_ROOT}/search_artifacts/count_aware_tail_auxiliary_screening_e300_20260816}"
 SOURCE_REVISION="${SOURCE_REVISION:?SOURCE_REVISION must be the frozen 40-character Git revision}"
 LAMBDA_TAIL="${LAMBDA_TAIL:?LAMBDA_TAIL must be frozen by train-only calibration}"
+EXECUTION_ROLE="${EXECUTION_ROLE:-primary_5080}"
 
 DATA="${DATA_ROOT}/intermittent_frozen_5000_with_split.parquet"
 SPLIT_MANIFEST="${DATA_ROOT}/intermittent_frozen_5000_split_manifest.json"
@@ -47,7 +48,7 @@ cd "${PROJECT_ROOT}"
   --split-manifest "${SPLIT_MANIFEST}" \
   --output-dir "${OUTPUT_ROOT}" \
   --source-revision "${SOURCE_REVISION}" \
-  --execution-role primary_5080 \
+  --execution-role "${EXECUTION_ROLE}" \
   --dataset-contract intermittent_frozen_5000 \
   --device cuda \
   --epochs 300 \
