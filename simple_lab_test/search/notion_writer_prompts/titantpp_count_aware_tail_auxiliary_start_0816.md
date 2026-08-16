@@ -66,4 +66,6 @@ bash simple_lab_test/search/scripts/run_count_aware_tail_screening_e300_20260816
 - Artifact: `search_artifacts/count_aware_tail_auxiliary_screening_e300_20260816_5090_rerun`
 - Launch contract: `running`, validation-only, held-out test 미사용
 - Source와 contract checksum 일치, Python compile과 CUDA process 진입 확인
+- Fresh T0 epoch 1: train joint `1.486340`, validation joint `0.824948`, time NLL
+  `0.818304`, quantity MAE `0.746130`
 - 이후 상태는 1시간 heartbeat에서 단회 확인한다.

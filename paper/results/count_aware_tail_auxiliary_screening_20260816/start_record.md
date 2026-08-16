@@ -17,4 +17,6 @@ finite하게 진행된 뒤, 서버 변경 요청에 따라 중단했다. 기존 
 
 5090에서는 5080 checkpoint를 이어받지 않고 T0부터 fresh rerun한다. Source checksum,
 Python compile, shell syntax, frozen dataset과 split manifest, CUDA process 진입을
-확인했다. 이후에는 1시간 heartbeat에서 단회 상태만 확인한다.
+확인했다. Fresh T0 epoch 1은 train joint `1.486340`, validation joint `0.824948`,
+time NLL `0.818304`, quantity MAE `0.746130`으로 finite하게 완료됐다. 이후에는 1시간
+heartbeat에서 단회 상태만 확인한다.
