@@ -16,4 +16,7 @@
 comparator 입력에는 포함하지 않는다. Source checksum, Python compile, shell syntax,
 frozen dataset과 split manifest, fresh artifact, tmux, CUDA process 진입을 확인했다.
 
+Fresh T0 epoch 1은 train joint `1.486691`, validation joint `0.828299`, time NLL
+`0.822056`, quantity MAE `0.843643`으로 finite하게 완료됐다.
+
 이후 상태는 1시간 heartbeat에서 단회 확인한다.

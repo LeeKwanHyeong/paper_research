@@ -71,4 +71,6 @@ bash simple_lab_test/search/scripts/run_count_aware_tail_screening_e300_20260816
 - Launch contract: `running`, validation-only, held-out test 미사용
 - Source와 contract checksum 일치, Python compile과 CUDA process 진입 확인
 - T0, T1, T2 모두 checkpoint 없이 처음부터 학습
+- Fresh T0 epoch 1: train joint `1.486691`, validation joint `0.828299`, time NLL
+  `0.822056`, quantity MAE `0.843643`
 - 이후 상태는 1시간 heartbeat에서 단회 확인한다.
