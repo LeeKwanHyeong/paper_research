@@ -1,6 +1,6 @@
 # TitanTPP-T1 Three-seed Extension Start Record
 
-- 상태: **사용자 요청으로 일시 중단**
+- 상태: **실행 재개**
 - 시작 기준 시각: `2026-08-17 19:05:17 KST`
 - 실행 서버: `5080`
 - tmux: `inter_tail_t1_multiseed_e300_5080_0817`
@@ -67,3 +67,8 @@ Seed 52 epoch 1은 train joint `1.493343`, validation joint `0.842131`, time NLL
 마지막 저장 지점은 epoch 26이며, `last_epoch_state.pt`의 epoch 값과 history 길이가
 모두 26인 것을 확인했다. 학습 프로세스와 tmux는 종료됐고 2시간 모니터링 자동화도
 일시중지했다. 동일 artifact로 runner를 다시 실행하면 epoch 27부터 재개된다.
+
+`2026-08-17 20:39 KST`에 5080 재접속, GPU 유휴 상태, runner checksum, epoch 26
+checkpoint를 재검증한 뒤 동일 tmux와 artifact로 학습을 재개했다. Seed 52 epoch 27은
+validation joint `-2.943153`, time NLL `-2.948747`, quantity MAE `0.639393`으로
+finite하게 완료됐고, 2시간 모니터링도 다시 활성화했다.
