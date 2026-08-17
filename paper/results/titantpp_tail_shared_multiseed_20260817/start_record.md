@@ -1,6 +1,6 @@
 # TitanTPP-T1 Three-seed Extension Start Record
 
-- 상태: **실행 준비 완료**
+- 상태: **실행 중**
 - 시작 기준 시각: `2026-08-17 19:05:17 KST`
 - 실행 서버: `5080`
 - tmux: `inter_tail_t1_multiseed_e300_5080_0817`
@@ -59,4 +59,6 @@ env \
 
 ## 결과
 
-실험 완료 후 작성한다.
+Seed 52 epoch 1은 train joint `1.493343`, validation joint `0.842131`, time NLL
+`0.835752`, quantity MAE `0.972831`로 finite하게 완료됐다. 전체 결과는 seeds 52와
+62가 모두 끝난 뒤 작성한다.
