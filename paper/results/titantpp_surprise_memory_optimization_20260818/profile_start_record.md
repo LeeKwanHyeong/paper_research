@@ -2,12 +2,12 @@
 
 ## 상태
 
-**실행 준비** · 5080 CUDA pre/post profiling
+**최적화 전 기준 측정 준비** · 5080 CUDA pre/post profiling
 
-- 시작 일자: `2026-08-18`
+- 시작 시각: `2026-08-18 12:52:17 KST`
 - 실행 서버: `5080`
 - tmux session: `titan_surprise_profile_0818`
-- Source revision: profiler 준비 커밋 후 고정
+- Source revision: `8c8a1b37286b2dc77d64831484097fea8fd995fd`
 - Pre artifact: `search_artifacts/titantpp_surprise_memory_profile_pre_20260818`
 - Post artifact: `search_artifacts/titantpp_surprise_memory_profile_post_20260818`
 - Held-out test: 미사용
@@ -47,7 +47,7 @@ causal retrieval, padding 무시, chunk 단위 gradient detach 계약을 유지�
 
 ```bash
 ssh 5080 '/usr/bin/tmux new-session -d -s titan_surprise_profile_0818 \
-  "env SOURCE_REVISION=<checksum_synced_commit> \
+  "env SOURCE_REVISION=8c8a1b37286b2dc77d64831484097fea8fd995fd \
   PROJECT_ROOT=/home/leekwanhyeong/workspace/paper_research \
   PYTHON_BIN=/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python \
   OUTPUT_ROOT=/home/leekwanhyeong/workspace/paper_research/search_artifacts/titantpp_surprise_memory_profile_pre_20260818 \
@@ -56,4 +56,3 @@ ssh 5080 '/usr/bin/tmux new-session -d -s titan_surprise_profile_0818 \
 ```
 
 ## 결과
-
