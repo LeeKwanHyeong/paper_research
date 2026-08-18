@@ -2,14 +2,16 @@
 
 ## 상태
 
-- 상태: 실행 준비 완료
+- 상태: 실험 중
 - 준비 시각: 2026-08-18 13:30:32 KST
+- 실험 시작 시각: 2026-08-18 13:36:45 KST
 - 실행 서버: 5080
 - tmux: `titan_memory_inter_e300_5080_0818`
-- source revision: `c65c0da`
+- source revision: `c65c0da68d49150d5d25b8ef4665cb64b065503c`
 - artifact: `search_artifacts/count_aware_titan_memory_backbone_screening_e300_20260818`
 - 평가 범위: validation only
 - held-out test: 미사용
+- 초기 진입: fresh hard-LMM epoch 1 완료, NaN/Traceback 없음
 
 ## 목적
 
