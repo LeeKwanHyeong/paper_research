@@ -581,3 +581,55 @@ def test_surprise_event_local_projections_run_once_per_sequence() -> None:
             handle.remove()
 
     assert counts == {name: 1 for name in counts}
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA is required")
+def test_compiled_surprise_scan_matches_cuda_eager_gradients() -> None:
+    device = torch.device("cuda")
+    eager = SurpriseGatedMemory(
+        d_model=8,
+        memory_rank=4,
+        chunk_size=3,
+        dropout=0.0,
+        compile_cuda_scan=False,
+    ).to(device).eval()
+    compiled = SurpriseGatedMemory(
+        d_model=8,
+        memory_rank=4,
+        chunk_size=3,
+        dropout=0.0,
+        compile_cuda_scan=True,
+    ).to(device).eval()
+    compiled.load_state_dict(eager.state_dict())
+    eager.residual_scale.data.fill_(0.5)
+    compiled.residual_scale.data.fill_(0.5)
+    eager_input = torch.randn(2, 7, 8, device=device, requires_grad=True)
+    compiled_input = eager_input.detach().clone().requires_grad_(True)
+    mask = torch.tensor([
+        [True, True, True, True, True, True, True],
+        [False, True, True, True, True, True, True],
+    ], device=device)
+
+    eager_output = eager(eager_input, mask=mask)
+    compiled_output = compiled(compiled_input, mask=mask)
+    eager_output.square().mean().backward()
+    compiled_output.square().mean().backward()
+
+    assert torch.allclose(compiled_output, eager_output, atol=2e-6, rtol=2e-5)
+    assert torch.allclose(
+        compiled_input.grad,
+        eager_input.grad,
+        atol=2e-6,
+        rtol=2e-5,
+    )
+    eager_parameters = dict(eager.named_parameters())
+    for name, parameter in compiled.named_parameters():
+        eager_gradient = eager_parameters[name].grad
+        assert parameter.grad is not None
+        assert eager_gradient is not None
+        assert torch.allclose(
+            parameter.grad,
+            eager_gradient,
+            atol=2e-6,
+            rtol=2e-5,
+        ), name
