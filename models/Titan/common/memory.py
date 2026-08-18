@@ -325,6 +325,49 @@ class GatedSoftMemory(nn.Module):
         return output
 
 
+def _scan_surprise_chunk(
+    memory: torch.Tensor,
+    momentum: torch.Tensor,
+    read_vectors: torch.Tensor,
+    keys: torch.Tensor,
+    values: torch.Tensor,
+    update_rates: torch.Tensor,
+    retentions: torch.Tensor,
+    valid_mask: torch.Tensor,
+    momentum_rate: torch.Tensor,
+    memory_clip: float,
+    rank_scale: float,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Scan one static-length chunk; compiled CUDA execution fuses state updates."""
+    retrieved_values: list[torch.Tensor] = []
+    for position in range(read_vectors.size(1)):
+        valid_state = valid_mask[:, position].view(memory.size(0), 1, 1)
+        readout = torch.bmm(memory, read_vectors[:, position])
+        retrieved_values.append(readout[:, :, 0])
+        predicted_value = readout[:, :, 1]
+        error = values[:, position] - predicted_value
+        gradient_step = (
+            error.unsqueeze(-1) * keys[:, position].unsqueeze(1)
+        ) / rank_scale
+        next_momentum = (
+            momentum_rate * momentum
+            + update_rates[:, position].unsqueeze(-1) * gradient_step
+        )
+        next_memory = (
+            retentions[:, position].unsqueeze(-1) * memory + next_momentum
+        ).clamp(min=-memory_clip, max=memory_clip)
+        memory = torch.where(valid_state, next_memory, memory)
+        momentum = torch.where(valid_state, next_momentum, momentum)
+    return memory, momentum, torch.stack(retrieved_values, dim=1)
+
+
+_COMPILED_SURPRISE_CHUNK = (
+    torch.compile(_scan_surprise_chunk, fullgraph=True, dynamic=False)
+    if hasattr(torch, "compile")
+    else None
+)
+
+
 class SurpriseGatedMemory(nn.Module):
     """Causal low-rank fast-weight memory with truncated surprise updates."""
 
@@ -338,6 +381,7 @@ class SurpriseGatedMemory(nn.Module):
         initial_momentum: float = 0.5,
         memory_clip: float = 5.0,
         dropout: float = 0.1,
+        compile_cuda_scan: bool = True,
     ) -> None:
         super().__init__()
         if d_model < 1:
@@ -360,6 +404,7 @@ class SurpriseGatedMemory(nn.Module):
         self.memory_rank = int(memory_rank)
         self.chunk_size = int(chunk_size)
         self.memory_clip = float(memory_clip)
+        self.compile_cuda_scan = bool(compile_cuda_scan)
 
         self.input_norm = nn.LayerNorm(self.d_model)
         self.query_proj = nn.Linear(self.d_model, self.memory_rank, bias=False)
@@ -469,39 +514,67 @@ class SurpriseGatedMemory(nn.Module):
         ) = self._prepare_sequence(encoded)
         memory = encoded.new_zeros(batch_size, self.d_model, self.memory_rank)
         momentum = torch.zeros_like(memory)
-        retrieved_values: list[torch.Tensor] = []
+        retrieved_chunks: list[torch.Tensor] = []
         surprise_values: list[torch.Tensor] = []
         momentum_rate = torch.sigmoid(self.momentum_logit)
         rank_scale = math.sqrt(self.memory_rank)
 
-        for chunk_start in range(0, seq_len, self.chunk_size):
-            if chunk_start:
-                memory = memory.detach()
-                momentum = momentum.detach()
-            chunk_end = min(chunk_start + self.chunk_size, seq_len)
-            for position in range(chunk_start, chunk_end):
-                valid_state = mask[:, position].view(batch_size, 1, 1)
-                readout = torch.bmm(memory, read_vectors[:, position])
-                retrieved_values.append(readout[:, :, 0])
-                predicted_value = readout[:, :, 1]
-                error = values[:, position] - predicted_value
-                gradient_step = (
-                    error.unsqueeze(-1) * keys[:, position].unsqueeze(1)
-                ) / rank_scale
-                next_momentum = (
-                    momentum_rate * momentum
-                    + update_rates[:, position].unsqueeze(-1) * gradient_step
+        use_compiled_scan = (
+            not collect_diagnostics
+            and self.compile_cuda_scan
+            and encoded.device.type == "cuda"
+            and _COMPILED_SURPRISE_CHUNK is not None
+        )
+        if use_compiled_scan:
+            for chunk_start in range(0, seq_len, self.chunk_size):
+                if chunk_start:
+                    memory = memory.detach()
+                    momentum = momentum.detach()
+                chunk_end = min(chunk_start + self.chunk_size, seq_len)
+                memory, momentum, chunk_retrieved = _COMPILED_SURPRISE_CHUNK(
+                    memory,
+                    momentum,
+                    read_vectors[:, chunk_start:chunk_end],
+                    keys[:, chunk_start:chunk_end],
+                    values[:, chunk_start:chunk_end],
+                    update_rates[:, chunk_start:chunk_end],
+                    retentions[:, chunk_start:chunk_end],
+                    mask[:, chunk_start:chunk_end],
+                    momentum_rate,
+                    self.memory_clip,
+                    rank_scale,
                 )
-                next_memory = (
-                    retentions[:, position].unsqueeze(-1) * memory + next_momentum
-                ).clamp(min=-self.memory_clip, max=self.memory_clip)
-                memory = torch.where(valid_state, next_memory, memory)
-                momentum = torch.where(valid_state, next_momentum, momentum)
+                retrieved_chunks.append(chunk_retrieved)
+        else:
+            for chunk_start in range(0, seq_len, self.chunk_size):
+                if chunk_start:
+                    memory = memory.detach()
+                    momentum = momentum.detach()
+                chunk_end = min(chunk_start + self.chunk_size, seq_len)
+                for position in range(chunk_start, chunk_end):
+                    valid_state = mask[:, position].view(batch_size, 1, 1)
+                    readout = torch.bmm(memory, read_vectors[:, position])
+                    retrieved_chunks.append(readout[:, :, 0].unsqueeze(1))
+                    predicted_value = readout[:, :, 1]
+                    error = values[:, position] - predicted_value
+                    gradient_step = (
+                        error.unsqueeze(-1) * keys[:, position].unsqueeze(1)
+                    ) / rank_scale
+                    next_momentum = (
+                        momentum_rate * momentum
+                        + update_rates[:, position].unsqueeze(-1) * gradient_step
+                    )
+                    next_memory = (
+                        retentions[:, position].unsqueeze(-1) * memory
+                        + next_momentum
+                    ).clamp(min=-self.memory_clip, max=self.memory_clip)
+                    memory = torch.where(valid_state, next_memory, memory)
+                    momentum = torch.where(valid_state, next_momentum, momentum)
 
-                if collect_diagnostics:
-                    surprise_values.append(self._diagnostic_surprise(error))
+                    if collect_diagnostics:
+                        surprise_values.append(self._diagnostic_surprise(error))
 
-        retrieved = torch.stack(retrieved_values, dim=1)
+        retrieved = torch.cat(retrieved_chunks, dim=1)
         retrieved = self.output_proj(self.retrieval_norm(retrieved))
         residual = (
             torch.tanh(self.residual_scale)
