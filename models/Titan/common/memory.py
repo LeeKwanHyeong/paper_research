@@ -391,12 +391,55 @@ class SurpriseGatedMemory(nn.Module):
     def _logit(probability: float) -> float:
         return math.log(probability / (1.0 - probability))
 
-    def process(
+    def _prepare_sequence(
+        self,
+        encoded: torch.Tensor,
+    ) -> tuple[
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+    ]:
+        """Vectorize event-local projections before the recurrent memory scan."""
+        normalized = self.input_norm(encoded)
+        queries = F.normalize(
+            self.query_proj(normalized),
+            dim=-1,
+            eps=1e-6,
+        )
+        keys = F.normalize(
+            self.key_proj(normalized),
+            dim=-1,
+            eps=1e-6,
+        )
+        read_vectors = torch.stack((queries, keys), dim=-1)
+        values = torch.tanh(self.value_proj(normalized))
+        update_rates = torch.sigmoid(self.update_rate_proj(normalized))
+        retentions = torch.sigmoid(self.retention_proj(normalized))
+        retrieval_gates = torch.sigmoid(self.gate_proj(normalized))
+        return (
+            read_vectors,
+            keys,
+            values,
+            update_rates,
+            retentions,
+            retrieval_gates,
+        )
+
+    @staticmethod
+    def _diagnostic_surprise(error: torch.Tensor) -> torch.Tensor:
+        return torch.linalg.vector_norm(error, dim=-1)
+
+    def _process_impl(
         self,
         encoded: torch.Tensor,
         mask: Optional[torch.Tensor] = None,
-    ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
-        """Process one independent sequence batch and return memory diagnostics."""
+        *,
+        collect_diagnostics: bool,
+    ) -> tuple[torch.Tensor, Optional[dict[str, torch.Tensor]]]:
+        """Run the recurrent scan while keeping event-local work vectorized."""
         if encoded.ndim != 3 or encoded.size(-1) != self.d_model:
             raise ValueError(
                 "encoded must have shape [batch, sequence, d_model]"
@@ -416,13 +459,18 @@ class SurpriseGatedMemory(nn.Module):
         else:
             mask = mask.to(device=encoded.device, dtype=torch.bool)
 
+        (
+            read_vectors,
+            keys,
+            values,
+            update_rates,
+            retentions,
+            retrieval_gates,
+        ) = self._prepare_sequence(encoded)
         memory = encoded.new_zeros(batch_size, self.d_model, self.memory_rank)
         momentum = torch.zeros_like(memory)
-        outputs: list[torch.Tensor] = []
+        retrieved_values: list[torch.Tensor] = []
         surprise_values: list[torch.Tensor] = []
-        update_rates: list[torch.Tensor] = []
-        retentions: list[torch.Tensor] = []
-        retrieval_gates: list[torch.Tensor] = []
         momentum_rate = torch.sigmoid(self.momentum_logit)
         rank_scale = math.sqrt(self.memory_rank)
 
@@ -432,72 +480,59 @@ class SurpriseGatedMemory(nn.Module):
                 momentum = momentum.detach()
             chunk_end = min(chunk_start + self.chunk_size, seq_len)
             for position in range(chunk_start, chunk_end):
-                valid = mask[:, position]
-                valid_vector = valid.to(dtype=encoded.dtype).unsqueeze(-1)
-                valid_state = valid_vector.unsqueeze(-1)
-                current = encoded[:, position]
-                normalized = self.input_norm(current)
-
-                query = F.normalize(
-                    self.query_proj(normalized),
-                    dim=-1,
-                    eps=1e-6,
-                )
-                key = F.normalize(
-                    self.key_proj(normalized),
-                    dim=-1,
-                    eps=1e-6,
-                )
-                value = torch.tanh(self.value_proj(normalized))
-
-                retrieved = torch.bmm(memory, query.unsqueeze(-1)).squeeze(-1)
-                retrieved = self.output_proj(self.retrieval_norm(retrieved))
-                retrieval_gate = torch.sigmoid(self.gate_proj(normalized))
-                residual = (
-                    torch.tanh(self.residual_scale)
-                    * retrieval_gate
-                    * self.dropout(retrieved)
-                )
-                outputs.append((current + residual) * valid_vector)
-
-                predicted_value = torch.bmm(
-                    memory,
-                    key.unsqueeze(-1),
-                ).squeeze(-1)
-                error = value - predicted_value
-                surprise = torch.linalg.vector_norm(error, dim=-1)
-                update_rate = torch.sigmoid(self.update_rate_proj(normalized))
-                retention = torch.sigmoid(self.retention_proj(normalized))
-                gradient_step = torch.bmm(
-                    error.unsqueeze(-1),
-                    key.unsqueeze(1),
+                valid_state = mask[:, position].view(batch_size, 1, 1)
+                readout = torch.bmm(memory, read_vectors[:, position])
+                retrieved_values.append(readout[:, :, 0])
+                predicted_value = readout[:, :, 1]
+                error = values[:, position] - predicted_value
+                gradient_step = (
+                    error.unsqueeze(-1) * keys[:, position].unsqueeze(1)
                 ) / rank_scale
                 next_momentum = (
                     momentum_rate * momentum
-                    + update_rate.unsqueeze(-1) * gradient_step
+                    + update_rates[:, position].unsqueeze(-1) * gradient_step
                 )
                 next_memory = (
-                    retention.unsqueeze(-1) * memory + next_momentum
+                    retentions[:, position].unsqueeze(-1) * memory + next_momentum
                 ).clamp(min=-self.memory_clip, max=self.memory_clip)
-                memory = valid_state * next_memory + (1.0 - valid_state) * memory
-                momentum = (
-                    valid_state * next_momentum + (1.0 - valid_state) * momentum
-                )
+                memory = torch.where(valid_state, next_memory, memory)
+                momentum = torch.where(valid_state, next_momentum, momentum)
 
-                surprise_values.append(surprise * valid_vector.squeeze(-1))
-                update_rates.append(update_rate.squeeze(-1) * valid_vector.squeeze(-1))
-                retentions.append(retention.squeeze(-1) * valid_vector.squeeze(-1))
-                retrieval_gates.append(
-                    retrieval_gate.mean(dim=-1) * valid_vector.squeeze(-1)
-                )
+                if collect_diagnostics:
+                    surprise_values.append(self._diagnostic_surprise(error))
 
-        output = torch.stack(outputs, dim=1)
+        retrieved = torch.stack(retrieved_values, dim=1)
+        retrieved = self.output_proj(self.retrieval_norm(retrieved))
+        residual = (
+            torch.tanh(self.residual_scale)
+            * retrieval_gates
+            * self.dropout(retrieved)
+        )
+        valid_values = mask.to(dtype=encoded.dtype)
+        output = (encoded + residual) * valid_values.unsqueeze(-1)
+        if not collect_diagnostics:
+            return output, None
         diagnostics = {
-            "surprise": torch.stack(surprise_values, dim=1),
-            "update_rate": torch.stack(update_rates, dim=1),
-            "retention": torch.stack(retentions, dim=1),
-            "retrieval_gate": torch.stack(retrieval_gates, dim=1),
+            "surprise": torch.stack(surprise_values, dim=1) * valid_values,
+            "update_rate": update_rates.squeeze(-1) * valid_values,
+            "retention": retentions.squeeze(-1) * valid_values,
+            "retrieval_gate": retrieval_gates.mean(dim=-1) * valid_values,
         }
+        return output, diagnostics
+
+    def process(
+        self,
+        encoded: torch.Tensor,
+        mask: Optional[torch.Tensor] = None,
+    ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
+        """Process one independent sequence batch and return memory diagnostics."""
+        output, diagnostics = self._process_impl(
+            encoded,
+            mask=mask,
+            collect_diagnostics=True,
+        )
+        if diagnostics is None:
+            raise RuntimeError("Surprise-memory diagnostics were not collected")
         return output, diagnostics
 
     def forward(
@@ -505,5 +540,9 @@ class SurpriseGatedMemory(nn.Module):
         encoded: torch.Tensor,
         mask: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
-        output, _ = self.process(encoded, mask=mask)
+        output, _ = self._process_impl(
+            encoded,
+            mask=mask,
+            collect_diagnostics=False,
+        )
         return output

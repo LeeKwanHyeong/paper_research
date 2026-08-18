@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import math
+
+import pytest
 import torch
+import torch.nn.functional as F
 
 from models.TPPs.CountAwareTPP import (
     CountAwareTitanTPP,
@@ -46,6 +50,98 @@ def sample_batch() -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         [1.0, 4.0, 12.0, 0.0],
     ])
     return dts, mask, quantities
+
+
+def legacy_surprise_process(
+    memory: SurpriseGatedMemory,
+    encoded: torch.Tensor,
+    mask: torch.Tensor,
+) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
+    """Reference the original event-wise implementation for regression tests."""
+    batch_size, seq_len, _ = encoded.shape
+    state = encoded.new_zeros(batch_size, memory.d_model, memory.memory_rank)
+    momentum = torch.zeros_like(state)
+    outputs: list[torch.Tensor] = []
+    surprise_values: list[torch.Tensor] = []
+    update_rates: list[torch.Tensor] = []
+    retentions: list[torch.Tensor] = []
+    retrieval_gates: list[torch.Tensor] = []
+    momentum_rate = torch.sigmoid(memory.momentum_logit)
+    rank_scale = math.sqrt(memory.memory_rank)
+
+    for chunk_start in range(0, seq_len, memory.chunk_size):
+        if chunk_start:
+            state = state.detach()
+            momentum = momentum.detach()
+        chunk_end = min(chunk_start + memory.chunk_size, seq_len)
+        for position in range(chunk_start, chunk_end):
+            valid = mask[:, position]
+            valid_vector = valid.to(dtype=encoded.dtype).unsqueeze(-1)
+            valid_state = valid_vector.unsqueeze(-1)
+            current = encoded[:, position]
+            normalized = memory.input_norm(current)
+            query = F.normalize(
+                memory.query_proj(normalized),
+                dim=-1,
+                eps=1e-6,
+            )
+            key = F.normalize(
+                memory.key_proj(normalized),
+                dim=-1,
+                eps=1e-6,
+            )
+            value = torch.tanh(memory.value_proj(normalized))
+            retrieved = torch.bmm(state, query.unsqueeze(-1)).squeeze(-1)
+            retrieved = memory.output_proj(memory.retrieval_norm(retrieved))
+            retrieval_gate = torch.sigmoid(memory.gate_proj(normalized))
+            residual = (
+                torch.tanh(memory.residual_scale)
+                * retrieval_gate
+                * memory.dropout(retrieved)
+            )
+            outputs.append((current + residual) * valid_vector)
+
+            predicted_value = torch.bmm(
+                state,
+                key.unsqueeze(-1),
+            ).squeeze(-1)
+            error = value - predicted_value
+            surprise = torch.linalg.vector_norm(error, dim=-1)
+            update_rate = torch.sigmoid(memory.update_rate_proj(normalized))
+            retention = torch.sigmoid(memory.retention_proj(normalized))
+            gradient_step = torch.bmm(
+                error.unsqueeze(-1),
+                key.unsqueeze(1),
+            ) / rank_scale
+            next_momentum = (
+                momentum_rate * momentum
+                + update_rate.unsqueeze(-1) * gradient_step
+            )
+            next_state = (
+                retention.unsqueeze(-1) * state + next_momentum
+            ).clamp(min=-memory.memory_clip, max=memory.memory_clip)
+            state = valid_state * next_state + (1.0 - valid_state) * state
+            momentum = (
+                valid_state * next_momentum + (1.0 - valid_state) * momentum
+            )
+
+            surprise_values.append(surprise * valid_vector.squeeze(-1))
+            update_rates.append(
+                update_rate.squeeze(-1) * valid_vector.squeeze(-1)
+            )
+            retentions.append(
+                retention.squeeze(-1) * valid_vector.squeeze(-1)
+            )
+            retrieval_gates.append(
+                retrieval_gate.mean(dim=-1) * valid_vector.squeeze(-1)
+            )
+
+    return torch.stack(outputs, dim=1), {
+        "surprise": torch.stack(surprise_values, dim=1),
+        "update_rate": torch.stack(update_rates, dim=1),
+        "retention": torch.stack(retentions, dim=1),
+        "retrieval_gate": torch.stack(retrieval_gates, dim=1),
+    }
 
 
 def test_memory_variants_are_opt_in_supported_backbones() -> None:
@@ -327,3 +423,160 @@ def test_open_surprise_memory_routes_finite_gradients_through_updates() -> None:
         for parameter in memory_parameters
         if parameter.grad is not None
     )
+
+
+def test_vectorized_surprise_process_matches_event_wise_reference() -> None:
+    memory = SurpriseGatedMemory(
+        d_model=8,
+        memory_rank=4,
+        chunk_size=3,
+        dropout=0.0,
+    ).eval()
+    memory.residual_scale.data.fill_(0.5)
+    encoded = torch.randn(3, 7, 8)
+    mask = torch.tensor([
+        [True, True, True, True, True, True, True],
+        [True, False, True, True, True, True, True],
+        [False, False, True, True, True, True, True],
+    ])
+
+    with torch.no_grad():
+        reference_output, reference_diagnostics = legacy_surprise_process(
+            memory,
+            encoded,
+            mask,
+        )
+        output, diagnostics = memory.process(encoded, mask=mask)
+
+    assert torch.allclose(output, reference_output, atol=1e-6, rtol=1e-5)
+    for key in reference_diagnostics:
+        assert torch.allclose(
+            diagnostics[key],
+            reference_diagnostics[key],
+            atol=1e-6,
+            rtol=1e-5,
+        )
+
+
+def test_vectorized_surprise_process_matches_reference_gradients() -> None:
+    reference = SurpriseGatedMemory(
+        d_model=8,
+        memory_rank=4,
+        chunk_size=3,
+        dropout=0.0,
+    ).eval()
+    optimized = SurpriseGatedMemory(
+        d_model=8,
+        memory_rank=4,
+        chunk_size=3,
+        dropout=0.0,
+    ).eval()
+    optimized.load_state_dict(reference.state_dict())
+    reference.residual_scale.data.fill_(0.5)
+    optimized.residual_scale.data.fill_(0.5)
+    reference_input = torch.randn(2, 7, 8, requires_grad=True)
+    optimized_input = reference_input.detach().clone().requires_grad_(True)
+    mask = torch.ones(2, 7, dtype=torch.bool)
+
+    reference_output, reference_diagnostics = legacy_surprise_process(
+        reference,
+        reference_input,
+        mask,
+    )
+    output, diagnostics = optimized.process(optimized_input, mask=mask)
+    reference_loss = reference_output.square().mean()
+    optimized_loss = output.square().mean()
+    for key in reference_diagnostics:
+        reference_loss = reference_loss + 0.01 * reference_diagnostics[key].mean()
+        optimized_loss = optimized_loss + 0.01 * diagnostics[key].mean()
+    reference_loss.backward()
+    optimized_loss.backward()
+
+    assert torch.allclose(
+        optimized_input.grad,
+        reference_input.grad,
+        atol=2e-6,
+        rtol=2e-5,
+    )
+    reference_parameters = dict(reference.named_parameters())
+    for name, parameter in optimized.named_parameters():
+        reference_gradient = reference_parameters[name].grad
+        assert parameter.grad is not None
+        assert reference_gradient is not None
+        assert torch.allclose(
+            parameter.grad,
+            reference_gradient,
+            atol=2e-6,
+            rtol=2e-5,
+        ), name
+
+
+def test_surprise_forward_skips_diagnostic_norm(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    memory = SurpriseGatedMemory(
+        d_model=8,
+        memory_rank=4,
+        chunk_size=3,
+        dropout=0.0,
+    ).eval()
+    encoded = torch.randn(2, 5, 8)
+    mask = torch.ones(2, 5, dtype=torch.bool)
+
+    def fail_surprise_norm(*args: object, **kwargs: object) -> torch.Tensor:
+        del args, kwargs
+        raise AssertionError("diagnostic norm should not run in forward")
+
+    monkeypatch.setattr(memory, "_diagnostic_surprise", fail_surprise_norm)
+
+    output = memory(encoded, mask=mask)
+    assert output.shape == encoded.shape
+    with pytest.raises(AssertionError, match="diagnostic norm"):
+        memory.process(encoded, mask=mask)
+
+
+def test_surprise_event_local_projections_run_once_per_sequence() -> None:
+    memory = SurpriseGatedMemory(
+        d_model=8,
+        memory_rank=4,
+        chunk_size=3,
+        dropout=0.0,
+    ).eval()
+    encoded = torch.randn(2, 7, 8)
+    mask = torch.ones(2, 7, dtype=torch.bool)
+    counts = {
+        name: 0
+        for name in (
+            "input_norm",
+            "query_proj",
+            "key_proj",
+            "value_proj",
+            "gate_proj",
+            "update_rate_proj",
+            "retention_proj",
+            "retrieval_norm",
+            "output_proj",
+        )
+    }
+    handles = []
+    for name in counts:
+        module = getattr(memory, name)
+
+        def count_call(
+            _module: torch.nn.Module,
+            _inputs: tuple[torch.Tensor, ...],
+            _output: torch.Tensor,
+            *,
+            module_name: str = name,
+        ) -> None:
+            counts[module_name] += 1
+
+        handles.append(module.register_forward_hook(count_call))
+
+    try:
+        memory(encoded, mask=mask)
+    finally:
+        for handle in handles:
+            handle.remove()
+
+    assert counts == {name: 1 for name in counts}
