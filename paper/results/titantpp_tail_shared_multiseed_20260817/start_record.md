@@ -96,3 +96,9 @@ TitanTPP-T1은 TitanTPP-T0 대비 MAE `6.43%`, RMSE `6.24%` 개선했고 time NL
 extreme tail 완화 근거는 제공하지만 THP에 대한 전 지표 우월 근거는 제공하지 않는다.
 
 상세 결과는 `comparison.md`, 공통 조건과 재실행 판정은 `contract_audit.md`에 기록했다.
+
+### Notion 반영
+
+- 대상: `5. Model Design Enhancement` 하위 `TitanTPP Count-Aware Log-MSE + Tail-Aware Auxiliary Validation`
+- 반영 내용: T1 3-seed 결과, T0 공통 비교 계약, 모델별 평균과 표준편차, tail 구간 해석
+- 검증: 페이지 재조회 후 최종 수치와 완료 문구를 확인했고 기존 판정 보류 문구가 제거된 것을 확인함
