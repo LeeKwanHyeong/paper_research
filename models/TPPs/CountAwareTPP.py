@@ -27,6 +27,12 @@ LOGNORMAL_VARIANT = "count_only_lognormal_k1"
 TAIL_SHARED_VARIANT = "count_only_log_mse_tail_shared"
 TAIL_HEAD_ONLY_VARIANT = "count_only_log_mse_tail_head_only"
 TAIL_VARIANTS = (TAIL_SHARED_VARIANT, TAIL_HEAD_ONLY_VARIANT)
+TITAN_MEMORY_MODE_NONE = "none"
+TITAN_MEMORY_MODE_STATIC_HARD = "static_hard_lmm"
+TITAN_MEMORY_MODES = (
+    TITAN_MEMORY_MODE_NONE,
+    TITAN_MEMORY_MODE_STATIC_HARD,
+)
 
 
 def inverse_softplus(value: float) -> float:
@@ -336,9 +342,16 @@ class CountAwareTitanTPP(SharedTimeCountModel):
         hidden_dim: int,
         train_log_mean: float,
         max_seq_len: int,
+        memory_mode: str = TITAN_MEMORY_MODE_STATIC_HARD,
         **quantity_kwargs: Any,
     ) -> None:
         super().__init__(hidden_dim, train_log_mean, **quantity_kwargs)
+        if memory_mode not in TITAN_MEMORY_MODES:
+            raise ValueError(
+                f"Unsupported count-aware Titan memory_mode: {memory_mode}"
+            )
+        self.memory_mode = memory_mode
+        uses_static_memory = memory_mode == TITAN_MEMORY_MODE_STATIC_HARD
         self.encoder = MemoryEncoder(
             input_dim=2,
             d_model=hidden_dim,
@@ -346,14 +359,18 @@ class CountAwareTitanTPP(SharedTimeCountModel):
             n_heads=4,
             d_ff=hidden_dim * 2,
             contextual_mem_size=0,
-            persistent_mem_size=16,
+            persistent_mem_size=16 if uses_static_memory else 0,
             dropout=0.1,
             use_context_update=False,
             use_pos_emb=True,
             max_len=max_seq_len,
             use_causal=True,
         )
-        self.lmm = LMM(d_model=hidden_dim, mem_size=64, topk=4)
+        self.lmm = (
+            LMM(d_model=hidden_dim, mem_size=64, topk=4)
+            if uses_static_memory
+            else None
+        )
 
     def encode(
         self,
@@ -363,7 +380,8 @@ class CountAwareTitanTPP(SharedTimeCountModel):
     ) -> torch.Tensor:
         x = self.continuous_features(dts, history_quantities, mask)
         encoded = self.encoder(x, mask=mask, update_context_memory=False)
-        encoded = self.lmm(encoded)
+        if self.lmm is not None:
+            encoded = self.lmm(encoded)
         return encoded * mask.unsqueeze(-1).to(dtype=encoded.dtype)
 
 
@@ -377,5 +395,8 @@ __all__ = [
     "TAIL_HEAD_ONLY_VARIANT",
     "TAIL_SHARED_VARIANT",
     "TAIL_VARIANTS",
+    "TITAN_MEMORY_MODE_NONE",
+    "TITAN_MEMORY_MODE_STATIC_HARD",
+    "TITAN_MEMORY_MODES",
     "inverse_softplus",
 ]
