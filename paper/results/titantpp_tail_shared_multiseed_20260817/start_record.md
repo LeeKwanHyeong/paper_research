@@ -72,3 +72,27 @@ Seed 52 epoch 1은 train joint `1.493343`, validation joint `0.842131`, time NLL
 checkpoint를 재검증한 뒤 동일 tmux와 artifact로 학습을 재개했다. Seed 52 epoch 27은
 validation joint `-2.943153`, time NLL `-2.948747`, quantity MAE `0.639393`으로
 finite하게 완료됐고, 2시간 모니터링도 다시 활성화했다.
+
+### 최종 완료
+
+- 상태: **완료**
+- 신규 run: seeds 52, 62 모두 성공
+- Seed 52: best epoch `180`, completed epoch `220`, early stopped
+- Seed 62: best epoch `259`, completed epoch `299`, early stopped
+- NaN/Traceback: 없음
+- Held-out test: 미사용
+- 결과 결합: 기존 seed 42 및 RMTPP·THP·TitanTPP-T0 3-seed와 완료
+
+| Model | Quantity MAE | Quantity RMSE | Time NLL |
+| --- | ---: | ---: | ---: |
+| Adapted RMTPP | `2.902523 +/- 0.170252` | `10.578742 +/- 0.604664` | `-3.599494 +/- 0.000000` |
+| Adapted THP | `0.666380 +/- 0.081872` | `2.150737 +/- 0.555155` | `-3.599485 +/- 0.000004` |
+| TitanTPP-T0 | `0.746917 +/- 0.068508` | `1.919518 +/- 0.293766` | `-3.593078 +/- 0.000661` |
+| TitanTPP-T1 | `0.698884 +/- 0.059655` | `1.799715 +/- 0.182126` | `-3.593170 +/- 0.000919` |
+
+TitanTPP-T1은 TitanTPP-T0 대비 MAE `6.43%`, RMSE `6.24%` 개선했고 time NLL도
+`0.000092` 낮아졌다. Adapted THP 대비로는 RMSE가 `16.32%` 개선됐지만 MAE는
+`4.88%` 높았고, seed별 MAE 우위도 `1/3`이었다. 따라서 T1은 Titan 내부 개선과
+extreme tail 완화 근거는 제공하지만 THP에 대한 전 지표 우월 근거는 제공하지 않는다.
+
+상세 결과는 `comparison.md`, 공통 조건과 재실행 판정은 `contract_audit.md`에 기록했다.

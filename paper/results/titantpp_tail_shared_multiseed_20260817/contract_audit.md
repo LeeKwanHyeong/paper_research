@@ -1,52 +1,66 @@
-# TitanTPP T1 Multi-seed Baseline Contract Audit
+# Intermittent T0/T1 Three-seed Contract Audit
 
 ## 판정
 
-- 상태: **PASS**
-- 재사용 baseline: `paper/results/count_aware_tpp_backbone_control_20260812/source_5080`
-- 비교 대상: RMTPP, THP seeds 42/52/62
-- 범위: Intermittent validation only
-- Held-out test: 미사용
+- 상태: **통과**
+- 재실행 필요 모델: 없음
+- 평가 범위: validation-only
+- held-out test: 미사용
+- 주의: 세 artifact의 source revision은 동일하지 않지만, source diff에서 T0의 입력, encoder, time head, log-MSE quantity head와 checkpoint selection 경로가 유지됨을 확인했다.
 
-## 계약 대조
+## Artifact
 
-| 항목 | 기존 RMTPP·THP artifact | TitanTPP T1 artifact | 판정 |
-| --- | --- | --- | :---: |
-| Dataset | intermittent frozen-5000 | intermittent frozen-5000 | 일치 |
-| Data SHA-256 | `85d1fe3a...ffffc3f` | `85d1fe3a...ffffc3f` | 일치 |
-| Split SHA-256 | `393158a5...64c1c04` | `393158a5...64c1c04` | 일치 |
-| Split rows | 398,824 / 86,285 / 88,019 | 398,824 / 86,285 / 88,019 | 일치 |
-| Seeds | 42, 52, 62 | 42 완료, 52·62 추가 예정 | 확장 가능 |
-| Epoch / batch / LR | 300 / 128 / 1e-3 | 300 / 128 / 1e-3 | 일치 |
-| Lookback / max sequence | 520 / 256 | 520 / 256 | 일치 |
-| Hidden dimension | 64 | 64 | 일치 |
-| Input / target | log1p time·quantity / log1p quantity | 동일 | 일치 |
-| Point prediction | softplus location → expm1 | 동일 | 일치 |
-| Selection | best validation joint objective | best validation joint objective | 일치 |
-| Evaluation | validation only | validation only | 일치 |
+| 역할 | 경로 | Source revision | Seeds |
+| --- | --- | --- | --- |
+| T0 backbone control | `paper/results/count_aware_tpp_backbone_control_20260812/source_5080` | `044add1f3de768d804d9f0269fd0013bd9658a35` | 42, 52, 62 |
+| TitanTPP-T1 seed 42 | `search_artifacts/count_aware_tail_auxiliary_screening_e300_20260816_5080_fresh_rerun` | `7de638a5c9290f79dae02a40fd22839aba9802e7` | 42 |
+| TitanTPP-T1 extension | `search_artifacts/count_aware_tail_shared_multiseed_extension_e300_20260817` | `d7fb2da367fa7efbe2de232a3394c2af50c36bcf` | 52, 62 |
 
-## 실행 경로 재현성
+## 고정 조건
 
-기존 backbone-control artifact의 TitanTPP-T0 seed 42와 새 tail-aware artifact의
-T0 seed 42가 다음 값에서 완전히 동일했다.
+| 항목 | 공통 값 | 판정 |
+| --- | --- | --- |
+| Dataset SHA-256 | `85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f` | 일치 |
+| Split manifest SHA-256 | `393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04` | 일치 |
+| Split rows | train 398,824 / validation 86,285 / test 88,019 | 일치 |
+| Maximum epochs | 300 | 일치 |
+| Batch size | 128 | 일치 |
+| Learning rate | 0.001 | 일치 |
+| Lookback | 520 weeks | 일치 |
+| Maximum sequence length | 256 | 일치 |
+| Hidden dimension | 64 | 일치 |
+| Minimum epochs | 40 | 일치 |
+| Early-stopping patience | 40 | 일치 |
+| Selection | minimum validation joint objective | 일치 |
+| Restore | best validation checkpoint | 일치 |
+| Evaluation | validation-only | 일치 |
+| Held-out test | not evaluated | 일치 |
 
-| Metric | 기존 artifact | 새 artifact |
-| --- | ---: | ---: |
-| Completed / best epoch | 240 / 200 | 240 / 200 |
-| Validation joint | -3.585705690087701 | -3.585705690087701 |
-| Time NLL | -3.592856040674848 | -3.592856040674848 |
-| Log quantity MSE | 0.007150351058535544 | 0.007150351058535544 |
-| Quantity MAE | 0.762085075221471 | 0.762085075221471 |
-| Quantity RMSE | 1.7224032516352568 | 1.7224032516352568 |
-| Parameter count | 89,795 | 89,795 |
+T0는 `time NLL + log1p quantity MSE`, T1은 여기에 train-only로 고정한 tail auxiliary loss를 추가한다. 이 차이는 의도한 loss ablation이며 계약 불일치가 아니다.
 
-기존 artifact는 이전 schema라 `point_prediction`과 `train_target_std`를 metadata에
-명시하지 않았지만, 동일한 T0 결과가 재현되어 quantity forward와 selection 실행
-경로가 같음을 확인했다.
+## Epoch 및 Checkpoint
 
-## 결론
+| Model | Seed | Best epoch | Completed epochs | Early stopped |
+| --- | ---: | ---: | ---: | --- |
+| Adapted RMTPP-T0 | 42 | 207 | 247 | yes |
+| Adapted RMTPP-T0 | 52 | 249 | 289 | yes |
+| Adapted RMTPP-T0 | 62 | 202 | 242 | yes |
+| Adapted THP-T0 | 42 | 198 | 238 | yes |
+| Adapted THP-T0 | 52 | 228 | 268 | yes |
+| Adapted THP-T0 | 62 | 243 | 283 | yes |
+| TitanTPP-T0 | 42 | 200 | 240 | yes |
+| TitanTPP-T0 | 52 | 202 | 242 | yes |
+| TitanTPP-T0 | 62 | 291 | 300 | no |
+| TitanTPP-T1 | 42 | 300 | 300 | no |
+| TitanTPP-T1 | 52 | 180 | 220 | yes |
+| TitanTPP-T1 | 62 | 259 | 299 | yes |
 
-기존 RMTPP·THP 3-seed validation 결과를 최종 방법 비교에 재사용한다. TitanTPP-T1은
-완료된 seed 42를 재사용하고 seeds 52·62만 동일 계약으로 추가 실행한다. 이 비교는
-완성된 방법 간 validation 성능 비교이며 Titan backbone 단독 효과의 인과 판정으로는
-사용하지 않는다.
+모든 run은 `status=success`, finite metric, checkpoint SHA-256, history와 completed epoch 일치를 충족했다.
+
+## Source Compatibility
+
+- `044add1` 이후에는 Log-Normal 및 tail-aware quantity variant와 추가 metric logging이 도입됐다.
+- T0 branch는 기존과 동일하게 `log1p(quantity)` MSE를 사용하고 model parameter 구성과 point prediction을 유지한다.
+- RMTPP, THP, TitanTPP encoder 구성과 공통 RMTPP형 time density head는 변경되지 않았다.
+- `7de638a`와 `d7fb2da` 사이의 count-aware runner source diff는 없다.
+- 따라서 strict same-revision 실험은 아니지만 model/data/training/selection 계약은 matched이며 기존 T0 run을 재실행하지 않는다.
