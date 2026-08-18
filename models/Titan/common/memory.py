@@ -325,7 +325,7 @@ class GatedSoftMemory(nn.Module):
         return output
 
 
-def _scan_surprise_chunk(
+def _scan_surprise_sequence(
     memory: torch.Tensor,
     momentum: torch.Tensor,
     read_vectors: torch.Tensor,
@@ -337,10 +337,14 @@ def _scan_surprise_chunk(
     momentum_rate: torch.Tensor,
     memory_clip: float,
     rank_scale: float,
+    chunk_size: int,
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-    """Scan one static-length chunk; compiled CUDA execution fuses state updates."""
+    """Scan one sequence graph while detaching state at fixed chunk boundaries."""
     retrieved_values: list[torch.Tensor] = []
     for position in range(read_vectors.size(1)):
+        if position and position % chunk_size == 0:
+            memory = memory.detach()
+            momentum = momentum.detach()
         valid_state = valid_mask[:, position].view(memory.size(0), 1, 1)
         readout = torch.bmm(memory, read_vectors[:, position])
         retrieved_values.append(readout[:, :, 0])
@@ -361,8 +365,13 @@ def _scan_surprise_chunk(
     return memory, momentum, torch.stack(retrieved_values, dim=1)
 
 
-_COMPILED_SURPRISE_CHUNK = (
-    torch.compile(_scan_surprise_chunk, fullgraph=True, dynamic=False)
+_COMPILED_SURPRISE_SEQUENCE = (
+    torch.compile(
+        _scan_surprise_sequence,
+        fullgraph=True,
+        dynamic=False,
+        mode="reduce-overhead",
+    )
     if hasattr(torch, "compile")
     else None
 )
@@ -523,28 +532,24 @@ class SurpriseGatedMemory(nn.Module):
             not collect_diagnostics
             and self.compile_cuda_scan
             and encoded.device.type == "cuda"
-            and _COMPILED_SURPRISE_CHUNK is not None
+            and _COMPILED_SURPRISE_SEQUENCE is not None
         )
         if use_compiled_scan:
-            for chunk_start in range(0, seq_len, self.chunk_size):
-                if chunk_start:
-                    memory = memory.detach()
-                    momentum = momentum.detach()
-                chunk_end = min(chunk_start + self.chunk_size, seq_len)
-                memory, momentum, chunk_retrieved = _COMPILED_SURPRISE_CHUNK(
-                    memory,
-                    momentum,
-                    read_vectors[:, chunk_start:chunk_end],
-                    keys[:, chunk_start:chunk_end],
-                    values[:, chunk_start:chunk_end],
-                    update_rates[:, chunk_start:chunk_end],
-                    retentions[:, chunk_start:chunk_end],
-                    mask[:, chunk_start:chunk_end],
-                    momentum_rate,
-                    self.memory_clip,
-                    rank_scale,
-                )
-                retrieved_chunks.append(chunk_retrieved)
+            memory, momentum, sequence_retrieved = _COMPILED_SURPRISE_SEQUENCE(
+                memory,
+                momentum,
+                read_vectors,
+                keys,
+                values,
+                update_rates,
+                retentions,
+                mask,
+                momentum_rate,
+                self.memory_clip,
+                rank_scale,
+                self.chunk_size,
+            )
+            retrieved_chunks.append(sequence_retrieved)
         else:
             for chunk_start in range(0, seq_len, self.chunk_size):
                 if chunk_start:

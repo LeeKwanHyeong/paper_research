@@ -307,7 +307,7 @@ def test_surprise_memory_starts_as_exact_no_memory_residual() -> None:
     assert metadata["candidate_name"] == "count_titan_surprise_memory"
     assert metadata["surprise_memory_rank"] == 16
     assert metadata["surprise_chunk_size"] == 32
-    assert metadata["surprise_scan_backend"] == "compiled_chunk_cuda"
+    assert metadata["surprise_scan_backend"] == "compiled_sequence_cuda"
     assert metadata["surprise_state_scope"] == "independent_input_sequence"
 
     with torch.no_grad():

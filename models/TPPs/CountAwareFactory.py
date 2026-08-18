@@ -123,7 +123,7 @@ def build_count_aware_model(
             "surprise_memory_rank": min(16, hidden_dim) if uses_surprise_memory else 0,
             "surprise_chunk_size": 32 if uses_surprise_memory else 0,
             "surprise_scan_backend": (
-                "compiled_chunk_cuda" if uses_surprise_memory else None
+                "compiled_sequence_cuda" if uses_surprise_memory else None
             ),
             "surprise_update_rate_init": 0.01 if uses_surprise_memory else None,
             "surprise_retention_init": 0.99 if uses_surprise_memory else None,
