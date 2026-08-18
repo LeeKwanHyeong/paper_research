@@ -19,7 +19,7 @@ import torch.nn.functional as F
 from models.TPPs.TransformerHawkesTPP import THPEncoderLayer
 from models.TPPs.config import THPConfig
 from models.Titan.backbone import MemoryEncoder
-from models.Titan.common.memory import GatedSoftMemory, LMM
+from models.Titan.common.memory import GatedSoftMemory, LMM, SurpriseGatedMemory
 
 
 LOG_MSE_VARIANT = "count_only_log_regression"
@@ -30,10 +30,12 @@ TAIL_VARIANTS = (TAIL_SHARED_VARIANT, TAIL_HEAD_ONLY_VARIANT)
 TITAN_MEMORY_MODE_NONE = "none"
 TITAN_MEMORY_MODE_STATIC_HARD = "static_hard_lmm"
 TITAN_MEMORY_MODE_STATIC_SOFT_GATED = "static_soft_gated"
+TITAN_MEMORY_MODE_SURPRISE_GATED = "surprise_gated"
 TITAN_MEMORY_MODES = (
     TITAN_MEMORY_MODE_NONE,
     TITAN_MEMORY_MODE_STATIC_HARD,
     TITAN_MEMORY_MODE_STATIC_SOFT_GATED,
+    TITAN_MEMORY_MODE_SURPRISE_GATED,
 )
 
 
@@ -383,6 +385,20 @@ class CountAwareTitanTPP(SharedTimeCountModel):
             if memory_mode == TITAN_MEMORY_MODE_STATIC_SOFT_GATED
             else None
         )
+        self.surprise_memory = (
+            SurpriseGatedMemory(
+                d_model=hidden_dim,
+                memory_rank=min(16, hidden_dim),
+                chunk_size=32,
+                initial_update_rate=0.01,
+                initial_retention=0.99,
+                initial_momentum=0.5,
+                memory_clip=5.0,
+                dropout=0.1,
+            )
+            if memory_mode == TITAN_MEMORY_MODE_SURPRISE_GATED
+            else None
+        )
 
     def encode(
         self,
@@ -396,6 +412,8 @@ class CountAwareTitanTPP(SharedTimeCountModel):
             encoded = self.lmm(encoded)
         if self.soft_memory is not None:
             encoded = self.soft_memory(encoded, mask=mask)
+        if self.surprise_memory is not None:
+            encoded = self.surprise_memory(encoded, mask=mask)
         return encoded * mask.unsqueeze(-1).to(dtype=encoded.dtype)
 
 
@@ -412,6 +430,7 @@ __all__ = [
     "TITAN_MEMORY_MODE_NONE",
     "TITAN_MEMORY_MODE_STATIC_HARD",
     "TITAN_MEMORY_MODE_STATIC_SOFT_GATED",
+    "TITAN_MEMORY_MODE_SURPRISE_GATED",
     "TITAN_MEMORY_MODES",
     "inverse_softplus",
 ]

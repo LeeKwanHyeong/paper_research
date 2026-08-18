@@ -14,6 +14,7 @@ from models.TPPs.CountAwareTPP import (
     TITAN_MEMORY_MODE_NONE,
     TITAN_MEMORY_MODE_STATIC_HARD,
     TITAN_MEMORY_MODE_STATIC_SOFT_GATED,
+    TITAN_MEMORY_MODE_SURPRISE_GATED,
 )
 from models.TPPs.NeuralHawkesTPP import CountAwareNHP
 from models.TPPs.SelfAttentiveHawkesTPP import CountAwareSAHP
@@ -82,11 +83,13 @@ def build_count_aware_model(
         "titantpp": TITAN_MEMORY_MODE_STATIC_HARD,
         "titantpp_no_memory": TITAN_MEMORY_MODE_NONE,
         "titantpp_gated_soft_memory": TITAN_MEMORY_MODE_STATIC_SOFT_GATED,
+        "titantpp_surprise_memory": TITAN_MEMORY_MODE_SURPRISE_GATED,
     }
     if backbone in titan_modes:
         memory_mode = titan_modes[backbone]
         uses_hard_memory = memory_mode == TITAN_MEMORY_MODE_STATIC_HARD
         uses_soft_memory = memory_mode == TITAN_MEMORY_MODE_STATIC_SOFT_GATED
+        uses_surprise_memory = memory_mode == TITAN_MEMORY_MODE_SURPRISE_GATED
         return CountAwareTitanTPP(
             hidden_dim,
             train_log_mean,
@@ -100,7 +103,11 @@ def build_count_aware_model(
                 else (
                     "count_titan_gated_soft_memory"
                     if uses_soft_memory
-                    else "count_titan_no_memory"
+                    else (
+                        "count_titan_surprise_memory"
+                        if uses_surprise_memory
+                        else "count_titan_no_memory"
+                    )
                 )
             ),
             "d_model": hidden_dim,
@@ -113,7 +120,17 @@ def build_count_aware_model(
             "lmm_topk": 4 if uses_hard_memory else 0,
             "soft_memory_size": 64 if uses_soft_memory else 0,
             "soft_memory_temperature": 1.0 if uses_soft_memory else None,
-            "memory_residual_gate_init": 0.0 if uses_soft_memory else None,
+            "surprise_memory_rank": min(16, hidden_dim) if uses_surprise_memory else 0,
+            "surprise_chunk_size": 32 if uses_surprise_memory else 0,
+            "surprise_update_rate_init": 0.01 if uses_surprise_memory else None,
+            "surprise_retention_init": 0.99 if uses_surprise_memory else None,
+            "surprise_momentum_init": 0.5 if uses_surprise_memory else None,
+            "surprise_state_scope": (
+                "independent_input_sequence" if uses_surprise_memory else None
+            ),
+            "memory_residual_gate_init": (
+                0.0 if uses_soft_memory or uses_surprise_memory else None
+            ),
             "max_len": max_seq_len,
         }
     raise ValueError(f"Unsupported backbone: {backbone}")

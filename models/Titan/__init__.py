@@ -18,13 +18,20 @@ __all__ = [
     "PositionWiseFFN",
     "LMM",
     "GatedSoftMemory",
+    "SurpriseGatedMemory",
 ]
 
 if TYPE_CHECKING:
     from .Titans import TitanBaseModel, TitanLMMModel, TitanSeq2SeqModel
     from .backbone import TitanBackbone, MemoryEncoder
     from .common.decoder import TitanDecoder, TitanDecoderLayer
-    from .common.memory import GatedSoftMemory, LMM, MemoryAttention, PositionWiseFFN
+    from .common.memory import (
+        GatedSoftMemory,
+        LMM,
+        MemoryAttention,
+        PositionWiseFFN,
+        SurpriseGatedMemory,
+    )
 
 _LAZY = {
     "TitanBaseModel": (".Titans", "TitanBaseModel"),
@@ -38,6 +45,7 @@ _LAZY = {
     "PositionWiseFFN": (".common.memory", "PositionWiseFFN"),
     "LMM": (".common.memory", "LMM"),
     "GatedSoftMemory": (".common.memory", "GatedSoftMemory"),
+    "SurpriseGatedMemory": (".common.memory", "SurpriseGatedMemory"),
 }
 
 

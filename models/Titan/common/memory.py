@@ -323,3 +323,187 @@ class GatedSoftMemory(nn.Module):
                 dtype=output.dtype,
             ).unsqueeze(-1)
         return output
+
+
+class SurpriseGatedMemory(nn.Module):
+    """Causal low-rank fast-weight memory with truncated surprise updates."""
+
+    def __init__(
+        self,
+        d_model: int,
+        memory_rank: int = 16,
+        chunk_size: int = 32,
+        initial_update_rate: float = 0.01,
+        initial_retention: float = 0.99,
+        initial_momentum: float = 0.5,
+        memory_clip: float = 5.0,
+        dropout: float = 0.1,
+    ) -> None:
+        super().__init__()
+        if d_model < 1:
+            raise ValueError("d_model must be positive")
+        if memory_rank < 1:
+            raise ValueError("memory_rank must be positive")
+        if chunk_size < 1:
+            raise ValueError("chunk_size must be positive")
+        for name, value in (
+            ("initial_update_rate", initial_update_rate),
+            ("initial_retention", initial_retention),
+            ("initial_momentum", initial_momentum),
+        ):
+            if not 0.0 < value < 1.0:
+                raise ValueError(f"{name} must lie strictly between zero and one")
+        if memory_clip <= 0.0:
+            raise ValueError("memory_clip must be positive")
+
+        self.d_model = int(d_model)
+        self.memory_rank = int(memory_rank)
+        self.chunk_size = int(chunk_size)
+        self.memory_clip = float(memory_clip)
+
+        self.input_norm = nn.LayerNorm(self.d_model)
+        self.query_proj = nn.Linear(self.d_model, self.memory_rank, bias=False)
+        self.key_proj = nn.Linear(self.d_model, self.memory_rank, bias=False)
+        self.value_proj = nn.Linear(self.d_model, self.d_model, bias=False)
+        self.retrieval_norm = nn.LayerNorm(self.d_model)
+        self.output_proj = nn.Linear(self.d_model, self.d_model, bias=False)
+        self.gate_proj = nn.Linear(self.d_model, self.d_model)
+        self.update_rate_proj = nn.Linear(self.d_model, 1)
+        self.retention_proj = nn.Linear(self.d_model, 1)
+        self.momentum_logit = nn.Parameter(
+            torch.tensor(self._logit(initial_momentum))
+        )
+        self.residual_scale = nn.Parameter(torch.zeros(()))
+        self.dropout = nn.Dropout(float(dropout))
+
+        nn.init.zeros_(self.update_rate_proj.weight)
+        nn.init.constant_(
+            self.update_rate_proj.bias,
+            self._logit(initial_update_rate),
+        )
+        nn.init.zeros_(self.retention_proj.weight)
+        nn.init.constant_(
+            self.retention_proj.bias,
+            self._logit(initial_retention),
+        )
+
+    @staticmethod
+    def _logit(probability: float) -> float:
+        return math.log(probability / (1.0 - probability))
+
+    def process(
+        self,
+        encoded: torch.Tensor,
+        mask: Optional[torch.Tensor] = None,
+    ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
+        """Process one independent sequence batch and return memory diagnostics."""
+        if encoded.ndim != 3 or encoded.size(-1) != self.d_model:
+            raise ValueError(
+                "encoded must have shape [batch, sequence, d_model]"
+            )
+        batch_size, seq_len, _ = encoded.shape
+        if mask is None:
+            mask = torch.ones(
+                batch_size,
+                seq_len,
+                device=encoded.device,
+                dtype=torch.bool,
+            )
+        elif mask.shape != (batch_size, seq_len):
+            raise ValueError(
+                f"Expected mask {(batch_size, seq_len)}, got {tuple(mask.shape)}"
+            )
+        else:
+            mask = mask.to(device=encoded.device, dtype=torch.bool)
+
+        memory = encoded.new_zeros(batch_size, self.d_model, self.memory_rank)
+        momentum = torch.zeros_like(memory)
+        outputs: list[torch.Tensor] = []
+        surprise_values: list[torch.Tensor] = []
+        update_rates: list[torch.Tensor] = []
+        retentions: list[torch.Tensor] = []
+        retrieval_gates: list[torch.Tensor] = []
+        momentum_rate = torch.sigmoid(self.momentum_logit)
+        rank_scale = math.sqrt(self.memory_rank)
+
+        for chunk_start in range(0, seq_len, self.chunk_size):
+            if chunk_start:
+                memory = memory.detach()
+                momentum = momentum.detach()
+            chunk_end = min(chunk_start + self.chunk_size, seq_len)
+            for position in range(chunk_start, chunk_end):
+                valid = mask[:, position]
+                valid_vector = valid.to(dtype=encoded.dtype).unsqueeze(-1)
+                valid_state = valid_vector.unsqueeze(-1)
+                current = encoded[:, position]
+                normalized = self.input_norm(current)
+
+                query = F.normalize(
+                    self.query_proj(normalized),
+                    dim=-1,
+                    eps=1e-6,
+                )
+                key = F.normalize(
+                    self.key_proj(normalized),
+                    dim=-1,
+                    eps=1e-6,
+                )
+                value = torch.tanh(self.value_proj(normalized))
+
+                retrieved = torch.bmm(memory, query.unsqueeze(-1)).squeeze(-1)
+                retrieved = self.output_proj(self.retrieval_norm(retrieved))
+                retrieval_gate = torch.sigmoid(self.gate_proj(normalized))
+                residual = (
+                    torch.tanh(self.residual_scale)
+                    * retrieval_gate
+                    * self.dropout(retrieved)
+                )
+                outputs.append((current + residual) * valid_vector)
+
+                predicted_value = torch.bmm(
+                    memory,
+                    key.unsqueeze(-1),
+                ).squeeze(-1)
+                error = value - predicted_value
+                surprise = torch.linalg.vector_norm(error, dim=-1)
+                update_rate = torch.sigmoid(self.update_rate_proj(normalized))
+                retention = torch.sigmoid(self.retention_proj(normalized))
+                gradient_step = torch.bmm(
+                    error.unsqueeze(-1),
+                    key.unsqueeze(1),
+                ) / rank_scale
+                next_momentum = (
+                    momentum_rate * momentum
+                    + update_rate.unsqueeze(-1) * gradient_step
+                )
+                next_memory = (
+                    retention.unsqueeze(-1) * memory + next_momentum
+                ).clamp(min=-self.memory_clip, max=self.memory_clip)
+                memory = valid_state * next_memory + (1.0 - valid_state) * memory
+                momentum = (
+                    valid_state * next_momentum + (1.0 - valid_state) * momentum
+                )
+
+                surprise_values.append(surprise * valid_vector.squeeze(-1))
+                update_rates.append(update_rate.squeeze(-1) * valid_vector.squeeze(-1))
+                retentions.append(retention.squeeze(-1) * valid_vector.squeeze(-1))
+                retrieval_gates.append(
+                    retrieval_gate.mean(dim=-1) * valid_vector.squeeze(-1)
+                )
+
+        output = torch.stack(outputs, dim=1)
+        diagnostics = {
+            "surprise": torch.stack(surprise_values, dim=1),
+            "update_rate": torch.stack(update_rates, dim=1),
+            "retention": torch.stack(retentions, dim=1),
+            "retrieval_gate": torch.stack(retrieval_gates, dim=1),
+        }
+        return output, diagnostics
+
+    def forward(
+        self,
+        encoded: torch.Tensor,
+        mask: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        output, _ = self.process(encoded, mask=mask)
+        return output
