@@ -2,10 +2,7 @@
 
 > Manuscript version: v0.6
 > Date: 2026-08-10 KST
-> Target format: ICTC 2026, IEEE two-column short paper
-> Evidence scope: fixed-split validation results; the held-out test split has not been used
-
-## Abstract
+> Target format: ICTC 2026, IEEE two-column short paperAbstract
 
 Demand for slow-moving items and long-tail products consists of irregularly timed orders whose positive quantities vary substantially. Neural temporal point processes provide a natural event-based formulation, but common models summarize history through recurrence and treat marks as categories, whereas demand quantity is continuous and often long-tailed. We propose TitanTPP, a quantity-aware temporal point process that combines a Titan-inspired causal memory-attention encoder with a log-magnitude mark and a within-mark residual. The two quantity components reconstruct demand on its original scale, and selected quantity gradients can be separated from the mark path when tail errors interfere with likelihood learning. We compare TitanTPP with adapted RMTPP and THP baselines under fixed chronological splits and three seeds. On Taxi, TitanTPP reduces validation quantity MAE from 65.8580 and 87.7508 to 23.7722 while obtaining the lowest validation NLL. On Instacart, it obtains the lowest quantity MAE, 4.3025, although adapted RMTPP retains the best likelihood and event-time error. The results show that the benefit is substantial on long, heavy-tailed event sequences but more limited on shorter sequences.
 
@@ -156,10 +153,11 @@ so quantity errors do not determine which epoch is selected.
 
 We evaluate Taxi and Instacart, which differ sharply in sequence length and quantity range. Taxi contains long event histories and a pronounced quantity tail; Instacart contains many shorter user-level sequences with a narrower positive-quantity range. Table 1 reports statistics computed from the frozen dataset manifests.
 
-| Dataset | Sequences | Events | Sequence length med./p95/max | Quantity med./p95/max | Magnitude marks | Base $b$ |
-|---|---:|---:|---:|---:|---:|---:|
-| Taxi | 131 | 55,119 | 405 / 743 / 744 | 7 / 1,547 / 6,489 | 4 | 10 |
-| Instacart | 206,209 | 3,279,521 | 10 / 50 / 100 | 8 / 25 / 177 | 8 | 2 |
+
+| Dataset   | Sequences |    Events | Sequence length med./p95/max | Quantity med./p95/max | Magnitude marks | Base$b$ |
+| --------- | --------: | --------: | ---------------------------: | --------------------: | --------------: | ------: |
+| Taxi      |       131 |    55,119 |              405 / 743 / 744 |     7 / 1,547 / 6,489 |               4 |      10 |
+| Instacart |   206,209 | 3,279,521 |                10 / 50 / 100 |          8 / 25 / 177 |               8 |       2 |
 
 *Table 1. Dataset statistics. The padding symbol is not counted as a magnitude mark.*
 
@@ -173,21 +171,23 @@ All models use the same fixed chronological splits, seeds 42, 52, and 62, AdamW 
 
 Table 2 reports Taxi results. TitanTPP obtains the lowest event NLL, quantity MAE, and the highest mark accuracy. Its quantity MAE is 63.9% lower than Adapted RMTPP and 72.9% lower than Adapted THP. Adapted RMTPP remains slightly better on inter-event-time MAE, so the result does not support uniform superiority across all targets.
 
-| Model | Val. NLL $\downarrow$ | Quantity MAE $\downarrow$ | $\Delta t$ MAE $\downarrow$ | Mark accuracy $\uparrow$ |
-|---|---:|---:|---:|---:|
-| Adapted RMTPP | 1.5803 $\pm$ 0.0032 | 65.8580 $\pm$ 2.4748 | **0.7326 $\pm$ 0.0085** | 91.800% $\pm$ 0.117%p |
-| Adapted THP | 1.5998 $\pm$ 0.0087 | 87.7508 $\pm$ 2.6771 | 0.7528 $\pm$ 0.0224 | 91.461% $\pm$ 0.202%p |
-| **TitanTPP** | **1.5458 $\pm$ 0.0048** | **23.7722 $\pm$ 1.0929** | 0.7374 $\pm$ 0.0151 | **92.606% $\pm$ 0.134%p** |
+
+| Model         |    Val. NLL$\downarrow$ | Quantity MAE$\downarrow$ | $\Delta t$ MAE $\downarrow$ |   Mark accuracy$\uparrow$ |
+| ------------- | ----------------------: | -----------------------: | --------------------------: | ------------------------: |
+| Adapted RMTPP |      1.5803$\pm$ 0.0032 |      65.8580$\pm$ 2.4748 |     **0.7326 $\pm$ 0.0085** |      91.800%$\pm$ 0.117%p |
+| Adapted THP   |      1.5998$\pm$ 0.0087 |      87.7508$\pm$ 2.6771 |          0.7528$\pm$ 0.0224 |      91.461%$\pm$ 0.202%p |
+| **TitanTPP**  | **1.5458 $\pm$ 0.0048** | **23.7722 $\pm$ 1.0929** |          0.7374$\pm$ 0.0151 | **92.606% $\pm$ 0.134%p** |
 
 *Table 2. Taxi validation results over three seeds.*
 
 Table 3 shows a different pattern on Instacart. TitanTPP obtains the lowest quantity MAE, improving on Adapted RMTPP by 0.8% and on Adapted THP by 0.05%. The difference from Adapted THP is small relative to the seed variation. Adapted RMTPP obtains the best NLL, inter-event-time MAE, and mark accuracy. The Instacart result therefore supports only a narrow claim about quantity reconstruction; it does not show a general likelihood advantage.
 
-| Model | Val. NLL $\downarrow$ | Quantity MAE $\downarrow$ | $\Delta t$ MAE $\downarrow$ | Mark accuracy $\uparrow$ |
-|---|---:|---:|---:|---:|
-| **Adapted RMTPP** | **4.3809 $\pm$ 0.0007** | 4.3379 $\pm$ 0.0131 | **5.6690 $\pm$ 0.0094** | **49.940% $\pm$ 0.034%p** |
-| Adapted THP | 4.3881 $\pm$ 0.0009 | 4.3046 $\pm$ 0.0081 | 5.7063 $\pm$ 0.0059 | 49.793% $\pm$ 0.091%p |
-| TitanTPP | 4.3827 $\pm$ 0.0012 | **4.3025 $\pm$ 0.0070** | 5.6827 $\pm$ 0.0027 | 49.809% $\pm$ 0.034%p |
+
+| Model             |    Val. NLL$\downarrow$ | Quantity MAE$\downarrow$ | $\Delta t$ MAE $\downarrow$ |   Mark accuracy$\uparrow$ |
+| ----------------- | ----------------------: | -----------------------: | --------------------------: | ------------------------: |
+| **Adapted RMTPP** | **4.3809 $\pm$ 0.0007** |       4.3379$\pm$ 0.0131 |     **5.6690 $\pm$ 0.0094** | **49.940% $\pm$ 0.034%p** |
+| Adapted THP       |      4.3881$\pm$ 0.0009 |       4.3046$\pm$ 0.0081 |          5.7063$\pm$ 0.0059 |      49.793%$\pm$ 0.091%p |
+| TitanTPP          |      4.3827$\pm$ 0.0012 |  **4.3025 $\pm$ 0.0070** |          5.6827$\pm$ 0.0027 |      49.809%$\pm$ 0.034%p |
 
 *Table 3. Instacart validation results over three seeds.*
 
