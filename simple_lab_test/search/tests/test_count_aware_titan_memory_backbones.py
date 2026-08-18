@@ -12,6 +12,12 @@ from models.TPPs.CountAwareTPP import (
 from models.Titan.common.memory import GatedSoftMemory, SurpriseGatedMemory
 from models.TPPs.CountAwareFactory import build_count_aware_model
 from paper.scripts.count_aware_tpp_backbone.core import target_outputs
+from paper.scripts.count_aware_tpp_backbone.constants import (
+    BACKBONES,
+    BACKBONE_LABELS,
+    SUPPORTED_BACKBONES,
+    TITAN_MEMORY_BACKBONES,
+)
 
 
 def build_titan(backbone: str) -> tuple[CountAwareTitanTPP, dict[str, object]]:
@@ -40,6 +46,23 @@ def sample_batch() -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         [1.0, 4.0, 12.0, 0.0],
     ])
     return dts, mask, quantities
+
+
+def test_memory_variants_are_opt_in_supported_backbones() -> None:
+    assert TITAN_MEMORY_BACKBONES == (
+        "titantpp_no_memory",
+        "titantpp_gated_soft_memory",
+        "titantpp_surprise_memory",
+    )
+    assert all(name not in BACKBONES for name in TITAN_MEMORY_BACKBONES)
+    assert SUPPORTED_BACKBONES == (*BACKBONES, *TITAN_MEMORY_BACKBONES)
+    assert BACKBONE_LABELS["titantpp_no_memory"] == "TitanTPP No Memory"
+    assert BACKBONE_LABELS["titantpp_gated_soft_memory"] == (
+        "TitanTPP Gated Soft Memory"
+    )
+    assert BACKBONE_LABELS["titantpp_surprise_memory"] == (
+        "TitanTPP Surprise Memory"
+    )
 
 
 def test_no_memory_backbone_removes_both_static_memory_paths() -> None:

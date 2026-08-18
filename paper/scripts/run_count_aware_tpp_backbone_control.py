@@ -35,6 +35,7 @@ from paper.scripts.count_aware_tpp_backbone.constants import (
     LOGNORMAL_VARIANT,
     QUANTITY_VARIANT_ALIASES,
     SEEDS,
+    SUPPORTED_BACKBONES,
     TAIL_HEAD_ONLY_VARIANT,
     TAIL_SHARED_VARIANT,
     TAIL_VARIANTS,
@@ -152,7 +153,7 @@ def main() -> None:
     backbones = parse_str_tuple(args.backbones)
     seeds = parse_int_tuple(args.seeds)
     quantity_variants = normalize_quantity_variants(args.quantity_variants)
-    if any(backbone not in BACKBONES for backbone in backbones):
+    if any(backbone not in SUPPORTED_BACKBONES for backbone in backbones):
         raise ValueError(f"Unsupported backbone selection: {backbones}")
     if not args.allow_partial_contract:
         if set(backbones) != set(BACKBONES) or set(seeds) != set(SEEDS):
