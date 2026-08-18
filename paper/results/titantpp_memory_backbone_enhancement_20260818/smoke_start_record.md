@@ -87,3 +87,6 @@ Soft-memory residual scale은 epoch 1 checkpoint에서 `0.001480`, surprise-memo
 표의 metric 차이는 모델 품질 근거로 사용하지 않는다. 실행 관점에서는 soft-memory가
 안정적으로 통과했지만 surprise-memory는 기존 hard-LMM 대비 약 9.6배 느려 long-epoch
 screening 전에 연산 최적화 또는 짧은 속도 gate가 필요하다.
+
+- Notion: `5. Model Design Enhancement`의 기존 실험 페이지에 최종 결과를 반영하고
+  완료 상태, held-out test 미사용, 주요 수치와 surprise-memory 속도 제약을 재조회했다.
