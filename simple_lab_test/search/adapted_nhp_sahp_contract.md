@@ -46,3 +46,18 @@
 ## 해석 제한
 
 이 비교는 NHP와 SAHP의 원 논문 구현을 재현하는 실험이 아니다. 공통 time·quantity head 아래에서 continuous-time recurrent encoder와 self-attentive Hawkes encoder가 count-aware next-event prediction에 기여하는지를 확인하는 통제 실험이다.
+
+## 구현 검증 기록
+
+- 검증 일자: 2026-08-18
+- source revision: `4d3dc00967fe3c43dc04aceb9e5bd5083e14cdb7`
+- focused test: `python -m pytest -q simple_lab_test/search/tests/test_count_aware_*.py`
+- focused test 결과: 58 passed
+- smoke dataset: Instacart fixed split top-20 series
+- smoke 조건: CPU, seed 42, epoch 1, batch size 128, train/validation 각각 최대 1 batch
+- 완료 run: Adapted NHP 1개, Adapted SAHP 1개
+- NHP smoke validation: joint objective 3.492542, time NLL 3.242446, quantity MAE 6.287001
+- SAHP smoke validation: joint objective 3.351113, time NLL 3.101416, quantity MAE 6.278617
+- 두 run 모두 best checkpoint, last epoch state, train log, summary, history를 생성했고 `status=success`를 기록했다.
+- validation-only이며 held-out test는 사용하지 않았다.
+- 이 수치는 DataLoader와 artifact 계약 확인용 partial smoke 결과이므로 모델 간 성능 근거로 사용하지 않는다.
