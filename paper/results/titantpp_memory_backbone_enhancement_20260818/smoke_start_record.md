@@ -6,7 +6,7 @@
 - 시작 기록 시각: `2026-08-18 11:40:06 KST`
 - 실행 서버: `5080`
 - tmux session: `titan_memory_backbone_smoke_0818`
-- Source revision: `cd1087b8ab6a0212c037c26d71aa363fa3336c80`
+- Source revision: `3003e836b93764c609ea918ed668ca2bdfb1a3bb`
 - Artifact: `search_artifacts/count_aware_titan_memory_backbone_cuda_smoke_20260818`
 - Held-out test: 미사용
 
@@ -50,7 +50,7 @@ validation summary와 scale-wise artifact 생성 경로를 검증한다. 이 smo
 
 ```bash
 ssh 5080 '/usr/bin/tmux new-session -d -s titan_memory_backbone_smoke_0818 \
-  "env SOURCE_REVISION=cd1087b8ab6a0212c037c26d71aa363fa3336c80 \
+  "env SOURCE_REVISION=3003e836b93764c609ea918ed668ca2bdfb1a3bb \
   PROJECT_ROOT=/home/leekwanhyeong/workspace/paper_research \
   PYTHON_BIN=/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python \
   OUTPUT_ROOT=/home/leekwanhyeong/workspace/paper_research/search_artifacts/count_aware_titan_memory_backbone_cuda_smoke_20260818 \
