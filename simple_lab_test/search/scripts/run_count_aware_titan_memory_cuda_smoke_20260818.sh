@@ -14,6 +14,11 @@ INSTA_MANIFEST="${PROJECT_ROOT}/sample_data/insta_market_basket/instacart_marked
 SOURCE_FILES=(
   "${PROJECT_ROOT}/models/TPPs/CountAwareFactory.py"
   "${PROJECT_ROOT}/models/TPPs/CountAwareTPP.py"
+  "${PROJECT_ROOT}/models/TPPs/NeuralHawkesTPP.py"
+  "${PROJECT_ROOT}/models/TPPs/SelfAttentiveHawkesTPP.py"
+  "${PROJECT_ROOT}/models/TPPs/TransformerHawkesTPP.py"
+  "${PROJECT_ROOT}/models/TPPs/config.py"
+  "${PROJECT_ROOT}/models/TPPs/value_conditioning.py"
   "${PROJECT_ROOT}/models/Titan/__init__.py"
   "${PROJECT_ROOT}/models/Titan/common/__init__.py"
   "${PROJECT_ROOT}/models/Titan/common/memory.py"
