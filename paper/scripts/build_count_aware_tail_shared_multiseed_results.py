@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Combine TitanTPP T1 seeds with matched RMTPP and THP baselines."""
+"""Combine TitanTPP T1 seeds with matched T0 backbone baselines."""
 
 from __future__ import annotations
 
@@ -13,12 +13,13 @@ from typing import Any
 
 
 SEEDS = (42, 52, 62)
-BASELINE_MODELS = ("rmtpp", "thp")
+BASELINE_MODELS = ("rmtpp", "thp", "titantpp")
 BASE_VARIANT = "count_only_log_regression"
 T1_VARIANT = "count_only_log_mse_tail_shared"
 MODEL_LABELS = {
     "rmtpp": "Adapted RMTPP",
     "thp": "Adapted THP",
+    "titantpp": "TitanTPP-T0",
     "titantpp_t1": "TitanTPP-T1",
 }
 RUN_METRICS = (
@@ -71,8 +72,15 @@ def read_csv(path: Path) -> list[dict[str, str]]:
 def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
     if not rows:
         raise ValueError(f"No rows to write: {path}")
+    fieldnames: list[str] = []
+    seen: set[str] = set()
+    for row in rows:
+        for fieldname in row:
+            if fieldname not in seen:
+                seen.add(fieldname)
+                fieldnames.append(fieldname)
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0]), lineterminator="\n")
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
