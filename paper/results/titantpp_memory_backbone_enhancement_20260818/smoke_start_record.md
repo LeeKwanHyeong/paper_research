@@ -2,9 +2,10 @@
 
 ## 상태
 
-- 상태: dependency 보완 후 fresh 재실행 준비
+- 상태: **완료**
 - 시작 기록 시각: `2026-08-18 11:40:06 KST`
 - 재실행 기록 시각: `2026-08-18 11:46:22 KST`
+- 완료 시각: `2026-08-18 11:48:14 KST`
 - 실행 서버: `5080`
 - tmux session: `titan_memory_backbone_smoke_0818`
 - Source revision: `8b0adb36d70db50e4dcec92df74111065766adc4`
@@ -63,5 +64,26 @@ ssh 5080 '/usr/bin/tmux new-session -d -s titan_memory_backbone_smoke_0818 \
 첫 실행은 학습 진입 전 pytest collection에서 종료됐다. 5080에 최근 package
 centralization의 `paper/scripts/count_aware_tpp_backbone/core.py`, `training.py`,
 `reporting.py`가 없었던 것이 원인이며 모델 forward는 실행되지 않았다. 실패 artifact는
-보존하고 dependency를 source manifest에 추가한 fresh 경로에서 재실행한다. 완료 후
-상태, 종료 시각, run 수, NaN·Inf·Traceback 여부와 artifact 검증 결과를 작성한다.
+보존하고 dependency를 source manifest에 추가한 fresh 경로에서 재실행했다.
+
+- 5080 focused pytest: `19 passed`
+- Intermittent partial CUDA model-test: `4/4` runs 완료
+- Instacart top-20 e1: `4/4` runs 완료
+- Traceback / NaN / Inf: 없음
+- Checkpoint / history / validation summary: 각 run 생성 확인
+- Instacart quantity scale rows: 4 backbones x 5 strata 생성 확인
+- Held-out test: 미사용
+- Test summary / plots: validation-only e1 smoke 계약상 생성하지 않음
+
+| Backbone | Instacart val joint | Qty MAE | Qty RMSE | Parameters | e1 elapsed |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Existing hard-LMM | `2.344668` | `5.527075` | `7.419839` | `77,507` | `0.997s` |
+| No-memory | `2.329380` | `5.342267` | `7.146830` | `71,363` | `0.512s` |
+| Gated soft-memory | `2.326635` | `5.297058` | `7.070282` | `100,228` | `0.615s` |
+| Surprise-memory | `2.328247` | `5.329214` | `7.125673` | `86,151` | `9.614s` |
+
+Soft-memory residual scale은 epoch 1 checkpoint에서 `0.001480`, surprise-memory는
+`-0.000804`로 zero-init 상태에서 실제 업데이트됐다. E1과 top-20 subset 결과이므로
+표의 metric 차이는 모델 품질 근거로 사용하지 않는다. 실행 관점에서는 soft-memory가
+안정적으로 통과했지만 surprise-memory는 기존 hard-LMM 대비 약 9.6배 느려 long-epoch
+screening 전에 연산 최적화 또는 짧은 속도 gate가 필요하다.
