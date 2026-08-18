@@ -29,7 +29,7 @@ from models.RMTPPs.config import THPConfig
 from models.Titan.backbone import MemoryEncoder
 from models.Titan.common.memory import LMM
 from paper.scripts.run_intermittent_log_backbone_control import (
-    BACKBONES,
+    BACKBONES as LEGACY_BACKBONES,
     EXPECTED_DATA_SHA256,
     EXPECTED_SPLIT_MANIFEST_SHA256,
     HISTORY_BOUNDARIES,
@@ -53,6 +53,7 @@ from simple_lab_test.search.common.experiment_utils import filter_top_series
 
 
 SEEDS = (42, 52, 62)
+BACKBONES = (*LEGACY_BACKBONES, "nhp", "sahp")
 VARIANT = "count_only_log_regression"
 LOGNORMAL_VARIANT = "count_only_lognormal_k1"
 TAIL_SHARED_VARIANT = "count_only_log_mse_tail_shared"
@@ -73,6 +74,8 @@ BACKBONE_LABELS = {
     "rmtpp": "Count-aware RMTPP",
     "thp": "Count-aware THP",
     "titantpp": "Count-aware TitanTPP",
+    "nhp": "Adapted NHP",
+    "sahp": "Adapted SAHP",
 }
 DATASET_CONTRACTS = {
     "intermittent_frozen_5000": {
@@ -369,6 +372,179 @@ class CountAwareRMTPP(SharedTimeCountModel):
         return encoded * mask.unsqueeze(-1).to(dtype=encoded.dtype)
 
 
+class CountAwareNHP(SharedTimeCountModel):
+    """Continuous-time LSTM history encoder under the shared output heads."""
+
+    def __init__(
+        self,
+        hidden_dim: int,
+        train_log_mean: float,
+        **quantity_kwargs: Any,
+    ) -> None:
+        super().__init__(hidden_dim, train_log_mean, **quantity_kwargs)
+        self.input_projection = nn.Linear(2, hidden_dim * 7)
+        self.recurrent_projection = nn.Linear(hidden_dim, hidden_dim * 7, bias=False)
+        self.input_dropout = nn.Dropout(0.1)
+
+    def encode(
+        self,
+        dts: torch.Tensor,
+        history_quantities: torch.Tensor,
+        mask: torch.Tensor,
+    ) -> torch.Tensor:
+        features = self.input_dropout(
+            self.continuous_features(dts, history_quantities, mask)
+        )
+        batch_size, seq_len, _ = features.shape
+        state_shape = (batch_size, self.hidden_dim)
+        cell = features.new_zeros(state_shape)
+        cell_bar = features.new_zeros(state_shape)
+        output_gate = features.new_zeros(state_shape)
+        decay_rate = features.new_ones(state_shape)
+        encoded_steps: list[torch.Tensor] = []
+
+        for step in range(seq_len):
+            active = mask[:, step].unsqueeze(-1)
+            elapsed = dts[:, step].to(features.dtype).clamp_min(0.0).unsqueeze(-1)
+            decay_factor = torch.exp(-decay_rate * elapsed)
+            decayed_cell = cell_bar + (cell - cell_bar) * decay_factor
+            decayed_hidden = output_gate * torch.tanh(decayed_cell)
+            gates = (
+                self.input_projection(features[:, step])
+                + self.recurrent_projection(decayed_hidden)
+            )
+            (
+                input_gate,
+                forget_gate,
+                candidate,
+                next_output_gate,
+                input_bar_gate,
+                forget_bar_gate,
+                next_decay_rate,
+            ) = gates.chunk(7, dim=-1)
+            input_gate = torch.sigmoid(input_gate)
+            forget_gate = torch.sigmoid(forget_gate)
+            candidate = torch.tanh(candidate)
+            next_output_gate = torch.sigmoid(next_output_gate)
+            input_bar_gate = torch.sigmoid(input_bar_gate)
+            forget_bar_gate = torch.sigmoid(forget_bar_gate)
+            next_decay_rate = F.softplus(next_decay_rate) + 1e-4
+            next_cell = forget_gate * decayed_cell + input_gate * candidate
+            next_cell_bar = forget_bar_gate * cell_bar + input_bar_gate * candidate
+            next_hidden = next_output_gate * torch.tanh(next_cell)
+
+            cell = torch.where(active, next_cell, cell)
+            cell_bar = torch.where(active, next_cell_bar, cell_bar)
+            output_gate = torch.where(active, next_output_gate, output_gate)
+            decay_rate = torch.where(active, next_decay_rate, decay_rate)
+            encoded_steps.append(
+                torch.where(active, next_hidden, torch.zeros_like(next_hidden))
+            )
+
+        return torch.stack(encoded_steps, dim=1)
+
+
+class SAHPEncoderBlock(nn.Module):
+    def __init__(self, hidden_dim: int, *, n_heads: int, dropout: float) -> None:
+        super().__init__()
+        self.attention = nn.MultiheadAttention(
+            hidden_dim,
+            n_heads,
+            dropout=dropout,
+            batch_first=True,
+        )
+        self.attention_dropout = nn.Dropout(dropout)
+        self.attention_norm = nn.LayerNorm(hidden_dim)
+        self.feed_forward = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim * 4),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(hidden_dim * 4, hidden_dim),
+        )
+        self.feed_forward_dropout = nn.Dropout(dropout)
+        self.feed_forward_norm = nn.LayerNorm(hidden_dim)
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        *,
+        mask: torch.Tensor,
+        causal_mask: torch.Tensor,
+    ) -> torch.Tensor:
+        attended, _ = self.attention(
+            x,
+            x,
+            x,
+            attn_mask=causal_mask,
+            key_padding_mask=~mask,
+            need_weights=False,
+        )
+        x = self.attention_norm(x + self.attention_dropout(attended))
+        x = self.feed_forward_norm(x + self.feed_forward_dropout(self.feed_forward(x)))
+        return x * mask.unsqueeze(-1).to(dtype=x.dtype)
+
+
+class CountAwareSAHP(SharedTimeCountModel):
+    """Self-attentive Hawkes-style encoder under the shared output heads."""
+
+    def __init__(
+        self,
+        hidden_dim: int,
+        train_log_mean: float,
+        **quantity_kwargs: Any,
+    ) -> None:
+        super().__init__(hidden_dim, train_log_mean, **quantity_kwargs)
+        if hidden_dim % 4 != 0:
+            raise ValueError("SAHP hidden_dim must be divisible by four")
+        self.input_projection = nn.Linear(2, hidden_dim)
+        self.input_dropout = nn.Dropout(0.1)
+        self.layers = nn.ModuleList([
+            SAHPEncoderBlock(hidden_dim, n_heads=4, dropout=0.1)
+            for _ in range(2)
+        ])
+        self.base_projection = nn.Linear(hidden_dim, hidden_dim)
+        self.event_projection = nn.Linear(hidden_dim, hidden_dim)
+        self.decay_projection = nn.Linear(hidden_dim, hidden_dim)
+
+    def temporal_encoding(self, dts: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
+        half_dim = self.hidden_dim // 2
+        denominator = max(half_dim - 1, 1)
+        frequencies = torch.exp(
+            torch.arange(half_dim, device=dts.device, dtype=torch.float32)
+            * (-math.log(10000.0) / denominator)
+        )
+        event_times = torch.cumsum(dts.float().clamp_min(0.0), dim=1)
+        phase = event_times.unsqueeze(-1) * frequencies
+        encoding = torch.cat([torch.sin(phase), torch.cos(phase)], dim=-1)
+        return encoding * mask.unsqueeze(-1).to(dtype=encoding.dtype)
+
+    def encode(
+        self,
+        dts: torch.Tensor,
+        history_quantities: torch.Tensor,
+        mask: torch.Tensor,
+    ) -> torch.Tensor:
+        features = self.continuous_features(dts, history_quantities, mask)
+        x = self.input_projection(features) + self.temporal_encoding(dts, mask)
+        x = self.input_dropout(x) * mask.unsqueeze(-1).to(dtype=x.dtype)
+        seq_len = x.size(1)
+        causal_mask = torch.triu(
+            torch.ones(seq_len, seq_len, device=x.device, dtype=torch.bool),
+            diagonal=1,
+        )
+        for layer in self.layers:
+            x = layer(x, mask=mask, causal_mask=causal_mask)
+
+        base_state = torch.tanh(self.base_projection(x))
+        event_state = torch.tanh(self.event_projection(x))
+        decay_rate = F.softplus(self.decay_projection(x)) + 1e-4
+        elapsed = dts.to(x.dtype).clamp_min(0.0).unsqueeze(-1)
+        encoded = base_state + (event_state - base_state) * torch.exp(
+            -decay_rate * elapsed
+        )
+        return encoded * mask.unsqueeze(-1).to(dtype=encoded.dtype)
+
+
 class CountAwareTHP(SharedTimeCountModel):
     def __init__(
         self,
@@ -492,6 +668,23 @@ def build_model(
             "candidate_name": "count_gru_h64",
             "rnn_type": "gru",
             "hidden_dim": hidden_dim,
+        }
+    if backbone == "nhp":
+        return CountAwareNHP(hidden_dim, train_log_mean, **quantity_kwargs), {
+            "candidate_name": "count_nhp_ctlstm_h64",
+            "encoder_type": "continuous_time_lstm",
+            "hidden_dim": hidden_dim,
+            "shared_time_head": True,
+        }
+    if backbone == "sahp":
+        return CountAwareSAHP(hidden_dim, train_log_mean, **quantity_kwargs), {
+            "candidate_name": "count_sahp_small",
+            "encoder_type": "causal_self_attention_with_continuous_decay",
+            "hidden_dim": hidden_dim,
+            "n_layers": 2,
+            "n_heads": 4,
+            "d_ff": hidden_dim * 4,
+            "shared_time_head": True,
         }
     if backbone == "thp":
         model = CountAwareTHP(hidden_dim, train_log_mean, **quantity_kwargs)
