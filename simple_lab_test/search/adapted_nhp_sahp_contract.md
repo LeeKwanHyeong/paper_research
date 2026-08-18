@@ -48,8 +48,7 @@
 - CLI orchestration: `paper/scripts/run_count_aware_tpp_backbone_control.py`
 - 학습·평가 지원 코드: `paper/scripts/count_aware_tpp_backbone/`
 
-실험 스크립트의 기존 import 경로는 호환성을 위해 re-export로 유지하지만,
-새 코드에서는 `models.TPPs` package에서 모델을 직접 import한다.
+모든 실행 코드에서는 `models.TPPs` package에서 모델을 직접 import한다.
 
 ## 실험 범위
 
@@ -64,7 +63,7 @@
 - 검증 일자: 2026-08-18
 - source revision: `4d3dc00967fe3c43dc04aceb9e5bd5083e14cdb7`
 - focused test: `python -m pytest -q simple_lab_test/search/tests/test_count_aware_*.py`
-- focused test 결과: 60 passed
+- focused test 결과: 59 passed
 - smoke dataset: Instacart fixed split top-20 series
 - smoke 조건: CPU, seed 42, epoch 1, batch size 128, train/validation 각각 최대 1 batch
 - 완료 run: Adapted NHP 1개, Adapted SAHP 1개

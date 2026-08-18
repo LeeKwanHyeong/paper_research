@@ -98,8 +98,8 @@ Q0/Q1/Q2 CPU model-test도 finite하게 완료됐다. 아직 5090 CUDA와 actual
 ## 로컬 근거
 
 - `.agents/results/architecture/adr-titantpp-raw-quantity-revin-q0-q1-q2.md`
-- `models/RMTPPs/magnitude_normalization.py`
-- `models/RMTPPs/TitanTPP.py`
+- `models/TPPs/magnitude_normalization.py`
+- `models/TPPs/TitanTPP.py`
 - `simple_lab_test/search/common/runner.py`
 - `utils/training.py`
 - `simple_lab_test/search/tests/test_titantpp_direct_raw_quantity.py`

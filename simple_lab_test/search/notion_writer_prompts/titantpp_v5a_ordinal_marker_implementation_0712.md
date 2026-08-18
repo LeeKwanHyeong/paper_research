@@ -33,7 +33,7 @@ design confirmed / local implementation complete / CPU gate passed / 5090 integr
 
 ## 구현 내용
 
-- shared helper `models/RMTPPs/marker_losses.py` 추가
+- shared helper `models/TPPs/marker_losses.py` 추가
 - real mark logits만 사용하는 normalized RPS 구현
 - mask 기반 평균과 real class 1개일 때 zero 처리
 - `marker_loss_mode=ce|ce_rps`, default `ce`
@@ -117,7 +117,7 @@ V2보다 성능이 높다는 결론은 쓰지 않습니다.
 ## Local Evidence
 
 ```text
-/Users/igwanhyeong/PycharmProjects/paper_research/models/RMTPPs/marker_losses.py
+/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/marker_losses.py
 /Users/igwanhyeong/PycharmProjects/paper_research/simple_lab_test/search/tests/test_titantpp_ordinal_marker_loss.py
 /Users/igwanhyeong/PycharmProjects/paper_research/.agents/results/architecture/adr-titantpp-v5a-ordinal-marker-rps-loss.md
 /Users/igwanhyeong/PycharmProjects/paper_research/simple_lab_test/search/model_enhancement_strategy.md

@@ -169,9 +169,9 @@ Marked-TPP safety versus V2:
 ## 구현 예정 경로
 
 ```text
-models/RMTPPs/magnitude_normalization.py
-models/RMTPPs/config.py
-models/RMTPPs/TitanTPP.py
+models/TPPs/magnitude_normalization.py
+models/TPPs/config.py
+models/TPPs/TitanTPP.py
 data_loader/event_seq_data_module.py
 utils/training.py
 simple_lab_test/search/common/runner.py

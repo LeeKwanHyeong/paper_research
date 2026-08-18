@@ -43,9 +43,9 @@ runner를 사용합니다. `overfit`, `qty-ablation`은 기존 실험 구현을
 
 | CLI name | 실제 모델 |
 | --- | --- |
-| `rmtpp` | `models.RMTPPs.RMTPP.RMTPP` |
-| `titantpp` | `models.RMTPPs.TitanTPP.TitanTPP` |
-| `thp` | `models.RMTPPs.TransformerHawkesTPP.TransformerHawkesTPP` |
+| `rmtpp` | `models.TPPs.RMTPP.RMTPP` |
+| `titantpp` | `models.TPPs.TitanTPP.TitanTPP` |
+| `thp` | `models.TPPs.TransformerHawkesTPP.TransformerHawkesTPP` |
 
 THP alias:
 
@@ -112,7 +112,7 @@ runs/.../metrics/ttm_contextual_best_val_nll.parquet
 
 ## TransformerHawkesTPP Integration
 
-`models/RMTPPs/TransformerHawkesTPP.py`는 official Transformer Hawkes Process의
+`models/TPPs/TransformerHawkesTPP.py`는 official Transformer Hawkes Process의
 encoder idea를 프로젝트 공통 decoder에 맞춘 adapter입니다.
 
 구현 원칙:

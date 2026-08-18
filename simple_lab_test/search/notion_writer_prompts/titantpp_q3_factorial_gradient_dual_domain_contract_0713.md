@@ -194,7 +194,7 @@ Full candidate gate:
 - `.agents/results/architecture/adr-titantpp-q3-factorial-gradient-dual-domain.md`
 - `.agents/results/architecture/adr-titantpp-raw-quantity-revin-q0-q1-q2.md`
 - `simple_lab_test/search/model_enhancement_strategy.md`
-- `models/RMTPPs/TitanTPP.py`
+- `models/TPPs/TitanTPP.py`
 - `simple_lab_test/search/tests/test_titantpp_direct_raw_quantity.py`
 - `simple_lab_test/search/scripts/run_titantpp_q3_inter_seed42_e50_0714.sh`
 - `simple_lab_test/search/notion_writer_prompts/titantpp_q3_inter_seed42_e50_start_0714.md`

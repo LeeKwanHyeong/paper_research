@@ -119,10 +119,10 @@ files=[
  "simple_lab_test/search/common/experiment_utils.py",
  "simple_lab_test/search/common/models.py",
  "simple_lab_test/search/common/runner.py",
- "models/RMTPPs/RMTPP.py",
- "models/RMTPPs/TransformerHawkesTPP.py",
- "models/RMTPPs/config.py",
- "models/RMTPPs/value_conditioning.py",
+ "models/TPPs/RMTPP.py",
+ "models/TPPs/TransformerHawkesTPP.py",
+ "models/TPPs/config.py",
+ "models/TPPs/value_conditioning.py",
  "utils/training.py",
 ]
 payload={

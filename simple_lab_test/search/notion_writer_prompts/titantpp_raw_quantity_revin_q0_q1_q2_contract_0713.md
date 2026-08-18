@@ -198,6 +198,6 @@ Q1과 Q2가 모두 통과하고 Q2가 overall 또는 short-context에서 Q1보�
 ```text
 .agents/results/architecture/adr-titantpp-raw-quantity-revin-q0-q1-q2.md
 simple_lab_test/search/model_enhancement_strategy.md
-models/RMTPPs/magnitude_normalization.py
-models/RMTPPs/TitanTPP.py
+models/TPPs/magnitude_normalization.py
+models/TPPs/TitanTPP.py
 ```

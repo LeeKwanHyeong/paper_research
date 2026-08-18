@@ -142,9 +142,9 @@ L_total
 - legacy `shared` mode는 기존 run path를 유지해 이전 artifact resume를 보호
 
 주요 코드:
-- `/Users/igwanhyeong/PycharmProjects/paper_research/models/RMTPPs/config.py`
-- `/Users/igwanhyeong/PycharmProjects/paper_research/models/RMTPPs/TitanTPP.py`
-- `/Users/igwanhyeong/PycharmProjects/paper_research/models/RMTPPs/value_conditioning.py`
+- `/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/config.py`
+- `/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/TitanTPP.py`
+- `/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/value_conditioning.py`
 - `/Users/igwanhyeong/PycharmProjects/paper_research/utils/training.py`
 - `/Users/igwanhyeong/PycharmProjects/paper_research/simple_lab_test/search/common/models.py`
 - `/Users/igwanhyeong/PycharmProjects/paper_research/simple_lab_test/search/common/runner.py`

@@ -75,7 +75,7 @@ the common V2 path: mark-conditioned residual experts model scale-dependent quan
 and a stopped mark-gate gradient reduces interference between quantity regression and mark
 classification.
 
-**Evidence.** F2, T2a, `models/RMTPPs/TitanTPP.py`, and the frozen model-source hashes.
+**Evidence.** F2, T2a, `models/TPPs/TitanTPP.py`, and the frozen model-source hashes.
 
 **Closing transition.** The resulting design can be compared against RMTPP and THP without
 changing the data split, quantity definition, or evaluation protocol.
