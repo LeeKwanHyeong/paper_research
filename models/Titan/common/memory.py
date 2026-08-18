@@ -252,3 +252,74 @@ class LMM(nn.Module):
         idx_exp = idx.unsqueeze(-1).expand(-1, -1, -1, D)    # [B, L, k, D]
         selected = torch.gather(mem_exp, 2, idx_exp).mean(dim=2)  # [B, L, D]
         return encoded + selected
+
+
+class GatedSoftMemory(nn.Module):
+    """Differentiable static memory retrieval with a zero-init residual gate."""
+
+    def __init__(
+        self,
+        d_model: int,
+        mem_size: int = 64,
+        temperature: float = 1.0,
+        dropout: float = 0.1,
+    ) -> None:
+        super().__init__()
+        if d_model < 1:
+            raise ValueError("d_model must be positive")
+        if mem_size < 1:
+            raise ValueError("mem_size must be positive")
+        if temperature <= 0.0:
+            raise ValueError("temperature must be positive")
+
+        self.d_model = int(d_model)
+        self.mem_size = int(mem_size)
+        self.temperature = float(temperature)
+
+        self.input_norm = nn.LayerNorm(self.d_model)
+        self.query_proj = nn.Linear(self.d_model, self.d_model, bias=False)
+        self.key_proj = nn.Linear(self.d_model, self.d_model, bias=False)
+        self.value_proj = nn.Linear(self.d_model, self.d_model, bias=False)
+        self.output_proj = nn.Linear(self.d_model, self.d_model, bias=False)
+        self.gate_proj = nn.Linear(self.d_model, self.d_model)
+        self.memory_keys = nn.Parameter(
+            torch.randn(1, self.mem_size, self.d_model) * 0.02
+        )
+        self.memory_values = nn.Parameter(
+            torch.randn(1, self.mem_size, self.d_model) * 0.02
+        )
+        self.residual_scale = nn.Parameter(torch.zeros(()))
+        self.dropout = nn.Dropout(float(dropout))
+
+    def retrieve(
+        self,
+        encoded: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Return the retrieved values and dense memory attention weights."""
+        normalized = self.input_norm(encoded)
+        query = self.query_proj(normalized)
+        keys = self.key_proj(self.memory_keys).expand(encoded.size(0), -1, -1)
+        values = self.value_proj(self.memory_values).expand(
+            encoded.size(0), -1, -1
+        )
+        scores = torch.matmul(query, keys.transpose(-2, -1))
+        scores = scores / (math.sqrt(self.d_model) * self.temperature)
+        weights = torch.softmax(scores, dim=-1)
+        retrieved = self.output_proj(torch.matmul(weights, values))
+        return retrieved, weights
+
+    def forward(
+        self,
+        encoded: torch.Tensor,
+        mask: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        retrieved, _ = self.retrieve(encoded)
+        gate = torch.sigmoid(self.gate_proj(self.input_norm(encoded)))
+        residual = torch.tanh(self.residual_scale) * gate * self.dropout(retrieved)
+        output = encoded + residual
+        if mask is not None:
+            output = output * mask.to(
+                device=output.device,
+                dtype=output.dtype,
+            ).unsqueeze(-1)
+        return output

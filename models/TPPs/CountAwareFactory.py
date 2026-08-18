@@ -13,6 +13,7 @@ from models.TPPs.CountAwareTPP import (
     SharedTimeCountModel,
     TITAN_MEMORY_MODE_NONE,
     TITAN_MEMORY_MODE_STATIC_HARD,
+    TITAN_MEMORY_MODE_STATIC_SOFT_GATED,
 )
 from models.TPPs.NeuralHawkesTPP import CountAwareNHP
 from models.TPPs.SelfAttentiveHawkesTPP import CountAwareSAHP
@@ -80,10 +81,12 @@ def build_count_aware_model(
     titan_modes = {
         "titantpp": TITAN_MEMORY_MODE_STATIC_HARD,
         "titantpp_no_memory": TITAN_MEMORY_MODE_NONE,
+        "titantpp_gated_soft_memory": TITAN_MEMORY_MODE_STATIC_SOFT_GATED,
     }
     if backbone in titan_modes:
         memory_mode = titan_modes[backbone]
-        uses_static_memory = memory_mode == TITAN_MEMORY_MODE_STATIC_HARD
+        uses_hard_memory = memory_mode == TITAN_MEMORY_MODE_STATIC_HARD
+        uses_soft_memory = memory_mode == TITAN_MEMORY_MODE_STATIC_SOFT_GATED
         return CountAwareTitanTPP(
             hidden_dim,
             train_log_mean,
@@ -93,17 +96,24 @@ def build_count_aware_model(
         ), {
             "candidate_name": (
                 "count_titan_small_lmm"
-                if uses_static_memory
-                else "count_titan_no_memory"
+                if uses_hard_memory
+                else (
+                    "count_titan_gated_soft_memory"
+                    if uses_soft_memory
+                    else "count_titan_no_memory"
+                )
             ),
             "d_model": hidden_dim,
             "n_layers": 2,
             "n_heads": 4,
             "d_ff": hidden_dim * 2,
             "memory_mode": memory_mode,
-            "persistent_mem_size": 16 if uses_static_memory else 0,
-            "lmm_mem_size": 64 if uses_static_memory else 0,
-            "lmm_topk": 4 if uses_static_memory else 0,
+            "persistent_mem_size": 16 if uses_hard_memory else 0,
+            "lmm_mem_size": 64 if uses_hard_memory else 0,
+            "lmm_topk": 4 if uses_hard_memory else 0,
+            "soft_memory_size": 64 if uses_soft_memory else 0,
+            "soft_memory_temperature": 1.0 if uses_soft_memory else None,
+            "memory_residual_gate_init": 0.0 if uses_soft_memory else None,
             "max_len": max_seq_len,
         }
     raise ValueError(f"Unsupported backbone: {backbone}")

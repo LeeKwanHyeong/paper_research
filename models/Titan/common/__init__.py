@@ -10,6 +10,7 @@ __all__ = [
     "MemoryAttention",
     "PositionWiseFFN",
     "LMM",
+    "GatedSoftMemory",
 ]
 
 _LAZY = {
@@ -18,6 +19,7 @@ _LAZY = {
     "MemoryAttention": (".memory", "MemoryAttention"),
     "PositionWiseFFN": (".memory", "PositionWiseFFN"),
     "LMM": (".memory", "LMM"),
+    "GatedSoftMemory": (".memory", "GatedSoftMemory"),
 }
 
 

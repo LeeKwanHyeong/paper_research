@@ -19,7 +19,7 @@ import torch.nn.functional as F
 from models.TPPs.TransformerHawkesTPP import THPEncoderLayer
 from models.TPPs.config import THPConfig
 from models.Titan.backbone import MemoryEncoder
-from models.Titan.common.memory import LMM
+from models.Titan.common.memory import GatedSoftMemory, LMM
 
 
 LOG_MSE_VARIANT = "count_only_log_regression"
@@ -29,9 +29,11 @@ TAIL_HEAD_ONLY_VARIANT = "count_only_log_mse_tail_head_only"
 TAIL_VARIANTS = (TAIL_SHARED_VARIANT, TAIL_HEAD_ONLY_VARIANT)
 TITAN_MEMORY_MODE_NONE = "none"
 TITAN_MEMORY_MODE_STATIC_HARD = "static_hard_lmm"
+TITAN_MEMORY_MODE_STATIC_SOFT_GATED = "static_soft_gated"
 TITAN_MEMORY_MODES = (
     TITAN_MEMORY_MODE_NONE,
     TITAN_MEMORY_MODE_STATIC_HARD,
+    TITAN_MEMORY_MODE_STATIC_SOFT_GATED,
 )
 
 
@@ -371,6 +373,16 @@ class CountAwareTitanTPP(SharedTimeCountModel):
             if uses_static_memory
             else None
         )
+        self.soft_memory = (
+            GatedSoftMemory(
+                d_model=hidden_dim,
+                mem_size=64,
+                temperature=1.0,
+                dropout=0.1,
+            )
+            if memory_mode == TITAN_MEMORY_MODE_STATIC_SOFT_GATED
+            else None
+        )
 
     def encode(
         self,
@@ -382,6 +394,8 @@ class CountAwareTitanTPP(SharedTimeCountModel):
         encoded = self.encoder(x, mask=mask, update_context_memory=False)
         if self.lmm is not None:
             encoded = self.lmm(encoded)
+        if self.soft_memory is not None:
+            encoded = self.soft_memory(encoded, mask=mask)
         return encoded * mask.unsqueeze(-1).to(dtype=encoded.dtype)
 
 
@@ -397,6 +411,7 @@ __all__ = [
     "TAIL_VARIANTS",
     "TITAN_MEMORY_MODE_NONE",
     "TITAN_MEMORY_MODE_STATIC_HARD",
+    "TITAN_MEMORY_MODE_STATIC_SOFT_GATED",
     "TITAN_MEMORY_MODES",
     "inverse_softplus",
 ]
