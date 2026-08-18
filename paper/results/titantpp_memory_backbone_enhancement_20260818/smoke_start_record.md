@@ -2,12 +2,13 @@
 
 ## 상태
 
-- 상태: 실행 준비
+- 상태: dependency 보완 후 fresh 재실행 준비
 - 시작 기록 시각: `2026-08-18 11:40:06 KST`
+- 재실행 기록 시각: `2026-08-18 11:46:22 KST`
 - 실행 서버: `5080`
 - tmux session: `titan_memory_backbone_smoke_0818`
-- Source revision: `3003e836b93764c609ea918ed668ca2bdfb1a3bb`
-- Artifact: `search_artifacts/count_aware_titan_memory_backbone_cuda_smoke_20260818`
+- Source revision: `8b0adb36d70db50e4dcec92df74111065766adc4`
+- Artifact: `search_artifacts/count_aware_titan_memory_backbone_cuda_smoke_20260818_rerun`
 - Held-out test: 미사용
 
 ## 목적
@@ -50,14 +51,17 @@ validation summary와 scale-wise artifact 생성 경로를 검증한다. 이 smo
 
 ```bash
 ssh 5080 '/usr/bin/tmux new-session -d -s titan_memory_backbone_smoke_0818 \
-  "env SOURCE_REVISION=3003e836b93764c609ea918ed668ca2bdfb1a3bb \
+  "env SOURCE_REVISION=8b0adb36d70db50e4dcec92df74111065766adc4 \
   PROJECT_ROOT=/home/leekwanhyeong/workspace/paper_research \
   PYTHON_BIN=/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python \
-  OUTPUT_ROOT=/home/leekwanhyeong/workspace/paper_research/search_artifacts/count_aware_titan_memory_backbone_cuda_smoke_20260818 \
+  OUTPUT_ROOT=/home/leekwanhyeong/workspace/paper_research/search_artifacts/count_aware_titan_memory_backbone_cuda_smoke_20260818_rerun \
   bash /home/leekwanhyeong/workspace/paper_research/simple_lab_test/search/scripts/run_count_aware_titan_memory_cuda_smoke_20260818.sh"'
 ```
 
 ## 결과
 
-실행 전이다. 완료 후 상태, 종료 시각, run 수, NaN·Inf·Traceback 여부와 artifact
-검증 결과를 작성한다.
+첫 실행은 학습 진입 전 pytest collection에서 종료됐다. 5080에 최근 package
+centralization의 `paper/scripts/count_aware_tpp_backbone/core.py`, `training.py`,
+`reporting.py`가 없었던 것이 원인이며 모델 forward는 실행되지 않았다. 실패 artifact는
+보존하고 dependency를 source manifest에 추가한 fresh 경로에서 재실행한다. 완료 후
+상태, 종료 시각, run 수, NaN·Inf·Traceback 여부와 artifact 검증 결과를 작성한다.
