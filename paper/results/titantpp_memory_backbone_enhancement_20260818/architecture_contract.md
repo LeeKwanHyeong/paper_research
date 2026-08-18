@@ -79,10 +79,15 @@ M_t = retention_t * M_(t-1) + S_t
 - Memory clipping: `[-5, 5]`
 - Chunk boundary: memory와 momentum state를 detach해 truncated gradient 적용
 - Retrieval residual: zero-init global scale과 event-dependent gate 사용
+- CUDA scan: event-local projection을 sequence 단위로 계산하고 전체 recurrent scan을
+  하나의 static graph로 compile
+- CPU, diagnostics, compile 미지원 환경: 동일 식의 eager scan 사용
 
 Chunk boundary의 detach는 forward 값을 바꾸지 않고 gradient horizon만 제한한다.
 현재 구현은 batch 사이의 pre-window memory를 전달하지 않는다. 따라서 이를
 cross-window 장기 기억 또는 test-time continual adaptation으로 해석하지 않는다.
+Compiled 경로도 graph 내부에서 32 event마다 state를 detach하므로 gradient horizon은
+동일하다. Compile wrapper는 parameter를 추가하지 않아 checkpoint key도 바뀌지 않는다.
 
 ## Parameter 예산
 
@@ -110,12 +115,19 @@ Soft-memory는 THP보다 12,225개 많으므로 결과 해석 시 별도 capacit
 - 동일 parameter에서 chunk size 변경은 forward와 diagnostics 값을 변경하면 안 된다.
 - Gate를 연 상태에서 memory projection과 update parameter의 gradient가 finite해야 한다.
 - Extreme interval과 quantity에서도 forward, loss, gradient가 finite해야 한다.
+- 대표 CUDA shape에서 Surprise/hard-LMM 학습 step 비율이 모두 `3.0x` 이하여야 한다.
+- Compiled/eager CUDA output과 input/parameter gradient가 허용 오차 내에서 같아야 한다.
 
 ## 현재 판정과 다음 Gate
 
-구조 구현과 로컬 계약 검증만 완료됐다. Backbone 개선 주장을 위해서는 T0 loss를
-고정한 `기존 Titan / no-memory / gated soft-memory / surprise-memory` fresh matched
-validation 비교가 먼저 필요하다. 이 비교를 통과한 후보에만 T1 loss를 적용한다.
+구조 구현, 로컬 계약, 5080 CUDA 계약과 runtime gate까지 완료됐다. 최종
+Surprise/hard-LMM 학습 step 비율은 L16 `1.36x`, L64 `1.64x`, L256 `2.61x`다.
+세 shape의 최초 compile, warmup, 측정과 profiler를 포함한 cold run은 약 4분 58초가
+걸렸으므로 compiled 경로는 long-epoch 학습용으로 해석한다.
+
+Backbone 개선 주장을 위해서는 T0 loss를 고정한 `기존 Titan / no-memory /
+gated soft-memory / surprise-memory` fresh matched validation 비교가 다음 단계다.
+이 비교를 통과한 후보에만 T1 loss를 적용한다.
 
 1차 validation gate는 기존 Titan-T0 대비 전체 MAE 또는 RMSE 5% 이상 개선,
 `<=p95` MAE 악화 2% 이하, time NLL 악화 0.01 이하, 모든 값 finite로 둔다.
