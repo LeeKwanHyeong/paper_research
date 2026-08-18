@@ -73,9 +73,9 @@ from simple_lab_test.common.pathing import ensure_project_root_on_path
 
 PROJECT_ROOT = ensure_project_root_on_path(THIS_FILE)
 
-from models.RMTPPs.RMTPP import RMTPP
-from models.RMTPPs.TitanTPP import TitanTPP
-from models.RMTPPs.config import RMTPPConfig
+from models.TPPs.RMTPP import RMTPP
+from models.TPPs.TitanTPP import TitanTPP
+from models.TPPs.config import RMTPPConfig
 from simple_lab_test.search.common.models import default_titan_candidates
 from simple_lab_test.search.common.experiment_utils import (
     DatasetSpec,

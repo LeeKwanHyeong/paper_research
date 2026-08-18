@@ -32,11 +32,11 @@ from data_loader.event_seq_data_module import (
     RMTPPWeekLookbackDataset,
     collate_week_lookback,
 )
-from models.RMTPPs.config import RMTPPConfig, THPConfig
-from models.RMTPPs.RMTPP import RMTPP
-from models.RMTPPs.TitanTPP import TitanTPP
-from models.RMTPPs.TransformerHawkesTPP import TransformerHawkesTPP
-from models.RMTPPs.value_conditioning import predict_value_for_marks
+from models.TPPs.config import RMTPPConfig, THPConfig
+from models.TPPs.RMTPP import RMTPP
+from models.TPPs.TitanTPP import TitanTPP
+from models.TPPs.TransformerHawkesTPP import TransformerHawkesTPP
+from models.TPPs.value_conditioning import predict_value_for_marks
 from models.Titan import TitanConfig
 from simple_lab_test.search.common.runner import (
     canonical_state_dict_sha256,

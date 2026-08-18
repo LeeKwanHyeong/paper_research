@@ -1,6 +1,6 @@
 import torch
 
-from models.RMTPPs.RMTPP import RMTPP
+from models.TPPs.RMTPP import RMTPP
 
 
 def train_one_epoch(model, loader, optimizer, device):

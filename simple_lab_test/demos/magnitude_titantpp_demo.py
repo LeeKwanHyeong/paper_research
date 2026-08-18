@@ -23,7 +23,7 @@ from simple_lab_test.common.pathing import ensure_project_root_on_path
 
 PROJECT_ROOT = ensure_project_root_on_path(__file__)
 
-from models.RMTPPs.config import RMTPPConfig
+from models.TPPs.config import RMTPPConfig
 from models.Titan import TitanConfig
 from utils.magnitude_pipeline import (
     build_magnitude_marked_df,

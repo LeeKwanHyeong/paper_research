@@ -8,7 +8,7 @@ from typing import Any
 import polars as pl
 import torch
 
-from models.RMTPPs.value_conditioning import predict_value_for_marks
+from models.TPPs.value_conditioning import predict_value_for_marks
 from simple_lab_test.search.common.configs import ExperimentConfig, RunConfig
 from simple_lab_test.search.common.models import (
     build_model,

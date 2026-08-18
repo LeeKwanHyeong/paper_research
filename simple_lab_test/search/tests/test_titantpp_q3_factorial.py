@@ -5,9 +5,9 @@ import pytest
 import torch
 import torch.nn.functional as F
 
-from models.RMTPPs.TitanTPP import TitanTPP
-from models.RMTPPs.config import RMTPPConfig
-from models.RMTPPs.value_conditioning import apply_transition_loss_scope
+from models.TPPs.TitanTPP import TitanTPP
+from models.TPPs.config import RMTPPConfig
+from models.TPPs.value_conditioning import apply_transition_loss_scope
 from models.Titan import TitanConfig
 from simple_lab_test.search.common.configs import ExperimentConfig, RunConfig
 from simple_lab_test.search.common.runner import (

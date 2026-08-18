@@ -6,19 +6,19 @@ from torch.utils.data import DataLoader
 
 from data_loader.event_seq_data_module import time_split_events, RMTPPDataset, collate_next_event, \
     RMTPPWeekLookbackDataset, collate_week_lookback
-from models.RMTPPs.RMTPP import RMTPP
-from models.RMTPPs.TitanTPP import TitanTPP
-from models.RMTPPs.TransformerHawkesTPP import TransformerHawkesTPP
-from models.RMTPPs.marker_losses import normalized_ranked_probability_score
-from models.RMTPPs.magnitude_normalization import normalized_magnitude_target
-from models.RMTPPs.value_conditioning import (
+from models.TPPs.RMTPP import RMTPP
+from models.TPPs.TitanTPP import TitanTPP
+from models.TPPs.TransformerHawkesTPP import TransformerHawkesTPP
+from models.TPPs.marker_losses import normalized_ranked_probability_score
+from models.TPPs.magnitude_normalization import normalized_magnitude_target
+from models.TPPs.value_conditioning import (
     mask_appended_target_value,
     predict_value_for_marks,
 )
 import numpy as np
 import polars as pl
 
-from models.RMTPPs.config import RMTPPConfig, THPConfig
+from models.TPPs.config import RMTPPConfig, THPConfig
 from models.Titan import TitanConfig
 
 

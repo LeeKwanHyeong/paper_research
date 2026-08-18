@@ -23,8 +23,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from models.RMTPPs.config import RMTPPConfig, THPConfig
-from models.RMTPPs.value_conditioning import mask_appended_target_value
+from models.TPPs.config import RMTPPConfig, THPConfig
+from models.TPPs.value_conditioning import mask_appended_target_value
 from models.Titan import TitanConfig
 from paper.scripts.run_taxi_log_backbone_control import (
     LogRegressionTHP,

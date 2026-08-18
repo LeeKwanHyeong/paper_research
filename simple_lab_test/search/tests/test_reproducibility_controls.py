@@ -6,7 +6,7 @@ import pytest
 import torch
 
 from data_loader.event_seq_data_module import RMTPPWeekLookbackDataset
-from models.RMTPPs.config import RMTPPConfig
+from models.TPPs.config import RMTPPConfig
 from simple_lab_test.search.common.configs import ExperimentConfig, RunConfig
 from simple_lab_test.search.common.experiment_utils import DatasetSpec
 from simple_lab_test.search.common.runner import (

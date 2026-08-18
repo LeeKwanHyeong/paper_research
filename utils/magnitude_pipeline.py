@@ -5,7 +5,7 @@ from dataclasses import asdict
 import polars as pl
 import torch
 
-from models.RMTPPs.config import RMTPPConfig
+from models.TPPs.config import RMTPPConfig
 from models.Titan import TitanConfig
 from utils.mark_utils import (
     compare_log_base_distributions,

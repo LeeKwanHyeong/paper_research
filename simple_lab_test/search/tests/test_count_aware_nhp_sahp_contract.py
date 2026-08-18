@@ -3,6 +3,14 @@ from __future__ import annotations
 import pytest
 import torch
 
+from models.TPPs.NeuralHawkesTPP import CountAwareNHP as ModelCountAwareNHP
+from models.TPPs.SelfAttentiveHawkesTPP import (
+    CountAwareSAHP as ModelCountAwareSAHP,
+)
+from models.RMTPPs.NeuralHawkesTPP import CountAwareNHP as LegacyCountAwareNHP
+from models.RMTPPs.SelfAttentiveHawkesTPP import (
+    CountAwareSAHP as LegacyCountAwareSAHP,
+)
 from paper.scripts.run_count_aware_tpp_backbone_control import (
     BACKBONES,
     BACKBONE_LABELS,
@@ -14,6 +22,16 @@ from paper.scripts.run_count_aware_tpp_backbone_control import (
 
 
 ADAPTED_BACKBONES = ("nhp", "sahp")
+
+
+def test_script_reexports_models_from_the_model_package() -> None:
+    assert CountAwareNHP is ModelCountAwareNHP
+    assert CountAwareSAHP is ModelCountAwareSAHP
+
+
+def test_legacy_rmtpps_imports_resolve_to_canonical_models() -> None:
+    assert LegacyCountAwareNHP is ModelCountAwareNHP
+    assert LegacyCountAwareSAHP is ModelCountAwareSAHP
 
 
 def build_adapted(backbone: str):

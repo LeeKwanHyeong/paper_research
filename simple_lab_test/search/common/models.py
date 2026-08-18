@@ -5,10 +5,10 @@ from typing import Any, Iterable
 
 import torch
 
-from models.RMTPPs.RMTPP import RMTPP
-from models.RMTPPs.TitanTPP import TitanTPP
-from models.RMTPPs.TransformerHawkesTPP import TransformerHawkesTPP
-from models.RMTPPs.config import RMTPPConfig, THPConfig
+from models.TPPs.RMTPP import RMTPP
+from models.TPPs.TitanTPP import TitanTPP
+from models.TPPs.TransformerHawkesTPP import TransformerHawkesTPP
+from models.TPPs.config import RMTPPConfig, THPConfig
 from simple_lab_test.search.common.configs import ExperimentConfig, RunConfig, THPCandidate
 from simple_lab_test.search.common.experiment_utils import (
     TitanCandidate,

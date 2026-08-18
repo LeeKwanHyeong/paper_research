@@ -26,8 +26,8 @@ from data_loader.event_seq_data_module import (  # noqa: E402
     RMTPPWeekLookbackDataset,
     collate_week_lookback,
 )
-from models.RMTPPs.TitanTPP import TitanTPP  # noqa: E402
-from models.RMTPPs.config import RMTPPConfig  # noqa: E402
+from models.TPPs.TitanTPP import TitanTPP  # noqa: E402
+from models.TPPs.config import RMTPPConfig  # noqa: E402
 from models.Titan import TitanConfig  # noqa: E402
 from simple_lab_test.search.common.runner import evaluate_scale_wise_qty  # noqa: E402
 from utils.training import TrainingConfig, eval_next_event_week_lookback  # noqa: E402

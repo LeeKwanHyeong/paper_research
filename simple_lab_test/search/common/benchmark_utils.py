@@ -52,7 +52,7 @@ from simple_lab_test.common.pathing import ensure_project_root_on_path
 
 PROJECT_ROOT = ensure_project_root_on_path(THIS_FILE)
 
-from models.RMTPPs.config import RMTPPConfig
+from models.TPPs.config import RMTPPConfig
 from simple_lab_test.search.common.experiment_utils import (
     DatasetSpec,
     SearchConfig,

@@ -3,8 +3,8 @@ from types import SimpleNamespace
 import pytest
 import torch
 
-from models.RMTPPs.TitanTPP import TitanTPP
-from models.RMTPPs.config import RMTPPConfig
+from models.TPPs.TitanTPP import TitanTPP
+from models.TPPs.config import RMTPPConfig
 from models.Titan import TitanConfig
 from simple_lab_test.search.common.configs import ExperimentConfig, RunConfig
 from simple_lab_test.search.common.runner import build_run_paths

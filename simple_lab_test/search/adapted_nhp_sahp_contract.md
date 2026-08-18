@@ -39,6 +39,18 @@
 - SAHP의 attention은 미래 및 padding key를 차단한다.
 - 기존 RMTPP, THP, TitanTPP 계약 테스트를 통과한다.
 
+## 코드 구조
+
+- 공통 count-aware time·quantity head: `models/TPPs/CountAwareTPP.py`
+- Adapted NHP: `models/TPPs/NeuralHawkesTPP.py`
+- Adapted SAHP: `models/TPPs/SelfAttentiveHawkesTPP.py`
+- backbone factory: `models/TPPs/CountAwareFactory.py`
+- CLI orchestration: `paper/scripts/run_count_aware_tpp_backbone_control.py`
+- 학습·평가 지원 코드: `paper/scripts/count_aware_tpp_backbone/`
+
+실험 스크립트의 기존 import 경로는 호환성을 위해 re-export로 유지하지만,
+새 코드에서는 `models.TPPs` package에서 모델을 직접 import한다.
+
 ## 실험 범위
 
 구현 후 첫 단계는 CPU focused test와 e1 partial smoke이다. 현재 5080에서 실행 중인 TitanTPP-T1 multi-seed 학습이 끝나기 전에는 새 GPU 학습을 시작하지 않는다. 이후 동일한 Intermittent fixed split에서 seed 42 screening을 먼저 수행하고, 결과가 유효할 때만 seeds 52·62로 확장한다.
@@ -52,7 +64,7 @@
 - 검증 일자: 2026-08-18
 - source revision: `4d3dc00967fe3c43dc04aceb9e5bd5083e14cdb7`
 - focused test: `python -m pytest -q simple_lab_test/search/tests/test_count_aware_*.py`
-- focused test 결과: 58 passed
+- focused test 결과: 60 passed
 - smoke dataset: Instacart fixed split top-20 series
 - smoke 조건: CPU, seed 42, epoch 1, batch size 128, train/validation 각각 최대 1 batch
 - 완료 run: Adapted NHP 1개, Adapted SAHP 1개

@@ -30,9 +30,9 @@ from data_loader.event_seq_data_module import (
     RMTPPWeekLookbackDataset,
     collate_week_lookback,
 )
-from models.RMTPPs.config import RMTPPConfig
-from models.RMTPPs.RMTPP import RMTPP
-from models.RMTPPs.value_conditioning import (
+from models.TPPs.config import RMTPPConfig
+from models.TPPs.RMTPP import RMTPP
+from models.TPPs.value_conditioning import (
     mask_appended_target_value,
     predict_value_for_marks,
 )

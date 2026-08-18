@@ -15,7 +15,7 @@ import polars as pl
 import torch
 import torch.nn.functional as F
 
-from models.RMTPPs.config import RMTPPConfig
+from models.TPPs.config import RMTPPConfig
 from simple_lab_test.search.common.configs import ExperimentConfig, RunConfig, RunPaths
 from simple_lab_test.search.common.models import (
     build_model,
@@ -52,7 +52,7 @@ from utils.training import (
     make_fixed_split_week_lookback_loaders,
     make_week_lookback_loaders,
 )
-from models.RMTPPs.value_conditioning import (
+from models.TPPs.value_conditioning import (
     mask_appended_target_value,
     predict_value_for_marks,
 )

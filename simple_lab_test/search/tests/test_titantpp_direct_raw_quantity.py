@@ -6,9 +6,9 @@ import polars as pl
 import pytest
 import torch
 
-from models.RMTPPs.TitanTPP import TitanTPP
-from models.RMTPPs.config import RMTPPConfig
-from models.RMTPPs.magnitude_normalization import (
+from models.TPPs.TitanTPP import TitanTPP
+from models.TPPs.config import RMTPPConfig
+from models.TPPs.magnitude_normalization import (
     build_causal_revin_magnitude_context,
     build_causal_shrinkage_revin_magnitude_context,
     build_raw_global_magnitude_context,
