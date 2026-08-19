@@ -2,7 +2,7 @@
 
 ## 상태
 
-- 상태: Intermittent seed-42 e300 진행 중
+- 상태: Intermittent seed-42 e300 완료, memory 후보 미채택
 - 준비 시각: 2026-08-19 14:22:51 KST
 - e300 시작 시각: 2026-08-19 14:37:12 KST
 - 실행 서버: 5080
@@ -13,6 +13,7 @@
 - CUDA smoke artifact: `search_artifacts/count_aware_scaled_time_persistent_dual_cuda_smoke_20260819_r3`
 - e300 artifact: `search_artifacts/titantpp_persistent_dual_scaled_time_screening_e300_20260819`
 - Held-out test: 사용하지 않음
+- 완료 확인 시각: 2026-08-19 23:50:32 KST
 
 ## 목적
 
@@ -63,3 +64,10 @@ SOURCE_REVISION=6bf27cbca219c010c245a6293f27abf14fc6ccb6 \
 ```
 
 ## 결과
+
+- 다섯 Variant가 모두 early stopping으로 정상 종료됐다.
+- M2, M3a, M3b는 Hard-LMM 기준의 quantity acceptance gate를 통과하지 못했다.
+- 최종 선택은 기존 M1 Hard-LMM이다. Multi-seed와 held-out test는 열지 않는다.
+- Scaled exact time head는 finite contract를 통과했지만 train joint loss spike가 반복돼
+  optimization 안정성은 별도 보완이 필요하다.
+- 상세 분석: [result_analysis.md](result_analysis.md)
