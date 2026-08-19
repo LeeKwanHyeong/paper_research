@@ -2,7 +2,7 @@
 
 ## 상태
 
-- 상태: 실험 중
+- 상태: 완료, strict gate 미통과
 - 준비 시각: 2026-08-18 13:30:32 KST
 - 실험 시작 시각: 2026-08-18 13:36:45 KST
 - 실행 서버: 5080
@@ -79,3 +79,15 @@ tmux new-session -d -s titan_memory_inter_e300_5080_0818 \
 7. 생성된 plot이 있으면 마지막에 확인
 
 ## 결과
+
+- 완료 runs: 4/4
+- 원래 acceptance gate 선택: `titantpp` (hard-LMM 유지)
+- quantity 기준 후보: `titantpp_surprise_memory`
+- Surprise는 hard-LMM 대비 validation quantity MAE 23.24%, RMSE 11.35%,
+  log1p quantity MSE 38.14%를 개선했다.
+- Time NLL은 0.03869 악화되어 사전 정의 gate를 통과하지 못했다.
+- 해당 Time NLL 차이의 99.98%는 `history > 128` 구간에서 발생했다.
+- 공통 time head의 모든 validation target이 `w * delta_t` clamp 구간에 포함되는
+  수치 계약 문제가 확인되어, 현재 Time NLL은 확률적 NLL로 최종 해석하지 않는다.
+- held-out test는 사용하지 않았다.
+- 상세 분석: [result.md](result.md)
