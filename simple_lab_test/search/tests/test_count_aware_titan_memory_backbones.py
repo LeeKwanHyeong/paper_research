@@ -149,6 +149,10 @@ def test_memory_variants_are_opt_in_supported_backbones() -> None:
         "titantpp_no_memory",
         "titantpp_gated_soft_memory",
         "titantpp_surprise_memory",
+        "titantpp_persistent_only",
+        "titantpp_persistent_surprise_memory",
+        "titantpp_dual_memory_shared",
+        "titantpp_dual_memory_adapter_only",
     )
     assert all(name not in BACKBONES for name in TITAN_MEMORY_BACKBONES)
     assert SUPPORTED_BACKBONES == (*BACKBONES, *TITAN_MEMORY_BACKBONES)

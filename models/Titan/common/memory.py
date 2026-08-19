@@ -492,7 +492,11 @@ class SurpriseGatedMemory(nn.Module):
         mask: Optional[torch.Tensor] = None,
         *,
         collect_diagnostics: bool,
-    ) -> tuple[torch.Tensor, Optional[dict[str, torch.Tensor]]]:
+    ) -> tuple[
+        torch.Tensor,
+        torch.Tensor,
+        Optional[dict[str, torch.Tensor]],
+    ]:
         """Run the recurrent scan while keeping event-local work vectorized."""
         if encoded.ndim != 3 or encoded.size(-1) != self.d_model:
             raise ValueError(
@@ -587,16 +591,17 @@ class SurpriseGatedMemory(nn.Module):
             * self.dropout(retrieved)
         )
         valid_values = mask.to(dtype=encoded.dtype)
-        output = (encoded + residual) * valid_values.unsqueeze(-1)
+        residual = residual * valid_values.unsqueeze(-1)
+        output = encoded * valid_values.unsqueeze(-1) + residual
         if not collect_diagnostics:
-            return output, None
+            return output, residual, None
         diagnostics = {
             "surprise": torch.stack(surprise_values, dim=1) * valid_values,
             "update_rate": update_rates.squeeze(-1) * valid_values,
             "retention": retentions.squeeze(-1) * valid_values,
             "retrieval_gate": retrieval_gates.mean(dim=-1) * valid_values,
         }
-        return output, diagnostics
+        return output, residual, diagnostics
 
     def process(
         self,
@@ -604,7 +609,7 @@ class SurpriseGatedMemory(nn.Module):
         mask: Optional[torch.Tensor] = None,
     ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
         """Process one independent sequence batch and return memory diagnostics."""
-        output, diagnostics = self._process_impl(
+        output, _, diagnostics = self._process_impl(
             encoded,
             mask=mask,
             collect_diagnostics=True,
@@ -613,12 +618,25 @@ class SurpriseGatedMemory(nn.Module):
             raise RuntimeError("Surprise-memory diagnostics were not collected")
         return output, diagnostics
 
+    def residual(
+        self,
+        encoded: torch.Tensor,
+        mask: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        """Return only the gated retrieval residual for task-specific routing."""
+        _, residual, _ = self._process_impl(
+            encoded,
+            mask=mask,
+            collect_diagnostics=False,
+        )
+        return residual
+
     def forward(
         self,
         encoded: torch.Tensor,
         mask: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
-        output, _ = self._process_impl(
+        output, _, _ = self._process_impl(
             encoded,
             mask=mask,
             collect_diagnostics=False,

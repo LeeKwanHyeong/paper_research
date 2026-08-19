@@ -12,10 +12,15 @@ from models.TPPs.CountAwareTPP import (
     CountAwareTHP,
     CountAwareTitanTPP,
     SharedTimeCountModel,
+    TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
     TITAN_MEMORY_MODE_NONE,
+    TITAN_MEMORY_MODE_PERSISTENT_ONLY,
+    TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
     TITAN_MEMORY_MODE_STATIC_HARD,
     TITAN_MEMORY_MODE_STATIC_SOFT_GATED,
     TITAN_MEMORY_MODE_SURPRISE_GATED,
+    TITAN_QUANTITY_GRADIENT_ADAPTER_ONLY,
+    TITAN_QUANTITY_GRADIENT_SHARED,
 )
 from models.TPPs.NeuralHawkesTPP import CountAwareNHP
 from models.TPPs.SelfAttentiveHawkesTPP import CountAwareSAHP
@@ -112,63 +117,133 @@ def build_count_aware_model(
             },
         )
     titan_modes = {
-        "titantpp": TITAN_MEMORY_MODE_STATIC_HARD,
-        "titantpp_no_memory": TITAN_MEMORY_MODE_NONE,
-        "titantpp_gated_soft_memory": TITAN_MEMORY_MODE_STATIC_SOFT_GATED,
-        "titantpp_surprise_memory": TITAN_MEMORY_MODE_SURPRISE_GATED,
+        "titantpp": (
+            TITAN_MEMORY_MODE_STATIC_HARD,
+            TITAN_QUANTITY_GRADIENT_SHARED,
+        ),
+        "titantpp_no_memory": (
+            TITAN_MEMORY_MODE_NONE,
+            TITAN_QUANTITY_GRADIENT_SHARED,
+        ),
+        "titantpp_gated_soft_memory": (
+            TITAN_MEMORY_MODE_STATIC_SOFT_GATED,
+            TITAN_QUANTITY_GRADIENT_SHARED,
+        ),
+        "titantpp_surprise_memory": (
+            TITAN_MEMORY_MODE_SURPRISE_GATED,
+            TITAN_QUANTITY_GRADIENT_SHARED,
+        ),
+        "titantpp_persistent_only": (
+            TITAN_MEMORY_MODE_PERSISTENT_ONLY,
+            TITAN_QUANTITY_GRADIENT_SHARED,
+        ),
+        "titantpp_persistent_surprise_memory": (
+            TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
+            TITAN_QUANTITY_GRADIENT_SHARED,
+        ),
+        "titantpp_dual_memory_shared": (
+            TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
+            TITAN_QUANTITY_GRADIENT_SHARED,
+        ),
+        "titantpp_dual_memory_adapter_only": (
+            TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
+            TITAN_QUANTITY_GRADIENT_ADAPTER_ONLY,
+        ),
     }
     if backbone in titan_modes:
-        memory_mode = titan_modes[backbone]
-        uses_hard_memory = memory_mode == TITAN_MEMORY_MODE_STATIC_HARD
+        memory_mode, quantity_memory_gradient_mode = titan_modes[backbone]
+        uses_persistent_memory = memory_mode in {
+            TITAN_MEMORY_MODE_PERSISTENT_ONLY,
+            TITAN_MEMORY_MODE_STATIC_HARD,
+            TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
+            TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
+        }
+        uses_hard_memory = memory_mode in {
+            TITAN_MEMORY_MODE_STATIC_HARD,
+            TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
+        }
         uses_soft_memory = memory_mode == TITAN_MEMORY_MODE_STATIC_SOFT_GATED
-        uses_surprise_memory = memory_mode == TITAN_MEMORY_MODE_SURPRISE_GATED
+        uses_surprise_memory = memory_mode in {
+            TITAN_MEMORY_MODE_SURPRISE_GATED,
+            TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
+            TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
+        }
         model = CountAwareTitanTPP(
             hidden_dim,
             train_log_mean,
             max_seq_len,
             memory_mode=memory_mode,
+            quantity_memory_gradient_mode=quantity_memory_gradient_mode,
             **quantity_kwargs,
         )
-        return with_time_metadata(model, {
-            "candidate_name": (
-                "count_titan_small_lmm"
-                if uses_hard_memory
-                else (
-                    "count_titan_gated_soft_memory"
-                    if uses_soft_memory
-                    else (
-                        "count_titan_surprise_memory"
-                        if uses_surprise_memory
-                        else "count_titan_no_memory"
-                    )
-                )
+        candidate_names = {
+            "titantpp": "count_titan_small_lmm",
+            "titantpp_no_memory": "count_titan_no_memory",
+            "titantpp_gated_soft_memory": "count_titan_gated_soft_memory",
+            "titantpp_surprise_memory": "count_titan_surprise_memory",
+            "titantpp_persistent_only": "count_titan_persistent_only",
+            "titantpp_persistent_surprise_memory": (
+                "count_titan_persistent_surprise_memory"
             ),
-            "d_model": hidden_dim,
-            "n_layers": 2,
-            "n_heads": 4,
-            "d_ff": hidden_dim * 2,
-            "memory_mode": memory_mode,
-            "persistent_mem_size": 16 if uses_hard_memory else 0,
-            "lmm_mem_size": 64 if uses_hard_memory else 0,
-            "lmm_topk": 4 if uses_hard_memory else 0,
-            "soft_memory_size": 64 if uses_soft_memory else 0,
-            "soft_memory_temperature": 1.0 if uses_soft_memory else None,
-            "surprise_memory_rank": min(16, hidden_dim) if uses_surprise_memory else 0,
-            "surprise_chunk_size": 32 if uses_surprise_memory else 0,
-            "surprise_scan_backend": (
-                "compiled_sequence_cuda" if uses_surprise_memory else None
+            "titantpp_dual_memory_shared": "count_titan_dual_memory_shared",
+            "titantpp_dual_memory_adapter_only": (
+                "count_titan_dual_memory_adapter_only"
             ),
-            "surprise_update_rate_init": 0.01 if uses_surprise_memory else None,
-            "surprise_retention_init": 0.99 if uses_surprise_memory else None,
-            "surprise_momentum_init": 0.5 if uses_surprise_memory else None,
-            "surprise_state_scope": (
-                "independent_input_sequence" if uses_surprise_memory else None
-            ),
-            "memory_residual_gate_init": (
-                0.0 if uses_soft_memory or uses_surprise_memory else None
-            ),
-            "max_len": max_seq_len,
-        })
+        }
+        return with_time_metadata(
+            model,
+            {
+                "candidate_name": candidate_names[backbone],
+                "d_model": hidden_dim,
+                "n_layers": 2,
+                "n_heads": 4,
+                "d_ff": hidden_dim * 2,
+                "memory_mode": memory_mode,
+                "persistent_mem_size": 16 if uses_persistent_memory else 0,
+                "lmm_mem_size": 64 if uses_hard_memory else 0,
+                "lmm_topk": 4 if uses_hard_memory else 0,
+                "soft_memory_size": 64 if uses_soft_memory else 0,
+                "soft_memory_temperature": (
+                    1.0 if uses_soft_memory else None
+                ),
+                "surprise_memory_rank": (
+                    min(16, hidden_dim) if uses_surprise_memory else 0
+                ),
+                "surprise_chunk_size": 32 if uses_surprise_memory else 0,
+                "surprise_scan_backend": (
+                    "compiled_sequence_cuda" if uses_surprise_memory else None
+                ),
+                "surprise_update_rate_init": (
+                    0.01 if uses_surprise_memory else None
+                ),
+                "surprise_retention_init": (
+                    0.99 if uses_surprise_memory else None
+                ),
+                "surprise_momentum_init": (
+                    0.5 if uses_surprise_memory else None
+                ),
+                "surprise_state_scope": (
+                    "independent_input_sequence" if uses_surprise_memory else None
+                ),
+                "memory_residual_gate_init": (
+                    0.0 if uses_soft_memory or uses_surprise_memory else None
+                ),
+                "time_memory_route": (
+                    "hard_lmm" if uses_hard_memory else "shared_memory_state"
+                ),
+                "quantity_memory_route": (
+                    "hard_lmm_plus_surprise_residual"
+                    if memory_mode == TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE
+                    else "shared_memory_state"
+                ),
+                "quantity_memory_gradient_mode": (
+                    quantity_memory_gradient_mode
+                    if memory_mode == TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE
+                    else "shared_state"
+                ),
+                "max_len": max_seq_len,
+            },
+        )
     raise ValueError(f"Unsupported backbone: {backbone}")
 
 

@@ -34,14 +34,26 @@ TIME_HEAD_MODES = (
     TIME_HEAD_MODE_SCALED_EXACT,
 )
 TITAN_MEMORY_MODE_NONE = "none"
+TITAN_MEMORY_MODE_PERSISTENT_ONLY = "persistent_only"
 TITAN_MEMORY_MODE_STATIC_HARD = "static_hard_lmm"
 TITAN_MEMORY_MODE_STATIC_SOFT_GATED = "static_soft_gated"
 TITAN_MEMORY_MODE_SURPRISE_GATED = "surprise_gated"
+TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED = "persistent_surprise_gated"
+TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE = "dual_hard_surprise"
 TITAN_MEMORY_MODES = (
     TITAN_MEMORY_MODE_NONE,
+    TITAN_MEMORY_MODE_PERSISTENT_ONLY,
     TITAN_MEMORY_MODE_STATIC_HARD,
     TITAN_MEMORY_MODE_STATIC_SOFT_GATED,
     TITAN_MEMORY_MODE_SURPRISE_GATED,
+    TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
+    TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
+)
+TITAN_QUANTITY_GRADIENT_SHARED = "shared"
+TITAN_QUANTITY_GRADIENT_ADAPTER_ONLY = "adapter_only"
+TITAN_QUANTITY_GRADIENT_MODES = (
+    TITAN_QUANTITY_GRADIENT_SHARED,
+    TITAN_QUANTITY_GRADIENT_ADAPTER_ONLY,
 )
 
 
@@ -171,6 +183,16 @@ class SharedTimeCountModel(nn.Module):
     ) -> torch.Tensor:
         """Encode an observed event history into one state per event."""
         raise NotImplementedError
+
+    def encode_task_states(
+        self,
+        dts: torch.Tensor,
+        history_quantities: torch.Tensor,
+        mask: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Return time and quantity states, shared by default."""
+        encoded = self.encode(dts, history_quantities, mask)
+        return encoded, encoded
 
     @staticmethod
     def continuous_features(
@@ -475,6 +497,7 @@ class CountAwareTitanTPP(SharedTimeCountModel):
         train_log_mean: float,
         max_seq_len: int,
         memory_mode: str = TITAN_MEMORY_MODE_STATIC_HARD,
+        quantity_memory_gradient_mode: str = TITAN_QUANTITY_GRADIENT_SHARED,
         **quantity_kwargs: Any,
     ) -> None:
         super().__init__(hidden_dim, train_log_mean, **quantity_kwargs)
@@ -482,8 +505,35 @@ class CountAwareTitanTPP(SharedTimeCountModel):
             raise ValueError(
                 f"Unsupported count-aware Titan memory_mode: {memory_mode}"
             )
+        if quantity_memory_gradient_mode not in TITAN_QUANTITY_GRADIENT_MODES:
+            raise ValueError(
+                "Unsupported Titan quantity_memory_gradient_mode: "
+                f"{quantity_memory_gradient_mode}"
+            )
+        if (
+            memory_mode != TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE
+            and quantity_memory_gradient_mode != TITAN_QUANTITY_GRADIENT_SHARED
+        ):
+            raise ValueError(
+                "adapter_only quantity routing is valid only for dual memory"
+            )
         self.memory_mode = memory_mode
-        uses_static_memory = memory_mode == TITAN_MEMORY_MODE_STATIC_HARD
+        self.quantity_memory_gradient_mode = quantity_memory_gradient_mode
+        uses_persistent_memory = memory_mode in {
+            TITAN_MEMORY_MODE_PERSISTENT_ONLY,
+            TITAN_MEMORY_MODE_STATIC_HARD,
+            TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
+            TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
+        }
+        uses_hard_memory = memory_mode in {
+            TITAN_MEMORY_MODE_STATIC_HARD,
+            TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
+        }
+        uses_surprise_memory = memory_mode in {
+            TITAN_MEMORY_MODE_SURPRISE_GATED,
+            TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
+            TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
+        }
         self.encoder = MemoryEncoder(
             input_dim=2,
             d_model=hidden_dim,
@@ -491,7 +541,7 @@ class CountAwareTitanTPP(SharedTimeCountModel):
             n_heads=4,
             d_ff=hidden_dim * 2,
             contextual_mem_size=0,
-            persistent_mem_size=16 if uses_static_memory else 0,
+            persistent_mem_size=16 if uses_persistent_memory else 0,
             dropout=0.1,
             use_context_update=False,
             use_pos_emb=True,
@@ -500,7 +550,7 @@ class CountAwareTitanTPP(SharedTimeCountModel):
         )
         self.lmm = (
             LMM(d_model=hidden_dim, mem_size=64, topk=4)
-            if uses_static_memory
+            if uses_hard_memory
             else None
         )
         self.soft_memory = (
@@ -524,11 +574,11 @@ class CountAwareTitanTPP(SharedTimeCountModel):
                 memory_clip=5.0,
                 dropout=0.1,
             )
-            if memory_mode == TITAN_MEMORY_MODE_SURPRISE_GATED
+            if uses_surprise_memory
             else None
         )
 
-    def encode(
+    def _encode_base(
         self,
         dts: torch.Tensor,
         history_quantities: torch.Tensor,
@@ -536,13 +586,55 @@ class CountAwareTitanTPP(SharedTimeCountModel):
     ) -> torch.Tensor:
         x = self.continuous_features(dts, history_quantities, mask)
         encoded = self.encoder(x, mask=mask, update_context_memory=False)
+        return encoded * mask.unsqueeze(-1).to(dtype=encoded.dtype)
+
+    def encode_task_states(
+        self,
+        dts: torch.Tensor,
+        history_quantities: torch.Tensor,
+        mask: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        base = self._encode_base(dts, history_quantities, mask)
+        valid = mask.unsqueeze(-1).to(dtype=base.dtype)
+
+        if self.memory_mode == TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE:
+            if self.lmm is None or self.surprise_memory is None:
+                raise RuntimeError("Dual memory requires both hard and surprise paths")
+            time_encoded = self.lmm(base) * valid
+            if self.quantity_memory_gradient_mode == TITAN_QUANTITY_GRADIENT_SHARED:
+                surprise_residual = self.surprise_memory.residual(base, mask=mask)
+                quantity_encoded = time_encoded + surprise_residual
+            else:
+                detached_base = base.detach()
+                surprise_residual = self.surprise_memory.residual(
+                    detached_base,
+                    mask=mask,
+                )
+                quantity_encoded = time_encoded.detach() + surprise_residual
+            return time_encoded, quantity_encoded * valid
+
+        encoded = base
         if self.lmm is not None:
             encoded = self.lmm(encoded)
         if self.soft_memory is not None:
             encoded = self.soft_memory(encoded, mask=mask)
         if self.surprise_memory is not None:
             encoded = self.surprise_memory(encoded, mask=mask)
-        return encoded * mask.unsqueeze(-1).to(dtype=encoded.dtype)
+        encoded = encoded * valid
+        return encoded, encoded
+
+    def encode(
+        self,
+        dts: torch.Tensor,
+        history_quantities: torch.Tensor,
+        mask: torch.Tensor,
+    ) -> torch.Tensor:
+        time_encoded, _ = self.encode_task_states(
+            dts,
+            history_quantities,
+            mask,
+        )
+        return time_encoded
 
 
 __all__ = [
@@ -559,10 +651,16 @@ __all__ = [
     "TIME_HEAD_MODE_SCALED_EXACT",
     "TIME_HEAD_MODES",
     "TITAN_MEMORY_MODE_NONE",
+    "TITAN_MEMORY_MODE_PERSISTENT_ONLY",
+    "TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED",
     "TITAN_MEMORY_MODE_STATIC_HARD",
     "TITAN_MEMORY_MODE_STATIC_SOFT_GATED",
     "TITAN_MEMORY_MODE_SURPRISE_GATED",
+    "TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE",
     "TITAN_MEMORY_MODES",
+    "TITAN_QUANTITY_GRADIENT_ADAPTER_ONLY",
+    "TITAN_QUANTITY_GRADIENT_MODES",
+    "TITAN_QUANTITY_GRADIENT_SHARED",
     "inverse_sigmoid",
     "inverse_softplus",
 ]
