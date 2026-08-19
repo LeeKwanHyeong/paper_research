@@ -17,6 +17,7 @@ from models.TPPs.CountAwareFactory import build_count_aware_model
 from paper.scripts.run_count_aware_tpp_backbone_control import (
     derive_train_time_contract,
     prepare_count_frame,
+    validate_scaled_time_contract,
 )
 
 
@@ -89,6 +90,28 @@ def test_time_constants_are_derived_from_train_targets_only() -> None:
     assert contract["target_dt_max"] == 5.0
     assert contract["time_scale"] == 3.0
     assert contract["time_w_max"] == 24.0
+
+
+def test_runtime_time_constants_must_match_train_only_contract() -> None:
+    contract = {"time_scale": 3.0, "time_w_max": 4.8}
+
+    validate_scaled_time_contract(
+        time_scale=3.0,
+        time_w_max=4.8,
+        train_time_contract=contract,
+    )
+    with pytest.raises(ValueError, match="time_scale"):
+        validate_scaled_time_contract(
+            time_scale=2.0,
+            time_w_max=4.8,
+            train_time_contract=contract,
+        )
+    with pytest.raises(ValueError, match="time_w_max"):
+        validate_scaled_time_contract(
+            time_scale=3.0,
+            time_w_max=10.0 / 3.0,
+            train_time_contract=contract,
+        )
 
 
 def test_scaled_exact_density_matches_closed_form_with_jacobian() -> None:

@@ -135,6 +135,37 @@ def derive_train_time_contract(
     }
 
 
+def validate_scaled_time_contract(
+    *,
+    time_scale: float,
+    time_w_max: float,
+    train_time_contract: dict[str, Any],
+) -> None:
+    """Require runtime constants to match the exact train-target statistics."""
+    expected_scale = float(train_time_contract["time_scale"])
+    expected_w_max = float(train_time_contract["time_w_max"])
+    if not math.isclose(
+        time_scale,
+        expected_scale,
+        rel_tol=0.0,
+        abs_tol=1e-12,
+    ):
+        raise ValueError(
+            f"time_scale={time_scale} does not match train-only value "
+            f"{expected_scale}"
+        )
+    if not math.isclose(
+        time_w_max,
+        expected_w_max,
+        rel_tol=0.0,
+        abs_tol=1e-12,
+    ):
+        raise ValueError(
+            f"time_w_max={time_w_max} does not match train-only value "
+            f"{expected_w_max}"
+        )
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data", type=Path, required=True)
@@ -173,7 +204,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--time-head-mode",
         choices=TIME_HEAD_MODES,
-        default=TIME_HEAD_MODE_SCALED_EXACT,
+        default=TIME_HEAD_MODE_LEGACY_CLAMPED,
     )
     parser.add_argument("--time-scale", type=float, default=3.0)
     parser.add_argument("--time-w-max", type=float, default=10.0 / 3.0)
@@ -301,24 +332,12 @@ def main() -> None:
         lookback_weeks=args.lookback_weeks,
         max_seq_len=args.max_seq_len,
     )
-    if (
-        args.time_head_mode == TIME_HEAD_MODE_SCALED_EXACT
-        and args.dataset_contract == "intermittent_frozen_5000"
-    ):
-        if not math.isclose(
-            args.time_scale,
-            float(train_time_contract["time_scale"]),
-            rel_tol=0.0,
-            abs_tol=1e-12,
-        ):
-            raise ValueError("time_scale does not match the train-only target median")
-        if not math.isclose(
-            args.time_w_max,
-            float(train_time_contract["time_w_max"]),
-            rel_tol=0.0,
-            abs_tol=1e-12,
-        ):
-            raise ValueError("time_w_max does not match the train-only safety bound")
+    if args.time_head_mode == TIME_HEAD_MODE_SCALED_EXACT:
+        validate_scaled_time_contract(
+            time_scale=args.time_scale,
+            time_w_max=args.time_w_max,
+            train_time_contract=train_time_contract,
+        )
     train_qty = raw_frame.filter(
         pl.col("chronological_split") == "train"
     )["demand_qty"].to_numpy().astype(np.float64)

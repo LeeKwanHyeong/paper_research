@@ -3,7 +3,7 @@ set -euo pipefail
 
 PROJECT_ROOT="${PROJECT_ROOT:-/home/leekwanhyeong/workspace/paper_research}"
 PYTHON_BIN="${PYTHON_BIN:-/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python}"
-OUTPUT_ROOT="${OUTPUT_ROOT:-${PROJECT_ROOT}/search_artifacts/count_aware_scaled_time_persistent_dual_cuda_smoke_20260819}"
+OUTPUT_ROOT="${OUTPUT_ROOT:-${PROJECT_ROOT}/search_artifacts/count_aware_scaled_time_persistent_dual_cuda_smoke_20260819_r2}"
 SOURCE_REVISION="${SOURCE_REVISION:?SOURCE_REVISION must be the frozen 40-character Git revision}"
 BACKBONES="titantpp_persistent_only,titantpp,titantpp_persistent_surprise_memory,titantpp_dual_memory_shared,titantpp_dual_memory_adapter_only"
 
@@ -102,7 +102,7 @@ cd "${PROJECT_ROOT}"
   --quantity-variants log_mse \
   --time-head-mode scaled_exact_rmtpp \
   --time-scale 3 \
-  --time-w-max 3.3333333333333335 \
+  --time-w-max 4.8 \
   --time-intercept-limit 30 \
   --backbones "${BACKBONES}" \
   --seeds 42 \
