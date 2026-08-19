@@ -27,6 +27,12 @@ LOGNORMAL_VARIANT = "count_only_lognormal_k1"
 TAIL_SHARED_VARIANT = "count_only_log_mse_tail_shared"
 TAIL_HEAD_ONLY_VARIANT = "count_only_log_mse_tail_head_only"
 TAIL_VARIANTS = (TAIL_SHARED_VARIANT, TAIL_HEAD_ONLY_VARIANT)
+TIME_HEAD_MODE_LEGACY_CLAMPED = "legacy_clamped_rmtpp"
+TIME_HEAD_MODE_SCALED_EXACT = "scaled_exact_rmtpp"
+TIME_HEAD_MODES = (
+    TIME_HEAD_MODE_LEGACY_CLAMPED,
+    TIME_HEAD_MODE_SCALED_EXACT,
+)
 TITAN_MEMORY_MODE_NONE = "none"
 TITAN_MEMORY_MODE_STATIC_HARD = "static_hard_lmm"
 TITAN_MEMORY_MODE_STATIC_SOFT_GATED = "static_soft_gated"
@@ -44,6 +50,13 @@ def inverse_softplus(value: float) -> float:
     if not math.isfinite(value) or value <= 0.0:
         raise ValueError("inverse_softplus requires a finite positive value")
     return value + math.log(-math.expm1(-value))
+
+
+def inverse_sigmoid(value: float) -> float:
+    """Return the logit of a finite probability strictly between zero and one."""
+    if not math.isfinite(value) or not 0.0 < value < 1.0:
+        raise ValueError("inverse_sigmoid requires a finite value in (0, 1)")
+    return math.log(value) - math.log1p(-value)
 
 
 class SharedTimeCountModel(nn.Module):
@@ -64,6 +77,10 @@ class SharedTimeCountModel(nn.Module):
         tail_normalization_scale: float = 46.0,
         tail_clip_cap: float = 187.0,
         tail_huber_delta: float = 1.0,
+        time_head_mode: str = TIME_HEAD_MODE_LEGACY_CLAMPED,
+        time_scale: float = 3.0,
+        time_w_max: float = 10.0 / 3.0,
+        time_intercept_limit: float = 30.0,
     ) -> None:
         super().__init__()
         if not math.isfinite(train_log_mean) or train_log_mean <= 0.0:
@@ -90,6 +107,14 @@ class SharedTimeCountModel(nn.Module):
             raise ValueError("tail_normalization_scale must be positive")
         if tail_huber_delta <= 0.0:
             raise ValueError("tail_huber_delta must be positive")
+        if time_head_mode not in TIME_HEAD_MODES:
+            raise ValueError(f"Unsupported time_head_mode: {time_head_mode}")
+        if not math.isfinite(time_scale) or time_scale <= 0.0:
+            raise ValueError("time_scale must be finite and positive")
+        if not math.isfinite(time_w_max) or time_w_max <= 0.0:
+            raise ValueError("time_w_max must be finite and positive")
+        if not math.isfinite(time_intercept_limit) or time_intercept_limit <= 0.0:
+            raise ValueError("time_intercept_limit must be finite and positive")
 
         self.hidden_dim = int(hidden_dim)
         self.quantity_variant = quantity_variant
@@ -101,10 +126,21 @@ class SharedTimeCountModel(nn.Module):
         self.tail_normalization_scale = float(tail_normalization_scale)
         self.tail_clip_cap = float(tail_clip_cap)
         self.tail_huber_delta = float(tail_huber_delta)
+        self.time_head_mode = time_head_mode
+        self.time_scale = float(time_scale)
+        self.time_w_max = float(time_w_max)
+        self.time_intercept_limit = float(time_intercept_limit)
 
         self.v_t = nn.Linear(self.hidden_dim, 1, bias=False)
-        self.b_t = nn.Parameter(torch.zeros(1))
-        self.w_raw = nn.Parameter(torch.full((1,), -3.0))
+        if self.time_head_mode == TIME_HEAD_MODE_SCALED_EXACT:
+            initial_w = min(0.05 * self.time_scale, 0.25 * self.time_w_max)
+            self.b_t = nn.Parameter(torch.full((1,), math.log(self.time_scale)))
+            self.w_raw = nn.Parameter(
+                torch.full((1,), inverse_sigmoid(initial_w / self.time_w_max))
+            )
+        else:
+            self.b_t = nn.Parameter(torch.zeros(1))
+            self.w_raw = nn.Parameter(torch.full((1,), -3.0))
         self.quantity_head = nn.Linear(self.hidden_dim, 1)
         if self.quantity_variant == LOGNORMAL_VARIANT:
             # Preserve the random stream used by the original deterministic
@@ -154,11 +190,103 @@ class SharedTimeCountModel(nn.Module):
 
     def log_f_dt(self, hidden: torch.Tensor, dt_next: torch.Tensor) -> torch.Tensor:
         """Evaluate the shared RMTPP-style next-event time log density."""
-        w = F.softplus(self.w_raw) + 1e-3
-        intercept = torch.clamp(self.v_t(hidden).squeeze(-1) + self.b_t, max=300.0)
-        exp_intercept = torch.exp(intercept)
-        wd = torch.clamp(w * dt_next, max=10.0)
-        return intercept + wd - (exp_intercept / w) * torch.expm1(wd)
+        if self.time_head_mode == TIME_HEAD_MODE_LEGACY_CLAMPED:
+            w = F.softplus(self.w_raw) + 1e-3
+            intercept = torch.clamp(
+                self.v_t(hidden).squeeze(-1) + self.b_t,
+                max=300.0,
+            )
+            exp_intercept = torch.exp(intercept)
+            wd = torch.clamp(w * dt_next, max=10.0)
+            return intercept + wd - (exp_intercept / w) * torch.expm1(wd)
+
+        output_dtype = hidden.dtype
+        intercept, w, scaled_dt = self._scaled_exact_time_terms(hidden, dt_next)
+        wd = w * scaled_dt
+        cumulative_hazard = (torch.exp(intercept) / w) * torch.expm1(wd)
+        log_density = (
+            intercept + wd - cumulative_hazard - math.log(self.time_scale)
+        )
+        return log_density.to(dtype=output_dtype)
+
+    def log_survival_dt(
+        self,
+        hidden: torch.Tensor,
+        dt_next: torch.Tensor,
+    ) -> torch.Tensor:
+        """Evaluate log survival under the configured time-head contract."""
+        if self.time_head_mode == TIME_HEAD_MODE_LEGACY_CLAMPED:
+            w = F.softplus(self.w_raw) + 1e-3
+            intercept = torch.clamp(
+                self.v_t(hidden).squeeze(-1) + self.b_t,
+                max=300.0,
+            )
+            wd = torch.clamp(w * dt_next, max=10.0)
+            return -(torch.exp(intercept) / w) * torch.expm1(wd)
+
+        output_dtype = hidden.dtype
+        intercept, w, scaled_dt = self._scaled_exact_time_terms(hidden, dt_next)
+        log_survival = -(torch.exp(intercept) / w) * torch.expm1(w * scaled_dt)
+        return log_survival.to(dtype=output_dtype)
+
+    def predict_time_median(self, hidden: torch.Tensor) -> torch.Tensor:
+        """Return the conditional median inter-event time in the original unit."""
+        output_dtype = hidden.dtype
+        if self.time_head_mode == TIME_HEAD_MODE_LEGACY_CLAMPED:
+            w = (F.softplus(self.w_raw) + 1e-3).to(dtype=torch.float64)
+            intercept = torch.clamp(
+                self.v_t(hidden).squeeze(-1) + self.b_t,
+                min=-300.0,
+                max=300.0,
+            ).to(dtype=torch.float64)
+            median = torch.log1p(w * math.log(2.0) * torch.exp(-intercept)) / w
+            return median.to(dtype=output_dtype)
+
+        intercept, w, _ = self._scaled_exact_time_terms(
+            hidden,
+            torch.zeros(hidden.shape[:-1], device=hidden.device, dtype=hidden.dtype),
+        )
+        scaled_median = (
+            torch.log1p(w * math.log(2.0) * torch.exp(-intercept)) / w
+        )
+        return (scaled_median * self.time_scale).to(dtype=output_dtype)
+
+    def positive_time_slope(self) -> torch.Tensor:
+        """Return the positive slope in the active time coordinate."""
+        if self.time_head_mode == TIME_HEAD_MODE_LEGACY_CLAMPED:
+            return F.softplus(self.w_raw) + 1e-3
+        return (self.time_w_max * torch.sigmoid(self.w_raw)).clamp_min(1e-6)
+
+    def time_head_contract(self) -> dict[str, float | str | bool]:
+        """Return serializable time-head metadata for experiment manifests."""
+        return {
+            "mode": self.time_head_mode,
+            "time_scale": self.time_scale,
+            "time_w_max": self.time_w_max,
+            "time_intercept_limit": self.time_intercept_limit,
+            "jacobian_correction": (
+                self.time_head_mode == TIME_HEAD_MODE_SCALED_EXACT
+            ),
+            "wd_clamp": (
+                10.0
+                if self.time_head_mode == TIME_HEAD_MODE_LEGACY_CLAMPED
+                else 0.0
+            ),
+        }
+
+    def _scaled_exact_time_terms(
+        self,
+        hidden: torch.Tensor,
+        dt_next: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        intercept = torch.clamp(
+            self.v_t(hidden).squeeze(-1) + self.b_t,
+            min=-self.time_intercept_limit,
+            max=self.time_intercept_limit,
+        ).to(dtype=torch.float64)
+        w = self.positive_time_slope().to(dtype=torch.float64)
+        scaled_dt = dt_next.to(dtype=torch.float64).clamp_min(0.0) / self.time_scale
+        return intercept, w, scaled_dt
 
     def predict_quantity(self, hidden: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Return log1p-space location and reconstructed raw quantity."""
@@ -427,10 +555,14 @@ __all__ = [
     "TAIL_HEAD_ONLY_VARIANT",
     "TAIL_SHARED_VARIANT",
     "TAIL_VARIANTS",
+    "TIME_HEAD_MODE_LEGACY_CLAMPED",
+    "TIME_HEAD_MODE_SCALED_EXACT",
+    "TIME_HEAD_MODES",
     "TITAN_MEMORY_MODE_NONE",
     "TITAN_MEMORY_MODE_STATIC_HARD",
     "TITAN_MEMORY_MODE_STATIC_SOFT_GATED",
     "TITAN_MEMORY_MODE_SURPRISE_GATED",
     "TITAN_MEMORY_MODES",
+    "inverse_sigmoid",
     "inverse_softplus",
 ]

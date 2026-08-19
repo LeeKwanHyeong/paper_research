@@ -7,6 +7,7 @@ from typing import Any
 
 from models.TPPs.CountAwareTPP import (
     LOG_MSE_VARIANT,
+    TIME_HEAD_MODE_LEGACY_CLAMPED,
     CountAwareRMTPP,
     CountAwareTHP,
     CountAwareTitanTPP,
@@ -18,6 +19,14 @@ from models.TPPs.CountAwareTPP import (
 )
 from models.TPPs.NeuralHawkesTPP import CountAwareNHP
 from models.TPPs.SelfAttentiveHawkesTPP import CountAwareSAHP
+
+
+def with_time_metadata(
+    model: SharedTimeCountModel,
+    encoder_metadata: dict[str, Any],
+) -> tuple[SharedTimeCountModel, dict[str, Any]]:
+    """Attach the shared time-head contract to backbone metadata."""
+    return model, {**encoder_metadata, "time_head": model.time_head_contract()}
 
 
 def build_count_aware_model(
@@ -36,6 +45,10 @@ def build_count_aware_model(
     tail_normalization_scale: float = 46.0,
     tail_clip_cap: float = 187.0,
     tail_huber_delta: float = 1.0,
+    time_head_mode: str = TIME_HEAD_MODE_LEGACY_CLAMPED,
+    time_scale: float = 3.0,
+    time_w_max: float = 10.0 / 3.0,
+    time_intercept_limit: float = 30.0,
 ) -> tuple[SharedTimeCountModel, dict[str, Any]]:
     """Construct one controlled backbone and its serializable metadata."""
     quantity_kwargs = {
@@ -49,36 +62,55 @@ def build_count_aware_model(
         "tail_normalization_scale": tail_normalization_scale,
         "tail_clip_cap": tail_clip_cap,
         "tail_huber_delta": tail_huber_delta,
+        "time_head_mode": time_head_mode,
+        "time_scale": time_scale,
+        "time_w_max": time_w_max,
+        "time_intercept_limit": time_intercept_limit,
     }
     if backbone == "rmtpp":
-        return CountAwareRMTPP(hidden_dim, train_log_mean, **quantity_kwargs), {
-            "candidate_name": "count_gru_h64",
-            "rnn_type": "gru",
-            "hidden_dim": hidden_dim,
-        }
+        model = CountAwareRMTPP(hidden_dim, train_log_mean, **quantity_kwargs)
+        return with_time_metadata(
+            model,
+            {
+                "candidate_name": "count_gru_h64",
+                "rnn_type": "gru",
+                "hidden_dim": hidden_dim,
+            },
+        )
     if backbone == "nhp":
-        return CountAwareNHP(hidden_dim, train_log_mean, **quantity_kwargs), {
-            "candidate_name": "count_nhp_ctlstm_h64",
-            "encoder_type": "continuous_time_lstm",
-            "hidden_dim": hidden_dim,
-            "shared_time_head": True,
-        }
+        model = CountAwareNHP(hidden_dim, train_log_mean, **quantity_kwargs)
+        return with_time_metadata(
+            model,
+            {
+                "candidate_name": "count_nhp_ctlstm_h64",
+                "encoder_type": "continuous_time_lstm",
+                "hidden_dim": hidden_dim,
+                "shared_time_head": True,
+            },
+        )
     if backbone == "sahp":
-        return CountAwareSAHP(hidden_dim, train_log_mean, **quantity_kwargs), {
-            "candidate_name": "count_sahp_small",
-            "encoder_type": "causal_self_attention_with_continuous_decay",
-            "hidden_dim": hidden_dim,
-            "n_layers": 2,
-            "n_heads": 4,
-            "d_ff": hidden_dim * 4,
-            "shared_time_head": True,
-        }
+        model = CountAwareSAHP(hidden_dim, train_log_mean, **quantity_kwargs)
+        return with_time_metadata(
+            model,
+            {
+                "candidate_name": "count_sahp_small",
+                "encoder_type": "causal_self_attention_with_continuous_decay",
+                "hidden_dim": hidden_dim,
+                "n_layers": 2,
+                "n_heads": 4,
+                "d_ff": hidden_dim * 4,
+                "shared_time_head": True,
+            },
+        )
     if backbone == "thp":
         model = CountAwareTHP(hidden_dim, train_log_mean, **quantity_kwargs)
-        return model, {
-            "candidate_name": "count_thp_small",
-            **asdict(model.encoder_config),
-        }
+        return with_time_metadata(
+            model,
+            {
+                "candidate_name": "count_thp_small",
+                **asdict(model.encoder_config),
+            },
+        )
     titan_modes = {
         "titantpp": TITAN_MEMORY_MODE_STATIC_HARD,
         "titantpp_no_memory": TITAN_MEMORY_MODE_NONE,
@@ -90,13 +122,14 @@ def build_count_aware_model(
         uses_hard_memory = memory_mode == TITAN_MEMORY_MODE_STATIC_HARD
         uses_soft_memory = memory_mode == TITAN_MEMORY_MODE_STATIC_SOFT_GATED
         uses_surprise_memory = memory_mode == TITAN_MEMORY_MODE_SURPRISE_GATED
-        return CountAwareTitanTPP(
+        model = CountAwareTitanTPP(
             hidden_dim,
             train_log_mean,
             max_seq_len,
             memory_mode=memory_mode,
             **quantity_kwargs,
-        ), {
+        )
+        return with_time_metadata(model, {
             "candidate_name": (
                 "count_titan_small_lmm"
                 if uses_hard_memory
@@ -135,7 +168,7 @@ def build_count_aware_model(
                 0.0 if uses_soft_memory or uses_surprise_memory else None
             ),
             "max_len": max_seq_len,
-        }
+        })
     raise ValueError(f"Unsupported backbone: {backbone}")
 
 

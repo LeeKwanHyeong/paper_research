@@ -100,6 +100,10 @@ def train_one(
         tail_normalization_scale=args.tail_normalization_scale,
         tail_clip_cap=args.tail_clip_cap,
         tail_huber_delta=args.tail_huber_delta,
+        time_head_mode=args.time_head_mode,
+        time_scale=args.time_scale,
+        time_w_max=args.time_w_max,
+        time_intercept_limit=args.time_intercept_limit,
     )
     model.to(args.device)
     parameter_count = sum(

@@ -17,11 +17,15 @@ import numpy as np
 import polars as pl
 import torch
 
+from data_loader.event_seq_data_module import RMTPPWeekLookbackDataset
 from models.TPPs.CountAwareTPP import (
     CountAwareRMTPP,
     CountAwareTHP,
     CountAwareTitanTPP,
     SharedTimeCountModel,
+    TIME_HEAD_MODE_LEGACY_CLAMPED,
+    TIME_HEAD_MODE_SCALED_EXACT,
+    TIME_HEAD_MODES,
 )
 from models.TPPs.CountAwareFactory import (
     build_count_aware_model as build_model,
@@ -86,6 +90,49 @@ DATASET_CONTRACTS = {
         "max_seq_len": 64,
     },
 }
+TIME_WD_SAFETY_LIMIT = 40.0
+
+
+def derive_train_time_contract(
+    frame: pl.DataFrame,
+    *,
+    lookback_weeks: int,
+    max_seq_len: int,
+) -> dict[str, Any]:
+    """Derive scaling constants from train targets under the exact loader path."""
+    dataset = RMTPPWeekLookbackDataset(
+        frame,
+        lookback_weeks=lookback_weeks,
+        max_seq_len=max_seq_len,
+        val_ratio=0.2,
+        mode="all",
+        split_col="chronological_split",
+        target_splits={"train"},
+    )
+    target_dts = np.asarray(
+        [
+            max(1.0, float(dataset.dt_lists[part_index][context_end + 1]))
+            for part_index, context_end in dataset.index
+        ],
+        dtype=np.float64,
+    )
+    if not target_dts.size or not np.isfinite(target_dts).all():
+        raise ValueError("Train-only time targets must be nonempty and finite")
+    time_scale = float(np.quantile(target_dts, 0.50))
+    target_max = float(target_dts.max())
+    time_w_max = TIME_WD_SAFETY_LIMIT / (target_max / time_scale)
+    return {
+        "statistics_source_split": "train",
+        "target_count": int(target_dts.size),
+        "target_dt_min": float(target_dts.min()),
+        "target_dt_mean": float(target_dts.mean()),
+        "target_dt_p50": time_scale,
+        "target_dt_p99": float(np.quantile(target_dts, 0.99)),
+        "target_dt_max": target_max,
+        "time_scale": time_scale,
+        "wd_safety_limit": TIME_WD_SAFETY_LIMIT,
+        "time_w_max": time_w_max,
+    }
 
 
 def parse_args() -> argparse.Namespace:
@@ -123,6 +170,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--tail-normalization-scale", type=float, default=46.0)
     parser.add_argument("--tail-clip-cap", type=float, default=187.0)
     parser.add_argument("--tail-huber-delta", type=float, default=1.0)
+    parser.add_argument(
+        "--time-head-mode",
+        choices=TIME_HEAD_MODES,
+        default=TIME_HEAD_MODE_SCALED_EXACT,
+    )
+    parser.add_argument("--time-scale", type=float, default=3.0)
+    parser.add_argument("--time-w-max", type=float, default=10.0 / 3.0)
+    parser.add_argument("--time-intercept-limit", type=float, default=30.0)
     parser.add_argument("--max-train-batches", type=int, default=None)
     parser.add_argument("--max-val-batches", type=int, default=None)
     parser.add_argument("--allow-partial-contract", action="store_true")
@@ -173,6 +228,23 @@ def main() -> None:
             raise ValueError("Instacart is supported only as an explicit max-series smoke")
     if args.lambda_log_qty != 1.0:
         raise ValueError("Frozen contract requires lambda_log_qty=1.0")
+    if args.time_head_mode == TIME_HEAD_MODE_SCALED_EXACT:
+        if args.time_scale <= 0.0 or args.time_w_max <= 0.0:
+            raise ValueError("Scaled-exact time constants must be positive")
+        if args.time_intercept_limit <= 0.0:
+            raise ValueError("time_intercept_limit must be positive")
+        if args.dataset_contract == "intermittent_frozen_5000":
+            if not math.isclose(args.time_scale, 3.0, rel_tol=0.0, abs_tol=1e-12):
+                raise ValueError("Intermittent scaled-exact contract requires time_scale=3")
+            if not math.isclose(
+                args.time_w_max,
+                10.0 / 3.0,
+                rel_tol=0.0,
+                abs_tol=1e-12,
+            ):
+                raise ValueError(
+                    "Intermittent scaled-exact contract requires time_w_max=10/3"
+                )
     if LOGNORMAL_VARIANT in quantity_variants:
         if args.quantity_sigma_floor != 1e-3:
             raise ValueError("K=1 contract requires quantity_sigma_floor=1e-3")
@@ -223,6 +295,30 @@ def main() -> None:
             max_series=args.max_series,
         ).sort(["oper_part_no", "seq"])
     quantity_contract = train_quantile_contract(raw_frame)
+    frame = prepare_count_frame(raw_frame)
+    train_time_contract = derive_train_time_contract(
+        frame,
+        lookback_weeks=args.lookback_weeks,
+        max_seq_len=args.max_seq_len,
+    )
+    if (
+        args.time_head_mode == TIME_HEAD_MODE_SCALED_EXACT
+        and args.dataset_contract == "intermittent_frozen_5000"
+    ):
+        if not math.isclose(
+            args.time_scale,
+            float(train_time_contract["time_scale"]),
+            rel_tol=0.0,
+            abs_tol=1e-12,
+        ):
+            raise ValueError("time_scale does not match the train-only target median")
+        if not math.isclose(
+            args.time_w_max,
+            float(train_time_contract["time_w_max"]),
+            rel_tol=0.0,
+            abs_tol=1e-12,
+        ):
+            raise ValueError("time_w_max does not match the train-only safety bound")
     train_qty = raw_frame.filter(
         pl.col("chronological_split") == "train"
     )["demand_qty"].to_numpy().astype(np.float64)
@@ -241,6 +337,14 @@ def main() -> None:
         "train_target_mean": float(train_log_qty.mean()),
         "train_target_std": float(train_log_qty.std()),
         "fitted_on": "train",
+        "time_head": {
+            "mode": args.time_head_mode,
+            "time_scale": args.time_scale,
+            "time_w_max": args.time_w_max,
+            "time_intercept_limit": args.time_intercept_limit,
+            "statistics_source_split": "train",
+            "train_time_statistics": train_time_contract,
+        },
     }
     interface_by_variant = {
         VARIANT: {
@@ -281,7 +385,6 @@ def main() -> None:
             "tail_huber_delta": args.tail_huber_delta,
         },
     }
-    frame = prepare_count_frame(raw_frame)
     split_rows = {
         str(row["chronological_split"]): int(row["len"])
         for row in raw_frame.group_by("chronological_split").agg(pl.len()).iter_rows(named=True)
@@ -316,6 +419,24 @@ def main() -> None:
         "lr": args.lr,
         "lambda_log_qty": args.lambda_log_qty,
         "lambda_tail": args.lambda_tail,
+        "time_head": {
+            "mode": args.time_head_mode,
+            "time_scale": args.time_scale,
+            "time_w_max": args.time_w_max,
+            "time_intercept_limit": args.time_intercept_limit,
+            "statistics_source_split": "train",
+            "density_unit": (
+                "original_delta_t_with_jacobian"
+                if args.time_head_mode == TIME_HEAD_MODE_SCALED_EXACT
+                else "legacy_delta_t_clamped_objective"
+            ),
+            "wd_clamp": (
+                10.0
+                if args.time_head_mode == TIME_HEAD_MODE_LEGACY_CLAMPED
+                else 0.0
+            ),
+            "train_time_statistics": train_time_contract,
+        },
         "tail_contract": {
             "threshold": args.tail_threshold,
             "normalization_scale": args.tail_normalization_scale,
