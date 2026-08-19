@@ -4,8 +4,8 @@
 
 - Scaled exact RMTPP time head 구현 및 로컬 검증: 완료
 - Persistent-matched memory와 dual-route 구현 및 로컬 검증: 완료
-- 5080 CUDA model-test와 Instacart e1 smoke: 실행 전
-- Intermittent seed-42 e300 validation screening: 실행 전
+- 5080 CUDA model-test와 Instacart e1 smoke: 완료
+- Intermittent seed-42 e300 validation screening: 진행 중
 - Held-out test: 미사용
 
 ## 목적
@@ -89,3 +89,14 @@ M0는 persistent token 단독 효과를 해석하는 진단군이며 최종 선�
 - Intermittent seed-42 e300 5/5 완료
 - Comparator가 source, data, split, time head, persistent token, validation-only 계약 검증
 - Held-out test artifact가 생성되지 않음
+
+## 실행 현황
+
+- Source revision: `6bf27cbca219c010c245a6293f27abf14fc6ccb6`
+- CUDA smoke artifact: `search_artifacts/count_aware_scaled_time_persistent_dual_cuda_smoke_20260819_r3`
+- CUDA focused test: 52 passed
+- Intermittent CUDA model-test: 5/5 success
+- Instacart top-20 e1 smoke: 5/5 success
+- e300 artifact: `search_artifacts/titantpp_persistent_dual_scaled_time_screening_e300_20260819`
+- e300 tmux: `titan_scaled_time_mem_e300_0819`
+- e300 시작 시각: 2026-08-19 14:37:12 KST

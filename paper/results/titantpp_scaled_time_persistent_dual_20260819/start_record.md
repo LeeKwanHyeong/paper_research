@@ -2,13 +2,16 @@
 
 ## 상태
 
-- 상태: 실행 준비 완료
+- 상태: Intermittent seed-42 e300 진행 중
 - 준비 시각: 2026-08-19 14:22:51 KST
+- e300 시작 시각: 2026-08-19 14:37:12 KST
 - 실행 서버: 5080
 - CUDA device: 0
 - CUDA smoke tmux: `titan_scaled_time_mem_smoke_0819`
 - e300 tmux: `titan_scaled_time_mem_e300_0819`
-- Source revision: 실행 직전 최종 커밋 SHA로 갱신
+- Source revision: `6bf27cbca219c010c245a6293f27abf14fc6ccb6`
+- CUDA smoke artifact: `search_artifacts/count_aware_scaled_time_persistent_dual_cuda_smoke_20260819_r3`
+- e300 artifact: `search_artifacts/titantpp_persistent_dual_scaled_time_screening_e300_20260819`
 - Held-out test: 사용하지 않음
 
 ## 목적
@@ -50,12 +53,12 @@ residual을 사용하는 dual-route와 gradient-routing 대조군을 검증한�
 ## 실행 명령어
 
 ```bash
-SOURCE_REVISION=<40-char-sha> \
+SOURCE_REVISION=6bf27cbca219c010c245a6293f27abf14fc6ccb6 \
   bash simple_lab_test/search/scripts/run_count_aware_scaled_time_persistent_dual_cuda_smoke_20260819.sh
 ```
 
 ```bash
-SOURCE_REVISION=<40-char-sha> \
+SOURCE_REVISION=6bf27cbca219c010c245a6293f27abf14fc6ccb6 \
   bash simple_lab_test/search/scripts/run_titantpp_persistent_dual_scaled_time_e300_20260819.sh
 ```
 
