@@ -18,6 +18,25 @@ Step을 제목 3으로 구성한다.
 .agents/results/architecture/titantpp-model-status-baseline-registry.md
 ```
 
+## 0. Current Count-aware Override
+
+2026-08-20 이후 현재 논문 방향인 mark-free count-aware 실험에는 아래 계약을
+우선 적용한다.
+
+```text
+paper/contracts/count_aware_model_baseline_v1.md
+```
+
+| 역할 | 고정 모델 | 비교 원칙 |
+| --- | --- | --- |
+| T0 common control | direct log-MSE + `legacy_clamped_rmtpp` | RMTPP·THP·NHP·SAHP 공통 backbone 비교 |
+| T1 incumbent | TitanTPP Hard-LMM + tail-shared + 동일 time head | 향후 Titan backbone 후보와 fresh matched 비교 |
+| H0/H3 | scaled exact / log-normal duration | time-head 진단 전용, 최종 모델 표 제외 |
+
+아래 R0/L0/S0와 V2/V3b 내용은 mark-residual formulation의 설계 이력으로
+보존한다. 현재 count-aware 기준선을 선택하거나 최종 모델 표를 구성할 때는 이를
+혼합하지 않는다.
+
 ## 1. Baseline Contract
 
 TitanTPP 강화 실험은 아래 세 기준선을 항상 함께 비교한다.

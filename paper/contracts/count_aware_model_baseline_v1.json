@@ -1,0 +1,75 @@
+{
+  "contract_id": "count_aware_model_baseline_v1",
+  "frozen_at": "2026-08-20",
+  "held_out_test_status": "locked",
+  "roles": {
+    "t0_common_control": {
+      "backbones": [
+        "rmtpp",
+        "thp",
+        "nhp",
+        "sahp",
+        "titantpp"
+      ],
+      "quantity_variant": "count_only_log_regression",
+      "quantity_loss": "mse_on_log1p_quantity",
+      "time_head_mode": "legacy_clamped_rmtpp",
+      "lambda_tail": 0.0,
+      "purpose": "common_backbone_and_loss_ablation_control"
+    },
+    "t1_incumbent": {
+      "backbone": "titantpp",
+      "encoder_candidate": "count_titan_small_lmm",
+      "memory": "hard_lmm",
+      "quantity_variant": "count_only_log_mse_tail_shared",
+      "quantity_loss": "log1p_mse_plus_capped_normalized_raw_huber",
+      "tail_gradient_route": "quantity_head_and_encoder",
+      "lambda_tail": 0.09111380335463036,
+      "tail_threshold": 46.0,
+      "tail_normalization_scale": 46.0,
+      "tail_clip_cap": 187.0,
+      "tail_huber_delta": 1.0,
+      "time_head_mode": "legacy_clamped_rmtpp",
+      "purpose": "current_titantpp_incumbent_and_future_backbone_control"
+    },
+    "time_head_diagnostic": {
+      "included_heads": {
+        "H0": "scaled_exact_rmtpp",
+        "H3": "lognormal_duration"
+      },
+      "publication_table": "excluded",
+      "purpose": "time_head_diagnosis_only"
+    }
+  },
+  "shared_training": {
+    "dataset": "intermittent_frozen_5000",
+    "seeds": [
+      42,
+      52,
+      62
+    ],
+    "maximum_epochs": 300,
+    "minimum_epochs": 40,
+    "early_stopping_patience": 40,
+    "batch_size": 128,
+    "learning_rate": 0.001,
+    "lookback_weeks": 520,
+    "max_sequence_length": 256,
+    "hidden_dimension": 64,
+    "gradient_clip": 1.0,
+    "checkpoint_selection": "minimum_validation_joint_objective",
+    "evaluation_scope": "validation_only"
+  },
+  "comparison_rules": [
+    "External backbone comparisons use T0 for RMTPP, THP, NHP, and SAHP.",
+    "Future Titan backbone comparisons use a fresh T1 incumbent in the same run.",
+    "H0 and H3 are diagnostic ablations and are excluded from the final model table.",
+    "Held-out test remains locked until the final architecture and coefficients are frozen."
+  ],
+  "evidence": {
+    "t1_multiseed_result": "paper/results/titantpp_tail_shared_multiseed_20260817",
+    "t1_seed42_artifact": "search_artifacts/count_aware_tail_auxiliary_screening_e300_20260816_5080_fresh_rerun",
+    "t1_seed52_62_artifact": "search_artifacts/count_aware_tail_shared_multiseed_extension_e300_20260817",
+    "time_head_diagnostic_result": "paper/results/titantpp_final_time_t1_integration_20260820"
+  }
+}

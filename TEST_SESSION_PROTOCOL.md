@@ -35,7 +35,7 @@ Notion Writer 세션이 같은 기준으로 실험을 실행하고 기록하기 
 | --- | --- | --- |
 | Main Developer | runner, model, data path 구현 | entrypoint에서 실제 execution path를 추적하고 최소 코드 변경 후 smoke/targeted test를 수행 |
 | Data Analyst | artifact 분석, metric 해석 | manifest, logs, summary/test/scale-wise 순서로 읽고 validation/test 방향과 NLL split을 분리 |
-| Model Enhancement | TitanTPP 구조 강화 | 현재 구현과 target architecture를 구분하고 R0/L0/S0 baseline 및 decision rule을 고정 |
+| Model Enhancement | TitanTPP 구조 강화 | 현재 formulation의 baseline registry와 decision rule을 고정하고 과거 R0/L0/S0와 count-aware T0/T1을 혼용하지 않음 |
 | Notion Writer | 실험 계획/결과 문서화 | 10번/11번 템플릿을 따르고 과장 없이 완료/진행/위험/다음 액션을 정리 |
 | Concept Explainer / Paper Writer | 교수님 보고/논문화 | 실험 근거와 해석을 분리하고 TitanTPP 단독 우월성을 과도하게 주장하지 않음 |
 

@@ -3,6 +3,7 @@ import csv
 import pytest
 
 from paper.scripts.build_count_aware_tail_shared_multiseed_results import (
+    build_comparison,
     collect_run_rows,
     summarize_runs,
     validate_contracts,
@@ -83,6 +84,13 @@ def test_collect_and_summarize_three_seed_grid():
     assert len(rows) == 12
     assert summaries["titantpp_t1"]["best_val_qty_mae_mean"] == pytest.approx(0.8)
     assert summaries["titantpp_t1"]["best_val_qty_mae_std"] == pytest.approx(0.1)
+
+    comparison = build_comparison(list(summaries.values()), rows)
+    assert comparison["model_roles"]["titantpp_t1"] == "t1_incumbent"
+    assert comparison["excluded_diagnostic_models"] == [
+        "H0_scaled_exact",
+        "H3_lognormal_duration",
+    ]
 
 
 def test_write_csv_preserves_union_of_heterogeneous_fields(tmp_path):

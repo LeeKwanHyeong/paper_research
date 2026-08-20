@@ -1,6 +1,6 @@
 # TitanTPP Model Status And Baseline Registry
 
-- Date: 2026-07-19
+- Date: 2026-08-20
 - Scope: Model Enhancement Session
 - Canonical role: 현재 모델 승격 상태와 후속 비교 기준의 단일 기준 문서
 
@@ -8,11 +8,27 @@
 통과해 후속 실험의 incumbent로 사용할 수 있다는 뜻이다. 현재 lock은 다음 구조
 실험을 위한 기준이며 논문 최종 모델 확정을 의미하지 않는다.
 
+## 0. Current Track Lock
+
+현재 논문 방향인 mark-free count-aware 트랙에서는 아래 역할을 공식 기준으로 사용한다.
+세부 상수와 실행 제약은 `paper/contracts/count_aware_model_baseline_v1.md`를 따른다.
+
+| 역할 | 현재 모델 | 상태 |
+| --- | --- | --- |
+| 공통 backbone/손실 control | T0 direct log-MSE + `legacy_clamped_rmtpp` | `ACTIVE_BASELINE` |
+| TitanTPP 대표 모델 | Hard-LMM + T1 tail-shared + `legacy_clamped_rmtpp` | `ACTIVE_INCUMBENT` |
+| time-head 진단 | H0 scaled exact, H3 log-normal duration | `REFERENCE_ONLY` |
+
+V2와 Taxi V3b는 mark-residual formulation의 역사적 기준으로 보존한다. 아래 V2
+`ACTIVE_BASELINE` 표기는 해당 과거 트랙 안에서만 유효하며 현재 count-aware 비교를
+대체하지 않는다.
+
 ## 1. Status Semantics
 
 | Status | Meaning |
 | --- | --- |
 | `ACTIVE_BASELINE` | 해당 데이터셋의 기본 control이자 새 후보가 넘어야 하는 incumbent |
+| `ACTIVE_INCUMBENT` | 현재 formulation에서 후속 모델 강화가 넘어야 하는 대표 모델 |
 | `PROMOTED_DATASET` | 특정 데이터셋에서만 승격됐으며 공통 baseline을 대체하지 않음 |
 | `REFERENCE_ONLY` | 외부 또는 과거 비교 기준이며 새 구조의 기본 시작점은 아님 |
 | `NOT_PROMOTED` | 구현·screening은 완료했지만 acceptance gate를 통과하지 못함 |
@@ -148,3 +164,5 @@ capacity ablation과 fresh matched control로 취급한다.
   `.agents/results/architecture/adr-titantpp-v5b-bounded-class-prior-marker-loss.md`
 - Current Notion source draft:
   `simple_lab_test/search/notion_writer_prompts/titantpp_v5b_bounded_class_prior_contract_0719.md`
+- Count-aware baseline contract:
+  `paper/contracts/count_aware_model_baseline_v1.md`

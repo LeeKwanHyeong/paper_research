@@ -63,6 +63,7 @@ cd "${PROJECT_ROOT}"
   --tail-clip-cap 187 \
   --tail-huber-delta 1 \
   --quantity-variants tail_shared \
+  --model-role t1_incumbent \
   --grad-clip 1 \
   --min-epochs 40 \
   --early-stopping-patience 40 \

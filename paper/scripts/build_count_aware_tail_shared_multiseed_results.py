@@ -272,6 +272,14 @@ def build_comparison(
     return {
         "schema_version": 1,
         "status": "complete",
+        "table_scope": "t0_common_controls_and_t1_incumbent",
+        "model_roles": {
+            "rmtpp": "t0_common_control",
+            "thp": "t0_common_control",
+            "titantpp": "t0_common_control",
+            "titantpp_t1": "t1_incumbent",
+        },
+        "excluded_diagnostic_models": ["H0_scaled_exact", "H3_lognormal_duration"],
         "evaluation_scope": "validation_only",
         "held_out_test_evaluated": False,
         "comparisons": comparisons,
@@ -287,6 +295,8 @@ def render_markdown(
         "- Scope: Intermittent validation only",
         "- Seeds: 42, 52, 62",
         "- Held-out test: not evaluated",
+        "- Table role: T0 common controls and the T1 incumbent",
+        "- H0/H3 time heads: diagnostic-only and excluded from this model table",
         "",
         "| Model | Joint objective | Time NLL | Log quantity MSE | Quantity MAE | Quantity RMSE |",
         "| --- | ---: | ---: | ---: | ---: | ---: |",

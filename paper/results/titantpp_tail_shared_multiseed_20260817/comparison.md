@@ -3,6 +3,8 @@
 - Scope: Intermittent validation only
 - Seeds: 42, 52, 62
 - Held-out test: not evaluated
+- Table role: T0 common controls and the T1 incumbent
+- H0/H3 time heads: diagnostic-only and excluded from this model table
 
 | Model | Joint objective | Time NLL | Log quantity MSE | Quantity MAE | Quantity RMSE |
 | --- | ---: | ---: | ---: | ---: | ---: |

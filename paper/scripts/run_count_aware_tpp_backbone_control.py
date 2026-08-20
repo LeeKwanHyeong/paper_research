@@ -40,6 +40,8 @@ from paper.scripts.count_aware_tpp_backbone.constants import (
     BACKBONE_LABELS,
     FROZEN_TAIL_LAMBDA,
     LOGNORMAL_VARIANT,
+    MODEL_ROLES,
+    MODEL_ROLE_EXPERIMENTAL,
     QUANTITY_VARIANT_ALIASES,
     SEEDS,
     SUPPORTED_BACKBONES,
@@ -47,6 +49,7 @@ from paper.scripts.count_aware_tpp_backbone.constants import (
     TAIL_SHARED_VARIANT,
     TAIL_VARIANTS,
     VARIANT,
+    validate_model_role_contract,
 )
 from paper.scripts.count_aware_tpp_backbone.core import (
     empty_accumulator,
@@ -207,6 +210,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--backbones", default=",".join(BACKBONES))
     parser.add_argument("--seeds", default=",".join(str(seed) for seed in SEEDS))
     parser.add_argument("--quantity-variants", default=VARIANT)
+    parser.add_argument(
+        "--model-role",
+        choices=MODEL_ROLES,
+        default=MODEL_ROLE_EXPERIMENTAL,
+        help="Frozen comparison role; experimental preserves legacy launch behavior.",
+    )
     parser.add_argument("--quantity-sigma-floor", type=float, default=1e-3)
     parser.add_argument("--lambda-location-huber", type=float, default=1.0)
     parser.add_argument("--location-huber-delta", type=float, default=0.25)
@@ -260,6 +269,13 @@ def main() -> None:
     backbones = parse_str_tuple(args.backbones)
     seeds = parse_int_tuple(args.seeds)
     quantity_variants = normalize_quantity_variants(args.quantity_variants)
+    validate_model_role_contract(
+        model_role=args.model_role,
+        backbones=backbones,
+        quantity_variants=quantity_variants,
+        time_head_mode=args.time_head_mode,
+        lambda_tail=args.lambda_tail,
+    )
     if any(backbone not in SUPPORTED_BACKBONES for backbone in backbones):
         raise ValueError(f"Unsupported backbone selection: {backbones}")
     if not args.allow_partial_contract:
@@ -512,6 +528,7 @@ def main() -> None:
         "schema_version": 1,
         "status": "running",
         "experiment": "mark_free_count_aware_quantity_screening",
+        "model_role": args.model_role,
         "dataset": args.dataset_contract,
         "max_series": args.max_series,
         "data_path": str(args.data.resolve()),
