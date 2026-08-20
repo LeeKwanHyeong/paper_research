@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import time
 from typing import Any
 
+import numpy as np
 import polars as pl
 import torch
 
@@ -31,6 +33,197 @@ from simple_lab_test.search.common.runner import (
 
 # Keep the historical factory name inside this experiment layer.
 build_model = build_count_aware_model
+
+
+def build_optimizer(
+    model: torch.nn.Module,
+    *,
+    lr: float,
+    time_head_lr_multiplier: float = 1.0,
+) -> torch.optim.AdamW:
+    """Build AdamW while optionally lowering only the shared time-head LR."""
+    if not math.isfinite(lr) or lr <= 0.0:
+        raise ValueError("lr must be finite and positive")
+    if (
+        not math.isfinite(time_head_lr_multiplier)
+        or time_head_lr_multiplier <= 0.0
+    ):
+        raise ValueError("time_head_lr_multiplier must be finite and positive")
+
+    trainable = [
+        parameter for parameter in model.parameters() if parameter.requires_grad
+    ]
+    if math.isclose(time_head_lr_multiplier, 1.0, rel_tol=0.0, abs_tol=1e-15):
+        # Preserve the historical one-group optimizer contract for H0/H1.
+        return torch.optim.AdamW(trainable, lr=lr)
+
+    if not hasattr(model, "time_head_named_parameters"):
+        raise TypeError("Model does not expose time_head_named_parameters()")
+    time_parameters = [
+        parameter
+        for _, parameter in model.time_head_named_parameters()
+        if parameter.requires_grad
+    ]
+    time_parameter_ids = {id(parameter) for parameter in time_parameters}
+    base_parameters = [
+        parameter for parameter in trainable if id(parameter) not in time_parameter_ids
+    ]
+    if not base_parameters or not time_parameters:
+        raise ValueError(
+            "Optimizer split requires nonempty base and time parameter groups"
+        )
+    return torch.optim.AdamW(
+        [
+            {
+                "params": base_parameters,
+                "lr": lr,
+                "group_name": "backbone_and_quantity",
+            },
+            {
+                "params": time_parameters,
+                "lr": lr * time_head_lr_multiplier,
+                "group_name": "time_head",
+            },
+        ],
+        lr=lr,
+    )
+
+
+def optimizer_group_contract(optimizer: torch.optim.Optimizer) -> list[dict[str, Any]]:
+    """Return optimizer-group metadata without serializing parameter objects."""
+    return [
+        {
+            "index": index,
+            "group_name": str(group.get("group_name", "all_parameters")),
+            "lr": float(group["lr"]),
+            "parameter_count": int(
+                sum(parameter.numel() for parameter in group["params"])
+            ),
+        }
+        for index, group in enumerate(optimizer.param_groups)
+    ]
+
+
+def train_epoch_with_telemetry(
+    *,
+    model: torch.nn.Module,
+    loader: Any,
+    optimizer: torch.optim.Optimizer,
+    device: str,
+    lambda_log_qty: float,
+    grad_clip: float,
+    max_batches: int | None,
+) -> dict[str, Any]:
+    """Train one epoch and record pre-clipping stability telemetry."""
+    if not math.isfinite(grad_clip) or grad_clip <= 0.0:
+        raise ValueError("grad_clip must be finite and positive")
+
+    model.train()
+    event_count = 0
+    joint_sum = 0.0
+    time_sum = 0.0
+    quantity_sum = 0.0
+    batch_joint_means: list[float] = []
+    gradient_norms: list[float] = []
+    clipping_count = 0
+    max_per_event_time_nll = -float("inf")
+
+    for batch_index, (_, dts, mask, _, quantities) in enumerate(loader):
+        if max_batches is not None and batch_index >= max_batches:
+            break
+        if quantities is None:
+            raise ValueError("Count-aware training requires raw quantities")
+        outputs = target_outputs(
+            model,
+            dts.to(device),
+            mask.to(device),
+            quantities.to(device),
+            lambda_log_qty=lambda_log_qty,
+        )
+        tracked_outputs = (
+            outputs["joint_loss"],
+            outputs["time_loss"],
+            outputs["quantity_train_loss"],
+        )
+        if not all(bool(torch.isfinite(value).all()) for value in tracked_outputs):
+            raise FloatingPointError(
+                f"Non-finite train loss at batch {batch_index}"
+            )
+
+        loss = outputs["joint_loss"].mean()
+        optimizer.zero_grad(set_to_none=True)
+        loss.backward()
+        pre_clip_norm = torch.nn.utils.clip_grad_norm_(
+            model.parameters(),
+            grad_clip,
+            error_if_nonfinite=False,
+        )
+        pre_clip_norm_value = float(pre_clip_norm.detach().cpu().item())
+        if not math.isfinite(pre_clip_norm_value):
+            raise FloatingPointError(
+                f"Non-finite pre-clipping gradient norm at batch {batch_index}"
+            )
+        optimizer.step()
+        if not all(
+            bool(torch.isfinite(parameter).all())
+            for parameter in model.parameters()
+        ):
+            raise FloatingPointError(
+                f"Non-finite model parameter after batch {batch_index}"
+            )
+
+        joint = outputs["joint_loss"].detach().double()
+        time_loss = outputs["time_loss"].detach().double()
+        quantity_loss = outputs["quantity_train_loss"].detach().double()
+        current_count = int(joint.numel())
+        event_count += current_count
+        joint_sum += float(joint.sum().item())
+        time_sum += float(time_loss.sum().item())
+        quantity_sum += float(quantity_loss.sum().item())
+        batch_joint_means.append(float(joint.mean().item()))
+        gradient_norms.append(pre_clip_norm_value)
+        clipping_count += int(pre_clip_norm_value > grad_clip)
+        max_per_event_time_nll = max(
+            max_per_event_time_nll,
+            float(time_loss.max().item()),
+        )
+
+    if event_count < 1 or not batch_joint_means:
+        raise ValueError("No train batches were evaluated")
+    batch_means = np.asarray(batch_joint_means, dtype=np.float64)
+    grad_norms = np.asarray(gradient_norms, dtype=np.float64)
+    slope = float(model.positive_time_slope().detach().cpu().item())
+    telemetry = {
+        "train_joint_objective": joint_sum / event_count,
+        "train_time_nll": time_sum / event_count,
+        "train_quantity_loss": quantity_sum / event_count,
+        "train_batch_joint_p50": float(np.quantile(batch_means, 0.50)),
+        "train_batch_joint_p95": float(np.quantile(batch_means, 0.95)),
+        "train_batch_joint_p99": float(np.quantile(batch_means, 0.99)),
+        "train_batch_joint_max": float(batch_means.max()),
+        "train_max_per_event_time_nll": max_per_event_time_nll,
+        "train_pre_clip_grad_norm_mean": float(grad_norms.mean()),
+        "train_pre_clip_grad_norm_max": float(grad_norms.max()),
+        "train_gradient_clip_count": clipping_count,
+        "train_gradient_clip_fraction": clipping_count / len(batch_joint_means),
+        "train_event_count": event_count,
+        "train_batch_count": len(batch_joint_means),
+        "train_time_slope": slope,
+        "train_all_finite": True,
+    }
+    if not all(
+        math.isfinite(float(value))
+        for key, value in telemetry.items()
+        if key
+        not in {
+            "train_gradient_clip_count",
+            "train_event_count",
+            "train_batch_count",
+            "train_all_finite",
+        }
+    ):
+        raise FloatingPointError("Non-finite train telemetry")
+    return telemetry
 
 
 def early_stopping_exhausted(
@@ -104,6 +297,10 @@ def train_one(
         time_scale=args.time_scale,
         time_w_max=args.time_w_max,
         time_intercept_limit=args.time_intercept_limit,
+        time_initial_intercept=float(
+            interface_meta["time_head"]["time_initial_intercept"]
+        ),
+        time_wd_safety_limit=args.time_wd_safety_limit,
     )
     model.to(args.device)
     parameter_count = sum(
@@ -111,7 +308,12 @@ def train_one(
         for parameter in model.parameters()
         if parameter.requires_grad
     )
-    optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
+    optimizer = build_optimizer(
+        model,
+        lr=args.lr,
+        time_head_lr_multiplier=args.time_head_lr_multiplier,
+    )
+    optimizer_contract = optimizer_group_contract(optimizer)
     history: list[dict[str, Any]] = []
     best_objective = float("inf")
     best_state: dict[str, torch.Tensor] | None = None
@@ -143,28 +345,15 @@ def train_one(
     for epoch in range(start_epoch, args.epochs + 1):
         if stopped_early:
             break
-        model.train()
-        running = 0.0
-        batches = 0
-        for batch_index, (_, dts, mask, _, quantities) in enumerate(train_loader):
-            if args.max_train_batches is not None and batch_index >= args.max_train_batches:
-                break
-            if quantities is None:
-                raise ValueError("Count-aware training requires raw quantities")
-            outputs = target_outputs(
-                model,
-                dts.to(args.device),
-                mask.to(args.device),
-                quantities.to(args.device),
-                lambda_log_qty=args.lambda_log_qty,
-            )
-            loss = outputs["joint_loss"].mean()
-            optimizer.zero_grad(set_to_none=True)
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), args.grad_clip)
-            optimizer.step()
-            running += float(loss.item())
-            batches += 1
+        train_telemetry = train_epoch_with_telemetry(
+            model=model,
+            loader=train_loader,
+            optimizer=optimizer,
+            device=args.device,
+            lambda_log_qty=args.lambda_log_qty,
+            grad_clip=args.grad_clip,
+            max_batches=args.max_train_batches,
+        )
 
         validation = evaluate(
             model=model,
@@ -177,7 +366,7 @@ def train_one(
         )
         epoch_row = {
             "epoch": epoch,
-            "train_joint_objective": running / max(batches, 1),
+            **train_telemetry,
             "val_joint_objective": float(validation["val_joint_objective"]),
             "val_time_nll": float(validation["val_time_nll"]),
             "val_quantity_train_loss": float(validation["val_quantity_train_loss"]),
@@ -199,6 +388,10 @@ def train_one(
             f"[epoch {epoch:03d}] backbone={backbone} "
             f"variant={quantity_variant} seed={seed} "
             f"train_joint={epoch_row['train_joint_objective']:.8f} "
+            f"train_time={epoch_row['train_time_nll']:.8f} "
+            f"batch_p99={epoch_row['train_batch_joint_p99']:.8f} "
+            f"grad_norm={epoch_row['train_pre_clip_grad_norm_mean']:.8f} "
+            f"clip_fraction={epoch_row['train_gradient_clip_fraction']:.6f} "
             f"val_joint={epoch_row['val_joint_objective']:.8f} "
             f"time_nll={epoch_row['val_time_nll']:.8f} "
             f"log_qty_mse={epoch_row['val_log_qty_mse']:.8f} "
@@ -224,6 +417,7 @@ def train_one(
             "best_state_dict": best_state,
             "encoder_config": encoder_config,
             "interface_meta": interface_meta,
+            "optimizer_group_contract": optimizer_contract,
             "source_revision": args.source_revision,
             "source_revision_history": source_revision_history,
             "evaluation_scope": "validation_only",
@@ -282,6 +476,7 @@ def train_one(
         "model_state_sha256": state_digest,
         "encoder_config": encoder_config,
         "interface_meta": interface_meta,
+        "optimizer_group_contract": optimizer_contract,
         "source_revision": args.source_revision,
         "source_revision_history": source_revision_history,
         "evaluation_scope": "validation_only",
@@ -346,6 +541,7 @@ def train_one(
         "elapsed_seconds": time.time() - started,
         "encoder_config": encoder_config,
         "interface_meta": interface_meta,
+        "optimizer_group_contract": optimizer_contract,
         "quantity_rows": quantity_rows,
         "history_rows": history_rows,
     }
@@ -358,4 +554,10 @@ def train_one(
 
 
 
-__all__ = ["early_stopping_exhausted", "train_one"]
+__all__ = [
+    "build_optimizer",
+    "early_stopping_exhausted",
+    "optimizer_group_contract",
+    "train_epoch_with_telemetry",
+    "train_one",
+]

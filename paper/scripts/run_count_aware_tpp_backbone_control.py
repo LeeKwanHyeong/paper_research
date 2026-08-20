@@ -23,8 +23,10 @@ from models.TPPs.CountAwareTPP import (
     CountAwareTHP,
     CountAwareTitanTPP,
     SharedTimeCountModel,
+    TIME_HEAD_EXACT_MODES,
     TIME_HEAD_MODE_LEGACY_CLAMPED,
     TIME_HEAD_MODE_SCALED_EXACT,
+    TIME_HEAD_MODE_SCALED_EXACT_STABLE,
     TIME_HEAD_MODES,
 )
 from models.TPPs.CountAwareFactory import (
@@ -91,6 +93,8 @@ DATASET_CONTRACTS = {
     },
 }
 TIME_WD_SAFETY_LIMIT = 40.0
+STABLE_TIME_WD_SAFETY_LIMIT = 8.0
+STABLE_TIME_INTERCEPT_LIMIT = 6.0
 
 
 def derive_train_time_contract(
@@ -98,6 +102,7 @@ def derive_train_time_contract(
     *,
     lookback_weeks: int,
     max_seq_len: int,
+    wd_safety_limit: float = TIME_WD_SAFETY_LIMIT,
 ) -> dict[str, Any]:
     """Derive scaling constants from train targets under the exact loader path."""
     dataset = RMTPPWeekLookbackDataset(
@@ -118,20 +123,25 @@ def derive_train_time_contract(
     )
     if not target_dts.size or not np.isfinite(target_dts).all():
         raise ValueError("Train-only time targets must be nonempty and finite")
+    if not math.isfinite(wd_safety_limit) or wd_safety_limit <= 0.0:
+        raise ValueError("wd_safety_limit must be finite and positive")
     time_scale = float(np.quantile(target_dts, 0.50))
+    target_mean = float(target_dts.mean())
     target_max = float(target_dts.max())
-    time_w_max = TIME_WD_SAFETY_LIMIT / (target_max / time_scale)
+    time_w_max = float(wd_safety_limit) / (target_max / time_scale)
+    time_initial_intercept = math.log(time_scale / target_mean)
     return {
         "statistics_source_split": "train",
         "target_count": int(target_dts.size),
         "target_dt_min": float(target_dts.min()),
-        "target_dt_mean": float(target_dts.mean()),
+        "target_dt_mean": target_mean,
         "target_dt_p50": time_scale,
         "target_dt_p99": float(np.quantile(target_dts, 0.99)),
         "target_dt_max": target_max,
         "time_scale": time_scale,
-        "wd_safety_limit": TIME_WD_SAFETY_LIMIT,
+        "wd_safety_limit": float(wd_safety_limit),
         "time_w_max": time_w_max,
+        "time_initial_intercept": time_initial_intercept,
     }
 
 
@@ -209,6 +219,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--time-scale", type=float, default=3.0)
     parser.add_argument("--time-w-max", type=float, default=10.0 / 3.0)
     parser.add_argument("--time-intercept-limit", type=float, default=30.0)
+    parser.add_argument(
+        "--time-wd-safety-limit",
+        type=float,
+        default=TIME_WD_SAFETY_LIMIT,
+    )
+    parser.add_argument("--time-head-lr-multiplier", type=float, default=1.0)
     parser.add_argument("--max-train-batches", type=int, default=None)
     parser.add_argument("--max-val-batches", type=int, default=None)
     parser.add_argument("--allow-partial-contract", action="store_true")
@@ -259,7 +275,11 @@ def main() -> None:
             raise ValueError("Instacart is supported only as an explicit max-series smoke")
     if args.lambda_log_qty != 1.0:
         raise ValueError("Frozen contract requires lambda_log_qty=1.0")
-    if args.time_head_mode == TIME_HEAD_MODE_SCALED_EXACT:
+    if args.time_wd_safety_limit <= 0.0:
+        raise ValueError("time_wd_safety_limit must be positive")
+    if args.time_head_lr_multiplier <= 0.0:
+        raise ValueError("time_head_lr_multiplier must be positive")
+    if args.time_head_mode in TIME_HEAD_EXACT_MODES:
         if args.time_scale <= 0.0 or args.time_w_max <= 0.0:
             raise ValueError("Scaled-exact time constants must be positive")
         if args.time_intercept_limit <= 0.0:
@@ -267,14 +287,36 @@ def main() -> None:
         if args.dataset_contract == "intermittent_frozen_5000":
             if not math.isclose(args.time_scale, 3.0, rel_tol=0.0, abs_tol=1e-12):
                 raise ValueError("Intermittent scaled-exact contract requires time_scale=3")
-            if not math.isclose(
-                args.time_w_max,
-                10.0 / 3.0,
-                rel_tol=0.0,
-                abs_tol=1e-12,
-            ):
+            if args.time_head_mode == TIME_HEAD_MODE_SCALED_EXACT:
+                expected = {
+                    "time_w_max": 10.0 / 3.0,
+                    "time_intercept_limit": 30.0,
+                    "time_wd_safety_limit": TIME_WD_SAFETY_LIMIT,
+                }
+            else:
+                expected = {
+                    "time_w_max": 2.0 / 3.0,
+                    "time_intercept_limit": STABLE_TIME_INTERCEPT_LIMIT,
+                    "time_wd_safety_limit": STABLE_TIME_WD_SAFETY_LIMIT,
+                }
+            observed = {
+                "time_w_max": args.time_w_max,
+                "time_intercept_limit": args.time_intercept_limit,
+                "time_wd_safety_limit": args.time_wd_safety_limit,
+            }
+            mismatches = {
+                name: {"expected": expected[name], "observed": value}
+                for name, value in observed.items()
+                if not math.isclose(
+                    value,
+                    expected[name],
+                    rel_tol=0.0,
+                    abs_tol=1e-12,
+                )
+            }
+            if mismatches:
                 raise ValueError(
-                    "Intermittent scaled-exact contract requires time_w_max=10/3"
+                    f"Intermittent scaled-exact contract mismatch: {mismatches}"
                 )
     if LOGNORMAL_VARIANT in quantity_variants:
         if args.quantity_sigma_floor != 1e-3:
@@ -331,13 +373,25 @@ def main() -> None:
         frame,
         lookback_weeks=args.lookback_weeks,
         max_seq_len=args.max_seq_len,
+        wd_safety_limit=args.time_wd_safety_limit,
     )
-    if args.time_head_mode == TIME_HEAD_MODE_SCALED_EXACT:
+    if args.time_head_mode in TIME_HEAD_EXACT_MODES:
         validate_scaled_time_contract(
             time_scale=args.time_scale,
             time_w_max=args.time_w_max,
             train_time_contract=train_time_contract,
         )
+    if args.time_head_mode == TIME_HEAD_MODE_SCALED_EXACT_STABLE:
+        time_initial_intercept = float(
+            train_time_contract["time_initial_intercept"]
+        )
+        time_intercept_transform = "scaled_tanh"
+    elif args.time_head_mode == TIME_HEAD_MODE_SCALED_EXACT:
+        time_initial_intercept = math.log(args.time_scale)
+        time_intercept_transform = "hard_clamp"
+    else:
+        time_initial_intercept = 0.0
+        time_intercept_transform = "legacy_upper_clamp"
     train_qty = raw_frame.filter(
         pl.col("chronological_split") == "train"
     )["demand_qty"].to_numpy().astype(np.float64)
@@ -361,6 +415,10 @@ def main() -> None:
             "time_scale": args.time_scale,
             "time_w_max": args.time_w_max,
             "time_intercept_limit": args.time_intercept_limit,
+            "time_initial_intercept": time_initial_intercept,
+            "time_intercept_transform": time_intercept_transform,
+            "time_wd_safety_limit": args.time_wd_safety_limit,
+            "time_head_lr_multiplier": args.time_head_lr_multiplier,
             "statistics_source_split": "train",
             "train_time_statistics": train_time_contract,
         },
@@ -443,10 +501,14 @@ def main() -> None:
             "time_scale": args.time_scale,
             "time_w_max": args.time_w_max,
             "time_intercept_limit": args.time_intercept_limit,
+            "time_initial_intercept": time_initial_intercept,
+            "time_intercept_transform": time_intercept_transform,
+            "time_wd_safety_limit": args.time_wd_safety_limit,
+            "time_head_lr_multiplier": args.time_head_lr_multiplier,
             "statistics_source_split": "train",
             "density_unit": (
                 "original_delta_t_with_jacobian"
-                if args.time_head_mode == TIME_HEAD_MODE_SCALED_EXACT
+                if args.time_head_mode in TIME_HEAD_EXACT_MODES
                 else "legacy_delta_t_clamped_objective"
             ),
             "wd_clamp": (

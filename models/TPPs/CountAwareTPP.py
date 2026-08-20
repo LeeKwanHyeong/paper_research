@@ -29,9 +29,14 @@ TAIL_HEAD_ONLY_VARIANT = "count_only_log_mse_tail_head_only"
 TAIL_VARIANTS = (TAIL_SHARED_VARIANT, TAIL_HEAD_ONLY_VARIANT)
 TIME_HEAD_MODE_LEGACY_CLAMPED = "legacy_clamped_rmtpp"
 TIME_HEAD_MODE_SCALED_EXACT = "scaled_exact_rmtpp"
+TIME_HEAD_MODE_SCALED_EXACT_STABLE = "scaled_exact_stable_rmtpp"
+TIME_HEAD_EXACT_MODES = (
+    TIME_HEAD_MODE_SCALED_EXACT,
+    TIME_HEAD_MODE_SCALED_EXACT_STABLE,
+)
 TIME_HEAD_MODES = (
     TIME_HEAD_MODE_LEGACY_CLAMPED,
-    TIME_HEAD_MODE_SCALED_EXACT,
+    *TIME_HEAD_EXACT_MODES,
 )
 TITAN_MEMORY_MODE_NONE = "none"
 TITAN_MEMORY_MODE_PERSISTENT_ONLY = "persistent_only"
@@ -93,6 +98,8 @@ class SharedTimeCountModel(nn.Module):
         time_scale: float = 3.0,
         time_w_max: float = 10.0 / 3.0,
         time_intercept_limit: float = 30.0,
+        time_initial_intercept: float | None = None,
+        time_wd_safety_limit: float = 40.0,
     ) -> None:
         super().__init__()
         if not math.isfinite(train_log_mean) or train_log_mean <= 0.0:
@@ -127,6 +134,12 @@ class SharedTimeCountModel(nn.Module):
             raise ValueError("time_w_max must be finite and positive")
         if not math.isfinite(time_intercept_limit) or time_intercept_limit <= 0.0:
             raise ValueError("time_intercept_limit must be finite and positive")
+        if time_initial_intercept is not None and not math.isfinite(
+            time_initial_intercept
+        ):
+            raise ValueError("time_initial_intercept must be finite when provided")
+        if not math.isfinite(time_wd_safety_limit) or time_wd_safety_limit <= 0.0:
+            raise ValueError("time_wd_safety_limit must be finite and positive")
 
         self.hidden_dim = int(hidden_dim)
         self.quantity_variant = quantity_variant
@@ -142,15 +155,35 @@ class SharedTimeCountModel(nn.Module):
         self.time_scale = float(time_scale)
         self.time_w_max = float(time_w_max)
         self.time_intercept_limit = float(time_intercept_limit)
+        self.time_wd_safety_limit = float(time_wd_safety_limit)
 
         self.v_t = nn.Linear(self.hidden_dim, 1, bias=False)
-        if self.time_head_mode == TIME_HEAD_MODE_SCALED_EXACT:
+        if self.time_head_mode in TIME_HEAD_EXACT_MODES:
             initial_w = min(0.05 * self.time_scale, 0.25 * self.time_w_max)
-            self.b_t = nn.Parameter(torch.full((1,), math.log(self.time_scale)))
+            if self.time_head_mode == TIME_HEAD_MODE_SCALED_EXACT_STABLE:
+                bounded_initial_intercept = (
+                    0.0
+                    if time_initial_intercept is None
+                    else float(time_initial_intercept)
+                )
+                if abs(bounded_initial_intercept) >= self.time_intercept_limit:
+                    raise ValueError(
+                        "time_initial_intercept must lie inside the stable "
+                        "intercept range"
+                    )
+                raw_initial_intercept = self.time_intercept_limit * math.atanh(
+                    bounded_initial_intercept / self.time_intercept_limit
+                )
+            else:
+                bounded_initial_intercept = math.log(self.time_scale)
+                raw_initial_intercept = bounded_initial_intercept
+            self.time_initial_intercept = bounded_initial_intercept
+            self.b_t = nn.Parameter(torch.full((1,), raw_initial_intercept))
             self.w_raw = nn.Parameter(
                 torch.full((1,), inverse_sigmoid(initial_w / self.time_w_max))
             )
         else:
+            self.time_initial_intercept = 0.0
             self.b_t = nn.Parameter(torch.zeros(1))
             self.w_raw = nn.Parameter(torch.full((1,), -3.0))
         self.quantity_head = nn.Linear(self.hidden_dim, 1)
@@ -281,13 +314,13 @@ class SharedTimeCountModel(nn.Module):
 
     def time_head_contract(self) -> dict[str, float | str | bool]:
         """Return serializable time-head metadata for experiment manifests."""
-        return {
+        contract: dict[str, float | str | bool] = {
             "mode": self.time_head_mode,
             "time_scale": self.time_scale,
             "time_w_max": self.time_w_max,
             "time_intercept_limit": self.time_intercept_limit,
             "jacobian_correction": (
-                self.time_head_mode == TIME_HEAD_MODE_SCALED_EXACT
+                self.time_head_mode in TIME_HEAD_EXACT_MODES
             ),
             "wd_clamp": (
                 10.0
@@ -295,17 +328,43 @@ class SharedTimeCountModel(nn.Module):
                 else 0.0
             ),
         }
+        if self.time_head_mode == TIME_HEAD_MODE_SCALED_EXACT_STABLE:
+            contract.update(
+                {
+                    "time_initial_intercept": self.time_initial_intercept,
+                    "time_intercept_transform": "scaled_tanh",
+                    "time_wd_safety_limit": self.time_wd_safety_limit,
+                }
+            )
+        return contract
+
+    def time_head_named_parameters(self) -> tuple[tuple[str, nn.Parameter], ...]:
+        """Return the parameters optimized by the shared event-time head."""
+        return (
+            ("v_t.weight", self.v_t.weight),
+            ("b_t", self.b_t),
+            ("w_raw", self.w_raw),
+        )
+
+    def bounded_time_intercept(self, hidden: torch.Tensor) -> torch.Tensor:
+        """Map the raw intensity intercept into its configured finite range."""
+        raw_intercept = self.v_t(hidden).squeeze(-1) + self.b_t
+        if self.time_head_mode == TIME_HEAD_MODE_SCALED_EXACT_STABLE:
+            return self.time_intercept_limit * torch.tanh(
+                raw_intercept / self.time_intercept_limit
+            )
+        return torch.clamp(
+            raw_intercept,
+            min=-self.time_intercept_limit,
+            max=self.time_intercept_limit,
+        )
 
     def _scaled_exact_time_terms(
         self,
         hidden: torch.Tensor,
         dt_next: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        intercept = torch.clamp(
-            self.v_t(hidden).squeeze(-1) + self.b_t,
-            min=-self.time_intercept_limit,
-            max=self.time_intercept_limit,
-        ).to(dtype=torch.float64)
+        intercept = self.bounded_time_intercept(hidden).to(dtype=torch.float64)
         w = self.positive_time_slope().to(dtype=torch.float64)
         scaled_dt = dt_next.to(dtype=torch.float64).clamp_min(0.0) / self.time_scale
         return intercept, w, scaled_dt
