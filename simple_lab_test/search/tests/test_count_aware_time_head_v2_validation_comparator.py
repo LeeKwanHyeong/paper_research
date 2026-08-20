@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import subprocess
+import sys
+from pathlib import Path
+
 import pytest
 
 from paper.scripts.compare_count_aware_time_head_v2_validation import (
@@ -75,3 +79,22 @@ def test_stability_decision_requires_train_only_h1_selection() -> None:
     invalid = {**valid, "selected_variant": "H2"}
     with pytest.raises(ValueError, match="train-only selection mismatch"):
         validate_stability_decision(invalid)
+
+
+def test_comparator_cli_imports_from_outside_project_root(tmp_path: Path) -> None:
+    script = (
+        Path(__file__).resolve().parents[3]
+        / "paper"
+        / "scripts"
+        / "compare_count_aware_time_head_v2_validation.py"
+    )
+
+    result = subprocess.run(
+        [sys.executable, str(script), "--help"],
+        cwd=tmp_path,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr

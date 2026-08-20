@@ -8,15 +8,19 @@ import ast
 import csv
 import json
 import math
+import sys
 from pathlib import Path
 from typing import Any
 
-from models.TPPs.CountAwareTPP import (
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(PROJECT_ROOT))
+
+from models.TPPs.CountAwareTPP import (  # noqa: E402
     TIME_HEAD_MODE_SCALED_EXACT,
     TIME_HEAD_MODE_SCALED_EXACT_STABLE,
 )
-from paper.scripts.count_aware_tpp_backbone.constants import VARIANT
-from paper.scripts.run_intermittent_log_backbone_control import (
+from paper.scripts.count_aware_tpp_backbone.constants import VARIANT  # noqa: E402
+from paper.scripts.run_intermittent_log_backbone_control import (  # noqa: E402
     EXPECTED_DATA_SHA256,
     EXPECTED_SPLIT_MANIFEST_SHA256,
 )
