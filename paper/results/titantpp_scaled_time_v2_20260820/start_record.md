@@ -2,9 +2,13 @@
 
 ## 상태
 
-- 상태: 계약 설계 완료, 구현 전
+- 상태: 구현·로컬 계약 검증 완료, 5080 실행 준비
 - 설계 일자: 2026-08-20
 - 실행 서버: 5080
+- implementation revision: `dc5a58b`
+- launch revision: 실행 스크립트 커밋 후 고정
+- preflight tmux: `timehead_v2_preflight_0820`
+- train-only stability tmux: `inter_timehead_v2_train_e3_0820`
 - Held-out test: 잠금
 
 ## 목적
@@ -29,3 +33,19 @@ Validation을 읽지 않는 train-only stability runner로 H0와 H1을 먼저 �
 
 ## 결과
 
+실험 시작 후 작성한다.
+
+## 실행 명령어
+
+```bash
+SOURCE_REVISION=<launch_revision> \
+  bash simple_lab_test/search/scripts/run_count_aware_time_head_v2_preflight_20260820.sh
+
+SOURCE_REVISION=<launch_revision> \
+  bash simple_lab_test/search/scripts/run_count_aware_time_head_v2_stability_20260820.sh
+```
+
+## Artifact
+
+- preflight: `search_artifacts/count_aware_time_head_v2_preflight_20260820`
+- train-only stability: `search_artifacts/count_aware_time_head_v2_train_stability_20260820`
