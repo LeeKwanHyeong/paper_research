@@ -2,13 +2,14 @@
 
 ## 상태
 
-- 상태: 구현·로컬 계약 검증 완료, 5080 실행 준비
+- 상태: 5080 preflight 및 train-only stability chain 실행 중
 - 설계 일자: 2026-08-20
 - 실행 서버: 5080
 - implementation revision: `dc5a58b`
-- launch revision: 실행 스크립트 커밋 후 고정
-- preflight tmux: `timehead_v2_preflight_0820`
-- train-only stability tmux: `inter_timehead_v2_train_e3_0820`
+- launch revision: `34b46701bf00603d3e1624162a2bd1b9c91cff1f`
+- 실험 시작 시각: 2026-08-20 09:06:33 KST
+- tmux: `inter_timehead_v2_gate_0820`
+- 실행 순서: preflight 성공 후 train-only stability 자동 진입
 - Held-out test: 잠금
 
 ## 목적
@@ -33,7 +34,9 @@ Validation을 읽지 않는 train-only stability runner로 H0와 H1을 먼저 �
 
 ## 결과
 
-실험 시작 후 작성한다.
+Preflight focused test `26 passed`, Intermittent CUDA model-test와 Instacart
+top-20 e1 smoke가 완료됐다. 현재 train-only short run에 진입했으며, 완료 후 같은
+tmux에서 full H0/H1 및 조건부 H2가 이어진다. 성능·선택 결과는 아직 판정하지 않았다.
 
 ## 실행 명령어
 

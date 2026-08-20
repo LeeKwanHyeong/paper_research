@@ -2,8 +2,10 @@
 
 ## 상태
 
-- 상태: 실험 준비 중
-- 실행 서버 / tmux: 5080 / `timehead_v2_preflight_0820`, 이후 `inter_timehead_v2_train_e3_0820`
+- 상태: 실험 중
+- 실험 시작 시각: 2026-08-20 09:06:33 KST
+- 실행 서버 / tmux: 5080 / `inter_timehead_v2_gate_0820`
+- preflight 성공 후 full train-only stability가 같은 tmux에서 이어진다.
 
 ## 목적
 
