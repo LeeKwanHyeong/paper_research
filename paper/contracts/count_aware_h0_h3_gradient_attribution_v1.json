@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "status": "implemented_not_run",
+  "dataset": "intermittent_frozen_5000",
+  "selection_scope": "train_only_diagnostic",
+  "held_out_test_evaluated": false,
+  "h0_status": "comparison_incumbent_with_unresolved_instability",
+  "h3_status": "not_selected_after_quantity_safety_failure",
+  "source_states": ["initial", "best", "final"],
+  "gradient_parameter_groups": [
+    "shared_encoder",
+    "time_head",
+    "quantity_head"
+  ],
+  "gradient_clip": 1.0,
+  "persistent_clipping_fraction": 0.95,
+  "dominant_group_sq_norm_share": 0.5,
+  "quantity_checkpoint_crossing": [
+    "H0_encoder_H0_head",
+    "H3_encoder_H3_head",
+    "H3_encoder_H0_head",
+    "H0_encoder_H3_head"
+  ],
+  "quantity_damage_threshold_pct": 2.0,
+  "audit_batches": 32,
+  "batch_size": 128,
+  "validation_evaluated": false
+}
