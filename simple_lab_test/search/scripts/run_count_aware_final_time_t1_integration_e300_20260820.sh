@@ -95,6 +95,7 @@ COMMON_ARGS=(
 
 export PYTHONHASHSEED=42 CUBLAS_WORKSPACE_CONFIG=:4096:8 CUDA_VISIBLE_DEVICES=0
 export PYTHONUNBUFFERED=1 MPLBACKEND=Agg
+export PYTHONPATH="${PROJECT_ROOT}${PYTHONPATH:+:${PYTHONPATH}}"
 export MPLCONFIGDIR="${MPLCONFIGDIR:-/tmp/mplconfig_final_time_t1_integration}"
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-/tmp/xdg_final_time_t1_integration}"
 export TORCHINDUCTOR_CACHE_DIR="${TORCHINDUCTOR_CACHE_DIR:-/tmp/torchinductor_final_time_t1_integration}"
