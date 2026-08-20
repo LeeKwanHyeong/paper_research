@@ -25,6 +25,7 @@ from models.TPPs.CountAwareTPP import (
     SharedTimeCountModel,
     TIME_HEAD_EXACT_MODES,
     TIME_HEAD_MODE_LEGACY_CLAMPED,
+    TIME_HEAD_MODE_LOGNORMAL_DURATION,
     TIME_HEAD_MODE_SCALED_EXACT,
     TIME_HEAD_MODE_SCALED_EXACT_STABLE,
     TIME_HEAD_MODES,
@@ -130,6 +131,7 @@ def derive_train_time_contract(
     target_max = float(target_dts.max())
     time_w_max = float(wd_safety_limit) / (target_max / time_scale)
     time_initial_intercept = math.log(time_scale / target_mean)
+    log_scaled_targets = np.log(target_dts / time_scale)
     return {
         "statistics_source_split": "train",
         "target_count": int(target_dts.size),
@@ -142,6 +144,8 @@ def derive_train_time_contract(
         "wd_safety_limit": float(wd_safety_limit),
         "time_w_max": time_w_max,
         "time_initial_intercept": time_initial_intercept,
+        "target_log_scaled_mean": float(log_scaled_targets.mean()),
+        "target_log_scaled_std": float(log_scaled_targets.std()),
     }
 
 
@@ -225,6 +229,7 @@ def parse_args() -> argparse.Namespace:
         default=TIME_WD_SAFETY_LIMIT,
     )
     parser.add_argument("--time-head-lr-multiplier", type=float, default=1.0)
+    parser.add_argument("--time-sigma-floor", type=float, default=1e-3)
     parser.add_argument("--max-train-batches", type=int, default=None)
     parser.add_argument("--max-val-batches", type=int, default=None)
     parser.add_argument("--allow-partial-contract", action="store_true")
@@ -279,6 +284,8 @@ def main() -> None:
         raise ValueError("time_wd_safety_limit must be positive")
     if args.time_head_lr_multiplier <= 0.0:
         raise ValueError("time_head_lr_multiplier must be positive")
+    if args.time_sigma_floor <= 0.0:
+        raise ValueError("time_sigma_floor must be positive")
     if args.time_head_mode in TIME_HEAD_EXACT_MODES:
         if args.time_scale <= 0.0 or args.time_w_max <= 0.0:
             raise ValueError("Scaled-exact time constants must be positive")
@@ -381,6 +388,17 @@ def main() -> None:
             time_w_max=args.time_w_max,
             train_time_contract=train_time_contract,
         )
+    elif args.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION:
+        expected_scale = float(train_time_contract["time_scale"])
+        if not math.isclose(
+            args.time_scale,
+            expected_scale,
+            rel_tol=0.0,
+            abs_tol=1e-12,
+        ):
+            raise ValueError(
+                "Log-normal duration time_scale must match the train-only median"
+            )
     if args.time_head_mode == TIME_HEAD_MODE_SCALED_EXACT_STABLE:
         time_initial_intercept = float(
             train_time_contract["time_initial_intercept"]
@@ -389,9 +407,30 @@ def main() -> None:
     elif args.time_head_mode == TIME_HEAD_MODE_SCALED_EXACT:
         time_initial_intercept = math.log(args.time_scale)
         time_intercept_transform = "hard_clamp"
+    elif args.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION:
+        time_initial_intercept = 0.0
+        time_intercept_transform = "not_applicable"
     else:
         time_initial_intercept = 0.0
         time_intercept_transform = "legacy_upper_clamp"
+    time_initial_location = (
+        float(train_time_contract["target_log_scaled_mean"])
+        if args.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION
+        else None
+    )
+    time_initial_scale = (
+        float(train_time_contract["target_log_scaled_std"])
+        if args.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION
+        else None
+    )
+    if (
+        args.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION
+        and time_initial_scale is not None
+        and time_initial_scale <= args.time_sigma_floor
+    ):
+        raise ValueError(
+            "Train-only log-duration scale must exceed time_sigma_floor"
+        )
     train_qty = raw_frame.filter(
         pl.col("chronological_split") == "train"
     )["demand_qty"].to_numpy().astype(np.float64)
@@ -419,6 +458,9 @@ def main() -> None:
             "time_intercept_transform": time_intercept_transform,
             "time_wd_safety_limit": args.time_wd_safety_limit,
             "time_head_lr_multiplier": args.time_head_lr_multiplier,
+            "time_initial_location": time_initial_location,
+            "time_initial_scale": time_initial_scale,
+            "time_sigma_floor": args.time_sigma_floor,
             "statistics_source_split": "train",
             "train_time_statistics": train_time_contract,
         },
@@ -505,10 +547,14 @@ def main() -> None:
             "time_intercept_transform": time_intercept_transform,
             "time_wd_safety_limit": args.time_wd_safety_limit,
             "time_head_lr_multiplier": args.time_head_lr_multiplier,
+            "time_initial_location": time_initial_location,
+            "time_initial_scale": time_initial_scale,
+            "time_sigma_floor": args.time_sigma_floor,
             "statistics_source_split": "train",
             "density_unit": (
                 "original_delta_t_with_jacobian"
-                if args.time_head_mode in TIME_HEAD_EXACT_MODES
+                if args.time_head_mode
+                in (*TIME_HEAD_EXACT_MODES, TIME_HEAD_MODE_LOGNORMAL_DURATION)
                 else "legacy_delta_t_clamped_objective"
             ),
             "wd_clamp": (

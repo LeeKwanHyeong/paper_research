@@ -192,7 +192,6 @@ def train_epoch_with_telemetry(
         raise ValueError("No train batches were evaluated")
     batch_means = np.asarray(batch_joint_means, dtype=np.float64)
     grad_norms = np.asarray(gradient_norms, dtype=np.float64)
-    slope = float(model.positive_time_slope().detach().cpu().item())
     telemetry = {
         "train_joint_objective": joint_sum / event_count,
         "train_time_nll": time_sum / event_count,
@@ -208,8 +207,8 @@ def train_epoch_with_telemetry(
         "train_gradient_clip_fraction": clipping_count / len(batch_joint_means),
         "train_event_count": event_count,
         "train_batch_count": len(batch_joint_means),
-        "train_time_slope": slope,
         "train_all_finite": True,
+        **model.time_head_telemetry(),
     }
     if not all(
         math.isfinite(float(value))
@@ -298,9 +297,16 @@ def train_one(
         time_w_max=args.time_w_max,
         time_intercept_limit=args.time_intercept_limit,
         time_initial_intercept=float(
-            interface_meta["time_head"]["time_initial_intercept"]
+            interface_meta["time_head"].get("time_initial_intercept", 0.0)
         ),
         time_wd_safety_limit=args.time_wd_safety_limit,
+        time_initial_location=interface_meta["time_head"].get(
+            "time_initial_location"
+        ),
+        time_initial_scale=interface_meta["time_head"].get(
+            "time_initial_scale"
+        ),
+        time_sigma_floor=args.time_sigma_floor,
     )
     model.to(args.device)
     parameter_count = sum(

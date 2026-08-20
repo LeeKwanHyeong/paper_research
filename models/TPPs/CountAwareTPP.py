@@ -30,6 +30,7 @@ TAIL_VARIANTS = (TAIL_SHARED_VARIANT, TAIL_HEAD_ONLY_VARIANT)
 TIME_HEAD_MODE_LEGACY_CLAMPED = "legacy_clamped_rmtpp"
 TIME_HEAD_MODE_SCALED_EXACT = "scaled_exact_rmtpp"
 TIME_HEAD_MODE_SCALED_EXACT_STABLE = "scaled_exact_stable_rmtpp"
+TIME_HEAD_MODE_LOGNORMAL_DURATION = "lognormal_duration"
 TIME_HEAD_EXACT_MODES = (
     TIME_HEAD_MODE_SCALED_EXACT,
     TIME_HEAD_MODE_SCALED_EXACT_STABLE,
@@ -37,6 +38,7 @@ TIME_HEAD_EXACT_MODES = (
 TIME_HEAD_MODES = (
     TIME_HEAD_MODE_LEGACY_CLAMPED,
     *TIME_HEAD_EXACT_MODES,
+    TIME_HEAD_MODE_LOGNORMAL_DURATION,
 )
 TITAN_MEMORY_MODE_NONE = "none"
 TITAN_MEMORY_MODE_PERSISTENT_ONLY = "persistent_only"
@@ -100,6 +102,9 @@ class SharedTimeCountModel(nn.Module):
         time_intercept_limit: float = 30.0,
         time_initial_intercept: float | None = None,
         time_wd_safety_limit: float = 40.0,
+        time_initial_location: float | None = None,
+        time_initial_scale: float | None = None,
+        time_sigma_floor: float = 1e-3,
     ) -> None:
         super().__init__()
         if not math.isfinite(train_log_mean) or train_log_mean <= 0.0:
@@ -140,6 +145,16 @@ class SharedTimeCountModel(nn.Module):
             raise ValueError("time_initial_intercept must be finite when provided")
         if not math.isfinite(time_wd_safety_limit) or time_wd_safety_limit <= 0.0:
             raise ValueError("time_wd_safety_limit must be finite and positive")
+        if time_initial_location is not None and not math.isfinite(
+            time_initial_location
+        ):
+            raise ValueError("time_initial_location must be finite when provided")
+        if time_initial_scale is not None and (
+            not math.isfinite(time_initial_scale) or time_initial_scale <= 0.0
+        ):
+            raise ValueError("time_initial_scale must be finite and positive")
+        if not math.isfinite(time_sigma_floor) or time_sigma_floor <= 0.0:
+            raise ValueError("time_sigma_floor must be finite and positive")
 
         self.hidden_dim = int(hidden_dim)
         self.quantity_variant = quantity_variant
@@ -156,6 +171,7 @@ class SharedTimeCountModel(nn.Module):
         self.time_w_max = float(time_w_max)
         self.time_intercept_limit = float(time_intercept_limit)
         self.time_wd_safety_limit = float(time_wd_safety_limit)
+        self.time_sigma_floor = float(time_sigma_floor)
 
         self.v_t = nn.Linear(self.hidden_dim, 1, bias=False)
         if self.time_head_mode in TIME_HEAD_EXACT_MODES:
@@ -182,8 +198,35 @@ class SharedTimeCountModel(nn.Module):
             self.w_raw = nn.Parameter(
                 torch.full((1,), inverse_sigmoid(initial_w / self.time_w_max))
             )
+            self.time_initial_location = 0.0
+            self.time_initial_scale = 0.0
+        elif self.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION:
+            initial_location = (
+                0.0
+                if time_initial_location is None
+                else float(time_initial_location)
+            )
+            initial_scale = (
+                1.0 if time_initial_scale is None else float(time_initial_scale)
+            )
+            if initial_scale <= self.time_sigma_floor:
+                raise ValueError(
+                    "time_initial_scale must exceed time_sigma_floor"
+                )
+            self.time_initial_intercept = 0.0
+            self.time_initial_location = initial_location
+            self.time_initial_scale = initial_scale
+            self.b_t = nn.Parameter(torch.full((1,), initial_location))
+            self.w_raw = nn.Parameter(
+                torch.full(
+                    (1,),
+                    inverse_softplus(initial_scale - self.time_sigma_floor),
+                )
+            )
         else:
             self.time_initial_intercept = 0.0
+            self.time_initial_location = 0.0
+            self.time_initial_scale = 0.0
             self.b_t = nn.Parameter(torch.zeros(1))
             self.w_raw = nn.Parameter(torch.full((1,), -3.0))
         self.quantity_head = nn.Linear(self.hidden_dim, 1)
@@ -255,6 +298,20 @@ class SharedTimeCountModel(nn.Module):
             wd = torch.clamp(w * dt_next, max=10.0)
             return intercept + wd - (exp_intercept / w) * torch.expm1(wd)
 
+        if self.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION:
+            output_dtype = hidden.dtype
+            location, scale, log_dt = self._lognormal_time_terms(hidden, dt_next)
+            standardized = (
+                log_dt - math.log(self.time_scale) - location
+            ) / scale
+            log_density = (
+                -0.5 * torch.square(standardized)
+                - torch.log(scale)
+                - log_dt
+                - 0.5 * math.log(2.0 * math.pi)
+            )
+            return log_density.to(dtype=output_dtype)
+
         output_dtype = hidden.dtype
         intercept, w, scaled_dt = self._scaled_exact_time_terms(hidden, dt_next)
         wd = w * scaled_dt
@@ -279,6 +336,14 @@ class SharedTimeCountModel(nn.Module):
             wd = torch.clamp(w * dt_next, max=10.0)
             return -(torch.exp(intercept) / w) * torch.expm1(wd)
 
+        if self.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION:
+            output_dtype = hidden.dtype
+            location, scale, log_dt = self._lognormal_time_terms(hidden, dt_next)
+            standardized = (
+                log_dt - math.log(self.time_scale) - location
+            ) / scale
+            return torch.special.log_ndtr(-standardized).to(dtype=output_dtype)
+
         output_dtype = hidden.dtype
         intercept, w, scaled_dt = self._scaled_exact_time_terms(hidden, dt_next)
         log_survival = -(torch.exp(intercept) / w) * torch.expm1(w * scaled_dt)
@@ -297,6 +362,11 @@ class SharedTimeCountModel(nn.Module):
             median = torch.log1p(w * math.log(2.0) * torch.exp(-intercept)) / w
             return median.to(dtype=output_dtype)
 
+        if self.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION:
+            location = self.time_location(hidden).to(dtype=torch.float64)
+            median = self.time_scale * torch.exp(location)
+            return median.to(dtype=output_dtype)
+
         intercept, w, _ = self._scaled_exact_time_terms(
             hidden,
             torch.zeros(hidden.shape[:-1], device=hidden.device, dtype=hidden.dtype),
@@ -308,12 +378,53 @@ class SharedTimeCountModel(nn.Module):
 
     def positive_time_slope(self) -> torch.Tensor:
         """Return the positive slope in the active time coordinate."""
+        if self.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION:
+            raise RuntimeError("Log-normal duration head has no RMTPP slope")
         if self.time_head_mode == TIME_HEAD_MODE_LEGACY_CLAMPED:
             return F.softplus(self.w_raw) + 1e-3
         return (self.time_w_max * torch.sigmoid(self.w_raw)).clamp_min(1e-6)
 
+    def positive_time_sigma(self) -> torch.Tensor:
+        """Return the positive log-duration scale for the log-normal head."""
+        if self.time_head_mode != TIME_HEAD_MODE_LOGNORMAL_DURATION:
+            raise RuntimeError("Only the log-normal duration head has sigma")
+        return self.time_sigma_floor + F.softplus(self.w_raw)
+
+    def time_location(self, hidden: torch.Tensor) -> torch.Tensor:
+        """Return the conditional log-duration location."""
+        if self.time_head_mode != TIME_HEAD_MODE_LOGNORMAL_DURATION:
+            raise RuntimeError("Only the log-normal duration head has location")
+        return self.v_t(hidden).squeeze(-1) + self.b_t
+
+    def time_head_telemetry(self) -> dict[str, float]:
+        """Expose the active scalar time-shape parameter without mislabeling it."""
+        if self.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION:
+            return {
+                "train_time_sigma": float(
+                    self.positive_time_sigma().detach().cpu().item()
+                )
+            }
+        return {
+            "train_time_slope": float(
+                self.positive_time_slope().detach().cpu().item()
+            )
+        }
+
     def time_head_contract(self) -> dict[str, float | str | bool]:
         """Return serializable time-head metadata for experiment manifests."""
+        if self.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION:
+            return {
+                "mode": self.time_head_mode,
+                "density_family": "lognormal_on_scaled_duration",
+                "time_scale": self.time_scale,
+                "time_initial_location": self.time_initial_location,
+                "time_initial_scale": self.time_initial_scale,
+                "time_sigma_floor": self.time_sigma_floor,
+                "time_location_transform": "identity",
+                "slope_parameterized": False,
+                "jacobian_correction": True,
+                "wd_clamp": 0.0,
+            }
         contract: dict[str, float | str | bool] = {
             "mode": self.time_head_mode,
             "time_scale": self.time_scale,
@@ -368,6 +479,18 @@ class SharedTimeCountModel(nn.Module):
         w = self.positive_time_slope().to(dtype=torch.float64)
         scaled_dt = dt_next.to(dtype=torch.float64).clamp_min(0.0) / self.time_scale
         return intercept, w, scaled_dt
+
+    def _lognormal_time_terms(
+        self,
+        hidden: torch.Tensor,
+        dt_next: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        if bool((dt_next <= 0.0).any()):
+            raise ValueError("Log-normal duration targets must be strictly positive")
+        location = self.time_location(hidden).to(dtype=torch.float64)
+        scale = self.positive_time_sigma().to(dtype=torch.float64)
+        log_dt = torch.log(dt_next.to(dtype=torch.float64))
+        return location, scale, log_dt
 
     def predict_quantity(self, hidden: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Return log1p-space location and reconstructed raw quantity."""
@@ -707,7 +830,9 @@ __all__ = [
     "TAIL_SHARED_VARIANT",
     "TAIL_VARIANTS",
     "TIME_HEAD_MODE_LEGACY_CLAMPED",
+    "TIME_HEAD_MODE_LOGNORMAL_DURATION",
     "TIME_HEAD_MODE_SCALED_EXACT",
+    "TIME_HEAD_MODE_SCALED_EXACT_STABLE",
     "TIME_HEAD_MODES",
     "TITAN_MEMORY_MODE_NONE",
     "TITAN_MEMORY_MODE_PERSISTENT_ONLY",

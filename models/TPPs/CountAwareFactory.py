@@ -56,6 +56,9 @@ def build_count_aware_model(
     time_intercept_limit: float = 30.0,
     time_initial_intercept: float | None = None,
     time_wd_safety_limit: float = 40.0,
+    time_initial_location: float | None = None,
+    time_initial_scale: float | None = None,
+    time_sigma_floor: float = 1e-3,
 ) -> tuple[SharedTimeCountModel, dict[str, Any]]:
     """Construct one controlled backbone and its serializable metadata."""
     quantity_kwargs = {
@@ -75,6 +78,9 @@ def build_count_aware_model(
         "time_intercept_limit": time_intercept_limit,
         "time_initial_intercept": time_initial_intercept,
         "time_wd_safety_limit": time_wd_safety_limit,
+        "time_initial_location": time_initial_location,
+        "time_initial_scale": time_initial_scale,
+        "time_sigma_floor": time_sigma_floor,
     }
     if backbone == "rmtpp":
         model = CountAwareRMTPP(hidden_dim, train_log_mean, **quantity_kwargs)
