@@ -2,8 +2,10 @@
 
 ## 상태
 
-- 상태: 5080 실행 준비 완료
+- 상태: 완료
 - 준비 시각: 2026-08-20 19:14:20 KST
+- 실험 시작 시각: 2026-08-20 19:16:38 KST
+- 실험 종료 시각: 2026-08-20 19:16:50 KST
 - 실행 서버: 5080
 - tmux: `inter_h0_h3_grad_audit_0820`
 - source revision: `ccbcfcf9210d5f0bb6e60adde3f7b431058a435f`
@@ -49,3 +51,16 @@ bash simple_lab_test/search/scripts/run_count_aware_h0_h3_gradient_attribution_2
 ```
 
 ## 결과
+
+- H0 best/final의 고정 32-batch clipping 비율은 각각 `3.125%`였다. H0의 기존
+  폭증은 지속적 clipping보다 드문 batch 또는 extreme duration에 민감한 문제로 남긴다.
+- H3 best/final은 모든 batch가 clipping됐고, time head가 joint squared-gradient
+  norm의 `93.30%`/`86.53%`를 차지했다.
+- H3 best의 shared encoder에서 time gradient는 quantity gradient의 약 `7.06배`였다.
+  Gradient cosine 중앙값은 `-0.0066`으로 강한 반대 방향 충돌은 아니었다.
+- H3 best train quantity loss는 H0보다 `3.15%` 낮았지만 raw MAE는 `22.15%`
+  높았다. Eval-mode crossing에서도 log-MSE는 `2.94%` 낮고 raw MAE는 `31.09%`
+  높아 log-domain 목적과 raw quantity metric의 불일치가 확인됐다.
+- H0/H3 encoder와 quantity head를 교차 적용하면 양방향 모두 오차가 크게 증가했다.
+  이는 강한 co-adaptation 증거이며 각 구성요소의 독립적 손상을 증명하지는 않는다.
+- Validation과 held-out test는 읽지 않았고 모든 audit 값은 finite였다.

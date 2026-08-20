@@ -49,3 +49,10 @@ representation 경로를 사전에 정의한 별도 가설이 필요하다.
 `PYTHONPATH`에 없어 실패했다. 동일 source의 comparator를 로컬에서 재실행했고 계약
 테스트 `7 passed`와 exact gate 결과를 확인했다. Runner에는 프로젝트 루트
 `PYTHONPATH`를 명시해 재발을 방지했다.
+
+후속 train-only gradient attribution에서는 H3 best/final의 모든 batch가 clipping됐고
+time head가 joint squared-gradient norm의 `93.30%`/`86.53%`를 차지했다. Shared
+encoder의 time gradient도 quantity gradient보다 best 기준 약 `7.06배` 컸다. 따라서
+H3 실패는 지속적인 gradient 방향 충돌보다 time-gradient scale dominance와 log-domain
+quantity 목적의 raw-error 불일치로 정리한다. 세부 결과는
+`paper/results/titantpp_h0_h3_gradient_attribution_20260820/result_analysis.md`에 둔다.
