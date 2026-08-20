@@ -2,9 +2,11 @@
 
 ## 상태
 
-- 상태: 5080 tmux 실행 중
+- 상태: 완료, H1 validation safety gate 실패
 - 준비 시각: 2026-08-20 09:27:23 KST
 - 실험 시작 시각: 2026-08-20 09:30:41 KST
+- 학습 종료 시각: 2026-08-20 11:20:44 KST
+- 최종 판정 시각: 2026-08-20 11:44:57 KST
 - 실행 서버: 5080
 - tmux: `inter_timehead_v2_h1_val_e300_0820`
 - source revision: `12c85cdb4b06d8e55652eb7aee5cde57bd7f8ce6`
@@ -58,8 +60,16 @@ SOURCE_REVISION=12c85cdb4b06d8e55652eb7aee5cde57bd7f8ce6 \
 
 ## 결과
 
-5080에서 source checksum, focused contract test `18 passed`, CUDA·dataset·reference
-artifact와 runner dry-run을 확인한 뒤 tmux 실행을 시작했다. 최종 validation 결과는
-실험 완료 후 작성한다. Epoch 1 진입 시 train joint `1.74864407`, validation Time NLL
-`1.61064688`, quantity MAE `0.80947879`가 finite한 것을 확인했다. 이 값은 초기 진입
-확인용이며 최종 checkpoint 판정에는 사용하지 않는다.
+H1은 epoch 22에서 best validation joint objective를 기록했고 epoch 62에서 early
+stopping됐다. 모든 학습·validation metric은 finite였고 평균 gradient clipping 비율은
+약 `1.15%`였다. 그러나 H0 대비 Time NLL은 `+0.74295`, quantity MAE는
+`+37.02%`, RMSE는 `+66.99%` 악화됐다. `<=p95` MAE만 `+1.88%`로 안전성 기준을
+통과했다. 따라서 H1을 채택하지 않고 H0 reference를 유지하며 memory 비교는 열지
+않는다.
+
+초기 자동 comparator는 프로젝트 import path 누락으로 실패했으나 학습 완료 후
+`5cc862b`에서 수정했고, 원격 focused test `7 passed` 후 같은 artifact에 comparator만
+재실행했다. 학습 checkpoint는 재생성하지 않았다.
+
+상세 분석은 [h1_validation_result_analysis.md](h1_validation_result_analysis.md)를
+따른다.
