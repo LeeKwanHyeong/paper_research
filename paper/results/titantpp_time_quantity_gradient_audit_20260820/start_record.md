@@ -2,10 +2,12 @@
 
 ## 상태
 
-- 상태: 5080 실행 준비
+- 상태: 5080 tmux 실행 중
 - 준비 시각: 2026-08-20 13:00:27 KST
+- 실험 시작 시각: 2026-08-20 13:04:14 KST
 - 실행 서버: 5080
 - tmux: `inter_time_qty_grad_audit_0820`
+- source revision: `7486cc97331b7865b698b3bfcf79f015469ce5c2`
 - artifact: `search_artifacts/count_aware_time_quantity_gradient_audit_20260820`
 - evaluation scope: train only
 - validation / held-out test: 사용하지 않음
@@ -55,4 +57,6 @@ bash simple_lab_test/search/scripts/run_count_aware_time_quantity_gradient_audit
 
 ## 결과
 
-실험 완료 후 작성한다.
+5080 source checksum, focused contract test `31 passed`, CUDA·dataset·tmux·fresh
+artifact preflight를 확인했다. H0 initial audit와 GPU process 진입까지 확인한 뒤 추가
+polling은 수행하지 않는다. 최종 결과는 실험 완료 후 작성한다.
