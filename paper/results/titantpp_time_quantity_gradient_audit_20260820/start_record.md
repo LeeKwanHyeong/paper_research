@@ -2,7 +2,7 @@
 
 ## 상태
 
-- 상태: 5080 tmux 실행 중
+- 상태: 완료
 - 준비 시각: 2026-08-20 13:00:27 KST
 - 실험 시작 시각: 2026-08-20 13:04:14 KST
 - 실행 서버: 5080
@@ -57,6 +57,9 @@ bash simple_lab_test/search/scripts/run_count_aware_time_quantity_gradient_audit
 
 ## 결과
 
-5080 source checksum, focused contract test `31 passed`, CUDA·dataset·tmux·fresh
-artifact preflight를 확인했다. H0 initial audit와 GPU process 진입까지 확인한 뒤 추가
-polling은 수행하지 않는다. 최종 결과는 실험 완료 후 작성한다.
+H1은 epoch 3에서 slope ratio `0.9895`, upward pressure `1.0000`으로 slope 계약 실패
+조건을 충족했다. 같은 시점의 gradient cosine 중앙값은 `+0.0466`, 강한 충돌 batch
+비율은 `25%`로 gradient 분리 조건을 충족하지 않았다.
+
+최종 판정은 `replace_slope_family_keep_shared_gradient`이다. 상세 수치와 H3 계약은
+`result_analysis.md` 및 `paper/contracts/count_aware_final_time_t1_v1.*`에 기록했다.

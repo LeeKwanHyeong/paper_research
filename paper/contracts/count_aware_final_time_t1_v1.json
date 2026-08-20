@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "status": "implementation_complete_preflight_pending",
+  "dataset": "intermittent_frozen_5000",
+  "selection_scope": "train_only_audit_then_seed42_validation_only",
+  "held_out_test_evaluated": false,
+  "backbone": {
+    "name": "TitanTPP",
+    "memory": "static_hard_lmm",
+    "persistent_memory_tokens": 16,
+    "lmm_memory_size": 64,
+    "lmm_topk": 4
+  },
+  "quantity": {
+    "variant": "T1-tail-shared",
+    "runner_name": "count_only_log_mse_tail_shared",
+    "lambda_tail": 0.09111380335463036,
+    "gradient_route": "quantity_head_and_shared_titan_encoder"
+  },
+  "train_only_audit": {
+    "artifact": "search_artifacts/count_aware_time_quantity_gradient_audit_20260820",
+    "diagnosed_head": "H1_scaled_exact_stable",
+    "final_slope_ratio": 0.9894576966762543,
+    "final_upward_pressure_fraction": 1.0,
+    "final_gradient_cosine_median": 0.04658598810955568,
+    "final_strong_conflict_fraction": 0.25,
+    "slope_contract_failed": true,
+    "strong_gradient_conflict": false,
+    "recommendation": "replace_slope_family_keep_shared_gradient"
+  },
+  "candidate_time_head": {
+    "variant": "H3-lognormal-duration",
+    "runner_name": "lognormal_duration",
+    "target_coordinate": "log(delta_t / train_median_delta_t)",
+    "location": "linear(shared_hidden)",
+    "scale": "time_sigma_floor + softplus(global_sigma_raw)",
+    "time_sigma_floor": 0.001,
+    "initial_location": "train_target_log_scaled_mean",
+    "initial_scale": "train_target_log_scaled_std",
+    "density_unit": "original_delta_t_with_negative_log_delta_t_jacobian",
+    "slope_parameterized": false,
+    "duration_clamp": false,
+    "gradient_route": "shared_titan_encoder"
+  },
+  "validation_factorial": {
+    "F0": "Hard-LMM + T1 + H0 scaled exact RMTPP",
+    "F1": "Hard-LMM + T1 + H3 log-normal duration",
+    "seed": 42,
+    "epochs_max": 300,
+    "early_stopping_min_epochs": 40,
+    "early_stopping_patience": 40,
+    "checkpoint_selection": "minimum_validation_joint_objective",
+    "batch_size": 128,
+    "learning_rate": 0.001,
+    "lookback_weeks": 520,
+    "max_seq_len": 256,
+    "hidden_dim": 64,
+    "evaluation_scope": "validation_only"
+  },
+  "acceptance_gate": {
+    "comparison": "F1_vs_fresh_matched_F0",
+    "time_nll_regression_max": 0.01,
+    "overall_mae_regression_max_pct": 2.0,
+    "overall_rmse_regression_max_pct": 2.0,
+    "le_p95_mae_regression_max_pct": 2.0,
+    "gt_p99_mae_regression_max_pct": 2.0,
+    "finite_required": true
+  }
+}
