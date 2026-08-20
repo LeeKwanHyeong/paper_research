@@ -2,9 +2,10 @@
 
 ## 상태
 
-- 준비 중
-- 실험 시작 시각: 실행 직전 갱신
+- 실험 중
+- 실험 시작 시각: 2026-08-20 20:18:24 KST
 - 실행 서버 / tmux: 5080 / `external_t0_nhp_sahp_e300_0820`
+- source revision: `8ec1f42fe01f9e436296914cb4d8d2a950528732`
 
 ## 목적
 
@@ -38,7 +39,7 @@ Encoder 이외의 데이터, head, loss, optimizer, checkpoint selection은 동�
 ## 실행 명령어
 
 ```bash
-SOURCE_REVISION=<frozen_sha> \
+SOURCE_REVISION=8ec1f42fe01f9e436296914cb4d8d2a950528732 \
 PROJECT_ROOT=/home/leekwanhyeong/workspace/paper_research \
 PYTHON_BIN=/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python \
 bash simple_lab_test/search/scripts/run_count_aware_external_t0_nhp_sahp_e300_20260820.sh

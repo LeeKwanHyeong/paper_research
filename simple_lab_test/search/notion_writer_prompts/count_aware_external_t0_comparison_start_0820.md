@@ -1,7 +1,8 @@
 # Notion Start Source: Count-aware External T0 NHP/SAHP Three-seed Comparison
 
 - 위치: `5. Model Design Enhancement`
-- 상태: 준비 중
+- 상태: 실험 중
+- 실험 시작 시각: 2026-08-20 20:18:24 KST
 - 실행 서버 / tmux: 5080 / `external_t0_nhp_sahp_e300_0820`
 
 ## 목적
