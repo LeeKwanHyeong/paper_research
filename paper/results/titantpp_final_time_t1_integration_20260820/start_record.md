@@ -2,7 +2,7 @@
 
 ## 상태
 
-- 상태: 5080 tmux 실행 중
+- 상태: 완료, H3 미채택
 - 준비 시각: 2026-08-20 13:24:33 KST
 - 실험 시작 시각: 2026-08-20 13:25:37 KST
 - 실행 서버: 5080
@@ -64,3 +64,13 @@ bash simple_lab_test/search/scripts/run_count_aware_final_time_t1_integration_e3
 ```
 
 ## 결과
+
+- F0와 F1은 모두 62 epoch에서 early stopping됐고 best epoch는 22였다.
+- H3는 Time NLL을 `0.822590`에서 `0.474637`로 낮췄다.
+- H3 quantity MAE/RMSE는 `1.116539`/`3.643457`로, F0의
+  `0.699481`/`1.650459`보다 각각 `59.62%`/`120.75%` 악화됐다.
+- `<=p95` MAE는 `10.78%`, `>p99` MAE는 `252.57%` 악화됐다.
+- 모든 metric은 finite이고 held-out test는 사용하지 않았다.
+- H3는 quantity safety gate를 통과하지 못해 최종 time head로 채택하지 않는다.
+- 현 단계에서는 H0 scaled exact head를 유지하되, H0의 train loss 폭증은 해결되지
+  않은 안정성 문제로 별도 기록한다.
