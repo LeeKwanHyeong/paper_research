@@ -3,12 +3,13 @@
 - 위치: `5. Model Design Enhancement`
 - 상태: 실험 중
 - 실험 시작 시각: 2026-08-20 20:18:24 KST
-- 실행 서버 / tmux: 5080 / `external_t0_nhp_sahp_e300_0820`
+- 실행 서버 / tmux: 5080 1개 shard, 5090 2개 shard
 
 ## 목적
 
 공통 T0 head/loss 아래에서 RMTPP·THP·NHP·SAHP encoder를 비교한다. 기존 계약이
-일치하는 RMTPP·THP 3-seed artifact는 재사용하고 NHP·SAHP만 새로 실행한다.
+일치하는 RMTPP·THP 3-seed artifact는 재사용한다. NHP 42·52는 5080, NHP 62와
+SAHP 42·52·62는 5090에서 분할 실행한다.
 
 ## Variant 계약
 

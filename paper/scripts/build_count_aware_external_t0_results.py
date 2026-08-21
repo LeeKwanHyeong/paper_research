@@ -61,7 +61,7 @@ SCALE_METRICS = (
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base-artifact", type=Path, required=True)
-    parser.add_argument("--extension-artifact", type=Path, required=True)
+    parser.add_argument("--extension-artifacts", type=Path, nargs="+", required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     return parser.parse_args()
 
@@ -79,32 +79,50 @@ def parse_bool(value: Any) -> bool:
     return value if isinstance(value, bool) else str(value).lower() == "true"
 
 
-def validate_contracts(base: dict[str, Any], extension: dict[str, Any]) -> None:
-    for name, contract in (("base", base), ("extension", extension)):
+def validate_contracts(base: dict[str, Any], extensions: list[dict[str, Any]]) -> None:
+    contracts = [("base", base)] + [
+        (f"extension_{index}", value)
+        for index, value in enumerate(extensions, start=1)
+    ]
+    for name, contract in contracts:
         if contract.get("status") != "complete":
             raise ValueError(f"{name} artifact is not complete")
         if parse_bool(contract.get("held_out_test_evaluated")):
             raise ValueError(f"{name} artifact evaluated held-out test")
-        if tuple(contract.get("seeds", ())) != SEEDS:
-            raise ValueError(f"{name} seed contract mismatch")
-    for key in CONTRACT_KEYS:
-        if extension.get(key) != base.get(key):
-            raise ValueError(f"extension contract mismatch for {key}")
+    if tuple(base.get("seeds", ())) != SEEDS:
+        raise ValueError("base seed contract mismatch")
     if not set(BASE_MODELS).issubset(base.get("backbones", ())):
         raise ValueError("base artifact is missing RMTPP or THP")
-    if tuple(extension.get("backbones", ())) != EXTENSION_MODELS:
-        raise ValueError("extension artifact must contain only NHP and SAHP")
-    if extension.get("model_role") != "t0_common_control":
-        raise ValueError("extension artifact is not an official T0 control")
-    if tuple(extension.get("quantity_variants", ())) != (VARIANT,):
-        raise ValueError("extension quantity variant mismatch")
-    if extension.get("time_head", {}).get("mode") != "legacy_clamped_rmtpp":
-        raise ValueError("extension time-head mismatch")
-    early = extension.get("early_stopping", {})
-    if early.get("min_epochs") != 40 or early.get("patience") != 40:
-        raise ValueError("extension early-stopping mismatch")
-    if early.get("restore") != "best_validation_joint_objective":
-        raise ValueError("extension checkpoint restore mismatch")
+    shard_pairs: set[tuple[str, int]] = set()
+    for index, extension in enumerate(extensions, start=1):
+        for key in CONTRACT_KEYS:
+            if extension.get(key) != base.get(key):
+                raise ValueError(f"extension_{index} contract mismatch for {key}")
+        backbones = tuple(extension.get("backbones", ()))
+        seeds = tuple(int(seed) for seed in extension.get("seeds", ()))
+        if not backbones or set(backbones) - set(EXTENSION_MODELS):
+            raise ValueError("extension artifact may contain only NHP or SAHP")
+        if not seeds or set(seeds) - set(SEEDS):
+            raise ValueError("extension artifact has unsupported seeds")
+        current_pairs = {(backbone, seed) for backbone in backbones for seed in seeds}
+        duplicate = shard_pairs & current_pairs
+        if duplicate:
+            raise ValueError(f"duplicate extension run pairs: {sorted(duplicate)}")
+        shard_pairs.update(current_pairs)
+        if extension.get("model_role") != "t0_common_control":
+            raise ValueError("extension artifact is not an official T0 control")
+        if tuple(extension.get("quantity_variants", ())) != (VARIANT,):
+            raise ValueError("extension quantity variant mismatch")
+        if extension.get("time_head", {}).get("mode") != "legacy_clamped_rmtpp":
+            raise ValueError("extension time-head mismatch")
+        early = extension.get("early_stopping", {})
+        if early.get("min_epochs") != 40 or early.get("patience") != 40:
+            raise ValueError("extension early-stopping mismatch")
+        if early.get("restore") != "best_validation_joint_objective":
+            raise ValueError("extension checkpoint restore mismatch")
+    expected_pairs = {(model, seed) for model in EXTENSION_MODELS for seed in SEEDS}
+    if shard_pairs != expected_pairs:
+        raise ValueError(f"extension shard grid mismatch: {sorted(shard_pairs)}")
 
 
 def validate_run(row: dict[str, str]) -> None:
@@ -123,10 +141,13 @@ def validate_run(row: dict[str, str]) -> None:
             raise ValueError(f"non-finite run metric: {metric}")
 
 
-def collect_runs(base_rows: list[dict[str, str]], extension_rows: list[dict[str, str]]) -> list[dict[str, Any]]:
+def collect_runs(
+    base_rows: list[dict[str, str]],
+    extension_row_groups: list[list[dict[str, str]]],
+) -> list[dict[str, Any]]:
     rows = [
         row
-        for source in (base_rows, extension_rows)
+        for source in (base_rows, *extension_row_groups)
         for row in source
         if row.get("backbone") in MODELS and row.get("variant") == VARIANT
     ]
@@ -161,7 +182,7 @@ def summarize_runs(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return output
 
 
-def collect_scale_rows(filename: str, artifacts: tuple[Path, Path]) -> list[dict[str, Any]]:
+def collect_scale_rows(filename: str, artifacts: tuple[Path, ...]) -> list[dict[str, Any]]:
     rows = []
     for artifact in artifacts:
         rows.extend(
@@ -224,7 +245,7 @@ def render_markdown(summaries: list[dict[str, Any]]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def render_audit(base: dict[str, Any], extension: dict[str, Any]) -> str:
+def render_audit(base: dict[str, Any], extensions: list[dict[str, Any]]) -> str:
     return "\n".join([
         "# External T0 Contract Audit",
         "",
@@ -237,7 +258,9 @@ def render_audit(base: dict[str, Any], extension: dict[str, Any]) -> str:
         "- Checkpoint: minimum validation joint objective",
         "- Held-out test: not evaluated",
         f"- Base source revision: `{base.get('source_revision')}`",
-        f"- Extension source revision: `{extension.get('source_revision')}`",
+        "- Extension source revisions: " + ", ".join(
+            f"`{extension.get('source_revision')}`" for extension in extensions
+        ),
         "",
     ])
 
@@ -245,25 +268,30 @@ def render_audit(base: dict[str, Any], extension: dict[str, Any]) -> str:
 def main() -> None:
     args = parse_args()
     base = args.base_artifact.resolve()
-    extension = args.extension_artifact.resolve()
+    extensions = [path.resolve() for path in args.extension_artifacts]
     output = args.output_dir.resolve()
     output.mkdir(parents=True, exist_ok=True)
     base_contract = read_json(base / "launch_contract.json")
-    extension_contract = read_json(extension / "launch_contract.json")
-    validate_contracts(base_contract, extension_contract)
+    extension_contracts = [
+        read_json(extension / "launch_contract.json") for extension in extensions
+    ]
+    validate_contracts(base_contract, extension_contracts)
     runs = collect_runs(
         read_csv(base / "run_summaries.csv"),
-        read_csv(extension / "run_summaries.csv"),
+        [read_csv(extension / "run_summaries.csv") for extension in extensions],
     )
     summaries = summarize_runs(runs)
-    quantity = summarize_scales(collect_scale_rows("quantity_seed_metrics.csv", (base, extension)))
-    history = summarize_scales(collect_scale_rows("history_seed_metrics.csv", (base, extension)))
+    artifacts = (base, *extensions)
+    quantity = summarize_scales(collect_scale_rows("quantity_seed_metrics.csv", artifacts))
+    history = summarize_scales(collect_scale_rows("history_seed_metrics.csv", artifacts))
     write_csv(output / "combined_seed_metrics.csv", runs)
     write_csv(output / "model_summary.csv", summaries)
     write_csv(output / "quantity_scale_summary.csv", quantity)
     write_csv(output / "history_scale_summary.csv", history)
     (output / "comparison.md").write_text(render_markdown(summaries), encoding="utf-8")
-    (output / "contract_audit.md").write_text(render_audit(base_contract, extension_contract), encoding="utf-8")
+    (output / "contract_audit.md").write_text(
+        render_audit(base_contract, extension_contracts), encoding="utf-8"
+    )
     metadata = {
         "schema_version": 1,
         "status": "complete",
