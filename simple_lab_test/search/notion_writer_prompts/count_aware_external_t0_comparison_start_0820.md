@@ -2,8 +2,10 @@
 
 - 위치: `5. Model Design Enhancement`
 - 상태: 실험 중
-- 실험 시작 시각: 2026-08-20 20:18:24 KST
+- 최초 실험 시작 시각: 2026-08-20 20:18:24 KST
+- 분할 실행 시작 시각: 2026-08-21 21:12 KST
 - 실행 서버 / tmux: 5080 1개 shard, 5090 2개 shard
+- source revision: `b6831d30a60b83677cc438b3a560217bf343c75c`
 
 ## 목적
 
@@ -28,11 +30,11 @@ SAHP 42·52·62는 5090에서 분할 실행한다.
 - batch size 128, learning rate 0.001
 - lookback 520 weeks, max sequence length 256
 - minimum validation joint objective checkpoint
-- artifact: `search_artifacts/count_aware_external_t0_nhp_sahp_e300_20260820`
+- artifacts: 5080 NHP 42·52, 5090 NHP 62, 5090 SAHP 42·52·62의 세 경로
 
 ## 실행 명령어
 
-`simple_lab_test/search/scripts/run_count_aware_external_t0_nhp_sahp_e300_20260820.sh`
+`simple_lab_test/search/scripts/run_count_aware_external_t0_shard_e300_20260821.sh`
 
 ## 결과
 
