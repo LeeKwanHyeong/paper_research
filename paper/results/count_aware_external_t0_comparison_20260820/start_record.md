@@ -2,7 +2,7 @@
 
 ## 상태
 
-- 실험 중
+- 완료
 - 최초 실험 시작 시각: 2026-08-20 20:18:24 KST
 - 분할 실행 시작 시각: 2026-08-21 21:12 KST
 - 실행 서버 / tmux:
@@ -86,3 +86,17 @@ bash simple_lab_test/search/scripts/run_count_aware_external_t0_shard_e300_20260
 - held-out test: 사용하지 않음
 
 ## 결과
+
+| 모델 | Validation joint objective | Time NLL | Quantity MAE | Quantity RMSE |
+| --- | ---: | ---: | ---: | ---: |
+| Adapted RMTPP | -3.588978 +/- 0.000855 | -3.599494 +/- 0.000000 | 2.902523 +/- 0.170252 | 10.578742 +/- 0.604664 |
+| Adapted THP | **-3.595301 +/- 0.000150** | -3.599485 +/- 0.000004 | **0.666380 +/- 0.081872** | **2.150737 +/- 0.555155** |
+| Adapted NHP | -3.555939 +/- 0.002011 | -3.599492 +/- 0.000001 | 5.282690 +/- 0.164652 | 15.424367 +/- 0.738889 |
+| Adapted SAHP | -3.594086 +/- 0.000116 | **-3.599494 +/- 0.000001** | 1.081459 +/- 0.008461 | 3.772380 +/- 0.175035 |
+
+- 네 모델의 Time NLL은 거의 같아 전체 차이는 quantity prediction에서 발생했다.
+- 공통 T0 계약에서는 THP가 joint objective, quantity MAE와 RMSE 모두 가장 우수했다.
+- SAHP는 두 번째로 우수했지만 THP보다 MAE와 RMSE가 높아 최종 T0 기준선으로 선택하지 않는다.
+- NHP는 중간 및 상위 수량 구간에서 과소 예측이 커 네 모델 중 quantity 성능이 가장 낮았다.
+- 모든 artifact는 validation-only이며 held-out test artifact는 생성되지 않았다.
+- 학습 runner가 plot 파일을 생성하지 않아 이번 검증은 summary, history와 scale-wise CSV를 기준으로 수행했다.
