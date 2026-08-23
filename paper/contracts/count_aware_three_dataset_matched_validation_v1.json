@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "status": "frozen_for_cuda_smoke",
+  "evaluation_scope": "validation_only",
+  "held_out_test_evaluated": false,
+  "datasets": {
+    "intermittent_frozen_5000": {
+      "time_unit": "week",
+      "lookback": 520,
+      "max_seq_len": 256,
+      "tail_threshold": 46.0,
+      "tail_normalization_scale": 46.0,
+      "tail_clip_cap": 187.0
+    },
+    "online_retail_ii": {
+      "time_unit": "hour",
+      "lookback": 8760,
+      "max_seq_len": 256,
+      "tail_threshold": 40.0,
+      "tail_normalization_scale": 40.0,
+      "tail_clip_cap": 144.0
+    },
+    "raf_spare_parts": {
+      "time_unit": "month",
+      "lookback": 84,
+      "max_seq_len": 84,
+      "tail_threshold": 60.0,
+      "tail_normalization_scale": 60.0,
+      "tail_clip_cap": 200.0
+    }
+  },
+  "t0": {
+    "backbones": ["rmtpp", "thp", "nhp", "sahp", "titantpp"],
+    "quantity_variant": "log_mse",
+    "time_head_mode": "legacy_clamped_rmtpp",
+    "lambda_tail": 0.0
+  },
+  "t1": {
+    "backbones": ["titantpp"],
+    "quantity_variant": "tail_shared",
+    "time_head_mode": "legacy_clamped_rmtpp",
+    "lambda_tail": 0.09111380335463036,
+    "tail_huber_delta": 1.0,
+    "tail_statistics_source": "train_only_nearest_quantiles"
+  },
+  "training": {
+    "seeds": [42, 52, 62],
+    "maximum_epochs": 300,
+    "minimum_epochs": 40,
+    "early_stopping_patience": 40,
+    "batch_size": 128,
+    "learning_rate": 0.001,
+    "hidden_dim": 64,
+    "gradient_clip": 1.0,
+    "checkpoint_selection": "minimum_validation_joint_objective"
+  }
+}

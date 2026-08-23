@@ -51,6 +51,10 @@ from paper.scripts.count_aware_tpp_backbone.constants import (
     VARIANT,
     validate_model_role_contract,
 )
+from paper.scripts.count_aware_tpp_backbone.datasets import (
+    DATASET_CONTRACTS,
+    validate_dataset_runtime_contract,
+)
 from paper.scripts.count_aware_tpp_backbone.core import (
     empty_accumulator,
     evaluate,
@@ -69,8 +73,6 @@ from paper.scripts.count_aware_tpp_backbone.training import (
     train_one,
 )
 from paper.scripts.run_intermittent_log_backbone_control import (
-    EXPECTED_DATA_SHA256,
-    EXPECTED_SPLIT_MANIFEST_SHA256,
     HISTORY_BOUNDARIES,
     HISTORY_STRATA,
 )
@@ -84,18 +86,6 @@ from paper.scripts.run_taxi_quantity_interface_ablation import (
 from simple_lab_test.search.common.experiment_utils import filter_top_series
 
 
-DATASET_CONTRACTS = {
-    "intermittent_frozen_5000": {
-        "data_sha256": EXPECTED_DATA_SHA256,
-        "split_manifest_sha256": EXPECTED_SPLIT_MANIFEST_SHA256,
-        "max_seq_len": 256,
-    },
-    "insta_market_basket": {
-        "data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
-        "split_manifest_sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d",
-        "max_seq_len": 64,
-    },
-}
 TIME_WD_SAFETY_LIMIT = 40.0
 STABLE_TIME_WD_SAFETY_LIMIT = 8.0
 STABLE_TIME_INTERCEPT_LIMIT = 6.0
@@ -282,11 +272,8 @@ def main() -> None:
         if set(backbones) != set(BACKBONES) or set(seeds) != set(SEEDS):
             raise ValueError("Qualified run requires all backbones and seeds 42/52/62")
     dataset_contract = DATASET_CONTRACTS[args.dataset_contract]
-    if args.hidden_dim != 64 or args.max_seq_len != dataset_contract["max_seq_len"]:
-        raise ValueError(
-            "Frozen contract requires hidden_dim=64 and "
-            f"max_seq_len={dataset_contract['max_seq_len']} for {args.dataset_contract}"
-        )
+    if args.hidden_dim != 64:
+        raise ValueError("Frozen contract requires hidden_dim=64")
     if args.max_series is not None and args.max_series < 1:
         raise ValueError("max_series must be positive")
     if args.dataset_contract == "intermittent_frozen_5000" and args.max_series is not None:
@@ -358,14 +345,18 @@ def main() -> None:
             raise ValueError(
                 f"Tail contract requires lambda_tail={FROZEN_TAIL_LAMBDA}"
             )
-        if args.tail_threshold != 46.0:
-            raise ValueError("Tail contract requires tail_threshold=46")
-        if args.tail_normalization_scale != 46.0:
-            raise ValueError("Tail contract requires tail_normalization_scale=46")
-        if args.tail_clip_cap != 187.0:
-            raise ValueError("Tail contract requires tail_clip_cap=187")
-        if args.tail_huber_delta != 1.0:
-            raise ValueError("Tail contract requires tail_huber_delta=1")
+    validate_dataset_runtime_contract(
+        dataset_id=args.dataset_contract,
+        lookback=args.lookback_weeks,
+        max_seq_len=args.max_seq_len,
+        uses_tail_loss=any(
+            variant in TAIL_VARIANTS for variant in quantity_variants
+        ),
+        tail_threshold=args.tail_threshold,
+        tail_normalization_scale=args.tail_normalization_scale,
+        tail_clip_cap=args.tail_clip_cap,
+        tail_huber_delta=args.tail_huber_delta,
+    )
 
     data_sha256 = sha256_file(args.data)
     manifest_sha256 = sha256_file(args.split_manifest)
@@ -530,6 +521,7 @@ def main() -> None:
         "experiment": "mark_free_count_aware_quantity_screening",
         "model_role": args.model_role,
         "dataset": args.dataset_contract,
+        "dataset_time_unit": dataset_contract["time_unit"],
         "max_series": args.max_series,
         "data_path": str(args.data.resolve()),
         "data_sha256": data_sha256,
