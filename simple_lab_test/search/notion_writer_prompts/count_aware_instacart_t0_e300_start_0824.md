@@ -7,8 +7,9 @@
 ## 상태
 
 - 실험 중
-- 실험 시작 시각: 실행 직전 KST 시각으로 갱신
+- 실험 시작 시각: 2026-08-24 16:42:01 KST
 - 실행 서버 / tmux: 5080 / `instacart_t0_e300_0824`
+- 예상 완료: 2026-08-25 22:00-2026-08-26 13:00 KST
 
 ## 목적
 
@@ -35,7 +36,7 @@
 ## 실행 명령어
 
 ```bash
-SOURCE_REVISION=<checksum-synced-full-sha> \
+SOURCE_REVISION=28293c43521615be2ed8fad5b043dc9df8e5e457 \
 PROJECT_ROOT=/home/leekwanhyeong/workspace/paper_research \
 PYTHON_BIN=/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python \
 OUTPUT_ROOT=/home/leekwanhyeong/workspace/paper_research/search_artifacts/count_aware_instacart_t0_e300_20260824 \
