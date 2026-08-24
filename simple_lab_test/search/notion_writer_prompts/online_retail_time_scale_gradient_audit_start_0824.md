@@ -4,7 +4,9 @@
 
 ## 상태
 
-- 준비 완료, 실행 전
+- 완료 · train-only stability gate 0/5 PASS · legacy time head e300 보류
+- 실험 시작 시각: 2026-08-24 09:15:51 KST
+- 실험 완료 시각: 2026-08-24 09:18 KST
 - 실행 서버 / tmux: 5080 / `online_retail_time_audit_5080_0824`
 
 ## 목적
@@ -42,3 +44,9 @@ ssh 5080 '/usr/bin/tmux new-session -d -s online_retail_time_audit_5080_0824 "en
 ```
 
 ## 결과
+
+- focused test 5개와 S0-S4 CUDA train-only 실행이 모두 finite하게 완료됐다.
+- Raw hour의 최대 per-event Time NLL은 419,467.69, 첫 epoch 평균 time-only gradient norm은 126,161.77이었다.
+- Train 평균 scale S3는 최대 Time NLL을 154.68까지 줄였지만 time-only threshold 초과율이 91.67%, joint clipping이 100%여서 gate를 통과하지 못했다.
+- Quantity-only gradient도 S3에서 83.33%의 batch가 threshold를 넘었다. 따라서 단순 시간 단위 변환만으로 joint clipping을 해결할 수 없다.
+- Online Retail II를 데이터셋 자체에서 폐기하지는 않지만, 현재 legacy time head를 사용하는 e300 비교에서는 보류한다. 재개하려면 모든 backbone에 공통인 안정적 duration head와 gradient-routing 계약이 필요하다.
