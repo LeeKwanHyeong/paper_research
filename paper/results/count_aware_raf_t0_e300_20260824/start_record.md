@@ -1,7 +1,8 @@
 # RAF Spare Parts Count-aware T0 3-seed e300 시작 기록
 
-- 상태: 실험 중
+- 상태: 완료
 - 실험 시작 시각: 2026-08-24 15:11:42 KST
+- 실험 종료 시각: 2026-08-24 16:03:31 KST
 - 실행 서버: 5080
 - tmux session: `raf_t0_e300_0824`
 - 실행 source revision: `c7d362e206d8e5d78d96917f03b17b9ad0f50374`
@@ -33,3 +34,10 @@ bash simple_lab_test/search/scripts/run_count_aware_raf_t0_e300_20260824.sh
 - held-out test: 사용하지 않음
 
 ## 결과
+
+- 15개 run 모두 early stopping으로 정상 종료했다.
+- source revision, fixed split, T0 역할, validation-only와 held-out test 잠금 계약이 일치했다.
+- Count-aware TitanTPP는 validation joint objective와 Time NLL 평균이 가장 낮았다.
+- Quantity MAE는 THP가 가장 낮고, Quantity RMSE는 TitanTPP가 가장 낮았지만 두 차이는 각각 `0.089%`, `0.052%`로 매우 작고 seed별 방향도 일관되지 않았다.
+- RAF validation history는 전부 64 events 이하라 long-history 우위 근거로 사용할 수 없다.
+- 상세 분석: `paper/results/count_aware_raf_t0_e300_20260824/analysis.md`
