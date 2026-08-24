@@ -43,3 +43,21 @@ def test_raf_context_and_matched_backbones_are_frozen() -> None:
     }
     assert contract["shared_training"]["seeds"] == [42, 52, 62]
     assert contract["shared_training"]["evaluation_scope"] == "validation_only"
+
+
+def test_instacart_t0_runner_excludes_t1_and_freezes_the_factorial() -> None:
+    runner_path = (
+        PROJECT_ROOT
+        / "simple_lab_test/search/scripts/"
+        "run_count_aware_instacart_t0_e300_20260824.sh"
+    )
+    runner = runner_path.read_text()
+
+    assert "--dataset-contract insta_market_basket" in runner
+    assert "--model-role t0_common_control" in runner
+    assert "--quantity-variants log_mse" in runner
+    assert 'T0_BACKBONES="rmtpp,thp,nhp,sahp,titantpp"' in runner
+    assert "--seeds 42,52,62" in runner
+    assert "--lookback-weeks 52" in runner
+    assert "--max-seq-len 64" in runner
+    assert "t1_incumbent" not in runner
