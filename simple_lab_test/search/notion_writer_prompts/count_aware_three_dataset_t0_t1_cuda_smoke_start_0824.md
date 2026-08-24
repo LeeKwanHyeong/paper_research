@@ -4,8 +4,9 @@
 
 ## 상태
 
-- 준비 중
-- 실험 시작 예정 시각: 2026-08-24 08:54:28 KST
+- 완료, runtime gate PASS
+- 실험 시작 시각: 2026-08-24 08:58:33 KST
+- 실험 완료 시각: 2026-08-24 08:59:04 KST
 - 실행 서버 / tmux: 5080 / `count_three_dataset_t0_t1_e1_5080_0824`
 
 ## 목적
@@ -42,3 +43,7 @@ ssh 5080 '/usr/bin/tmux new-session -d -s count_three_dataset_t0_t1_e1_5080_0824
 
 ## 결과
 
+- focused contract test 26개, CUDA model-test 6개 case, actual-data e1 18개 run이 모두 통과했다.
+- 모든 run이 finite했고 checkpoint, history와 validation summary를 생성했다. Held-out test는 사용하지 않았다.
+- partial e1 smoke이므로 scale-wise metric과 plot은 생성하지 않았으며 성능 순위를 판정하지 않는다.
+- Online Retail II는 legacy time head의 Time NLL이 매우 크고 gradient clipping 비율이 100%여서, 정식 e300 전에 train-only time-scale 감사를 수행한다.
