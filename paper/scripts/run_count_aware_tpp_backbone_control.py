@@ -278,9 +278,6 @@ def main() -> None:
         raise ValueError("max_series must be positive")
     if args.dataset_contract == "intermittent_frozen_5000" and args.max_series is not None:
         raise ValueError("The qualified Intermittent contract does not allow max_series")
-    if args.dataset_contract == "insta_market_basket":
-        if not args.allow_partial_contract or args.max_series is None:
-            raise ValueError("Instacart is supported only as an explicit max-series smoke")
     if args.lambda_log_qty != 1.0:
         raise ValueError("Frozen contract requires lambda_log_qty=1.0")
     if args.time_wd_safety_limit <= 0.0:

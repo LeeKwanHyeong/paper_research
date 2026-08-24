@@ -49,14 +49,33 @@ DATASET_CONTRACTS: dict[str, dict[str, Any]] = {
         },
         "official_validation": True,
     },
+    "yellow_trip_hourly": {
+        "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+        "split_manifest_sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85",
+        "time_unit": "hour",
+        "lookback": 168,
+        "max_seq_len": 256,
+        "tail_contract": {
+            "threshold": 1562.0,
+            "normalization_scale": 1562.0,
+            "clip_cap": 3449.0,
+            "huber_delta": 1.0,
+        },
+        "official_validation": True,
+    },
     "insta_market_basket": {
         "data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
         "split_manifest_sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d",
         "time_unit": "day",
-        "lookback": None,
+        "lookback": 52,
         "max_seq_len": 64,
-        "tail_contract": None,
-        "official_validation": False,
+        "tail_contract": {
+            "threshold": 25.0,
+            "normalization_scale": 25.0,
+            "clip_cap": 35.0,
+            "huber_delta": 1.0,
+        },
+        "official_validation": True,
     },
 }
 

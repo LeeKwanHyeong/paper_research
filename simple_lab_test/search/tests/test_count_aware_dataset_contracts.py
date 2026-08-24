@@ -14,6 +14,8 @@ from paper.scripts.count_aware_tpp_backbone.datasets import (
         ("intermittent_frozen_5000", 520, 256, 46.0, 187.0),
         ("online_retail_ii", 8760, 256, 40.0, 144.0),
         ("raf_spare_parts", 84, 84, 60.0, 200.0),
+        ("yellow_trip_hourly", 168, 256, 1562.0, 3449.0),
+        ("insta_market_basket", 52, 64, 25.0, 35.0),
     ],
 )
 def test_official_dataset_contracts_accept_frozen_t1_constants(
@@ -73,5 +75,7 @@ def test_all_official_contracts_have_train_only_tail_constants() -> None:
         "intermittent_frozen_5000",
         "online_retail_ii",
         "raf_spare_parts",
+        "yellow_trip_hourly",
+        "insta_market_basket",
     }
     assert all(contract["tail_contract"] is not None for contract in official.values())
