@@ -31,6 +31,10 @@ Lookback은 target 이전에 포함할 시간 범위이고, max sequence length�
 계약과 runner registry에서 함께 검증한다. T1 상수는 train split의 nearest
 `p95/p95/p99`로 미리 고정하며 validation을 보고 바꾸지 않는다.
 
+5080 실행에서는 같은 SHA-256을 가진 `sample_data/new_york_taxi`와
+`sample_data/insta_market_basket` 복사본을 사용한다. 경로만 다르고 학습 데이터와
+split manifest의 바이트 내용은 동일하다.
+
 ## Factorial 계약
 
 | 역할 | Backbone | Quantity objective | Time head |

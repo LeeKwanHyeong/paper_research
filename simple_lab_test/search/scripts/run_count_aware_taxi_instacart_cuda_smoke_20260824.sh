@@ -4,6 +4,8 @@ set -euo pipefail
 PROJECT_ROOT="${PROJECT_ROOT:-/home/leekwanhyeong/workspace/paper_research}"
 PYTHON_BIN="${PYTHON_BIN:-/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python}"
 OUTPUT_ROOT="${OUTPUT_ROOT:-${PROJECT_ROOT}/search_artifacts/count_aware_taxi_instacart_t0_t1_cuda_smoke_20260824}"
+TAXI_DATA_ROOT="${TAXI_DATA_ROOT:-${PROJECT_ROOT}/sample_data/new_york_taxi}"
+INSTACART_DATA_ROOT="${INSTACART_DATA_ROOT:-${PROJECT_ROOT}/sample_data/insta_market_basket}"
 SOURCE_REVISION="${SOURCE_REVISION:?SOURCE_REVISION must be the frozen 40-character Git revision}"
 DRY_RUN="${DRY_RUN:-0}"
 LAMBDA_TAIL="0.09111380335463036"
@@ -117,13 +119,13 @@ run_cmd "${PYTHON_BIN}" paper/scripts/run_count_aware_cuda_model_test.py \
 
 run_dataset \
   yellow_trip_hourly \
-  "${PROJECT_ROOT}/benchmark_data/data/auxiliary/yellow_trip_hourly/yellow_trip_hourly_with_split.parquet" \
-  "${PROJECT_ROOT}/benchmark_data/data/auxiliary/yellow_trip_hourly/yellow_trip_hourly_split_manifest.json" \
+  "${TAXI_DATA_ROOT}/yellow_trip_hourly_with_split.parquet" \
+  "${TAXI_DATA_ROOT}/yellow_trip_hourly_split_manifest.json" \
   168 256 1562 3449
 run_dataset \
   insta_market_basket \
-  "${PROJECT_ROOT}/benchmark_data/data/auxiliary/instacart/instacart_marked_target_with_split.parquet" \
-  "${PROJECT_ROOT}/benchmark_data/data/auxiliary/instacart/instacart_marked_target_split_manifest.json" \
+  "${INSTACART_DATA_ROOT}/instacart_marked_target_with_split.parquet" \
+  "${INSTACART_DATA_ROOT}/instacart_marked_target_split_manifest.json" \
   52 64 25 35
 
 if [[ "${DRY_RUN}" != "1" ]]; then
