@@ -23,7 +23,7 @@ ROLES = {
     },
     "t1_incumbent": {
         "backbones": {"titantpp"},
-        "variant": "tail_shared",
+        "variant": "count_only_log_mse_tail_shared",
         "lambda_tail": 0.09111380335463036,
     },
 }
@@ -127,6 +127,12 @@ def main() -> None:
                     launch.get("evaluation_scope") == "validation_only",
                     launch.get("held_out_test_evaluated") is False,
                     launch.get("partial_smoke") is True,
+                    launch.get("epochs") == 1,
+                    launch.get("batch_size") == 128,
+                    math.isclose(float(launch.get("lr")), 0.001),
+                    launch.get("max_series") == 20,
+                    launch.get("seeds") == [42],
+                    launch.get("quantity_variants") == [role_contract["variant"]],
                     launch.get("lookback_weeks") == dataset_contract["lookback"],
                     launch.get("max_seq_len") == dataset_contract["max_seq_len"],
                     launch.get("hidden_dim") == 64,
