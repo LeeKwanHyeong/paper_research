@@ -1,0 +1,88 @@
+{
+  "contract_id": "count_aware_model_baseline_v2",
+  "frozen_at": "2026-08-24",
+  "paper_model_name": "Count-aware TitanTPP",
+  "internal_model_name": "TitanTPP-T0",
+  "held_out_test_status": "locked",
+  "primary_model": {
+    "backbone": "titantpp",
+    "encoder_candidate": "count_titan_small_lmm",
+    "memory_mode": "static_hard_lmm",
+    "persistent_memory_size": 16,
+    "lmm_memory_size": 64,
+    "lmm_topk": 4,
+    "history_features": [
+      "log1p_delta_t",
+      "log1p_raw_quantity"
+    ],
+    "quantity_mark_used": false,
+    "quantity_residual_used": false,
+    "quantity_variant": "count_only_log_regression",
+    "quantity_loss": "mse_on_log1p_quantity",
+    "point_prediction": "distribution_median_expm1_location",
+    "time_head_mode": "legacy_clamped_rmtpp",
+    "lambda_tail": 0.0
+  },
+  "matched_controls": {
+    "backbones": [
+      "rmtpp",
+      "thp",
+      "nhp",
+      "sahp",
+      "titantpp"
+    ],
+    "shared_history_features": true,
+    "shared_quantity_head": true,
+    "shared_quantity_loss": true,
+    "shared_time_head": true,
+    "shared_checkpoint_selection": true
+  },
+  "shared_training": {
+    "seeds": [42, 52, 62],
+    "maximum_epochs": 300,
+    "minimum_epochs": 40,
+    "early_stopping_patience": 40,
+    "batch_size": 128,
+    "learning_rate": 0.001,
+    "hidden_dimension": 64,
+    "gradient_clip": 1.0,
+    "checkpoint_selection": "minimum_validation_joint_objective",
+    "evaluation_scope": "validation_only"
+  },
+  "dataset_context": {
+    "intermittent_frozen_5000": {
+      "time_unit": "week",
+      "lookback": 520,
+      "max_sequence_length": 256
+    },
+    "raf_spare_parts": {
+      "time_unit": "month",
+      "lookback": 84,
+      "max_sequence_length": 84
+    },
+    "yellow_trip_hourly": {
+      "time_unit": "hour",
+      "lookback": 168,
+      "max_sequence_length": 256
+    },
+    "insta_market_basket": {
+      "time_unit": "day",
+      "lookback": 52,
+      "max_sequence_length": 64
+    }
+  },
+  "ablation": {
+    "name": "TitanTPP-T1",
+    "change_from_t0": "tail_aware_auxiliary_loss_only",
+    "publication_role": "dataset_specific_objective_ablation",
+    "main_model_table": false,
+    "current_positive_evidence": "intermittent_frozen_5000",
+    "current_negative_evidence": "yellow_trip_hourly"
+  },
+  "comparison_rules": [
+    "Backbone claims use matched T0 rows only.",
+    "TitanTPP-T1 is not evidence of a Titan backbone change.",
+    "Only dataset context-window settings may vary across matched T0 datasets; the time unit is a frozen dataset property rather than a tuned model setting.",
+    "Held-out test remains locked until the T0 architecture and paper claim are frozen."
+  ]
+}

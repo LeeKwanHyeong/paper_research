@@ -1,6 +1,6 @@
 # TitanTPP Model Status And Baseline Registry
 
-- Date: 2026-08-20
+- Date: 2026-08-24
 - Scope: Model Enhancement Session
 - Canonical role: 현재 모델 승격 상태와 후속 비교 기준의 단일 기준 문서
 
@@ -11,12 +11,13 @@
 ## 0. Current Track Lock
 
 현재 논문 방향인 mark-free count-aware 트랙에서는 아래 역할을 공식 기준으로 사용한다.
-세부 상수와 실행 제약은 `paper/contracts/count_aware_model_baseline_v1.md`를 따른다.
+세부 상수와 실행 제약은 `paper/contracts/count_aware_model_baseline_v2.md`를 따른다.
 
 | 역할 | 현재 모델 | 상태 |
 | --- | --- | --- |
+| 논문 주 모델 | Count-aware TitanTPP (`TitanTPP-T0`) | `ACTIVE_INCUMBENT` |
 | 공통 backbone/손실 control | T0 direct log-MSE + `legacy_clamped_rmtpp` | `ACTIVE_BASELINE` |
-| TitanTPP 대표 모델 | Hard-LMM + T1 tail-shared + `legacy_clamped_rmtpp` | `ACTIVE_INCUMBENT` |
+| T1 tail-shared | TitanTPP-T0 + tail-aware auxiliary loss | `DATASET_SPECIFIC_ABLATION` |
 | time-head 진단 | H0 scaled exact, H3 log-normal duration | `REFERENCE_ONLY` |
 
 V2와 Taxi V3b는 mark-residual formulation의 역사적 기준으로 보존한다. 아래 V2
@@ -36,6 +37,7 @@ V2와 Taxi V3b는 mark-residual formulation의 역사적 기준으로 보존한�
 | `SELECTED_HYPOTHESIS` | 다음 설계·audit 대상으로 선택됐지만 구현·성능 승격은 아직 없음 |
 | `DEFERRED` | 설계·scaffold만 있고 승격 판단에 필요한 모델 품질 실험이 없음 |
 | `INFRA_ONLY` | 실행·재현성·artifact 계약만 검증했으며 모델 품질 근거가 아님 |
+| `DATASET_SPECIFIC_ABLATION` | 주 모델 구조는 유지하고 특정 데이터 분포에서 objective 효과만 확인하는 ablation |
 
 ## 2. Frozen Model Identities
 
@@ -165,4 +167,4 @@ capacity ablation과 fresh matched control로 취급한다.
 - Current Notion source draft:
   `simple_lab_test/search/notion_writer_prompts/titantpp_v5b_bounded_class_prior_contract_0719.md`
 - Count-aware baseline contract:
-  `paper/contracts/count_aware_model_baseline_v1.md`
+  `paper/contracts/count_aware_model_baseline_v2.md`

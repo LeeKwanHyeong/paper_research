@@ -12,13 +12,13 @@ python simple_lab_test/search/tpp_experiment.py {subcommand} ...
 
 ## Current Count-aware Baseline
 
-2026-08-20 이후 mark-free count-aware 실험은
-`paper/contracts/count_aware_model_baseline_v1.md`를 따른다.
+2026-08-24 이후 mark-free count-aware 주 모델 실험은
+`paper/contracts/count_aware_model_baseline_v2.md`를 따른다.
 
-- RMTPP·THP·NHP·SAHP 공통 비교는 T0 direct log-MSE와
+- 논문 주 모델은 `Count-aware TitanTPP`, 내부 실험명은 `TitanTPP-T0`다.
+- RMTPP·THP·NHP·SAHP·TitanTPP 공통 비교는 T0 direct log-MSE와
   `legacy_clamped_rmtpp` time head를 사용한다.
-- 향후 Titan backbone 강화는 Hard-LMM + T1 tail-shared + 동일 time head를
-  fresh incumbent로 함께 실행한다.
+- T1 tail-shared는 dataset-specific objective ablation이며 주 모델 표에서 제외한다.
 - H0 scaled exact와 H3 log-normal duration은 진단 ablation이며 최종 모델
   비교표에서 제외한다.
 - 공식 count-aware runner 실행에는 `--model-role`을 명시해 계약 이탈을 실행 전에

@@ -20,17 +20,18 @@ Step을 제목 3으로 구성한다.
 
 ## 0. Current Count-aware Override
 
-2026-08-20 이후 현재 논문 방향인 mark-free count-aware 실험에는 아래 계약을
+2026-08-24 이후 현재 논문 방향인 mark-free count-aware 실험에는 아래 계약을
 우선 적용한다.
 
 ```text
-paper/contracts/count_aware_model_baseline_v1.md
+paper/contracts/count_aware_model_baseline_v2.md
 ```
 
 | 역할 | 고정 모델 | 비교 원칙 |
 | --- | --- | --- |
-| T0 common control | direct log-MSE + `legacy_clamped_rmtpp` | RMTPP·THP·NHP·SAHP 공통 backbone 비교 |
-| T1 incumbent | TitanTPP Hard-LMM + tail-shared + 동일 time head | 향후 Titan backbone 후보와 fresh matched 비교 |
+| 주 모델 | Count-aware TitanTPP (`TitanTPP-T0`) | 공통 direct log-MSE 조건에서 backbone 효과 비교 |
+| T0 common control | direct log-MSE + `legacy_clamped_rmtpp` | RMTPP·THP·NHP·SAHP·TitanTPP 공통 backbone 비교 |
+| T1 ablation | TitanTPP-T0 + tail-shared | Intermittent long-tail objective 효과와 Taxi 실패를 dataset-specific하게 보고 |
 | H0/H3 | scaled exact / log-normal duration | time-head 진단 전용, 최종 모델 표 제외 |
 
 아래 R0/L0/S0와 V2/V3b 내용은 mark-residual formulation의 설계 이력으로
@@ -53,7 +54,7 @@ TitanTPP 강화 실험은 아래 세 기준선을 항상 함께 비교한다.
 - `L0`는 legacy TitanTPP 기준선이다. 새 구조가 기존 TitanTPP보다 좋아졌는지 확인하는 최소 기준이다.
 - `S0`는 multi-seed V1/V2 비교로 확정한 strong baseline이다. 이후 강화 모델은 단순히 L0만 이기는 것이 아니라, 가능하면 S0 대비 개선을 보여야 한다.
 - V1 `residual_only`는 보조 guardrail로 유지한다. 특히 taxi에서 V2의 quantity 이득과 함께 marker NLL/mark accuracy가 회복되는지 확인할 때 사용한다.
-- 현재 active incumbent는 Intermittent/Instacart의 V2와 Taxi의 V3b다. Taxi의 새 replacement 후보는 V3b를 primary로 넘고 V2를 attribution control로 함께 비교한다.
+- 이 문단의 역사적 mark-residual 트랙에서는 Intermittent/Instacart V2와 Taxi V3b가 당시 strong baseline이었다. 현재 mark-free count-aware 트랙의 공식 기준은 위 `Current Count-aware Override`의 TitanTPP-T0다.
 
 ## 2. Evaluation Protocol
 
