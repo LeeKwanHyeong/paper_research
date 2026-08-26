@@ -27,7 +27,8 @@ test에서도 momentum 및 adaptive forgetting과 함께 해당 state를 갱신�
 | B1 | Faithful Titans-MAC | deep neural associative memory + surprise/momentum/forgetting + MAC | 원본 메커니즘 대조군 |
 | B2 | TPP-specific Gated Memory | event-domain causal gated dynamic memory | 향후 제안 backbone 후보 |
 
-B2는 B1 계약 테스트가 모두 통과하기 전까지 구현·성능 실험 대상으로 열지 않는다.
+B2는 B1 계약 테스트 통과 후 구현했으며, matched validation 전까지 성능 우위를
+주장하지 않는다.
 B1은 원본 메커니즘을 count-aware event 입력과 다음-event 예측 순서에 맞춘 재현이며,
 원 논문의 대규모 언어 모델 설정이나 parameter count를 그대로 복제한다는 뜻은 아니다.
 
@@ -64,6 +65,20 @@ write는 그 뒤에 수행한다. 이 차이는 원본 메커니즘과 event-dom
 보고한다. B0와의 비교에서는 quantity head, direct log-MSE,
 `legacy_clamped_rmtpp` time head, optimizer와 checkpoint selection을 변경하지 않는다.
 
+## B2 TPP-specific Gated Memory
+
+B2는 원본 Titans를 재현하는 구조가 아니라 event-domain에 맞춘 자체 제안 구조다.
+B0·B1과 동일하게 persistent token 16개를 유지하고, local causal encoder 뒤에 관측
+event 전용 64-slot memory를 둔다. 각 event query는 cosine similarity 상위 4개 slot만
+선택하며, 선택된 값은 동일 평균이 아니라 similarity softmax 가중합으로 읽는다.
+
+Sparse 후보와 함께 zero-value null memory가 경쟁한다. Non-null probability와 학습형
+confidence gate를 곱해 memory residual의 크기를 정하므로, 유효 slot이 없거나 memory가
+도움이 되지 않는 event에서는 local encoder state가 보존된다. Prediction state를 먼저
+완성한 뒤 현재 관측 event를 row-local circular slot에 기록한다. 기본 호출은 빈 state로
+시작하며 streaming은 B1과 동일한 explicit state-in/state-out API와 series별 reset을
+사용한다.
+
 ## Event Causality
 
 1. 입력에는 현재까지 관측된 event의 delta-time과 quantity만 포함한다.
@@ -84,4 +99,4 @@ write는 그 뒤에 수행한다. 이 차이는 원본 메커니즘과 event-dom
 - Extreme finite input의 forward, backward 및 online update finite
 - 기존 B0 state dict 및 forward 회귀 테스트
 
-하나라도 실패하면 B1 성능 학습과 B2 구현으로 넘어가지 않는다.
+하나라도 실패하면 B1·B2 성능 학습으로 넘어가지 않는다.

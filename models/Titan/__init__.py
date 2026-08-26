@@ -23,6 +23,8 @@ __all__ = [
     "TitansMACEncoder",
     "TitansMemoryState",
     "TitansNeuralMemory",
+    "TPPGatedMemoryState",
+    "TPPSpecificGatedMemory",
 ]
 
 if TYPE_CHECKING:
@@ -42,6 +44,10 @@ if TYPE_CHECKING:
         TitansMemoryState,
         TitansNeuralMemory,
     )
+    from .common.tpp_gated_memory import (
+        TPPGatedMemoryState,
+        TPPSpecificGatedMemory,
+    )
 
 _LAZY = {
     "TitanBaseModel": (".Titans", "TitanBaseModel"),
@@ -60,6 +66,14 @@ _LAZY = {
     "TitansMACEncoder": (".common.titans_mac", "TitansMACEncoder"),
     "TitansMemoryState": (".common.titans_mac", "TitansMemoryState"),
     "TitansNeuralMemory": (".common.titans_mac", "TitansNeuralMemory"),
+    "TPPGatedMemoryState": (
+        ".common.tpp_gated_memory",
+        "TPPGatedMemoryState",
+    ),
+    "TPPSpecificGatedMemory": (
+        ".common.tpp_gated_memory",
+        "TPPSpecificGatedMemory",
+    ),
 }
 
 

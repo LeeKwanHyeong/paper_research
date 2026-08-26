@@ -30,6 +30,7 @@
     "B2": {
       "name": "TPP-specific Gated Memory",
       "canonical_component": "Causal Gated Neural Memory",
+      "implementation": "TPPSpecificGatedMemory",
       "memory_type": "event_domain_gated_dynamic_memory",
       "test_time_weight_update": true,
       "faithful_titans_ltm": false,
@@ -67,6 +68,18 @@
     "final_output": "attention_output_gated_with_segment_start_memory_read",
     "post_write_read_status": "not_used_for_prediction_under_strict_tpp_causality"
   },
+  "b2_mechanism": {
+    "persistent_memory_tokens": 16,
+    "dynamic_event_slots": 64,
+    "sparse_topk": 4,
+    "retrieval": "cosine_similarity_weighted_sparse_topk",
+    "null_memory": "learned_query_dependent_logit_with_zero_value",
+    "confidence_gate": "non_null_probability_times_learned_scalar_gate",
+    "output": "local_encoder_state_plus_gated_memory_residual",
+    "write_policy": "row_local_circular_observed_event_after_prediction",
+    "state_api": "explicit_state_in_explicit_state_out_shared_with_B1",
+    "relationship_to_titans": "project_specific_proposal_not_faithful_titans_ltm"
+  },
   "causal_event_protocol": [
     "Build each segment from observed history events only.",
     "Read the segment-start memory before any event in that segment is written.",
@@ -91,7 +104,7 @@
     "checkpoint_selection": "minimum_validation_joint_objective",
     "held_out_test": "locked"
   },
-  "implementation_order": ["B0", "B1"],
-  "b2_status": "contract_only_until_B1_passes_all_contract_tests",
+  "implementation_order": ["B0", "B1", "B2"],
+  "b2_status": "implemented_pending_matched_validation",
   "performance_gate": "blocked_until_contract_tests_pass"
 }

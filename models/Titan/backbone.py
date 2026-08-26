@@ -151,10 +151,42 @@ class MemoryEncoder(nn.Module):
         device: torch.device,
         dtype: torch.dtype,
         *,
-        offset: int = 0,
+        offset: int | torch.Tensor = 0,
     ) -> torch.Tensor:
+        batch_offsets: torch.Tensor | None = None
+        if torch.is_tensor(offset):
+            if offset.ndim != 1:
+                raise ValueError("position_offset tensor must have shape [batch]")
+            batch_offsets = offset.to(device=device, dtype=torch.long)
+            if bool((batch_offsets < 0).any()):
+                raise ValueError("position_offset values must be nonnegative")
+
         if self.pos_emb is None:
-            return torch.zeros(1, L, self.input_proj.out_features, device=device, dtype=dtype)
+            batch_size = 1 if batch_offsets is None else batch_offsets.size(0)
+            return torch.zeros(
+                batch_size,
+                L,
+                self.input_proj.out_features,
+                device=device,
+                dtype=dtype,
+            )
+
+        if batch_offsets is not None:
+            indices = batch_offsets.unsqueeze(1) + torch.arange(
+                L,
+                device=device,
+                dtype=torch.long,
+            ).unsqueeze(0)
+            end = int(indices.max().item()) + 1 if indices.numel() else 0
+            table = self.pos_emb.to(device=device, dtype=dtype)
+            if end > table.size(1):
+                table = F.interpolate(
+                    table.transpose(1, 2),
+                    size=end,
+                    mode="linear",
+                    align_corners=False,
+                ).transpose(1, 2)
+            return table[0][indices]
 
         offset = max(int(offset), 0)
         end = offset + int(L)
@@ -182,7 +214,7 @@ class MemoryEncoder(nn.Module):
         *,
         mask: Optional[torch.Tensor] = None,
         update_context_memory: Optional[bool] = None,
-        position_offset: int = 0,
+        position_offset: int | torch.Tensor = 0,
         context_memory_update: str = "all",
     ) -> torch.Tensor:
         # x: [B, L, input_dim]

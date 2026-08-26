@@ -25,6 +25,10 @@ from models.Titan.common.memory import (
     SurpriseGatedMemory,
 )
 from models.Titan.common.titans_mac import TitansMACEncoder, TitansMemoryState
+from models.Titan.common.tpp_gated_memory import (
+    TPPGatedMemoryState,
+    TPPSpecificGatedMemory,
+)
 
 
 LOG_MSE_VARIANT = "count_only_log_regression"
@@ -53,6 +57,7 @@ TITAN_MEMORY_MODE_SURPRISE_GATED = "surprise_gated"
 TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED = "persistent_surprise_gated"
 TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE = "dual_hard_surprise"
 TITAN_MEMORY_MODE_TITANS_MAC = "titans_mac"
+TITAN_MEMORY_MODE_TPP_GATED = "tpp_gated_memory"
 TITAN_MEMORY_MODES = (
     TITAN_MEMORY_MODE_NONE,
     TITAN_MEMORY_MODE_PERSISTENT_ONLY,
@@ -62,6 +67,7 @@ TITAN_MEMORY_MODES = (
     TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
     TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
     TITAN_MEMORY_MODE_TITANS_MAC,
+    TITAN_MEMORY_MODE_TPP_GATED,
 )
 TITAN_QUANTITY_GRADIENT_SHARED = "shared"
 TITAN_QUANTITY_GRADIENT_ADAPTER_ONLY = "adapter_only"
@@ -712,11 +718,13 @@ class CountAwareTitanTPP(SharedTimeCountModel):
         self.memory_mode = memory_mode
         self.quantity_memory_gradient_mode = quantity_memory_gradient_mode
         uses_titans_mac = memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+        uses_tpp_gated_memory = memory_mode == TITAN_MEMORY_MODE_TPP_GATED
         uses_persistent_memory = memory_mode in {
             TITAN_MEMORY_MODE_PERSISTENT_ONLY,
             TITAN_MEMORY_MODE_STATIC_HARD,
             TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
             TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
+            TITAN_MEMORY_MODE_TPP_GATED,
         }
         uses_hard_memory = memory_mode in {
             TITAN_MEMORY_MODE_STATIC_HARD,
@@ -789,6 +797,19 @@ class CountAwareTitanTPP(SharedTimeCountModel):
             if uses_surprise_memory
             else None
         )
+        self.tpp_gated_memory = (
+            TPPSpecificGatedMemory(
+                d_model=hidden_dim,
+                memory_size=64,
+                topk=4,
+                temperature=1.0,
+                dropout=0.1,
+                initial_null_logit=0.0,
+                initial_confidence=0.5,
+            )
+            if uses_tpp_gated_memory
+            else None
+        )
 
     def _encode_base(
         self,
@@ -809,6 +830,12 @@ class CountAwareTitanTPP(SharedTimeCountModel):
             if self.encoder is None:
                 raise RuntimeError("Titan encoder is not initialized")
             encoded = self.encoder(x, mask=mask, update_context_memory=False)
+            if self.tpp_gated_memory is not None:
+                encoded = self.tpp_gated_memory(
+                    encoded,
+                    mask=mask,
+                    write_mask=memory_write_mask,
+                )
         return encoded * mask.unsqueeze(-1).to(dtype=encoded.dtype)
 
     def encode_with_memory_state(
@@ -817,18 +844,22 @@ class CountAwareTitanTPP(SharedTimeCountModel):
         history_quantities: torch.Tensor,
         mask: torch.Tensor,
         *,
-        state: TitansMemoryState | None = None,
+        state: TitansMemoryState | TPPGatedMemoryState | None = None,
         series_ids: torch.Tensor | None = None,
         memory_write_mask: torch.Tensor | None = None,
         segment_size: int | None = None,
         write_chunk_size: int | None = None,
-    ) -> tuple[torch.Tensor, TitansMemoryState, dict[str, torch.Tensor]]:
-        """Run B1 with explicit state-in/state-out streaming semantics."""
-        if self.titans_mac_encoder is None:
-            raise RuntimeError("Explicit neural-memory state is available only for B1")
+    ) -> tuple[
+        torch.Tensor,
+        TitansMemoryState | TPPGatedMemoryState,
+        dict[str, torch.Tensor],
+    ]:
+        """Run B1 or B2 with their shared explicit streaming-state API."""
         features = self.continuous_features(dts, history_quantities, mask)
-        encoded, next_state, diagnostics = (
-            self.titans_mac_encoder.forward_with_state(
+        if self.titans_mac_encoder is not None:
+            if state is not None and not isinstance(state, TitansMemoryState):
+                raise TypeError("B1 requires TitansMemoryState")
+            encoded, next_state, diagnostics = self.titans_mac_encoder.forward_with_state(
                 features,
                 mask=mask,
                 write_mask=memory_write_mask,
@@ -837,7 +868,38 @@ class CountAwareTitanTPP(SharedTimeCountModel):
                 segment_size=segment_size,
                 write_chunk_size=write_chunk_size,
             )
-        )
+        elif self.tpp_gated_memory is not None:
+            if segment_size is not None:
+                raise ValueError("segment_size applies only to B1 Titans-MAC")
+            if state is not None and not isinstance(state, TPPGatedMemoryState):
+                raise TypeError("B2 requires TPPGatedMemoryState")
+            prepared_state = self.tpp_gated_memory.prepare_state(
+                state,
+                batch_size=features.size(0),
+                device=features.device,
+                dtype=features.dtype,
+                series_ids=series_ids,
+            )
+            if self.encoder is None:
+                raise RuntimeError("B2 local encoder is not initialized")
+            local_encoded = self.encoder(
+                features,
+                mask=mask,
+                update_context_memory=False,
+                position_offset=prepared_state.positions,
+            )
+            encoded, next_state, diagnostics = (
+                self.tpp_gated_memory.forward_with_state(
+                    local_encoded,
+                    mask=mask,
+                    write_mask=memory_write_mask,
+                    state=prepared_state,
+                    series_ids=series_ids,
+                    write_chunk_size=write_chunk_size,
+                )
+            )
+        else:
+            raise RuntimeError("Explicit online state is available only for B1 or B2")
         valid = mask.unsqueeze(-1).to(dtype=encoded.dtype)
         return encoded * valid, next_state, diagnostics
 
@@ -920,6 +982,7 @@ __all__ = [
     "TITAN_MEMORY_MODE_SURPRISE_GATED",
     "TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE",
     "TITAN_MEMORY_MODE_TITANS_MAC",
+    "TITAN_MEMORY_MODE_TPP_GATED",
     "TITAN_MEMORY_MODES",
     "TITAN_QUANTITY_GRADIENT_ADAPTER_ONLY",
     "TITAN_QUANTITY_GRADIENT_MODES",

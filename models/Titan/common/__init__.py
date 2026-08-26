@@ -16,6 +16,8 @@ __all__ = [
     "TitansMACEncoder",
     "TitansMemoryState",
     "TitansNeuralMemory",
+    "TPPGatedMemoryState",
+    "TPPSpecificGatedMemory",
 ]
 
 _LAZY = {
@@ -30,6 +32,8 @@ _LAZY = {
     "TitansMACEncoder": (".titans_mac", "TitansMACEncoder"),
     "TitansMemoryState": (".titans_mac", "TitansMemoryState"),
     "TitansNeuralMemory": (".titans_mac", "TitansNeuralMemory"),
+    "TPPGatedMemoryState": (".tpp_gated_memory", "TPPGatedMemoryState"),
+    "TPPSpecificGatedMemory": (".tpp_gated_memory", "TPPSpecificGatedMemory"),
 }
 
 
