@@ -19,7 +19,11 @@ import torch.nn.functional as F
 from models.TPPs.TransformerHawkesTPP import THPEncoderLayer
 from models.TPPs.config import THPConfig
 from models.Titan.backbone import MemoryEncoder
-from models.Titan.common.memory import GatedSoftMemory, LMM, SurpriseGatedMemory
+from models.Titan.common.memory import (
+    GatedSoftMemory,
+    HardLocalMemoryMatcher,
+    SurpriseGatedMemory,
+)
 
 
 LOG_MSE_VARIANT = "count_only_log_regression"
@@ -731,7 +735,7 @@ class CountAwareTitanTPP(SharedTimeCountModel):
             use_causal=True,
         )
         self.lmm = (
-            LMM(d_model=hidden_dim, mem_size=64, topk=4)
+            HardLocalMemoryMatcher(d_model=hidden_dim, mem_size=64, topk=4)
             if uses_hard_memory
             else None
         )

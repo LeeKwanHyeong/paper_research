@@ -200,9 +200,14 @@ class MemoryAttention(nn.Module):
         return out
 
 
-class LMM(nn.Module):
+class HardLocalMemoryMatcher(nn.Module):
     """
-    Local Memory Matching:
+    Project-specific hard local memory matching.
+
+    This static top-k prototype bank predates the faithful Titans neural
+    long-term memory implementation. It is not the test-time-updated Long-term
+    Memory Module (LMM) defined by Behrouz et al.
+
     - learnable memory bank (persistent) of shape [1, M, D]
     - matches encoded tokens to top-k memory vectors and adds mean(selected)
     """
@@ -252,6 +257,11 @@ class LMM(nn.Module):
         idx_exp = idx.unsqueeze(-1).expand(-1, -1, -1, D)    # [B, L, k, D]
         selected = torch.gather(mem_exp, 2, idx_exp).mean(dim=2)  # [B, L, D]
         return encoded + selected
+
+
+# Backward-compatible import alias. Historical checkpoints and experiment
+# metadata use ``LMM``/``static_hard_lmm`` for this project-specific matcher.
+LMM = HardLocalMemoryMatcher
 
 
 class GatedSoftMemory(nn.Module):

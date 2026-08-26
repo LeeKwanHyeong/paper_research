@@ -8,13 +8,16 @@
 
 ## 주 모델
 
-논문의 주 모델은 TitanTPP-T0다. Titan Hard-LMM encoder에 mark-free count
-formulation을 적용하고, 다음 사건의 시간과 연속 수량을 함께 예측한다.
+논문의 주 모델은 TitanTPP-T0다. 프로젝트 고유의 Hard Local Memory Matching
+encoder에 mark-free count formulation을 적용하고, 다음 사건의 시간과 연속 수량을
+함께 예측한다. 기존 문서와 artifact의 `Hard-LMM` 및 `static_hard_lmm` 표기는 호환을
+위한 과거 명칭이다. 이 정적 top-k prototype matcher는 원본 Titans의 test-time
+updated Long-term Memory Module과 다른 구조다.
 
 | 축 | 고정 값 |
 | --- | --- |
 | encoder | `count_titan_small_lmm`, hidden dimension 64 |
-| memory | static Hard-LMM, persistent 16, memory 64, top-k 4 |
+| memory | static Hard Local Memory Matcher, persistent 16, prototype 64, top-k 4 |
 | history input | `log1p(delta_t)`, `log1p(raw_quantity)` |
 | mark/residual | 사용하지 않음 |
 | quantity target | `log1p(raw_quantity)` |

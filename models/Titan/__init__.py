@@ -16,6 +16,7 @@ __all__ = [
     "TitanDecoderLayer",
     "MemoryAttention",
     "PositionWiseFFN",
+    "HardLocalMemoryMatcher",
     "LMM",
     "GatedSoftMemory",
     "SurpriseGatedMemory",
@@ -27,6 +28,7 @@ if TYPE_CHECKING:
     from .common.decoder import TitanDecoder, TitanDecoderLayer
     from .common.memory import (
         GatedSoftMemory,
+        HardLocalMemoryMatcher,
         LMM,
         MemoryAttention,
         PositionWiseFFN,
@@ -43,6 +45,7 @@ _LAZY = {
     "TitanDecoderLayer": (".common.decoder", "TitanDecoderLayer"),
     "MemoryAttention": (".common.memory", "MemoryAttention"),
     "PositionWiseFFN": (".common.memory", "PositionWiseFFN"),
+    "HardLocalMemoryMatcher": (".common.memory", "HardLocalMemoryMatcher"),
     "LMM": (".common.memory", "LMM"),
     "GatedSoftMemory": (".common.memory", "GatedSoftMemory"),
     "SurpriseGatedMemory": (".common.memory", "SurpriseGatedMemory"),
