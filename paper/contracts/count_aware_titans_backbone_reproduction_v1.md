@@ -57,9 +57,12 @@ retrieved memory, current observed segment 순으로 attention context를 구성
 Attention output으로 다음-event 예측 state를 먼저 만든 뒤, valid current-segment
 output만 memory에 기록한다. 기록이 끝난 state는 다음 segment부터 읽을 수 있다.
 
-원본 MAC의 post-write retrieval과 attention output gating도 유지한다. B0와의 비교에서는
-quantity head, direct log-MSE, `legacy_clamped_rmtpp` time head, optimizer와 checkpoint
-selection을 변경하지 않는다.
+Attention output gating은 유지하되, 원본 MAC 식 (25)의 post-write retrieval은 다음
+event를 예측하기 전에 현재 event를 쓰지 않는 stricter TPP causality를 위해 prediction
+state에 사용하지 않는다. Prediction state는 segment-start memory read로 완성하고,
+write는 그 뒤에 수행한다. 이 차이는 원본 메커니즘과 event-domain adaptation을 구분해
+보고한다. B0와의 비교에서는 quantity head, direct log-MSE,
+`legacy_clamped_rmtpp` time head, optimizer와 checkpoint selection을 변경하지 않는다.
 
 ## Event Causality
 

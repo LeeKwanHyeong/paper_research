@@ -24,6 +24,7 @@ from models.Titan.common.memory import (
     HardLocalMemoryMatcher,
     SurpriseGatedMemory,
 )
+from models.Titan.common.titans_mac import TitansMACEncoder, TitansMemoryState
 
 
 LOG_MSE_VARIANT = "count_only_log_regression"
@@ -51,6 +52,7 @@ TITAN_MEMORY_MODE_STATIC_SOFT_GATED = "static_soft_gated"
 TITAN_MEMORY_MODE_SURPRISE_GATED = "surprise_gated"
 TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED = "persistent_surprise_gated"
 TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE = "dual_hard_surprise"
+TITAN_MEMORY_MODE_TITANS_MAC = "titans_mac"
 TITAN_MEMORY_MODES = (
     TITAN_MEMORY_MODE_NONE,
     TITAN_MEMORY_MODE_PERSISTENT_ONLY,
@@ -59,6 +61,7 @@ TITAN_MEMORY_MODES = (
     TITAN_MEMORY_MODE_SURPRISE_GATED,
     TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
     TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
+    TITAN_MEMORY_MODE_TITANS_MAC,
 )
 TITAN_QUANTITY_GRADIENT_SHARED = "shared"
 TITAN_QUANTITY_GRADIENT_ADAPTER_ONLY = "adapter_only"
@@ -269,8 +272,11 @@ class SharedTimeCountModel(nn.Module):
         dts: torch.Tensor,
         history_quantities: torch.Tensor,
         mask: torch.Tensor,
+        *,
+        memory_write_mask: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Return time and quantity states, shared by default."""
+        del memory_write_mask
         encoded = self.encode(dts, history_quantities, mask)
         return encoded, encoded
 
@@ -705,6 +711,7 @@ class CountAwareTitanTPP(SharedTimeCountModel):
             )
         self.memory_mode = memory_mode
         self.quantity_memory_gradient_mode = quantity_memory_gradient_mode
+        uses_titans_mac = memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
         uses_persistent_memory = memory_mode in {
             TITAN_MEMORY_MODE_PERSISTENT_ONLY,
             TITAN_MEMORY_MODE_STATIC_HARD,
@@ -720,19 +727,38 @@ class CountAwareTitanTPP(SharedTimeCountModel):
             TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
             TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
         }
-        self.encoder = MemoryEncoder(
-            input_dim=2,
-            d_model=hidden_dim,
-            n_layers=2,
-            n_heads=4,
-            d_ff=hidden_dim * 2,
-            contextual_mem_size=0,
-            persistent_mem_size=16 if uses_persistent_memory else 0,
-            dropout=0.1,
-            use_context_update=False,
-            use_pos_emb=True,
-            max_len=max_seq_len,
-            use_causal=True,
+        self.encoder = (
+            None
+            if uses_titans_mac
+            else MemoryEncoder(
+                input_dim=2,
+                d_model=hidden_dim,
+                n_layers=2,
+                n_heads=4,
+                d_ff=hidden_dim * 2,
+                contextual_mem_size=0,
+                persistent_mem_size=16 if uses_persistent_memory else 0,
+                dropout=0.1,
+                use_context_update=False,
+                use_pos_emb=True,
+                max_len=max_seq_len,
+                use_causal=True,
+            )
+        )
+        self.titans_mac_encoder = (
+            TitansMACEncoder(
+                input_dim=2,
+                d_model=hidden_dim,
+                n_layers=2,
+                n_heads=4,
+                d_ff=hidden_dim * 2,
+                persistent_memory_size=16,
+                segment_size=16,
+                max_len=max_seq_len,
+                dropout=0.1,
+            )
+            if uses_titans_mac
+            else None
         )
         self.lmm = (
             HardLocalMemoryMatcher(d_model=hidden_dim, mem_size=64, topk=4)
@@ -769,18 +795,66 @@ class CountAwareTitanTPP(SharedTimeCountModel):
         dts: torch.Tensor,
         history_quantities: torch.Tensor,
         mask: torch.Tensor,
+        *,
+        memory_write_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         x = self.continuous_features(dts, history_quantities, mask)
-        encoded = self.encoder(x, mask=mask, update_context_memory=False)
+        if self.titans_mac_encoder is not None:
+            encoded = self.titans_mac_encoder(
+                x,
+                mask=mask,
+                write_mask=memory_write_mask,
+            )
+        else:
+            if self.encoder is None:
+                raise RuntimeError("Titan encoder is not initialized")
+            encoded = self.encoder(x, mask=mask, update_context_memory=False)
         return encoded * mask.unsqueeze(-1).to(dtype=encoded.dtype)
+
+    def encode_with_memory_state(
+        self,
+        dts: torch.Tensor,
+        history_quantities: torch.Tensor,
+        mask: torch.Tensor,
+        *,
+        state: TitansMemoryState | None = None,
+        series_ids: torch.Tensor | None = None,
+        memory_write_mask: torch.Tensor | None = None,
+        segment_size: int | None = None,
+        write_chunk_size: int | None = None,
+    ) -> tuple[torch.Tensor, TitansMemoryState, dict[str, torch.Tensor]]:
+        """Run B1 with explicit state-in/state-out streaming semantics."""
+        if self.titans_mac_encoder is None:
+            raise RuntimeError("Explicit neural-memory state is available only for B1")
+        features = self.continuous_features(dts, history_quantities, mask)
+        encoded, next_state, diagnostics = (
+            self.titans_mac_encoder.forward_with_state(
+                features,
+                mask=mask,
+                write_mask=memory_write_mask,
+                state=state,
+                series_ids=series_ids,
+                segment_size=segment_size,
+                write_chunk_size=write_chunk_size,
+            )
+        )
+        valid = mask.unsqueeze(-1).to(dtype=encoded.dtype)
+        return encoded * valid, next_state, diagnostics
 
     def encode_task_states(
         self,
         dts: torch.Tensor,
         history_quantities: torch.Tensor,
         mask: torch.Tensor,
+        *,
+        memory_write_mask: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        base = self._encode_base(dts, history_quantities, mask)
+        base = self._encode_base(
+            dts,
+            history_quantities,
+            mask,
+            memory_write_mask=memory_write_mask,
+        )
         valid = mask.unsqueeze(-1).to(dtype=base.dtype)
 
         if self.memory_mode == TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE:
@@ -845,6 +919,7 @@ __all__ = [
     "TITAN_MEMORY_MODE_STATIC_SOFT_GATED",
     "TITAN_MEMORY_MODE_SURPRISE_GATED",
     "TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE",
+    "TITAN_MEMORY_MODE_TITANS_MAC",
     "TITAN_MEMORY_MODES",
     "TITAN_QUANTITY_GRADIENT_ADAPTER_ONLY",
     "TITAN_QUANTITY_GRADIENT_MODES",

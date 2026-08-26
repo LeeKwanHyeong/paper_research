@@ -12,8 +12,15 @@ from models.TPPs.CountAwareTPP import (
     TITAN_MEMORY_MODE_STATIC_HARD,
     TITAN_MEMORY_MODE_STATIC_SOFT_GATED,
     TITAN_MEMORY_MODE_SURPRISE_GATED,
+    TITAN_MEMORY_MODE_TITANS_MAC,
 )
-from models.Titan.common.memory import GatedSoftMemory, SurpriseGatedMemory
+from models.Titan.common.memory import (
+    GatedSoftMemory,
+    HardLocalMemoryMatcher,
+    LMM,
+    SurpriseGatedMemory,
+)
+from models.Titan.common.titans_mac import TitansMACEncoder
 from models.TPPs.CountAwareFactory import build_count_aware_model
 from paper.scripts.count_aware_tpp_backbone.core import target_outputs
 from paper.scripts.count_aware_tpp_backbone.constants import (
@@ -153,6 +160,7 @@ def test_memory_variants_are_opt_in_supported_backbones() -> None:
         "titantpp_persistent_surprise_memory",
         "titantpp_dual_memory_shared",
         "titantpp_dual_memory_adapter_only",
+        "titantpp_titans_mac",
     )
     assert all(name not in BACKBONES for name in TITAN_MEMORY_BACKBONES)
     assert SUPPORTED_BACKBONES == (*BACKBONES, *TITAN_MEMORY_BACKBONES)
@@ -162,6 +170,49 @@ def test_memory_variants_are_opt_in_supported_backbones() -> None:
     )
     assert BACKBONE_LABELS["titantpp_surprise_memory"] == (
         "TitanTPP Surprise Memory"
+    )
+    assert BACKBONE_LABELS["titantpp_titans_mac"] == (
+        "TitanTPP Faithful Titans-MAC"
+    )
+
+
+def test_historical_lmm_alias_resolves_to_hard_local_matcher() -> None:
+    assert LMM is HardLocalMemoryMatcher
+
+
+def test_faithful_titans_mac_factory_contract_and_finite_backward() -> None:
+    candidate, metadata = build_titan("titantpp_titans_mac")
+    dts, mask, quantities = sample_batch()
+
+    assert candidate.memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+    assert candidate.encoder is None
+    assert isinstance(candidate.titans_mac_encoder, TitansMACEncoder)
+    assert candidate.lmm is None
+    assert candidate.soft_memory is None
+    assert candidate.surprise_memory is None
+    assert metadata["candidate_name"] == "count_titan_faithful_titans_mac"
+    assert metadata["backbone_contract_id"] == "B1"
+    assert metadata["titans_neural_memory_depth"] == 2
+    assert metadata["titans_mac_segment_size"] == 16
+    assert metadata["persistent_memory_update_scope"] == "outer_loop_only"
+
+    outputs = target_outputs(
+        candidate,
+        dts,
+        mask,
+        quantities,
+        lambda_log_qty=1.0,
+    )
+    outputs["joint_loss"].mean().backward()
+
+    assert all(
+        torch.isfinite(value).all()
+        for value in outputs.values()
+        if torch.is_tensor(value)
+    )
+    assert all(
+        parameter.grad is None or torch.isfinite(parameter.grad).all()
+        for parameter in candidate.parameters()
     )
 
 

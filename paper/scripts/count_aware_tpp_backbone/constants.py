@@ -33,6 +33,7 @@ TITAN_PERSISTENT_MEMORY_BACKBONES = (
 TITAN_MEMORY_BACKBONES = (
     *TITAN_HISTORICAL_MEMORY_BACKBONES,
     *TITAN_PERSISTENT_MEMORY_BACKBONES,
+    "titantpp_titans_mac",
 )
 SUPPORTED_BACKBONES = (*BACKBONES, *TITAN_MEMORY_BACKBONES)
 VARIANT = LOG_MSE_VARIANT
@@ -77,6 +78,7 @@ BACKBONE_LABELS = {
     "titantpp_dual_memory_adapter_only": (
         "TitanTPP Dual Memory Adapter-only"
     ),
+    "titantpp_titans_mac": "TitanTPP Faithful Titans-MAC",
 }
 
 

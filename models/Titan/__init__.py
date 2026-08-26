@@ -20,6 +20,9 @@ __all__ = [
     "LMM",
     "GatedSoftMemory",
     "SurpriseGatedMemory",
+    "TitansMACEncoder",
+    "TitansMemoryState",
+    "TitansNeuralMemory",
 ]
 
 if TYPE_CHECKING:
@@ -33,6 +36,11 @@ if TYPE_CHECKING:
         MemoryAttention,
         PositionWiseFFN,
         SurpriseGatedMemory,
+    )
+    from .common.titans_mac import (
+        TitansMACEncoder,
+        TitansMemoryState,
+        TitansNeuralMemory,
     )
 
 _LAZY = {
@@ -49,6 +57,9 @@ _LAZY = {
     "LMM": (".common.memory", "LMM"),
     "GatedSoftMemory": (".common.memory", "GatedSoftMemory"),
     "SurpriseGatedMemory": (".common.memory", "SurpriseGatedMemory"),
+    "TitansMACEncoder": (".common.titans_mac", "TitansMACEncoder"),
+    "TitansMemoryState": (".common.titans_mac", "TitansMemoryState"),
+    "TitansNeuralMemory": (".common.titans_mac", "TitansNeuralMemory"),
 }
 
 

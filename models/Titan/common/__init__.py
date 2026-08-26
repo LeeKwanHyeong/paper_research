@@ -13,6 +13,9 @@ __all__ = [
     "LMM",
     "GatedSoftMemory",
     "SurpriseGatedMemory",
+    "TitansMACEncoder",
+    "TitansMemoryState",
+    "TitansNeuralMemory",
 ]
 
 _LAZY = {
@@ -24,6 +27,9 @@ _LAZY = {
     "LMM": (".memory", "LMM"),
     "GatedSoftMemory": (".memory", "GatedSoftMemory"),
     "SurpriseGatedMemory": (".memory", "SurpriseGatedMemory"),
+    "TitansMACEncoder": (".titans_mac", "TitansMACEncoder"),
+    "TitansMemoryState": (".titans_mac", "TitansMemoryState"),
+    "TitansNeuralMemory": (".titans_mac", "TitansNeuralMemory"),
 }
 
 

@@ -19,6 +19,7 @@ from models.TPPs.CountAwareTPP import (
     TITAN_MEMORY_MODE_STATIC_HARD,
     TITAN_MEMORY_MODE_STATIC_SOFT_GATED,
     TITAN_MEMORY_MODE_SURPRISE_GATED,
+    TITAN_MEMORY_MODE_TITANS_MAC,
     TITAN_QUANTITY_GRADIENT_ADAPTER_ONLY,
     TITAN_QUANTITY_GRADIENT_SHARED,
 )
@@ -159,6 +160,10 @@ def build_count_aware_model(
             TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
             TITAN_QUANTITY_GRADIENT_ADAPTER_ONLY,
         ),
+        "titantpp_titans_mac": (
+            TITAN_MEMORY_MODE_TITANS_MAC,
+            TITAN_QUANTITY_GRADIENT_SHARED,
+        ),
     }
     if backbone in titan_modes:
         memory_mode, quantity_memory_gradient_mode = titan_modes[backbone]
@@ -167,6 +172,7 @@ def build_count_aware_model(
             TITAN_MEMORY_MODE_STATIC_HARD,
             TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
             TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
+            TITAN_MEMORY_MODE_TITANS_MAC,
         }
         uses_hard_memory = memory_mode in {
             TITAN_MEMORY_MODE_STATIC_HARD,
@@ -199,17 +205,30 @@ def build_count_aware_model(
             "titantpp_dual_memory_adapter_only": (
                 "count_titan_dual_memory_adapter_only"
             ),
+            "titantpp_titans_mac": "count_titan_faithful_titans_mac",
         }
         return with_time_metadata(
             model,
             {
                 "candidate_name": candidate_names[backbone],
+                "backbone_contract_id": (
+                    "B1"
+                    if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+                    else "B0"
+                    if backbone == "titantpp"
+                    else "historical_ablation"
+                ),
                 "d_model": hidden_dim,
                 "n_layers": 2,
                 "n_heads": 4,
                 "d_ff": hidden_dim * 2,
                 "memory_mode": memory_mode,
                 "persistent_mem_size": 16 if uses_persistent_memory else 0,
+                "persistent_memory_update_scope": (
+                    "outer_loop_only"
+                    if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+                    else None
+                ),
                 "lmm_mem_size": 64 if uses_hard_memory else 0,
                 "lmm_topk": 4 if uses_hard_memory else 0,
                 "soft_memory_size": 64 if uses_soft_memory else 0,
@@ -233,13 +252,39 @@ def build_count_aware_model(
                     0.5 if uses_surprise_memory else None
                 ),
                 "surprise_state_scope": (
-                    "independent_input_sequence" if uses_surprise_memory else None
+                    "independent_input_sequence"
+                    if uses_surprise_memory
+                    or memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+                    else None
+                ),
+                "titans_neural_memory_depth": (
+                    2 if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC else 0
+                ),
+                "titans_neural_memory_hidden_expansion": (
+                    2 if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC else 0
+                ),
+                "titans_mac_segment_size": (
+                    16 if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC else 0
+                ),
+                "titans_online_update": (
+                    "surprise_momentum_adaptive_forgetting"
+                    if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+                    else None
+                ),
+                "titans_event_order": (
+                    "segment_read_prediction_then_observed_write"
+                    if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+                    else None
                 ),
                 "memory_residual_gate_init": (
                     0.0 if uses_soft_memory or uses_surprise_memory else None
                 ),
                 "time_memory_route": (
-                    "hard_lmm" if uses_hard_memory else "shared_memory_state"
+                    "hard_local_memory_matcher"
+                    if uses_hard_memory
+                    else "titans_mac"
+                    if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+                    else "shared_memory_state"
                 ),
                 "quantity_memory_route": (
                     "hard_lmm_plus_surprise_residual"

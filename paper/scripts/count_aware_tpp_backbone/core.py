@@ -61,10 +61,13 @@ def target_outputs(
     history_positions = lengths - 2
     history_quantities = quantities.clone()
     history_quantities[batch_ids, target_positions] = 0.0
+    memory_write_mask = mask.clone()
+    memory_write_mask[batch_ids, target_positions] = False
     time_encoded, quantity_encoded = model.encode_task_states(
         dts,
         history_quantities,
         mask,
+        memory_write_mask=memory_write_mask,
     )
     time_hidden = time_encoded[batch_ids, history_positions]
     quantity_hidden = quantity_encoded[batch_ids, history_positions]
