@@ -161,6 +161,7 @@ def test_memory_variants_are_opt_in_supported_backbones() -> None:
         "titantpp_dual_memory_shared",
         "titantpp_dual_memory_adapter_only",
         "titantpp_titans_mac",
+        "titantpp_tpp_gated_memory",
     )
     assert all(name not in BACKBONES for name in TITAN_MEMORY_BACKBONES)
     assert SUPPORTED_BACKBONES == (*BACKBONES, *TITAN_MEMORY_BACKBONES)
@@ -173,6 +174,9 @@ def test_memory_variants_are_opt_in_supported_backbones() -> None:
     )
     assert BACKBONE_LABELS["titantpp_titans_mac"] == (
         "TitanTPP Faithful Titans-MAC"
+    )
+    assert BACKBONE_LABELS["titantpp_tpp_gated_memory"] == (
+        "TitanTPP TPP-specific Gated Memory"
     )
 
 

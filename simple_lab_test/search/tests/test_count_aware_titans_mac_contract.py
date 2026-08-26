@@ -87,9 +87,7 @@ def test_reproduction_contract_separates_b0_b1_and_b2() -> None:
     assert contract["variants"]["B1"]["name"] == "Faithful Titans-MAC"
     assert contract["variants"]["B1"]["test_time_weight_update"] is True
     assert contract["variants"]["B2"]["faithful_titans_ltm"] is False
-    assert contract["b2_status"] == (
-        "contract_only_until_B1_passes_all_contract_tests"
-    )
+    assert contract["b2_status"] == "implemented_pending_matched_validation"
     assert contract["matched_t0_boundary"]["held_out_test"] == "locked"
 
 
