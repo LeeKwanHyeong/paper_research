@@ -1,0 +1,67 @@
+{
+  "confirmed_dataset_count": 0,
+  "counterfactual_limit": "The memory-off path reuses a checkpoint trained with memory. It isolates the inference-time residual, not retraining adaptation.",
+  "datasets": [
+    {
+      "body_definition": "validation quantity <= train p95",
+      "body_harm_on_both_errors_all_seeds": false,
+      "body_mae_delta_on_minus_off_mean": -0.5202985885840682,
+      "body_mse_delta_on_minus_off_mean": -7.369081654291147,
+      "dataset": "insta_market_basket",
+      "extreme_tail_definition": "validation quantity > train p99",
+      "extreme_tail_improvement_on_both_errors_all_seeds": true,
+      "extreme_tail_mae_delta_on_minus_off_mean": -4.819282114202938,
+      "extreme_tail_mse_delta_on_minus_off_mean": -235.70992570516418,
+      "seed_count": 3,
+      "verdict": "mixed_by_seed_or_error_metric"
+    },
+    {
+      "body_definition": "validation quantity <= train p95",
+      "body_harm_on_both_errors_all_seeds": false,
+      "body_mae_delta_on_minus_off_mean": -2.048602352815217,
+      "body_mse_delta_on_minus_off_mean": -15.77870473368249,
+      "dataset": "intermittent_v2",
+      "extreme_tail_definition": "validation quantity > train p99",
+      "extreme_tail_improvement_on_both_errors_all_seeds": true,
+      "extreme_tail_mae_delta_on_minus_off_mean": -53.65989685950138,
+      "extreme_tail_mse_delta_on_minus_off_mean": -3934.4276024085407,
+      "seed_count": 3,
+      "verdict": "mixed_by_seed_or_error_metric"
+    },
+    {
+      "body_definition": "validation quantity <= train p95",
+      "body_harm_on_both_errors_all_seeds": false,
+      "body_mae_delta_on_minus_off_mean": -0.005428205429268994,
+      "body_mse_delta_on_minus_off_mean": 0.2932468813197924,
+      "dataset": "raf_spare_parts",
+      "extreme_tail_definition": "validation quantity > train p99",
+      "extreme_tail_improvement_on_both_errors_all_seeds": false,
+      "extreme_tail_mae_delta_on_minus_off_mean": -0.20667327880859374,
+      "extreme_tail_mse_delta_on_minus_off_mean": -114.8397412109375,
+      "seed_count": 3,
+      "verdict": "mixed_by_seed_or_error_metric"
+    },
+    {
+      "body_definition": "validation quantity <= train p95",
+      "body_harm_on_both_errors_all_seeds": false,
+      "body_mae_delta_on_minus_off_mean": 0.3818619131256069,
+      "body_mse_delta_on_minus_off_mean": 299.1523361285552,
+      "dataset": "yellow_trip_hourly",
+      "extreme_tail_definition": "validation quantity > train p99",
+      "extreme_tail_improvement_on_both_errors_all_seeds": true,
+      "extreme_tail_mae_delta_on_minus_off_mean": -113.5464021706883,
+      "extreme_tail_mse_delta_on_minus_off_mean": -182798.81911961036,
+      "seed_count": 3,
+      "verdict": "mixed_by_seed_or_error_metric"
+    }
+  ],
+  "evaluation_scope": "validation_only",
+  "full_validation": true,
+  "held_out_test_evaluated": false,
+  "inference_time_residual_attribution_valid": true,
+  "intervention": "remove only B0 additive hard-prototype residual",
+  "memory_on_reproduces_official_evaluation": true,
+  "same_checkpoint_local_encoder_and_quantity_head": true,
+  "schema_version": 1,
+  "training_time_no_memory_effect_identified": false
+}

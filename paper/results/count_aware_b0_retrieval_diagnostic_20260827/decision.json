@@ -1,0 +1,50 @@
+{
+  "status": "complete",
+  "evaluation_scope": "validation_only",
+  "held_out_test_evaluated": false,
+  "primary_question": "Does the B0 additive hard-prototype residual cause a general body-harm and extreme-tail-improvement pattern?",
+  "answer": "The residual directly causes the frozen-checkpoint event-level prediction changes, but the general body-harm pattern is rejected. Extreme-tail benefit is stable on three datasets, while body harm is localized by dataset, quantity stratum, and seed.",
+  "confirmed": [
+    "The memory-on and memory-off paths share the checkpoint, local encoder, and quantity head; only the additive B0 residual differs.",
+    "All 1814928 validation events use retrieval and receive a nonzero residual.",
+    "Intermittent, Instacart, and Taxi improve MAE and MSE above train-only p99 for all three seeds.",
+    "Instacart <=p50 is harmed on MAE and MSE for all three seeds.",
+    "Taxi p50-p90 is harmed on MAE and MSE for all three seeds.",
+    "Residual norm alone does not determine whether retrieval helps or harms."
+  ],
+  "rejected": [
+    "B0 universally harms the full <=p95 body region.",
+    "Larger residual norm explains the extreme-tail gain.",
+    "This frozen-checkpoint intervention measures how a separately retrained no-memory model would perform."
+  ],
+  "dataset_findings": {
+    "insta_market_basket": {
+      "body_mae_delta_on_minus_off": -0.5202985885840682,
+      "extreme_tail_mae_delta_on_minus_off": -4.819282114202938,
+      "interpretation": "The residual improves the aggregate body and tail, but consistently harms the <=p50 stratum."
+    },
+    "intermittent_v2": {
+      "body_mae_delta_on_minus_off": -2.048602352815217,
+      "extreme_tail_mae_delta_on_minus_off": -53.65989685950138,
+      "interpretation": "The residual improves every quantity stratum and is strongly co-adapted with the trained local path."
+    },
+    "raf_spare_parts": {
+      "body_mae_delta_on_minus_off": -0.005428205429268994,
+      "extreme_tail_mae_delta_on_minus_off": -0.20667327880859374,
+      "interpretation": "The effect is near-neutral and not seed-stable; the >p99 scope has only 50 validation events per seed."
+    },
+    "yellow_trip_hourly": {
+      "body_mae_delta_on_minus_off": 0.3818619131256069,
+      "extreme_tail_mae_delta_on_minus_off": -113.5464021706883,
+      "interpretation": "The aggregate body-harm and tail-benefit pattern appears, but full-body harm is driven by seed 52; p50-p90 harm and p95+ benefit are seed-stable."
+    }
+  },
+  "design_constraints_for_b2": [
+    "Provide a null-memory path instead of applying memory unconditionally.",
+    "Do not gate on residual norm alone.",
+    "Use retrieval similarity, similarity margin, local state, and residual direction in the confidence gate.",
+    "Keep similarity-weighted sparse retrieval rather than an unweighted hard top-k mean.",
+    "Log gate, null selection, residual projection, and error deltas by quantity and history stratum."
+  ],
+  "next_step": "Run B1 and B2 CUDA model-tests and four-dataset e1 smokes on 5080, then perform the frozen B0/B1/B2 seed-42 matched validation screening."
+}

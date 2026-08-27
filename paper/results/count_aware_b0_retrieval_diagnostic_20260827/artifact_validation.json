@@ -1,0 +1,49 @@
+{
+  "artifact_root": "search_artifacts/count_aware_b0_retrieval_diagnostic_20260827_5080_v3",
+  "status": "complete",
+  "execution_server": "5080",
+  "device": "cuda",
+  "source_revision": "e346b23a98c0f51c15a18e840fba39c052d9e88b",
+  "evaluation_scope": "validation_only",
+  "held_out_test_evaluated": false,
+  "test_artifact_count": 0,
+  "dataset_count": 4,
+  "checkpoint_count": 12,
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "event_row_count": 1814928,
+  "full_validation_all_checkpoints": true,
+  "all_values_finite": true,
+  "memory_on_official_prediction_max_abs_diff": 0.0,
+  "artifact_mae_max_abs_diff": 2.2254418752254423e-08,
+  "artifact_rmse_max_abs_diff": 9.606732476186153e-08,
+  "retrieval_applied_share": 1.0,
+  "residual_nonzero_share": 1.0,
+  "top_k": 4,
+  "prototype_count": 64,
+  "source_files_sha256_verified": true,
+  "source_summary_sha256": {
+    "scope_summary.csv": "27cea868db0fcc95376d73e9f90c1711b0adc30cd28ab99b8c45288e5a781d21",
+    "seed_scope_metrics.csv": "ae230757c968be686f111ff21223c21f0de295c9c0deef6b74477e77f9a10ec7",
+    "prototype_usage_seed.csv": "630e9854de116689925ead3b6f4fb8adcbeb38d10fa96efc4638b1fe6a374dc5",
+    "checkpoint_audit.json": "f3884f5da8104ab881e75a8c137f3120be81dae26a64385097fdc66bc6805eb0"
+  },
+  "inference_time_residual_attribution_valid": true,
+  "same_checkpoint_local_encoder_and_quantity_head": true,
+  "training_time_no_memory_effect_identified": false,
+  "aggregate_body_harm_extreme_tail_improvement_datasets": [
+    "yellow_trip_hourly"
+  ],
+  "seed_stable_body_harm_extreme_tail_improvement_datasets": [],
+  "extreme_tail_improvement_seed_counts": {
+    "insta_market_basket": 3,
+    "intermittent_v2": 3,
+    "raf_spare_parts": 2,
+    "yellow_trip_hourly": 3
+  },
+  "decision": "residual_causality_confirmed_universal_body_harm_rejected",
+  "decision_reason": "The frozen-checkpoint counterfactual isolates the additive B0 residual exactly, but body harm is not stable across datasets and seeds. Tail benefit is robust on Intermittent, Instacart, and Taxi; low- and middle-body harm is localized to Instacart <=p50 and Taxi p50-p90."
+}

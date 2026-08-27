@@ -1,0 +1,330 @@
+[
+  {
+    "artifact_dir": "/home/leekwanhyeong/workspace/paper_research/search_artifacts/count_aware_tpp_backbone_control_e300_20260812",
+    "batch_size": 128,
+    "data_path": "/home/leekwanhyeong/workspace/paper_research/sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+    "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+    "dataset": "intermittent_v2",
+    "evaluation_scope": "validation_only",
+    "held_out_test_evaluated": false,
+    "history_length_contract": {
+      "boundaries": [
+        64,
+        128
+      ],
+      "definition": "number of observed events before the validation target",
+      "strata": [
+        {
+          "stratum": "history_le_64",
+          "stratum_label": "History <= 64",
+          "stratum_order": 0
+        },
+        {
+          "stratum": "history_65_128",
+          "stratum_label": "History 65-128",
+          "stratum_order": 1
+        },
+        {
+          "stratum": "history_gt_128",
+          "stratum_label": "History > 128",
+          "stratum_order": 2
+        }
+      ]
+    },
+    "lookback_weeks": 520,
+    "max_seq_len": 256,
+    "quantity_contract": {
+      "boundaries": [
+        2.0,
+        31.0,
+        46.0,
+        187.0
+      ],
+      "quantiles": [
+        0.5,
+        0.9,
+        0.95,
+        0.99
+      ],
+      "strata": [
+        {
+          "stratum": "le_p50",
+          "stratum_label": "<= 2",
+          "stratum_order": 0
+        },
+        {
+          "stratum": "p50_p90",
+          "stratum_label": "(2, 31]",
+          "stratum_order": 1
+        },
+        {
+          "stratum": "p90_p95",
+          "stratum_label": "(31, 46]",
+          "stratum_order": 2
+        },
+        {
+          "stratum": "p95_p99",
+          "stratum_label": "(46, 187]",
+          "stratum_order": 3
+        },
+        {
+          "stratum": "gt_p99",
+          "stratum_label": "> 187",
+          "stratum_order": 4
+        }
+      ]
+    },
+    "seeds": [
+      42,
+      52,
+      62
+    ],
+    "source_revision": "044add1f3de768d804d9f0269fd0013bd9658a35"
+  },
+  {
+    "artifact_dir": "/home/leekwanhyeong/workspace/paper_research/search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control",
+    "batch_size": 128,
+    "data_path": "/home/leekwanhyeong/workspace/paper_research/sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+    "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+    "dataset": "yellow_trip_hourly",
+    "evaluation_scope": "validation_only",
+    "held_out_test_evaluated": false,
+    "history_length_contract": {
+      "boundaries": [
+        64,
+        128
+      ],
+      "definition": "number of observed events before the validation target",
+      "strata": [
+        {
+          "stratum": "history_le_64",
+          "stratum_label": "History <= 64",
+          "stratum_order": 0
+        },
+        {
+          "stratum": "history_65_128",
+          "stratum_label": "History 65-128",
+          "stratum_order": 1
+        },
+        {
+          "stratum": "history_gt_128",
+          "stratum_label": "History > 128",
+          "stratum_order": 2
+        }
+      ]
+    },
+    "lookback_weeks": 168,
+    "max_seq_len": 256,
+    "quantity_contract": {
+      "boundaries": [
+        7.0,
+        686.0,
+        1562.0,
+        3449.0
+      ],
+      "quantiles": [
+        0.5,
+        0.9,
+        0.95,
+        0.99
+      ],
+      "strata": [
+        {
+          "stratum": "le_p50",
+          "stratum_label": "<= 7",
+          "stratum_order": 0
+        },
+        {
+          "stratum": "p50_p90",
+          "stratum_label": "(7, 686]",
+          "stratum_order": 1
+        },
+        {
+          "stratum": "p90_p95",
+          "stratum_label": "(686, 1562]",
+          "stratum_order": 2
+        },
+        {
+          "stratum": "p95_p99",
+          "stratum_label": "(1562, 3449]",
+          "stratum_order": 3
+        },
+        {
+          "stratum": "gt_p99",
+          "stratum_label": "> 3449",
+          "stratum_order": 4
+        }
+      ]
+    },
+    "seeds": [
+      42,
+      52,
+      62
+    ],
+    "source_revision": "6a01aea9024db9e3ef6cfdd2c3d0219ceb320856"
+  },
+  {
+    "artifact_dir": "/home/leekwanhyeong/workspace/paper_research/search_artifacts/count_aware_raf_t0_e300_20260824/raf_spare_parts/t0_common_control",
+    "batch_size": 128,
+    "data_path": "/home/leekwanhyeong/workspace/paper_research/benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_with_split.parquet",
+    "data_sha256": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d",
+    "dataset": "raf_spare_parts",
+    "evaluation_scope": "validation_only",
+    "held_out_test_evaluated": false,
+    "history_length_contract": {
+      "boundaries": [
+        64,
+        128
+      ],
+      "definition": "number of observed events before the validation target",
+      "strata": [
+        {
+          "stratum": "history_le_64",
+          "stratum_label": "History <= 64",
+          "stratum_order": 0
+        },
+        {
+          "stratum": "history_65_128",
+          "stratum_label": "History 65-128",
+          "stratum_order": 1
+        },
+        {
+          "stratum": "history_gt_128",
+          "stratum_label": "History > 128",
+          "stratum_order": 2
+        }
+      ]
+    },
+    "lookback_weeks": 84,
+    "max_seq_len": 84,
+    "quantity_contract": {
+      "boundaries": [
+        2.0,
+        30.0,
+        60.0,
+        200.0
+      ],
+      "quantiles": [
+        0.5,
+        0.9,
+        0.95,
+        0.99
+      ],
+      "strata": [
+        {
+          "stratum": "le_p50",
+          "stratum_label": "<= 2",
+          "stratum_order": 0
+        },
+        {
+          "stratum": "p50_p90",
+          "stratum_label": "(2, 30]",
+          "stratum_order": 1
+        },
+        {
+          "stratum": "p90_p95",
+          "stratum_label": "(30, 60]",
+          "stratum_order": 2
+        },
+        {
+          "stratum": "p95_p99",
+          "stratum_label": "(60, 200]",
+          "stratum_order": 3
+        },
+        {
+          "stratum": "gt_p99",
+          "stratum_label": "> 200",
+          "stratum_order": 4
+        }
+      ]
+    },
+    "seeds": [
+      42,
+      52,
+      62
+    ],
+    "source_revision": "c7d362e206d8e5d78d96917f03b17b9ad0f50374"
+  },
+  {
+    "artifact_dir": "/home/leekwanhyeong/workspace/paper_research/search_artifacts/count_aware_instacart_t0_e300_20260824_recovery1/insta_market_basket/t0_common_control",
+    "batch_size": 128,
+    "data_path": "/home/leekwanhyeong/workspace/paper_research/sample_data/insta_market_basket/instacart_marked_target_with_split.parquet",
+    "data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+    "dataset": "insta_market_basket",
+    "evaluation_scope": "validation_only",
+    "held_out_test_evaluated": false,
+    "history_length_contract": {
+      "boundaries": [
+        64,
+        128
+      ],
+      "definition": "number of observed events before the validation target",
+      "strata": [
+        {
+          "stratum": "history_le_64",
+          "stratum_label": "History <= 64",
+          "stratum_order": 0
+        },
+        {
+          "stratum": "history_65_128",
+          "stratum_label": "History 65-128",
+          "stratum_order": 1
+        },
+        {
+          "stratum": "history_gt_128",
+          "stratum_label": "History > 128",
+          "stratum_order": 2
+        }
+      ]
+    },
+    "lookback_weeks": 52,
+    "max_seq_len": 64,
+    "quantity_contract": {
+      "boundaries": [
+        8.0,
+        20.0,
+        25.0,
+        35.0
+      ],
+      "quantiles": [
+        0.5,
+        0.9,
+        0.95,
+        0.99
+      ],
+      "strata": [
+        {
+          "stratum": "le_p50",
+          "stratum_label": "<= 8",
+          "stratum_order": 0
+        },
+        {
+          "stratum": "p50_p90",
+          "stratum_label": "(8, 20]",
+          "stratum_order": 1
+        },
+        {
+          "stratum": "p90_p95",
+          "stratum_label": "(20, 25]",
+          "stratum_order": 2
+        },
+        {
+          "stratum": "p95_p99",
+          "stratum_label": "(25, 35]",
+          "stratum_order": 3
+        },
+        {
+          "stratum": "gt_p99",
+          "stratum_label": "> 35",
+          "stratum_order": 4
+        }
+      ]
+    },
+    "seeds": [
+      42,
+      52,
+      62
+    ],
+    "source_revision": "28293c43521615be2ed8fad5b043dc9df8e5e457"
+  }
+]
