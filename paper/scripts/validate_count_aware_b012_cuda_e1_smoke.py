@@ -160,8 +160,13 @@ def validate_dataset(
             raise FileNotFoundError(checkpoint)
         elapsed[backbone] = float(row["elapsed_seconds"])
 
+    breakdown_artifacts = {}
     for filename in ("quantity_seed_metrics.csv", "history_seed_metrics.csv"):
-        rows = load_csv(run_dir / filename)
+        path = run_dir / filename
+        if not path.is_file():
+            breakdown_artifacts[filename] = "omitted_by_partial_smoke_contract"
+            continue
+        rows = load_csv(path)
         if not rows:
             raise ValueError(f"{dataset_id}/{filename} is empty")
         for row in rows:
@@ -170,6 +175,7 @@ def validate_dataset(
                 BREAKDOWN_FINITE_FIELDS,
                 label=f"{dataset_id}/{filename}/{row['backbone']}/{row['stratum']}",
             )
+        breakdown_artifacts[filename] = "present_and_finite"
 
     b0_elapsed = elapsed["titantpp"]
     elapsed_ratios = {
@@ -179,6 +185,7 @@ def validate_dataset(
         "dataset": dataset_id,
         "run_count": len(summaries),
         "all_metrics_finite": True,
+        "breakdown_artifacts": breakdown_artifacts,
         "held_out_test_evaluated": False,
         "elapsed_seconds": elapsed,
         "elapsed_ratio_vs_b0": elapsed_ratios,
