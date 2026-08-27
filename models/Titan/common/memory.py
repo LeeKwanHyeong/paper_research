@@ -13,6 +13,7 @@ class ContextualMemoryBuffer(nn.Module):
     Simple FIFO contextual memory buffer: keeps last `size` tokens (detached by caller).
     Shape: [B, M, D] or [1, M, D]
     """
+
     def __init__(self, size: int):
         super().__init__()
         self.size = int(size)
@@ -36,7 +37,7 @@ class ContextualMemoryBuffer(nn.Module):
         else:
             out = torch.cat([mem, tail], dim=1)  # [B, M+take, D]
             if out.size(1) > self.size:
-                out = out[:, -self.size:, :]
+                out = out[:, -self.size :, :]
 
         return out
 
@@ -47,6 +48,7 @@ class MemoryAttention(nn.Module):
     - contextual memory: updated outside (encoder loop) via update_contextual_memory()
     - persistent memory: learnable parameters
     """
+
     def __init__(
         self,
         d_model: int,
@@ -73,7 +75,9 @@ class MemoryAttention(nn.Module):
 
         # persistent (learnable) memory: [1, Mp, D]
         if self.persistent_mem_size > 0:
-            self.persistent_mem = nn.Parameter(torch.randn(1, self.persistent_mem_size, self.d_model) * 0.02)
+            self.persistent_mem = nn.Parameter(
+                torch.randn(1, self.persistent_mem_size, self.d_model) * 0.02
+            )
         else:
             self.register_parameter("persistent_mem", None)
 
@@ -126,9 +130,13 @@ class MemoryAttention(nn.Module):
         # --- Memory Concatenation (MAC) ---
         mem_list = []
         if self._ctx_mem is not None and self._ctx_mem.numel() > 0:
-            mem_list.append(self._ctx_mem.to(device=x.device, dtype=x.dtype))  # [B, M_ctx, D]
+            mem_list.append(
+                self._ctx_mem.to(device=x.device, dtype=x.dtype)
+            )  # [B, M_ctx, D]
         if self.persistent_mem is not None:
-            mem_list.append(self.persistent_mem.to(device=x.device, dtype=x.dtype).expand(B, -1, -1))  # [B, M_per, D]
+            mem_list.append(
+                self.persistent_mem.to(device=x.device, dtype=x.dtype).expand(B, -1, -1)
+            )  # [B, M_per, D]
 
         n_mem = 0
         if len(mem_list) > 0:
@@ -163,7 +171,9 @@ class MemoryAttention(nn.Module):
 
         if mask is not None:
             if mask.shape != (B, L):
-                raise ValueError(f"Expected attention mask {(B, L)}, got {tuple(mask.shape)}")
+                raise ValueError(
+                    f"Expected attention mask {(B, L)}, got {tuple(mask.shape)}"
+                )
             valid_keys = torch.cat(
                 [
                     torch.ones(B, n_mem, device=x.device, dtype=torch.bool),
@@ -211,6 +221,7 @@ class HardLocalMemoryMatcher(nn.Module):
     - learnable memory bank (persistent) of shape [1, M, D]
     - matches encoded tokens to top-k memory vectors and adds mean(selected)
     """
+
     def __init__(self, d_model: int, mem_size: int = 128, topk: int = 8):
         super().__init__()
         self.d_model = int(d_model)
@@ -222,41 +233,81 @@ class HardLocalMemoryMatcher(nn.Module):
         else:
             self.register_parameter("mem", None)
 
-    def forward(self, encoded: torch.Tensor, memory: Optional[torch.Tensor] = None) -> torch.Tensor:
-        """
-        encoded: [B, L, D]
-        memory:
-          - None -> use self.mem
-          - [M, D] or [1, M, D] or [B, M, D]
-        """
+    def retrieve(
+        self,
+        encoded: torch.Tensor,
+        memory: Optional[torch.Tensor] = None,
+    ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
+        """Return the additive prototype residual and its retrieval trace."""
         B, L, D = encoded.shape
 
         if memory is None:
             memory = self.mem
 
         if memory is None or memory.numel() == 0:
-            return encoded
+            empty_shape = (B, L, 0)
+            return torch.zeros_like(encoded), {
+                "prototype_indices": torch.empty(
+                    empty_shape,
+                    device=encoded.device,
+                    dtype=torch.long,
+                ),
+                "topk_similarity": torch.empty(
+                    empty_shape,
+                    device=encoded.device,
+                    dtype=encoded.dtype,
+                ),
+            }
 
         if memory.dim() == 2:
             memory = memory.unsqueeze(0)  # [1, M, D]
         if memory.size(0) == 1:
             memory = memory.expand(B, -1, -1)  # [B, M, D]
+        if memory.size(0) != B or memory.size(2) != D:
+            raise ValueError("memory must have shape [M, D], [1, M, D], or [B, M, D]")
 
         M = memory.size(1)
         k = min(self.topk, M)
         if k <= 0:
-            return encoded
+            empty_shape = (B, L, 0)
+            return torch.zeros_like(encoded), {
+                "prototype_indices": torch.empty(
+                    empty_shape,
+                    device=encoded.device,
+                    dtype=torch.long,
+                ),
+                "topk_similarity": torch.empty(
+                    empty_shape,
+                    device=encoded.device,
+                    dtype=encoded.dtype,
+                ),
+            }
 
         enc_n = F.normalize(encoded, p=2, dim=-1)
         mem_n = F.normalize(memory, p=2, dim=-1)
 
         sim = torch.matmul(enc_n, mem_n.transpose(-2, -1))  # [B, L, M]
-        _, idx = torch.topk(sim, k, dim=-1)
+        topk_similarity, idx = torch.topk(sim, k, dim=-1)
 
         mem_exp = memory.unsqueeze(1).expand(-1, L, -1, -1)  # [B, L, M, D]
-        idx_exp = idx.unsqueeze(-1).expand(-1, -1, -1, D)    # [B, L, k, D]
-        selected = torch.gather(mem_exp, 2, idx_exp).mean(dim=2)  # [B, L, D]
-        return encoded + selected
+        idx_exp = idx.unsqueeze(-1).expand(-1, -1, -1, D)  # [B, L, k, D]
+        residual = torch.gather(mem_exp, 2, idx_exp).mean(dim=2)  # [B, L, D]
+        return residual, {
+            "prototype_indices": idx,
+            "topk_similarity": topk_similarity,
+        }
+
+    def forward(
+        self, encoded: torch.Tensor, memory: Optional[torch.Tensor] = None
+    ) -> torch.Tensor:
+        """
+        encoded: [B, L, D]
+        memory:
+          - None -> use self.mem
+          - [M, D] or [1, M, D] or [B, M, D]
+        """
+        residual, _ = self.retrieve(encoded, memory=memory)
+        return encoded + residual
 
 
 # Backward-compatible import alias. Historical checkpoints and experiment
@@ -309,9 +360,7 @@ class GatedSoftMemory(nn.Module):
         normalized = self.input_norm(encoded)
         query = self.query_proj(normalized)
         keys = self.key_proj(self.memory_keys).expand(encoded.size(0), -1, -1)
-        values = self.value_proj(self.memory_values).expand(
-            encoded.size(0), -1, -1
-        )
+        values = self.value_proj(self.memory_values).expand(encoded.size(0), -1, -1)
         scores = torch.matmul(query, keys.transpose(-2, -1))
         scores = scores / (math.sqrt(self.d_model) * self.temperature)
         weights = torch.softmax(scores, dim=-1)
@@ -434,9 +483,7 @@ class SurpriseGatedMemory(nn.Module):
         self.gate_proj = nn.Linear(self.d_model, self.d_model)
         self.update_rate_proj = nn.Linear(self.d_model, 1)
         self.retention_proj = nn.Linear(self.d_model, 1)
-        self.momentum_logit = nn.Parameter(
-            torch.tensor(self._logit(initial_momentum))
-        )
+        self.momentum_logit = nn.Parameter(torch.tensor(self._logit(initial_momentum)))
         self.residual_scale = nn.Parameter(torch.zeros(()))
         self.dropout = nn.Dropout(float(dropout))
 
@@ -509,9 +556,7 @@ class SurpriseGatedMemory(nn.Module):
     ]:
         """Run the recurrent scan while keeping event-local work vectorized."""
         if encoded.ndim != 3 or encoded.size(-1) != self.d_model:
-            raise ValueError(
-                "encoded must have shape [batch, sequence, d_model]"
-            )
+            raise ValueError("encoded must have shape [batch, sequence, d_model]")
         batch_size, seq_len, _ = encoded.shape
         if mask is None:
             mask = torch.ones(
@@ -584,8 +629,7 @@ class SurpriseGatedMemory(nn.Module):
                         + update_rates[:, position].unsqueeze(-1) * gradient_step
                     )
                     next_memory = (
-                        retentions[:, position].unsqueeze(-1) * memory
-                        + next_momentum
+                        retentions[:, position].unsqueeze(-1) * memory + next_momentum
                     ).clamp(min=-self.memory_clip, max=self.memory_clip)
                     memory = torch.where(valid_state, next_memory, memory)
                     momentum = torch.where(valid_state, next_momentum, momentum)
@@ -596,9 +640,7 @@ class SurpriseGatedMemory(nn.Module):
         retrieved = torch.cat(retrieved_chunks, dim=1)
         retrieved = self.output_proj(self.retrieval_norm(retrieved))
         residual = (
-            torch.tanh(self.residual_scale)
-            * retrieval_gates
-            * self.dropout(retrieved)
+            torch.tanh(self.residual_scale) * retrieval_gates * self.dropout(retrieved)
         )
         valid_values = mask.to(dtype=encoded.dtype)
         residual = residual * valid_values.unsqueeze(-1)

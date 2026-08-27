@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "evaluation_scope": "validation_only",
+  "held_out_test_evaluated": false,
+  "quantity_regions": {
+    "body_le_p95": ["le_p50", "p50_p90", "p90_p95"],
+    "tail_p95_p99": ["p95_p99"],
+    "extreme_tail_gt_p99": ["gt_p99"]
+  },
+  "datasets": [
+    {
+      "dataset": "intermittent_v2",
+      "artifact_dir": "search_artifacts/count_aware_tpp_backbone_control_e300_20260812",
+      "data_path": "sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet"
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "artifact_dir": "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control",
+      "data_path": "sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet"
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "artifact_dir": "search_artifacts/count_aware_raf_t0_e300_20260824/raf_spare_parts/t0_common_control",
+      "data_path": "benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_with_split.parquet"
+    },
+    {
+      "dataset": "insta_market_basket",
+      "artifact_dir": "search_artifacts/count_aware_instacart_t0_e300_20260824_recovery1/insta_market_basket/t0_common_control",
+      "data_path": "sample_data/insta_market_basket/instacart_marked_target_with_split.parquet"
+    }
+  ]
+}
