@@ -1,6 +1,6 @@
 # Instacart Count-aware T0 3-seed e300 시작 기록
 
-- 상태: 실험 중
+- 상태: 완료
 - 실험 시작 시각: 2026-08-24 16:42:01 KST
 - 실행 서버: 5080
 - tmux session: `instacart_t0_e300_0824`
@@ -35,3 +35,9 @@ bash simple_lab_test/search/scripts/run_count_aware_instacart_t0_e300_20260824.s
 - held-out test: 사용하지 않음
 
 ## 결과
+
+- 완료 시각: 2026-08-27 17:00:16 KST
+- recovery artifact: `search_artifacts/count_aware_instacart_t0_e300_20260824_recovery1`
+- 완료 run: 15/15
+- 평가 범위: validation-only, held-out test 미사용
+- 상세 검증 및 결과: `artifact_validation.json`, `model_summary.csv`, `result_briefing_ko.md`

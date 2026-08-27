@@ -1,0 +1,53 @@
+{
+  "artifact_root": "search_artifacts/count_aware_instacart_t0_e300_20260824_recovery1",
+  "status": "complete",
+  "execution_server": "5080",
+  "source_revision": "28293c43521615be2ed8fad5b043dc9df8e5e457",
+  "recovery_artifact": true,
+  "recovery_policy": {
+    "preserved_run": "rmtpp_seed_52",
+    "fresh_reruns": [
+      "rmtpp_seed_42",
+      "rmtpp_seed_62"
+    ],
+    "contract_changed": false
+  },
+  "run_count": 15,
+  "successful_run_count": 15,
+  "backbones": [
+    "rmtpp",
+    "thp",
+    "nhp",
+    "sahp",
+    "titantpp"
+  ],
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "evaluation_scope": "validation_only",
+  "held_out_test_evaluated": false,
+  "test_artifact_count": 0,
+  "plot_artifact_count": 0,
+  "source_manifest_entries": 5,
+  "source_manifest_hashes_match_revision": true,
+  "data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+  "split_manifest_sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d",
+  "model_role": "t0_common_control",
+  "quantity_loss": "direct_mse_on_log1p_quantity",
+  "time_head_mode": "legacy_clamped_rmtpp",
+  "max_epochs": 300,
+  "min_epochs": 40,
+  "early_stopping_patience": 40,
+  "batch_size": 128,
+  "learning_rate": 0.001,
+  "lookback_days": 52,
+  "max_sequence_length": 64,
+  "all_runs_stopped_early": true,
+  "nonfinite_json_metrics": 0,
+  "traceback_detected": false,
+  "cuda_error_detected_in_recovery_log": false,
+  "decision": "complete_and_freeze_instacart_t0_validation_baselines",
+  "decision_reason": "All 15 matched T0 validation runs completed with finite metrics and no held-out test use. RMTPP led all four aggregate metrics; the current Hard-LMM TitanTPP remained competitive but did not establish an Instacart backbone advantage."
+}
