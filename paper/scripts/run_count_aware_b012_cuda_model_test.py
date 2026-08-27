@@ -40,6 +40,12 @@ def parse_args() -> argparse.Namespace:
         default="",
         help="Comma-separated backbones to compile in-place for timing only.",
     )
+    parser.add_argument(
+        "--b1-segment-size",
+        type=int,
+        default=16,
+        help="Global B1 MAC segment size used by the timing gate.",
+    )
     return parser.parse_args()
 
 
@@ -436,6 +442,7 @@ def training_step_times(
     timed_steps: int,
     device: str,
     compile_model: bool,
+    b1_segment_size: int,
 ) -> list[float]:
     torch.manual_seed(123)
     model, _ = build_model(
@@ -443,10 +450,12 @@ def training_step_times(
         max_seq_len=sequence_length,
         device=device,
     )
+    if backbone == "titantpp_titans_mac":
+        if model.titans_mac_encoder is None:
+            raise AssertionError("B1 Titans-MAC encoder is missing")
+        model.titans_mac_encoder.segment_size = b1_segment_size
     if compile_model:
         if backbone == "titantpp_titans_mac":
-            if model.titans_mac_encoder is None:
-                raise AssertionError("B1 Titans-MAC encoder is missing")
             for layer in model.titans_mac_encoder.layers:
                 layer.compile_cuda_block = False
         model.compile(fullgraph=False, dynamic=False, mode="reduce-overhead")
@@ -486,6 +495,8 @@ def main() -> None:
         raise ValueError("warmup-steps must be nonnegative and timed-steps positive")
     if args.maximum_step_ratio <= 0.0:
         raise ValueError("maximum-step-ratio must be positive")
+    if args.b1_segment_size < 1:
+        raise ValueError("b1-segment-size must be positive")
     compiled_backbones = {
         value.strip()
         for value in args.compile_model_backbones.split(",")
@@ -516,6 +527,7 @@ def main() -> None:
             timed_steps=args.timed_steps,
             device=args.device,
             compile_model=backbone in compiled_backbones,
+            b1_segment_size=args.b1_segment_size,
         )
         for backbone in TITAN_B012_BACKBONES
     }
@@ -551,6 +563,7 @@ def main() -> None:
         "batch_size": args.batch_size,
         "sequence_length": args.sequence_length,
         "compiled_model_backbones": sorted(compiled_backbones),
+        "b1_timing_segment_size": args.b1_segment_size,
         "correctness": correctness,
         "training_step_timing": timing_rows,
         "speed_gate_passed": speed_gate_passed,
