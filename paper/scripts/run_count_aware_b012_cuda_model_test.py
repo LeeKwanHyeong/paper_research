@@ -219,8 +219,6 @@ def compiled_eager_equivalence(
         if eager_model.titans_mac_encoder is None:
             raise AssertionError("B1 Titans-MAC encoder is missing")
         eager_model.titans_mac_encoder.neural_memory.compile_cuda_scan = False
-        for layer in eager_model.titans_mac_encoder.layers:
-            layer.compile_cuda_block = False
     else:
         if eager_model.tpp_gated_memory is None:
             raise AssertionError("B2 gated memory is missing")
@@ -455,9 +453,6 @@ def training_step_times(
             raise AssertionError("B1 Titans-MAC encoder is missing")
         model.titans_mac_encoder.segment_size = b1_segment_size
     if compile_model:
-        if backbone == "titantpp_titans_mac":
-            for layer in model.titans_mac_encoder.layers:
-                layer.compile_cuda_block = False
         model.compile(fullgraph=False, dynamic=False, mode="reduce-overhead")
     model.train()
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
