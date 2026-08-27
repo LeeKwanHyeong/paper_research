@@ -55,6 +55,8 @@ DEFAULT_MANIFEST = (
 )
 SOURCE_FILES = (
     "models/Titan/common/memory.py",
+    "models/Titan/common/titans_mac.py",
+    "models/Titan/common/tpp_gated_memory.py",
     "models/TPPs/CountAwareTPP.py",
     "models/TPPs/CountAwareFactory.py",
     "paper/scripts/count_aware_tpp_backbone/core.py",
