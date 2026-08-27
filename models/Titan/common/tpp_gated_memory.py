@@ -183,7 +183,7 @@ _COMPILED_TPP_GATED_SEQUENCE = (
         _scan_tpp_gated_sequence,
         fullgraph=True,
         dynamic=False,
-        mode="reduce-overhead",
+        mode="default",
     )
     if hasattr(torch, "compile")
     else None

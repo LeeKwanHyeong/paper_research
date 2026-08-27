@@ -167,7 +167,7 @@ _COMPILED_TITANS_WRITE_SEQUENCE = (
         _scan_titans_write_sequence,
         fullgraph=True,
         dynamic=False,
-        mode="reduce-overhead",
+        mode="default",
     )
     if hasattr(torch, "compile")
     else None
