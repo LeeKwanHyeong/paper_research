@@ -11,7 +11,9 @@ from paper.scripts.count_aware_tpp_backbone.constants import (
     MODEL_ROLE_T0_COMMON_CONTROL,
     MODEL_ROLE_T1_BACKBONE_COMPARISON,
     MODEL_ROLE_T1_INCUMBENT,
+    MODEL_ROLE_TITAN_B012_SCREENING,
     MODEL_ROLE_TIME_HEAD_DIAGNOSTIC,
+    TITAN_B012_BACKBONES,
     TAIL_SHARED_VARIANT,
     VARIANT,
     validate_model_role_contract,
@@ -78,3 +80,21 @@ def test_time_head_diagnostic_is_not_an_incumbent_role() -> None:
         time_head_mode=TIME_HEAD_MODE_LOGNORMAL_DURATION,
         lambda_tail=FROZEN_TAIL_LAMBDA,
     )
+
+
+def test_titan_b012_screening_freezes_order_head_and_loss() -> None:
+    validate(
+        model_role=MODEL_ROLE_TITAN_B012_SCREENING,
+        backbones=TITAN_B012_BACKBONES,
+    )
+    with pytest.raises(ValueError, match="ordered backbones"):
+        validate(
+            model_role=MODEL_ROLE_TITAN_B012_SCREENING,
+            backbones=tuple(reversed(TITAN_B012_BACKBONES)),
+        )
+    with pytest.raises(ValueError, match="direct log-MSE"):
+        validate(
+            model_role=MODEL_ROLE_TITAN_B012_SCREENING,
+            backbones=TITAN_B012_BACKBONES,
+            quantity_variants=(TAIL_SHARED_VARIANT,),
+        )

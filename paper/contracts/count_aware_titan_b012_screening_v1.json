@@ -1,0 +1,100 @@
+{
+  "contract_id": "count_aware_titan_b012_screening_v1",
+  "frozen_at": "2026-08-27",
+  "parent_contract": "count_aware_titans_backbone_reproduction_v1",
+  "execution_server": "5080",
+  "backbones": [
+    "titantpp",
+    "titantpp_titans_mac",
+    "titantpp_tpp_gated_memory"
+  ],
+  "backbone_roles": {
+    "titantpp": "B0_current_hard_lmm_control",
+    "titantpp_titans_mac": "B1_faithful_titans_mac_reference",
+    "titantpp_tpp_gated_memory": "B2_proposed_candidate"
+  },
+  "shared_t0_contract": {
+    "model_role": "titan_b012_screening",
+    "input": "mark_free_observed_event_history",
+    "quantity_variant": "direct_log1p_quantity_mse",
+    "lambda_log_qty": 1.0,
+    "lambda_tail": 0.0,
+    "time_head": "legacy_clamped_rmtpp",
+    "hidden_dim": 64,
+    "batch_size": 128,
+    "learning_rate": 0.001,
+    "gradient_clip": 1.0,
+    "checkpoint_selection": "minimum_validation_joint_objective",
+    "evaluation_scope": "validation_only",
+    "held_out_test": "locked"
+  },
+  "dataset_contexts": {
+    "intermittent_frozen_5000": {
+      "lookback": 520,
+      "max_sequence_length": 256
+    },
+    "yellow_trip_hourly": {
+      "lookback": 168,
+      "max_sequence_length": 256
+    },
+    "raf_spare_parts": {
+      "lookback": 84,
+      "max_sequence_length": 84
+    },
+    "insta_market_basket": {
+      "lookback": 52,
+      "max_sequence_length": 64
+    }
+  },
+  "preflight": {
+    "datasets": [
+      "intermittent_frozen_5000",
+      "yellow_trip_hourly",
+      "raf_spare_parts",
+      "insta_market_basket"
+    ],
+    "epochs": 1,
+    "minimum_epochs": 1,
+    "patience": 1,
+    "maximum_train_batches": 2,
+    "maximum_validation_batches": 2,
+    "required_checks": [
+      "cuda_finite_forward_backward",
+      "extreme_input_finite",
+      "model_checkpoint_prediction_roundtrip",
+      "online_memory_state_continuation_roundtrip",
+      "artifact_checkpoint_exists",
+      "all_metrics_finite",
+      "held_out_test_unused"
+    ],
+    "maximum_training_step_ratio_vs_b0": 3.0
+  },
+  "screening": {
+    "datasets": [
+      "intermittent_frozen_5000",
+      "yellow_trip_hourly",
+      "raf_spare_parts"
+    ],
+    "seeds": [42],
+    "maximum_epochs": 300,
+    "minimum_epochs": 40,
+    "patience": 40,
+    "fresh_runs": true,
+    "dataset_specific_memory_hyperparameters": false
+  },
+  "b2_acceptance_gate": {
+    "scope": "each_screening_dataset",
+    "primary": {
+      "metric": "validation_quantity_mae_at_or_below_train_p95",
+      "minimum_relative_improvement_vs_b0": 0.05
+    },
+    "guardrails": {
+      "overall_quantity_rmse_maximum_relative_regression_vs_b0": 0.02,
+      "validation_quantity_mae_above_train_p99_maximum_relative_regression_vs_b0": 0.02,
+      "time_nll_maximum_absolute_regression_vs_b0": 0.01,
+      "all_values_finite": true
+    },
+    "selection_rule": "select_b2_only_if_every_dataset_passes_primary_and_all_guardrails",
+    "b1_selection_status": "reference_only_not_selectable"
+  }
+}

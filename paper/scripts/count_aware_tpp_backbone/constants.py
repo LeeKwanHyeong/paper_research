@@ -44,14 +44,21 @@ MODEL_ROLE_T0_COMMON_CONTROL = "t0_common_control"
 MODEL_ROLE_T1_INCUMBENT = "t1_incumbent"
 MODEL_ROLE_T1_BACKBONE_COMPARISON = "t1_backbone_comparison"
 MODEL_ROLE_TIME_HEAD_DIAGNOSTIC = "time_head_diagnostic"
+MODEL_ROLE_TITAN_B012_SCREENING = "titan_b012_screening"
 MODEL_ROLES = (
     MODEL_ROLE_EXPERIMENTAL,
     MODEL_ROLE_T0_COMMON_CONTROL,
     MODEL_ROLE_T1_INCUMBENT,
     MODEL_ROLE_T1_BACKBONE_COMPARISON,
     MODEL_ROLE_TIME_HEAD_DIAGNOSTIC,
+    MODEL_ROLE_TITAN_B012_SCREENING,
 )
 T0_COMMON_BACKBONES = ("rmtpp", "thp", "nhp", "sahp", "titantpp")
+TITAN_B012_BACKBONES = (
+    "titantpp",
+    "titantpp_titans_mac",
+    "titantpp_tpp_gated_memory",
+)
 QUANTITY_VARIANT_ALIASES = {
     "log_mse": VARIANT,
     VARIANT: VARIANT,
@@ -106,6 +113,23 @@ def validate_model_role_contract(
         if not math.isclose(lambda_tail, 0.0, rel_tol=0.0, abs_tol=1e-15):
             raise ValueError("T0 common control requires lambda_tail=0")
         return
+    if model_role == MODEL_ROLE_TITAN_B012_SCREENING:
+        if backbones != TITAN_B012_BACKBONES:
+            raise ValueError(
+                "Titan B0/B1/B2 screening requires ordered backbones="
+                f"{TITAN_B012_BACKBONES}"
+            )
+        if quantity_variants != (VARIANT,):
+            raise ValueError(
+                "Titan B0/B1/B2 screening requires the direct log-MSE variant"
+            )
+        if time_head_mode != TIME_HEAD_MODE_LEGACY_CLAMPED:
+            raise ValueError(
+                "Titan B0/B1/B2 screening requires legacy_clamped_rmtpp"
+            )
+        if not math.isclose(lambda_tail, 0.0, rel_tol=0.0, abs_tol=1e-15):
+            raise ValueError("Titan B0/B1/B2 screening requires lambda_tail=0")
+        return
     if model_role == MODEL_ROLE_T1_INCUMBENT:
         if backbones != ("titantpp",):
             raise ValueError("T1 incumbent requires backbone=titantpp")
@@ -152,6 +176,7 @@ __all__ = [
     "MODEL_ROLE_T0_COMMON_CONTROL",
     "MODEL_ROLE_T1_BACKBONE_COMPARISON",
     "MODEL_ROLE_T1_INCUMBENT",
+    "MODEL_ROLE_TITAN_B012_SCREENING",
     "MODEL_ROLE_TIME_HEAD_DIAGNOSTIC",
     "QUANTITY_VARIANT_ALIASES",
     "SEEDS",
@@ -160,6 +185,7 @@ __all__ = [
     "TAIL_SHARED_VARIANT",
     "TAIL_VARIANTS",
     "T0_COMMON_BACKBONES",
+    "TITAN_B012_BACKBONES",
     "TITAN_HISTORICAL_MEMORY_BACKBONES",
     "TITAN_MEMORY_BACKBONES",
     "TITAN_PERSISTENT_MEMORY_BACKBONES",
