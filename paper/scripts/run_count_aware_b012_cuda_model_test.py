@@ -46,6 +46,11 @@ def parse_args() -> argparse.Namespace:
         default=16,
         help="Global B1 MAC segment size used by the timing gate.",
     )
+    parser.add_argument(
+        "--timing-only",
+        action="store_true",
+        help="Skip correctness cases when profiling additional static shapes.",
+    )
     return parser.parse_args()
 
 
@@ -504,15 +509,19 @@ def main() -> None:
             + ", ".join(sorted(unsupported_compiled))
         )
 
-    correctness = [
-        correctness_case(
-            backbone,
-            batch_size=args.batch_size,
-            sequence_length=args.sequence_length,
-            device=args.device,
-        )
-        for backbone in TITAN_B012_BACKBONES
-    ]
+    correctness = (
+        []
+        if args.timing_only
+        else [
+            correctness_case(
+                backbone,
+                batch_size=args.batch_size,
+                sequence_length=args.sequence_length,
+                device=args.device,
+            )
+            for backbone in TITAN_B012_BACKBONES
+        ]
+    )
     timings = {
         backbone: training_step_times(
             backbone,
@@ -559,6 +568,7 @@ def main() -> None:
         "sequence_length": args.sequence_length,
         "compiled_model_backbones": sorted(compiled_backbones),
         "b1_timing_segment_size": args.b1_segment_size,
+        "correctness_skipped": args.timing_only,
         "correctness": correctness,
         "training_step_timing": timing_rows,
         "speed_gate_passed": speed_gate_passed,
