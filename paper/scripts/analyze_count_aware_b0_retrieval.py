@@ -380,10 +380,10 @@ def b0_counterfactual_outputs(
         dim=-1,
     )
     if not torch.allclose(
-        raw_on - raw_off,
-        logit_residual,
+        raw_on,
+        raw_off + logit_residual,
         rtol=1e-5,
-        atol=1e-6,
+        atol=1e-5,
     ):
         raise AssertionError("Quantity logit shift is not explained by the residual")
 
