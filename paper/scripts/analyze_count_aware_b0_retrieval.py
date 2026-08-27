@@ -119,6 +119,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int)
     parser.add_argument("--max-batches", type=int)
     parser.add_argument("--event-chunk-rows", type=int, default=100_000)
+    parser.add_argument("--source-revision")
     return parser.parse_args()
 
 
@@ -135,14 +136,26 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-def git_revision() -> str:
-    result = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        cwd=PROJECT_ROOT,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+def git_revision(override: str | None) -> str:
+    if override:
+        revision = override.strip()
+        if not revision or any(
+            character not in "0123456789abcdef" for character in revision
+        ):
+            raise ValueError("source_revision must be a lowercase hexadecimal commit")
+        return revision
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=PROJECT_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (FileNotFoundError, subprocess.CalledProcessError) as error:
+        raise RuntimeError(
+            "This execution copy has no Git metadata; pass --source-revision"
+        ) from error
     return result.stdout.strip()
 
 
@@ -1120,7 +1133,7 @@ def main() -> None:
     launch_record: dict[str, Any] = {
         "schema_version": 1,
         "status": "running",
-        "source_revision": git_revision(),
+        "source_revision": git_revision(args.source_revision),
         "evaluation_scope": "validation_only",
         "held_out_test_evaluated": False,
         "device": args.device,

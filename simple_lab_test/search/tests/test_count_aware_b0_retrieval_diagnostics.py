@@ -12,6 +12,7 @@ from paper.scripts.analyze_count_aware_b0_retrieval import (
     aggregate_event_shards,
     b0_counterfactual_outputs,
     build_event_frame,
+    git_revision,
 )
 from paper.scripts.count_aware_tpp_backbone.core import target_outputs
 
@@ -55,6 +56,10 @@ def test_hard_lmm_empty_memory_has_zero_residual() -> None:
     assert trace["prototype_indices"].shape == (2, 3, 0)
     assert trace["topk_similarity"].shape == (2, 3, 0)
     assert torch.equal(matcher(encoded), encoded)
+
+
+def test_source_revision_override_supports_execution_copies_without_git() -> None:
+    assert git_revision("abc123") == "abc123"
 
 
 def _b0_fixture() -> tuple[
