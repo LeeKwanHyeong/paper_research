@@ -167,7 +167,7 @@ _COMPILED_TITANS_WRITE_SEQUENCE = (
         _scan_titans_write_sequence,
         fullgraph=True,
         dynamic=False,
-        mode="default",
+        mode="reduce-overhead",
     )
     if hasattr(torch, "compile")
     else None
@@ -561,15 +561,19 @@ class TitansNeuralMemory(nn.Module):
         )
         if use_compiled_scan:
             keys, values, theta, eta, alpha = self._project_write(inputs)
-            scanned = _COMPILED_TITANS_WRITE_SEQUENCE(
-                *state.memory_tensors(),
-                *state.momentum_tensors(),
-                keys,
-                values,
-                theta.squeeze(-1),
-                eta.squeeze(-1),
-                alpha.squeeze(-1),
-                write_mask,
+            # CUDAGraph reuses output buffers across calls; state must outlive them.
+            scanned = tuple(
+                tensor.clone()
+                for tensor in _COMPILED_TITANS_WRITE_SEQUENCE(
+                    *state.memory_tensors(),
+                    *state.momentum_tensors(),
+                    keys,
+                    values,
+                    theta.squeeze(-1),
+                    eta.squeeze(-1),
+                    alpha.squeeze(-1),
+                    write_mask,
+                )
             )
             next_state = TitansMemoryState(
                 *scanned[:8],

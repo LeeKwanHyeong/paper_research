@@ -183,7 +183,7 @@ _COMPILED_TPP_GATED_SEQUENCE = (
         _scan_tpp_gated_sequence,
         fullgraph=True,
         dynamic=False,
-        mode="default",
+        mode="reduce-overhead",
     )
     if hasattr(torch, "compile")
     else None
@@ -547,28 +547,32 @@ class TPPSpecificGatedMemory(nn.Module):
                 eps=1e-6,
             )
             write_values = self.value_projection(normalized)
-            scanned = _COMPILED_TPP_GATED_SEQUENCE(
-                state.keys,
-                state.values,
-                state.valid_slots,
-                state.write_counts,
-                encoded,
-                normalized,
-                queries,
-                write_keys,
-                write_values,
-                self.null_logit_projection(normalized),
-                self.confidence_projection.weight,
-                self.confidence_projection.bias,
-                self.output_norm.weight,
-                self.output_norm.bias,
-                self.output_projection.weight,
-                mask,
-                write_mask,
-                self.topk,
-                self.temperature,
-                self.dropout.p,
-                self.training,
+            # CUDAGraph reuses output buffers across calls; state must outlive them.
+            scanned = tuple(
+                tensor.clone()
+                for tensor in _COMPILED_TPP_GATED_SEQUENCE(
+                    state.keys,
+                    state.values,
+                    state.valid_slots,
+                    state.write_counts,
+                    encoded,
+                    normalized,
+                    queries,
+                    write_keys,
+                    write_values,
+                    self.null_logit_projection(normalized),
+                    self.confidence_projection.weight,
+                    self.confidence_projection.bias,
+                    self.output_norm.weight,
+                    self.output_norm.bias,
+                    self.output_projection.weight,
+                    mask,
+                    write_mask,
+                    self.topk,
+                    self.temperature,
+                    self.dropout.p,
+                    self.training,
+                )
             )
             next_state = TPPGatedMemoryState(
                 keys=scanned[1],
