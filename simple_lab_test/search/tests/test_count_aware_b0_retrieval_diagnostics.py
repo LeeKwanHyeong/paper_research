@@ -7,14 +7,17 @@ from models.TPPs.CountAwareFactory import build_count_aware_model
 from models.TPPs.CountAwareTPP import CountAwareTitanTPP
 from models.Titan.common.memory import HardLocalMemoryMatcher
 from paper.scripts.analyze_count_aware_b0_retrieval import (
+    LEGACY_INTERMITTENT_SOURCE_REVISION,
     EventParquetSink,
     PrototypeUsageAccumulator,
     aggregate_event_shards,
     b0_counterfactual_outputs,
     build_event_frame,
     git_revision,
+    restore_b0,
 )
 from paper.scripts.count_aware_tpp_backbone.core import target_outputs
+from simple_lab_test.search.common.runner import canonical_state_dict_sha256
 
 
 def test_hard_lmm_retrieval_trace_preserves_historical_forward() -> None:
@@ -60,6 +63,45 @@ def test_hard_lmm_empty_memory_has_zero_residual() -> None:
 
 def test_source_revision_override_supports_execution_copies_without_git() -> None:
     assert git_revision("abc123") == "abc123"
+
+
+def test_legacy_intermittent_checkpoint_is_inferred_only_from_pinned_source(
+    tmp_path,
+) -> None:
+    model, _ = build_count_aware_model(
+        "titantpp",
+        hidden_dim=16,
+        train_log_mean=1.0,
+        max_seq_len=6,
+    )
+    state = {
+        name: tensor.detach().cpu().clone()
+        for name, tensor in model.state_dict().items()
+    }
+    checkpoint = tmp_path / "legacy.pt"
+    torch.save(
+        {
+            "backbone": "titantpp",
+            "encoder_config": {"d_model": 16, "max_len": 6},
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": False,
+            "interface_meta": {
+                "mode": "mark_free_count_aware_log_regression",
+                "quantity_loss": "mse_on_log1p_quantity",
+                "train_target_mean": 1.0,
+            },
+            "model_state_dict": state,
+            "model_state_sha256": canonical_state_dict_sha256(state),
+            "source_revision": LEGACY_INTERMITTENT_SOURCE_REVISION,
+        },
+        checkpoint,
+    )
+
+    restored, audit = restore_b0(checkpoint, {"lambda_tail": 0.0}, "cpu")
+
+    assert restored.memory_mode == "static_hard_lmm"
+    assert audit["legacy_contract_inferred"] is True
+    assert all(audit["checkpoint_checks"].values())
 
 
 def _b0_fixture() -> tuple[

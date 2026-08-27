@@ -47,6 +47,7 @@ from simple_lab_test.search.common.runner import (  # noqa: E402
 
 VARIANT = "count_only_log_regression"
 BACKBONE = "titantpp"
+LEGACY_INTERMITTENT_SOURCE_REVISION = "044add1f3de768d804d9f0269fd0013bd9658a35"
 DEFAULT_MANIFEST = (
     PROJECT_ROOT
     / "paper"
@@ -105,6 +106,7 @@ SEED_METRICS = (
 @dataclass(frozen=True)
 class DatasetSpec:
     dataset: str
+    contract_dataset: str
     artifact_dir: Path
     data_path: Path
 
@@ -183,6 +185,7 @@ def load_manifest(
         specs.append(
             DatasetSpec(
                 dataset=str(row["dataset"]),
+                contract_dataset=str(row.get("contract_dataset", row["dataset"])),
                 artifact_dir=resolve_path(row["artifact_dir"]),
                 data_path=resolve_path(row["data_path"]),
             )
@@ -200,17 +203,30 @@ def validate_dataset_contract(spec: DatasetSpec) -> dict[str, Any]:
     if not contract_path.exists():
         raise FileNotFoundError(contract_path)
     contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    legacy_intermittent = (
+        contract.get("source_revision") == LEGACY_INTERMITTENT_SOURCE_REVISION
+    )
+    variants = contract.get("quantity_variants")
+    direct_log_mse = variants == [VARIANT] or (
+        legacy_intermittent
+        and variants is None
+        and contract.get("interface", {}).get("quantity_loss")
+        == "mse_on_log1p_quantity"
+    )
+    time_head_mode = contract.get("time_head", {}).get("mode")
+    legacy_time_head = time_head_mode == "legacy_clamped_rmtpp" or (
+        legacy_intermittent and time_head_mode is None
+    )
     checks = {
-        "dataset_matches": contract.get("dataset") == spec.dataset,
+        "dataset_matches": contract.get("dataset") == spec.contract_dataset,
         "evaluation_scope_validation_only": (
             contract.get("evaluation_scope") == "validation_only"
         ),
         "held_out_test_unused": contract.get("held_out_test_evaluated") is False,
         "t0_role": contract.get("model_role", "t0_common_control")
         == "t0_common_control",
-        "direct_log_mse_only": contract.get("quantity_variants") == [VARIANT],
-        "legacy_time_head": contract.get("time_head", {}).get("mode")
-        == "legacy_clamped_rmtpp",
+        "direct_log_mse_only": direct_log_mse,
+        "legacy_time_head": legacy_time_head,
         "data_exists": spec.data_path.exists(),
     }
     if spec.data_path.exists():
@@ -246,13 +262,27 @@ def restore_b0(
     device: str,
 ) -> tuple[CountAwareTitanTPP, dict[str, Any]]:
     payload = torch_load_checkpoint(checkpoint, map_location="cpu")
+    legacy_intermittent = (
+        payload.get("source_revision") == LEGACY_INTERMITTENT_SOURCE_REVISION
+    )
+    payload_variant = payload.get("variant")
+    encoder_memory_mode = payload.get("encoder_config", {}).get("memory_mode")
+    state_keys = set(payload["model_state_dict"])
+    has_only_hard_static_memory = "lmm.mem" in state_keys and not any(
+        key.startswith(("soft_memory.", "surprise_memory.")) for key in state_keys
+    )
     checkpoint_checks = {
         "backbone": payload.get("backbone") == BACKBONE,
-        "variant": payload.get("variant") == VARIANT,
+        "variant": payload_variant == VARIANT
+        or (legacy_intermittent and payload_variant is None),
         "validation_only": payload.get("evaluation_scope") == "validation_only",
         "held_out_test_unused": payload.get("held_out_test_evaluated") is False,
-        "memory_mode": payload.get("encoder_config", {}).get("memory_mode")
-        == TITAN_MEMORY_MODE_STATIC_HARD,
+        "memory_mode": encoder_memory_mode == TITAN_MEMORY_MODE_STATIC_HARD
+        or (
+            legacy_intermittent
+            and encoder_memory_mode is None
+            and has_only_hard_static_memory
+        ),
     }
     observed_state_sha = canonical_state_dict_sha256(payload["model_state_dict"])
     checkpoint_checks["state_sha256"] = observed_state_sha == payload.get(
@@ -266,7 +296,10 @@ def restore_b0(
 
     interface = payload["interface_meta"]
     encoder = payload["encoder_config"]
-    time_contract = interface["time_head"]
+    time_contract = interface.get(
+        "time_head",
+        {"mode": "legacy_clamped_rmtpp"},
+    )
     tail_contract = contract.get("tail_contract", {})
     model, _ = build_count_aware_model(
         BACKBONE,
@@ -274,7 +307,7 @@ def restore_b0(
         train_log_mean=float(interface["train_target_mean"]),
         train_log_std=float(interface.get("train_target_std", 1.0)),
         max_seq_len=int(encoder["max_len"]),
-        quantity_variant=payload["variant"],
+        quantity_variant=VARIANT,
         lambda_tail=float(contract.get("lambda_tail", 0.0)),
         tail_threshold=float(tail_contract.get("threshold", 46.0)),
         tail_normalization_scale=float(tail_contract.get("normalization_scale", 46.0)),
@@ -299,6 +332,7 @@ def restore_b0(
         "checkpoint_file_sha256": sha256_file(checkpoint),
         "model_state_sha256": observed_state_sha,
         "checkpoint_source_revision": payload.get("source_revision"),
+        "legacy_contract_inferred": legacy_intermittent,
         "checkpoint_checks": checkpoint_checks,
     }
 
