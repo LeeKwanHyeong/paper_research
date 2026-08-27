@@ -197,6 +197,7 @@ def validate_encoder_contract(backbone: str, summary: dict[str, Any]) -> None:
             "titans_neural_memory_depth": 2,
             "titans_neural_memory_hidden_expansion": 2,
             "titans_mac_segment_size": 16,
+            "titans_scan_backend": "compiled_sequence_cuda",
             "titans_online_update": "surprise_momentum_adaptive_forgetting",
         }
     elif backbone == "titantpp_tpp_gated_memory":
@@ -206,6 +207,7 @@ def validate_encoder_contract(backbone: str, summary: dict[str, Any]) -> None:
             "tpp_gated_topk": 4,
             "tpp_gated_temperature": 1.0,
             "tpp_gated_state_scope": "explicit_per_series_state",
+            "tpp_gated_scan_backend": "compiled_sequence_cuda",
         }
     else:
         expected = {

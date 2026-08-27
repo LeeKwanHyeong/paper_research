@@ -12,6 +12,7 @@ from models.Titan.common.titans_mac import (
     TitansMACEncoder,
     TitansMemoryState,
     TitansNeuralMemory,
+    _scan_titans_write_sequence,
 )
 from paper.scripts.count_aware_tpp_backbone.core import target_outputs
 
@@ -87,6 +88,9 @@ def test_reproduction_contract_separates_b0_b1_and_b2() -> None:
     assert contract["variants"]["B1"]["name"] == "Faithful Titans-MAC"
     assert contract["variants"]["B1"]["test_time_weight_update"] is True
     assert contract["variants"]["B2"]["faithful_titans_ltm"] is False
+    assert contract["b1_mechanism"]["cuda_scan_backend"] == (
+        "compiled_fullgraph_exact_recurrence"
+    )
     assert contract["b2_status"] == "implemented_pending_matched_validation"
     assert contract["matched_t0_boundary"]["held_out_test"] == "locked"
 
@@ -401,6 +405,60 @@ def test_token_and_chunk_write_schedules_are_numerically_identical() -> None:
         assert torch.allclose(
             token_diag[name],
             chunk_diag[name],
+            atol=1e-6,
+            rtol=1e-5,
+        )
+
+
+def test_compilable_write_scan_matches_eager_reference() -> None:
+    torch.manual_seed(19)
+    memory = TitansNeuralMemory(d_model=6, compile_cuda_scan=False)
+    inputs = torch.randn(2, 7, 6)
+    write_mask = torch.tensor(
+        [
+            [True, True, False, True, True, True, False],
+            [True, False, True, True, False, True, True],
+        ]
+    )
+    initial = memory.initial_state(
+        2,
+        device=inputs.device,
+        dtype=inputs.dtype,
+    )
+    eager_state, eager_diagnostics = memory.write_sequence(
+        initial,
+        inputs,
+        write_mask,
+    )
+    keys, values, theta, eta, alpha = memory._project_write(inputs)
+
+    scanned = _scan_titans_write_sequence(
+        *initial.memory_tensors(),
+        *initial.momentum_tensors(),
+        keys,
+        values,
+        theta.squeeze(-1),
+        eta.squeeze(-1),
+        alpha.squeeze(-1),
+        write_mask,
+    )
+    scanned_state = TitansMemoryState(
+        *scanned[:8],
+        positions=initial.positions,
+    )
+    scanned_diagnostics = {
+        "associative_loss": scanned[8],
+        "update_rate": scanned[9],
+        "momentum_rate": scanned[10],
+        "forgetting_rate": scanned[11],
+        "write_applied": scanned[12],
+    }
+
+    assert_state_allclose(eager_state, scanned_state, atol=1e-6, rtol=1e-5)
+    for name, expected in eager_diagnostics.items():
+        assert torch.allclose(
+            scanned_diagnostics[name],
+            expected,
             atol=1e-6,
             rtol=1e-5,
         )

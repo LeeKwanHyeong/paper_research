@@ -44,6 +44,152 @@ class TPPGatedMemoryState:
         )
 
 
+def _scan_tpp_gated_sequence(
+    state_keys: torch.Tensor,
+    state_values: torch.Tensor,
+    state_valid_slots: torch.Tensor,
+    state_write_counts: torch.Tensor,
+    encoded: torch.Tensor,
+    normalized: torch.Tensor,
+    queries: torch.Tensor,
+    write_keys: torch.Tensor,
+    write_values: torch.Tensor,
+    null_logits: torch.Tensor,
+    confidence_weight: torch.Tensor,
+    confidence_bias: torch.Tensor,
+    output_norm_weight: torch.Tensor,
+    output_norm_bias: torch.Tensor,
+    output_projection_weight: torch.Tensor,
+    mask: torch.Tensor,
+    write_mask: torch.Tensor,
+    topk: int,
+    temperature: float,
+    dropout_probability: float,
+    training: bool,
+) -> tuple[torch.Tensor, ...]:
+    """Run exact sparse read-before-write recurrence as one CUDA graph."""
+    outputs: list[torch.Tensor] = []
+    null_probabilities: list[torch.Tensor] = []
+    retrieval_confidences: list[torch.Tensor] = []
+    learned_confidences: list[torch.Tensor] = []
+    effective_gates: list[torch.Tensor] = []
+    selected_slot_counts: list[torch.Tensor] = []
+    applied_writes: list[torch.Tensor] = []
+    memory_size = state_keys.size(1)
+    d_model = state_keys.size(2)
+
+    for position in range(encoded.size(1)):
+        scores = torch.einsum(
+            "bd,bmd->bm",
+            queries[:, position],
+            state_keys,
+        ) / temperature
+        scores = scores.masked_fill(~state_valid_slots, float("-inf"))
+        selected_scores, selected_indices = torch.topk(scores, topk, dim=-1)
+        selected_valid = torch.gather(
+            state_valid_slots,
+            1,
+            selected_indices,
+        )
+        selected_scores = selected_scores.masked_fill(
+            ~selected_valid,
+            float("-inf"),
+        )
+        candidate_logits = torch.cat(
+            (selected_scores, null_logits[:, position]),
+            dim=-1,
+        )
+        candidate_weights = torch.softmax(candidate_logits, dim=-1)
+        selected_weights = candidate_weights[:, :-1]
+        null_probability = candidate_weights[:, -1]
+        gather_indices = selected_indices.unsqueeze(-1).expand(-1, -1, d_model)
+        selected_values = torch.gather(state_values, 1, gather_indices)
+        retrieved = torch.sum(
+            selected_weights.unsqueeze(-1) * selected_values,
+            dim=1,
+        )
+        retrieval_confidence = selected_weights.sum(dim=-1)
+        confidence_input = torch.cat(
+            (normalized[:, position], retrieved),
+            dim=-1,
+        )
+        learned_confidence = torch.sigmoid(
+            F.linear(confidence_input, confidence_weight, confidence_bias)
+        ).squeeze(-1)
+        effective_gate = retrieval_confidence * learned_confidence
+        normalized_retrieved = F.layer_norm(
+            retrieved,
+            (d_model,),
+            output_norm_weight,
+            output_norm_bias,
+        )
+        projected_retrieved = F.linear(
+            normalized_retrieved,
+            output_projection_weight,
+        )
+        residual = effective_gate.unsqueeze(-1) * F.dropout(
+            projected_retrieved,
+            p=dropout_probability,
+            training=training,
+        )
+        valid = mask[:, position]
+        valid_values = valid.to(dtype=encoded.dtype)
+        outputs.append(
+            (encoded[:, position] + residual) * valid_values.unsqueeze(-1)
+        )
+        null_probabilities.append(null_probability * valid_values)
+        retrieval_confidences.append(retrieval_confidence * valid_values)
+        learned_confidences.append(learned_confidence * valid_values)
+        effective_gates.append(effective_gate * valid_values)
+        selected_slot_counts.append(
+            selected_valid.sum(dim=-1).to(encoded.dtype) * valid_values
+        )
+
+        write_valid = write_mask[:, position]
+        applied_writes.append(write_valid.to(encoded.dtype))
+        slot_indices = torch.remainder(state_write_counts, memory_size)
+        slot_mask = F.one_hot(slot_indices, num_classes=memory_size).bool()
+        write_slots = slot_mask & write_valid.unsqueeze(-1)
+        state_keys = torch.where(
+            write_slots.unsqueeze(-1),
+            write_keys[:, position].unsqueeze(1),
+            state_keys,
+        )
+        state_values = torch.where(
+            write_slots.unsqueeze(-1),
+            write_values[:, position].unsqueeze(1),
+            state_values,
+        )
+        state_valid_slots = state_valid_slots | write_slots
+        state_write_counts = state_write_counts + write_valid.to(torch.long)
+
+    return (
+        torch.stack(outputs, dim=1),
+        state_keys,
+        state_values,
+        state_valid_slots,
+        state_write_counts,
+        torch.stack(null_probabilities, dim=1),
+        torch.stack(retrieval_confidences, dim=1),
+        torch.stack(learned_confidences, dim=1),
+        torch.stack(effective_gates, dim=1),
+        torch.stack(selected_slot_counts, dim=1),
+        torch.stack(applied_writes, dim=1),
+    )
+
+
+_COMPILED_TPP_GATED_SEQUENCE = (
+    torch.compile(
+        _scan_tpp_gated_sequence,
+        fullgraph=True,
+        dynamic=False,
+        mode="reduce-overhead",
+    )
+    if hasattr(torch, "compile")
+    else None
+)
+
+
 class TPPSpecificGatedMemory(nn.Module):
     """Sparse observed-event retrieval with null selection and confidence gating."""
 
@@ -57,6 +203,7 @@ class TPPSpecificGatedMemory(nn.Module):
         dropout: float = 0.1,
         initial_null_logit: float = 0.0,
         initial_confidence: float = 0.5,
+        compile_cuda_scan: bool = True,
     ) -> None:
         super().__init__()
         if d_model < 1:
@@ -74,6 +221,7 @@ class TPPSpecificGatedMemory(nn.Module):
         self.memory_size = int(memory_size)
         self.topk = min(int(topk), self.memory_size)
         self.temperature = float(temperature)
+        self.compile_cuda_scan = bool(compile_cuda_scan)
 
         self.input_norm = nn.LayerNorm(self.d_model)
         self.query_projection = nn.Linear(self.d_model, self.d_model, bias=False)
@@ -366,6 +514,15 @@ class TPPSpecificGatedMemory(nn.Module):
                 seq_len=seq_len,
                 device=encoded.device,
             ) & mask
+        use_compiled_scan = (
+            state is None
+            and series_ids is None
+            and write_chunk_size is None
+            and seq_len > 0
+            and encoded.device.type == "cuda"
+            and self.compile_cuda_scan
+            and _COMPILED_TPP_GATED_SEQUENCE is not None
+        )
         state = self.prepare_state(
             state,
             batch_size=batch_size,
@@ -376,6 +533,60 @@ class TPPSpecificGatedMemory(nn.Module):
         chunk_size = seq_len if write_chunk_size is None else int(write_chunk_size)
         if chunk_size < 1:
             raise ValueError("write_chunk_size must be positive")
+
+        if use_compiled_scan:
+            normalized = self.input_norm(encoded)
+            queries = F.normalize(
+                self.query_projection(normalized),
+                dim=-1,
+                eps=1e-6,
+            )
+            write_keys = F.normalize(
+                self.key_projection(normalized),
+                dim=-1,
+                eps=1e-6,
+            )
+            write_values = self.value_projection(normalized)
+            scanned = _COMPILED_TPP_GATED_SEQUENCE(
+                state.keys,
+                state.values,
+                state.valid_slots,
+                state.write_counts,
+                encoded,
+                normalized,
+                queries,
+                write_keys,
+                write_values,
+                self.null_logit_projection(normalized),
+                self.confidence_projection.weight,
+                self.confidence_projection.bias,
+                self.output_norm.weight,
+                self.output_norm.bias,
+                self.output_projection.weight,
+                mask,
+                write_mask,
+                self.topk,
+                self.temperature,
+                self.dropout.p,
+                self.training,
+            )
+            next_state = TPPGatedMemoryState(
+                keys=scanned[1],
+                values=scanned[2],
+                valid_slots=scanned[3],
+                write_counts=scanned[4],
+                positions=state.positions + mask.sum(dim=1),
+                series_ids=state.series_ids,
+            )
+            diagnostics = {
+                "null_probability": scanned[5],
+                "retrieval_confidence": scanned[6],
+                "learned_confidence": scanned[7],
+                "effective_gate": scanned[8],
+                "selected_slot_count": scanned[9],
+                "write_applied": scanned[10],
+            }
+            return scanned[0], next_state, diagnostics
 
         outputs: list[torch.Tensor] = []
         collected: dict[str, list[torch.Tensor]] = {

@@ -198,6 +198,7 @@ def test_faithful_titans_mac_factory_contract_and_finite_backward() -> None:
     assert metadata["backbone_contract_id"] == "B1"
     assert metadata["titans_neural_memory_depth"] == 2
     assert metadata["titans_mac_segment_size"] == 16
+    assert metadata["titans_scan_backend"] == "compiled_sequence_cuda"
     assert metadata["persistent_memory_update_scope"] == "outer_loop_only"
 
     outputs = target_outputs(

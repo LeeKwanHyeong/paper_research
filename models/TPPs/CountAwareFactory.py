@@ -279,6 +279,11 @@ def build_count_aware_model(
                 "titans_mac_segment_size": (
                     16 if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC else 0
                 ),
+                "titans_scan_backend": (
+                    "compiled_sequence_cuda"
+                    if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+                    else None
+                ),
                 "titans_online_update": (
                     "surprise_momentum_adaptive_forgetting"
                     if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
@@ -315,6 +320,11 @@ def build_count_aware_model(
                 ),
                 "tpp_gated_state_scope": (
                     "explicit_per_series_state"
+                    if memory_mode == TITAN_MEMORY_MODE_TPP_GATED
+                    else None
+                ),
+                "tpp_gated_scan_backend": (
+                    "compiled_sequence_cuda"
                     if memory_mode == TITAN_MEMORY_MODE_TPP_GATED
                     else None
                 ),

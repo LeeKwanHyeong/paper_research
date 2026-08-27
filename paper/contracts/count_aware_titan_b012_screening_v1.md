@@ -27,6 +27,8 @@ after serialization. Median optimizer-step time for B1 and B2 must not exceed
 three times B0 under the same synthetic batch. Intermittent, Taxi, RAF, and
 Instacart then run an e1 smoke with two train and two validation batches. Every
 run must produce finite validation artifacts and a restorable checkpoint.
+The compiled CUDA recurrence must first match the eager reference state,
+diagnostics, outputs, and gradients within the frozen numerical tolerance.
 
 ## Seed-42 Screening
 

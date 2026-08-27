@@ -55,6 +55,125 @@ class TitansMemoryState:
         )
 
 
+def _scan_titans_write_sequence(
+    weight_1: torch.Tensor,
+    bias_1: torch.Tensor,
+    weight_2: torch.Tensor,
+    bias_2: torch.Tensor,
+    momentum_weight_1: torch.Tensor,
+    momentum_bias_1: torch.Tensor,
+    momentum_weight_2: torch.Tensor,
+    momentum_bias_2: torch.Tensor,
+    keys: torch.Tensor,
+    values: torch.Tensor,
+    update_rates: torch.Tensor,
+    momentum_rates: torch.Tensor,
+    forgetting_rates: torch.Tensor,
+    write_mask: torch.Tensor,
+) -> tuple[torch.Tensor, ...]:
+    """Run the exact Titans write recurrence as one compilable CUDA graph."""
+    losses: list[torch.Tensor] = []
+    applied_update_rates: list[torch.Tensor] = []
+    applied_momentum_rates: list[torch.Tensor] = []
+    applied_forgetting_rates: list[torch.Tensor] = []
+    applied_writes: list[torch.Tensor] = []
+
+    for position in range(keys.size(1)):
+        key = keys[:, position]
+        value = values[:, position]
+        theta = update_rates[:, position]
+        eta = momentum_rates[:, position]
+        alpha = forgetting_rates[:, position]
+        valid = write_mask[:, position]
+
+        pre_activation = torch.einsum("bhd,bd->bh", weight_1, key) + bias_1
+        hidden = F.silu(pre_activation)
+        prediction = torch.einsum("bdh,bh->bd", weight_2, hidden) + bias_2
+        error = prediction - value
+        output_gradient = 2.0 * error
+        grad_weight_2 = output_gradient.unsqueeze(-1) * hidden.unsqueeze(1)
+        grad_bias_2 = output_gradient
+        hidden_gradient = torch.einsum("bdh,bd->bh", weight_2, output_gradient)
+        sigmoid = torch.sigmoid(pre_activation)
+        pre_gradient = hidden_gradient * (
+            sigmoid * (1.0 + pre_activation * (1.0 - sigmoid))
+        )
+        grad_weight_1 = pre_gradient.unsqueeze(-1) * key.unsqueeze(1)
+        grad_bias_1 = pre_gradient
+
+        def update_tensor(
+            parameter: torch.Tensor,
+            momentum: torch.Tensor,
+            gradient: torch.Tensor,
+        ) -> tuple[torch.Tensor, torch.Tensor]:
+            dimensions = [1] * (parameter.ndim - 1)
+            row_theta = theta.view(parameter.size(0), *dimensions)
+            row_eta = eta.view(parameter.size(0), *dimensions)
+            row_alpha = alpha.view(parameter.size(0), *dimensions)
+            row_valid = valid.view(parameter.size(0), *dimensions)
+            next_momentum = row_eta * momentum - row_theta * gradient
+            next_parameter = (1.0 - row_alpha) * parameter + next_momentum
+            return (
+                torch.where(row_valid, next_parameter, parameter),
+                torch.where(row_valid, next_momentum, momentum),
+            )
+
+        weight_1, momentum_weight_1 = update_tensor(
+            weight_1,
+            momentum_weight_1,
+            grad_weight_1,
+        )
+        bias_1, momentum_bias_1 = update_tensor(
+            bias_1,
+            momentum_bias_1,
+            grad_bias_1,
+        )
+        weight_2, momentum_weight_2 = update_tensor(
+            weight_2,
+            momentum_weight_2,
+            grad_weight_2,
+        )
+        bias_2, momentum_bias_2 = update_tensor(
+            bias_2,
+            momentum_bias_2,
+            grad_bias_2,
+        )
+        valid_values = valid.to(dtype=keys.dtype)
+        losses.append(torch.square(error).sum(dim=-1) * valid_values)
+        applied_update_rates.append(theta * valid_values)
+        applied_momentum_rates.append(eta * valid_values)
+        applied_forgetting_rates.append(alpha * valid_values)
+        applied_writes.append(valid_values)
+
+    return (
+        weight_1,
+        bias_1,
+        weight_2,
+        bias_2,
+        momentum_weight_1,
+        momentum_bias_1,
+        momentum_weight_2,
+        momentum_bias_2,
+        torch.stack(losses, dim=1),
+        torch.stack(applied_update_rates, dim=1),
+        torch.stack(applied_momentum_rates, dim=1),
+        torch.stack(applied_forgetting_rates, dim=1),
+        torch.stack(applied_writes, dim=1),
+    )
+
+
+_COMPILED_TITANS_WRITE_SEQUENCE = (
+    torch.compile(
+        _scan_titans_write_sequence,
+        fullgraph=True,
+        dynamic=False,
+        mode="reduce-overhead",
+    )
+    if hasattr(torch, "compile")
+    else None
+)
+
+
 class TitansNeuralMemory(nn.Module):
     """Two-layer associative memory updated by surprise, momentum, and decay."""
 
@@ -66,6 +185,7 @@ class TitansNeuralMemory(nn.Module):
         initial_update_rate: float = 0.01,
         initial_momentum: float = 0.9,
         initial_forgetting: float = 0.001,
+        compile_cuda_scan: bool = True,
     ) -> None:
         super().__init__()
         if d_model < 1:
@@ -82,6 +202,7 @@ class TitansNeuralMemory(nn.Module):
 
         self.d_model = int(d_model)
         self.memory_hidden_dim = int(d_model * hidden_expansion)
+        self.compile_cuda_scan = bool(compile_cuda_scan)
         self.input_norm = nn.LayerNorm(self.d_model)
         self.query_projection = nn.Linear(self.d_model, self.d_model, bias=False)
         self.key_projection = nn.Linear(self.d_model, self.d_model, bias=False)
@@ -432,6 +553,36 @@ class TitansNeuralMemory(nn.Module):
         step = inputs.size(1) if chunk_size is None else int(chunk_size)
         if step < 1:
             raise ValueError("chunk_size must be positive")
+        use_compiled_scan = (
+            inputs.size(1) > 0
+            and inputs.device.type == "cuda"
+            and self.compile_cuda_scan
+            and _COMPILED_TITANS_WRITE_SEQUENCE is not None
+        )
+        if use_compiled_scan:
+            keys, values, theta, eta, alpha = self._project_write(inputs)
+            scanned = _COMPILED_TITANS_WRITE_SEQUENCE(
+                *state.memory_tensors(),
+                *state.momentum_tensors(),
+                keys,
+                values,
+                theta.squeeze(-1),
+                eta.squeeze(-1),
+                alpha.squeeze(-1),
+                write_mask,
+            )
+            next_state = TitansMemoryState(
+                *scanned[:8],
+                positions=state.positions,
+                series_ids=state.series_ids,
+            )
+            return next_state, {
+                "associative_loss": scanned[8],
+                "update_rate": scanned[9],
+                "momentum_rate": scanned[10],
+                "forgetting_rate": scanned[11],
+                "write_applied": scanned[12],
+            }
         collected: dict[str, list[torch.Tensor]] = {
             "associative_loss": [],
             "update_rate": [],

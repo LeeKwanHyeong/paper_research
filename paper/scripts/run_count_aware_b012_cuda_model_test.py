@@ -182,6 +182,100 @@ def checkpoint_roundtrip(
     }
 
 
+def compiled_eager_equivalence(
+    backbone: str,
+    dts: torch.Tensor,
+    quantities: torch.Tensor,
+    mask: torch.Tensor,
+    *,
+    device: str,
+) -> dict[str, float | bool] | None:
+    if backbone == "titantpp":
+        return None
+    torch.manual_seed(777)
+    compiled_model, _ = build_model(
+        backbone,
+        max_seq_len=dts.size(1),
+        device=device,
+    )
+    eager_model, _ = build_model(
+        backbone,
+        max_seq_len=dts.size(1),
+        device=device,
+    )
+    eager_model.load_state_dict(compiled_model.state_dict())
+    if backbone == "titantpp_titans_mac":
+        if eager_model.titans_mac_encoder is None:
+            raise AssertionError("B1 Titans-MAC encoder is missing")
+        eager_model.titans_mac_encoder.neural_memory.compile_cuda_scan = False
+    else:
+        if eager_model.tpp_gated_memory is None:
+            raise AssertionError("B2 gated memory is missing")
+        eager_model.tpp_gated_memory.compile_cuda_scan = False
+    compiled_model.eval()
+    eager_model.eval()
+
+    compiled_outputs = target_outputs(
+        compiled_model,
+        dts,
+        mask,
+        quantities,
+        lambda_log_qty=1.0,
+    )
+    compiled_outputs["joint_loss"].mean().backward()
+    eager_outputs = target_outputs(
+        eager_model,
+        dts,
+        mask,
+        quantities,
+        lambda_log_qty=1.0,
+    )
+    eager_outputs["joint_loss"].mean().backward()
+
+    output_difference = max(
+        float(
+            (compiled_outputs[name] - eager_outputs[name])
+            .abs()
+            .max()
+            .detach()
+            .cpu()
+        )
+        for name in ("joint_loss", "time_loss", "pred_qty")
+    )
+    compiled_gradients = {
+        name: parameter.grad
+        for name, parameter in compiled_model.named_parameters()
+        if parameter.grad is not None
+    }
+    eager_gradients = {
+        name: parameter.grad
+        for name, parameter in eager_model.named_parameters()
+        if parameter.grad is not None
+    }
+    if compiled_gradients.keys() != eager_gradients.keys():
+        raise AssertionError(f"Compiled/eager gradient coverage differs for {backbone}")
+    gradient_difference = max(
+        float(
+            (compiled_gradients[name] - eager_gradients[name])
+            .abs()
+            .max()
+            .detach()
+            .cpu()
+        )
+        for name in compiled_gradients
+    )
+    if output_difference > 1e-5 or gradient_difference > 1e-4:
+        raise AssertionError(
+            f"Compiled/eager mismatch for {backbone}: "
+            f"output={output_difference} gradient={gradient_difference}"
+        )
+    return {
+        "passed": True,
+        "maximum_output_difference": output_difference,
+        "maximum_gradient_difference": gradient_difference,
+    }
+
+
 def online_state_roundtrip(
     backbone: str,
     model: torch.nn.Module,
@@ -307,6 +401,13 @@ def correctness_case(
         mask[:2],
         device=device,
     )
+    compiled_eager = compiled_eager_equivalence(
+        backbone,
+        dts,
+        quantities,
+        mask,
+        device=device,
+    )
     return {
         "backbone": backbone,
         "backbone_contract_id": metadata["backbone_contract_id"],
@@ -315,6 +416,7 @@ def correctness_case(
         "extreme_input_finite": True,
         "model_checkpoint_roundtrip": model_checkpoint,
         "online_memory_state_roundtrip": memory_checkpoint,
+        "compiled_eager_equivalence": compiled_eager,
     }
 
 

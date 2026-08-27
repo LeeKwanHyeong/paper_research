@@ -79,6 +79,11 @@ confidence gate를 곱해 memory residual의 크기를 정하므로, 유효 slot
 시작하며 streaming은 B1과 동일한 explicit state-in/state-out API와 series별 reset을
 사용한다.
 
+B1의 surprise/momentum/forgetting recurrence와 B2의 sparse read-before-write
+recurrence는 CUDA에서 `torch.compile` full-graph scan으로 실행한다. 이는 실행
+backend 최적화일 뿐 수식이나 event 순서를 바꾸지 않으며, CPU eager reference와
+state·diagnostic·gradient가 허용 오차 안에서 일치해야 한다.
+
 ## Event Causality
 
 1. 입력에는 현재까지 관측된 event의 delta-time과 quantity만 포함한다.

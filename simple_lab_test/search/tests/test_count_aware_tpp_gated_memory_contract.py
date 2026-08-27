@@ -14,6 +14,7 @@ from models.TPPs.CountAwareTPP import (
 from models.Titan.common.tpp_gated_memory import (
     TPPGatedMemoryState,
     TPPSpecificGatedMemory,
+    _scan_tpp_gated_sequence,
 )
 from paper.scripts.count_aware_tpp_backbone.constants import (
     BACKBONE_LABELS,
@@ -106,6 +107,9 @@ def test_b2_contract_factory_runner_and_persistent_memory_match() -> None:
     assert contract["b2_mechanism"]["relationship_to_titans"] == (
         "project_specific_proposal_not_faithful_titans_ltm"
     )
+    assert contract["b2_mechanism"]["cuda_scan_backend"] == (
+        "compiled_fullgraph_exact_read_before_write_recurrence"
+    )
     assert "titantpp_tpp_gated_memory" in TITAN_MEMORY_BACKBONES
     assert "titantpp_tpp_gated_memory" in SUPPORTED_BACKBONES
     assert BACKBONE_LABELS["titantpp_tpp_gated_memory"] == (
@@ -127,6 +131,7 @@ def test_b2_contract_factory_runner_and_persistent_memory_match() -> None:
     assert metadata["tpp_gated_write_policy"] == (
         "circular_observed_event_after_prediction"
     )
+    assert metadata["tpp_gated_scan_backend"] == "compiled_sequence_cuda"
     assert metadata["persistent_mem_size"] == 16
     assert b0_metadata["persistent_mem_size"] == 16
     assert b1_metadata["persistent_mem_size"] == 16
@@ -352,6 +357,94 @@ def test_write_chunk_schedules_are_numerically_identical() -> None:
         assert torch.allclose(
             token_diagnostics[name],
             chunk_diagnostics[name],
+            atol=1e-6,
+            rtol=1e-5,
+        )
+
+
+def test_compilable_scan_matches_eager_read_before_write_reference() -> None:
+    memory = build_memory()
+    encoded = torch.randn(2, 7, memory.d_model)
+    mask = torch.tensor(
+        [
+            [True, True, False, True, True, True, False],
+            [True, False, True, True, False, True, True],
+        ]
+    )
+    write_mask = mask.clone()
+    write_mask[:, -2] = False
+    series_ids = torch.tensor([1, 2])
+    initial = memory.initial_state(
+        2,
+        device=encoded.device,
+        dtype=encoded.dtype,
+        series_ids=series_ids,
+    )
+    eager_output, eager_state, eager_diagnostics = memory.forward_with_state(
+        encoded,
+        mask=mask,
+        write_mask=write_mask,
+        state=initial,
+        series_ids=series_ids,
+        write_chunk_size=1,
+    )
+    normalized = memory.input_norm(encoded)
+    queries = torch.nn.functional.normalize(
+        memory.query_projection(normalized),
+        dim=-1,
+        eps=1e-6,
+    )
+    write_keys = torch.nn.functional.normalize(
+        memory.key_projection(normalized),
+        dim=-1,
+        eps=1e-6,
+    )
+    scanned = _scan_tpp_gated_sequence(
+        initial.keys,
+        initial.values,
+        initial.valid_slots,
+        initial.write_counts,
+        encoded,
+        normalized,
+        queries,
+        write_keys,
+        memory.value_projection(normalized),
+        memory.null_logit_projection(normalized),
+        memory.confidence_projection.weight,
+        memory.confidence_projection.bias,
+        memory.output_norm.weight,
+        memory.output_norm.bias,
+        memory.output_projection.weight,
+        mask,
+        write_mask,
+        memory.topk,
+        memory.temperature,
+        memory.dropout.p,
+        memory.training,
+    )
+    scanned_state = TPPGatedMemoryState(
+        keys=scanned[1],
+        values=scanned[2],
+        valid_slots=scanned[3],
+        write_counts=scanned[4],
+        positions=initial.positions + mask.sum(dim=1),
+        series_ids=initial.series_ids,
+    )
+    scanned_diagnostics = {
+        "null_probability": scanned[5],
+        "retrieval_confidence": scanned[6],
+        "learned_confidence": scanned[7],
+        "effective_gate": scanned[8],
+        "selected_slot_count": scanned[9],
+        "write_applied": scanned[10],
+    }
+
+    assert torch.allclose(scanned[0], eager_output, atol=1e-6, rtol=1e-5)
+    assert_state_allclose(eager_state, scanned_state, atol=1e-6, rtol=1e-5)
+    for name, expected in eager_diagnostics.items():
+        assert torch.allclose(
+            scanned_diagnostics[name],
+            expected,
             atol=1e-6,
             rtol=1e-5,
         )
