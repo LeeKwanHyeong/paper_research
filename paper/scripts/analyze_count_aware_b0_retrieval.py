@@ -23,7 +23,12 @@ os.environ.setdefault("XDG_CACHE_HOME", "/tmp/xdg_b0_retrieval")
 import numpy as np  # noqa: E402
 import polars as pl  # noqa: E402
 import torch  # noqa: E402
+from torch.utils.data import DataLoader  # noqa: E402
 
+from data_loader.event_seq_data_module import (  # noqa: E402
+    RMTPPWeekLookbackDataset,
+    collate_week_lookback,
+)
 from models.TPPs.CountAwareFactory import build_count_aware_model  # noqa: E402
 from models.TPPs.CountAwareTPP import (  # noqa: E402
     TITAN_MEMORY_MODE_STATIC_HARD,
@@ -34,7 +39,6 @@ from paper.scripts.count_aware_tpp_backbone.core import (  # noqa: E402
     right_pad_batch,
     target_outputs,
 )
-from paper.scripts.run_taxi_quantity_interface_ablation import make_loader  # noqa: E402
 from simple_lab_test.search.common.runner import (  # noqa: E402
     canonical_state_dict_sha256,
     torch_load_checkpoint,
@@ -56,6 +60,8 @@ SOURCE_FILES = (
     "paper/scripts/count_aware_tpp_backbone/core.py",
     "paper/scripts/analyze_count_aware_b0_retrieval.py",
     "paper/configs/count_aware_b0_retrieval_validation_manifest.json",
+    "data_loader/event_seq_data_module.py",
+    "simple_lab_test/search/common/runner.py",
 )
 SCOPE_TYPES = (
     ("overall", None),
@@ -779,18 +785,25 @@ def dataset_frame_and_loader(
     batch_size_override: int | None,
 ) -> tuple[pl.DataFrame, Any]:
     frame = prepare_count_frame(pl.read_parquet(spec.data_path))
-    loader = make_loader(
+    dataset = RMTPPWeekLookbackDataset(
         frame,
-        target_split="validation",
+        lookback_weeks=int(contract["lookback_weeks"]),
+        max_seq_len=int(contract["max_seq_len"]),
+        val_ratio=0.2,
+        mode="all",
+        split_col="chronological_split",
+        target_splits={"validation"},
+    )
+    loader = DataLoader(
+        dataset,
         batch_size=(
             int(batch_size_override)
             if batch_size_override is not None
             else int(contract["batch_size"])
         ),
-        lookback_weeks=int(contract["lookback_weeks"]),
-        max_seq_len=int(contract["max_seq_len"]),
         shuffle=False,
-        generator=None,
+        collate_fn=collate_week_lookback,
+        num_workers=0,
     )
     return frame, loader
 
