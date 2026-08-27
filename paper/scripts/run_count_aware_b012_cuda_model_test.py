@@ -541,11 +541,13 @@ def main() -> None:
     }
     b0_seconds = medians["titantpp"]
     timing_rows = []
-    speed_gate_passed = True
+    b2_speed_gate_passed = True
     for backbone in TITAN_B012_BACKBONES:
         ratio = medians[backbone] / b0_seconds
-        passed = backbone == "titantpp" or ratio <= args.maximum_step_ratio
-        speed_gate_passed = speed_gate_passed and passed
+        within_limit = backbone == "titantpp" or ratio <= args.maximum_step_ratio
+        hard_gate = backbone == "titantpp_tpp_gated_memory"
+        if hard_gate:
+            b2_speed_gate_passed = b2_speed_gate_passed and within_limit
         timing_rows.append(
             {
                 "backbone": backbone,
@@ -553,12 +555,20 @@ def main() -> None:
                 "median_seconds": medians[backbone],
                 "ratio_vs_b0": ratio,
                 "maximum_allowed_ratio": args.maximum_step_ratio,
-                "passed": passed,
+                "within_allowed_ratio": within_limit,
+                "hard_gate": hard_gate,
+                "policy": (
+                    "candidate_hard_gate"
+                    if hard_gate
+                    else "reference_disclosure"
+                    if backbone == "titantpp_titans_mac"
+                    else "baseline"
+                ),
             }
         )
 
     payload = {
-        "status": "complete" if speed_gate_passed else "failed_speed_gate",
+        "status": "complete" if b2_speed_gate_passed else "failed_speed_gate",
         "device": args.device,
         "cuda_device": (
             torch.cuda.get_device_name(0) if args.device.startswith("cuda") else None
@@ -571,13 +581,15 @@ def main() -> None:
         "correctness_skipped": args.timing_only,
         "correctness": correctness,
         "training_step_timing": timing_rows,
-        "speed_gate_passed": speed_gate_passed,
+        "speed_gate_passed": b2_speed_gate_passed,
+        "b2_speed_gate_passed": b2_speed_gate_passed,
+        "b1_reference_ratio_disclosed": True,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(payload, indent=2), flush=True)
-    if not speed_gate_passed:
-        raise RuntimeError("B1/B2 training-step speed gate failed")
+    if not b2_speed_gate_passed:
+        raise RuntimeError("B2 training-step speed gate failed")
 
 
 if __name__ == "__main__":

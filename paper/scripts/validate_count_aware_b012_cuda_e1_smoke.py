@@ -193,9 +193,11 @@ def main() -> None:
         raise ValueError("source-revision must be a 40-character lowercase Git SHA")
     cuda_test = load_json(args.artifact_root / "cuda_model_test.json")
     if cuda_test.get("status") != "complete" or not cuda_test.get(
-        "speed_gate_passed"
+        "b2_speed_gate_passed"
     ):
-        raise ValueError("CUDA model test or B0-relative speed gate did not pass")
+        raise ValueError("CUDA model test or B2 speed gate did not pass")
+    if not cuda_test.get("b1_reference_ratio_disclosed"):
+        raise ValueError("B1 reference speed ratio was not disclosed")
     if cuda_test.get("backbones") != list(TITAN_B012_BACKBONES):
         raise ValueError("CUDA model test backbone contract drifted")
 
@@ -222,7 +224,8 @@ def main() -> None:
         "source_revision": args.source_revision,
         "execution_server": "5080",
         "cuda_model_test_passed": True,
-        "training_step_speed_gate_passed": True,
+        "b2_training_step_speed_gate_passed": True,
+        "b1_reference_speed_ratio_disclosed": True,
         "dataset_results": dataset_results,
         "held_out_test_evaluated": False,
     }

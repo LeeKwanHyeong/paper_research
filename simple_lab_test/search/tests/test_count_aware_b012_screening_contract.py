@@ -77,6 +77,14 @@ def test_frozen_json_matches_runtime_backbone_and_dataset_contracts() -> None:
     assert contract["b2_acceptance_gate"]["b1_selection_status"] == (
         "reference_only_not_selectable"
     )
+    speed_policy = contract["preflight"]["speed_policy"]
+    assert speed_policy["timing_batch_size"] == 128
+    assert speed_policy["timing_sequence_length"] == 64
+    assert speed_policy["b2_maximum_training_step_ratio_vs_b0"] == 3.0
+    assert speed_policy["b1_segment_size"] == 16
+    assert speed_policy["b1_policy"] == (
+        "reference_only_ratio_must_be_disclosed_after_optimization"
+    )
     for dataset_id, context in contract["dataset_contexts"].items():
         runtime = DATASET_CONTRACTS[dataset_id]
         assert context["lookback"] == runtime["lookback"]

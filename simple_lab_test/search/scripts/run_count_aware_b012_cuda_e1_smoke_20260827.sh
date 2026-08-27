@@ -69,6 +69,10 @@ cd "${PROJECT_ROOT}"
 "${PYTHON_BIN}" paper/scripts/run_count_aware_b012_cuda_model_test.py \
   --device cuda \
   --output "${OUTPUT_ROOT}/cuda_model_test.json" \
+  --batch-size 128 \
+  --sequence-length 64 \
+  --warmup-steps 2 \
+  --timed-steps 5 \
   --maximum-step-ratio 3
 
 run_dataset() {
