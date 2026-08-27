@@ -35,6 +35,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--warmup-steps", type=int, default=1)
     parser.add_argument("--timed-steps", type=int, default=3)
     parser.add_argument("--maximum-step-ratio", type=float, default=3.0)
+    parser.add_argument(
+        "--compile-model-backbones",
+        default="",
+        help="Comma-separated backbones to compile in-place for timing only.",
+    )
     return parser.parse_args()
 
 
@@ -430,6 +435,7 @@ def training_step_times(
     warmup_steps: int,
     timed_steps: int,
     device: str,
+    compile_model: bool,
 ) -> list[float]:
     torch.manual_seed(123)
     model, _ = build_model(
@@ -437,6 +443,8 @@ def training_step_times(
         max_seq_len=sequence_length,
         device=device,
     )
+    if compile_model:
+        model.compile(fullgraph=False, dynamic=False, mode="reduce-overhead")
     model.train()
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     dts, quantities, mask = make_batch(
@@ -473,6 +481,17 @@ def main() -> None:
         raise ValueError("warmup-steps must be nonnegative and timed-steps positive")
     if args.maximum_step_ratio <= 0.0:
         raise ValueError("maximum-step-ratio must be positive")
+    compiled_backbones = {
+        value.strip()
+        for value in args.compile_model_backbones.split(",")
+        if value.strip()
+    }
+    unsupported_compiled = compiled_backbones.difference(TITAN_B012_BACKBONES)
+    if unsupported_compiled:
+        raise ValueError(
+            "Unsupported compile-model backbones: "
+            + ", ".join(sorted(unsupported_compiled))
+        )
 
     correctness = [
         correctness_case(
@@ -491,6 +510,7 @@ def main() -> None:
             warmup_steps=args.warmup_steps,
             timed_steps=args.timed_steps,
             device=args.device,
+            compile_model=backbone in compiled_backbones,
         )
         for backbone in TITAN_B012_BACKBONES
     }
@@ -525,6 +545,7 @@ def main() -> None:
         "backbones": list(TITAN_B012_BACKBONES),
         "batch_size": args.batch_size,
         "sequence_length": args.sequence_length,
+        "compiled_model_backbones": sorted(compiled_backbones),
         "correctness": correctness,
         "training_step_timing": timing_rows,
         "speed_gate_passed": speed_gate_passed,
