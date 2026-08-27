@@ -208,6 +208,8 @@ def compiled_eager_equivalence(
         if eager_model.titans_mac_encoder is None:
             raise AssertionError("B1 Titans-MAC encoder is missing")
         eager_model.titans_mac_encoder.neural_memory.compile_cuda_scan = False
+        for layer in eager_model.titans_mac_encoder.layers:
+            layer.compile_cuda_block = False
     else:
         if eager_model.tpp_gated_memory is None:
             raise AssertionError("B2 gated memory is missing")

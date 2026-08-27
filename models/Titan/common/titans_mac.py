@@ -622,8 +622,11 @@ class TitansMACBlock(nn.Module):
         n_heads: int,
         d_ff: int,
         dropout: float,
+        *,
+        compile_cuda_block: bool = True,
     ) -> None:
         super().__init__()
+        self.compile_cuda_block = bool(compile_cuda_block)
         self.attention_norm = nn.LayerNorm(d_model)
         self.attention = nn.MultiheadAttention(
             d_model,
@@ -640,8 +643,18 @@ class TitansMACBlock(nn.Module):
             nn.Linear(d_ff, d_model),
         )
         self.feedforward_dropout = nn.Dropout(dropout)
+        self._compiled_cuda_forward = (
+            torch.compile(
+                self._forward_impl,
+                fullgraph=True,
+                dynamic=False,
+                mode="reduce-overhead",
+            )
+            if hasattr(torch, "compile")
+            else None
+        )
 
-    def forward(
+    def _forward_impl(
         self,
         tokens: torch.Tensor,
         *,
@@ -663,6 +676,33 @@ class TitansMACBlock(nn.Module):
         fed = self.feedforward(self.feedforward_norm(tokens))
         tokens = tokens + self.feedforward_dropout(fed)
         return tokens * valid_mask.unsqueeze(-1).to(dtype=tokens.dtype)
+
+    def forward(
+        self,
+        tokens: torch.Tensor,
+        *,
+        blocked_mask: torch.Tensor,
+        key_padding_mask: torch.Tensor,
+        valid_mask: torch.Tensor,
+    ) -> torch.Tensor:
+        if (
+            tokens.device.type == "cuda"
+            and self.compile_cuda_block
+            and self._compiled_cuda_forward is not None
+        ):
+            # Keep the result valid after the next CUDAGraph replay.
+            return self._compiled_cuda_forward(
+                tokens,
+                blocked_mask=blocked_mask,
+                key_padding_mask=key_padding_mask,
+                valid_mask=valid_mask,
+            ).clone()
+        return self._forward_impl(
+            tokens,
+            blocked_mask=blocked_mask,
+            key_padding_mask=key_padding_mask,
+            valid_mask=valid_mask,
+        )
 
 
 class TitansMACEncoder(nn.Module):
