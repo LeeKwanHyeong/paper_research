@@ -444,6 +444,11 @@ def training_step_times(
         device=device,
     )
     if compile_model:
+        if backbone == "titantpp_titans_mac":
+            if model.titans_mac_encoder is None:
+                raise AssertionError("B1 Titans-MAC encoder is missing")
+            for layer in model.titans_mac_encoder.layers:
+                layer.compile_cuda_block = False
         model.compile(fullgraph=False, dynamic=False, mode="reduce-overhead")
     model.train()
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
