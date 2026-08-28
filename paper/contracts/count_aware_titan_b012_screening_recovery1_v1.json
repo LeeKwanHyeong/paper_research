@@ -1,0 +1,78 @@
+{
+  "contract_id": "count_aware_titan_b012_screening_recovery1_v1",
+  "frozen_at": "2026-08-28",
+  "parent_contract": "count_aware_titan_b012_screening_v1",
+  "training_source_revision": "08e59880cd61cbd27cec40aa04636452b87bebfc",
+  "execution_server": "5080",
+  "incident": {
+    "failed_artifact": "count_aware_b012_seed42_screening_e300_20260827_final1",
+    "failure_stage": "intermittent_frozen_5000/B1_initialization",
+    "failure_class": "external_graphics_vram_exhaustion",
+    "failed_artifact_is_immutable": true,
+    "held_out_test_evaluated": false
+  },
+  "reused_run": {
+    "dataset": "intermittent_frozen_5000",
+    "backbone": "titantpp",
+    "variant": "count_only_log_regression",
+    "seed": 42,
+    "required_status": "success",
+    "required_evaluation_scope": "validation_only",
+    "required_checks": [
+      "training_source_revision_exact",
+      "launch_contract_exact",
+      "checkpoint_exists",
+      "checkpoint_state_digest_exact",
+      "all_summary_metrics_finite",
+      "held_out_test_unused"
+    ]
+  },
+  "isolated_run_plan": [
+    ["intermittent_frozen_5000", "titantpp_titans_mac"],
+    ["intermittent_frozen_5000", "titantpp_tpp_gated_memory"],
+    ["yellow_trip_hourly", "titantpp"],
+    ["yellow_trip_hourly", "titantpp_titans_mac"],
+    ["yellow_trip_hourly", "titantpp_tpp_gated_memory"],
+    ["raf_spare_parts", "titantpp"],
+    ["raf_spare_parts", "titantpp_titans_mac"],
+    ["raf_spare_parts", "titantpp_tpp_gated_memory"]
+  ],
+  "process_isolation": {
+    "one_backbone_per_python_process": true,
+    "completed_shards_are_reused": true,
+    "partial_checkpoint_resume_allowed_only_at_same_training_revision": true,
+    "force_rerun": false,
+    "canonical_merge_requires_all_nine_runs": true
+  },
+  "gpu_preflight": {
+    "run_before_every_isolated_backbone": true,
+    "minimum_free_memory_mib": 15000,
+    "maximum_used_memory_mib": 512,
+    "compute_processes_allowed": 0,
+    "forbidden_graphics_process_names": [
+      "gnome-shell",
+      "Xwayland"
+    ],
+    "failure_action": "stop_before_training_and_preserve_artifacts"
+  },
+  "status_contract": {
+    "atomic_status_writes": true,
+    "shell_exit_trap_required": true,
+    "states": [
+      "prepared",
+      "running",
+      "failed",
+      "merged",
+      "complete"
+    ],
+    "failed_state_records_dataset_backbone_and_exit_code": true
+  },
+  "canonical_result": {
+    "model_role": "titan_b012_screening",
+    "expected_run_count": 9,
+    "training_contract_unchanged": true,
+    "recovery_orchestration_revision_recorded_separately": true,
+    "evaluation_scope": "validation_only",
+    "held_out_test": "locked"
+  }
+}
