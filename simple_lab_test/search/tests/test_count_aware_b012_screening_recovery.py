@@ -607,3 +607,7 @@ def test_recovery_contract_and_launcher_freeze_the_safe_execution_order() -> Non
     assert launcher.index("preflight-gpu") < launcher.index('"${RUNNER}"')
     assert "training_source_revision=" in launcher
     assert "recovery_orchestration_revision=" in launcher
+    assert "verify_snapshot_training_files" in launcher
+    assert 'source_manifest="${SOURCE_ARTIFACT}/source_manifest.txt"' in launcher
+    assert 'rev-parse --is-inside-work-tree' in launcher
+    assert 'if [[ "${VERIFY_ONLY}" == "1" ]]' in launcher

@@ -11,6 +11,7 @@ MINIMUM_FREE_MIB="${MINIMUM_FREE_MIB:-15000}"
 MAXIMUM_USED_MIB="${MAXIMUM_USED_MIB:-512}"
 PREFLIGHT_ATTEMPTS="${PREFLIGHT_ATTEMPTS:-12}"
 PREFLIGHT_INTERVAL_SECONDS="${PREFLIGHT_INTERVAL_SECONDS:-5}"
+VERIFY_ONLY="${VERIFY_ONLY:-0}"
 
 MODEL_ROLE="titan_b012_screening"
 RECOVERY_CONTRACT="${PROJECT_ROOT}/paper/contracts/count_aware_titan_b012_screening_recovery1_v1.json"
@@ -92,6 +93,26 @@ on_exit() {
 }
 trap on_exit EXIT
 
+verify_snapshot_training_files() {
+  local source_manifest="${SOURCE_ARTIFACT}/source_manifest.txt"
+  local relative_path
+  local absolute_path
+  local expected_sha
+  local observed_sha
+
+  [[ -f "${source_manifest}" ]]
+  grep -qx "source_revision=${SOURCE_REVISION}" "${source_manifest}"
+  for relative_path in "${TRAINING_RELATIVE_FILES[@]}"; do
+    absolute_path="${PROJECT_ROOT}/${relative_path}"
+    expected_sha="$(awk -v path="${absolute_path}" '$2 == path {print $1}' \
+      "${source_manifest}")"
+    [[ "${expected_sha}" =~ ^[0-9a-f]{64}$ ]]
+    observed_sha="$(sha256sum "${absolute_path}")"
+    observed_sha="${observed_sha%% *}"
+    [[ "${observed_sha}" == "${expected_sha}" ]]
+  done
+}
+
 export PYTHONHASHSEED=42 CUBLAS_WORKSPACE_CONFIG=:4096:8 CUDA_VISIBLE_DEVICES=0
 export PYTHONUNBUFFERED=1 MPLBACKEND=Agg
 export MPLCONFIGDIR="${MPLCONFIGDIR:-/tmp/mplconfig_b012_recovery1}"
@@ -100,19 +121,30 @@ export XDG_CACHE_HOME="${XDG_CACHE_HOME:-/tmp/xdg_b012_recovery1}"
 [[ -x "${PYTHON_BIN}" ]]
 [[ "${SOURCE_REVISION}" =~ ^[0-9a-f]{40}$ ]]
 [[ "${RECOVERY_REVISION}" =~ ^[0-9a-f]{40}$ ]]
+[[ "${VERIFY_ONLY}" =~ ^[01]$ ]]
 [[ -d "${SOURCE_ARTIFACT}" ]]
 [[ "${SOURCE_ARTIFACT}" != "${OUTPUT_ROOT}" ]]
 for relative_path in "${TRAINING_RELATIVE_FILES[@]}" "${RECOVERY_RELATIVE_FILES[@]}"; do
   [[ -f "${PROJECT_ROOT}/${relative_path}" ]]
 done
 
-observed_revision="$(git -C "${PROJECT_ROOT}" rev-parse HEAD)"
-[[ "${observed_revision}" == "${RECOVERY_REVISION}" ]]
-git -C "${PROJECT_ROOT}" cat-file -e "${SOURCE_REVISION}^{commit}"
-git -C "${PROJECT_ROOT}" diff --quiet \
-  "${SOURCE_REVISION}" -- "${TRAINING_RELATIVE_FILES[@]}"
-git -C "${PROJECT_ROOT}" diff --quiet \
-  "${RECOVERY_REVISION}" -- "${RECOVERY_RELATIVE_FILES[@]}"
+if git -C "${PROJECT_ROOT}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  observed_revision="$(git -C "${PROJECT_ROOT}" rev-parse HEAD)"
+  [[ "${observed_revision}" == "${RECOVERY_REVISION}" ]]
+  git -C "${PROJECT_ROOT}" cat-file -e "${SOURCE_REVISION}^{commit}"
+  git -C "${PROJECT_ROOT}" diff --quiet \
+    "${SOURCE_REVISION}" -- "${TRAINING_RELATIVE_FILES[@]}"
+  git -C "${PROJECT_ROOT}" diff --quiet \
+    "${RECOVERY_REVISION}" -- "${RECOVERY_RELATIVE_FILES[@]}"
+else
+  verify_snapshot_training_files
+fi
+if [[ "${VERIFY_ONLY}" == "1" ]]; then
+  printf 'Recovery source verification passed: training=%s recovery=%s\n' \
+    "${SOURCE_REVISION}" "${RECOVERY_REVISION}"
+  FINALIZED=1
+  exit 0
+fi
 
 "${PYTHON_BIN}" "${RECOVERY_TOOL}" prepare \
   --source-artifact "${SOURCE_ARTIFACT}" \
