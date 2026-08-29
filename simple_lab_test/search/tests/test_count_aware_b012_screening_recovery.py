@@ -33,6 +33,7 @@ from paper.scripts.recover_count_aware_b012_seed42_screening import (
     prepare_shard_5090,
     shard_role_dir,
     shard_run_dir,
+    validate_launch_contract,
     validate_completed_run,
     write_status,
 )
@@ -184,6 +185,15 @@ def launch_payload(
                     "time_initial_scale": None,
                     "time_sigma_floor": 1e-3,
                     "statistics_source_split": "train",
+                    "train_time_statistics": {
+                        "statistics_source_split": "train",
+                        "target_count": 100,
+                        "target_dt_p50": 3.0,
+                        "target_dt_max": 12.0,
+                        "time_scale": 3.0,
+                        "time_w_max": 10.0 / 3.0,
+                        "wd_safety_limit": 40.0,
+                    },
                 },
             }
         },
@@ -205,6 +215,8 @@ def launch_payload(
             "train_time_statistics": {
                 "statistics_source_split": "train",
                 "target_count": 100,
+                "target_dt_p50": 3.0,
+                "target_dt_max": 12.0,
                 "time_scale": 3.0,
                 "time_w_max": 10.0 / 3.0,
                 "wd_safety_limit": 40.0,
@@ -654,6 +666,53 @@ def test_shard_inspection_allows_only_missing_same_revision_resume_or_reuse(
         backbone=backbone,
         source_revision=SOURCE_REVISION,
     )["action"] == "reuse_completed"
+
+
+def test_launch_contract_accepts_train_derived_time_values_and_rejects_drift(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "launch_contract.json"
+    payload = launch_payload(
+        "yellow_trip_hourly",
+        ("titantpp",),
+        model_role=MODEL_ROLE_EXPERIMENTAL,
+        status="running",
+    )
+    time_scale = 1.0
+    time_w_max = 8.0 / 23.0
+    train_time = payload["time_head"]["train_time_statistics"]
+    train_time["target_dt_p50"] = time_scale
+    train_time["target_dt_max"] = 115.0
+    train_time["time_scale"] = time_scale
+    train_time["time_w_max"] = time_w_max
+    interface_time = payload["interfaces"][VARIANT]["time_head"]
+    interface_time["train_time_statistics"] = dict(train_time)
+    write_json(path, payload)
+
+    validated = validate_launch_contract(
+        path,
+        dataset="yellow_trip_hourly",
+        backbones=("titantpp",),
+        source_revision=SOURCE_REVISION,
+        model_role=MODEL_ROLE_EXPERIMENTAL,
+        allowed_statuses={"running"},
+    )
+    assert validated["time_head"]["time_scale"] == 3.0
+    assert validated["time_head"]["time_w_max"] == 10.0 / 3.0
+    assert validated["time_head"]["train_time_statistics"]["time_scale"] == time_scale
+    assert validated["time_head"]["train_time_statistics"]["time_w_max"] == time_w_max
+
+    interface_time["train_time_statistics"]["time_scale"] = 3.0
+    write_json(path, payload)
+    with pytest.raises(ValueError, match="interfaces.*train_time_statistics"):
+        validate_launch_contract(
+            path,
+            dataset="yellow_trip_hourly",
+            backbones=("titantpp",),
+            source_revision=SOURCE_REVISION,
+            model_role=MODEL_ROLE_EXPERIMENTAL,
+            allowed_statuses={"running"},
+        )
 
 
 def test_failed_status_is_atomic_and_held_out_artifacts_are_rejected(

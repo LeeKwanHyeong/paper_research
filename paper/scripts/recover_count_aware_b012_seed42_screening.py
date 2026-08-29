@@ -226,10 +226,23 @@ def validate_launch_contract(
                 "observed": time_head.get(key),
             }
     train_time = time_head.get("train_time_statistics", {})
+    train_time_values: dict[str, float] = {}
+    for key in ("time_scale", "time_w_max"):
+        observed = train_time.get(key)
+        if (
+            isinstance(observed, bool)
+            or not isinstance(observed, (int, float))
+            or not math.isfinite(float(observed))
+            or float(observed) <= 0.0
+        ):
+            mismatches[f"time_head.train_time_statistics.{key}"] = {
+                "expected": "positive finite train-derived value",
+                "observed": observed,
+            }
+        else:
+            train_time_values[key] = float(observed)
     expected_train_time = {
         "statistics_source_split": "train",
-        "time_scale": 3.0,
-        "time_w_max": 10.0 / 3.0,
         "wd_safety_limit": 40.0,
     }
     for key, expected_value in expected_train_time.items():
@@ -245,6 +258,31 @@ def validate_launch_contract(
             "expected": "positive integer",
             "observed": train_time.get("target_count"),
         }
+    target_p50 = train_time.get("target_dt_p50")
+    target_max = train_time.get("target_dt_max")
+    if "time_scale" in train_time_values and target_p50 != train_time_values["time_scale"]:
+        mismatches["time_head.train_time_statistics.time_scale_formula"] = {
+            "expected": target_p50,
+            "observed": train_time_values["time_scale"],
+        }
+    if (
+        "time_w_max" in train_time_values
+        and isinstance(target_max, (int, float))
+        and not isinstance(target_max, bool)
+        and math.isfinite(float(target_max))
+        and float(target_max) > 0.0
+    ):
+        expected_w_max = 40.0 / float(target_max)
+        if not math.isclose(
+            train_time_values["time_w_max"],
+            expected_w_max,
+            rel_tol=1e-12,
+            abs_tol=1e-12,
+        ):
+            mismatches["time_head.train_time_statistics.time_w_max_formula"] = {
+                "expected": expected_w_max,
+                "observed": train_time_values["time_w_max"],
+            }
 
     interface = payload.get("interfaces", {}).get(VARIANT, {})
     expected_interface = {
@@ -284,6 +322,12 @@ def validate_launch_contract(
                 "expected": expected_time_head[key],
                 "observed": interface_time.get(key),
             }
+    interface_train_time = interface_time.get("train_time_statistics")
+    if interface_train_time != train_time:
+        mismatches[f"interfaces.{VARIANT}.time_head.train_time_statistics"] = {
+            "expected": train_time,
+            "observed": interface_train_time,
+        }
     early_stopping = payload.get("early_stopping", {})
     for key, expected_value in {
         "monitor": "validation_joint_objective",
