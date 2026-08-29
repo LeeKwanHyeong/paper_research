@@ -20,13 +20,17 @@ from paper.scripts.count_aware_tpp_backbone.constants import (
 from paper.scripts.count_aware_tpp_backbone.datasets import DATASET_CONTRACTS
 from paper.scripts.recover_count_aware_b012_seed42_screening import (
     RECOVERY_RUNS,
+    SHARD_5090_RUNS,
     assert_no_held_out_artifacts,
     canonical_run_dir,
     evaluate_gpu_snapshot,
+    finalize_shard_5090,
+    import_shard_5090,
     inspect_shard,
     merge_recovery,
     parse_nvidia_process_table,
     prepare_recovery,
+    prepare_shard_5090,
     shard_role_dir,
     shard_run_dir,
     validate_completed_run,
@@ -41,6 +45,10 @@ RECOVERY_REVISION = "1" * 40
 RECOVERY_CONTRACT = (
     PROJECT_ROOT
     / "paper/contracts/count_aware_titan_b012_screening_recovery1_v1.json"
+)
+SHARD_5090_CONTRACT = (
+    PROJECT_ROOT
+    / "paper/contracts/count_aware_titan_b012_screening_shard5090_v1.json"
 )
 
 
@@ -364,6 +372,153 @@ def test_gpu_preflight_rejects_graphics_and_compute_processes() -> None:
         maximum_used_mib=512,
     )["passed"] is True
 
+    xorg_only = parse_nvidia_process_table(
+        "| 0 N/A N/A 155500 G /usr/lib/xorg/Xorg 16MiB |"
+    )
+    assert evaluate_gpu_snapshot(
+        total_mib=32607,
+        used_mib=16,
+        free_mib=32591,
+        processes=xorg_only,
+        minimum_free_mib=30000,
+        maximum_used_mib=512,
+        forbidden_graphics_names={"gnome-shell", "Xwayland", "Xorg"},
+    )["failure_reasons"] == ["forbidden_graphics_process_present"]
+
+
+def test_5090_shard_prepares_and_finalizes_only_canonical_runs_4_to_9(
+    tmp_path: Path,
+) -> None:
+    output = tmp_path / "shard5090"
+    manifest = prepare_shard_5090(
+        output_root=output,
+        source_revision=SOURCE_REVISION,
+        recovery_revision=RECOVERY_REVISION,
+        contract_path=SHARD_5090_CONTRACT,
+        execution_server="5090",
+    )
+
+    assert manifest["status"] == "prepared"
+    assert manifest["expected_run_count"] == 6
+    assert [row["canonical_ordinal"] for row in manifest["planned_runs"]] == list(
+        range(4, 10)
+    )
+    status = json.loads(
+        (output / "screening_status.json").read_text(encoding="utf-8")
+    )
+    assert status["execution_server"] == "5090"
+    assert status["shard_orchestration_revision"] == RECOVERY_REVISION
+    assert "recovery_orchestration_revision" not in status
+
+    with pytest.raises(FileNotFoundError):
+        finalize_shard_5090(
+            output_root=output,
+            source_revision=SOURCE_REVISION,
+            recovery_revision=RECOVERY_REVISION,
+            contract_path=SHARD_5090_CONTRACT,
+            execution_server="5090",
+        )
+
+    for dataset, backbone in SHARD_5090_RUNS:
+        role_dir = shard_role_dir(output, dataset, backbone)
+        write_json(
+            role_dir / "launch_contract.json",
+            launch_payload(
+                dataset,
+                (backbone,),
+                model_role=MODEL_ROLE_EXPERIMENTAL,
+                status="complete",
+            ),
+        )
+        make_completed_run(shard_run_dir(output, dataset, backbone), backbone)
+
+    completed = finalize_shard_5090(
+        output_root=output,
+        source_revision=SOURCE_REVISION,
+        recovery_revision=RECOVERY_REVISION,
+        contract_path=SHARD_5090_CONTRACT,
+        execution_server="5090",
+    )
+
+    assert completed["status"] == "complete"
+    assert completed["completed_run_count"] == 6
+    assert [row["canonical_ordinal"] for row in completed["validated_runs"]] == list(
+        range(4, 10)
+    )
+    assert completed["held_out_test_evaluated"] is False
+    assert_no_held_out_artifacts(output)
+
+
+def test_5090_shard_import_is_validated_and_idempotent(tmp_path: Path) -> None:
+    source = make_source_artifact(tmp_path)
+    recovery = tmp_path / "recovery1"
+    prepare_recovery(
+        source_artifact=source,
+        output_root=recovery,
+        source_revision=SOURCE_REVISION,
+        recovery_revision=RECOVERY_REVISION,
+        contract_path=RECOVERY_CONTRACT,
+    )
+    shard = tmp_path / "shard5090"
+    prepare_shard_5090(
+        output_root=shard,
+        source_revision=SOURCE_REVISION,
+        recovery_revision=RECOVERY_REVISION,
+        contract_path=SHARD_5090_CONTRACT,
+        execution_server="5090",
+    )
+    for dataset, backbone in SHARD_5090_RUNS:
+        write_json(
+            shard_role_dir(shard, dataset, backbone) / "launch_contract.json",
+            launch_payload(
+                dataset,
+                (backbone,),
+                model_role=MODEL_ROLE_EXPERIMENTAL,
+                status="complete",
+            ),
+        )
+        make_completed_run(shard_run_dir(shard, dataset, backbone), backbone)
+    finalize_shard_5090(
+        output_root=shard,
+        source_revision=SOURCE_REVISION,
+        recovery_revision=RECOVERY_REVISION,
+        contract_path=SHARD_5090_CONTRACT,
+        execution_server="5090",
+    )
+
+    first = import_shard_5090(
+        shard_root=shard,
+        output_root=recovery,
+        source_revision=SOURCE_REVISION,
+        recovery_revision=RECOVERY_REVISION,
+        shard_revision=RECOVERY_REVISION,
+        contract_path=SHARD_5090_CONTRACT,
+    )
+    second = import_shard_5090(
+        shard_root=shard,
+        output_root=recovery,
+        source_revision=SOURCE_REVISION,
+        recovery_revision=RECOVERY_REVISION,
+        shard_revision=RECOVERY_REVISION,
+        contract_path=SHARD_5090_CONTRACT,
+    )
+
+    assert first["run_count"] == 6
+    assert {row["action"] for row in first["runs"]} == {"installed"}
+    assert {row["action"] for row in second["runs"]} == {"reused_identical"}
+    manifest = json.loads(
+        (recovery / "recovery_manifest.json").read_text(encoding="utf-8")
+    )
+    assert manifest["imported_5090_shard"]["run_count"] == 6
+    for dataset, backbone in SHARD_5090_RUNS:
+        assert inspect_shard(
+            output_root=recovery,
+            dataset=dataset,
+            backbone=backbone,
+            source_revision=SOURCE_REVISION,
+        )["action"] == "reuse_completed"
+    assert_no_held_out_artifacts(recovery)
+
 
 def test_prepare_reuses_only_validated_b0_and_keeps_source_immutable(
     tmp_path: Path,
@@ -611,3 +766,50 @@ def test_recovery_contract_and_launcher_freeze_the_safe_execution_order() -> Non
     assert 'source_manifest="${SOURCE_ARTIFACT}/source_manifest.txt"' in launcher
     assert 'rev-parse --is-inside-work-tree' in launcher
     assert 'if [[ "${VERIFY_ONLY}" == "1" ]]' in launcher
+
+
+def test_5090_shard_contract_and_launcher_freeze_runs_4_to_9() -> None:
+    contract = json.loads(SHARD_5090_CONTRACT.read_text(encoding="utf-8"))
+    launcher = (
+        PROJECT_ROOT
+        / "simple_lab_test/search/scripts/"
+        "run_count_aware_b012_seed42_screening_shard5090_20260829.sh"
+    ).read_text(encoding="utf-8")
+
+    observed_plan = tuple(
+        (row["dataset"], row["backbone"]) for row in contract["run_plan"]
+    )
+    assert observed_plan == SHARD_5090_RUNS
+    assert [row["canonical_ordinal"] for row in contract["run_plan"]] == list(
+        range(4, 10)
+    )
+    assert contract["training_source_revision"] == SOURCE_REVISION
+    assert contract["execution_server"] == "5090"
+    assert contract["evaluation_scope"] == "validation_only"
+    assert contract["held_out_test"] == "locked"
+    assert contract["process_isolation"]["one_backbone_per_python_process"] is True
+    assert contract["process_isolation"]["merge_on_5090"] is False
+    assert launcher.count("run_isolated_backbone \\\n") == 6
+    assert "finalize-shard-5090" in launcher
+    assert "--revision-field shard_orchestration_revision" in launcher
+    assert "compare_count_aware_b012_seed42_screening.py" not in launcher
+    assert " merge " not in launcher
+    assert "--forbidden-graphics-process Xorg" in launcher
+    assert "--model-role experimental" in launcher
+    assert "--allow-partial-contract" in launcher
+    assert "--force-rerun" not in launcher
+
+
+def test_5080_split_guard_pauses_only_at_the_intermittent_b2_boundary() -> None:
+    guard = (
+        PROJECT_ROOT
+        / "simple_lab_test/search/scripts/"
+        "guard_count_aware_b012_5080_split_boundary_20260829.sh"
+    ).read_text(encoding="utf-8")
+
+    assert "kill -STOP \"${PARENT_PID}\"" in guard
+    assert "kill -STOP \"${child_pid}\"" not in guard
+    assert "--dataset-contract intermittent_frozen_5000" in guard
+    assert "--backbones titantpp_tpp_gated_memory" in guard
+    assert "boundary_held" in guard
+    assert "Taxi and RAF are reserved for 5090" in guard

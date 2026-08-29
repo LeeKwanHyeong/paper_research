@@ -43,6 +43,7 @@ from simple_lab_test.search.common.runner import (
 
 
 CONTRACT_ID = "count_aware_titan_b012_screening_recovery1_v1"
+SHARD_5090_CONTRACT_ID = "count_aware_titan_b012_screening_shard5090_v1"
 RECOVERY_MODEL_ROLE = MODEL_ROLE_TITAN_B012_SCREENING
 REUSED_RUN = ("intermittent_frozen_5000", "titantpp")
 RECOVERY_RUNS = (
@@ -55,6 +56,8 @@ RECOVERY_RUNS = (
     ("raf_spare_parts", "titantpp_titans_mac"),
     ("raf_spare_parts", "titantpp_tpp_gated_memory"),
 )
+SHARD_5090_RUNS = RECOVERY_RUNS[2:]
+DEFAULT_FORBIDDEN_GRAPHICS_NAMES = {"gnome-shell", "xwayland"}
 FORBIDDEN_HELD_OUT_NAMES = {
     "held_out_test.json",
     "test_metrics.csv",
@@ -741,6 +744,7 @@ def evaluate_gpu_snapshot(
     processes: list[dict[str, Any]],
     minimum_free_mib: int,
     maximum_used_mib: int,
+    forbidden_graphics_names: set[str] | None = None,
 ) -> dict[str, Any]:
     reasons = []
     if free_mib < minimum_free_mib:
@@ -750,7 +754,14 @@ def evaluate_gpu_snapshot(
     compute_processes = [process for process in processes if "C" in process["type"]]
     if compute_processes:
         reasons.append("cuda_compute_process_present")
-    forbidden_names = {"gnome-shell", "xwayland"}
+    forbidden_names = {
+        name.lower()
+        for name in (
+            forbidden_graphics_names
+            if forbidden_graphics_names is not None
+            else DEFAULT_FORBIDDEN_GRAPHICS_NAMES
+        )
+    }
     forbidden_graphics = [
         process
         for process in processes
@@ -815,6 +826,7 @@ def run_gpu_preflight(
     maximum_used_mib: int,
     attempts: int,
     interval_seconds: float,
+    forbidden_graphics_names: set[str] | None = None,
 ) -> dict[str, Any]:
     if attempts < 1:
         raise ValueError("GPU preflight attempts must be positive")
@@ -825,6 +837,7 @@ def run_gpu_preflight(
             **snapshot,
             minimum_free_mib=minimum_free_mib,
             maximum_used_mib=maximum_used_mib,
+            forbidden_graphics_names=forbidden_graphics_names,
         )
         evaluation["attempt"] = attempt
         evaluation["observed_at_utc"] = utc_now()
@@ -862,6 +875,8 @@ def write_status(
     source_revision: str,
     recovery_revision: str,
     message: str,
+    execution_server: str = "5080",
+    revision_field: str = "recovery_orchestration_revision",
     current_dataset: str | None = None,
     current_backbone: str | None = None,
     exit_code: int | None = None,
@@ -869,11 +884,16 @@ def write_status(
     allowed = {"prepared", "running", "failed", "merged", "complete"}
     if state not in allowed:
         raise ValueError(f"Unsupported recovery state: {state}")
+    if revision_field not in {
+        "recovery_orchestration_revision",
+        "shard_orchestration_revision",
+    }:
+        raise ValueError(f"Unsupported orchestration revision field: {revision_field}")
     payload = {
         "status": state,
         "training_source_revision": source_revision,
-        "recovery_orchestration_revision": recovery_revision,
-        "execution_server": "5080",
+        revision_field: recovery_revision,
+        "execution_server": execution_server,
         "current_dataset": current_dataset,
         "current_backbone": current_backbone,
         "message": message,
@@ -882,8 +902,10 @@ def write_status(
         "held_out_test_evaluated": False,
     }
     write_json_atomic(output_root / "screening_status.json", payload)
-    manifest_path = output_root / "recovery_manifest.json"
-    if manifest_path.is_file():
+    for manifest_name in ("recovery_manifest.json", "shard_manifest.json"):
+        manifest_path = output_root / manifest_name
+        if not manifest_path.is_file():
+            continue
         manifest = load_json(manifest_path)
         manifest["status"] = state
         manifest["last_status_update_utc"] = payload["updated_at_utc"]
@@ -895,6 +917,378 @@ def write_status(
             manifest["last_exit_code"] = exit_code
         write_json_atomic(manifest_path, manifest)
     return payload
+
+
+def _validate_shard_5090_contract(
+    path: Path,
+    *,
+    source_revision: str,
+    execution_server: str,
+) -> dict[str, Any]:
+    contract = load_json(path)
+    if contract.get("contract_id") != SHARD_5090_CONTRACT_ID:
+        raise ValueError(
+            f"Unexpected 5090 shard contract id: {contract.get('contract_id')}"
+        )
+    if contract.get("training_source_revision") != source_revision:
+        raise ValueError("5090 shard training revision mismatch")
+    if contract.get("execution_server") != execution_server:
+        raise ValueError("5090 shard execution server mismatch")
+    observed_plan = tuple(
+        (row.get("dataset"), row.get("backbone"))
+        for row in contract.get("run_plan", [])
+    )
+    if observed_plan != SHARD_5090_RUNS:
+        raise ValueError(f"5090 shard run plan drifted: {observed_plan}")
+    observed_ordinals = tuple(
+        int(row.get("canonical_ordinal", -1))
+        for row in contract.get("run_plan", [])
+    )
+    if observed_ordinals != tuple(range(4, 10)):
+        raise ValueError(f"5090 shard canonical ordinals drifted: {observed_ordinals}")
+    if contract.get("evaluation_scope") != "validation_only":
+        raise ValueError("5090 shard must remain validation-only")
+    if contract.get("held_out_test") != "locked":
+        raise ValueError("5090 shard must keep held-out test locked")
+    training_files = contract.get("training_files")
+    if not isinstance(training_files, dict) or not training_files:
+        raise ValueError("5090 shard contract requires frozen training-file hashes")
+    for relative_path, expected_sha in training_files.items():
+        if not re.fullmatch(r"[0-9a-f]{64}", str(expected_sha)):
+            raise ValueError(f"Invalid frozen hash for {relative_path}")
+        absolute_path = PROJECT_ROOT / relative_path
+        if not absolute_path.is_file():
+            raise FileNotFoundError(absolute_path)
+        observed_sha = sha256_file(absolute_path)
+        if observed_sha != expected_sha:
+            raise ValueError(
+                f"Frozen training snapshot mismatch for {relative_path}: "
+                f"{observed_sha} != {expected_sha}"
+            )
+    return contract
+
+
+def prepare_shard_5090(
+    *,
+    output_root: Path,
+    source_revision: str,
+    recovery_revision: str,
+    contract_path: Path,
+    execution_server: str,
+) -> dict[str, Any]:
+    contract = _validate_shard_5090_contract(
+        contract_path,
+        source_revision=source_revision,
+        execution_server=execution_server,
+    )
+    assert_no_held_out_artifacts(output_root)
+    manifest_path = output_root / "shard_manifest.json"
+    identity = {
+        "contract_id": SHARD_5090_CONTRACT_ID,
+        "training_source_revision": source_revision,
+        "shard_orchestration_revision": recovery_revision,
+        "execution_server": execution_server,
+    }
+    if manifest_path.is_file():
+        existing = load_json(manifest_path)
+        mismatches = {
+            key: {"expected": value, "observed": existing.get(key)}
+            for key, value in identity.items()
+            if existing.get(key) != value
+        }
+        if mismatches:
+            raise ValueError(f"Existing 5090 shard manifest mismatch: {mismatches}")
+        return existing
+    if output_root.exists() and any(output_root.iterdir()):
+        raise ValueError(
+            f"Refusing nonempty 5090 shard root without manifest: {output_root}"
+        )
+    output_root.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        **identity,
+        "status": "prepared",
+        "prepared_at_utc": utc_now(),
+        "planned_runs": contract["run_plan"],
+        "expected_run_count": len(SHARD_5090_RUNS),
+        "completed_run_count": 0,
+        "evaluation_scope": "validation_only",
+        "held_out_test_evaluated": False,
+    }
+    write_json_atomic(manifest_path, manifest)
+    write_status(
+        output_root=output_root,
+        state="prepared",
+        source_revision=source_revision,
+        recovery_revision=recovery_revision,
+        execution_server=execution_server,
+        revision_field="shard_orchestration_revision",
+        message="Prepared canonical runs 4-9 as an isolated 5090 shard.",
+    )
+    return load_json(manifest_path)
+
+
+def finalize_shard_5090(
+    *,
+    output_root: Path,
+    source_revision: str,
+    recovery_revision: str,
+    contract_path: Path,
+    execution_server: str,
+) -> dict[str, Any]:
+    _validate_shard_5090_contract(
+        contract_path,
+        source_revision=source_revision,
+        execution_server=execution_server,
+    )
+    assert_no_held_out_artifacts(output_root)
+    manifest_path = output_root / "shard_manifest.json"
+    manifest = load_json(manifest_path)
+    identity = {
+        "contract_id": SHARD_5090_CONTRACT_ID,
+        "training_source_revision": source_revision,
+        "shard_orchestration_revision": recovery_revision,
+        "execution_server": execution_server,
+    }
+    mismatches = {
+        key: {"expected": value, "observed": manifest.get(key)}
+        for key, value in identity.items()
+        if manifest.get(key) != value
+    }
+    if mismatches:
+        raise ValueError(f"5090 shard manifest mismatch: {mismatches}")
+    validated_runs = _collect_validated_shard_5090_runs(
+        output_root=output_root,
+        source_revision=source_revision,
+    )
+    manifest.update(
+        {
+            "status": "complete",
+            "completed_at_utc": utc_now(),
+            "completed_run_count": len(validated_runs),
+            "validated_runs": validated_runs,
+            "held_out_test_evaluated": False,
+        }
+    )
+    write_json_atomic(manifest_path, manifest)
+    write_status(
+        output_root=output_root,
+        state="complete",
+        source_revision=source_revision,
+        recovery_revision=recovery_revision,
+        execution_server=execution_server,
+        revision_field="shard_orchestration_revision",
+        message="Validated all six 5090 shard runs; transfer to recovery1 is pending.",
+    )
+    assert_no_held_out_artifacts(output_root)
+    return load_json(manifest_path)
+
+
+def _collect_validated_shard_5090_runs(
+    *,
+    output_root: Path,
+    source_revision: str,
+) -> list[dict[str, Any]]:
+    validated_runs = []
+    for canonical_ordinal, (dataset, backbone) in enumerate(
+        SHARD_5090_RUNS,
+        start=4,
+    ):
+        role_dir = shard_role_dir(output_root, dataset, backbone)
+        validate_launch_contract(
+            role_dir / "launch_contract.json",
+            dataset=dataset,
+            backbones=(backbone,),
+            source_revision=source_revision,
+            model_role=MODEL_ROLE_EXPERIMENTAL,
+            allowed_statuses={"complete"},
+        )
+        record = validate_completed_run(
+            shard_run_dir(output_root, dataset, backbone),
+            dataset=dataset,
+            backbone=backbone,
+            source_revision=source_revision,
+        )
+        summary = record["summary"]
+        validated_runs.append(
+            {
+                "canonical_ordinal": canonical_ordinal,
+                "dataset": dataset,
+                "backbone": backbone,
+                "variant": VARIANT,
+                "seed": 42,
+                "completed_epochs": summary["completed_epochs"],
+                "best_epoch": summary["best_epoch"],
+                "summary_sha256": record["summary_sha256"],
+                "checkpoint_file_sha256": record["checkpoint_file_sha256"],
+                "checkpoint_state_sha256": record["checkpoint_state_sha256"],
+            }
+        )
+    return validated_runs
+
+
+def validate_shard_5090_artifact(
+    *,
+    shard_root: Path,
+    source_revision: str,
+    shard_revision: str,
+    contract_path: Path,
+) -> dict[str, Any]:
+    _validate_shard_5090_contract(
+        contract_path,
+        source_revision=source_revision,
+        execution_server="5090",
+    )
+    assert_no_held_out_artifacts(shard_root)
+    manifest = load_json(shard_root / "shard_manifest.json")
+    expected = {
+        "contract_id": SHARD_5090_CONTRACT_ID,
+        "training_source_revision": source_revision,
+        "shard_orchestration_revision": shard_revision,
+        "execution_server": "5090",
+        "status": "complete",
+        "completed_run_count": len(SHARD_5090_RUNS),
+        "held_out_test_evaluated": False,
+    }
+    mismatches = {
+        key: {"expected": value, "observed": manifest.get(key)}
+        for key, value in expected.items()
+        if manifest.get(key) != value
+    }
+    if mismatches:
+        raise ValueError(f"5090 shard artifact manifest mismatch: {mismatches}")
+    validated_runs = _collect_validated_shard_5090_runs(
+        output_root=shard_root,
+        source_revision=source_revision,
+    )
+    recorded_runs = manifest.get("validated_runs")
+    if recorded_runs != validated_runs:
+        raise ValueError("5090 shard artifact digest manifest drifted")
+    return {"manifest": manifest, "validated_runs": validated_runs}
+
+
+def import_shard_5090(
+    *,
+    shard_root: Path,
+    output_root: Path,
+    source_revision: str,
+    recovery_revision: str,
+    shard_revision: str,
+    contract_path: Path,
+) -> dict[str, Any]:
+    assert_no_held_out_artifacts(output_root)
+    recovery_manifest_path = output_root / "recovery_manifest.json"
+    recovery_manifest = load_json(recovery_manifest_path)
+    expected_recovery = {
+        "contract_id": CONTRACT_ID,
+        "training_source_revision": source_revision,
+        "recovery_orchestration_revision": recovery_revision,
+        "held_out_test_evaluated": False,
+    }
+    recovery_mismatches = {
+        key: {"expected": value, "observed": recovery_manifest.get(key)}
+        for key, value in expected_recovery.items()
+        if recovery_manifest.get(key) != value
+    }
+    if recovery_mismatches:
+        raise ValueError(f"Recovery manifest mismatch: {recovery_mismatches}")
+
+    shard = validate_shard_5090_artifact(
+        shard_root=shard_root,
+        source_revision=source_revision,
+        shard_revision=shard_revision,
+        contract_path=contract_path,
+    )
+    imported_runs = []
+    for source_record, (dataset, backbone) in zip(
+        shard["validated_runs"],
+        SHARD_5090_RUNS,
+        strict=True,
+    ):
+        source_role = shard_role_dir(shard_root, dataset, backbone)
+        destination_role = shard_role_dir(output_root, dataset, backbone)
+        destination_run = shard_run_dir(output_root, dataset, backbone)
+        action = "installed"
+        if destination_role.exists():
+            validate_launch_contract(
+                destination_role / "launch_contract.json",
+                dataset=dataset,
+                backbones=(backbone,),
+                source_revision=source_revision,
+                model_role=MODEL_ROLE_EXPERIMENTAL,
+                allowed_statuses={"complete"},
+            )
+            destination_record = validate_completed_run(
+                destination_run,
+                dataset=dataset,
+                backbone=backbone,
+                source_revision=source_revision,
+            )
+            if (
+                destination_record["checkpoint_state_sha256"]
+                != source_record["checkpoint_state_sha256"]
+            ):
+                raise ValueError(
+                    "Existing recovery shard differs from validated 5090 shard: "
+                    f"{dataset}/{backbone}"
+                )
+            action = "reused_identical"
+        else:
+            destination_role.parent.mkdir(parents=True, exist_ok=True)
+            incoming = destination_role.with_name(
+                f".{destination_role.name}.incoming_5090"
+            )
+            if incoming.exists():
+                raise ValueError(f"Stale 5090 import staging directory: {incoming}")
+            shutil.copytree(source_role, incoming)
+            validate_launch_contract(
+                incoming / "launch_contract.json",
+                dataset=dataset,
+                backbones=(backbone,),
+                source_revision=source_revision,
+                model_role=MODEL_ROLE_EXPERIMENTAL,
+                allowed_statuses={"complete"},
+            )
+            staged_record = validate_completed_run(
+                incoming / "runs" / backbone / VARIANT / "seed_42",
+                dataset=dataset,
+                backbone=backbone,
+                source_revision=source_revision,
+            )
+            if (
+                staged_record["checkpoint_state_sha256"]
+                != source_record["checkpoint_state_sha256"]
+            ):
+                raise ValueError(
+                    f"5090 shard changed during import: {dataset}/{backbone}"
+                )
+            os.replace(incoming, destination_role)
+        imported_runs.append(
+            {
+                "canonical_ordinal": source_record["canonical_ordinal"],
+                "dataset": dataset,
+                "backbone": backbone,
+                "checkpoint_state_sha256": source_record[
+                    "checkpoint_state_sha256"
+                ],
+                "action": action,
+            }
+        )
+
+    recovery_manifest["imported_5090_shard"] = {
+        "contract_id": SHARD_5090_CONTRACT_ID,
+        "shard_orchestration_revision": shard_revision,
+        "imported_at_utc": utc_now(),
+        "run_count": len(imported_runs),
+        "runs": imported_runs,
+    }
+    write_json_atomic(recovery_manifest_path, recovery_manifest)
+    assert_no_held_out_artifacts(output_root)
+    return {
+        "status": "imported",
+        "run_count": len(imported_runs),
+        "runs": imported_runs,
+        "held_out_test_evaluated": False,
+    }
 
 
 def _install_validated_run(
@@ -1113,6 +1507,13 @@ def parse_args() -> argparse.Namespace:
     prepare.add_argument("--recovery-revision", required=True)
     prepare.add_argument("--contract", type=Path, required=True)
 
+    prepare_shard = subparsers.add_parser("prepare-shard-5090")
+    prepare_shard.add_argument("--output-root", type=Path, required=True)
+    prepare_shard.add_argument("--source-revision", required=True)
+    prepare_shard.add_argument("--recovery-revision", required=True)
+    prepare_shard.add_argument("--contract", type=Path, required=True)
+    prepare_shard.add_argument("--execution-server", default="5090")
+
     preflight = subparsers.add_parser("preflight-gpu")
     preflight.add_argument("--output", type=Path, required=True)
     preflight.add_argument("--dataset", choices=SCREENING_DATASETS, required=True)
@@ -1122,6 +1523,11 @@ def parse_args() -> argparse.Namespace:
     preflight.add_argument("--maximum-used-mib", type=int, default=512)
     preflight.add_argument("--attempts", type=int, default=12)
     preflight.add_argument("--interval-seconds", type=float, default=5.0)
+    preflight.add_argument(
+        "--forbidden-graphics-process",
+        action="append",
+        dest="forbidden_graphics_processes",
+    )
 
     inspect = subparsers.add_parser("inspect-shard")
     inspect.add_argument("--output-root", type=Path, required=True)
@@ -1141,6 +1547,15 @@ def parse_args() -> argparse.Namespace:
     status.add_argument("--source-revision", required=True)
     status.add_argument("--recovery-revision", required=True)
     status.add_argument("--message", required=True)
+    status.add_argument("--execution-server", default="5080")
+    status.add_argument(
+        "--revision-field",
+        choices=(
+            "recovery_orchestration_revision",
+            "shard_orchestration_revision",
+        ),
+        default="recovery_orchestration_revision",
+    )
     status.add_argument("--current-dataset")
     status.add_argument("--current-backbone")
     status.add_argument("--exit-code", type=int)
@@ -1149,6 +1564,21 @@ def parse_args() -> argparse.Namespace:
     merge.add_argument("--output-root", type=Path, required=True)
     merge.add_argument("--source-revision", required=True)
     merge.add_argument("--recovery-revision", required=True)
+
+    finalize_shard = subparsers.add_parser("finalize-shard-5090")
+    finalize_shard.add_argument("--output-root", type=Path, required=True)
+    finalize_shard.add_argument("--source-revision", required=True)
+    finalize_shard.add_argument("--recovery-revision", required=True)
+    finalize_shard.add_argument("--contract", type=Path, required=True)
+    finalize_shard.add_argument("--execution-server", default="5090")
+
+    import_shard = subparsers.add_parser("import-shard-5090")
+    import_shard.add_argument("--shard-root", type=Path, required=True)
+    import_shard.add_argument("--output-root", type=Path, required=True)
+    import_shard.add_argument("--source-revision", required=True)
+    import_shard.add_argument("--recovery-revision", required=True)
+    import_shard.add_argument("--shard-revision", required=True)
+    import_shard.add_argument("--contract", type=Path, required=True)
     return parser.parse_args()
 
 
@@ -1162,6 +1592,14 @@ def main() -> None:
             recovery_revision=args.recovery_revision,
             contract_path=args.contract,
         )
+    elif args.command == "prepare-shard-5090":
+        payload = prepare_shard_5090(
+            output_root=args.output_root,
+            source_revision=args.source_revision,
+            recovery_revision=args.recovery_revision,
+            contract_path=args.contract,
+            execution_server=args.execution_server,
+        )
     elif args.command == "preflight-gpu":
         payload = run_gpu_preflight(
             output_path=args.output,
@@ -1172,6 +1610,11 @@ def main() -> None:
             maximum_used_mib=args.maximum_used_mib,
             attempts=args.attempts,
             interval_seconds=args.interval_seconds,
+            forbidden_graphics_names=(
+                set(args.forbidden_graphics_processes)
+                if args.forbidden_graphics_processes
+                else None
+            ),
         )
     elif args.command == "inspect-shard":
         payload = inspect_shard(
@@ -1189,15 +1632,34 @@ def main() -> None:
             source_revision=args.source_revision,
             recovery_revision=args.recovery_revision,
             message=args.message,
+            execution_server=args.execution_server,
+            revision_field=args.revision_field,
             current_dataset=args.current_dataset,
             current_backbone=args.current_backbone,
             exit_code=args.exit_code,
         )
-    else:
+    elif args.command == "merge":
         payload = merge_recovery(
             output_root=args.output_root,
             source_revision=args.source_revision,
             recovery_revision=args.recovery_revision,
+        )
+    elif args.command == "finalize-shard-5090":
+        payload = finalize_shard_5090(
+            output_root=args.output_root,
+            source_revision=args.source_revision,
+            recovery_revision=args.recovery_revision,
+            contract_path=args.contract,
+            execution_server=args.execution_server,
+        )
+    else:
+        payload = import_shard_5090(
+            shard_root=args.shard_root,
+            output_root=args.output_root,
+            source_revision=args.source_revision,
+            recovery_revision=args.recovery_revision,
+            shard_revision=args.shard_revision,
+            contract_path=args.contract,
         )
     if args.command == "inspect-shard" and args.action_only:
         print(payload["action"], flush=True)
@@ -1211,16 +1673,21 @@ if __name__ == "__main__":
 
 __all__ = [
     "RECOVERY_RUNS",
+    "SHARD_5090_RUNS",
     "assert_no_held_out_artifacts",
     "evaluate_gpu_snapshot",
     "find_forbidden_artifacts",
+    "import_shard_5090",
     "inspect_shard",
     "merge_recovery",
     "parse_nvidia_process_table",
     "prepare_recovery",
+    "prepare_shard_5090",
     "run_gpu_preflight",
+    "finalize_shard_5090",
     "validate_completed_run",
     "validate_launch_contract",
     "validate_partial_checkpoint",
+    "validate_shard_5090_artifact",
     "write_status",
 ]

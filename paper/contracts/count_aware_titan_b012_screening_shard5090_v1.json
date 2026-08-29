@@ -1,0 +1,84 @@
+{
+  "contract_id": "count_aware_titan_b012_screening_shard5090_v1",
+  "frozen_at": "2026-08-29",
+  "parent_contract": "count_aware_titan_b012_screening_recovery1_v1",
+  "training_source_revision": "08e59880cd61cbd27cec40aa04636452b87bebfc",
+  "execution_server": "5090",
+  "run_plan": [
+    {
+      "canonical_ordinal": 4,
+      "dataset": "yellow_trip_hourly",
+      "backbone": "titantpp"
+    },
+    {
+      "canonical_ordinal": 5,
+      "dataset": "yellow_trip_hourly",
+      "backbone": "titantpp_titans_mac"
+    },
+    {
+      "canonical_ordinal": 6,
+      "dataset": "yellow_trip_hourly",
+      "backbone": "titantpp_tpp_gated_memory"
+    },
+    {
+      "canonical_ordinal": 7,
+      "dataset": "raf_spare_parts",
+      "backbone": "titantpp"
+    },
+    {
+      "canonical_ordinal": 8,
+      "dataset": "raf_spare_parts",
+      "backbone": "titantpp_titans_mac"
+    },
+    {
+      "canonical_ordinal": 9,
+      "dataset": "raf_spare_parts",
+      "backbone": "titantpp_tpp_gated_memory"
+    }
+  ],
+  "training_files": {
+    "paper/contracts/count_aware_titans_backbone_reproduction_v1.json": "826175559a664f4fc5bacf2bc1d30462534abda5efe210ee769234775a7aee66",
+    "paper/contracts/count_aware_titans_backbone_reproduction_v1.md": "f3237869209bf9938ce4aa772d0584a35d47649aae388cee9f0affe1c6b4249b",
+    "paper/contracts/count_aware_titan_b012_screening_v1.json": "d5c85bdea96669fd15fd849e037b3d79e321e83ee273a0eb3224b7f507a79963",
+    "paper/contracts/count_aware_titan_b012_screening_v1.md": "5e238018f06056fe74095bde05f862a07a2f60be31076a489daae5e1210498c1",
+    "models/TPPs/CountAwareFactory.py": "d65c069f15ad904740de14f9d31687f79f0064d4afad5e08bde3949e60bfcaa1",
+    "models/TPPs/CountAwareTPP.py": "4fb6344566a945bbef8b3fd3f39bdccd6c9fc756f0a58371a94025f71617cdf5",
+    "models/Titan/__init__.py": "a8147804206ab500c7adeeeaf194c82447ead4d332b2959f8ed8e3692793c1a7",
+    "models/Titan/backbone.py": "1c81144b9c00fd8993cc66b76c58dfe0fbfb087a1d25db33e1253527e0fc5726",
+    "models/Titan/common/__init__.py": "f301d6cf6edcc7804363d3c9e1c5ef22ec6fbead856aac7d4ec2bcef0508dc88",
+    "models/Titan/common/titans_mac.py": "ac520d669351de715640097365b6eb4279d32c8d953a52d60c140330933b0eb9",
+    "models/Titan/common/tpp_gated_memory.py": "4d77851c904a46117eb5968c602c6e91c87f7bc061f90816b9f941775b818263",
+    "paper/scripts/count_aware_tpp_backbone/constants.py": "c6d512dc47be62d89fba0af72aa916c9b0bbd8dd73db3f2441a50de00c4573c8",
+    "paper/scripts/count_aware_tpp_backbone/core.py": "7b4be86be21eb1efb1716ebf61689288a3598e87327e56ace9cac14f12361bb2",
+    "paper/scripts/count_aware_tpp_backbone/datasets.py": "0a2982d92a21d6dd0518adba5e631d40cf2222c9eb9ee476d861b27211623274",
+    "paper/scripts/count_aware_tpp_backbone/reporting.py": "4764b790352b6a84a4efa9df9b17e3ad948534779539bf87422af7d8c06825c6",
+    "paper/scripts/count_aware_tpp_backbone/training.py": "408a7ef09ad3946d5def2bdff8dcd1ea5e3005311e8fed4f6884e54c32f87a40",
+    "paper/scripts/run_count_aware_tpp_backbone_control.py": "0c9f5359118cde39a1cb6045fb52024a634df0a44e36213c47e0b0510852f4f1"
+  },
+  "process_isolation": {
+    "one_backbone_per_python_process": true,
+    "completed_shards_are_reused": true,
+    "force_rerun": false,
+    "merge_on_5090": false
+  },
+  "gpu_preflight": {
+    "run_before_every_isolated_backbone": true,
+    "minimum_free_memory_mib": 30000,
+    "maximum_used_memory_mib": 512,
+    "compute_processes_allowed": 0,
+    "forbidden_graphics_process_names": [
+      "gnome-shell",
+      "Xwayland",
+      "Xorg"
+    ],
+    "failure_action": "stop_before_training_and_preserve_artifacts"
+  },
+  "handoff": {
+    "primary_server": "5080",
+    "primary_artifact": "count_aware_b012_seed42_screening_e300_20260828_recovery1",
+    "copy_scope": "shards/yellow_trip_hourly and shards/raf_spare_parts",
+    "primary_launcher_resumes_only_after_all_six_shards_validate": true
+  },
+  "evaluation_scope": "validation_only",
+  "held_out_test": "locked"
+}
