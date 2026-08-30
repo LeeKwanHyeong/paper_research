@@ -17,12 +17,18 @@ from paper.scripts.validate_count_aware_titantpp_mac_three_seed_validation impor
 )
 
 
-def check_header(contract, summary, history, *, seed, revision):
+CONTEXTS = {"insta_market_basket": (52, 64), "raf_spare_parts": (84, 84),
+            "yellow_trip_hourly": (168, 256), "intermittent_frozen_5000": (520, 256)}
+
+
+def check_header(contract, summary, history, *, seed, revision,
+                 dataset="insta_market_basket", epochs=1, min_epochs=1):
+    lookback, max_seq_len = CONTEXTS[dataset]
     expected = {"status": "complete", "completed_run_count": 1,
-                "source_revision": revision, "dataset": "insta_market_basket",
+                "source_revision": revision, "dataset": dataset,
                 "seeds": [seed], "backbones": ["titantpp_titans_mac"],
-                "epochs": 1, "batch_size": 128, "lr": 0.001,
-                "lookback_weeks": 52, "max_seq_len": 64, "hidden_dim": 64,
+                "epochs": epochs, "batch_size": 128, "lr": 0.001,
+                "lookback_weeks": lookback, "max_seq_len": max_seq_len, "hidden_dim": 64,
                 "lambda_log_qty": 1., "lambda_tail": 0., "grad_clip": 1.,
                 "titans_memory_gradient_clip": 1., "partial_smoke": False,
                 "evaluation_scope": "validation_only", "held_out_test_evaluated": False}
@@ -31,8 +37,9 @@ def check_header(contract, summary, history, *, seed, revision):
             raise ValueError(f"Preflight contract mismatch: {key}")
     if contract["time_head"]["mode"] != "legacy_clamped_rmtpp":
         raise ValueError("Time head changed")
-    if summary.get("status") != "success" or summary.get("completed_epochs") != 1:
-        raise ValueError("Full epoch is not complete")
+    completed = summary.get("completed_epochs", 0)
+    if summary.get("status") != "success" or not min_epochs <= completed <= epochs:
+        raise ValueError("Required full epochs are not complete")
     for payload in (summary,):
         if payload.get("source_revision") != revision or payload.get("source_revision_history") != [revision]:
             raise ValueError("Mixed source revision")
@@ -40,7 +47,9 @@ def check_header(contract, summary, history, *, seed, revision):
             raise ValueError("Held-out test was evaluated")
         if payload["encoder_config"].get("titans_memory_gradient_clip") != 1.:
             raise ValueError("Checkpoint metadata lacks the inner stability policy")
-    if len(history) != 1 or history[0]["epoch"] != 1 or not history[0].get("train_all_finite"):
+    if (len(history) != completed
+            or [row["epoch"] for row in history] != list(range(1, completed + 1))
+            or not all(row.get("train_all_finite") for row in history)):
         raise ValueError("Incomplete or non-finite history")
     for name, value in (("contract", contract), ("summary", summary), ("history", history)):
         require_finite(value, location=name)
@@ -49,6 +58,7 @@ def check_header(contract, summary, history, *, seed, revision):
 def validate(args):
     import polars as pl
     import torch
+    from paper.scripts.count_aware_tpp_backbone.datasets import DATASET_CONTRACTS
     from models.TPPs.CountAwareFactory import build_count_aware_model
     from paper.scripts.count_aware_tpp_backbone.core import prepare_count_frame, right_pad_batch, target_outputs
     from paper.scripts.run_taxi_quantity_interface_ablation import make_loader
@@ -66,7 +76,27 @@ def validate(args):
     run = args.run_root / "runs/titantpp_titans_mac/count_only_log_regression" / f"seed_{args.seed}"
     summary = load_json(run / "summary.json")
     history = load_json(run / "history.json")["history"]
-    check_header(contract, summary, history, seed=args.seed, revision=args.expected_revision)
+    check_header(contract, summary, history, seed=args.seed, revision=args.expected_revision,
+                 dataset=args.dataset, epochs=args.epochs, min_epochs=args.min_epochs)
+    context = DATASET_CONTRACTS[args.dataset]
+    for key in ("data_sha256", "split_manifest_sha256"):
+        if contract[key] != context[key]:
+            raise ValueError(f"Frozen dataset mismatch: {key}")
+    expected_early = {"min_epochs": args.min_epochs, "patience": 40,
+                      "monitor": "validation_joint_objective",
+                      "restore": "best_validation_joint_objective"}
+    if any(contract["early_stopping"].get(k) != v for k, v in expected_early.items()):
+        raise ValueError("Early stopping/checkpoint selection mismatch")
+    for key, expected in {"time_scale": 3., "time_w_max": 10./3.,
+                          "time_intercept_limit": 30., "time_initial_intercept": 0.,
+                          "time_head_lr_multiplier": 1.}.items():
+        if not math.isclose(contract["time_head"][key], expected, rel_tol=0, abs_tol=1e-12):
+            raise ValueError(f"Frozen time head mismatch: {key}")
+    interface = contract["interfaces"]["count_only_log_regression"]
+    if (interface["quantity_loss"] != "mse_on_log1p_quantity"
+            or interface["target_quantity_masked_from_history"] is not True
+            or interface["quantity_mark_used"] is not False):
+        raise ValueError("Quantity or mark-free contract mismatch")
     if any("test" in p.name.lower() for p in args.run_root.rglob("*") if p.is_file()):
         raise ValueError("Unexpected held-out test artifact")
     if sha256_file(Path(contract["data_path"])) != contract["data_sha256"]:
@@ -75,11 +105,13 @@ def validate(args):
         raise ValueError("Fixed split digest changed")
     frame = prepare_count_frame(pl.read_parquet(contract["data_path"]))
     loaders = {split: make_loader(frame, target_split=split, batch_size=128,
-                                  lookback_weeks=52, max_seq_len=64,
+                                  lookback_weeks=context["lookback"],
+                                  max_seq_len=context["max_seq_len"],
                                   shuffle=False, generator=None)
                for split in ("train", "validation")}
     train_count, val_count = (len(loaders[s].dataset) for s in ("train", "validation"))
-    if history[0]["train_event_count"] != train_count or history[0]["train_batch_count"] != math.ceil(train_count / 128):
+    if any(row["train_event_count"] != train_count or
+           row["train_batch_count"] != math.ceil(train_count / 128) for row in history):
         raise ValueError("Training skipped targets or batches")
     for key in ("quantity_rows", "history_rows"):
         if sum(row["count"] for row in summary[key]) != val_count:
@@ -90,6 +122,13 @@ def validate(args):
         raise ValueError("Checkpoint source mismatch")
     if checkpoint["encoder_config"].get("titans_memory_gradient_clip") != 1.:
         raise ValueError("Checkpoint inner policy mismatch")
+    best = min(history, key=lambda row: row["val_joint_objective"])
+    if len(history) < args.epochs and len(history) - best["epoch"] < 40:
+        raise ValueError("Run ended before exhausting its patience")
+    if summary["best_epoch"] != best["epoch"] or not math.isclose(
+            summary["best_val_joint_objective"], best["val_joint_objective"],
+            rel_tol=1e-7, abs_tol=1e-8):
+        raise ValueError("Selected checkpoint does not minimize validation objective")
     digest = canonical_state_dict_sha256(checkpoint["model_state_dict"])
     if digest != summary["checkpoint_state_sha256"] or digest != checkpoint["model_state_sha256"]:
         raise ValueError("Checkpoint tensor digest mismatch")
@@ -101,7 +140,7 @@ def validate(args):
         "time_wd_safety_limit", "time_initial_location", "time_initial_scale", "time_sigma_floor")}
     def restore(state):
         model, _ = build_count_aware_model(
-            "titantpp_titans_mac", hidden_dim=64, max_seq_len=64,
+            "titantpp_titans_mac", hidden_dim=64, max_seq_len=context["max_seq_len"],
             train_log_mean=interface["train_target_mean"], train_log_std=interface["train_target_std"],
             titans_memory_gradient_clip=1., time_head_mode="legacy_clamped_rmtpp", **time_kwargs)
         model.load_state_dict(state, strict=True)
@@ -131,7 +170,9 @@ def validate(args):
                                (*states[1].memory_tensors(), *states[1].momentum_tensors())):
             if not torch.isfinite(left).all() or not torch.equal(left, right):
                 raise ValueError("Observed-history memory replay mismatch")
-    return {"status": "complete", "seed": args.seed, "training_source_revision": args.expected_revision,
+    return {"status": "complete", "seed": args.seed, "dataset": args.dataset,
+            "maximum_epochs": args.epochs, "completed_epochs": len(history),
+            "training_source_revision": args.expected_revision,
             "verified_source_files": len(manifest["files"]), "train_target_count": train_count,
             "train_batch_count": len(loaders["train"]), "validation_target_count": val_count,
             "checkpoint_state_sha256": digest, "checkpoint_prediction_replay_exact": True,
@@ -146,6 +187,9 @@ def main():
     parser.add_argument("--source-manifest", type=Path, required=True)
     parser.add_argument("--expected-revision", required=True)
     parser.add_argument("--seed", type=int, required=True)
+    parser.add_argument("--dataset", choices=CONTEXTS, default="insta_market_basket")
+    parser.add_argument("--epochs", type=int, default=1)
+    parser.add_argument("--min-epochs", type=int, default=1)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--device", default="cuda")
     args = parser.parse_args()
