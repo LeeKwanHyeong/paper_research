@@ -1,0 +1,149 @@
+{
+  "status": "complete_target_not_met",
+  "source_revision": "b1ba364f91c48575be15716c408883bd7490c1b0",
+  "device": "cuda",
+  "cuda_device": "NVIDIA GeForce RTX 5080",
+  "batch_size": 128,
+  "optimization": {
+    "optimization_contract_id": "count_aware_titantpp_mac_semantic_optimization_v1",
+    "scan_backend": "fixed_shape_compiled_state_only_cuda",
+    "compiled_scan_batch_size": 128,
+    "compiled_scan_chunk_size": 16,
+    "mac_segment_size": 16,
+    "training_diagnostics": "disabled_state_only_scan",
+    "checkpoint_parameter_keys_changed": false
+  },
+  "semantic_equivalence": {
+    "passed": true,
+    "maximum_output_difference": 1.1920928955078125e-07,
+    "maximum_gradient_difference": 2.384185791015625e-07
+  },
+  "frozen_checkpoint_replay": {
+    "passed": true,
+    "model_state_sha256": "00097caf2610b4a10b6f27458035ab5d4f435153ded98a81d02745a221e03c0d",
+    "prediction_maximum_absolute_difference": 0.0
+  },
+  "timing": [
+    {
+      "sequence_length": 64,
+      "b0": {
+        "backbone": "titantpp",
+        "sequence_length": 64,
+        "cold_training_step_seconds": 0.07175884197931737,
+        "estimated_compile_overhead_seconds": 0.06844254198949784,
+        "steady_training_step_samples_seconds": [
+          0.0033162999898195267,
+          0.003339527000207454,
+          0.003428647993132472,
+          0.0033105610054917634,
+          0.0032795240404084325
+        ],
+        "steady_training_step_median_seconds": 0.0033162999898195267,
+        "steady_training_step_p95_seconds": 0.003428647993132472,
+        "peak_allocated_mib": 258.1689453125,
+        "peak_reserved_mib": 726.0
+      },
+      "b1": {
+        "backbone": "titantpp_titans_mac",
+        "sequence_length": 64,
+        "cold_training_step_seconds": 40.68881482898723,
+        "estimated_compile_overhead_seconds": 40.66231608996168,
+        "steady_training_step_samples_seconds": [
+          0.02612604497699067,
+          0.02617329399799928,
+          0.026578265998978168,
+          0.02649873902555555,
+          0.026819657010491937
+        ],
+        "steady_training_step_median_seconds": 0.02649873902555555,
+        "steady_training_step_p95_seconds": 0.026819657010491937,
+        "peak_allocated_mib": 898.39501953125,
+        "peak_reserved_mib": 974.0
+      },
+      "b1_b0_steady_training_step_ratio": 7.9904529466279115,
+      "maximum_ratio": 3.0,
+      "target_met": false
+    },
+    {
+      "sequence_length": 84,
+      "b0": {
+        "backbone": "titantpp",
+        "sequence_length": 84,
+        "cold_training_step_seconds": 0.005320555006619543,
+        "estimated_compile_overhead_seconds": 0.0017439110088162124,
+        "steady_training_step_samples_seconds": [
+          0.0035856919712387025,
+          0.00356477900641039,
+          0.0035766439978033304,
+          0.0035985439899377525,
+          0.0035495839547365904
+        ],
+        "steady_training_step_median_seconds": 0.0035766439978033304,
+        "steady_training_step_p95_seconds": 0.0035985439899377525,
+        "peak_allocated_mib": 349.85009765625,
+        "peak_reserved_mib": 384.0
+      },
+      "b1": {
+        "backbone": "titantpp_titans_mac",
+        "sequence_length": 84,
+        "cold_training_step_seconds": 42.72827917698305,
+        "estimated_compile_overhead_seconds": 42.68831976997899,
+        "steady_training_step_samples_seconds": [
+          0.04014801298035309,
+          0.03980391699587926,
+          0.039959407004062086,
+          0.039923211035784334,
+          0.040051969001069665
+        ],
+        "steady_training_step_median_seconds": 0.039959407004062086,
+        "steady_training_step_p95_seconds": 0.04014801298035309,
+        "peak_allocated_mib": 1305.14501953125,
+        "peak_reserved_mib": 1360.0
+      },
+      "b1_b0_steady_training_step_ratio": 11.17231880740828,
+      "maximum_ratio": 3.0,
+      "target_met": false
+    },
+    {
+      "sequence_length": 256,
+      "b0": {
+        "backbone": "titantpp",
+        "sequence_length": 256,
+        "cold_training_step_seconds": 0.01626427297014743,
+        "estimated_compile_overhead_seconds": 0.0005200919695198536,
+        "steady_training_step_samples_seconds": [
+          0.015723750984761864,
+          0.015780562011059374,
+          0.015744181000627577,
+          0.015771476959344,
+          0.015731648018117994
+        ],
+        "steady_training_step_median_seconds": 0.015744181000627577,
+        "steady_training_step_p95_seconds": 0.015780562011059374,
+        "peak_allocated_mib": 1413.8330078125,
+        "peak_reserved_mib": 1576.0
+      },
+      "b1": {
+        "backbone": "titantpp_titans_mac",
+        "sequence_length": 256,
+        "cold_training_step_seconds": 41.62742216803599,
+        "estimated_compile_overhead_seconds": 41.52001419803128,
+        "steady_training_step_samples_seconds": [
+          0.10778598702745512,
+          0.10728030401514843,
+          0.10740797000471503,
+          0.10732191405259073,
+          0.10777159599820152
+        ],
+        "steady_training_step_median_seconds": 0.10740797000471503,
+        "steady_training_step_p95_seconds": 0.10778598702745512,
+        "peak_allocated_mib": 3467.25439453125,
+        "peak_reserved_mib": 3548.0
+      },
+      "b1_b0_steady_training_step_ratio": 6.822074136497392,
+      "maximum_ratio": 3.0,
+      "target_met": false
+    }
+  ],
+  "three_x_target_met": false
+}
