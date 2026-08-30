@@ -84,6 +84,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int)
     parser.add_argument("--max-batches", type=int)
     parser.add_argument("--runtime-batches", type=int, default=5)
+    parser.add_argument("--source-revision")
     return parser.parse_args()
 
 
@@ -900,21 +901,28 @@ def render_analysis(decision: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def write_source_manifest(output_dir: Path) -> None:
+def write_source_manifest(output_dir: Path, source_revision: str | None) -> None:
     rows = []
     for relative in SOURCE_FILES:
         path = PROJECT_ROOT / relative
         rows.append({"path": relative, "sha256": sha256_file(path)})
-    try:
-        revision = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
-            cwd=PROJECT_ROOT,
-            check=True,
-            capture_output=True,
-            text=True,
-        ).stdout.strip()
-    except (FileNotFoundError, subprocess.CalledProcessError):
-        revision = None
+    revision = source_revision
+    if revision is not None:
+        if len(revision) != 40 or any(
+            character not in "0123456789abcdef" for character in revision
+        ):
+            raise ValueError("source_revision must be a full lowercase SHA-1")
+    else:
+        try:
+            revision = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=PROJECT_ROOT,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+        except (FileNotFoundError, subprocess.CalledProcessError):
+            revision = None
     write_json(
         output_dir / "source_manifest.json",
         {"git_revision": revision, "files": rows},
@@ -969,7 +977,7 @@ def main() -> None:
     (args.output_dir / "analysis.md").write_text(
         render_analysis(decision), encoding="utf-8"
     )
-    write_source_manifest(args.output_dir)
+    write_source_manifest(args.output_dir, args.source_revision)
     print(json.dumps(decision, indent=2), flush=True)
 
 
