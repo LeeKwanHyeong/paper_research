@@ -29,7 +29,7 @@ forward-time inner updates.
 
 The former extreme-input tests used sequences of length four. They did not
 exercise the 16-event MAC segment boundary with a learned unstable memory.
-A short smoke also did not cover a full Instacart epoch of roughly 15,556
+A short smoke also did not cover a full Instacart epoch of 15,557
 batches. Most importantly, the actual failing batch was not reproduced before
 the preceding recovery was launched. This was a diagnosis and release-gate
 failure, not evidence that the user needed to reboot or change the dataset.
@@ -57,7 +57,10 @@ Verified before the full-epoch checks:
 - Both GPUs pass all nine inner-gradient stability tests, including a
   deterministic unbounded-recurrence counterexample, 64-write stability,
   masking, per-series clipping and compiled/token scan agreement.
-- 5080 runtime: 23 causal/state/optimization/checkpoint tests pass. One
+- 5080 runtime: the combined causal/state/optimization/checkpoint and gate
+  suite has 38 passed, one skipped and one deselected. CUDA was deselected
+  in that CPU suite because the nine CUDA/stability tests ran separately.
+  The raw report is `cpu_contract_tests.xml`. One
   historical Git-object digest test is skipped in the exported snapshot;
   historical digests remain anchored to revision `08e5988`, not overwritten.
 - Seven fail-closed preflight-header tests pass locally. The broader local
@@ -69,17 +72,18 @@ Raw fixtures and traces are preserved under local
 `evidence.json` records their digests and condensed outcomes. No held-out test
 target was evaluated.
 
-## Full-Epoch Checks In Progress
+## Full-Epoch Verification Status
 
 Both servers use the isolated snapshot
 `/home/leekwanhyeong/workspace/paper_research_mac_stability_diagnostic_20260831`.
 Its 24 declared source digests were checked against the committed source.
 The old failed runs and original snapshots remain untouched.
 
-| Server | tmux | Run |
-|---|---|---|
-| 5090 | `mac_stability_full_e1_42_0831` | Instacart seed 42, complete train and validation epoch |
-| 5080 | `mac_stability_full_e1_62_0831` | Instacart seed 62, complete train and validation epoch |
+| Server | tmux | Run | Status at 2026-08-31 04:47 KST |
+|---|---|---|---|
+| 5090 | `mac_stability_full_e1_42_0831` | Instacart seed 42 | Complete; full coverage and checkpoint gate passed |
+| 5080 | `mac_stability_full_e1_62_0831` | Instacart seed 62 | Complete; full coverage and checkpoint gate passed |
+| 5090 | `mac_stability_full_e1_52_0831` | Instacart seed 52 | Running, fresh start after seed42 gate passed |
 
 Artifact roots are
 `search_artifacts/titantpp_mac_stability_preflight_20260831_<server>`.
@@ -89,16 +93,39 @@ split digests, exact training-target and batch counts, full validation strata
 counts, finite metrics, checkpoint tensor digest, strict restore, prediction
 and observed-history memory replay, and held-out artifact absence.
 
-At this record's creation, full-epoch checks are still running. A completed
-diagnostic epoch is not an e300 result and does not establish model quality.
-Do not mark the full experiment recovered or restart the old launchers.
+For each completed run, the gate verified 1,991,192 training targets across
+15,557 batches and 503,733 validation targets. Both histories and summaries
+are finite. Strict checkpoint restore reproduced predictions and
+observed-history memory tensors exactly. See `validation_report_seed42.json`
+and `validation_report_seed62.json`; these are stability checks, not e300
+results or evidence of model quality. The artifacts were synchronized locally
+without `--delete`, and all 24 source digests were checked again locally.
+
+The 5090 kernel journal is not readable by the current SSH user and noninteractive
+sudo requires a password. Absence of NVIDIA Xid on that server is therefore
+not verified. GDM remains inactive on both hosts. No display or shared runtime
+service was changed as part of this repair.
+
+Hourly heartbeat `titantpp-mac` tracks all three preflights and runs the
+completion validator if needed. It must not restart a failed job or an old
+unbounded launcher. A bounded postflight waiter is also attached to the
+seed52 run; the heartbeat remains the fallback if the SSH waiter disconnects.
+
+The existing Notion page `2026-08-30 TitanTPP-MAC 3-Seed Validation Launch`
+was updated and fetched again to verify the corrected diagnosis, new policy
+and stability/performance distinction:
+https://app.notion.com/p/3ccbbe405613817ea095f605888d39ac
 
 ## Next Order
 
-1. Finish and validate both full-epoch checks; preserve failure evidence if any
+1. Finish and validate seed52's full-epoch check; preserve failure evidence if any
    check fails instead of blindly retrying.
-2. Verify seed 52 and the remaining dataset/context shapes under the same
+2. Verify the remaining dataset/context shapes under the same
    explicit policy before a new long-running grid.
-3. Freeze a new matched MAC grid and monitoring target before e300. Recompute
+3. Confirm the expanded run scope, then freeze a new matched MAC grid and
+   monitoring target before e300. The user has been asked to approve all
+   four datasets times three seeds (12 MAC runs), rather than mixing three
+   historical seed42 runs with nine new ones. No new e300 grid is launched.
+   Recompute
    every MAC seed used in a three-seed table under the same inner policy;
    preserve old runs only as separately labelled historical evidence.
