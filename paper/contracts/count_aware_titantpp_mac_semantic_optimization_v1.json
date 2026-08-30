@@ -1,0 +1,58 @@
+{
+  "contract_id": "count_aware_titantpp_mac_semantic_optimization_v1",
+  "frozen_at": "2026-08-30",
+  "parent_contract": "count_aware_titantpp_mac_primary_v1",
+  "implementation_backbone": "titantpp_titans_mac",
+  "integration": {
+    "frozen_factory": "models/TPPs/CountAwareFactory.py",
+    "frozen_memory_equations": "models/Titan/common/titans_mac.py",
+    "execution_adapter": "models/Titan/common/titans_mac_optimized.py",
+    "primary_runtime": "paper/scripts/count_aware_titantpp_mac_runtime.py"
+  },
+  "frozen_base_sha256": {
+    "models/TPPs/CountAwareFactory.py": "d65c069f15ad904740de14f9d31687f79f0064d4afad5e08bde3949e60bfcaa1",
+    "paper/scripts/count_aware_tpp_backbone/constants.py": "c6d512dc47be62d89fba0af72aa916c9b0bbd8dd73db3f2441a50de00c4573c8",
+    "models/Titan/common/titans_mac.py": "ac520d669351de715640097365b6eb4279d32c8d953a52d60c140330933b0eb9"
+  },
+  "allowed_changes": [
+    "omit_unused_write_diagnostics_from_standard_training_forward",
+    "compile_state_only_write_recurrence",
+    "pad_final_batch_and_write_chunk_to_frozen_compile_shapes",
+    "reuse_frozen_scan_shape_across_segments",
+    "change_chunk_scheduling_without_changing_token_order"
+  ],
+  "forbidden_changes": [
+    "neural_memory_equations",
+    "surprise_momentum_or_forgetting_order",
+    "predict_before_write_order",
+    "segment_size",
+    "persistent_memory_or_model_parameters",
+    "quantity_or_time_heads",
+    "loss_or_checkpoint_selection",
+    "checkpoint_parameter_keys"
+  ],
+  "frozen_runtime_shapes": {
+    "compiled_scan_batch_size": 128,
+    "compiled_scan_chunk_size": 16,
+    "mac_segment_size": 16
+  },
+  "numerical_acceptance": {
+    "state_maximum_absolute_difference": 1e-6,
+    "prediction_maximum_absolute_difference": 1e-5,
+    "loss_maximum_absolute_difference": 1e-5,
+    "gradient_maximum_absolute_difference": 1e-4,
+    "checkpoint_strict_load": true,
+    "checkpoint_prediction_replay": true,
+    "causal_and_series_contract_tests": true,
+    "extreme_input_finite": true
+  },
+  "runtime_acceptance": {
+    "device": "NVIDIA_GeForce_RTX_5080",
+    "batch_size": 128,
+    "sequence_lengths": [64, 84, 256],
+    "b1_b0_steady_training_step_ratio_target_maximum": 3.0,
+    "peak_vram_must_be_reported": true,
+    "cold_compile_time_must_be_reported": true,
+    "target_is_required_before_three_seed_expansion": true
+  }
+}
