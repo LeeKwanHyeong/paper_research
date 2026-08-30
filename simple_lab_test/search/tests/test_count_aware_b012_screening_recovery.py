@@ -191,7 +191,7 @@ def launch_payload(
                         "target_dt_p50": 3.0,
                         "target_dt_max": 12.0,
                         "time_scale": 3.0,
-                        "time_w_max": 10.0 / 3.0,
+                        "time_w_max": 10.0,
                         "wd_safety_limit": 40.0,
                     },
                 },
@@ -218,7 +218,7 @@ def launch_payload(
                 "target_dt_p50": 3.0,
                 "target_dt_max": 12.0,
                 "time_scale": 3.0,
-                "time_w_max": 10.0 / 3.0,
+                "time_w_max": 10.0,
                 "wd_safety_limit": 40.0,
             },
         },
@@ -668,8 +668,17 @@ def test_shard_inspection_allows_only_missing_same_revision_resume_or_reuse(
     )["action"] == "reuse_completed"
 
 
-def test_launch_contract_accepts_train_derived_time_values_and_rejects_drift(
+@pytest.mark.parametrize(
+    ("time_scale", "target_max"),
+    (
+        (1.0, 115.0),
+        (6.0, 35.0),
+    ),
+)
+def test_launch_contract_accepts_runner_derived_time_values(
     tmp_path: Path,
+    time_scale: float,
+    target_max: float,
 ) -> None:
     path = tmp_path / "launch_contract.json"
     payload = launch_payload(
@@ -678,11 +687,10 @@ def test_launch_contract_accepts_train_derived_time_values_and_rejects_drift(
         model_role=MODEL_ROLE_EXPERIMENTAL,
         status="running",
     )
-    time_scale = 1.0
-    time_w_max = 8.0 / 23.0
+    time_w_max = 40.0 / (target_max / time_scale)
     train_time = payload["time_head"]["train_time_statistics"]
     train_time["target_dt_p50"] = time_scale
-    train_time["target_dt_max"] = 115.0
+    train_time["target_dt_max"] = target_max
     train_time["time_scale"] = time_scale
     train_time["time_w_max"] = time_w_max
     interface_time = payload["interfaces"][VARIANT]["time_head"]
@@ -702,8 +710,19 @@ def test_launch_contract_accepts_train_derived_time_values_and_rejects_drift(
     assert validated["time_head"]["train_time_statistics"]["time_scale"] == time_scale
     assert validated["time_head"]["train_time_statistics"]["time_w_max"] == time_w_max
 
-    interface_time["train_time_statistics"]["time_scale"] = 3.0
+
+def test_launch_contract_rejects_interface_train_time_drift(tmp_path: Path) -> None:
+    path = tmp_path / "launch_contract.json"
+    payload = launch_payload(
+        "yellow_trip_hourly",
+        ("titantpp",),
+        model_role=MODEL_ROLE_EXPERIMENTAL,
+        status="running",
+    )
+    interface_time = payload["interfaces"][VARIANT]["time_head"]
+    interface_time["train_time_statistics"]["time_scale"] = 4.0
     write_json(path, payload)
+
     with pytest.raises(ValueError, match="interfaces.*train_time_statistics"):
         validate_launch_contract(
             path,

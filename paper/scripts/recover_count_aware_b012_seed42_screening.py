@@ -260,19 +260,44 @@ def validate_launch_contract(
         }
     target_p50 = train_time.get("target_dt_p50")
     target_max = train_time.get("target_dt_max")
-    if "time_scale" in train_time_values and target_p50 != train_time_values["time_scale"]:
+    valid_target_p50 = (
+        isinstance(target_p50, (int, float))
+        and not isinstance(target_p50, bool)
+        and math.isfinite(float(target_p50))
+        and float(target_p50) > 0.0
+    )
+    valid_target_max = (
+        isinstance(target_max, (int, float))
+        and not isinstance(target_max, bool)
+        and math.isfinite(float(target_max))
+        and float(target_max) > 0.0
+    )
+    if not valid_target_p50:
+        mismatches["time_head.train_time_statistics.target_dt_p50"] = {
+            "expected": "positive finite train-derived value",
+            "observed": target_p50,
+        }
+    elif "time_scale" in train_time_values and not math.isclose(
+        train_time_values["time_scale"],
+        float(target_p50),
+        rel_tol=1e-12,
+        abs_tol=1e-12,
+    ):
         mismatches["time_head.train_time_statistics.time_scale_formula"] = {
             "expected": target_p50,
             "observed": train_time_values["time_scale"],
         }
-    if (
-        "time_w_max" in train_time_values
-        and isinstance(target_max, (int, float))
-        and not isinstance(target_max, bool)
-        and math.isfinite(float(target_max))
-        and float(target_max) > 0.0
-    ):
-        expected_w_max = 40.0 / float(target_max)
+    if not valid_target_max:
+        mismatches["time_head.train_time_statistics.target_dt_max"] = {
+            "expected": "positive finite train-derived value",
+            "observed": target_max,
+        }
+    elif "time_w_max" in train_time_values and "time_scale" in train_time_values:
+        # Mirrors derive_train_time_contract in the frozen training runner.
+        expected_w_max = (
+            float(train_time["wd_safety_limit"])
+            / (float(target_max) / train_time_values["time_scale"])
+        )
         if not math.isclose(
             train_time_values["time_w_max"],
             expected_w_max,
