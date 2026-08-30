@@ -1,0 +1,575 @@
+{
+  "training_fix_revision": "c4dbf856c32e6502acc660ffac23c3e2f68e5375",
+  "cases": [
+    {
+      "seed": 42,
+      "batch": 3705,
+      "input_finite": true,
+      "parameters_finite": true,
+      "capture_elapsed_seconds": 157.91046610893682,
+      "files": [
+        {
+          "path": "search_artifacts/titantpp_mac_nonfinite_20260831/seed42/capture.json",
+          "sha256": "2eb742ab6d8d160c291f437aaa2ee15531f33432320f9a2926601508d662c50d"
+        },
+        {
+          "path": "search_artifacts/titantpp_mac_nonfinite_20260831/seed42/compiled_fixed_seed42.json",
+          "sha256": "5dbbfe6a6f3369409e42c684586ffb32c3b6c321d31cd57cc769200cc5bd168f",
+          "status": "finite",
+          "error": null,
+          "eager": false
+        },
+        {
+          "path": "search_artifacts/titantpp_mac_nonfinite_20260831/seed42/compiled_trace.json",
+          "sha256": "547a873ea4d897e2219ce75ac5b68898b88ae8c634ceb3fba9e8e8591d318ee5",
+          "status": "nonfinite",
+          "error": "First non-finite stage: memory.write_sequence",
+          "eager": false,
+          "first_nonfinite_stage": {
+            "stage": "memory.write_sequence",
+            "tensors": [
+              {
+                "name": ".0.weight_1",
+                "shape": [
+                  128,
+                  128,
+                  64
+                ],
+                "nonfinite_count": 8192,
+                "bad_rows": [
+                  51
+                ],
+                "finite_abs_max": 38925.5390625
+              },
+              {
+                "name": ".0.bias_1",
+                "shape": [
+                  128,
+                  128
+                ],
+                "nonfinite_count": 128,
+                "bad_rows": [
+                  51
+                ],
+                "finite_abs_max": 57267.06640625
+              },
+              {
+                "name": ".0.weight_2",
+                "shape": [
+                  128,
+                  64,
+                  128
+                ],
+                "nonfinite_count": 8192,
+                "bad_rows": [
+                  51
+                ],
+                "finite_abs_max": 92705.1171875
+              },
+              {
+                "name": ".0.bias_2",
+                "shape": [
+                  128,
+                  64
+                ],
+                "nonfinite_count": 64,
+                "bad_rows": [
+                  51
+                ],
+                "finite_abs_max": 1128.0753173828125
+              },
+              {
+                "name": ".0.momentum_weight_1",
+                "shape": [
+                  128,
+                  128,
+                  64
+                ],
+                "nonfinite_count": 8192,
+                "bad_rows": [
+                  51
+                ],
+                "finite_abs_max": 19429.953125
+              },
+              {
+                "name": ".0.momentum_bias_1",
+                "shape": [
+                  128,
+                  128
+                ],
+                "nonfinite_count": 128,
+                "bad_rows": [
+                  51
+                ],
+                "finite_abs_max": 28584.396484375
+              },
+              {
+                "name": ".0.momentum_weight_2",
+                "shape": [
+                  128,
+                  64,
+                  128
+                ],
+                "nonfinite_count": 8192,
+                "bad_rows": [
+                  51
+                ],
+                "finite_abs_max": 46243.25
+              },
+              {
+                "name": ".0.momentum_bias_2",
+                "shape": [
+                  128,
+                  64
+                ],
+                "nonfinite_count": 64,
+                "bad_rows": [
+                  51
+                ],
+                "finite_abs_max": 515.079833984375
+              },
+              {
+                "name": ".1.associative_loss",
+                "shape": [
+                  128,
+                  16
+                ],
+                "nonfinite_count": 1,
+                "bad_rows": [
+                  51
+                ],
+                "finite_abs_max": 2.7962082825674587e+32
+              },
+              {
+                "name": ".1.update_rate",
+                "shape": [
+                  128,
+                  16
+                ],
+                "nonfinite_count": 0,
+                "bad_rows": [],
+                "finite_abs_max": 0.11634161323308945
+              },
+              {
+                "name": ".1.momentum_rate",
+                "shape": [
+                  128,
+                  16
+                ],
+                "nonfinite_count": 0,
+                "bad_rows": [],
+                "finite_abs_max": 0.9987456798553467
+              },
+              {
+                "name": ".1.forgetting_rate",
+                "shape": [
+                  128,
+                  16
+                ],
+                "nonfinite_count": 0,
+                "bad_rows": [],
+                "finite_abs_max": 0.0004306110495235771
+              },
+              {
+                "name": ".1.write_applied",
+                "shape": [
+                  128,
+                  16
+                ],
+                "nonfinite_count": 0,
+                "bad_rows": [],
+                "finite_abs_max": 1.0
+              }
+            ]
+          }
+        },
+        {
+          "path": "search_artifacts/titantpp_mac_nonfinite_20260831/seed42/eager_fixed_seed42.json",
+          "sha256": "643cc46f5963fcaa3d027d6d8875c2e314de3185114ca8a3f0a4ab40e17d1dae",
+          "status": "finite",
+          "error": null,
+          "eager": true
+        },
+        {
+          "path": "search_artifacts/titantpp_mac_nonfinite_20260831/seed42/eager_trace.json",
+          "sha256": "a7e2adccebb4bda3aa42f93ea871586a6c4fdca1f11bd966abbc6d5d42037b66",
+          "status": "nonfinite",
+          "error": "First non-finite stage: memory.associative_gradients",
+          "eager": true,
+          "first_nonfinite_stage": {
+            "stage": "memory.associative_gradients",
+            "tensors": [
+              {
+                "name": ".0.0",
+                "shape": [
+                  128,
+                  128,
+                  64
+                ],
+                "nonfinite_count": 64,
+                "bad_rows": [
+                  51
+                ],
+                "finite_abs_max": 1.3511993461912648e+22
+              },
+              {
+                "name": ".0.1",
+                "shape": [
+                  128,
+                  128
+                ],
+                "nonfinite_count": 1,
+                "bad_rows": [
+                  51
+                ],
+                "finite_abs_max": 2.000988270577488e+22
+              },
+              {
+                "name": ".0.2",
+                "shape": [
+                  128,
+                  64,
+                  128
+                ],
+                "nonfinite_count": 0,
+                "bad_rows": [],
+                "finite_abs_max": 7.117303753151647e+22
+              },
+              {
+                "name": ".0.3",
+                "shape": [
+                  128,
+                  64
+                ],
+                "nonfinite_count": 0,
+                "bad_rows": [],
+                "finite_abs_max": 3351717584306176.0
+              },
+              {
+                "name": ".1",
+                "shape": [
+                  128
+                ],
+                "nonfinite_count": 0,
+                "bad_rows": [],
+                "finite_abs_max": 1.4538053500654406e+31
+              }
+            ]
+          }
+        },
+        {
+          "path": "search_artifacts/titantpp_mac_nonfinite_20260831/seed42/forward_fixture.pt",
+          "sha256": "e80bc79c9b5036196c98bcc0916a8d0aefdd5746aa51f8a2f4da69dcc5ef99f6"
+        }
+      ]
+    },
+    {
+      "seed": 62,
+      "batch": 13439,
+      "input_finite": true,
+      "parameters_finite": true,
+      "capture_elapsed_seconds": 599.1561149690533,
+      "files": [
+        {
+          "path": "search_artifacts/titantpp_mac_nonfinite_20260831/seed62/capture.json",
+          "sha256": "b94b18fcfe5e8b6b824908a67c86a509fb5df18fb54f62581ddc8eb74cf7d86c"
+        },
+        {
+          "path": "search_artifacts/titantpp_mac_nonfinite_20260831/seed62/fixed_compiled_seed62.json",
+          "sha256": "3a6f424f113d0ba36c89aa5ea538af747d68e23f21495db34f68832ec6452cde",
+          "status": "finite",
+          "error": null,
+          "eager": false
+        },
+        {
+          "path": "search_artifacts/titantpp_mac_nonfinite_20260831/seed62/fixed_eager_seed62.json",
+          "sha256": "483b64a89ed944137601099163cd15ed1aa47515be28987dc7cf44243e05b52e",
+          "status": "finite",
+          "error": null,
+          "eager": true
+        },
+        {
+          "path": "search_artifacts/titantpp_mac_nonfinite_20260831/seed62/forward_fixture.pt",
+          "sha256": "735864da6fa163f2ef5adbe435ca126f268ab6e7dc780520d0ce05bcc6d51cd8"
+        },
+        {
+          "path": "search_artifacts/titantpp_mac_nonfinite_20260831/seed62/original_compiled_seed62.json",
+          "sha256": "0012649890a8e870b9138bf5e81c7d7bee1a61a8ed725ee4a2df7926b71f5d15",
+          "status": "nonfinite",
+          "error": "First non-finite stage: memory.write_sequence",
+          "eager": false,
+          "first_nonfinite_stage": {
+            "stage": "memory.write_sequence",
+            "tensors": [
+              {
+                "name": ".0.weight_1",
+                "shape": [
+                  128,
+                  128,
+                  64
+                ],
+                "nonfinite_count": 49152,
+                "bad_rows": [
+                  13,
+                  32,
+                  79,
+                  90,
+                  119,
+                  122
+                ],
+                "finite_abs_max": 2.771564728662426e+25
+              },
+              {
+                "name": ".0.bias_1",
+                "shape": [
+                  128,
+                  128
+                ],
+                "nonfinite_count": 768,
+                "bad_rows": [
+                  13,
+                  32,
+                  79,
+                  90,
+                  119,
+                  122
+                ],
+                "finite_abs_max": 4.170790388321656e+25
+              },
+              {
+                "name": ".0.weight_2",
+                "shape": [
+                  128,
+                  64,
+                  128
+                ],
+                "nonfinite_count": 45720,
+                "bad_rows": [
+                  13,
+                  32,
+                  79,
+                  90,
+                  119,
+                  122
+                ],
+                "finite_abs_max": 1.5423032183809395e+26
+              },
+              {
+                "name": ".0.bias_2",
+                "shape": [
+                  128,
+                  64
+                ],
+                "nonfinite_count": 351,
+                "bad_rows": [
+                  13,
+                  32,
+                  79,
+                  90,
+                  119,
+                  122
+                ],
+                "finite_abs_max": 3.476787583017045e+37
+              },
+              {
+                "name": ".0.momentum_weight_1",
+                "shape": [
+                  128,
+                  128,
+                  64
+                ],
+                "nonfinite_count": 49152,
+                "bad_rows": [
+                  13,
+                  32,
+                  79,
+                  90,
+                  119,
+                  122
+                ],
+                "finite_abs_max": 2.771564728662426e+25
+              },
+              {
+                "name": ".0.momentum_bias_1",
+                "shape": [
+                  128,
+                  128
+                ],
+                "nonfinite_count": 768,
+                "bad_rows": [
+                  13,
+                  32,
+                  79,
+                  90,
+                  119,
+                  122
+                ],
+                "finite_abs_max": 4.170790388321656e+25
+              },
+              {
+                "name": ".0.momentum_weight_2",
+                "shape": [
+                  128,
+                  64,
+                  128
+                ],
+                "nonfinite_count": 45720,
+                "bad_rows": [
+                  13,
+                  32,
+                  79,
+                  90,
+                  119,
+                  122
+                ],
+                "finite_abs_max": 1.5423032183809395e+26
+              },
+              {
+                "name": ".0.momentum_bias_2",
+                "shape": [
+                  128,
+                  64
+                ],
+                "nonfinite_count": 351,
+                "bad_rows": [
+                  13,
+                  32,
+                  79,
+                  90,
+                  119,
+                  122
+                ],
+                "finite_abs_max": 3.476787583017045e+37
+              },
+              {
+                "name": ".1.associative_loss",
+                "shape": [
+                  128,
+                  16
+                ],
+                "nonfinite_count": 47,
+                "bad_rows": [
+                  9,
+                  13,
+                  32,
+                  68,
+                  79,
+                  90,
+                  119,
+                  122
+                ],
+                "finite_abs_max": 8.982103122495149e+35
+              },
+              {
+                "name": ".1.update_rate",
+                "shape": [
+                  128,
+                  16
+                ],
+                "nonfinite_count": 0,
+                "bad_rows": [],
+                "finite_abs_max": 0.1346626579761505
+              },
+              {
+                "name": ".1.momentum_rate",
+                "shape": [
+                  128,
+                  16
+                ],
+                "nonfinite_count": 0,
+                "bad_rows": [],
+                "finite_abs_max": 0.9798096418380737
+              },
+              {
+                "name": ".1.forgetting_rate",
+                "shape": [
+                  128,
+                  16
+                ],
+                "nonfinite_count": 0,
+                "bad_rows": [],
+                "finite_abs_max": 0.026352904736995697
+              },
+              {
+                "name": ".1.write_applied",
+                "shape": [
+                  128,
+                  16
+                ],
+                "nonfinite_count": 0,
+                "bad_rows": [],
+                "finite_abs_max": 1.0
+              }
+            ]
+          }
+        },
+        {
+          "path": "search_artifacts/titantpp_mac_nonfinite_20260831/seed62/original_eager_seed62.json",
+          "sha256": "e0e7cec3657cecf6bef1852fd84d4d03eb7cc137756f078f9c15abc90fae238f",
+          "status": "nonfinite",
+          "error": "First non-finite stage: memory.associative_gradients",
+          "eager": true,
+          "first_nonfinite_stage": {
+            "stage": "memory.associative_gradients",
+            "tensors": [
+              {
+                "name": ".0.0",
+                "shape": [
+                  128,
+                  128,
+                  64
+                ],
+                "nonfinite_count": 0,
+                "bad_rows": [],
+                "finite_abs_max": 1.05434869575608e+31
+              },
+              {
+                "name": ".0.1",
+                "shape": [
+                  128,
+                  128
+                ],
+                "nonfinite_count": 0,
+                "bad_rows": [],
+                "finite_abs_max": 1.7703931617547675e+31
+              },
+              {
+                "name": ".0.2",
+                "shape": [
+                  128,
+                  64,
+                  128
+                ],
+                "nonfinite_count": 0,
+                "bad_rows": [],
+                "finite_abs_max": 1.3423889633641725e+30
+              },
+              {
+                "name": ".0.3",
+                "shape": [
+                  128,
+                  64
+                ],
+                "nonfinite_count": 0,
+                "bad_rows": [],
+                "finite_abs_max": 2.9364004372911384e+20
+              },
+              {
+                "name": ".1",
+                "shape": [
+                  128
+                ],
+                "nonfinite_count": 2,
+                "bad_rows": [
+                  32,
+                  68
+                ],
+                "finite_abs_max": 2.0983201270190928e+33
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
