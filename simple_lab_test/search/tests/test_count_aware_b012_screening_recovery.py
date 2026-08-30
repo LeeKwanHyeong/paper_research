@@ -777,6 +777,13 @@ def test_merge_validates_all_nine_runs_and_builds_comparator_contract(
         recovery_revision=RECOVERY_REVISION,
         contract_path=RECOVERY_CONTRACT,
     )
+    reused_run = canonical_run_dir(
+        output, "intermittent_frozen_5000", "titantpp"
+    )
+    reused_summary_path = reused_run / "summary.json"
+    reused_summary = json.loads(reused_summary_path.read_text(encoding="utf-8"))
+    reused_summary["checkpoint_path"] = "/remote/host/stale_checkpoint.pt"
+    write_json(reused_summary_path, reused_summary)
     for dataset, backbone in RECOVERY_RUNS:
         role_dir = shard_role_dir(output, dataset, backbone)
         write_json(
@@ -797,6 +804,12 @@ def test_merge_validates_all_nine_runs_and_builds_comparator_contract(
     )
 
     assert result["completed_run_count"] == 9
+    rewritten_summary = json.loads(
+        reused_summary_path.read_text(encoding="utf-8")
+    )
+    assert rewritten_summary["checkpoint_path"] == str(
+        (reused_run / "best_val_joint_objective_model.pt").resolve()
+    )
     for dataset in SCREENING_DATASETS:
         role_dir = output / dataset / MODEL_ROLE_TITAN_B012_SCREENING
         launch = json.loads(

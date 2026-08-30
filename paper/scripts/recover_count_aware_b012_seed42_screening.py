@@ -1404,6 +1404,7 @@ def _install_validated_run(
             raise ValueError(
                 f"Canonical run already exists with a different state: {destination}"
             )
+        _rewrite_checkpoint_path(destination)
         _materialize_history_csv(destination, destination_record["history"])
         return
     destination.parent.mkdir(parents=True, exist_ok=True)
