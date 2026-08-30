@@ -1019,6 +1019,22 @@ def _validate_shard_5090_contract(
         raise ValueError("5090 shard must remain validation-only")
     if contract.get("held_out_test") != "locked":
         raise ValueError("5090 shard must keep held-out test locked")
+    expected_compiler_policy = {
+        "wrapper": "paper/scripts/run_with_b012_dynamo_policy.py",
+        "compiled_scan_dynamic_shapes": False,
+        "recompile_limit": 64,
+        "accumulated_recompile_limit": 512,
+        "scope": "orchestration_only_no_model_or_loss_change",
+        "required_real_data_preflight": [
+            "raf_spare_parts/titantpp_titans_mac/e1",
+            "raf_spare_parts/titantpp_tpp_gated_memory/e1",
+        ],
+    }
+    if contract.get("compiler_policy") != expected_compiler_policy:
+        raise ValueError("5090 shard compiler policy drifted")
+    wrapper_path = PROJECT_ROOT / expected_compiler_policy["wrapper"]
+    if not wrapper_path.is_file():
+        raise FileNotFoundError(wrapper_path)
     training_files = contract.get("training_files")
     if not isinstance(training_files, dict) or not training_files:
         raise ValueError("5090 shard contract requires frozen training-file hashes")

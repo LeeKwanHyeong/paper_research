@@ -61,6 +61,17 @@
     "force_rerun": false,
     "merge_on_5090": false
   },
+  "compiler_policy": {
+    "wrapper": "paper/scripts/run_with_b012_dynamo_policy.py",
+    "compiled_scan_dynamic_shapes": false,
+    "recompile_limit": 64,
+    "accumulated_recompile_limit": 512,
+    "scope": "orchestration_only_no_model_or_loss_change",
+    "required_real_data_preflight": [
+      "raf_spare_parts/titantpp_titans_mac/e1",
+      "raf_spare_parts/titantpp_tpp_gated_memory/e1"
+    ]
+  },
   "gpu_preflight": {
     "run_before_every_isolated_backbone": true,
     "minimum_free_memory_mib": 30000,

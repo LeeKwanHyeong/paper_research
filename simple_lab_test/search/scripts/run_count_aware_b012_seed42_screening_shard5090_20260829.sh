@@ -13,12 +13,15 @@ MAXIMUM_USED_MIB="${MAXIMUM_USED_MIB:-512}"
 PREFLIGHT_ATTEMPTS="${PREFLIGHT_ATTEMPTS:-12}"
 PREFLIGHT_INTERVAL_SECONDS="${PREFLIGHT_INTERVAL_SECONDS:-5}"
 VERIFY_ONLY="${VERIFY_ONLY:-0}"
+DYNAMO_RECOMPILE_LIMIT="${DYNAMO_RECOMPILE_LIMIT:-64}"
+DYNAMO_ACCUMULATED_RECOMPILE_LIMIT="${DYNAMO_ACCUMULATED_RECOMPILE_LIMIT:-512}"
 
 MODEL_ROLE="titan_b012_screening"
 EXECUTION_SERVER="5090"
 SHARD_CONTRACT="${PROJECT_ROOT}/paper/contracts/count_aware_titan_b012_screening_shard5090_v1.json"
 RECOVERY_TOOL="${PROJECT_ROOT}/paper/scripts/recover_count_aware_b012_seed42_screening.py"
 RUNNER="${PROJECT_ROOT}/paper/scripts/run_count_aware_tpp_backbone_control.py"
+DYNAMO_RUNNER="${PROJECT_ROOT}/paper/scripts/run_with_b012_dynamo_policy.py"
 CURRENT_DATASET=""
 CURRENT_BACKBONE=""
 SHARD_PREPARED=0
@@ -103,9 +106,13 @@ export XDG_CACHE_HOME="${XDG_CACHE_HOME:-/tmp/xdg_b012_shard5090}"
 [[ "${SOURCE_REVISION}" =~ ^[0-9a-f]{40}$ ]]
 [[ "${SHARD_REVISION}" =~ ^[0-9a-f]{40}$ ]]
 [[ "${VERIFY_ONLY}" =~ ^[01]$ ]]
+[[ "${DYNAMO_RECOMPILE_LIMIT}" =~ ^[1-9][0-9]*$ ]]
+[[ "${DYNAMO_ACCUMULATED_RECOMPILE_LIMIT}" =~ ^[1-9][0-9]*$ ]]
+(( DYNAMO_ACCUMULATED_RECOMPILE_LIMIT >= DYNAMO_RECOMPILE_LIMIT ))
 [[ -f "${SHARD_CONTRACT}" ]]
 [[ -f "${RECOVERY_TOOL}" ]]
 [[ -f "${RUNNER}" ]]
+[[ -f "${DYNAMO_RUNNER}" ]]
 [[ -f "${DEPLOYMENT_METADATA}" ]]
 [[ -f "${DEPLOYMENT_SHA256}" ]]
 verify_deployment
@@ -134,9 +141,13 @@ cp "${DEPLOYMENT_SHA256}" "${OUTPUT_ROOT}/provenance/deployment_files.sha256"
   printf 'shard_orchestration_revision=%s\n' "${SHARD_REVISION}"
   printf 'execution_server=%s\n' "${EXECUTION_SERVER}"
   printf 'contract_id=count_aware_titan_b012_screening_shard5090_v1\n'
+  printf 'dynamo_recompile_limit=%s\n' "${DYNAMO_RECOMPILE_LIMIT}"
+  printf 'dynamo_accumulated_recompile_limit=%s\n' \
+    "${DYNAMO_ACCUMULATED_RECOMPILE_LIMIT}"
   printf 'output_artifact=%s\n' "${OUTPUT_ROOT}"
   printf 'generated_at_utc=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  sha256sum "${SHARD_CONTRACT}" "${RECOVERY_TOOL}" "${RUNNER}"
+  sha256sum "${SHARD_CONTRACT}" "${RECOVERY_TOOL}" "${RUNNER}" \
+    "${DYNAMO_RUNNER}"
 } > "${OUTPUT_ROOT}/source_manifest.txt"
 
 exec > >(tee -a "${OUTPUT_ROOT}/logs/run.log") 2>&1
@@ -192,7 +203,10 @@ run_isolated_backbone() {
     --forbidden-graphics-process Xwayland \
     --forbidden-graphics-process Xorg
 
-  "${PYTHON_BIN}" "${RUNNER}" \
+  "${PYTHON_BIN}" "${DYNAMO_RUNNER}" \
+    --recompile-limit "${DYNAMO_RECOMPILE_LIMIT}" \
+    --accumulated-recompile-limit "${DYNAMO_ACCUMULATED_RECOMPILE_LIMIT}" \
+    "${RUNNER}" \
     --data "${data_path}" \
     --split-manifest "${manifest_path}" \
     --output-dir "${shard_output}" \
