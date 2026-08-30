@@ -1,0 +1,67 @@
+{
+  "contract_id": "count_aware_titantpp_mac_three_seed_split_v1",
+  "frozen_at": "2026-08-30T20:31:29+09:00",
+  "parent_validation_contract": "count_aware_titantpp_mac_three_seed_validation_v1",
+  "parent_validation_contract_sha256": "cdedbb5c3f2643196130eb09a270a03e94fdd80d0d8ac321c176b6f1e2f72451",
+  "parent_orchestration_revision": "22d773b1de15339514bdcc5c4df7c5c6824e938f",
+  "model_name": "Count-aware TitanTPP-MAC",
+  "short_model_name": "TitanTPP-MAC",
+  "training_source_revision": "08e59880cd61cbd27cec40aa04636452b87bebfc",
+  "implementation_backbone": "titantpp_titans_mac",
+  "reason": "Reduce wall-clock time without changing the frozen model or validation contract.",
+  "shards": {
+    "seed52_5090": {
+      "execution_server": "5090",
+      "artifact_name": "count_aware_titantpp_mac_three_seed_validation_20260830_5090",
+      "run_order": [
+        ["raf_spare_parts", 52],
+        ["yellow_trip_hourly", 52],
+        ["insta_market_basket", 42],
+        ["insta_market_basket", 52],
+        ["intermittent_frozen_5000", 52]
+      ],
+      "run_count": 5
+    },
+    "seed62_5080": {
+      "execution_server": "5080",
+      "artifact_name": "count_aware_titantpp_mac_seed62_validation_20260830_5080",
+      "run_order": [
+        ["raf_spare_parts", 62],
+        ["yellow_trip_hourly", 62],
+        ["insta_market_basket", 62],
+        ["intermittent_frozen_5000", 62]
+      ],
+      "run_count": 4
+    }
+  },
+  "canonical_run_order": [
+    ["raf_spare_parts", 52],
+    ["raf_spare_parts", 62],
+    ["yellow_trip_hourly", 52],
+    ["yellow_trip_hourly", 62],
+    ["insta_market_basket", 42],
+    ["insta_market_basket", 52],
+    ["insta_market_basket", 62],
+    ["intermittent_frozen_5000", 52],
+    ["intermittent_frozen_5000", 62]
+  ],
+  "canonical_run_count": 9,
+  "execution_rules": {
+    "independent_python_process_per_run": true,
+    "validation_only": true,
+    "held_out_test": "locked",
+    "record_execution_server_per_run": true,
+    "mixed_server_runtime_is_not_a_model_compute_comparison": true,
+    "reuse_requires_full_parent_run_validation": true,
+    "duplicate_run_execution_forbidden": true
+  },
+  "completion_requirements": {
+    "shard_partitions_are_disjoint": true,
+    "shard_union_equals_parent_grid": true,
+    "all_nine_runs_validate_against_parent_contract": true,
+    "all_metrics_finite": true,
+    "checkpoint_digest_present": true,
+    "held_out_test_artifact_absent": true,
+    "canonical_merge_summary_present": true
+  }
+}
