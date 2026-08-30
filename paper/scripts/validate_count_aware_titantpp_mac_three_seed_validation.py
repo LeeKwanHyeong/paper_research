@@ -151,6 +151,19 @@ def run_paths(run_root: Path, seed: int) -> tuple[Path, Path, Path]:
     )
 
 
+def resolve_checkpoint_path(summary_path: Path, recorded_path: str) -> Path:
+    checkpoint_path = Path(recorded_path)
+    if checkpoint_path.is_file():
+        return checkpoint_path
+    synchronized_path = summary_path.parent / checkpoint_path.name
+    if synchronized_path.is_file():
+        return synchronized_path
+    raise FileNotFoundError(
+        "Checkpoint is missing at both the recorded and synchronized paths: "
+        f"recorded={checkpoint_path} synchronized={synchronized_path}"
+    )
+
+
 def validate_run(
     *,
     run_root: Path,
@@ -228,9 +241,7 @@ def validate_run(
     checkpoint_digest = summary.get("checkpoint_state_sha256", "")
     if len(checkpoint_digest) != 64:
         raise ValueError("Checkpoint state digest is missing")
-    checkpoint_path = Path(summary["checkpoint_path"])
-    if not checkpoint_path.is_file():
-        raise FileNotFoundError(checkpoint_path)
+    resolve_checkpoint_path(summary_path, summary["checkpoint_path"])
     if len(history.get("history", [])) != summary["completed_epochs"]:
         raise ValueError("History length does not match completed epochs")
 

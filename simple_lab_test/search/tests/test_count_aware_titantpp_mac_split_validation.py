@@ -9,6 +9,7 @@ import pytest
 from paper.scripts.validate_count_aware_titantpp_mac_three_seed_validation import (
     finalize_shard,
     finalize_split,
+    validate_run,
     validate_split_contract,
 )
 
@@ -184,3 +185,36 @@ def test_shard_and_canonical_finalization(tmp_path: Path) -> None:
         "mixed_server_runtime_is_not_a_model_compute_comparison"
     ] is True
     assert canonical["held_out_test_evaluated"] is False
+
+
+def test_validator_resolves_checkpoint_after_remote_artifact_sync(
+    tmp_path: Path,
+) -> None:
+    contract = load_json(CONTRACT_PATH)
+    dataset = "raf_spare_parts"
+    seed = 52
+    write_fixture_run(
+        tmp_path,
+        dataset=dataset,
+        seed=seed,
+        contract=contract,
+    )
+    run_root = tmp_path / "shards" / dataset / f"seed_{seed}"
+    summary_path = (
+        run_root
+        / "runs/titantpp_titans_mac/count_only_log_regression"
+        / f"seed_{seed}/summary.json"
+    )
+    summary = load_json(summary_path)
+    summary["checkpoint_path"] = (
+        "/remote/server/artifact/best_val_joint_objective_model.pt"
+    )
+    summary_path.write_text(json.dumps(summary), encoding="utf-8")
+
+    evidence = validate_run(
+        run_root=run_root,
+        dataset=dataset,
+        seed=seed,
+        contract=contract,
+    )
+    assert evidence["checkpoint_state_sha256"] == "a" * 64
