@@ -14,6 +14,9 @@ from typing import Any
 
 BACKBONE = "titantpp_titans_mac"
 VARIANT = "count_only_log_regression"
+LEGACY_TRAINING_SOURCE_REVISION = (
+    "08e59880cd61cbd27cec40aa04636452b87bebfc"
+)
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -39,6 +42,38 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def resolve_status_training_revision(
+    *,
+    output_root: Path,
+    explicit_revision: str | None,
+) -> str:
+    """Resolve status provenance without hard-coding the active contract."""
+    if explicit_revision is not None:
+        revision = explicit_revision
+    else:
+        revisions: set[str] = set()
+        for manifest in output_root.glob("source_manifest*.txt"):
+            for line in manifest.read_text(encoding="utf-8").splitlines():
+                key, separator, value = line.partition("=")
+                if separator and key == "training_source_revision":
+                    revisions.add(value.strip())
+        if len(revisions) > 1:
+            raise ValueError(
+                f"Conflicting training revisions in source manifests: "
+                f"{sorted(revisions)}"
+            )
+        revision = (
+            next(iter(revisions))
+            if revisions
+            else LEGACY_TRAINING_SOURCE_REVISION
+        )
+    if len(revision) != 40 or any(
+        character not in "0123456789abcdef" for character in revision
+    ):
+        raise ValueError(f"Invalid training source revision: {revision!r}")
+    return revision
 
 
 def require_finite(value: Any, *, location: str) -> None:
@@ -455,6 +490,7 @@ def parse_args() -> argparse.Namespace:
     status.add_argument("--output-root", type=Path, required=True)
     status.add_argument("--state", required=True)
     status.add_argument("--orchestration-revision", required=True)
+    status.add_argument("--training-source-revision", default=None)
     status.add_argument("--current-dataset", default=None)
     status.add_argument("--current-seed", type=int, default=None)
     status.add_argument("--completed-run-count", type=int, required=True)
@@ -524,8 +560,9 @@ def main() -> None:
         payload = {
             "status": args.state,
             "model_name": "TitanTPP-MAC",
-            "training_source_revision": (
-                "08e59880cd61cbd27cec40aa04636452b87bebfc"
+            "training_source_revision": resolve_status_training_revision(
+                output_root=args.output_root,
+                explicit_revision=args.training_source_revision,
             ),
             "orchestration_revision": args.orchestration_revision,
             "execution_server": args.execution_server,

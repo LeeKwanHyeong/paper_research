@@ -53,6 +53,7 @@ write_status() {
     --output-root "${OUTPUT_ROOT}"
     --state "${state}"
     --orchestration-revision "${ORCHESTRATION_REVISION}"
+    --training-source-revision "${SOURCE_REVISION}"
     --completed-run-count "${COMPLETED_RUNS}"
     --message "${message}"
     --execution-server "${EXECUTION_SERVER}"

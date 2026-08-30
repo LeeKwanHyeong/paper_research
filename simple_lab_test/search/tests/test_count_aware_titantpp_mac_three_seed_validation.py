@@ -7,6 +7,7 @@ from pathlib import Path
 
 from paper.scripts.validate_count_aware_titantpp_mac_three_seed_validation import (
     finalize,
+    resolve_status_training_revision,
     validate_run,
     verify_source,
 )
@@ -59,6 +60,25 @@ def test_historical_contract_remains_pinned_to_pre_correction_revision() -> None
         "08e59880cd61cbd27cec40aa04636452b87bebfc"
     )
     assert historical["contract_id"].endswith("_v1")
+
+
+def test_status_revision_comes_from_explicit_contract_or_manifest(
+    tmp_path: Path,
+) -> None:
+    corrected_revision = "b1d9e638c68bc7bab9ace6b5c8fa9d0af989c8f7"
+    assert resolve_status_training_revision(
+        output_root=tmp_path,
+        explicit_revision=corrected_revision,
+    ) == corrected_revision
+
+    (tmp_path / "source_manifest_seed62_5080.txt").write_text(
+        f"training_source_revision={corrected_revision}\n",
+        encoding="utf-8",
+    )
+    assert resolve_status_training_revision(
+        output_root=tmp_path,
+        explicit_revision=None,
+    ) == corrected_revision
 
 
 def test_frozen_training_file_digests_match_source_revision() -> None:
