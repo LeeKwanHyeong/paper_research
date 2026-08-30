@@ -8,11 +8,13 @@ import pytest
 from models.TPPs.CountAwareFactory import build_count_aware_model
 from models.TPPs.CountAwareTPP import TIME_HEAD_MODE_LEGACY_CLAMPED
 from paper.scripts.count_aware_tpp_backbone.constants import (
-    BACKBONE_LABELS,
+    VARIANT,
+)
+from paper.scripts.count_aware_titantpp_mac_contract import (
     MODEL_ROLE_TITANTPP_MAC_PRIMARY,
     TITANTPP_MAC_PRIMARY_BACKBONES,
-    VARIANT,
-    validate_model_role_contract,
+    TITANTPP_MAC_PAPER_NAME,
+    validate_titantpp_mac_primary_contract,
 )
 
 
@@ -53,8 +55,8 @@ def test_primary_acceptance_gate_is_frozen_for_four_datasets_and_three_seeds() -
 
 
 def test_primary_model_role_rejects_contract_drift() -> None:
-    validate_model_role_contract(
-        model_role=MODEL_ROLE_TITANTPP_MAC_PRIMARY,
+    assert MODEL_ROLE_TITANTPP_MAC_PRIMARY == "titantpp_mac_primary"
+    validate_titantpp_mac_primary_contract(
         backbones=TITANTPP_MAC_PRIMARY_BACKBONES,
         quantity_variants=(VARIANT,),
         time_head_mode=TIME_HEAD_MODE_LEGACY_CLAMPED,
@@ -62,8 +64,7 @@ def test_primary_model_role_rejects_contract_drift() -> None:
     )
 
     with pytest.raises(ValueError, match="direct log-MSE"):
-        validate_model_role_contract(
-            model_role=MODEL_ROLE_TITANTPP_MAC_PRIMARY,
+        validate_titantpp_mac_primary_contract(
             backbones=TITANTPP_MAC_PRIMARY_BACKBONES,
             quantity_variants=("tail_shared_log_regression",),
             time_head_mode=TIME_HEAD_MODE_LEGACY_CLAMPED,
@@ -71,7 +72,7 @@ def test_primary_model_role_rejects_contract_drift() -> None:
         )
 
 
-def test_factory_exposes_primary_paper_name_without_breaking_b1_identity() -> None:
+def test_primary_name_is_separate_from_frozen_b1_factory_identity() -> None:
     _, metadata = build_count_aware_model(
         "titantpp_titans_mac",
         hidden_dim=8,
@@ -79,8 +80,8 @@ def test_factory_exposes_primary_paper_name_without_breaking_b1_identity() -> No
         max_seq_len=16,
     )
 
-    assert BACKBONE_LABELS["titantpp_titans_mac"] == "Count-aware TitanTPP-MAC"
+    assert TITANTPP_MAC_PAPER_NAME == "Count-aware TitanTPP-MAC"
     assert metadata["candidate_name"] == "count_titan_faithful_titans_mac"
     assert metadata["backbone_contract_id"] == "B1"
-    assert metadata["paper_model_name"] == "Count-aware TitanTPP-MAC"
-    assert metadata["model_positioning"] == "primary_candidate"
+    assert "paper_model_name" not in metadata
+    assert "model_positioning" not in metadata

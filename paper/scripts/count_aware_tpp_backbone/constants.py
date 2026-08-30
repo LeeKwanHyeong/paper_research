@@ -45,7 +45,6 @@ MODEL_ROLE_T1_INCUMBENT = "t1_incumbent"
 MODEL_ROLE_T1_BACKBONE_COMPARISON = "t1_backbone_comparison"
 MODEL_ROLE_TIME_HEAD_DIAGNOSTIC = "time_head_diagnostic"
 MODEL_ROLE_TITAN_B012_SCREENING = "titan_b012_screening"
-MODEL_ROLE_TITANTPP_MAC_PRIMARY = "titantpp_mac_primary"
 MODEL_ROLES = (
     MODEL_ROLE_EXPERIMENTAL,
     MODEL_ROLE_T0_COMMON_CONTROL,
@@ -53,7 +52,6 @@ MODEL_ROLES = (
     MODEL_ROLE_T1_BACKBONE_COMPARISON,
     MODEL_ROLE_TIME_HEAD_DIAGNOSTIC,
     MODEL_ROLE_TITAN_B012_SCREENING,
-    MODEL_ROLE_TITANTPP_MAC_PRIMARY,
 )
 T0_COMMON_BACKBONES = ("rmtpp", "thp", "nhp", "sahp", "titantpp")
 TITAN_B012_BACKBONES = (
@@ -61,7 +59,6 @@ TITAN_B012_BACKBONES = (
     "titantpp_titans_mac",
     "titantpp_tpp_gated_memory",
 )
-TITANTPP_MAC_PRIMARY_BACKBONES = ("titantpp_titans_mac",)
 QUANTITY_VARIANT_ALIASES = {
     "log_mse": VARIANT,
     VARIANT: VARIANT,
@@ -89,7 +86,7 @@ BACKBONE_LABELS = {
     "titantpp_dual_memory_adapter_only": (
         "TitanTPP Dual Memory Adapter-only"
     ),
-    "titantpp_titans_mac": "Count-aware TitanTPP-MAC",
+    "titantpp_titans_mac": "TitanTPP Faithful Titans-MAC",
     "titantpp_tpp_gated_memory": "TitanTPP TPP-specific Gated Memory",
 }
 
@@ -132,21 +129,6 @@ def validate_model_role_contract(
             )
         if not math.isclose(lambda_tail, 0.0, rel_tol=0.0, abs_tol=1e-15):
             raise ValueError("Titan B0/B1/B2 screening requires lambda_tail=0")
-        return
-    if model_role == MODEL_ROLE_TITANTPP_MAC_PRIMARY:
-        if backbones != TITANTPP_MAC_PRIMARY_BACKBONES:
-            raise ValueError(
-                "TitanTPP-MAC primary runs require "
-                f"backbones={TITANTPP_MAC_PRIMARY_BACKBONES}"
-            )
-        if quantity_variants != (VARIANT,):
-            raise ValueError("TitanTPP-MAC primary requires direct log-MSE")
-        if time_head_mode != TIME_HEAD_MODE_LEGACY_CLAMPED:
-            raise ValueError(
-                "TitanTPP-MAC primary requires legacy_clamped_rmtpp"
-            )
-        if not math.isclose(lambda_tail, 0.0, rel_tol=0.0, abs_tol=1e-15):
-            raise ValueError("TitanTPP-MAC primary requires lambda_tail=0")
         return
     if model_role == MODEL_ROLE_T1_INCUMBENT:
         if backbones != ("titantpp",):
@@ -195,7 +177,6 @@ __all__ = [
     "MODEL_ROLE_T1_BACKBONE_COMPARISON",
     "MODEL_ROLE_T1_INCUMBENT",
     "MODEL_ROLE_TITAN_B012_SCREENING",
-    "MODEL_ROLE_TITANTPP_MAC_PRIMARY",
     "MODEL_ROLE_TIME_HEAD_DIAGNOSTIC",
     "QUANTITY_VARIANT_ALIASES",
     "SEEDS",
@@ -205,7 +186,6 @@ __all__ = [
     "TAIL_VARIANTS",
     "T0_COMMON_BACKBONES",
     "TITAN_B012_BACKBONES",
-    "TITANTPP_MAC_PRIMARY_BACKBONES",
     "TITAN_HISTORICAL_MEMORY_BACKBONES",
     "TITAN_MEMORY_BACKBONES",
     "TITAN_PERSISTENT_MEMORY_BACKBONES",

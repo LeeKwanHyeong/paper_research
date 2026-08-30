@@ -173,7 +173,7 @@ def test_memory_variants_are_opt_in_supported_backbones() -> None:
         "TitanTPP Surprise Memory"
     )
     assert BACKBONE_LABELS["titantpp_titans_mac"] == (
-        "Count-aware TitanTPP-MAC"
+        "TitanTPP Faithful Titans-MAC"
     )
     assert BACKBONE_LABELS["titantpp_tpp_gated_memory"] == (
         "TitanTPP TPP-specific Gated Memory"
