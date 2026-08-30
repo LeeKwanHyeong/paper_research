@@ -8,11 +8,14 @@ ORCHESTRATION_REVISION="${ORCHESTRATION_REVISION:?ORCHESTRATION_REVISION is requ
 SHARD_ID="${SHARD_ID:?SHARD_ID is required}"
 VERIFY_ONLY="${VERIFY_ONLY:-0}"
 MINIMUM_FREE_MIB="${MINIMUM_FREE_MIB:-12000}"
+INSTACART_FIRST="${INSTACART_FIRST:-0}"
 
-SOURCE_REVISION="08e59880cd61cbd27cec40aa04636452b87bebfc"
-CONTRACT="${PROJECT_ROOT}/paper/contracts/count_aware_titantpp_mac_three_seed_validation_v1.json"
-SPLIT_CONTRACT="${PROJECT_ROOT}/paper/contracts/count_aware_titantpp_mac_three_seed_split_v1.json"
-AMENDMENT="${PROJECT_ROOT}/paper/contracts/count_aware_titantpp_mac_primary_v1_amendment_1.json"
+SOURCE_REVISION="${SOURCE_REVISION:-08e59880cd61cbd27cec40aa04636452b87bebfc}"
+CONTRACT="${CONTRACT:-${PROJECT_ROOT}/paper/contracts/count_aware_titantpp_mac_three_seed_validation_v1.json}"
+SPLIT_CONTRACT="${SPLIT_CONTRACT:-${PROJECT_ROOT}/paper/contracts/count_aware_titantpp_mac_three_seed_split_v1.json}"
+AMENDMENT="${AMENDMENT:-${PROJECT_ROOT}/paper/contracts/count_aware_titantpp_mac_primary_v1_amendment_1.json}"
+PARENT_CONTRACT_ID="${PARENT_CONTRACT_ID:-count_aware_titantpp_mac_three_seed_validation_v1}"
+SPLIT_CONTRACT_ID="${SPLIT_CONTRACT_ID:-count_aware_titantpp_mac_three_seed_split_v1}"
 VALIDATOR="${PROJECT_ROOT}/paper/scripts/validate_count_aware_titantpp_mac_three_seed_validation.py"
 POLICY_RUNNER="${PROJECT_ROOT}/paper/scripts/run_with_titantpp_mac_dynamo_policy.py"
 TRAINING_RUNNER="${PROJECT_ROOT}/paper/scripts/run_count_aware_tpp_backbone_control.py"
@@ -39,6 +42,8 @@ CURRENT_SEED=""
 COMPLETED_RUNS=0
 FINALIZED=0
 STATUS_FILENAME="split_status_${SHARD_ID}.json"
+FAILED_COMMAND=""
+FAILED_LINE=""
 
 write_status() {
   local state="$1"
@@ -70,15 +75,23 @@ on_exit() {
   if [[ "${FINALIZED}" != "1" ]]; then
     set +e
     write_status failed \
-      "TitanTPP-MAC shard stopped at ${CURRENT_DATASET:-setup}/seed_${CURRENT_SEED:-none}."
+      "TitanTPP-MAC shard stopped at ${CURRENT_DATASET:-setup}/seed_${CURRENT_SEED:-none}; exit=${exit_code}; line=${FAILED_LINE:-unknown}; command=${FAILED_COMMAND:0:160}."
   fi
   exit "${exit_code}"
 }
+
+on_err() {
+  FAILED_LINE="${BASH_LINENO[0]:-unknown}"
+  FAILED_COMMAND="${BASH_COMMAND:-unknown}"
+}
+
+trap on_err ERR
 trap on_exit EXIT
 
 [[ -x "${PYTHON_BIN}" ]]
 [[ "${ORCHESTRATION_REVISION}" =~ ^[0-9a-f]{40}$ ]]
 [[ "${VERIFY_ONLY}" =~ ^[01]$ ]]
+[[ "${INSTACART_FIRST}" =~ ^[01]$ ]]
 for path in \
   "${CONTRACT}" \
   "${SPLIT_CONTRACT}" \
@@ -112,8 +125,9 @@ fi
   printf 'orchestration_revision=%s\n' "${ORCHESTRATION_REVISION}"
   printf 'execution_server=%s\n' "${EXECUTION_SERVER}"
   printf 'shard_id=%s\n' "${SHARD_ID}"
-  printf 'parent_contract_id=count_aware_titantpp_mac_three_seed_validation_v1\n'
-  printf 'split_contract_id=count_aware_titantpp_mac_three_seed_split_v1\n'
+  printf 'parent_contract_id=%s\n' "${PARENT_CONTRACT_ID}"
+  printf 'split_contract_id=%s\n' "${SPLIT_CONTRACT_ID}"
+  printf 'instacart_first=%s\n' "${INSTACART_FIRST}"
   printf 'generated_at_utc=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   sha256sum "${CONTRACT}" "${SPLIT_CONTRACT}" "${AMENDMENT}" \
     "${VALIDATOR}" "${POLICY_RUNNER}" "${TRAINING_RUNNER}" "${LAUNCHER}"
@@ -216,31 +230,58 @@ INSTACART_ROOT="${PROJECT_ROOT}/sample_data/insta_market_basket"
 
 write_status running "TitanTPP-MAC ${SHARD_ID} launcher started."
 if [[ "${SHARD_ID}" == "seed52_5090" ]]; then
-  run_one 1 raf_spare_parts 52 \
-    "${RAF_ROOT}/raf_spare_parts_with_split.parquet" \
-    "${RAF_ROOT}/raf_spare_parts_split_manifest.json" 84 84
-  run_one 2 yellow_trip_hourly 52 \
-    "${TAXI_ROOT}/yellow_trip_hourly_with_split.parquet" \
-    "${TAXI_ROOT}/yellow_trip_hourly_split_manifest.json" 168 256
-  run_one 3 insta_market_basket 42 \
-    "${INSTACART_ROOT}/instacart_marked_target_with_split.parquet" \
-    "${INSTACART_ROOT}/instacart_marked_target_split_manifest.json" 52 64
-  run_one 4 insta_market_basket 52 \
-    "${INSTACART_ROOT}/instacart_marked_target_with_split.parquet" \
-    "${INSTACART_ROOT}/instacart_marked_target_split_manifest.json" 52 64
+  if [[ "${INSTACART_FIRST}" == "1" ]]; then
+    run_one 1 insta_market_basket 42 \
+      "${INSTACART_ROOT}/instacart_marked_target_with_split.parquet" \
+      "${INSTACART_ROOT}/instacart_marked_target_split_manifest.json" 52 64
+    run_one 2 insta_market_basket 52 \
+      "${INSTACART_ROOT}/instacart_marked_target_with_split.parquet" \
+      "${INSTACART_ROOT}/instacart_marked_target_split_manifest.json" 52 64
+    run_one 3 raf_spare_parts 52 \
+      "${RAF_ROOT}/raf_spare_parts_with_split.parquet" \
+      "${RAF_ROOT}/raf_spare_parts_split_manifest.json" 84 84
+    run_one 4 yellow_trip_hourly 52 \
+      "${TAXI_ROOT}/yellow_trip_hourly_with_split.parquet" \
+      "${TAXI_ROOT}/yellow_trip_hourly_split_manifest.json" 168 256
+  else
+    run_one 1 raf_spare_parts 52 \
+      "${RAF_ROOT}/raf_spare_parts_with_split.parquet" \
+      "${RAF_ROOT}/raf_spare_parts_split_manifest.json" 84 84
+    run_one 2 yellow_trip_hourly 52 \
+      "${TAXI_ROOT}/yellow_trip_hourly_with_split.parquet" \
+      "${TAXI_ROOT}/yellow_trip_hourly_split_manifest.json" 168 256
+    run_one 3 insta_market_basket 42 \
+      "${INSTACART_ROOT}/instacart_marked_target_with_split.parquet" \
+      "${INSTACART_ROOT}/instacart_marked_target_split_manifest.json" 52 64
+    run_one 4 insta_market_basket 52 \
+      "${INSTACART_ROOT}/instacart_marked_target_with_split.parquet" \
+      "${INSTACART_ROOT}/instacart_marked_target_split_manifest.json" 52 64
+  fi
   run_one 5 intermittent_frozen_5000 52 \
     "${INTERMITTENT_ROOT}/intermittent_frozen_5000_with_split.parquet" \
     "${INTERMITTENT_ROOT}/intermittent_frozen_5000_split_manifest.json" 520 256
 else
-  run_one 1 raf_spare_parts 62 \
-    "${RAF_ROOT}/raf_spare_parts_with_split.parquet" \
-    "${RAF_ROOT}/raf_spare_parts_split_manifest.json" 84 84
-  run_one 2 yellow_trip_hourly 62 \
-    "${TAXI_ROOT}/yellow_trip_hourly_with_split.parquet" \
-    "${TAXI_ROOT}/yellow_trip_hourly_split_manifest.json" 168 256
-  run_one 3 insta_market_basket 62 \
-    "${INSTACART_ROOT}/instacart_marked_target_with_split.parquet" \
-    "${INSTACART_ROOT}/instacart_marked_target_split_manifest.json" 52 64
+  if [[ "${INSTACART_FIRST}" == "1" ]]; then
+    run_one 1 insta_market_basket 62 \
+      "${INSTACART_ROOT}/instacart_marked_target_with_split.parquet" \
+      "${INSTACART_ROOT}/instacart_marked_target_split_manifest.json" 52 64
+    run_one 2 raf_spare_parts 62 \
+      "${RAF_ROOT}/raf_spare_parts_with_split.parquet" \
+      "${RAF_ROOT}/raf_spare_parts_split_manifest.json" 84 84
+    run_one 3 yellow_trip_hourly 62 \
+      "${TAXI_ROOT}/yellow_trip_hourly_with_split.parquet" \
+      "${TAXI_ROOT}/yellow_trip_hourly_split_manifest.json" 168 256
+  else
+    run_one 1 raf_spare_parts 62 \
+      "${RAF_ROOT}/raf_spare_parts_with_split.parquet" \
+      "${RAF_ROOT}/raf_spare_parts_split_manifest.json" 84 84
+    run_one 2 yellow_trip_hourly 62 \
+      "${TAXI_ROOT}/yellow_trip_hourly_with_split.parquet" \
+      "${TAXI_ROOT}/yellow_trip_hourly_split_manifest.json" 168 256
+    run_one 3 insta_market_basket 62 \
+      "${INSTACART_ROOT}/instacart_marked_target_with_split.parquet" \
+      "${INSTACART_ROOT}/instacart_marked_target_split_manifest.json" 52 64
+  fi
   run_one 4 intermittent_frozen_5000 62 \
     "${INTERMITTENT_ROOT}/intermittent_frozen_5000_with_split.parquet" \
     "${INTERMITTENT_ROOT}/intermittent_frozen_5000_split_manifest.json" 520 256

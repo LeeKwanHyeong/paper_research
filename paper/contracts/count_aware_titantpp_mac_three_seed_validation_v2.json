@@ -1,0 +1,99 @@
+{
+  "contract_id": "count_aware_titantpp_mac_three_seed_validation_v2",
+  "frozen_at": "2026-08-30T23:10:28+09:00",
+  "parent_amendment": "count_aware_titantpp_mac_primary_v1_amendment_2",
+  "parent_amendment_sha256": "c0a0e8e5bf396160a58ebb17a4510246b5e4e34c527c6faae01550c6f47ca4e2",
+  "model_name": "Count-aware TitanTPP-MAC",
+  "short_model_name": "TitanTPP-MAC",
+  "training_source_revision": "b1d9e638c68bc7bab9ace6b5c8fa9d0af989c8f7",
+  "implementation_backbone": "titantpp_titans_mac",
+  "execution": {
+    "servers": ["5080", "5090"],
+    "device": "cuda",
+    "isolated_python_process_per_run": true,
+    "semantic_optimization_adapter_used": false,
+    "dynamo_recompile_limit": 64,
+    "dynamo_accumulated_recompile_limit": 512,
+    "validation_only": true,
+    "held_out_test": "locked"
+  },
+  "training": {
+    "epochs": 300,
+    "min_epochs": 40,
+    "early_stopping_patience": 40,
+    "batch_size": 128,
+    "learning_rate": 0.001,
+    "hidden_dim": 64,
+    "lambda_log_quantity": 1.0,
+    "lambda_tail": 0.0,
+    "quantity_objective": "direct_mse_on_log1p_quantity",
+    "time_head": "legacy_clamped_rmtpp",
+    "time_intercept_limit": 30.0,
+    "gradient_clip": 1.0,
+    "checkpoint_selection": "minimum_validation_joint_objective"
+  },
+  "datasets": {
+    "intermittent_frozen_5000": {
+      "lookback": 520,
+      "max_sequence_length": 256,
+      "seeds": [52, 62]
+    },
+    "yellow_trip_hourly": {
+      "lookback": 168,
+      "max_sequence_length": 256,
+      "seeds": [52, 62]
+    },
+    "raf_spare_parts": {
+      "lookback": 84,
+      "max_sequence_length": 84,
+      "seeds": [52, 62]
+    },
+    "insta_market_basket": {
+      "lookback": 52,
+      "max_sequence_length": 64,
+      "seeds": [42, 52, 62]
+    }
+  },
+  "run_order": [
+    ["raf_spare_parts", 52],
+    ["raf_spare_parts", 62],
+    ["yellow_trip_hourly", 52],
+    ["yellow_trip_hourly", 62],
+    ["insta_market_basket", 42],
+    ["insta_market_basket", 52],
+    ["insta_market_basket", 62],
+    ["intermittent_frozen_5000", 52],
+    ["intermittent_frozen_5000", 62]
+  ],
+  "run_count": 9,
+  "frozen_training_file_sha256": {
+    "paper/contracts/count_aware_titans_backbone_reproduction_v1.json": "826175559a664f4fc5bacf2bc1d30462534abda5efe210ee769234775a7aee66",
+    "paper/contracts/count_aware_titans_backbone_reproduction_v1.md": "f3237869209bf9938ce4aa772d0584a35d47649aae388cee9f0affe1c6b4249b",
+    "paper/contracts/count_aware_titan_b012_screening_v1.json": "d5c85bdea96669fd15fd849e037b3d79e321e83ee273a0eb3224b7f507a79963",
+    "paper/contracts/count_aware_titan_b012_screening_v1.md": "5e238018f06056fe74095bde05f862a07a2f60be31076a489daae5e1210498c1",
+    "models/TPPs/CountAwareFactory.py": "d65c069f15ad904740de14f9d31687f79f0064d4afad5e08bde3949e60bfcaa1",
+    "models/TPPs/CountAwareTPP.py": "12c43a0b13360ce1f6c117e10e5db6a6fddb4491164f80edb2e89b15909cf947",
+    "models/Titan/__init__.py": "a8147804206ab500c7adeeeaf194c82447ead4d332b2959f8ed8e3692793c1a7",
+    "models/Titan/backbone.py": "1c81144b9c00fd8993cc66b76c58dfe0fbfb087a1d25db33e1253527e0fc5726",
+    "models/Titan/common/__init__.py": "f301d6cf6edcc7804363d3c9e1c5ef22ec6fbead856aac7d4ec2bcef0508dc88",
+    "models/Titan/common/titans_mac.py": "ac520d669351de715640097365b6eb4279d32c8d953a52d60c140330933b0eb9",
+    "paper/scripts/count_aware_tpp_backbone/constants.py": "c6d512dc47be62d89fba0af72aa916c9b0bbd8dd73db3f2441a50de00c4573c8",
+    "paper/scripts/count_aware_tpp_backbone/core.py": "7b4be86be21eb1efb1716ebf61689288a3598e87327e56ace9cac14f12361bb2",
+    "paper/scripts/count_aware_tpp_backbone/datasets.py": "0a2982d92a21d6dd0518adba5e631d40cf2222c9eb9ee476d861b27211623274",
+    "paper/scripts/count_aware_tpp_backbone/reporting.py": "4764b790352b6a84a4efa9df9b17e3ad948534779539bf87422af7d8c06825c6",
+    "paper/scripts/count_aware_tpp_backbone/training.py": "fbfc68542a3b8ea3febb7c5e6ee5971406186cab3b5e49982eebd8f1cf69ef5e",
+    "paper/scripts/run_count_aware_tpp_backbone_control.py": "0c9f5359118cde39a1cb6045fb52024a634df0a44e36213c47e0b0510852f4f1",
+    "data_loader/event_seq_data_module.py": "7c11d9ace6c4e4d3bb03861aae92393aa946a38452d702dc7625210b339897ca",
+    "paper/scripts/run_intermittent_log_backbone_control.py": "eb8fd2aba200a48963efc22bf03f2c66f87a9def59a99c0a0261abf133b98ad4",
+    "paper/scripts/run_taxi_quantity_interface_ablation.py": "32630140f939b1e8e2287893b7705b1d3ec6e9f67644c5f9477c0ef979890801"
+  },
+  "completion_requirements": {
+    "all_runs_successful": true,
+    "all_metrics_finite": true,
+    "launch_contract_match": true,
+    "checkpoint_digest_present": true,
+    "held_out_test_artifact_absent": true,
+    "source_manifest_present": true,
+    "single_corrected_training_revision": true
+  }
+}

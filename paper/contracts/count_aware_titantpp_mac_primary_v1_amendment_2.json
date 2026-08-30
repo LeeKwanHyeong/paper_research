@@ -1,0 +1,53 @@
+{
+  "amendment_id": "count_aware_titantpp_mac_primary_v1_amendment_2",
+  "amended_at": "2026-08-30T23:10:28+09:00",
+  "parent_amendment": "count_aware_titantpp_mac_primary_v1_amendment_1",
+  "parent_amendment_sha256": "c68ee13f37f411cd5a7926217e4050dc8fafa220dca63946034009edb9c85303",
+  "status": "effective_before_any_completed_instacart_epoch_or_held_out_inspection",
+  "model_name": "Count-aware TitanTPP-MAC",
+  "corrected_training_source_revision": "b1d9e638c68bc7bab9ace6b5c8fa9d0af989c8f7",
+  "failure_evidence": {
+    "seed_42_server": "5090",
+    "seed_42_dataset": "insta_market_basket",
+    "seed_42_failed_batch": 3705,
+    "seed_62_server": "5080",
+    "seed_62_dataset": "insta_market_basket",
+    "seed_62_failed_batch": 13439,
+    "completed_instacart_epochs_before_amendment": 0,
+    "failure_class": "non_finite_training_loss",
+    "gpu_xid_observed": false,
+    "cuda_oom_observed": false
+  },
+  "root_cause": {
+    "contracted_time_intercept_limit": 30.0,
+    "previous_legacy_implementation_upper_bound": 300.0,
+    "failure_mechanism": "float32_exp_overflow_in_legacy_time_density",
+    "reason_short_datasets_passed": "RAF and Taxi completed before the learned intercept reached the overflow regime; Instacart performs about 15556 optimizer steps per epoch.",
+    "independent_reproduction_before_fix": "intercept_100_produced_negative_infinity_for_density_and_survival"
+  },
+  "correction": {
+    "density_upper_bound": "time_intercept_limit",
+    "survival_upper_bound": "time_intercept_limit",
+    "median_upper_bound": "time_intercept_limit",
+    "configured_limit": 30.0,
+    "memory_equations_changed": false,
+    "quantity_objective_changed": false,
+    "time_density_family_changed": false,
+    "data_or_split_changed": false,
+    "optimizer_or_checkpoint_rule_changed": false,
+    "diagnostics_added": "non_finite_component_names_and_time_head_telemetry"
+  },
+  "evidence_boundary": {
+    "held_out_test": "locked",
+    "pre_amendment_instacart_results_reusable": false,
+    "pre_amendment_completed_raf_taxi_runs": "preserved_as_historical_artifacts_but_not_imported_into_the_corrected_grid",
+    "existing_seed_42_compatibility": "requires_checkpoint_replay_equivalence_under_the_corrected_time_head_before_final_three_seed_reporting"
+  },
+  "completion_requirements": {
+    "extreme_forward_backward_finite": true,
+    "normal_range_formula_unchanged": true,
+    "all_corrected_grid_runs_use_one_training_revision": true,
+    "all_metrics_finite": true,
+    "held_out_test_artifact_absent": true
+  }
+}

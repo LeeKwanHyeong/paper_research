@@ -15,6 +15,10 @@ from paper.scripts.validate_count_aware_titantpp_mac_three_seed_validation impor
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 CONTRACT_PATH = (
     PROJECT_ROOT
+    / "paper/contracts/count_aware_titantpp_mac_three_seed_validation_v2.json"
+)
+HISTORICAL_CONTRACT_PATH = (
+    PROJECT_ROOT
     / "paper/contracts/count_aware_titantpp_mac_three_seed_validation_v1.json"
 )
 RUNNER_PATH = (
@@ -41,6 +45,20 @@ def test_contract_uses_titantpp_mac_name_and_exact_nine_run_grid() -> None:
     ) == 9
     assert contract["execution"]["semantic_optimization_adapter_used"] is False
     assert contract["execution"]["held_out_test"] == "locked"
+    assert contract["training_source_revision"] == (
+        "b1d9e638c68bc7bab9ace6b5c8fa9d0af989c8f7"
+    )
+
+
+def test_historical_contract_remains_pinned_to_pre_correction_revision() -> None:
+    historical = json.loads(
+        HISTORICAL_CONTRACT_PATH.read_text(encoding="utf-8")
+    )
+
+    assert historical["training_source_revision"] == (
+        "08e59880cd61cbd27cec40aa04636452b87bebfc"
+    )
+    assert historical["contract_id"].endswith("_v1")
 
 
 def test_frozen_training_file_digests_match_source_revision() -> None:

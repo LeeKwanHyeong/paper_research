@@ -17,11 +17,11 @@ from paper.scripts.validate_count_aware_titantpp_mac_three_seed_validation impor
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 CONTRACT_PATH = (
     PROJECT_ROOT
-    / "paper/contracts/count_aware_titantpp_mac_three_seed_validation_v1.json"
+    / "paper/contracts/count_aware_titantpp_mac_three_seed_validation_v2.json"
 )
 SPLIT_CONTRACT_PATH = (
     PROJECT_ROOT
-    / "paper/contracts/count_aware_titantpp_mac_three_seed_split_v1.json"
+    / "paper/contracts/count_aware_titantpp_mac_three_seed_split_v2.json"
 )
 RUNNER_PATH = (
     PROJECT_ROOT
@@ -122,6 +122,17 @@ def test_split_contract_is_disjoint_and_covers_parent_grid() -> None:
     assert evidence["canonical_run_count"] == 9
     assert split_contract["shards"]["seed52_5090"]["run_count"] == 5
     assert split_contract["shards"]["seed62_5080"]["run_count"] == 4
+    assert split_contract["shards"]["seed52_5090"]["run_order"][0] == [
+        "insta_market_basket",
+        42,
+    ]
+    assert split_contract["shards"]["seed62_5080"]["run_order"][0] == [
+        "insta_market_basket",
+        62,
+    ]
+    assert split_contract["execution_rules"][
+        "reuse_from_pre_amendment_artifacts_forbidden"
+    ] is True
 
 
 def test_split_contract_rejects_duplicate_partition() -> None:
