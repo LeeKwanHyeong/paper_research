@@ -1,0 +1,67 @@
+{
+  "amendment_id": "count_aware_titantpp_mac_primary_v1_amendment_1",
+  "amended_at": "2026-08-30T20:12:40+09:00",
+  "parent_contract": "count_aware_titantpp_mac_primary_v1",
+  "parent_contract_sha256": "ff1216aedbb73343c08b6dc3e3e576bc9962bac25d35c6ed10a3ec7b3a65beb8",
+  "status": "effective_before_seed_52_seed_62_or_held_out_inspection",
+  "terminology": {
+    "paper_model_name": "Count-aware TitanTPP-MAC",
+    "short_model_name": "TitanTPP-MAC",
+    "forward_facing_role_labels_are_forbidden": true,
+    "legacy_role_labels_are_provenance_only": true
+  },
+  "decision_information_boundary": {
+    "observed_before_amendment": [
+      "seed_42_validation_on_intermittent_taxi_raf",
+      "seed_42_memory_attribution_audit",
+      "rtx_5080_semantic_optimization_benchmark"
+    ],
+    "not_observed_before_amendment": [
+      "seed_52_validation",
+      "seed_62_validation",
+      "instacart_titantpp_mac_validation",
+      "held_out_test"
+    ]
+  },
+  "unchanged_parent_rules": [
+    "causal_memory_contract",
+    "shared_training_contract",
+    "dataset_contexts",
+    "three_seed_acceptance_gate.primary",
+    "three_seed_acceptance_gate.aggregate_guardrails",
+    "three_seed_acceptance_gate.per_dataset_guardrails",
+    "three_seed_acceptance_gate.statistical_reporting",
+    "three_seed_acceptance_gate.integrity_guardrails"
+  ],
+  "compute_amendment": {
+    "previous_effect": "hard_model_selection_guardrail",
+    "effective_effect": "mandatory_reporting_and_limitation_not_model_selection",
+    "reference_target_ratio_vs_hard_lmm": 3.0,
+    "reference_target_met": false,
+    "validation_expansion_blocked_by_compute_target": false,
+    "model_selection_blocked_by_compute_target": false,
+    "same_device_and_training_contract_measurement_required": true,
+    "epoch_or_step_time_must_be_reported": true,
+    "peak_vram_must_be_reported": true,
+    "cold_compile_time_must_be_reported_when_applicable": true,
+    "target_failure_must_be_reported_as_limitation": true,
+    "performance_or_integrity_thresholds_changed": false,
+    "rationale": "The semantics-preserving optimization preserved predictions but did not meet the pre-registered 3x efficiency target. Compute remains an explicit limitation while validation evidence is expanded under the unchanged frozen model and performance gates."
+  },
+  "effective_selection_rule": "select_titantpp_mac_only_if_primary_performance_and_integrity_guardrails_pass_with_compute_reported_separately",
+  "official_validation_execution": {
+    "training_source_revision": "08e59880cd61cbd27cec40aa04636452b87bebfc",
+    "implementation_backbone": "titantpp_titans_mac",
+    "semantic_optimization_adapter_used": false,
+    "reason": "match_the_existing_seed_42_training_revision_without_mixing_implementations",
+    "existing_seed_42_reuse_requires_contract_and_checkpoint_digest_match": true,
+    "held_out_test": "locked",
+    "fresh_or_missing_runs": {
+      "intermittent_frozen_5000": [52, 62],
+      "yellow_trip_hourly": [52, 62],
+      "raf_spare_parts": [52, 62],
+      "insta_market_basket": [42, 52, 62]
+    },
+    "fresh_or_missing_run_count": 9
+  }
+}
