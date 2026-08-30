@@ -79,11 +79,11 @@ Both servers use the isolated snapshot
 Its 24 declared source digests were checked against the committed source.
 The old failed runs and original snapshots remain untouched.
 
-| Server | tmux | Run | Status at 2026-08-31 04:47 KST |
+| Server | tmux | Run | Status verified at 2026-08-31 05:37 KST |
 |---|---|---|---|
 | 5090 | `mac_stability_full_e1_42_0831` | Instacart seed 42 | Complete; full coverage and checkpoint gate passed |
 | 5080 | `mac_stability_full_e1_62_0831` | Instacart seed 62 | Complete; full coverage and checkpoint gate passed |
-| 5090 | `mac_stability_full_e1_52_0831` | Instacart seed 52 | Running, fresh start after seed42 gate passed |
+| 5090 | `mac_stability_full_e1_52_0831` | Instacart seed 52 | Complete; full coverage and checkpoint gate passed |
 
 Artifact roots are
 `search_artifacts/titantpp_mac_stability_preflight_20260831_<server>`.
@@ -94,38 +94,46 @@ counts, finite metrics, checkpoint tensor digest, strict restore, prediction
 and observed-history memory replay, and held-out artifact absence.
 
 For each completed run, the gate verified 1,991,192 training targets across
-15,557 batches and 503,733 validation targets. Both histories and summaries
+15,557 batches and 503,733 validation targets. All three histories and summaries
 are finite. Strict checkpoint restore reproduced predictions and
-observed-history memory tensors exactly. See `validation_report_seed42.json`
-and `validation_report_seed62.json`; these are stability checks, not e300
+observed-history memory tensors exactly. See `validation_report_seed42.json`,
+`validation_report_seed52.json` and `validation_report_seed62.json`; these are stability checks, not e300
 results or evidence of model quality. The artifacts were synchronized locally
 without `--delete`, and all 24 source digests were checked again locally.
+The completion audit also independently rechecked each local launch contract,
+history/summary finite values, quantity/history stratum counts, held-out
+artifact absence and canonical checkpoint tensor digest. The three existing
+complete remote validation reports were retained, not regenerated.
 
 The 5090 kernel journal is not readable by the current SSH user and noninteractive
 sudo requires a password. Absence of NVIDIA Xid on that server is therefore
-not verified. GDM remains inactive on both hosts. No display or shared runtime
-service was changed as part of this repair.
+not verified. At the completion snapshot, both GDM services were inactive,
+there were no CUDA compute processes, and GPU utilization was zero (5080:
+34 MiB, 5090: 2 MiB). All three training tmux sessions had exited normally.
+No relevant Xid/OOM/watchdog event appeared in the readable 5080 kernel log
+since 03:00 KST. No display or shared runtime service was changed as part of
+this repair. The machine-readable observation is `completion_audit.json`.
 
-Hourly heartbeat `titantpp-mac` tracks all three preflights and runs the
-completion validator if needed. It must not restart a failed job or an old
-unbounded launcher. A bounded postflight waiter is also attached to the
-seed52 run; the heartbeat remains the fallback if the SSH waiter disconnects.
+Hourly heartbeat `titantpp-mac` tracked all three preflights. Seed52's bounded
+postflight waiter produced its complete validation report before the hourly
+check. This close-out retires the completed preflight monitor; it does not
+authorize an old unbounded launcher or a new e300 grid.
 
 The existing Notion page `2026-08-30 TitanTPP-MAC 3-Seed Validation Launch`
-was updated and fetched again to verify the corrected diagnosis, new policy
-and stability/performance distinction:
+was updated and fetched again to verify the corrected diagnosis, new policy,
+all-three-seed completion and stability/performance distinction:
 https://app.notion.com/p/3ccbbe405613817ea095f605888d39ac
 
 ## Next Order
 
-1. Finish and validate seed52's full-epoch check; preserve failure evidence if any
-   check fails instead of blindly retrying.
-2. Verify the remaining dataset/context shapes under the same
+Current baseline: all three Instacart full-epoch stability preflights and
+checkpoint gates are complete; no held-out evaluation or new e300 was run.
+
+1. Verify the remaining dataset/context shapes under the same
    explicit policy before a new long-running grid.
-3. Confirm the expanded run scope, then freeze a new matched MAC grid and
+2. Confirm the expanded run scope, then freeze a new matched MAC grid and
    monitoring target before e300. The user has been asked to approve all
    four datasets times three seeds (12 MAC runs), rather than mixing three
    historical seed42 runs with nine new ones. No new e300 grid is launched.
-   Recompute
-   every MAC seed used in a three-seed table under the same inner policy;
+   Recompute every MAC seed used in a three-seed table under the same inner policy;
    preserve old runs only as separately labelled historical evidence.
