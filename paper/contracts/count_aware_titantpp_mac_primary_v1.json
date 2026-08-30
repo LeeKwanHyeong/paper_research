@@ -1,0 +1,101 @@
+{
+  "contract_id": "count_aware_titantpp_mac_primary_v1",
+  "frozen_at": "2026-08-30",
+  "supersedes_selection_status_only": "count_aware_titan_b012_screening_v1",
+  "historical_screening_contract_remains_immutable": true,
+  "paper_model_name": "Count-aware TitanTPP-MAC",
+  "implementation_backbone": "titantpp_titans_mac",
+  "internal_lineage": "B1_faithful_titans_mac",
+  "positioning": "primary_candidate",
+  "decision_information_boundary": {
+    "observed_before_freeze": [
+      "seed_42_validation_on_intermittent_taxi_raf"
+    ],
+    "not_observed_before_freeze": [
+      "seed_52_validation",
+      "seed_62_validation",
+      "held_out_test"
+    ]
+  },
+  "causal_memory_contract": {
+    "event_order": "predict_before_observed_write",
+    "write_source": "observed_history_event_only",
+    "current_prediction_target_write": false,
+    "padding_write": false,
+    "future_target_write": false,
+    "state_scope": "one_series_per_explicit_memory_state",
+    "series_change": "reset_changed_row_before_read",
+    "cross_series_state_sharing": false,
+    "persistent_memory_scope": "outer_loop_task_parameter_fixed_during_validation_and_test"
+  },
+  "shared_training_contract": {
+    "input": "mark_free_observed_event_history",
+    "quantity_objective": "direct_mse_on_log1p_quantity",
+    "lambda_log_qty": 1.0,
+    "tail_auxiliary_loss": false,
+    "lambda_tail": 0.0,
+    "time_head": "legacy_clamped_rmtpp",
+    "checkpoint_selection": "minimum_validation_joint_objective",
+    "evaluation_scope": "validation_only_until_final_freeze",
+    "held_out_test": "locked",
+    "seeds": [42, 52, 62],
+    "dataset_specific_memory_hyperparameters": false
+  },
+  "dataset_contexts": {
+    "intermittent_frozen_5000": {
+      "lookback": 520,
+      "max_sequence_length": 256
+    },
+    "yellow_trip_hourly": {
+      "lookback": 168,
+      "max_sequence_length": 256
+    },
+    "raf_spare_parts": {
+      "lookback": 84,
+      "max_sequence_length": 84
+    },
+    "insta_market_basket": {
+      "lookback": 52,
+      "max_sequence_length": 64
+    }
+  },
+  "three_seed_acceptance_gate": {
+    "comparison": "paired_fresh_or_contract_matched_B0_vs_B1_validation",
+    "primary_metric": "quantity_mae_at_or_below_train_p95",
+    "primary": {
+      "macro_dataset_relative_improvement_minimum": 0.05,
+      "dataset_mean_improvement_minimum_count": 3,
+      "dataset_count": 4,
+      "seed_pair_improvement_minimum_count": 8,
+      "seed_pair_count": 12,
+      "maximum_single_dataset_mean_regression": 0.05
+    },
+    "aggregate_guardrails": {
+      "macro_overall_quantity_mae_maximum_relative_regression": 0.0,
+      "macro_overall_quantity_rmse_maximum_relative_regression": 0.0,
+      "macro_above_train_p99_mae_maximum_relative_regression": 0.0
+    },
+    "per_dataset_guardrails": {
+      "overall_quantity_rmse_maximum_relative_regression": 0.15,
+      "above_train_p99_mae_maximum_relative_regression": 0.25,
+      "time_nll_maximum_absolute_regression": 0.01
+    },
+    "statistical_reporting": {
+      "paired_seed_results_required": true,
+      "hierarchical_paired_bootstrap_confidence_interval_required": true,
+      "confidence_interval_is_hard_gate": false
+    },
+    "compute_guardrail": {
+      "optimized_epoch_cost_ratio_vs_B0_maximum": 3.0,
+      "scope": "each_official_dataset",
+      "same_device_and_training_contract_required": true
+    },
+    "integrity_guardrails": {
+      "all_metrics_finite": true,
+      "all_required_artifacts_present": true,
+      "held_out_test_unused": true,
+      "contract_digest_match": true
+    },
+    "selection_rule": "select_titantpp_mac_only_if_primary_and_every_guardrail_pass"
+  }
+}

@@ -218,6 +218,16 @@ def build_count_aware_model(
             model,
             {
                 "candidate_name": candidate_names[backbone],
+                "paper_model_name": (
+                    "Count-aware TitanTPP-MAC"
+                    if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+                    else None
+                ),
+                "model_positioning": (
+                    "primary_candidate"
+                    if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+                    else None
+                ),
                 "backbone_contract_id": (
                     "B1"
                     if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
