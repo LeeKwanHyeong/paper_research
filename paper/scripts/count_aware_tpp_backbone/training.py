@@ -314,6 +314,7 @@ def train_one(
             "time_initial_scale"
         ),
         time_sigma_floor=args.time_sigma_floor,
+        titans_memory_gradient_clip=getattr(args, "titans_memory_gradient_clip", None),
     )
     model.to(args.device)
     parameter_count = sum(

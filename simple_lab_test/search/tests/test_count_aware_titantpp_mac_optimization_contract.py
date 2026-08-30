@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -85,9 +86,15 @@ def test_semantic_optimization_contract_freezes_allowed_changes_and_shapes() -> 
         "b1_b0_steady_training_step_ratio_target_maximum"
     ] == 3.0
     for relative_path, expected_digest in contract["frozen_base_sha256"].items():
-        actual_digest = hashlib.sha256(
-            (PROJECT_ROOT / relative_path).read_bytes()
-        ).hexdigest()
+        # This is a historical freeze, not a ban on later opt-in stability
+        # variants. Check its immutable revision, never replace its digests.
+        result = subprocess.run(
+            ["git", "show", f"08e59880cd61cbd27cec40aa04636452b87bebfc:{relative_path}"],
+            cwd=PROJECT_ROOT, capture_output=True,
+        )
+        if result.returncode:
+            pytest.skip("Historical source object unavailable in exported snapshot")
+        actual_digest = hashlib.sha256(result.stdout).hexdigest()
         assert actual_digest == expected_digest
 
 

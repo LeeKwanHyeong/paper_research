@@ -7,6 +7,8 @@ from typing import Any, Optional
 import torch
 import torch.nn.functional as F
 
+from .titans_memory_stability import clip_associative_gradients
+
 from .titans_mac import (
     TitansMACEncoder,
     TitansMemoryState,
@@ -30,6 +32,7 @@ def _scan_titans_write_sequence_state_only(
     momentum_rates: torch.Tensor,
     forgetting_rates: torch.Tensor,
     write_mask: torch.Tensor,
+    gradient_max_norm: float | None = None,
 ) -> tuple[torch.Tensor, ...]:
     """Run the frozen recurrence without materializing unused diagnostics."""
     for position in range(keys.size(1)):
@@ -53,6 +56,13 @@ def _scan_titans_write_sequence_state_only(
         )
         grad_weight_1 = pre_gradient.unsqueeze(-1) * key.unsqueeze(1)
         grad_bias_1 = pre_gradient
+
+        grad_weight_1, grad_bias_1, grad_weight_2, grad_bias_2 = (
+            clip_associative_gradients(
+                (grad_weight_1, grad_bias_1, grad_weight_2, grad_bias_2),
+                gradient_max_norm,
+            )
+        )
 
         def update_tensor(
             parameter: torch.Tensor,
@@ -130,6 +140,7 @@ class OptimizedTitansNeuralMemory(TitansNeuralMemory):
         initial_momentum: float = 0.9,
         initial_forgetting: float = 0.001,
         compile_cuda_scan: bool = True,
+        gradient_max_norm: float | None = None,
         compiled_scan_batch_size: int = 128,
         compiled_scan_chunk_size: int = 16,
     ) -> None:
@@ -140,6 +151,7 @@ class OptimizedTitansNeuralMemory(TitansNeuralMemory):
             initial_momentum=initial_momentum,
             initial_forgetting=initial_forgetting,
             compile_cuda_scan=compile_cuda_scan,
+            gradient_max_norm=gradient_max_norm,
         )
         if compiled_scan_batch_size < 1 or compiled_scan_chunk_size < 1:
             raise ValueError("Compiled scan dimensions must be positive")
@@ -227,7 +239,9 @@ class OptimizedTitansNeuralMemory(TitansNeuralMemory):
         )
         if compiled is None:
             raise RuntimeError("Compiled Titans scan is unavailable")
-        scanned = compiled(*memory, *momenta, *scan_inputs)
+        scanned = compiled(
+            *memory, *momenta, *scan_inputs, self.gradient_max_norm
+        )
         next_state = TitansMemoryState(
             *(tensor[:batch_size] for tensor in scanned[:8]),
             positions=state.positions,
@@ -400,7 +414,10 @@ def _optimized_encoder_from_frozen(
             max_len=frozen.max_len,
             dropout=float(first_layer.attention.dropout),
         ).to(device=first_parameter.device, dtype=first_parameter.dtype)
-        replacement = OptimizedTitansNeuralMemory(frozen.d_model).to(
+        replacement = OptimizedTitansNeuralMemory(
+            frozen.d_model,
+            gradient_max_norm=getattr(frozen.neural_memory, "gradient_max_norm", None),
+        ).to(
             device=first_parameter.device,
             dtype=first_parameter.dtype,
         )

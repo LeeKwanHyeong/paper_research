@@ -1,5 +1,18 @@
 # Count-aware TitanTPP-MAC Primary Contract v1 Amendment 2
 
+## Correction Recorded 2026-08-31
+
+The causal attribution below was premature. Recovery2 failed at the same
+Instacart batches after the time-head correction. Exact seed-42 replay located
+the first non-finite values in the neural associative memory update, with
+finite inputs and finite model parameters. The time-head bound correction is
+a separate synthetic defect fix, not a demonstrated explanation of these
+failures. The claim about why RAF/Taxi passed is also withdrawn. The original
+text is retained as an audit trail; use
+`count_aware_titantpp_mac_inner_gradient_stability_v1.json` for the new policy.
+
+## Original Record (Causal Claims Superseded)
+
 This amendment corrects a contract-implementation mismatch in the shared
 `legacy_clamped_rmtpp` time head. The frozen launch metadata declared
 `time_intercept_limit=30`, but the legacy density and survival implementation

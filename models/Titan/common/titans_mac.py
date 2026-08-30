@@ -16,6 +16,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from .titans_memory_stability import clip_associative_gradients
+
 
 @dataclass(frozen=True)
 class TitansMemoryState:
@@ -70,6 +72,7 @@ def _scan_titans_write_sequence(
     momentum_rates: torch.Tensor,
     forgetting_rates: torch.Tensor,
     write_mask: torch.Tensor,
+    gradient_max_norm: float | None = None,
 ) -> tuple[torch.Tensor, ...]:
     """Run the exact Titans write recurrence as one compilable CUDA graph."""
     losses: list[torch.Tensor] = []
@@ -100,6 +103,13 @@ def _scan_titans_write_sequence(
         )
         grad_weight_1 = pre_gradient.unsqueeze(-1) * key.unsqueeze(1)
         grad_bias_1 = pre_gradient
+
+        grad_weight_1, grad_bias_1, grad_weight_2, grad_bias_2 = (
+            clip_associative_gradients(
+                (grad_weight_1, grad_bias_1, grad_weight_2, grad_bias_2),
+                gradient_max_norm,
+            )
+        )
 
         def update_tensor(
             parameter: torch.Tensor,
@@ -186,6 +196,7 @@ class TitansNeuralMemory(nn.Module):
         initial_momentum: float = 0.9,
         initial_forgetting: float = 0.001,
         compile_cuda_scan: bool = True,
+        gradient_max_norm: float | None = None,
     ) -> None:
         super().__init__()
         if d_model < 1:
@@ -203,6 +214,11 @@ class TitansNeuralMemory(nn.Module):
         self.d_model = int(d_model)
         self.memory_hidden_dim = int(d_model * hidden_expansion)
         self.compile_cuda_scan = bool(compile_cuda_scan)
+        if gradient_max_norm is not None and (
+            not math.isfinite(gradient_max_norm) or gradient_max_norm <= 0
+        ):
+            raise ValueError("gradient_max_norm must be finite and positive")
+        self.gradient_max_norm = gradient_max_norm
         self.input_norm = nn.LayerNorm(self.d_model)
         self.query_projection = nn.Linear(self.d_model, self.d_model, bias=False)
         self.key_projection = nn.Linear(self.d_model, self.d_model, bias=False)
@@ -502,6 +518,9 @@ class TitansNeuralMemory(nn.Module):
         valid = valid.to(device=inputs.device, dtype=torch.bool)
         keys, values, theta, eta, alpha = self._project_write(inputs)
         gradients, loss = self.associative_gradients(state, keys, values)
+        gradients = clip_associative_gradients(
+            gradients, getattr(self, "gradient_max_norm", None)
+        )
         updated = tuple(
             self._apply_update(
                 parameter,
@@ -570,6 +589,7 @@ class TitansNeuralMemory(nn.Module):
                 eta.squeeze(-1),
                 alpha.squeeze(-1),
                 write_mask,
+                getattr(self, "gradient_max_norm", None),
             )
             next_state = TitansMemoryState(
                 *scanned[:8],

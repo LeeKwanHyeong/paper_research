@@ -1,0 +1,38 @@
+{
+  "contract_id": "count_aware_titantpp_mac_inner_gradient_stability_v1",
+  "date": "2026-08-31",
+  "model_name": "Count-aware TitanTPP-MAC",
+  "variant": "explicit_inner_gradient_clipping",
+  "parent_training_revision": "b1d9e638c68bc7bab9ace6b5c8fa9d0af989c8f7",
+  "historical_unbounded_revision": "08e59880cd61cbd27cec40aa04636452b87bebfc",
+  "correction_to_amendment_2": "The synthetic time-head overflow was real but was not the demonstrated cause of Instacart failures. Both recovery2 jobs failed again at the same batches. Do not use the previous causal attribution.",
+  "inner_gradient_clip": {
+    "max_norm": 1.0,
+    "scope": "joint_L2_norm_of_four_associative_gradient_tensors_per_series_per_observed_token",
+    "applied_before": "momentum_then_adaptive_forgetting_update",
+    "differentiable": true,
+    "norm_overflow_protection": "scale_before_squaring",
+    "disabled_reference_value": null,
+    "cli_flag": "--titans-memory-gradient-clip"
+  },
+  "unchanged": ["predict_before_write", "series_reset", "padding_and_target_write_mask", "persistent_memory", "segment_size_16", "direct_log1p_quantity_MSE", "legacy_clamped_rmtpp", "fixed_split", "outer_optimizer", "checkpoint_selection"],
+  "forbidden_workarounds": ["skip_failing_batch", "nan_to_num_loss", "silent_eager_fallback", "mix_clipped_and_unbounded_seed_results", "resume_old_failed_checkpoint"],
+  "preflight": {
+    "actual_failure_fixtures": [["5090", 42, 3705], ["5080", 62, 13439]],
+    "fixture_forward_and_backward_finite": true,
+    "compiled_eager_equivalence": true,
+    "causality_and_series_reset_tests": true,
+    "instacart_full_train_and_validation_epoch": true,
+    "checkpoint_strict_restore_and_prediction_replay": true,
+    "partial_smoke_is_not_sufficient": true,
+    "no_automatic_e300_launch": true
+  },
+  "result_boundary": {
+    "evaluation_scope": "validation_only",
+    "held_out_test": "locked",
+    "prior_seed_42_results_reusable_for_three_seed_mean": false,
+    "final_matched_mac_grid_requires": "all_3_seeds_under_the_same_new_inner_update_contract",
+    "other_backbones_unchanged": true,
+    "performance_not_established_by_stability_checks": true
+  }
+}

@@ -195,6 +195,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--hidden-dim", type=int, default=64)
     parser.add_argument("--lambda-log-qty", type=float, default=1.0)
     parser.add_argument("--grad-clip", type=float, default=1.0)
+    parser.add_argument("--titans-memory-gradient-clip", type=float, default=None)
     parser.add_argument("--early-stopping-patience", type=int, default=40)
     parser.add_argument("--min-epochs", type=int, default=40)
     parser.add_argument("--backbones", default=",".join(BACKBONES))
@@ -578,6 +579,7 @@ def main() -> None:
             "statistics_source_split": "train",
         },
         "grad_clip": args.grad_clip,
+        "titans_memory_gradient_clip": args.titans_memory_gradient_clip,
         "early_stopping": {
             "monitor": "validation_joint_objective",
             "formula_by_variant": {

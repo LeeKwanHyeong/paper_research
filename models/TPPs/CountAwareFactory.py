@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+import math
 from typing import Any
 
 from models.TPPs.CountAwareTPP import (
@@ -61,8 +62,15 @@ def build_count_aware_model(
     time_initial_location: float | None = None,
     time_initial_scale: float | None = None,
     time_sigma_floor: float = 1e-3,
+    titans_memory_gradient_clip: float | None = None,
 ) -> tuple[SharedTimeCountModel, dict[str, Any]]:
     """Construct one controlled backbone and its serializable metadata."""
+    if titans_memory_gradient_clip is not None:
+        if (not math.isfinite(titans_memory_gradient_clip)
+                or titans_memory_gradient_clip <= 0):
+            raise ValueError("titans_memory_gradient_clip must be finite and positive")
+        if backbone != "titantpp_titans_mac":
+            raise ValueError("Titans inner gradient clipping requires titantpp_titans_mac")
     quantity_kwargs = {
         "train_log_std": train_log_std,
         "quantity_variant": quantity_variant,
@@ -214,6 +222,12 @@ def build_count_aware_model(
             "titantpp_titans_mac": "count_titan_faithful_titans_mac",
             "titantpp_tpp_gated_memory": "count_titan_tpp_specific_gated_memory",
         }
+        if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC:
+            model.titans_mac_encoder.neural_memory.gradient_max_norm = (
+                titans_memory_gradient_clip
+            )
+            if titans_memory_gradient_clip is not None:
+                candidate_names[backbone] = "count_titan_mac_inner_grad_clipped"
         return with_time_metadata(
             model,
             {
@@ -289,6 +303,7 @@ def build_count_aware_model(
                     if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
                     else None
                 ),
+                "titans_memory_gradient_clip": titans_memory_gradient_clip,
                 "titans_event_order": (
                     "segment_read_prediction_then_observed_write"
                     if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
