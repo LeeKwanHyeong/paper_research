@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "contract_id": "count_aware_titantpp_mac_primary_v1",
+  "evaluation_scope": "validation_only",
+  "held_out_test_evaluated": false,
+  "seeds": [42],
+  "quantity_regions": {
+    "body_le_p95": ["le_p50", "p50_p90", "p90_p95"],
+    "tail_p95_p99": ["p95_p99"],
+    "extreme_tail_gt_p99": ["gt_p99"]
+  },
+  "datasets": [
+    {
+      "dataset": "intermittent_frozen_5000",
+      "artifact_dir": "search_artifacts/count_aware_b012_seed42_screening_e300_20260828_recovery1/intermittent_frozen_5000/titan_b012_screening",
+      "data_path": "sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet"
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "artifact_dir": "search_artifacts/count_aware_b012_seed42_screening_e300_20260828_recovery1/yellow_trip_hourly/titan_b012_screening",
+      "data_path": "sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet"
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "artifact_dir": "search_artifacts/count_aware_b012_seed42_screening_e300_20260828_recovery1/raf_spare_parts/titan_b012_screening",
+      "data_path": "benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_with_split.parquet"
+    }
+  ]
+}
