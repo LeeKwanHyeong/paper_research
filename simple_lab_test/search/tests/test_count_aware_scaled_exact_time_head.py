@@ -206,11 +206,41 @@ def test_legacy_mode_preserves_clamped_formula() -> None:
     delta_t = torch.tensor([1.0, 3.0, 1.0e6])
 
     w = F.softplus(model.w_raw) + 1e-3
-    intercept = torch.clamp(model.v_t(hidden).squeeze(-1) + model.b_t, max=300.0)
+    intercept = torch.clamp(
+        model.v_t(hidden).squeeze(-1) + model.b_t,
+        max=model.time_intercept_limit,
+    )
     wd = torch.clamp(w * delta_t, max=10.0)
     expected = intercept + wd - (torch.exp(intercept) / w) * torch.expm1(wd)
 
     assert torch.equal(model.log_f_dt(hidden, delta_t), expected)
+
+
+def test_legacy_mode_enforces_contract_limit_before_exponential() -> None:
+    model = CountAwareRMTPP(
+        8,
+        train_log_mean=1.5,
+        time_head_mode=TIME_HEAD_MODE_LEGACY_CLAMPED,
+        time_intercept_limit=30.0,
+    )
+    with torch.no_grad():
+        model.v_t.weight.zero_()
+        model.b_t.fill_(100.0)
+
+    hidden = torch.zeros(2, model.hidden_dim, requires_grad=True)
+    delta_t = torch.tensor([1.0, 30.0])
+    log_density = model.log_f_dt(hidden, delta_t)
+    log_survival = model.log_survival_dt(hidden, delta_t)
+    median = model.predict_time_median(hidden)
+    loss = -log_density.mean()
+    loss.backward()
+
+    assert torch.isfinite(log_density).all()
+    assert torch.isfinite(log_survival).all()
+    assert torch.isfinite(median).all()
+    assert torch.isfinite(loss)
+    assert model.w_raw.grad is not None
+    assert torch.isfinite(model.w_raw.grad).all()
 
 
 @pytest.mark.parametrize(

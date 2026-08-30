@@ -140,14 +140,21 @@ def train_epoch_with_telemetry(
             quantities.to(device),
             lambda_log_qty=lambda_log_qty,
         )
-        tracked_outputs = (
-            outputs["joint_loss"],
-            outputs["time_loss"],
-            outputs["quantity_train_loss"],
-        )
-        if not all(bool(torch.isfinite(value).all()) for value in tracked_outputs):
+        tracked_outputs = {
+            "joint_loss": outputs["joint_loss"],
+            "time_loss": outputs["time_loss"],
+            "quantity_train_loss": outputs["quantity_train_loss"],
+        }
+        nonfinite_outputs = [
+            name
+            for name, value in tracked_outputs.items()
+            if not bool(torch.isfinite(value).all())
+        ]
+        if nonfinite_outputs:
             raise FloatingPointError(
-                f"Non-finite train loss at batch {batch_index}"
+                "Non-finite train outputs at batch "
+                f"{batch_index}: {','.join(nonfinite_outputs)}; "
+                f"time_head={model.time_head_telemetry()}"
             )
 
         loss = outputs["joint_loss"].mean()

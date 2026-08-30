@@ -308,7 +308,7 @@ class SharedTimeCountModel(nn.Module):
             w = F.softplus(self.w_raw) + 1e-3
             intercept = torch.clamp(
                 self.v_t(hidden).squeeze(-1) + self.b_t,
-                max=300.0,
+                max=self.time_intercept_limit,
             )
             exp_intercept = torch.exp(intercept)
             wd = torch.clamp(w * dt_next, max=10.0)
@@ -347,7 +347,7 @@ class SharedTimeCountModel(nn.Module):
             w = F.softplus(self.w_raw) + 1e-3
             intercept = torch.clamp(
                 self.v_t(hidden).squeeze(-1) + self.b_t,
-                max=300.0,
+                max=self.time_intercept_limit,
             )
             wd = torch.clamp(w * dt_next, max=10.0)
             return -(torch.exp(intercept) / w) * torch.expm1(wd)
@@ -373,7 +373,7 @@ class SharedTimeCountModel(nn.Module):
             intercept = torch.clamp(
                 self.v_t(hidden).squeeze(-1) + self.b_t,
                 min=-300.0,
-                max=300.0,
+                max=self.time_intercept_limit,
             ).to(dtype=torch.float64)
             median = torch.log1p(w * math.log(2.0) * torch.exp(-intercept)) / w
             return median.to(dtype=output_dtype)
