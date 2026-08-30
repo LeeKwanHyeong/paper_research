@@ -27,6 +27,11 @@ RUNNER_PATH = (
     / "simple_lab_test/search/scripts/"
     "run_count_aware_titantpp_mac_validation_shard_20260830.sh"
 )
+HANDOFF_PATH = (
+    PROJECT_ROOT
+    / "simple_lab_test/search/scripts/"
+    "handoff_count_aware_titantpp_mac_seed52_5090_20260830.sh"
+)
 
 
 def load_json(path: Path) -> dict:
@@ -133,9 +138,10 @@ def test_split_contract_rejects_duplicate_partition() -> None:
         )
 
 
-def test_split_launcher_has_valid_shell_syntax() -> None:
+@pytest.mark.parametrize("script", [RUNNER_PATH, HANDOFF_PATH])
+def test_split_launcher_has_valid_shell_syntax(script: Path) -> None:
     completed = subprocess.run(
-        ["bash", "-n", str(RUNNER_PATH)],
+        ["bash", "-n", str(script)],
         check=False,
         capture_output=True,
         text=True,
