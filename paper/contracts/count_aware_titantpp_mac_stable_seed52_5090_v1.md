@@ -44,9 +44,11 @@ At 09:38 KST the GPU was idle (2 MiB), GDM inactive, and port8011 was not
 listening. Existing CPU services are outside this scope and remain untouched.
 Kernel journal access is restricted; an empty query is not evidence of no Xid.
 
-A dedicated hourly 5090 monitor records context gates (0-3) separately from
-e300 runs (0-4). Leave the 5080 monitor intact. No automated service restore,
-restart, retry, or change to the frozen training policy is authorized here.
+The existing hourly thread monitor now covers both servers because the app
+allows one active heartbeat per thread. Record each server's context gates
+(0-3) separately from e300 runs (0-4); leave 5080 execution unchanged.
+No automated service restore, restart, retry, or change to the frozen training
+policy is authorized here.
 
 ## Closeout
 

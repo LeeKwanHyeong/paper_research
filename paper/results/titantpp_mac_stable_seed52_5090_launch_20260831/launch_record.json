@@ -1,0 +1,181 @@
+{
+  "record_type": "launch_observation_not_final_performance_result",
+  "launched_at": "2026-08-31T09:44:03.900343+09:00",
+  "checked_at": "2026-08-31T09:47:42.425973+09:00",
+  "status": {
+    "child_pid": 1747269,
+    "command": [
+      "/opt/miniconda3/envs/ai_env/bin/python",
+      "paper/scripts/diagnose_titantpp_mac_nonfinite.py",
+      "--snapshot-dir",
+      "/home/leekwanhyeong/workspace/paper_research_mac_stable_c4dbf85_dd9790e_5090/search_artifacts/count_aware_titantpp_mac_stable_seed52_e300_20260831_5090/context_e1/yellow_trip_hourly/diagnostic",
+      "paper/scripts/run_with_titantpp_mac_dynamo_policy.py",
+      "--recompile-limit",
+      "64",
+      "--accumulated-recompile-limit",
+      "512",
+      "paper/scripts/run_count_aware_tpp_backbone_control.py",
+      "--data",
+      "/home/leekwanhyeong/workspace/paper_research_mac_stable_c4dbf85_dd9790e_5090/sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+      "--split-manifest",
+      "/home/leekwanhyeong/workspace/paper_research_mac_stable_c4dbf85_dd9790e_5090/sample_data/new_york_taxi/yellow_trip_hourly_split_manifest.json",
+      "--output-dir",
+      "/home/leekwanhyeong/workspace/paper_research_mac_stable_c4dbf85_dd9790e_5090/search_artifacts/count_aware_titantpp_mac_stable_seed52_e300_20260831_5090/context_e1/yellow_trip_hourly/seed_52",
+      "--source-revision",
+      "c4dbf856c32e6502acc660ffac23c3e2f68e5375",
+      "--execution-role",
+      "stable_5090_context_e1_seed52",
+      "--dataset-contract",
+      "yellow_trip_hourly",
+      "--model-role",
+      "experimental",
+      "--device",
+      "cuda",
+      "--epochs",
+      "1",
+      "--min-epochs",
+      "1",
+      "--early-stopping-patience",
+      "40",
+      "--batch-size",
+      "128",
+      "--lr",
+      "0.001",
+      "--hidden-dim",
+      "64",
+      "--lookback-weeks",
+      "168",
+      "--max-seq-len",
+      "256",
+      "--lambda-log-qty",
+      "1",
+      "--lambda-tail",
+      "0",
+      "--quantity-variants",
+      "log_mse",
+      "--backbones",
+      "titantpp_titans_mac",
+      "--seeds",
+      "52",
+      "--time-head-mode",
+      "legacy_clamped_rmtpp",
+      "--time-scale",
+      "3",
+      "--time-w-max",
+      "3.3333333333333335",
+      "--time-intercept-limit",
+      "30",
+      "--grad-clip",
+      "1",
+      "--titans-memory-gradient-clip",
+      "1",
+      "--allow-partial-contract"
+    ],
+    "completed_run_count": 0,
+    "context_preflights_complete": 1,
+    "current_dataset": "yellow_trip_hourly",
+    "execution_server": "5090",
+    "expected_run_count": 4,
+    "gpu_preflight": {
+      "compute": "",
+      "gdm": "inactive",
+      "gpu": "NVIDIA GeForce RTX 5090, 32110"
+    },
+    "held_out_test_evaluated": false,
+    "log_path": "/home/leekwanhyeong/workspace/paper_research_mac_stable_c4dbf85_dd9790e_5090/search_artifacts/count_aware_titantpp_mac_stable_seed52_e300_20260831_5090/context_e1/yellow_trip_hourly/train.log",
+    "orchestration_revision": "dd9790ef190784bf0084246efb5f8614016a5411",
+    "phase": "context_e1",
+    "seed": 52,
+    "stage": "training",
+    "state": "running",
+    "training_source_revision": "c4dbf856c32e6502acc660ffac23c3e2f68e5375",
+    "updated_at": "2026-08-31T00:46:52.937444+00:00"
+  },
+  "reports": {
+    "context_e1/raf_spare_parts/validation_report.json": {
+      "all_metrics_finite": true,
+      "checkpoint_prediction_replay_exact": true,
+      "checkpoint_state_sha256": "1075428ed17b31a6ede380a7b242f8348a903ab96f68b12dd7f12e73d3308e6d",
+      "completed_epochs": 1,
+      "dataset": "raf_spare_parts",
+      "e300_automatically_authorized": false,
+      "held_out_test_evaluated": false,
+      "maximum_epochs": 1,
+      "observed_history_memory_replay_exact": true,
+      "seed": 52,
+      "status": "complete",
+      "train_batch_count": 202,
+      "train_target_count": 25779,
+      "training_source_revision": "c4dbf856c32e6502acc660ffac23c3e2f68e5375",
+      "validation_target_count": 6690,
+      "verified_source_files": 24
+    }
+  },
+  "diagnostics": {
+    "context_e1/raf_spare_parts/diagnostic/diagnostic_status.json": {
+      "state": "complete",
+      "error": null
+    },
+    "context_e1/yellow_trip_hourly/diagnostic/diagnostic_status.json": {
+      "state": "running",
+      "error": null
+    }
+  },
+  "gpu": {
+    "code": 0,
+    "stdout": "NVIDIA GeForce RTX 5090, 8790 MiB, 23322 MiB, 33 %\n",
+    "stderr": ""
+  },
+  "compute": {
+    "code": 0,
+    "stdout": "1747269, /opt/miniconda3/envs/ai_env/bin/python, 8780 MiB\n",
+    "stderr": ""
+  },
+  "gdm": {
+    "code": 3,
+    "stdout": "inactive\n",
+    "stderr": ""
+  },
+  "tmux": {
+    "code": 0,
+    "stdout": "1744806 0 python\n",
+    "stderr": "/opt/miniconda3/envs/ai_env/bin/tmux: /opt/miniconda3/envs/ai_env/bin/../lib/libtinfo.so.6: no version information available (required by /opt/miniconda3/envs/ai_env/bin/tmux)\n/opt/miniconda3/envs/ai_env/bin/tmux: /opt/miniconda3/envs/ai_env/bin/../lib/libtinfo.so.6: no version information available (required by /opt/miniconda3/envs/ai_env/bin/tmux)\n"
+  },
+  "log_tail": "[titantpp-mac-dynamo-policy] recompile_limit=64 accumulated_recompile_limit=512\n/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/torch/_inductor/compile_fx.py:322: UserWarning: TensorFloat32 tensor cores for float32 matrix multiplication available but not enabled. Consider setting `torch.set_float32_matmul_precision('high')` for better performance.\n  warnings.warn(\n[diagnostic] batch=0 elapsed=25.2s\n/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/torch/autograd/graph.py:869: UserWarning: Memory Efficient attention defaults to a non-deterministic algorithm. To explicitly enable determinism call torch.use_deterministic_algorithms(True, warn_only=False). (Triggered internally at /pytorch/aten/src/ATen/native/transformers/cuda/attention_backward.cu:900.)\n  return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass\n",
+  "snapshot": "/home/leekwanhyeong/workspace/paper_research_mac_stable_c4dbf85_dd9790e_5090",
+  "artifact": "/home/leekwanhyeong/workspace/paper_research_mac_stable_c4dbf85_dd9790e_5090/search_artifacts/count_aware_titantpp_mac_stable_seed52_e300_20260831_5090",
+  "tmux_session": "titantpp_mac_stable_seed52_5090_0831",
+  "training_revision": "c4dbf856c32e6502acc660ffac23c3e2f68e5375",
+  "orchestration_revision": "dd9790ef190784bf0084246efb5f8614016a5411",
+  "scope": {
+    "server": "5090",
+    "seed": 52,
+    "datasets": 4,
+    "seed42_authorized": false,
+    "seed62_5080_changed": false,
+    "model_loss_training_changed": false
+  },
+  "prelaunch": {
+    "local_tests_passed": 53,
+    "remote_tests_passed": 53,
+    "training_hashes_verified": 24,
+    "all_four_dataset_split_hashes_verified": true,
+    "missing_raf_files_detected_before_training": true,
+    "raf_resolution": "Copied exact-checksum local parquet and split manifest without --delete to the new snapshot only.",
+    "service_changes": false,
+    "demand_engine_8011_listening_before_launch": false,
+    "kernel_journal": "Permission-limited; cannot establish absence of Xid"
+  },
+  "monitor": {
+    "id": "titantpp-mac-5080-seed62",
+    "name": "TitanTPP-MAC 5080·5090 분할 모니터",
+    "interval_hours": 1,
+    "status": "ACTIVE",
+    "mode": "Updated existing thread heartbeat; separate heartbeat creation was rejected by one-per-thread limit"
+  },
+  "notion": {
+    "page_id": "3ccbbe40-5613-817e-a095-f605888d39ac",
+    "launch_update_readback_verified": true
+  },
+  "eta": "Await actual post-compile per-epoch timing; not inferred from 5080 or GPU model."
+}
