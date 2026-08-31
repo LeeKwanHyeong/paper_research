@@ -1,0 +1,119 @@
+{
+  "record_type": "launch_observation_not_final_result",
+  "observed_at": "2026-08-31T09:18:42.787578+09:00",
+  "started_at": "2026-08-31T09:16:05+09:00",
+  "server": "5080",
+  "other_server_accessed": false,
+  "model": "Count-aware TitanTPP-MAC",
+  "seed": 62,
+  "training_revision": "c4dbf856c32e6502acc660ffac23c3e2f68e5375",
+  "orchestration_revision": "f814e03f8a9f842937bd0de3a8dc4d78a96d61e7",
+  "snapshot": "/home/leekwanhyeong/workspace/paper_research_mac_stable_c4dbf85_f814e03_5080",
+  "tmux": "titantpp_mac_stable_seed62_5080_0831",
+  "artifact": "/home/leekwanhyeong/workspace/paper_research_mac_stable_c4dbf85_f814e03_5080/search_artifacts/count_aware_titantpp_mac_stable_seed62_e300_20260831_5080",
+  "launcher_log": "/home/leekwanhyeong/workspace/paper_research_mac_stable_c4dbf85_f814e03_5080/search_artifacts/titantpp_mac_stable_seed62_5080_0831.launch.log",
+  "status": {
+    "child_pid": 308972,
+    "command": [
+      "/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python",
+      "paper/scripts/validate_titantpp_mac_stability_preflight.py",
+      "--project-root",
+      "/home/leekwanhyeong/workspace/paper_research_mac_stable_c4dbf85_f814e03_5080",
+      "--run-root",
+      "/home/leekwanhyeong/workspace/paper_research_mac_stable_c4dbf85_f814e03_5080/search_artifacts/count_aware_titantpp_mac_stable_seed62_e300_20260831_5080/context_e1/raf_spare_parts/seed_62",
+      "--source-manifest",
+      "/home/leekwanhyeong/workspace/paper_research_mac_stable_c4dbf85_f814e03_5080/search_artifacts/count_aware_titantpp_mac_stable_seed62_e300_20260831_5080/source_manifest.json",
+      "--expected-revision",
+      "c4dbf856c32e6502acc660ffac23c3e2f68e5375",
+      "--seed",
+      "62",
+      "--dataset",
+      "raf_spare_parts",
+      "--epochs",
+      "1",
+      "--min-epochs",
+      "1",
+      "--output",
+      "/home/leekwanhyeong/workspace/paper_research_mac_stable_c4dbf85_f814e03_5080/search_artifacts/count_aware_titantpp_mac_stable_seed62_e300_20260831_5080/context_e1/raf_spare_parts/validation_report.json"
+    ],
+    "completed_run_count": 0,
+    "context_preflights_complete": 0,
+    "current_dataset": "raf_spare_parts",
+    "execution_server": "5080",
+    "expected_run_count": 4,
+    "gpu_preflight": {
+      "compute": "",
+      "gdm": "inactive",
+      "gpu": "NVIDIA GeForce RTX 5080, 15801"
+    },
+    "held_out_test_evaluated": false,
+    "log_path": "/home/leekwanhyeong/workspace/paper_research_mac_stable_c4dbf85_f814e03_5080/search_artifacts/count_aware_titantpp_mac_stable_seed62_e300_20260831_5080/context_e1/raf_spare_parts/validator.log",
+    "orchestration_revision": "f814e03f8a9f842937bd0de3a8dc4d78a96d61e7",
+    "phase": "context_e1",
+    "seed": 62,
+    "stage": "artifact_validation",
+    "state": "running",
+    "training_source_revision": "c4dbf856c32e6502acc660ffac23c3e2f68e5375",
+    "updated_at": "2026-08-31T00:18:40.444231+00:00"
+  },
+  "diagnostic_states": {
+    "context_e1/raf_spare_parts/diagnostic/diagnostic_status.json": {
+      "state": "complete",
+      "error": null
+    }
+  },
+  "gpu": {
+    "returncode": 0,
+    "stdout": "NVIDIA GeForce RTX 5080, 494 MiB, 15341 MiB, 0 %\n",
+    "stderr": ""
+  },
+  "compute": {
+    "returncode": 0,
+    "stdout": "308972, /home/leekwanhyeong/miniconda3/envs/ai_env/bin/python, 452 MiB\n",
+    "stderr": ""
+  },
+  "gdm": {
+    "returncode": 3,
+    "stdout": "inactive\n",
+    "stderr": ""
+  },
+  "tmux_observation": {
+    "returncode": 0,
+    "stdout": "307690 0 python\n",
+    "stderr": ""
+  },
+  "preflight": {
+    "source_and_data_sha256_verified": true,
+    "training_file_count": 24,
+    "local_contract_tests_passed": 29,
+    "remote_contract_tests_passed": 29,
+    "kernel_check": {
+      "observed_at": "2026-08-31T09:16:28+09:00",
+      "since": "2026-08-31T05:30:00+09:00",
+      "journal_return_code": 0,
+      "xid_oom_watchdog_matches": []
+    }
+  },
+  "automation": {
+    "id": "titantpp-mac-5080-seed62",
+    "status": "ACTIVE",
+    "interval_hours": 1,
+    "scope": "5080 only"
+  },
+  "notion": {
+    "page_id": "3ccbbe40-5613-817e-a095-f605888d39ac",
+    "update_verified": true
+  },
+  "next": [
+    "Finish RAF, Taxi and Intermittent full-context e1 artifact gates",
+    "Only after all gates pass: fresh seed62 e300 Instacart, RAF, Taxi, Intermittent",
+    "Validate/synchronize seed62 outputs; defer other seeds and all 5090 work"
+  ],
+  "eta": "Not established before full-context qualification and production epoch timing.",
+  "limits": [
+    "No e300 result yet",
+    "Full e1 does not guarantee later optimization remains finite",
+    "Previous unbounded-memory results must not be pooled with this policy",
+    "Held-out test remains locked"
+  ]
+}
