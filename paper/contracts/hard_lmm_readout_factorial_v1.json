@@ -1,0 +1,74 @@
+{
+  "contract_id": "hard_lmm_readout_factorial_v1",
+  "created_on": "2026-09-03",
+  "scope": "exploratory_frozen_seed42_cached_information_not_official_T0",
+  "parent_contract": "paper/contracts/count_aware_hard_lmm_frozen_probe_v1.json",
+  "parent_execution_revision": "474ebdde2598e4a2509a83d41fc8d404ca99fce0",
+  "source_artifact": "search_artifacts/hard_lmm_frozen_probe_20260903",
+  "datasets": ["intermittent_v2", "yellow_trip_hourly", "raf_spare_parts", "insta_market_basket"],
+  "heads": ["constant", "linear", "mlp"],
+  "objectives": ["log_mse", "raw_mae"],
+  "runtime": {"device": "cpu", "torch_version": "2.7.1", "threads": 1},
+  "architecture": {
+    "features": "cached_138_features_plus_original_logit_and_memory_projection_140_total",
+    "limitation": "normalized_hidden_vectors_and_compressed_norm_statistics_not_raw_hidden_states",
+    "normalization": "cached_train_only_mean_and_population_std_floor_1e-6_saved_as_frozen_buffers",
+    "constant": "one_unbounded_scalar_logit_offset",
+    "linear": "140_to_1_affine_unbounded_logit_offset",
+    "mlp": "140_to_16_tanh_to_1_unbounded_logit_offset",
+    "initialization": "seed42_zero_output_layer_exact_original_prediction",
+    "prediction": "expm1(softplus(original_logit_plus_offset))",
+    "time_route": "unchanged_cached_original_Time_NLL",
+    "forbidden_inputs": ["target_quantity", "target_delta_t", "target_bin", "future_event", "validation_fitted_statistics"]
+  },
+  "training": {
+    "seed": 42,
+    "shuffle_seed": 42,
+    "maximum_epochs": 40,
+    "early_stopping": false,
+    "batch_size": 1024,
+    "learning_rate": 0.001,
+    "weight_decay": 0,
+    "gradient_clip": 1,
+    "optimizer": "Adam",
+    "log_mse": "MSE(softplus(z_new),log1p(quantity)); constant_Time_NLL_has_no_trainable_path",
+    "raw_mae": "mean(abs(expm1(softplus(z_new))-quantity)); all_cached_train_events_unweighted",
+    "train_targets": "unchanged_parent_uniform_subset_max65536_seed42",
+    "validation_targets": "full_parent_validation",
+    "dataset_specific_tuning": false
+  },
+  "selection": {
+    "joint": "minimum_validation_original_Time_NLL_plus_log_MSE_over_epochs0_to40",
+    "body": "minimum_validation_MAE_on_quantity_le_train_p95_over_epochs0_to40",
+    "tie_break": "strict_improvement_earliest_epoch_including_identity_epoch0",
+    "comparison": "report_both_selectors_separately_never_choose_a_selector_after_results",
+    "official_candidate_compatibility": "only_log_mse_objective_with_joint_selector_preserves_original_objective_and_selection",
+    "body_selector": "diagnostic_only_reuses_known_validation_not_unbiased_generalization"
+  },
+  "preflight": {
+    "split": "train_only",
+    "epochs": 1,
+    "targets": "full_cached_train_subset",
+    "require_all_24_pass_before_validation": true,
+    "reuse_state_for_comparison": false,
+    "requirements": ["finite_outputs_parameters_gradients", "first_gradient_nonzero", "parameters_and_predictions_changed", "exact_identity_initialization"]
+  },
+  "decision": {
+    "gate": "unchanged_parent_body5pct_RMSE2pct_gtp99MAE2pct_TimeNLL001_and_positive_selected_epoch",
+    "report": "every_cell_and_both_selectors_including_failures_and_identity",
+    "feature_value": "compare_feature_heads_to_constant_with_same_objective_and_selector",
+    "capacity_contrast": "MLP_minus_linear_same_objective_and_selector",
+    "objective_contrast": "raw_MAE_minus_log_MSE_same_head_and_selector",
+    "universal_support": "one_fixed_cell_passes_all_four_datasets_no_dataset_wise_winner_mixture",
+    "automatic_promotion_or_fresh_training": false
+  },
+  "safety": {
+    "raw_data_access": false,
+    "held_out_access": false,
+    "original_model_loss_head_or_contract_changes": false,
+    "runtime_install_or_server_changes": false,
+    "silent_prediction_clipping": false,
+    "automatic_retry": false,
+    "overwrite": false
+  }
+}
