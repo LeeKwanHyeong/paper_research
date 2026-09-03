@@ -134,12 +134,22 @@ work. Structured historical launch/ETA evidence: `launch_record.json`.
 
 ## Next Work
 
+The requested post-stop investigation is complete. See `mechanism_analysis.md`,
+`mechanism_audit.json` and `mechanism_verification.json`: weak direct quantity
+effect of weighting, tail-concentrated Taxi gains, joint-versus-raw metric
+selection mismatch, and bounded train-only task-gradient measurements. No new
+training or model change ran. The proposed next experiment is an unlaunched,
+original-Hard-LMM quantity route with a local-only time route; it is a diagnostic
+candidate, not an adopted improvement. Local-encoder attribution follows only
+if needed. No selector or acceptance threshold was changed retrospectively.
+The new diagnostic is local only: its Notion update was blocked by external
+transfer approval and was not retried. The earlier Notion stop record is unchanged.
+
 1. Current baseline: preserve the two audited results and the interrupted
    checkpoint. Do not resume this candidate or expand seeds automatically.
-2. Next decision: separate quantity/time selection tradeoffs from representation
-   limitations before authorizing another single backbone change. Existing
-   histories may inform this diagnosis, but selecting a favorable MAE epoch
-   after the fact cannot replace the official validation-joint checkpoint.
+2. Next decision: agree on the isolated routing contract before implementing or
+   training another backbone. Selecting a favorable MAE epoch after the fact
+   cannot replace the official validation-joint checkpoint.
 3. No new training, backbone modification, service change or push is authorized
    by this cancellation. Stop evidence and partial results are scoped to local
    `paper_research/master` and the existing Notion experiment page.
