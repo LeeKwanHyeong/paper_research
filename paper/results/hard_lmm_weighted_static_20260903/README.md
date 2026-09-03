@@ -1,4 +1,43 @@
-# Weighted Static Retrieval: Screening In Progress
+# Weighted Static Retrieval: Stopped By User
+
+## Current Status
+
+The user approved cancellation after reviewing the completed Taxi and RAF
+results. Training stopped on **2026-09-03 at 16:12:57 KST**. The controller was
+stopped before the training child so the queued Instacart run could not start.
+Only this experiment's verified processes were terminated. GPU compute
+processes were empty afterward, with 34 MiB used and utilization 0%; GDM stayed
+inactive. The tmux pane is dead and retained. No service or 5090 was changed.
+
+- Taxi and RAF: completed runs, locally audited; original results preserved.
+- Intermittent: interrupted, not a completed benchmark. Last checkpoint and
+  history are epoch 91; best epoch is 91. Current weights, optimizer state,
+  best weights and history are preserved in `last_epoch_state.pt`.
+- Instacart: e300 run never started. Its earlier successful e1 is unaffected.
+- Hourly automation `hard-lmm-weighted-retrieval-5080`: **PAUSED**.
+- Artifact and original pre-stop status/log/history/checkpoint backups were
+  synchronized locally without deletion. No held-out test was used.
+
+The status is `cancelled_by_user`, not success or an infrastructure failure.
+No Intermittent final summary was fabricated. The earlier ETA no longer applies.
+Verification is in `stop_verification.json`; completed-only comparisons are in
+`partial_comparison.json`. Raw process/backup evidence remains in ignored
+`search_artifacts/hard_lmm_weighted_static_seed42_20260903/stop_record.json`.
+
+## Completed-Only Decision
+
+| Dataset | Original MAE / RMSE | Candidate MAE / RMSE | Body MAE change | Gate |
+| --- | ---: | ---: | ---: | --- |
+| Taxi | 51.767732 / 181.537594 | 50.794521 / 177.751678 | -0.5877% | Fail body |
+| RAF | 9.086491 / 36.123388 | 9.087862 / 36.111766 | +0.0751% | Fail body |
+
+Both completed seed-42 runs pass the RMSE, gt-p99 MAE and Time NLL guardrails,
+but fail the fixed 5% body improvement requirement. Because the prospective
+broad-follow-up rule requires all four datasets to pass, this candidate is not
+expanded. This is **0/2 evaluated datasets passing**, with one interrupted and
+one unstarted, NOT four completed negative results. The stop decision was made
+after observing these two results; it is recorded rather than retroactively
+added to the original contract. No selector, loss, threshold or model was changed.
 
 ## Completed
 
@@ -61,7 +100,7 @@ The fix and targeted regression tests passed **26 tests**. It was not deployed
 over the frozen training source. Failed historical statuses were preserved;
 completed e1 runs were not repeated. Consolidated evidence: `smoke_readiness.json`.
 
-## Active Screening
+## Screening Launch (Historical)
 
 - Started **2026-09-03 13:22:32 KST** on 5080 in tmux
   `hard_lmm_weighted_seed42_0903`.
@@ -73,9 +112,9 @@ completed e1 runs were not repeated. Consolidated evidence: `smoke_readiness.jso
   CUDA PID 356299, 2,344 MiB total VRAM used, utilization 78%, GDM inactive,
   no recent accessible kernel Xid/OOM entries. This is a snapshot, not a claim
   about sustained utilization or final performance.
-- Hourly heartbeat: `hard-lmm-weighted-retrieval-5080`, active.
+- Hourly heartbeat was created as `hard-lmm-weighted-retrieval-5080`; it is now paused.
 
-The tmux controller calls the already-approved frozen `command`, `preflight`,
+The tmux controller called the already-approved frozen `command`, `preflight`,
 `baseline` and training entrypoint in isolated processes. It does not call the
 old monolithic `main`, which would repeat the known Intermittent audit failure.
 Modern summaries are audited remotely; Intermittent is explicitly marked pending
@@ -88,23 +127,24 @@ Approximate e1 train-plus-validation epoch times, excluding the second final
 checkpoint evaluation, were 11.70 / 2.53 / 105.45 / 149.52 seconds in dataset
 order. Assuming original baseline stop epochs 42 / 60 / 240 / 66 gives about
 **10 hours**, around **September 3 23:20 KST**. If every run reaches e300 at those
-speeds, about **22.4 hours**, around **September 4 11:50 KST**. These are conditional
+speeds, about **22.4 hours**, around **September 4 11:50 KST**. These were conditional
 estimates, not guaranteed limits; new early stopping and sustained speed can
-change them. Structured launch/ETA evidence: `launch_record.json`.
+change them. They were superseded by cancellation, not a forecast of remaining
+work. Structured historical launch/ETA evidence: `launch_record.json`.
 
 ## Next Work
 
-1. In progress: leave the four candidate-only runs to finish; hourly monitoring
-   checks progress and resource failures without restarting work.
-2. Next: sync artifacts without `--delete`, validate manifests/logs/contracts,
-   summary/history/strata/checkpoint digests and held-out absence using the local
-   fixed `audit_run`. Original Intermittent summary is available at
-   `paper/results/count_aware_tpp_backbone_control_20260812/source_5080/runs/titantpp/count_only_log_regression/seed_42/summary.json`;
-   its digest must match the registry. Other baselines use registry paths.
-3. Compare against original frozen baseline identities using the unchanged body,
-   RMSE, tail and time gates. Record runtime differences and single-seed limits,
-   update Notion and commit related results only to local `paper_research/master`.
+1. Current baseline: preserve the two audited results and the interrupted
+   checkpoint. Do not resume this candidate or expand seeds automatically.
+2. Next decision: separate quantity/time selection tradeoffs from representation
+   limitations before authorizing another single backbone change. Existing
+   histories may inform this diagnosis, but selecting a favorable MAE epoch
+   after the fact cannot replace the official validation-joint checkpoint.
+3. No new training, backbone modification, service change or push is authorized
+   by this cancellation. Stop evidence and partial results are scoped to local
+   `paper_research/master` and the existing Notion experiment page.
 
 The prospective JSON/Markdown contract is in `paper/contracts/hard_lmm_weighted_static_v1.*`.
 Notion: [2026-09-03 Hard-LMM Similarity-Weighted Static Retrieval](https://app.notion.com/p/3d0bbe40561381d98efecd94ec3976a8).
-The Notion result section remains empty because there are no performance results.
+The Notion page records the user-requested stop and completed-only results;
+Intermittent and Instacart are explicitly not final evaluated results.
