@@ -151,9 +151,13 @@ changes, training, or server operations.
 
 1. Current baseline: preserve the two audited results and the interrupted
    checkpoint. Do not resume this candidate or expand seeds automatically.
-2. Next decision: agree on the isolated routing contract before implementing or
-   training another backbone. Selecting a favorable MAE epoch after the fact
-   cannot replace the official validation-joint checkpoint.
+2. The isolated routing contract is now frozen in
+   `paper/contracts/hard_lmm_local_time_v1.json` and its Markdown companion.
+   Implementation and training remain unstarted; implement/test the distinct
+   route only after a separate agreement. Selecting a favorable MAE epoch after
+   the fact cannot replace the official validation-joint checkpoint.
+   Document checks and Notion readback evidence are recorded separately in
+   `paper/results/hard_lmm_local_time_20260903/contract_verification.json`.
 3. No new training, backbone modification, service change or push is authorized
    by this cancellation. Stop evidence and partial results are scoped to local
    `paper_research/master` and the existing Notion experiment page.

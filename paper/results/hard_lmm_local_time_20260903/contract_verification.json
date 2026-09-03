@@ -1,0 +1,95 @@
+{
+  "state": "document_contract_verified",
+  "verified_at": "2026-09-03T10:21:01.977191+00:00",
+  "contract_id": "hard_lmm_local_time_v1",
+  "contract_sha256": "63ba706026c22b2052c04bc06b27fb7a6b99dbb837945ad029d4f1abcf876a4e",
+  "markdown_sha256": "c38b05746948e9bcf87524bb3f82fcb23c33277897a06d77a52811d13b970323",
+  "test_source_sha256": "0747101caaabf4c742cc1852f226e9408c3dc23fadda4608a241401c8d10e6c3",
+  "focused_tests": {
+    "command": "/usr/local/bin/python3 -s -m pytest -q simple_lab_test/search/tests/test_hard_lmm_local_time_contract.py",
+    "passed": 10,
+    "exit_code": 0,
+    "scope": "document consistency only, not new model execution"
+  },
+  "runtime": {
+    "python": "3.12.10",
+    "torch": "2.7.1",
+    "dependencies_changed": false
+  },
+  "source_context_revision": "7394d9a990e82aaacf4046940951cfa6a30ef4c6",
+  "source_files_unchanged": {
+    "models/TPPs/CountAwareTPP.py": "e80d503be00d3a7b85f0ab2aa06c34e02a45bdece423b9f056cc6f9d112b5e4e",
+    "models/TPPs/CountAwareFactory.py": "5231e38d8ddeb22cde9817bb22db9f48547a0838927242715224baface96dfbc",
+    "models/Titan/common/memory.py": "77cd312055d826e8080fca35239872098168438c179569615d6ef7a206068d42",
+    "models/Titan/backbone.py": "1c81144b9c00fd8993cc66b76c58dfe0fbfb087a1d25db33e1253527e0fc5726",
+    "paper/scripts/count_aware_tpp_backbone/core.py": "025dfbe75a5a4e235466807f31873aa085f8ddffe680485fb4b9f4f7ef60c598",
+    "paper/scripts/count_aware_tpp_backbone/training.py": "dcf1df7c1b8e5fec81eb7ab361dc7fa582bfe6141148b976bb1c8501480e9f06",
+    "paper/scripts/run_count_aware_tpp_backbone_control.py": "12eece61e726a9551026286b0f09f31c7f9ef17fd8f5d6c9c21760a361ef6fda",
+    "paper/scripts/run_taxi_quantity_interface_ablation.py": "32630140f939b1e8e2287893b7705b1d3ec6e9f67644c5f9477c0ef979890801",
+    "paper/scripts/count_aware_tpp_backbone/datasets.py": "0a2982d92a21d6dd0518adba5e631d40cf2222c9eb9ee476d861b27211623274"
+  },
+  "baseline_metadata_checks": {
+    "intermittent_v2": {
+      "summary_path": "paper/results/count_aware_tpp_backbone_control_20260812/source_5080/runs/titantpp/count_only_log_regression/seed_42/summary.json",
+      "summary_sha256": "87991b2170f35187e2191f444a215c237034639a1d32262dfc2ab00c2acbf532",
+      "launch_contract_sha256": "7405c7d06c4f95dbccc6bcc4dc2216ef0171bdd3a644ebc497280cd4fde07b19",
+      "parameter_count": 89795,
+      "validation_count": 86285,
+      "checkpoint_status": "absent_in_this_local_copy; future_route_test_requires_hash_verified_weights"
+    },
+    "yellow_trip_hourly": {
+      "summary_path": "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control/runs/titantpp/count_only_log_regression/seed_42/summary.json",
+      "summary_sha256": "771bc13643ad71e21c7533586dbb457ff043a57a12804c77355fcffb192a8c44",
+      "launch_contract_sha256": "f9d1d380ac8f96d359d2cc976fb705113fddc2293b01088fe6696127547ba069",
+      "parameter_count": 89795,
+      "validation_count": 8268,
+      "checkpoint_status": "file_digest_verified; not_deserialized"
+    },
+    "raf_spare_parts": {
+      "summary_path": "search_artifacts/count_aware_raf_t0_e300_20260824/raf_spare_parts/t0_common_control/runs/titantpp/count_only_log_regression/seed_42/summary.json",
+      "summary_sha256": "3a94e7f822d473a1d2244e689a4152921daa685d27c784953446e88668fb6404",
+      "launch_contract_sha256": "342ba56cb7bdf459e519405c6a68ad821ceb4031e0f854e5f5d08e26e091efc0",
+      "parameter_count": 78787,
+      "validation_count": 6690,
+      "checkpoint_status": "file_digest_verified; not_deserialized"
+    },
+    "insta_market_basket": {
+      "summary_path": "search_artifacts/count_aware_instacart_t0_e300_20260824_recovery1/insta_market_basket/t0_common_control/runs/titantpp/count_only_log_regression/seed_42/summary.json",
+      "summary_sha256": "f6fc651d7ccea6773235162f6e05d9e5f2d160749adde6c742c9af4e4f8a3ed2",
+      "launch_contract_sha256": "b1e908652913ab2744e7567f18803c8796f2de08b42a65cc83a0791a06072b2b",
+      "parameter_count": 77507,
+      "validation_count": 503733,
+      "checkpoint_status": "file_digest_verified; not_deserialized"
+    }
+  },
+  "registry_sha256": "a9430a67f81c5c6a3b2baccd5a0fef425b57b98d3706637f9f3040c909540356",
+  "diagnostic_audit_unchanged": true,
+  "implementation_acceptance_state": "not_run_candidate_not_implemented",
+  "model_implementation": false,
+  "training": false,
+  "cuda_or_e1_tests": false,
+  "held_out_used": false,
+  "optimizer_steps": 0,
+  "checkpoint_deserialization": false,
+  "limitations": [
+    "Legacy optimizer metadata omits default weight decay; source uses AdamW and current installed defaults are checked, not a replay of every historical runtime.",
+    "Intermittent local summary mirror has no checkpoint; no remote fetch attempted.",
+    "No new model performance, causality or gradient test is claimed by the document checks."
+  ],
+  "gpu_server_operations": false,
+  "notion": {
+    "state": "published_readback_verified",
+    "page_id": "3d0bbe40-5613-81d9-8efe-cd94ec3976a8",
+    "page_url": "https://app.notion.com/p/3d0bbe40561381d98efecd94ec3976a8",
+    "before_page_last_edited_at": "2026-09-03T09:41:51.854Z",
+    "after_page_last_edited_at": "2026-09-03T10:19:53.102Z",
+    "checks": {
+      "complete_content_matches": true,
+      "parent_preserved": true,
+      "cancelled_result_preserved": true,
+      "contract_frozen_not_model": true,
+      "document_checks_not_cuda_pass": true,
+      "same_quantity_persistent_and_adamw": true
+    }
+  }
+}
