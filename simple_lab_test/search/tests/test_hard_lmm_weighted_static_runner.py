@@ -87,3 +87,26 @@ def test_body_gate_uses_count_weighted_absolute_errors_not_mean_of_bins():
     assert result["passed"]
     candidate["best_val_qty_rmse"] *= 1.03
     assert not runner.compare(reference, candidate, c["per_dataset_gate"])["passed"]
+
+
+def test_legacy_intermittent_missing_unused_std_is_explicit_not_fabricated():
+    row = {"dataset": "intermittent_v2", "checkpoint_source_revision": "044add1f3de768d804d9f0269fd0013bd9658a35"}
+    old = {"interface_meta": {"train_target_mean": 1.}, "variant": runner.VARIANT}
+    new = {"interface_meta": {"train_target_mean": 1., "train_target_std": 2.}, "variant": runner.VARIANT}
+    assert runner.validate_quantity_initialization(new, old, row) == "legacy_unrecorded_not_used_by_log_mse"
+    assert "train_target_std" not in old["interface_meta"]
+    for change in ({"dataset": "yellow_trip_hourly"}, {"checkpoint_source_revision": "a" * 40}):
+        with pytest.raises(ValueError):
+            runner.validate_quantity_initialization(new, old, row | change)
+    with pytest.raises(ValueError):
+        runner.validate_quantity_initialization(new | {"variant": "lognormal"}, old, row)
+    with pytest.raises(ValueError):
+        runner.validate_quantity_initialization(new | {"interface_meta": {"train_target_mean": 1.1}}, old, row)
+
+
+def test_present_baseline_std_must_still_match():
+    row = {"dataset": "yellow_trip_hourly"}
+    old = {"interface_meta": {"train_target_mean": 1., "train_target_std": 2.}, "variant": runner.VARIANT}
+    assert runner.validate_quantity_initialization(old, old, row) == "matched"
+    with pytest.raises(ValueError):
+        runner.validate_quantity_initialization(old | {"interface_meta": {"train_target_mean": 1., "train_target_std": 3.}}, old, row)

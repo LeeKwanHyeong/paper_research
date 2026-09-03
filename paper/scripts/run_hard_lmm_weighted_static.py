@@ -125,6 +125,24 @@ def command(row, project, output, revision, phase):
     return result + ["--allow-partial-contract"]
 
 
+def validate_quantity_initialization(candidate, reference, row):
+    """The original Intermittent log-MSE schema predates scale-head statistics."""
+    observed, original = candidate["interface_meta"], reference["interface_meta"]
+    require(math.isclose(observed["train_target_mean"], original["train_target_mean"], rel_tol=0, abs_tol=1e-12),
+            "Train-only quantity statistics changed: train_target_mean")
+    if "train_target_std" in original:
+        require(math.isclose(observed["train_target_std"], original["train_target_std"], rel_tol=0, abs_tol=1e-12),
+                "Train-only quantity statistics changed: train_target_std")
+        return "matched"
+    require(row["dataset"] == "intermittent_v2" and
+            row["checkpoint_source_revision"] == "044add1f3de768d804d9f0269fd0013bd9658a35" and
+            candidate["variant"] == reference["variant"] == VARIANT,
+            "Unexpected missing baseline train_target_std")
+    # This statistic initializes only the optional log-normal scale head, which
+    # is absent in both direct log-MSE models. Do not fabricate a reference value.
+    return "legacy_unrecorded_not_used_by_log_mse"
+
+
 def audit_run(output, row, reference, revision, phase, contract):
     import torch
     from simple_lab_test.search.common.runner import canonical_state_dict_sha256
@@ -151,9 +169,7 @@ def audit_run(output, row, reference, revision, phase, contract):
     require([(q["stratum"], q["count"]) for q in s["quantity_rows"]] ==
             [(q["stratum"], q["count"]) for q in reference["quantity_rows"]], "Quantity strata changed")
     require(s["parameter_count"] == reference["parameter_count"], "Parameter count changed")
-    for key in ("train_target_mean", "train_target_std"):
-        require(math.isclose(s["interface_meta"][key], reference["interface_meta"][key], rel_tol=0, abs_tol=1e-12),
-                f"Train-only quantity statistics changed: {key}")
+    std_check = validate_quantity_initialization(s, reference, row)
     require(c["lookback_weeks"] == row["lookback"] and c["max_seq_len"] == row["max_seq_len"], "Context changed")
     meta = s["encoder_config"]
     require(meta["static_retrieval_contract_id"] == "hard_lmm_weighted_static_v1" and
@@ -169,6 +185,7 @@ def audit_run(output, row, reference, revision, phase, contract):
     result = {"status": "passed", "dataset": row["dataset"], "phase": phase,
               "summary_sha256": digest(output / SUMMARY), "checkpoint_file_sha256": digest(checkpoint_path),
               "checkpoint_state_sha256": s["checkpoint_state_sha256"], "finite": True,
+              "baseline_train_std_check": std_check,
               "held_out_test_evaluated": False, "train_validation_counts_match": True}
     save(output / "audit.json", result)
     return s
