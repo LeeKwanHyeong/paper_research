@@ -88,7 +88,7 @@ def test_candidate_entrypoint_filters_before_materializing():
     assert "raw_frame = load_train_validation_frame(args.data)" in source
 
 
-@pytest.mark.parametrize("violation", [None, "nonfinite", "scope", "optimizer", "route", "digest"])
+@pytest.mark.parametrize("violation", [None, "nonfinite", "scope", "optimizer", "route", "digest", "history"])
 def test_artifact_audit_accepts_complete_e1_and_rejects_drift(tmp_path, violation):
     model, meta = build_count_aware_model(smoke.BACKBONE, hidden_dim=16, train_log_mean=1.5,
         max_seq_len=8, quantity_variant=smoke.VARIANT, lambda_tail=0., time_head_mode="legacy_clamped_rmtpp")
@@ -129,7 +129,7 @@ def test_artifact_audit_accepts_complete_e1_and_rejects_drift(tmp_path, violatio
     # A malformed external artifact can contain NaN despite our writer rejecting it.
     import json
     (run / "summary.json").write_text(json.dumps(summary))
-    smoke.save(run / "history.json", [{"epoch": 1}])
+    smoke.save(run / "history.json", [{"epoch": 1}] if violation == "history" else {"history": [{"epoch": 1}]})
     torch.save(checkpoint, run / "best_val_joint_objective_model.pt")
     torch.save(checkpoint | {"optimizer_state_dict": optimizer}, run / "last_epoch_state.pt")
     if violation is None:

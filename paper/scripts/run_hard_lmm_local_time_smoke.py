@@ -90,7 +90,10 @@ def audit_run(output, row, reference, revision, spec):
     from simple_lab_test.search.common.runner import canonical_state_dict_sha256
 
     c, s = read(output / "launch_contract.json"), read(output / SUMMARY)
-    history = read((output / SUMMARY).parent / "history.json")
+    history_payload = read((output / SUMMARY).parent / "history.json")
+    require(isinstance(history_payload, dict) and isinstance(history_payload.get("history"), list),
+            "Expected the runner's history envelope")
+    history = history_payload["history"]
     for payload in (c, s, history):
         finite(payload)
     require(c["status"] == "complete" and c["completed_run_count"] == 1, "Run incomplete")

@@ -45,3 +45,20 @@ MiB free VRAM, no recent accessible kernel Xid/OOM. Source transfer/CUDA/e1 are
 pending at this implementation commit. The dedicated smoke entry point has no
 screening option and cannot launch e300. Main Taxi/RAF seed-42 screening remains
 a separate decision after completed CUDA/e1 artifact validation.
+
+## Server Smoke Audit Correction
+
+The frozen `b9d0ac0` snapshot passed all 250 source checksums, isolated-package
+tests (28 passed), and 5080 CUDA contracts (14 passed, 2.06 seconds). Taxi full e1
+finished successfully. The first post-run validator incorrectly indexed
+`history.json` as a list; the actual runner writes `{"history": [...]}`. Its
+`KeyError: 0` correctly stopped the launcher before RAF; it was not a model, GPU,
+or training failure. The historical failed status is preserved unchanged.
+
+The local-only validator was corrected to require the real envelope; its fixture
+now uses that envelope and rejects a bare list. Twenty-nine focused model/validator
+tests pass. The completed Taxi artifact passes the corrected audit, including full
+38,393/8,268 targets, strata, finite metrics, optimizer, routing and checkpoint
+digests. Do not retrain Taxi or rerun CUDA. RAF alone may run in a fresh directory
+using the exact original `b9d0ac0` training snapshot and generated e1 command,
+followed by corrected local validation. No source patch is applied to the server.
