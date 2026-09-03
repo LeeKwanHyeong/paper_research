@@ -35,6 +35,7 @@ TITAN_MEMORY_BACKBONES = (
     *TITAN_PERSISTENT_MEMORY_BACKBONES,
     "titantpp_titans_mac",
     "titantpp_tpp_gated_memory",
+    "titantpp_weighted_static_memory",
 )
 SUPPORTED_BACKBONES = (*BACKBONES, *TITAN_MEMORY_BACKBONES)
 VARIANT = LOG_MSE_VARIANT
@@ -45,6 +46,7 @@ MODEL_ROLE_T1_INCUMBENT = "t1_incumbent"
 MODEL_ROLE_T1_BACKBONE_COMPARISON = "t1_backbone_comparison"
 MODEL_ROLE_TIME_HEAD_DIAGNOSTIC = "time_head_diagnostic"
 MODEL_ROLE_TITAN_B012_SCREENING = "titan_b012_screening"
+MODEL_ROLE_WEIGHTED_STATIC = "t0_weighted_static_retrieval"
 MODEL_ROLES = (
     MODEL_ROLE_EXPERIMENTAL,
     MODEL_ROLE_T0_COMMON_CONTROL,
@@ -52,6 +54,7 @@ MODEL_ROLES = (
     MODEL_ROLE_T1_BACKBONE_COMPARISON,
     MODEL_ROLE_TIME_HEAD_DIAGNOSTIC,
     MODEL_ROLE_TITAN_B012_SCREENING,
+    MODEL_ROLE_WEIGHTED_STATIC,
 )
 T0_COMMON_BACKBONES = ("rmtpp", "thp", "nhp", "sahp", "titantpp")
 TITAN_B012_BACKBONES = (
@@ -88,6 +91,7 @@ BACKBONE_LABELS = {
     ),
     "titantpp_titans_mac": "TitanTPP Faithful Titans-MAC",
     "titantpp_tpp_gated_memory": "TitanTPP TPP-specific Gated Memory",
+    "titantpp_weighted_static_memory": "Hard-LMM Similarity-Weighted Static Retrieval",
 }
 
 
@@ -101,6 +105,14 @@ def validate_model_role_contract(
 ) -> None:
     """Reject official-role runs that drift from the frozen baseline contract."""
     if model_role == MODEL_ROLE_EXPERIMENTAL:
+        return
+    if model_role == MODEL_ROLE_WEIGHTED_STATIC:
+        if backbones != ("titantpp_weighted_static_memory",):
+            raise ValueError("Weighted static role requires only the registered W0 candidate")
+        if quantity_variants != (VARIANT,) or time_head_mode != TIME_HEAD_MODE_LEGACY_CLAMPED:
+            raise ValueError("Weighted static role requires direct log-MSE and legacy_clamped_rmtpp")
+        if not math.isclose(lambda_tail, 0.0, rel_tol=0.0, abs_tol=1e-15):
+            raise ValueError("Weighted static role requires lambda_tail=0")
         return
     if model_role == MODEL_ROLE_T0_COMMON_CONTROL:
         invalid = sorted(set(backbones) - set(T0_COMMON_BACKBONES))
@@ -177,6 +189,7 @@ __all__ = [
     "MODEL_ROLE_T1_BACKBONE_COMPARISON",
     "MODEL_ROLE_T1_INCUMBENT",
     "MODEL_ROLE_TITAN_B012_SCREENING",
+    "MODEL_ROLE_WEIGHTED_STATIC",
     "MODEL_ROLE_TIME_HEAD_DIAGNOSTIC",
     "QUANTITY_VARIANT_ALIASES",
     "SEEDS",

@@ -291,11 +291,17 @@ class HardLocalMemoryMatcher(nn.Module):
 
         mem_exp = memory.unsqueeze(1).expand(-1, L, -1, -1)  # [B, L, M, D]
         idx_exp = idx.unsqueeze(-1).expand(-1, -1, -1, D)  # [B, L, k, D]
-        residual = torch.gather(mem_exp, 2, idx_exp).mean(dim=2)  # [B, L, D]
+        selected = torch.gather(mem_exp, 2, idx_exp)
+        residual = self._combine_selected(selected, topk_similarity)  # [B, L, D]
         return residual, {
             "prototype_indices": idx,
             "topk_similarity": topk_similarity,
         }
+
+    def _combine_selected(
+        self, selected: torch.Tensor, similarities: torch.Tensor
+    ) -> torch.Tensor:
+        return selected.mean(dim=2)
 
     def forward(
         self, encoded: torch.Tensor, memory: Optional[torch.Tensor] = None
@@ -313,6 +319,22 @@ class HardLocalMemoryMatcher(nn.Module):
 # Backward-compatible import alias. Historical checkpoints and experiment
 # metadata use ``LMM``/``static_hard_lmm`` for this project-specific matcher.
 LMM = HardLocalMemoryMatcher
+
+
+class SimilarityWeightedLocalMemoryMatcher(HardLocalMemoryMatcher):
+    """Static hard top-k selection; only aggregation changes, with fixed tau=1.
+
+    No additional parameters, online writes, gates or output projections.
+    Selected scores remain in autograd; the discrete top-k membership does not.
+    """
+
+    temperature = 1.0
+
+    def _combine_selected(
+        self, selected: torch.Tensor, similarities: torch.Tensor
+    ) -> torch.Tensor:
+        weights = (similarities / self.temperature).softmax(dim=-1)
+        return (selected * weights.unsqueeze(-1)).sum(dim=2)
 
 
 class GatedSoftMemory(nn.Module):

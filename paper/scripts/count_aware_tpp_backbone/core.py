@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+from pathlib import Path
 
 import numpy as np
 import polars as pl
@@ -13,6 +14,16 @@ from paper.scripts.run_intermittent_log_backbone_control import (
     HISTORY_BOUNDARIES,
     HISTORY_STRATA,
 )
+
+
+def load_train_validation_frame(path: Path) -> pl.DataFrame:
+    """Exclude held-out rows before materialization; preserve canonical order."""
+    return (
+        pl.scan_parquet(path)
+        .filter(pl.col("chronological_split").is_in(["train", "validation"]))
+        .collect()
+        .sort(["oper_part_no", "seq"])
+    )
 
 
 def prepare_count_frame(frame: pl.DataFrame) -> pl.DataFrame:

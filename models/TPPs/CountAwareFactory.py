@@ -18,6 +18,7 @@ from models.TPPs.CountAwareTPP import (
     TITAN_MEMORY_MODE_PERSISTENT_ONLY,
     TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
     TITAN_MEMORY_MODE_STATIC_HARD,
+    TITAN_MEMORY_MODE_STATIC_WEIGHTED,
     TITAN_MEMORY_MODE_STATIC_SOFT_GATED,
     TITAN_MEMORY_MODE_SURPRISE_GATED,
     TITAN_MEMORY_MODE_TITANS_MAC,
@@ -141,6 +142,10 @@ def build_count_aware_model(
             TITAN_MEMORY_MODE_STATIC_HARD,
             TITAN_QUANTITY_GRADIENT_SHARED,
         ),
+        "titantpp_weighted_static_memory": (
+            TITAN_MEMORY_MODE_STATIC_WEIGHTED,
+            TITAN_QUANTITY_GRADIENT_SHARED,
+        ),
         "titantpp_no_memory": (
             TITAN_MEMORY_MODE_NONE,
             TITAN_QUANTITY_GRADIENT_SHARED,
@@ -183,6 +188,7 @@ def build_count_aware_model(
         uses_persistent_memory = memory_mode in {
             TITAN_MEMORY_MODE_PERSISTENT_ONLY,
             TITAN_MEMORY_MODE_STATIC_HARD,
+            TITAN_MEMORY_MODE_STATIC_WEIGHTED,
             TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
             TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
             TITAN_MEMORY_MODE_TITANS_MAC,
@@ -190,6 +196,7 @@ def build_count_aware_model(
         }
         uses_hard_memory = memory_mode in {
             TITAN_MEMORY_MODE_STATIC_HARD,
+            TITAN_MEMORY_MODE_STATIC_WEIGHTED,
             TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
         }
         uses_soft_memory = memory_mode == TITAN_MEMORY_MODE_STATIC_SOFT_GATED
@@ -208,6 +215,7 @@ def build_count_aware_model(
         )
         candidate_names = {
             "titantpp": "count_titan_small_lmm",
+            "titantpp_weighted_static_memory": "count_titan_static_top4_weighted_tau1",
             "titantpp_no_memory": "count_titan_no_memory",
             "titantpp_gated_soft_memory": "count_titan_gated_soft_memory",
             "titantpp_surprise_memory": "count_titan_surprise_memory",
@@ -232,8 +240,16 @@ def build_count_aware_model(
             model,
             {
                 "candidate_name": candidate_names[backbone],
+                **({
+                    "static_retrieval_aggregation": "softmax_cosine_topk",
+                    "static_retrieval_temperature": 1.0,
+                    "static_retrieval_contract_id": "hard_lmm_weighted_static_v1",
+                    "additional_parameter_count": 0,
+                } if memory_mode == TITAN_MEMORY_MODE_STATIC_WEIGHTED else {}),
                 "backbone_contract_id": (
-                    "B1"
+                    "W0"
+                    if memory_mode == TITAN_MEMORY_MODE_STATIC_WEIGHTED
+                    else "B1"
                     if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
                     else "B2"
                     if memory_mode == TITAN_MEMORY_MODE_TPP_GATED
@@ -347,7 +363,9 @@ def build_count_aware_model(
                     0.0 if uses_soft_memory or uses_surprise_memory else None
                 ),
                 "time_memory_route": (
-                    "hard_local_memory_matcher"
+                    "similarity_weighted_static_matcher"
+                    if memory_mode == TITAN_MEMORY_MODE_STATIC_WEIGHTED
+                    else "hard_local_memory_matcher"
                     if uses_hard_memory
                     else "titans_mac"
                     if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC

@@ -22,6 +22,7 @@ from models.Titan.backbone import MemoryEncoder
 from models.Titan.common.memory import (
     GatedSoftMemory,
     HardLocalMemoryMatcher,
+    SimilarityWeightedLocalMemoryMatcher,
     SurpriseGatedMemory,
 )
 from models.Titan.common.titans_mac import TitansMACEncoder, TitansMemoryState
@@ -52,6 +53,7 @@ TIME_HEAD_MODES = (
 TITAN_MEMORY_MODE_NONE = "none"
 TITAN_MEMORY_MODE_PERSISTENT_ONLY = "persistent_only"
 TITAN_MEMORY_MODE_STATIC_HARD = "static_hard_lmm"
+TITAN_MEMORY_MODE_STATIC_WEIGHTED = "static_weighted_lmm"
 TITAN_MEMORY_MODE_STATIC_SOFT_GATED = "static_soft_gated"
 TITAN_MEMORY_MODE_SURPRISE_GATED = "surprise_gated"
 TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED = "persistent_surprise_gated"
@@ -62,6 +64,7 @@ TITAN_MEMORY_MODES = (
     TITAN_MEMORY_MODE_NONE,
     TITAN_MEMORY_MODE_PERSISTENT_ONLY,
     TITAN_MEMORY_MODE_STATIC_HARD,
+    TITAN_MEMORY_MODE_STATIC_WEIGHTED,
     TITAN_MEMORY_MODE_STATIC_SOFT_GATED,
     TITAN_MEMORY_MODE_SURPRISE_GATED,
     TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
@@ -722,12 +725,14 @@ class CountAwareTitanTPP(SharedTimeCountModel):
         uses_persistent_memory = memory_mode in {
             TITAN_MEMORY_MODE_PERSISTENT_ONLY,
             TITAN_MEMORY_MODE_STATIC_HARD,
+            TITAN_MEMORY_MODE_STATIC_WEIGHTED,
             TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
             TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
             TITAN_MEMORY_MODE_TPP_GATED,
         }
         uses_hard_memory = memory_mode in {
             TITAN_MEMORY_MODE_STATIC_HARD,
+            TITAN_MEMORY_MODE_STATIC_WEIGHTED,
             TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
         }
         uses_surprise_memory = memory_mode in {
@@ -768,8 +773,13 @@ class CountAwareTitanTPP(SharedTimeCountModel):
             if uses_titans_mac
             else None
         )
+        matcher = (
+            SimilarityWeightedLocalMemoryMatcher
+            if memory_mode == TITAN_MEMORY_MODE_STATIC_WEIGHTED
+            else HardLocalMemoryMatcher
+        )
         self.lmm = (
-            HardLocalMemoryMatcher(d_model=hidden_dim, mem_size=64, topk=4)
+            matcher(d_model=hidden_dim, mem_size=64, topk=4)
             if uses_hard_memory
             else None
         )
@@ -978,6 +988,7 @@ __all__ = [
     "TITAN_MEMORY_MODE_PERSISTENT_ONLY",
     "TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED",
     "TITAN_MEMORY_MODE_STATIC_HARD",
+    "TITAN_MEMORY_MODE_STATIC_WEIGHTED",
     "TITAN_MEMORY_MODE_STATIC_SOFT_GATED",
     "TITAN_MEMORY_MODE_SURPRISE_GATED",
     "TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE",
