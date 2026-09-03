@@ -1,0 +1,86 @@
+{
+  "architecture": {
+    "baseline": "explicit_unmodified_g1_not_represented_by_finite_sigmoid_parameters",
+    "constant": "one_trainable_score_same_initial_gate_without_features",
+    "correction": "(gate - 1) * original_quantity_logit_residual_projection",
+    "gate": "1 - 0.2 * sigmoid(score)",
+    "initial_gate": 0.99,
+    "maximum_shrinkage": 0.2,
+    "smooth": "same_138_to_16_tanh_to_1_MLP_as_parent_zero_final_weight_bias_logit_0.05",
+    "time_route": "unchanged_original_memory_enhanced_state"
+  },
+  "candidates": [
+    "constant_shrinkage",
+    "smooth_shrinkage"
+  ],
+  "contract_id": "hard_lmm_smooth_shrinkage_v1",
+  "created_on": "2026-09-03",
+  "datasets": [
+    "intermittent_v2",
+    "yellow_trip_hourly",
+    "raf_spare_parts",
+    "insta_market_basket"
+  ],
+  "decision": {
+    "adaptive_value": "smooth_body_MAE_strictly_less_than_selected_constant_and_joint_no_greater",
+    "automatic_fresh_training": false,
+    "automatic_seed_expansion": false,
+    "cross_dataset_support": "all_four_datasets_pass_both_checks",
+    "extra_reporting_only": [
+      "le_p50",
+      "p50_p90",
+      "p90_p95",
+      "history",
+      "gate_saturation",
+      "zero_gradients"
+    ],
+    "per_dataset": "unchanged_parent_body5pct_RMSE2pct_p99MAE2pct_TimeNLL001_and_trained_checkpoint"
+  },
+  "parent_contract": "paper/contracts/count_aware_hard_lmm_frozen_probe_v1.json",
+  "parent_execution_revision": "474ebdde2598e4a2509a83d41fc8d404ca99fce0",
+  "preflight": {
+    "epochs": 1,
+    "require_all_eight_pass_before_loading_validation_caches": true,
+    "requirements": [
+      "finite_parameters_outputs_gradients",
+      "first_gradient_nonzero",
+      "parameters_changed",
+      "train_gates_changed"
+    ],
+    "reuse_state_for_comparison": false,
+    "split": "train_only",
+    "targets": "full_cached_train_sample"
+  },
+  "runtime": {
+    "device": "cpu",
+    "threads": 1,
+    "torch_version": "2.7.1"
+  },
+  "safety": {
+    "automatic_retry": false,
+    "backbone_or_original_probe_changes": false,
+    "dataset_specific_tuning": false,
+    "held_out_access": false,
+    "overwrite": false,
+    "raw_data_access": false,
+    "runtime_install_changes": false
+  },
+  "scope": "frozen_seed42_cache_probe_not_fresh_backbone_training",
+  "source_artifact": "search_artifacts/hard_lmm_frozen_probe_20260903",
+  "training": {
+    "batch_size": 128,
+    "checkpoint_selection": "minimum_validation_joint_over_identity_epoch_minus1_initial_candidate_epoch0_and_trained_epochs",
+    "gradient_clip": 1,
+    "learning_rate": 0.001,
+    "maximum_epochs": 40,
+    "minimum_epochs": 10,
+    "objective": "direct_log_quantity_MSE_plus_constant_original_Time_NLL",
+    "patience": 10,
+    "seed": 42,
+    "shuffle_seed": 42,
+    "tie_break": "strict_improvement_only_identity_then_earliest",
+    "train_targets": "unchanged_parent_sample_max65536_seed42",
+    "validation_targets": "full_parent_validation",
+    "weight_decay": 0
+  }
+}
