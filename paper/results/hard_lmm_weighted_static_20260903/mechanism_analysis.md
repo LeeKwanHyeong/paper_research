@@ -220,7 +220,10 @@ script. Focused tests cover selector distinction, finite checks, gradient cosine
 softmax behavior and the decoder identity; memory/causal regression tests are
 also included. Detailed verification is in `mechanism_verification.json`.
 
-Notion publication of this new diagnostic was rejected by the external-transfer
-approval review. No retry or alternate upload was attempted. The existing Notion
-page retains the earlier stop/results record; this new analysis is local only
-pending explicit approval to share it externally.
+The first Notion publication attempt was rejected by the external-transfer
+approval review; no alternate upload was attempted. After explicit user approval,
+the analysis and proposed next work were published to the existing experiment
+page on September 3. Readback verified the content, preservation of the earlier
+stop/results record, and the unimplemented/unlaunched status of the next candidate.
+Publication evidence is in `mechanism_notion_publication.json`. The approval was
+limited to this documentation update, not model changes, training, or server work.

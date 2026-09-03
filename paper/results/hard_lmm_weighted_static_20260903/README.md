@@ -142,8 +142,12 @@ training or model change ran. The proposed next experiment is an unlaunched,
 original-Hard-LMM quantity route with a local-only time route; it is a diagnostic
 candidate, not an adopted improvement. Local-encoder attribution follows only
 if needed. No selector or acceptance threshold was changed retrospectively.
-The new diagnostic is local only: its Notion update was blocked by external
-transfer approval and was not retried. The earlier Notion stop record is unchanged.
+The diagnostic was published to the existing Notion page after explicit user
+approval on September 3. Readback verified the new analysis and preserved the
+earlier results and stop record. The prior attempt was blocked by external
+transfer approval; no alternate upload was attempted. Publication evidence is in
+`mechanism_notion_publication.json`. This approval does not authorize model
+changes, training, or server operations.
 
 1. Current baseline: preserve the two audited results and the interrupted
    checkpoint. Do not resume this candidate or expand seeds automatically.
@@ -156,5 +160,6 @@ transfer approval and was not retried. The earlier Notion stop record is unchang
 
 The prospective JSON/Markdown contract is in `paper/contracts/hard_lmm_weighted_static_v1.*`.
 Notion: [2026-09-03 Hard-LMM Similarity-Weighted Static Retrieval](https://app.notion.com/p/3d0bbe40561381d98efecd94ec3976a8).
-The Notion page records the user-requested stop and completed-only results;
+The Notion page records the user-requested stop, completed-only results, and
+post-stop mechanism analysis. Proposed next work is not implemented or launched;
 Intermittent and Instacart are explicitly not final evaluated results.
