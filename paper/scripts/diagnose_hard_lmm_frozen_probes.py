@@ -167,6 +167,8 @@ def fit_constant(z, quantity, points=1001):
     if points < 3 or points % 2 != 1:
         raise ValueError("Odd grid size including zero required")
     offsets = torch.linspace(-0.05, 0.05, points, dtype=torch.float64)
+    # linspace can round the midpoint away from exact zero on some runtimes.
+    offsets[points // 2] = 0.
     target = quantity.double().clamp_min(0).log1p()
     curve = []
     for block in offsets.split(32):
