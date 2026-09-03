@@ -1,0 +1,70 @@
+{
+  "contract_id": "hard_lmm_readout_seed_replication_v1",
+  "created_on": "2026-09-03",
+  "scope": "frozen_Intermittent_checkpoint_seed_replication_not_fresh_backbone_training",
+  "parent_contract": "paper/contracts/hard_lmm_readout_factorial_v1.json",
+  "parent_contract_sha256": "1893d552bbe36078b871e8e85e2b3857532f5da877cdaae83560f6038bc35a38",
+  "parent_execution_revision": "5d81e0ed65ec6739e4cf47a63f02584f06da3dbe",
+  "parent_artifact": "search_artifacts/hard_lmm_readout_factorial_20260903",
+  "parent_feature_artifact": "search_artifacts/hard_lmm_frozen_probe_20260903/intermittent_v2",
+  "baseline_artifact": "paper/results/count_aware_tpp_backbone_control_20260812/source_5080",
+  "checkpoint_audit": "paper/results/count_aware_b0_retrieval_diagnostic_20260827/checkpoint_audit.json",
+  "checkpoint_audit_sha256": "f3884f5da8104ab881e75a8c137f3120be81dae26a64385097fdc66bc6805eb0",
+  "dataset": "intermittent_v2",
+  "reused_seed": 42,
+  "new_seeds": [52, 62],
+  "heads": ["constant", "linear"],
+  "objectives": ["log_mse", "raw_mae"],
+  "selectors": ["joint", "body"],
+  "hypotheses": ["constant_log_mse", "linear_raw_mae"],
+  "matched_controls": ["constant_raw_mae", "linear_log_mse"],
+  "inherit_exactly": ["architecture", "training", "selection", "runtime"],
+  "adapter_initialization_and_shuffle_seed": 42,
+  "backbone_seed_is_only_seed_factor": true,
+  "checkpoints": [
+    {
+      "seed": 52,
+      "path": "search_artifacts/hard_lmm_readout_replication_inputs_20260903/seed_52.pt",
+      "checkpoint_file_sha256": "5bfb5b3740bb77facd2ab7860f374accc3b8b02a4d8196b84e1be45305cf268b",
+      "checkpoint_state_sha256": "b5e7fbcc185e3acf296e121ad14b805993e3559016ec29cfcc82aa5f49feb02b",
+      "summary_sha256": "24ba0b03efa4514157b5f63f6888839c9d20d4c0afdbc931c940bb6af02a1717"
+    },
+    {
+      "seed": 62,
+      "path": "search_artifacts/hard_lmm_readout_replication_inputs_20260903/seed_62.pt",
+      "checkpoint_file_sha256": "34b5869198372fa6748a564741ca7d073685eb93afaae6a44417ab478853fdaa",
+      "checkpoint_state_sha256": "c39667fc9b51dd2df19337af707d5e958b2aa943de3e621e2a4cdb71b2b1dc01",
+      "summary_sha256": "8492bf745935d1b058787ee5625aacecc03f77e0f5519942bacf0825ba35ec6c"
+    }
+  ],
+  "cache": {
+    "device": "cpu",
+    "batch_size": 128,
+    "train_available": 393824,
+    "train_selected": 65536,
+    "validation_selected": 86285,
+    "sample_seed": 42,
+    "indices_and_labels": "must_match_seed42_cache_exactly",
+    "feature_definition": "unchanged_extract_features_from_hard_lmm_frozen_probe",
+    "preflight": "first256_selected_train_targets_discarded_before_full_cache; all8_train_readout_preflights_before_validation_cache_extraction",
+    "baseline_replay_absolute_tolerance": 0.00001,
+    "held_out_rows": "exclude_with_parquet_predicate_before_materialization"
+  },
+  "decision": {
+    "gate": "unchanged_parent_body5pct_RMSE2pct_gtp99MAE2pct_TimeNLL001_positive_selected_epoch",
+    "replication": "same_cell_and_selector_must_pass_both_new_seeds_individually",
+    "all_three": "same_cell_and_selector_must_pass_seed42_52_62_individually",
+    "report": "seed42_discovery_separate_from_new52_62; all4cells_bothselectors; unweighted3seed_mean_and_sample_std_ddof1; paired_changes",
+    "no_pooled_events_or_mean_only_acceptance": true,
+    "automatic_promotion_or_fresh_training": false,
+    "limitation": "checkpoint_seed_sensitivity_on_same_known_validation_not_new_independent_data"
+  },
+  "safety": {
+    "official_T0_changes": false,
+    "original_model_or_runtime_changes": false,
+    "server_compute_or_service_changes": false,
+    "held_out_access": false,
+    "retry_or_tuning_after_results": false,
+    "overwrite": false
+  }
+}
