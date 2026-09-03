@@ -40,11 +40,12 @@ check, not evidence that the original body/tail performance gates are passed.
 
 ## Next Boundary
 
-5080 read-only preflight passed: GDM inactive, no CUDA compute processes, 15,801
-MiB free VRAM, no recent accessible kernel Xid/OOM. Source transfer/CUDA/e1 are
-pending at this implementation commit. The dedicated smoke entry point has no
-screening option and cannot launch e300. Main Taxi/RAF seed-42 screening remains
-a separate decision after completed CUDA/e1 artifact validation.
+Implementation, local validation and 5080 CUDA/full-e1 checks are complete.
+The dedicated smoke entry point has no screening option and cannot launch e300.
+Main Taxi/RAF seed-42 screening remains a separate decision. If approved, use
+fresh artifacts/initialization with the frozen e300/min40/patience40 contract,
+not either e1 checkpoint; keep all original performance thresholds. Do not resume
+the cancelled weighted candidate or retrain the benchmark models.
 
 ## Server Smoke Audit Correction
 
@@ -59,6 +60,40 @@ The local-only validator was corrected to require the real envelope; its fixture
 now uses that envelope and rejects a bare list. Twenty-nine focused model/validator
 tests pass. The completed Taxi artifact passes the corrected audit, including full
 38,393/8,268 targets, strata, finite metrics, optimizer, routing and checkpoint
-digests. Do not retrain Taxi or rerun CUDA. RAF alone may run in a fresh directory
-using the exact original `b9d0ac0` training snapshot and generated e1 command,
-followed by corrected local validation. No source patch is applied to the server.
+digests. Taxi and CUDA were not rerun. RAF alone ran in a fresh directory using
+the exact original `b9d0ac0` training snapshot and generated e1 command, followed
+by corrected local validation. No source patch was applied to the server.
+
+## Final CUDA and E1 Evidence
+
+`smoke_verification.json` is the authoritative combined local audit; it does not
+rewrite the historical launcher failure. Final local suite: **129 passed, 1
+skipped** (`final_local_tests.xml`). CUDA: **14 passed**, no skips. Isolated package:
+**28 passed** before transfer. Training source remains `b9d0ac0`; corrected local
+validator is `5d43bf6`. Remote Python 3.12.13/PyTorch 2.11.0+cu130 was unchanged.
+
+| Dataset | Full Train / Validation Targets | e1 Train+Validation Seconds | Audit |
+| --- | ---: | ---: | --- |
+| Taxi | 38,393 / 8,268 | 12.235 | Passed |
+| RAF | 25,779 / 6,690 | 2.662 | Passed |
+
+RAF completed at **2026-09-03 19:47:15 KST**, followed by successful local audit.
+Timing is the runner's e1 elapsed time, not an e300 forecast. Every summary,
+history and CSV numeric metric is finite. Quantity/history CSV values reconcile
+with summaries; data/source hashes, original counts/strata, AdamW defaults,
+head/route metadata and last/best checkpoint digests match. Test data were not
+materialized or evaluated. The e1 runner does not generate convergence plots;
+none are claimed as verified. Postflight: no CUDA processes, GDM inactive,
+15,798 MiB free, no recent accessible kernel Xid/OOM.
+
+Raw checkpoints remain in the local `search_artifacts` directories identified in
+`smoke_verification.json`. Curated manifests, logs, summaries, histories, CSVs and
+CUDA evidence are committed under `source_5080_taxi` and `source_5080_raf`; large
+checkpoint binaries are not committed. Transfers used no `--delete`. The short
+checks finished in this session; no new scheduler, installation, GDM/service
+change, 5090 operation, push or e300 training occurred.
+
+Peak allocated VRAM was not instrumented in these short e1 runs; pre/postflight
+free VRAM must not be presented as peak allocation. Record it separately if
+performance screening is authorized. Notion publication/readback is verified in
+`notion_publication.json`, including preservation of the prior cancellation.
