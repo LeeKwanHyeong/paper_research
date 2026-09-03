@@ -12,7 +12,11 @@ import numpy as np
 import polars as pl
 import torch
 
-from models.TPPs.CountAwareFactory import build_count_aware_model
+from models.TPPs.CountAwareFactory import (
+    HARD_LOCAL_TIME_BACKBONE,
+    build_count_aware_model,
+    validate_checkpoint_route,
+)
 from paper.scripts.count_aware_tpp_backbone.constants import (
     BACKBONE_LABELS,
     TAIL_VARIANTS,
@@ -261,6 +265,9 @@ def train_one(
     last_path = run_dir / "last_epoch_state.pt"
     if summary_path.exists() and best_path.exists() and not args.force_rerun:
         payload = json.loads(summary_path.read_text(encoding="utf-8"))
+        validate_checkpoint_route(payload, backbone)
+        if backbone == HARD_LOCAL_TIME_BACKBONE:
+            validate_checkpoint_route(torch_load_checkpoint(best_path, map_location="cpu"), backbone)
         quantity_rows = payload.pop("quantity_rows")
         history_rows = payload.pop("history_rows")
         return payload, quantity_rows, history_rows
@@ -336,6 +343,7 @@ def train_one(
 
     if last_path.exists() and not args.force_rerun:
         payload = torch_load_checkpoint(last_path, map_location="cpu")
+        validate_checkpoint_route(payload, backbone)
         model.load_state_dict(payload["model_state_dict"], strict=True)
         optimizer.load_state_dict(payload["optimizer_state_dict"])
         history = list(payload.get("history", []))

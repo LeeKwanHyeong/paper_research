@@ -153,8 +153,10 @@ changes, training, or server operations.
    checkpoint. Do not resume this candidate or expand seeds automatically.
 2. The isolated routing contract is now frozen in
    `paper/contracts/hard_lmm_local_time_v1.json` and its Markdown companion.
-   Implementation and training remain unstarted; implement/test the distinct
-   route only after a separate agreement. Selecting a favorable MAE epoch after
+   A subsequent user instruction authorized the distinct route implementation
+   and local-to-5080 CUDA/e1 checks, recorded in
+   `paper/results/hard_lmm_local_time_20260903/README.md`. e300 remains unstarted.
+   Selecting a favorable MAE epoch after
    the fact cannot replace the official validation-joint checkpoint.
    Document checks and Notion readback evidence are recorded separately in
    `paper/results/hard_lmm_local_time_20260903/contract_verification.json`.

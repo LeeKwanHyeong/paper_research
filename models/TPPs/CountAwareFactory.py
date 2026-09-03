@@ -14,6 +14,7 @@ from models.TPPs.CountAwareTPP import (
     CountAwareTitanTPP,
     SharedTimeCountModel,
     TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
+    TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
     TITAN_MEMORY_MODE_NONE,
     TITAN_MEMORY_MODE_PERSISTENT_ONLY,
     TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
@@ -28,6 +29,44 @@ from models.TPPs.CountAwareTPP import (
 )
 from models.TPPs.NeuralHawkesTPP import CountAwareNHP
 from models.TPPs.SelfAttentiveHawkesTPP import CountAwareSAHP
+
+
+HARD_LOCAL_TIME_BACKBONE = "titantpp_hard_memory_local_time"
+HARD_LOCAL_TIME_CONTRACT = "hard_lmm_local_time_v1"
+
+
+def validate_checkpoint_route(payload: dict[str, Any], expected_backbone: str) -> None:
+    """Equal tensor shapes do not identify the local-time routing ablation."""
+    metadata = payload.get("encoder_config", {})
+    if not isinstance(metadata, dict):
+        raise ValueError("Invalid checkpoint encoder metadata")
+    is_routed = (
+        payload.get("backbone") == HARD_LOCAL_TIME_BACKBONE
+        or metadata.get("routing_contract_id") == HARD_LOCAL_TIME_CONTRACT
+        or metadata.get("memory_mode") == TITAN_MEMORY_MODE_HARD_LOCAL_TIME
+    )
+    if expected_backbone != HARD_LOCAL_TIME_BACKBONE:
+        if is_routed:
+            raise ValueError("Local-time checkpoint cannot be loaded as another backbone")
+        return
+    required = {
+        "routing_contract_id": HARD_LOCAL_TIME_CONTRACT,
+        "memory_mode": TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
+        "time_memory_route": "local_encoder_with_persistent_tokens",
+        "quantity_memory_route": "hard_local_memory_matcher",
+        "static_retrieval_aggregation": "arithmetic_mean",
+        "persistent_mem_size": 16,
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+    }
+    if payload.get("backbone") != expected_backbone or any(
+        metadata.get(key) != expected for key, expected in required.items()
+    ):
+        raise ValueError("Local-time checkpoint routing metadata mismatch")
+    time_head = metadata.get("time_head", {})
+    if (payload.get("variant") != LOG_MSE_VARIANT or not isinstance(time_head, dict)
+            or time_head.get("mode") != TIME_HEAD_MODE_LEGACY_CLAMPED):
+        raise ValueError("Local-time checkpoint head/objective mismatch")
 
 
 def with_time_metadata(
@@ -66,6 +105,12 @@ def build_count_aware_model(
     titans_memory_gradient_clip: float | None = None,
 ) -> tuple[SharedTimeCountModel, dict[str, Any]]:
     """Construct one controlled backbone and its serializable metadata."""
+    if backbone == HARD_LOCAL_TIME_BACKBONE and (
+        quantity_variant != LOG_MSE_VARIANT
+        or time_head_mode != TIME_HEAD_MODE_LEGACY_CLAMPED
+        or lambda_tail != 0.0
+    ):
+        raise ValueError("Local-time candidate requires direct log-MSE, legacy time head and no tail loss")
     if titans_memory_gradient_clip is not None:
         if (not math.isfinite(titans_memory_gradient_clip)
                 or titans_memory_gradient_clip <= 0):
@@ -142,6 +187,10 @@ def build_count_aware_model(
             TITAN_MEMORY_MODE_STATIC_HARD,
             TITAN_QUANTITY_GRADIENT_SHARED,
         ),
+        HARD_LOCAL_TIME_BACKBONE: (
+            TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
+            TITAN_QUANTITY_GRADIENT_SHARED,
+        ),
         "titantpp_weighted_static_memory": (
             TITAN_MEMORY_MODE_STATIC_WEIGHTED,
             TITAN_QUANTITY_GRADIENT_SHARED,
@@ -188,6 +237,7 @@ def build_count_aware_model(
         uses_persistent_memory = memory_mode in {
             TITAN_MEMORY_MODE_PERSISTENT_ONLY,
             TITAN_MEMORY_MODE_STATIC_HARD,
+            TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
             TITAN_MEMORY_MODE_STATIC_WEIGHTED,
             TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
             TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
@@ -196,6 +246,7 @@ def build_count_aware_model(
         }
         uses_hard_memory = memory_mode in {
             TITAN_MEMORY_MODE_STATIC_HARD,
+            TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
             TITAN_MEMORY_MODE_STATIC_WEIGHTED,
             TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
         }
@@ -215,6 +266,7 @@ def build_count_aware_model(
         )
         candidate_names = {
             "titantpp": "count_titan_small_lmm",
+            HARD_LOCAL_TIME_BACKBONE: "count_titan_hard_quantity_local_time",
             "titantpp_weighted_static_memory": "count_titan_static_top4_weighted_tau1",
             "titantpp_no_memory": "count_titan_no_memory",
             "titantpp_gated_soft_memory": "count_titan_gated_soft_memory",
@@ -241,13 +293,20 @@ def build_count_aware_model(
             {
                 "candidate_name": candidate_names[backbone],
                 **({
+                    "routing_contract_id": HARD_LOCAL_TIME_CONTRACT,
+                    "static_retrieval_aggregation": "arithmetic_mean",
+                    "additional_parameter_count": 0,
+                } if memory_mode == TITAN_MEMORY_MODE_HARD_LOCAL_TIME else {}),
+                **({
                     "static_retrieval_aggregation": "softmax_cosine_topk",
                     "static_retrieval_temperature": 1.0,
                     "static_retrieval_contract_id": "hard_lmm_weighted_static_v1",
                     "additional_parameter_count": 0,
                 } if memory_mode == TITAN_MEMORY_MODE_STATIC_WEIGHTED else {}),
                 "backbone_contract_id": (
-                    "W0"
+                    HARD_LOCAL_TIME_CONTRACT
+                    if memory_mode == TITAN_MEMORY_MODE_HARD_LOCAL_TIME
+                    else "W0"
                     if memory_mode == TITAN_MEMORY_MODE_STATIC_WEIGHTED
                     else "B1"
                     if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
@@ -269,6 +328,7 @@ def build_count_aware_model(
                     in {
                         TITAN_MEMORY_MODE_TITANS_MAC,
                         TITAN_MEMORY_MODE_TPP_GATED,
+                        TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
                     }
                     else None
                 ),
@@ -363,7 +423,9 @@ def build_count_aware_model(
                     0.0 if uses_soft_memory or uses_surprise_memory else None
                 ),
                 "time_memory_route": (
-                    "similarity_weighted_static_matcher"
+                    "local_encoder_with_persistent_tokens"
+                    if memory_mode == TITAN_MEMORY_MODE_HARD_LOCAL_TIME
+                    else "similarity_weighted_static_matcher"
                     if memory_mode == TITAN_MEMORY_MODE_STATIC_WEIGHTED
                     else "hard_local_memory_matcher"
                     if uses_hard_memory
@@ -374,7 +436,9 @@ def build_count_aware_model(
                     else "shared_memory_state"
                 ),
                 "quantity_memory_route": (
-                    "hard_lmm_plus_surprise_residual"
+                    "hard_local_memory_matcher"
+                    if memory_mode == TITAN_MEMORY_MODE_HARD_LOCAL_TIME
+                    else "hard_lmm_plus_surprise_residual"
                     if memory_mode == TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE
                     else "shared_memory_state"
                 ),

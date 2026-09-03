@@ -43,6 +43,7 @@ from paper.scripts.count_aware_tpp_backbone.constants import (
     MODEL_ROLES,
     MODEL_ROLE_EXPERIMENTAL,
     MODEL_ROLE_WEIGHTED_STATIC,
+    MODEL_ROLE_HARD_LOCAL_TIME,
     QUANTITY_VARIANT_ALIASES,
     SEEDS,
     SUPPORTED_BACKBONES,
@@ -364,7 +365,7 @@ def main() -> None:
         raise ValueError(f"Unexpected fixed-split SHA-256: {data_sha256}")
     if manifest_sha256 != dataset_contract["split_manifest_sha256"]:
         raise ValueError(f"Unexpected split-manifest SHA-256: {manifest_sha256}")
-    if args.model_role == MODEL_ROLE_WEIGHTED_STATIC:
+    if args.model_role in {MODEL_ROLE_WEIGHTED_STATIC, MODEL_ROLE_HARD_LOCAL_TIME}:
         # Keep the new candidate's held-out rows outside materialized memory.
         raw_frame = load_train_validation_frame(args.data)
     else:

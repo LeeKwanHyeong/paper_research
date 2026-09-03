@@ -36,6 +36,7 @@ TITAN_MEMORY_BACKBONES = (
     "titantpp_titans_mac",
     "titantpp_tpp_gated_memory",
     "titantpp_weighted_static_memory",
+    "titantpp_hard_memory_local_time",
 )
 SUPPORTED_BACKBONES = (*BACKBONES, *TITAN_MEMORY_BACKBONES)
 VARIANT = LOG_MSE_VARIANT
@@ -47,6 +48,7 @@ MODEL_ROLE_T1_BACKBONE_COMPARISON = "t1_backbone_comparison"
 MODEL_ROLE_TIME_HEAD_DIAGNOSTIC = "time_head_diagnostic"
 MODEL_ROLE_TITAN_B012_SCREENING = "titan_b012_screening"
 MODEL_ROLE_WEIGHTED_STATIC = "t0_weighted_static_retrieval"
+MODEL_ROLE_HARD_LOCAL_TIME = "t0_hard_memory_local_time"
 MODEL_ROLES = (
     MODEL_ROLE_EXPERIMENTAL,
     MODEL_ROLE_T0_COMMON_CONTROL,
@@ -55,6 +57,7 @@ MODEL_ROLES = (
     MODEL_ROLE_TIME_HEAD_DIAGNOSTIC,
     MODEL_ROLE_TITAN_B012_SCREENING,
     MODEL_ROLE_WEIGHTED_STATIC,
+    MODEL_ROLE_HARD_LOCAL_TIME,
 )
 T0_COMMON_BACKBONES = ("rmtpp", "thp", "nhp", "sahp", "titantpp")
 TITAN_B012_BACKBONES = (
@@ -92,6 +95,7 @@ BACKBONE_LABELS = {
     "titantpp_titans_mac": "TitanTPP Faithful Titans-MAC",
     "titantpp_tpp_gated_memory": "TitanTPP TPP-specific Gated Memory",
     "titantpp_weighted_static_memory": "Hard-LMM Similarity-Weighted Static Retrieval",
+    "titantpp_hard_memory_local_time": "Hard-LMM Quantity Memory / Local Time",
 }
 
 
@@ -104,6 +108,13 @@ def validate_model_role_contract(
     lambda_tail: float,
 ) -> None:
     """Reject official-role runs that drift from the frozen baseline contract."""
+    if model_role == MODEL_ROLE_HARD_LOCAL_TIME or "titantpp_hard_memory_local_time" in backbones:
+        if model_role != MODEL_ROLE_HARD_LOCAL_TIME or backbones != ("titantpp_hard_memory_local_time",):
+            raise ValueError("Local-time candidate requires its dedicated single-backbone role")
+        if (quantity_variants != (VARIANT,) or time_head_mode != TIME_HEAD_MODE_LEGACY_CLAMPED
+                or lambda_tail != 0.0):
+            raise ValueError("Local-time role requires direct log-MSE, legacy time head and no tail loss")
+        return
     if model_role == MODEL_ROLE_EXPERIMENTAL:
         return
     if model_role == MODEL_ROLE_WEIGHTED_STATIC:
@@ -190,6 +201,7 @@ __all__ = [
     "MODEL_ROLE_T1_INCUMBENT",
     "MODEL_ROLE_TITAN_B012_SCREENING",
     "MODEL_ROLE_WEIGHTED_STATIC",
+    "MODEL_ROLE_HARD_LOCAL_TIME",
     "MODEL_ROLE_TIME_HEAD_DIAGNOSTIC",
     "QUANTITY_VARIANT_ALIASES",
     "SEEDS",

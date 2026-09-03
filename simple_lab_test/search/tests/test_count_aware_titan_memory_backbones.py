@@ -163,6 +163,7 @@ def test_memory_variants_are_opt_in_supported_backbones() -> None:
         "titantpp_titans_mac",
         "titantpp_tpp_gated_memory",
         "titantpp_weighted_static_memory",
+        "titantpp_hard_memory_local_time",
     )
     assert all(name not in BACKBONES for name in TITAN_MEMORY_BACKBONES)
     assert SUPPORTED_BACKBONES == (*BACKBONES, *TITAN_MEMORY_BACKBONES)

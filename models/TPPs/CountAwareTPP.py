@@ -53,6 +53,7 @@ TIME_HEAD_MODES = (
 TITAN_MEMORY_MODE_NONE = "none"
 TITAN_MEMORY_MODE_PERSISTENT_ONLY = "persistent_only"
 TITAN_MEMORY_MODE_STATIC_HARD = "static_hard_lmm"
+TITAN_MEMORY_MODE_HARD_LOCAL_TIME = "hard_lmm_local_time"
 TITAN_MEMORY_MODE_STATIC_WEIGHTED = "static_weighted_lmm"
 TITAN_MEMORY_MODE_STATIC_SOFT_GATED = "static_soft_gated"
 TITAN_MEMORY_MODE_SURPRISE_GATED = "surprise_gated"
@@ -64,6 +65,7 @@ TITAN_MEMORY_MODES = (
     TITAN_MEMORY_MODE_NONE,
     TITAN_MEMORY_MODE_PERSISTENT_ONLY,
     TITAN_MEMORY_MODE_STATIC_HARD,
+    TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
     TITAN_MEMORY_MODE_STATIC_WEIGHTED,
     TITAN_MEMORY_MODE_STATIC_SOFT_GATED,
     TITAN_MEMORY_MODE_SURPRISE_GATED,
@@ -725,6 +727,7 @@ class CountAwareTitanTPP(SharedTimeCountModel):
         uses_persistent_memory = memory_mode in {
             TITAN_MEMORY_MODE_PERSISTENT_ONLY,
             TITAN_MEMORY_MODE_STATIC_HARD,
+            TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
             TITAN_MEMORY_MODE_STATIC_WEIGHTED,
             TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
             TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
@@ -732,6 +735,7 @@ class CountAwareTitanTPP(SharedTimeCountModel):
         }
         uses_hard_memory = memory_mode in {
             TITAN_MEMORY_MODE_STATIC_HARD,
+            TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
             TITAN_MEMORY_MODE_STATIC_WEIGHTED,
             TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
         }
@@ -953,6 +957,9 @@ class CountAwareTitanTPP(SharedTimeCountModel):
         if self.surprise_memory is not None:
             encoded = self.surprise_memory(encoded, mask=mask)
         encoded = encoded * valid
+        if self.memory_mode == TITAN_MEMORY_MODE_HARD_LOCAL_TIME:
+            # Preserve the quantity graph; only the time path bypasses prototypes.
+            return base * valid, encoded
         return encoded, encoded
 
     def encode(
@@ -988,6 +995,7 @@ __all__ = [
     "TITAN_MEMORY_MODE_PERSISTENT_ONLY",
     "TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED",
     "TITAN_MEMORY_MODE_STATIC_HARD",
+    "TITAN_MEMORY_MODE_HARD_LOCAL_TIME",
     "TITAN_MEMORY_MODE_STATIC_WEIGHTED",
     "TITAN_MEMORY_MODE_STATIC_SOFT_GATED",
     "TITAN_MEMORY_MODE_SURPRISE_GATED",
