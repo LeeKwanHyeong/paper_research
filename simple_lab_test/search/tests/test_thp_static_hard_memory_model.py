@@ -1,6 +1,7 @@
 """Executable local contracts for THP plus the original static hard bank."""
 
 import copy
+import hashlib
 import io
 import os
 from pathlib import Path
@@ -29,6 +30,18 @@ from paper.scripts.count_aware_tpp_backbone.training import build_optimizer
 ROOT = Path(__file__).resolve().parents[3]
 DEVICE = os.environ.get("THP_STATIC_MEMORY_TEST_DEVICE", "cpu")
 TOL = dict(rtol=1e-5, atol=1e-6) if DEVICE == "cuda" else dict(rtol=0., atol=0.)
+FROZEN_FACTORY_SHA256 = "0937ccf3219f5c75f5d8ec01cee6a5716e2472cdf546734029f021f9bfc8c588"
+
+
+def frozen_factory_source():
+    # Isolated deployment snapshots have no Git database. The exported reference
+    # must still be byte-identical to the pre-implementation contract revision.
+    exported = os.environ.get("THP_STATIC_MEMORY_REFERENCE_FACTORY")
+    source = Path(exported).read_bytes() if exported else subprocess.check_output(
+        ["git", "show", "7f0bf8d:models/TPPs/CountAwareFactory.py"], cwd=ROOT)
+    if hashlib.sha256(source).hexdigest() != FROZEN_FACTORY_SHA256:
+        raise ValueError("Frozen reference factory checksum mismatch")
+    return source.decode()
 
 
 def build(backbone=CANDIDATE, length=84):
@@ -320,8 +333,7 @@ def test_role_requires_only_the_new_candidate_not_a_default_benchmark():
 
 @pytest.mark.parametrize("backbone", ["thp", "titantpp"])
 def test_legacy_factory_metadata_parameters_and_outputs_unchanged(backbone):
-    old_source = subprocess.check_output(
-        ["git", "show", "7f0bf8d:models/TPPs/CountAwareFactory.py"], cwd=ROOT, text=True)
+    old_source = frozen_factory_source()
     namespace = {"__name__": "frozen_reference_factory"}
     exec(compile(old_source, "frozen_reference_factory", "exec"), namespace)
     torch.manual_seed(42)
