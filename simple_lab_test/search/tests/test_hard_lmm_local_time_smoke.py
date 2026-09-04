@@ -89,7 +89,8 @@ def test_candidate_entrypoint_filters_before_materializing():
 
 
 @pytest.mark.parametrize("violation", [None, "nonfinite", "scope", "optimizer", "route", "digest", "history"])
-def test_artifact_audit_accepts_complete_e1_and_rejects_drift(tmp_path, violation):
+@pytest.mark.parametrize("screening", [False, True])
+def test_artifact_audit_accepts_complete_e1_and_rejects_drift(tmp_path, violation, screening):
     model, meta = build_count_aware_model(smoke.BACKBONE, hidden_dim=16, train_log_mean=1.5,
         max_seq_len=8, quantity_variant=smoke.VARIANT, lambda_tail=0., time_head_mode="legacy_clamped_rmtpp")
     revision = "a" * 40
@@ -112,6 +113,11 @@ def test_artifact_audit_accepts_complete_e1_and_rejects_drift(tmp_path, violatio
         checkpoint_state_sha256=canonical_state_dict_sha256(model.state_dict()))
     checkpoint = dict(backbone=smoke.BACKBONE, variant=smoke.VARIANT, encoder_config=meta,
                       source_revision=revision, model_state_dict=model.state_dict())
+    history = [{"epoch": 1}]
+    if screening:
+        launch.update(epochs=300, early_stopping=dict(min_epochs=40, patience=40, monitor="validation_joint_objective"))
+        summary.update(epochs=300, completed_epochs=41)
+        history = [{"epoch": epoch, "val_joint_objective": 2., "train_event_count": 3} for epoch in range(1, 42)]
     optimizer = torch.optim.AdamW(model.parameters(), lr=.001).state_dict()
     if violation == "nonfinite":
         summary["quantity_rows"][0]["qty_mae"] = float("nan")
@@ -129,12 +135,29 @@ def test_artifact_audit_accepts_complete_e1_and_rejects_drift(tmp_path, violatio
     # A malformed external artifact can contain NaN despite our writer rejecting it.
     import json
     (run / "summary.json").write_text(json.dumps(summary))
-    smoke.save(run / "history.json", [{"epoch": 1}] if violation == "history" else {"history": [{"epoch": 1}]})
+    smoke.save(run / "history.json", history if violation == "history" else {"history": history})
     torch.save(checkpoint, run / "best_val_joint_objective_model.pt")
-    torch.save(checkpoint | {"optimizer_state_dict": optimizer}, run / "last_epoch_state.pt")
+    last = checkpoint | {"optimizer_state_dict": optimizer, "best_state_dict": model.state_dict()}
+    if screening:
+        last["model_state_dict"] = {key: value + .01 for key, value in model.state_dict().items()}
+    torch.save(last, run / "last_epoch_state.pt")
     if violation is None:
-        assert smoke.audit_run(tmp_path, row, summary, revision, spec)["status"] == "passed"
+        assert smoke.audit_run(tmp_path, row, summary, revision, spec,
+                               screening=screening, write_audit=False)["status"] == "passed"
+        assert not (tmp_path / "audit.json").exists()
+        assert smoke.audit_run(tmp_path, row, summary, revision, spec, screening=screening)["status"] == "passed"
+        if screening:
+            summary["best_epoch"] = 2
+            smoke.save(run / "summary.json", summary)
+            with pytest.raises(ValueError, match="checkpoint selection"):
+                smoke.audit_run(tmp_path, row, summary, revision, spec, screening=True, write_audit=False)
+            summary["best_epoch"] = 1
+            summary["completed_epochs"] = 40
+            smoke.save(run / "summary.json", summary)
+            smoke.save(run / "history.json", {"history": history[:-1]})
+            with pytest.raises(ValueError, match="Premature completion"):
+                smoke.audit_run(tmp_path, row, summary, revision, spec, screening=True, write_audit=False)
     else:
         with pytest.raises(ValueError):
-            smoke.audit_run(tmp_path, row, summary, revision, spec)
+            smoke.audit_run(tmp_path, row, summary, revision, spec, screening=screening)
         assert not (tmp_path / "audit.json").exists()

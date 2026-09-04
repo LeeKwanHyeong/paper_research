@@ -84,7 +84,7 @@ def command(row, project, output, revision):
     return result + ["--allow-partial-contract"]
 
 
-def audit_run(output, row, reference, revision, spec):
+def audit_run(output, row, reference, revision, spec, *, screening=False, write_audit=True):
     import torch
     from models.TPPs.CountAwareFactory import validate_checkpoint_route
     from simple_lab_test.search.common.runner import canonical_state_dict_sha256
@@ -98,13 +98,24 @@ def audit_run(output, row, reference, revision, spec):
         finite(payload)
     require(c["status"] == "complete" and c["completed_run_count"] == 1, "Run incomplete")
     require(c["backbones"] == [BACKBONE] and c["seeds"] == [42] and c["model_role"] == ROLE, "Wrong candidate")
-    for key, expected in {"epochs": 1, "batch_size": 128, "lr": .001, "hidden_dim": 64,
+    budget, minimum = (300, 40) if screening else (1, 1)
+    for key, expected in {"epochs": budget, "batch_size": 128, "lr": .001, "hidden_dim": 64,
                           "grad_clip": 1., "lambda_log_qty": 1., "lambda_tail": 0.,
                           "data_sha256": row["data_sha256"],
                           "split_manifest_sha256": row["split_manifest_sha256"]}.items():
         require(c[key] == expected, f"Launch contract mismatch: {key}")
-    require(s["status"] == "success" and s["epochs"] == s["best_epoch"] == 1, "Wrong smoke budget/status")
-    require(len(history) == 1 and history[0]["epoch"] == 1, "Unexpected history/resume")
+    require(s["status"] == "success" and s["epochs"] == budget, "Wrong budget/status")
+    require(minimum <= len(history) <= budget and
+            [r["epoch"] for r in history] == list(range(1, len(history) + 1)), "Unexpected history/resume")
+    best = min(history, key=lambda r: r["val_joint_objective"]) if screening else history[0]
+    require(s["best_epoch"] == best["epoch"], "Wrong checkpoint selection")
+    if screening:
+        require(s["completed_epochs"] == len(history), "Completed epoch mismatch")
+        require(len(history) == budget or len(history) - best["epoch"] >= 40, "Premature completion")
+        for length in range(minimum, len(history)):
+            prefix_best = min(history[:length], key=lambda r: r["val_joint_objective"])["epoch"]
+            require(length - prefix_best < 40, "Training continued after patience exhausted")
+        require(all(r["train_event_count"] == spec["train_targets"] for r in history), "Partial train epoch")
     require(c["source_revision"] == s["source_revision"] == revision and
             s["source_revision_history"] == [revision], "Revision or resume mismatch")
     require(not c["partial_smoke"] and set(c["split_rows"]) == {"train", "validation"}, "Subsampling/test materialization")
@@ -115,7 +126,7 @@ def audit_run(output, row, reference, revision, spec):
     for key, expected in {"mode": "legacy_clamped_rmtpp", "time_scale": 3., "time_w_max": 10. / 3.,
                           "time_intercept_limit": 30., "time_head_lr_multiplier": 1.}.items():
         require(c["time_head"][key] == expected, f"Time launch contract mismatch: {key}")
-    for key, expected in {"min_epochs": 1, "patience": 1, "monitor": "validation_joint_objective"}.items():
+    for key, expected in {"min_epochs": minimum, "patience": minimum, "monitor": "validation_joint_objective"}.items():
         require(c["early_stopping"][key] == expected, f"Selection mismatch: {key}")
     require(c["time_head"]["train_time_statistics"]["target_count"] == spec["train_targets"], "Train count changed")
     for rows in (s["quantity_rows"], s["history_rows"]):
@@ -136,18 +147,21 @@ def audit_run(output, row, reference, revision, spec):
         require(all(torch.isfinite(t).all() for t in payload["model_state_dict"].values()), "Nonfinite checkpoint")
     state_digest = canonical_state_dict_sha256(checkpoint["model_state_dict"])
     require(state_digest == s["checkpoint_state_sha256"], "Checkpoint digest mismatch")
-    require(state_digest == canonical_state_dict_sha256(last["model_state_dict"]), "e1 last/best mismatch")
+    saved_best = last["best_state_dict"] if screening else last["model_state_dict"]
+    require(state_digest == canonical_state_dict_sha256(saved_best), "Saved best checkpoint mismatch")
     groups = last["optimizer_state_dict"]["param_groups"]
     require(len(groups) == 1, "Unexpected optimizer groups")
     for key, expected in {"lr": .001, "weight_decay": .01, "eps": 1e-8,
                           "betas": (.9, .999), "amsgrad": False}.items():
         require(groups[0][key] == expected, f"Optimizer mismatch: {key}")
-    result = {"status": "passed", "dataset": row["dataset"], "phase": "full_e1_smoke",
+    result = {"status": "passed", "dataset": row["dataset"], "phase": "e300_screening" if screening else "full_e1_smoke",
               "summary_sha256": digest(output / SUMMARY), "history_sha256": digest((output / SUMMARY).parent / "history.json"),
               "checkpoint_file_sha256": digest(checkpoint_path), "checkpoint_state_sha256": state_digest,
               "finite": True, "held_out_test_evaluated": False, "train_validation_counts_match": True,
-              "route_and_optimizer_verified": True, "performance_acceptance": "not_evaluated_e1_only"}
-    save(output / "audit.json", result)
+              "route_and_optimizer_verified": True,
+              "performance_acceptance": "pending_comparison" if screening else "not_evaluated_e1_only"}
+    if write_audit:
+        save(output / "audit.json", result)
     return result
 
 
