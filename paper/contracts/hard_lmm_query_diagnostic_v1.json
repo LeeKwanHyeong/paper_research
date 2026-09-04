@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "contract_id": "hard_lmm_query_diagnostic_v1",
+  "created_on": "2026-09-05",
+  "source_baseline_revision": "1003033",
+  "scope": "local_frozen_train_only_diagnostic_before_conditional_query_implementation",
+  "authorization": {
+    "train_only_diagnostic": true,
+    "query_implementation_if_evidence_passes": true,
+    "local_tests_and_commit": true,
+    "conditional_5090_source_sync_cuda_full_e1": true,
+    "e300_or_additional_seeds_datasets": false,
+    "held_out_test": false,
+    "service_or_secret_changes": false,
+    "push": false
+  },
+  "datasets": ["yellow_trip_hourly", "insta_market_basket"],
+  "original_registry": "paper/contracts/count_aware_hard_lmm_frozen_probe_v1.json",
+  "original_registry_sha256": "a9430a67f81c5c6a3b2baccd5a0fef425b57b98d3706637f9f3040c909540356",
+  "separate_key_artifact": "search_artifacts/hard_lmm_key_value_seed42_e300_5090_20260904",
+  "separate_key_audit": "paper/results/hard_lmm_key_value_screening_5090_20260904/final_audit.json",
+  "separate_key_audit_sha256": "64f9dc05e1edf8bb74a81908c04b79da30fcaa990fad0ce231663fde461599f9",
+  "sampling": {
+    "maximum_targets_per_dataset": 8192,
+    "seed": 42,
+    "algorithm": "torch.randperm(train_dataset_length, seed42)[:8192], sorted ascending",
+    "paired_models_use_identical_target_indices": true,
+    "population": "chronological_split == train, filtered lazily before collection",
+    "loader": "original RMTPPWeekLookbackDataset with frozen lookback/max_seq_len",
+    "batch_size": 64,
+    "device": "cpu",
+    "torch_threads": 4,
+    "fold": "int.from_bytes(SHA256('20260905:' + str(series_index))[:8], 'big') % 2",
+    "minimum_distinct_series_per_fold": 10,
+    "folds": 2,
+    "fold_units": "disjoint series; both halves only from original training split"
+  },
+  "features": {
+    "h": "local encoder state at last observed event; model eval and frozen",
+    "history_level": "mean log1p(nonnegative quantity) over observed events in the current legal context",
+    "latest_deviation": "last observed log1p(quantity) minus history_level",
+    "short_history": "one observed event gives its log quantity and deviation zero; empty history rejected",
+    "excluded": ["target_quantity", "target_duration", "padding", "future_events", "validation_rows", "held_out_rows"],
+    "label_only": "log1p(target_quantity) minus current model softplus(quantity_logit)",
+    "normalization_fact": "T0 already inputs log1p(gap) and log1p(count); this diagnoses explicit accessibility, not absent or RevIN-erased information"
+  },
+  "retrieval_diagnostics": [
+    "actual top4 membership and sorted-set paired overlap",
+    "actual aggregation weights: uniform 0.25 original, selected-score softmax separate-key",
+    "prototype usage effective count and top4 share",
+    "within-model selected value projections through its own quantity head",
+    "quantity residual projection and memory prediction effect",
+    "history-level/deviation descriptive strata fitted on train only"
+  ],
+  "crossfit": {
+    "decision_checkpoint": "separate_key",
+    "original_checkpoint_role": "descriptive context, not a second opportunity to pass",
+    "neighbor_count": 64,
+    "distance": "cosine on normalized h; neighbors only from opposite series fold",
+    "constant_control": "opposite-fold mean log residual",
+    "h_only_control": "mean log residual among the 64 cosine neighbors",
+    "two_stat_probe": "h-only correction plus local ridge slopes on the two history statistics",
+    "standardization": "opposite-fold statistics mean and population std only; zero std replaced with one",
+    "local_fit": "neighbor-centered two statistics and label; ridge=1 on summed squared error; unpenalized local intercept",
+    "ridge": 1.0,
+    "metric": "MSE of predicting the label-only log1p residual, not a trained candidate performance score",
+    "bootstrap": "500 deterministic series-cluster resamples of out-of-fold paired squared-error improvement, seed20260905",
+    "bootstrap_seed": 20260905,
+    "bootstrap_samples": 500,
+    "lower_band_quantile": 0.05,
+    "no_hyperparameter_search": true
+  },
+  "evidence_gate": {
+    "instacart_pooled_relative_mse_improvement_vs_h_only_minimum": 0.01,
+    "instacart_improvement_in_both_folds": true,
+    "instacart_pooled_mse_below_constant": true,
+    "instacart_cluster_paired_improvement_lower_band_strictly_positive": true,
+    "taxi_pooled_relative_mse_regression_vs_h_only_maximum": 0.01,
+    "source_input_checkpoint_integrity_and_all_finite": true,
+    "if_pass": "define one causal two-stat residual query contract, then perform authorized local implementation and conditional 5090 CUDA/e1",
+    "if_fail_or_unassessable": "hold query implementation; document missing support and mechanism alternatives without automatically implementing them",
+    "thresholds_frozen_before_diagnostic_outputs": true
+  },
+  "limitations": [
+    "The frozen encoders were trained on all of these train rows; helper crossfit does not make this an independent generalization estimate.",
+    "Both checkpoints were selected using validation; this diagnostic never reads validation target rows or held-out results.",
+    "Different fitted checkpoints may have different latent coordinate systems. Prototype-ID overlap is descriptive, not semantic equivalence or causal key-only attribution.",
+    "Residual decodability does not prove that a query-only gradient path can use the signal or that a fresh model improves.",
+    "No completed Instacart weighted-only e300 control exists; effects cannot be attributed solely to key/value separation.",
+    "The cluster bootstrap band describes train-internal stability and is not a held-out statistical significance claim.",
+    "The fixed sample and linear local probe can miss nonlinear or rare-stratum effects; failure is insufficient support, not impossibility."
+  ]
+}

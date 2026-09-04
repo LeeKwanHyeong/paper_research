@@ -1,0 +1,39 @@
+{
+  "status": "passed",
+  "review_type": "independent_read_only_recomputation_from_saved_corrections_and_labels",
+  "file_hashes_checked": 169,
+  "file_hash_mismatches": 0,
+  "paired_target_series_fold_context_quantity_statistics_history_equal": true,
+  "series_disjoint_and_sha_fold_assignment_verified": true,
+  "maximum_numpy_vs_reported_mse_difference": 5.551115123125783e-17,
+  "bootstrap_bands_independently_reproduced": 4,
+  "new_fits_or_model_inference": false,
+  "validation_or_held_out_rows_read": false,
+  "gate_reproduced": "hold_query_implementation",
+  "separate_key": {
+    "insta_market_basket": {
+      "constant_mse": 0.24577767089597802,
+      "h_only_mse": 0.24897549146685266,
+      "two_stat_mse": 0.2547492426807387,
+      "relative_mse_regression": 0.023190038424543893,
+      "both_folds_worse": true,
+      "top_four_selection_share": 0.992218017578125,
+      "effective_prototypes": 4.194797706334164
+    },
+    "yellow_trip_hourly": {
+      "constant_mse": 0.14126078656280713,
+      "h_only_mse": 0.13872395133030518,
+      "two_stat_mse": 0.1399749984211943,
+      "relative_mse_regression": 0.009018248679424742,
+      "both_folds_worse": true,
+      "top_four_selection_share": 0.622589111328125,
+      "effective_prototypes": 8.73063769421142
+    }
+  },
+  "required_caveats": [
+    "This fixed train-internal helper failure is not evidence that all query improvements are impossible.",
+    "Concentration alone is not a proven failure cause: Taxi concentration also increased while earlier validation performance improved.",
+    "High cosine similarity alone does not prove residual-predictive neighborhoods; the Instacart constant control beats both local controls.",
+    "Memory removal from a coadapted checkpoint does not isolate its contribution to fresh training."
+  ]
+}
