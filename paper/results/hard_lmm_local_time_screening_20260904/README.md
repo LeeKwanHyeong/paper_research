@@ -1,6 +1,35 @@
 # Hard-LMM Local Time: Approved Fresh Screening
 
-## Latest Status: GDM Approval Required
+## Latest Status: Awaiting User Sudo Authentication
+
+2026-09-04 12:51 KST: the user explicitly approved temporarily stopping 5080
+GDM after the graphical-session termination risk was explained. The authorized
+`sudo -n systemctl stop gdm` returned `sudo: a password is required`; GDM was
+not stopped. Approval is no longer missing. The remaining action is for the user
+to authenticate directly in their terminal; do not request a password in chat,
+search for stored credentials, kill the desktop instead, or bypass preflight.
+
+```bash
+ssh -t 5080 'sudo systemctl stop gdm'
+```
+
+Non-GPU preparation is now complete: the committed 727,698-byte package was
+transferred to 5080, verified against its archive digest, and unpacked into the
+new `/home/leekwanhyeong/workspace/paper_research_local_time_screening_484a052`
+snapshot without overwriting either the frozen model tree or any artifacts.
+All 253 source/contract/report hashes and the immutable training manifest pass.
+The screening readiness function also validated the exact runtime, pinned
+baseline/data identities and both existing e1 artifacts, without training or
+inference. Evidence: `server_readiness_1253.json`, checked at 12:53 KST.
+GDM was still active; training and its hourly monitor have not started.
+
+Next: after the user completes sudo authentication, confirm GDM/graphics are
+inactive and the unchanged GPU/kernel preflight passes. Then launch the prepared
+Taxi-to-RAF job, confirm the first epoch, and create its hourly monitor. Do not
+ask for GDM or training approval again, and do not rerun CUDA/e1 or repackage
+the already verified source unless its integrity check fails.
+
+## Earlier State: GDM Approval Required
 
 2026-09-04 12:43 KST: SSH connectivity to 5080 is restored. The frozen training
 manifest and all source checksums match; Python 3.12.13, PyTorch 2.11.0+cu130
