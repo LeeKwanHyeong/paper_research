@@ -1,0 +1,270 @@
+{
+  "schema_version": 1,
+  "registry_id": "count_aware_thp_static_hard_memory_baselines_v1",
+  "created_on": "2026-09-04",
+  "scope": "original_seed42_validation_baselines_only",
+  "source_registry": "paper/contracts/count_aware_hard_lmm_frozen_probe_v1.json",
+  "source_registry_sha256": "a9430a67f81c5c6a3b2baccd5a0fef425b57b98d3706637f9f3040c909540356",
+  "datasets": [
+    {
+      "dataset": "yellow_trip_hourly",
+      "contract_dataset": "yellow_trip_hourly",
+      "artifact_dir": "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control",
+      "data_path": "sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+      "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+      "split_manifest_path": "sample_data/new_york_taxi/yellow_trip_hourly_split_manifest.json",
+      "split_manifest_sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85",
+      "lookback": 168,
+      "max_seq_len": 256,
+      "launch_contract_sha256": "f9d1d380ac8f96d359d2cc976fb705113fddc2293b01088fe6696127547ba069",
+      "baseline_source_revision": "6a01aea9024db9e3ef6cfdd2c3d0219ceb320856",
+      "train_targets": 38393,
+      "validation_targets": 8268,
+      "quantity_contract": {
+        "boundaries": [
+          7.0,
+          686.0,
+          1562.0,
+          3449.0
+        ],
+        "quantiles": [
+          0.5,
+          0.9,
+          0.95,
+          0.99
+        ],
+        "strata": [
+          {
+            "stratum": "le_p50",
+            "stratum_label": "<= 7",
+            "stratum_order": 0
+          },
+          {
+            "stratum": "p50_p90",
+            "stratum_label": "(7, 686]",
+            "stratum_order": 1
+          },
+          {
+            "stratum": "p90_p95",
+            "stratum_label": "(686, 1562]",
+            "stratum_order": 2
+          },
+          {
+            "stratum": "p95_p99",
+            "stratum_label": "(1562, 3449]",
+            "stratum_order": 3
+          },
+          {
+            "stratum": "gt_p99",
+            "stratum_label": "> 3449",
+            "stratum_order": 4
+          }
+        ]
+      },
+      "history_length_contract": {
+        "boundaries": [
+          64,
+          128
+        ],
+        "definition": "number of observed events before the validation target",
+        "strata": [
+          {
+            "stratum": "history_le_64",
+            "stratum_label": "History <= 64",
+            "stratum_order": 0
+          },
+          {
+            "stratum": "history_65_128",
+            "stratum_label": "History 65-128",
+            "stratum_order": 1
+          },
+          {
+            "stratum": "history_gt_128",
+            "stratum_label": "History > 128",
+            "stratum_order": 2
+          }
+        ]
+      },
+      "historical_split_rows": {
+        "test": 8327,
+        "train": 38524,
+        "validation": 8268
+      },
+      "baselines": {
+        "thp": {
+          "files_sha256": {
+            "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control/runs/thp/count_only_log_regression/seed_42/summary.json": "37509c6503896d88ac3b789f69ec6efc5b44055081f20a93144a1beb4a3df386",
+            "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control/runs/thp/count_only_log_regression/seed_42/history.json": "841ce6c8ff4dcd0e7a167b853b38557e66e72af082bf44e378151f1697479a13",
+            "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control/runs/thp/count_only_log_regression/seed_42/best_val_joint_objective_model.pt": "4f93471cf4131a8b85f12cc593ba8918ad75e3926422431d7828c21ca9e85960",
+            "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control/runs/thp/count_only_log_regression/seed_42/last_epoch_state.pt": "b447c825b564d73908c012fb732358910a3c6d8ec5f71271dfad4c221743eded"
+          },
+          "checkpoint_state_sha256": "a85198edac465c61a2974d717f274fcfde253a468425d2a581fb99175dfbec07",
+          "parameter_count": 100291,
+          "completed_epochs": 65,
+          "best_epoch": 25,
+          "body_mae": 20.435579890185025,
+          "gt_p99_mae": 805.731083737144,
+          "best_val_qty_mae": 39.10815288529456,
+          "best_val_qty_rmse": 139.96028336914267,
+          "best_val_time_nll": 1.3603334355582115,
+          "best_val_joint_objective": 1.5473653607874258
+        },
+        "titantpp": {
+          "files_sha256": {
+            "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control/runs/titantpp/count_only_log_regression/seed_42/summary.json": "771bc13643ad71e21c7533586dbb457ff043a57a12804c77355fcffb192a8c44",
+            "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control/runs/titantpp/count_only_log_regression/seed_42/history.json": "6a2d3b97af50582e6b65997933a1c4c195b0b770e5260efe83bab48558395755",
+            "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control/runs/titantpp/count_only_log_regression/seed_42/best_val_joint_objective_model.pt": "d5a69ac6c12b2249b3812631a244657042d168b1030755fd2aa63ab980ea6ab3",
+            "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control/runs/titantpp/count_only_log_regression/seed_42/last_epoch_state.pt": "f11d9e2b5c6aab7bb19f372635981a6939a3b16f55adda4ecec4247f81418e0c"
+          },
+          "checkpoint_state_sha256": "2e9ed10989e8a78c881e5b4e6888f769fffaa0d19030b4a2b91abd202135f0a6",
+          "parameter_count": 89795,
+          "completed_epochs": 42,
+          "best_epoch": 2,
+          "body_mae": 23.16740661211176,
+          "gt_p99_mae": 1166.2824212569224,
+          "best_val_qty_mae": 51.76773159866986,
+          "best_val_qty_rmse": 181.5375935825544,
+          "best_val_time_nll": 1.3664302460355464,
+          "best_val_joint_objective": 1.557602497507076
+        }
+      },
+      "prospective_absolute_gate_limits": {
+        "body_mae_max": 20.435579890185025,
+        "overall_mae_max": 39.10815288529456,
+        "overall_rmse_max": 137.1610777017598,
+        "gt_p99_mae_max": 789.6164620624011,
+        "time_nll_max": 1.3703334355582115
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "contract_dataset": "raf_spare_parts",
+      "artifact_dir": "search_artifacts/count_aware_raf_t0_e300_20260824/raf_spare_parts/t0_common_control",
+      "data_path": "benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_with_split.parquet",
+      "data_sha256": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d",
+      "split_manifest_path": "benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_split_manifest.json",
+      "split_manifest_sha256": "cd2458aa3809014aa74b8a121572a74e3d86dc520a690335d79a1e5150899e27",
+      "lookback": 84,
+      "max_seq_len": 84,
+      "launch_contract_sha256": "342ba56cb7bdf459e519405c6a68ad821ceb4031e0f854e5f5d08e26e091efc0",
+      "baseline_source_revision": "c7d362e206d8e5d78d96917f03b17b9ad0f50374",
+      "train_targets": 25779,
+      "validation_targets": 6690,
+      "quantity_contract": {
+        "boundaries": [
+          2.0,
+          30.0,
+          60.0,
+          200.0
+        ],
+        "quantiles": [
+          0.5,
+          0.9,
+          0.95,
+          0.99
+        ],
+        "strata": [
+          {
+            "stratum": "le_p50",
+            "stratum_label": "<= 2",
+            "stratum_order": 0
+          },
+          {
+            "stratum": "p50_p90",
+            "stratum_label": "(2, 30]",
+            "stratum_order": 1
+          },
+          {
+            "stratum": "p90_p95",
+            "stratum_label": "(30, 60]",
+            "stratum_order": 2
+          },
+          {
+            "stratum": "p95_p99",
+            "stratum_label": "(60, 200]",
+            "stratum_order": 3
+          },
+          {
+            "stratum": "gt_p99",
+            "stratum_label": "> 200",
+            "stratum_order": 4
+          }
+        ]
+      },
+      "history_length_contract": {
+        "boundaries": [
+          64,
+          128
+        ],
+        "definition": "number of observed events before the validation target",
+        "strata": [
+          {
+            "stratum": "history_le_64",
+            "stratum_label": "History <= 64",
+            "stratum_order": 0
+          },
+          {
+            "stratum": "history_65_128",
+            "stratum_label": "History 65-128",
+            "stratum_order": 1
+          },
+          {
+            "stratum": "history_gt_128",
+            "stratum_label": "History > 128",
+            "stratum_order": 2
+          }
+        ]
+      },
+      "historical_split_rows": {
+        "test": 5226,
+        "train": 30779,
+        "validation": 6690
+      },
+      "baselines": {
+        "thp": {
+          "files_sha256": {
+            "search_artifacts/count_aware_raf_t0_e300_20260824/raf_spare_parts/t0_common_control/runs/thp/count_only_log_regression/seed_42/summary.json": "46747c09d2a984979dcc4cc7a5b4d94e406b0b9a7a65e4955f25d78a39d8dcf0",
+            "search_artifacts/count_aware_raf_t0_e300_20260824/raf_spare_parts/t0_common_control/runs/thp/count_only_log_regression/seed_42/history.json": "caecbf3a9701e8ece4a38d86d39f9f0ecc74a0d2ab085af3d22504a342539613",
+            "search_artifacts/count_aware_raf_t0_e300_20260824/raf_spare_parts/t0_common_control/runs/thp/count_only_log_regression/seed_42/best_val_joint_objective_model.pt": "7bff19ddcaa03f923916b10feb32516a020d59144684ec0a5a96cf26f7ed70a9",
+            "search_artifacts/count_aware_raf_t0_e300_20260824/raf_spare_parts/t0_common_control/runs/thp/count_only_log_regression/seed_42/last_epoch_state.pt": "698157a3ac9ea425b11d402625198ee9ed14e83c28119bde7ffa3964a49bb744"
+          },
+          "checkpoint_state_sha256": "8f4c9705efc09f4388ee11289b736ee275de042b9784c9f75ed958228571b4a7",
+          "parameter_count": 100291,
+          "completed_epochs": 60,
+          "best_epoch": 20,
+          "body_mae": 4.349095600129957,
+          "gt_p99_mae": 315.74019464492795,
+          "best_val_qty_mae": 9.092431926353095,
+          "best_val_qty_rmse": 36.222067962230845,
+          "best_val_time_nll": 3.2758202337897946,
+          "best_val_joint_objective": 3.8361180483493036
+        },
+        "titantpp": {
+          "files_sha256": {
+            "search_artifacts/count_aware_raf_t0_e300_20260824/raf_spare_parts/t0_common_control/runs/titantpp/count_only_log_regression/seed_42/summary.json": "3a94e7f822d473a1d2244e689a4152921daa685d27c784953446e88668fb6404",
+            "search_artifacts/count_aware_raf_t0_e300_20260824/raf_spare_parts/t0_common_control/runs/titantpp/count_only_log_regression/seed_42/history.json": "284da65138d3087bec70f7f5bf816ce0f2fe50b78fd50eaf7a782465c0594cef",
+            "search_artifacts/count_aware_raf_t0_e300_20260824/raf_spare_parts/t0_common_control/runs/titantpp/count_only_log_regression/seed_42/best_val_joint_objective_model.pt": "cc8501aa4a5dfa703bb93bdbe4d13987742b46d4e50d8cd2b7a6ef5de2975e8c",
+            "search_artifacts/count_aware_raf_t0_e300_20260824/raf_spare_parts/t0_common_control/runs/titantpp/count_only_log_regression/seed_42/last_epoch_state.pt": "4d76382d2780b36ed27eb7e20e4d14d66fae021b37c95768bb7b9eab3b7a0843"
+          },
+          "checkpoint_state_sha256": "6ae2bc4ab638bc72b191bf3e4688862c5dffc2895114e1dfca20f53cf829a851",
+          "parameter_count": 78787,
+          "completed_epochs": 60,
+          "best_epoch": 20,
+          "body_mae": 4.2259422035195735,
+          "gt_p99_mae": 313.5108126568794,
+          "best_val_qty_mae": 9.08649149016771,
+          "best_val_qty_rmse": 36.12338839210351,
+          "best_val_time_nll": 3.2851159643699237,
+          "best_val_joint_objective": 3.842684096997807
+        }
+      },
+      "prospective_absolute_gate_limits": {
+        "body_mae_max": 4.014645093343595,
+        "overall_mae_max": 9.092431926353095,
+        "overall_rmse_max": 35.49762660298623,
+        "gt_p99_mae_max": 309.4253907520294,
+        "time_nll_max": 3.2858202337897944
+      }
+    }
+  ]
+}

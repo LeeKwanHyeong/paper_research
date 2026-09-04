@@ -1,0 +1,53 @@
+{
+  "status": "passed",
+  "audited_at": "2026-09-04T08:02:40.590443+00:00",
+  "base_code_revision": "af14bcfba59fef6f5b9f1d7c4682fba804beddaa",
+  "runtime": {
+    "python": "3.12.10",
+    "torch": "2.7.1"
+  },
+  "registry_sha256": "92c6165b43c7a11fa515ce66be326b133a4f83b428a28d240a26985d2c2d7a8e",
+  "baselines": [
+    {
+      "dataset": "yellow_trip_hourly",
+      "model": "thp",
+      "status": "passed",
+      "files_unchanged": true
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "model": "titantpp",
+      "status": "passed",
+      "files_unchanged": true
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "thp",
+      "status": "passed",
+      "files_unchanged": true
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "titantpp",
+      "status": "passed",
+      "files_unchanged": true
+    }
+  ],
+  "checks": [
+    "file/state digests",
+    "full train/validation target counts",
+    "strict joint selector/patience",
+    "finite metrics and checkpoint/optimizer tensors",
+    "AdamW and legacy head",
+    "weighted strata totals",
+    "THP/Hard-LMM quantity and history stratum labels and counts identical",
+    "historical/current CountAwareTHP and THPEncoderLayer AST equality"
+  ],
+  "scope": "local metadata/hash/CPU tensor audit; no model creation, forward, optimizer step, dataset materialization, server access or test evaluation",
+  "reuse": "eligible for historical validation comparison subject to unchanged implementation/training contract and prelaunch re-audit",
+  "caveats": [
+    "Historical split_rows includes test counts; absence of test evaluation does not prove absence of test-row materialization.",
+    "Candidate must filter test before materialization and match train/validation counts and strata.",
+    "Single seed and historical runtime; no matched-runtime/bitwise replay or statistical superiority claim."
+  ]
+}
