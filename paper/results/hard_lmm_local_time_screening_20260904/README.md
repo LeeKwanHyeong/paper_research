@@ -1,5 +1,39 @@
 # Hard-LMM Local Time: Approved Fresh Screening
 
+## Latest Status: GDM Approval Required
+
+2026-09-04 12:43 KST: SSH connectivity to 5080 is restored. The frozen training
+manifest and all source checksums match; Python 3.12.13, PyTorch 2.11.0+cu130
+and CUDA 13.0 match the successful smoke environment. No CUDA compute job or
+tmux session is running. NVIDIA-SMI reports 184/16,303 MiB used, utilization 0%,
+with gnome-shell (149 MiB) and Xwayland (6 MiB). The accessible kernel log has
+no Xid/OOM in the last hour. These are read-only observations, not a stress test.
+
+GDM is active, so the original headless preflight correctly blocks launch.
+The user has been asked to approve stopping GDM temporarily because doing so
+can terminate the graphical session and its applications. GDM has not been
+stopped; no process or service has been changed. Source transfer, fresh training
+and its scheduler have not started. The intended output artifact does not exist.
+
+The committed orchestration revision is `484a052cc820c111dcd514e90ee294bcba59cacb`;
+the separate training snapshot remains `b9d0ac0`. A 727,698-byte local package
+contains 253 committed source/contract/smoke-report files, plus its manifest and
+an empty root-discovery sentinel. No dataset, checkpoint or secret is packaged.
+`package.json` records its archive and manifest digests. Isolated package tests
+passed **55/55** (`isolated_package_tests.xml`); they do not rerun CUDA/e1. Tests and
+`server_preflight_1243.json` preserve readiness evidence without GPU training.
+
+Next: obtain explicit GDM-stop approval, confirm the headless preflight again,
+transfer and checksum the separate orchestration snapshot, launch Taxi then RAF,
+confirm the first epoch and create one hourly monitor. Training approval is
+already granted; do not weaken the preflight or repeat completed CUDA/e1 runs.
+The user's follow-up also approves the previously requested Notion publication
+of internal paths, revision identifiers and experiment status to the existing
+experiment page. Publication and readback succeeded at 12:45 KST; the prior
+weighted-candidate cancellation remains intact. Evidence is in
+`notion_publication_resumed.json`; the earlier permission denial is preserved
+in `notion_publication.json` as historical evidence.
+
 ## Scope and Baseline
 
 On 2026-09-04 the user explicitly approved Taxi and RAF seed-42 fresh e300
@@ -68,7 +102,7 @@ There were no forward passes, optimizer steps or dataset inference in this audit
 Model, trainer, common training code and frozen contract have no diff against
 the smoke-tested `b9d0ac0` revision. `git diff --check` passed.
 
-## Current Blocker
+## Earlier SSH Blocker
 
 The initial SSH preflight and one bounded connection retry both timed out at
 `5080` port 22 on 2026-09-04. No source was transferred and no training was
