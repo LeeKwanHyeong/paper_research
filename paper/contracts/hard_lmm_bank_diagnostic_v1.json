@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "contract_id": "hard_lmm_bank_diagnostic_v1",
+  "created_on": "2026-09-05",
+  "source_baseline_revision": "aac1c00",
+  "scope": "One local frozen diagnostic of full value bank, observed selection and averaging; no model implementation or fitting",
+  "prior_manifest": "paper/results/hard_lmm_query_diagnostic_20260905/execution_manifest.json",
+  "prior_manifest_sha256": "d73ba6bc4278fb0196295eea1f44fad317bfd936b8b1bf5c073411b666421256",
+  "prior_contract": "paper/contracts/hard_lmm_query_diagnostic_v1.json",
+  "datasets": ["yellow_trip_hourly", "insta_market_basket"],
+  "models": ["original", "separate_key"],
+  "population": "Reuse the identical 8192 train targets per dataset and the existing two disjoint-series folds; do not load parquet or new targets",
+  "cache_fields_used": ["h", "indices", "weights", "scores", "projection", "value_projections", "z", "target_index", "series_index", "fold", "context_end"],
+  "excluded_from_analysis": ["target quantity", "target duration", "residual labels", "validation rows", "held-out rows"],
+  "runtime": {"device": "cpu", "threads": 4, "geometry_dtype": "float64", "checkpoint_parity_dtype": "float32"},
+  "definitions": {
+    "quantity_slot_projection": "value dot checkpoint quantity head weight, before softplus",
+    "time_slot_projection": "value dot checkpoint time head weight, before intercept clamp",
+    "full_uniform": "All 64 slots equally weighted, including slots not selected in this sample",
+    "active_union_uniform": "Uniform over slots appearing in cached top4",
+    "selected_mass": "Slot probability equals its actual cached attention weight summed over all queries, divided by query count",
+    "weight_roundoff": "Accept sums within absolute 1e-6 of one; normalize in float64 for probability identities; separately verify original float32 outputs without normalization",
+    "decomposition": "Selected marginal variance = variance of per-query weighted mean + mean per-query weighted within variance; also compute vector covariance traces",
+    "head_scaling_control": "Report raw projection and unit-head projection variance divided by centered vector covariance trace",
+    "effective_rank": "exp entropy of normalized squared singular values of centered sqrt-mass-weighted values",
+    "averaging_control": "Compare actual weights with uniform weights on the same cached top4; no new retrieval or model evaluation",
+    "time_effect": "Clamp(a0 + sum(alpha * value_dot_time), max=L) - clamp(a0, max=L), where a0 = v_t(h) + b_t; upper clamp only as in legacy training loss"
+  },
+  "integrity": [
+    "Verify all recorded prior model/data-loader/script source digests and prior contract digest",
+    "Verify checkpoint files, canonical state digests, launch contracts and cache digests against their existing records",
+    "Verify paired train target/series/context/fold identities",
+    "Reproduce cached quantity slot projections, summed memory contribution and final quantity logits",
+    "Verify selected retrieval scores and weights against checkpoint keys without asserting index order across near ties",
+    "Verify finite geometry, variance identities and unchanged checkpoint state after diagnosis"
+  ],
+  "interpretation": [
+    "Large full-bank spread but small selected-mass spread localizes an observed restriction to selection; it does not prove unused slots useful",
+    "Small full-bank quantity spread would support investigating value/head directions; geometry alone does not establish a deficient learning signal",
+    "Large within-query share shows that averaging reduces variation; it does not prove harmful cancellation or justify a new fusion model",
+    "Greater time than quantity normalized variation is only a directional role difference; it does not establish task conflict, timing accuracy or time NLL",
+    "Report continuous values and agreement across existing train folds; no post-result performance or architecture adoption threshold"
+  ],
+  "stop_condition": "After one bounded diagnostic, identify a supported bottleneck or explicitly conclude that a single value/fusion implementation hypothesis is not justified",
+  "authorization_scope": {"local_diagnostic_tests_and_record": true, "5090_if_needed_for_this_diagnostic": true, "model_training": false, "held_out_test": false, "push": false},
+  "limitations": [
+    "Frozen models were trained on these rows and selected using validation; this is not an independent generalization estimate",
+    "Same slot numbers across separately trained models are not semantically aligned",
+    "Unused means absent from this sample, not untrained or unhelpful",
+    "No target gap is available in the allowed cache fields; do not report time NLL or target-conditioned gradient conflicts",
+    "Checkpoint geometry cannot establish which architecture change will improve a freshly trained model"
+  ]
+}
