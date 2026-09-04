@@ -25,7 +25,8 @@ def package(output):
     with tarfile.open(fileobj=io.BytesIO(archive)) as source:
         for member in source.getmembers():
             if member.isfile():
-                contents[member.name] = source.extractfile(member).read()
+                if Path(member.name).suffix in {".py", ".json", ".md", ".sh", ".toml", ".yaml", ".yml", ".txt"}:
+                    contents[member.name] = source.extractfile(member).read()
             elif not member.isdir():
                 raise ValueError("No links or special files in a source package")
     reference = subprocess.check_output(["git", "show", "7f0bf8d:models/TPPs/CountAwareFactory.py"], cwd=ROOT)
