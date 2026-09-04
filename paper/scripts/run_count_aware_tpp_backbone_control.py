@@ -34,6 +34,7 @@ from models.TPPs.CountAwareFactory import (
     build_count_aware_model as build_model,
 )
 from models.TPPs.CountAwareTHPStaticMemory import THP_STATIC_MEMORY_ROLE
+from models.Titan.common.key_value_memory import KEY_VALUE_ROLE
 from models.TPPs.NeuralHawkesTPP import CountAwareNHP
 from models.TPPs.SelfAttentiveHawkesTPP import CountAwareSAHP
 from paper.scripts.count_aware_tpp_backbone.constants import (
@@ -384,6 +385,7 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
     if manifest_sha256 != dataset_contract["split_manifest_sha256"]:
         raise ValueError(f"Unexpected split-manifest SHA-256: {manifest_sha256}")
     if (args.model_role in {MODEL_ROLE_WEIGHTED_STATIC, MODEL_ROLE_HARD_LOCAL_TIME}
+            or args.model_role == KEY_VALUE_ROLE
             or args.model_role == THP_STATIC_MEMORY_ROLE):
         # Keep the new candidate's held-out rows outside materialized memory.
         raw_frame = load_train_validation_frame(args.data)

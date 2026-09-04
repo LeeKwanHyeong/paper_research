@@ -2,6 +2,7 @@
 
 import math
 
+from models.Titan.common.key_value_memory import KEY_VALUE_BACKBONE, KEY_VALUE_ROLE
 from models.TPPs.CountAwareTHPStaticMemory import (
     THP_STATIC_MEMORY_BACKBONE,
     THP_STATIC_MEMORY_ROLE,
@@ -42,6 +43,7 @@ TITAN_MEMORY_BACKBONES = (
     "titantpp_tpp_gated_memory",
     "titantpp_weighted_static_memory",
     "titantpp_hard_memory_local_time",
+    KEY_VALUE_BACKBONE,
 )
 SUPPORTED_BACKBONES = (*BACKBONES, *TITAN_MEMORY_BACKBONES, THP_STATIC_MEMORY_BACKBONE)
 VARIANT = LOG_MSE_VARIANT
@@ -55,6 +57,7 @@ MODEL_ROLE_TITAN_B012_SCREENING = "titan_b012_screening"
 MODEL_ROLE_WEIGHTED_STATIC = "t0_weighted_static_retrieval"
 MODEL_ROLE_HARD_LOCAL_TIME = "t0_hard_memory_local_time"
 MODEL_ROLES = (
+    KEY_VALUE_ROLE,
     MODEL_ROLE_EXPERIMENTAL,
     MODEL_ROLE_T0_COMMON_CONTROL,
     MODEL_ROLE_T1_INCUMBENT,
@@ -82,6 +85,7 @@ QUANTITY_VARIANT_ALIASES = {
     TAIL_HEAD_ONLY_VARIANT: TAIL_HEAD_ONLY_VARIANT,
 }
 BACKBONE_LABELS = {
+    KEY_VALUE_BACKBONE: "TitanTPP-HardLMM Separate-Key Sparse Retrieval",
     THP_STATIC_MEMORY_BACKBONE: "Count-aware THP + Static Hard Memory",
     "rmtpp": "Count-aware RMTPP",
     "thp": "Count-aware THP",
@@ -115,6 +119,13 @@ def validate_model_role_contract(
     lambda_tail: float,
 ) -> None:
     """Reject official-role runs that drift from the frozen baseline contract."""
+    if model_role == KEY_VALUE_ROLE or KEY_VALUE_BACKBONE in backbones:
+        if model_role != KEY_VALUE_ROLE or backbones != (KEY_VALUE_BACKBONE,):
+            raise ValueError("Separate-key memory requires its dedicated single-backbone role")
+        if (quantity_variants != (VARIANT,) or time_head_mode != TIME_HEAD_MODE_LEGACY_CLAMPED
+                or lambda_tail != 0.0):
+            raise ValueError("Separate-key role requires direct log-MSE, legacy time head and no tail loss")
+        return
     if model_role == THP_STATIC_MEMORY_ROLE or THP_STATIC_MEMORY_BACKBONE in backbones:
         if model_role != THP_STATIC_MEMORY_ROLE or backbones != (THP_STATIC_MEMORY_BACKBONE,):
             raise ValueError("THP static memory requires its dedicated single-backbone role")

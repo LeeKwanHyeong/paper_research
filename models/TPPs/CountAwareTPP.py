@@ -25,6 +25,10 @@ from models.Titan.common.memory import (
     SimilarityWeightedLocalMemoryMatcher,
     SurpriseGatedMemory,
 )
+from models.Titan.common.key_value_memory import (
+    KEY_VALUE_MEMORY_MODE,
+    KeyValueLocalMemoryMatcher,
+)
 from models.Titan.common.titans_mac import TitansMACEncoder, TitansMemoryState
 from models.Titan.common.tpp_gated_memory import (
     TPPGatedMemoryState,
@@ -67,6 +71,7 @@ TITAN_MEMORY_MODES = (
     TITAN_MEMORY_MODE_STATIC_HARD,
     TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
     TITAN_MEMORY_MODE_STATIC_WEIGHTED,
+    KEY_VALUE_MEMORY_MODE,
     TITAN_MEMORY_MODE_STATIC_SOFT_GATED,
     TITAN_MEMORY_MODE_SURPRISE_GATED,
     TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
@@ -729,6 +734,7 @@ class CountAwareTitanTPP(SharedTimeCountModel):
             TITAN_MEMORY_MODE_STATIC_HARD,
             TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
             TITAN_MEMORY_MODE_STATIC_WEIGHTED,
+            KEY_VALUE_MEMORY_MODE,
             TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
             TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
             TITAN_MEMORY_MODE_TPP_GATED,
@@ -737,6 +743,7 @@ class CountAwareTitanTPP(SharedTimeCountModel):
             TITAN_MEMORY_MODE_STATIC_HARD,
             TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
             TITAN_MEMORY_MODE_STATIC_WEIGHTED,
+            KEY_VALUE_MEMORY_MODE,
             TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
         }
         uses_surprise_memory = memory_mode in {
@@ -778,7 +785,9 @@ class CountAwareTitanTPP(SharedTimeCountModel):
             else None
         )
         matcher = (
-            SimilarityWeightedLocalMemoryMatcher
+            KeyValueLocalMemoryMatcher
+            if memory_mode == KEY_VALUE_MEMORY_MODE
+            else SimilarityWeightedLocalMemoryMatcher
             if memory_mode == TITAN_MEMORY_MODE_STATIC_WEIGHTED
             else HardLocalMemoryMatcher
         )

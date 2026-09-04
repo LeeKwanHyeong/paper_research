@@ -35,14 +35,68 @@ from models.TPPs.CountAwareTHPStaticMemory import (
     static_memory_metadata,
     validate_static_memory_checkpoint,
 )
+from models.Titan.common.key_value_memory import (
+    KEY_VALUE_BACKBONE,
+    KEY_VALUE_CONTRACT,
+    KEY_VALUE_MEMORY_MODE,
+)
 
 
 HARD_LOCAL_TIME_BACKBONE = "titantpp_hard_memory_local_time"
 HARD_LOCAL_TIME_CONTRACT = "hard_lmm_local_time_v1"
 
 
+def validate_key_value_checkpoint(payload: dict[str, Any], expected_backbone: str) -> None:
+    """Do not reinterpret a separate-key checkpoint as a tied-bank backbone."""
+    metadata = payload.get("encoder_config", {})
+    if not isinstance(metadata, dict):
+        raise ValueError("Invalid checkpoint encoder metadata")
+    state = payload.get("model_state_dict", {})
+    has_keys = isinstance(state, dict) and "lmm.memory_keys" in state
+    is_candidate = (
+        payload.get("backbone") == KEY_VALUE_BACKBONE
+        or metadata.get("memory_mode") == KEY_VALUE_MEMORY_MODE
+        or metadata.get("static_retrieval_contract_id") == KEY_VALUE_CONTRACT
+        or has_keys
+    )
+    if expected_backbone != KEY_VALUE_BACKBONE:
+        if is_candidate:
+            raise ValueError("Separate-key checkpoint cannot be loaded as another backbone")
+        return
+    dim = metadata.get("d_model")
+    required = {
+        "backbone_contract_id": KEY_VALUE_CONTRACT,
+        "static_retrieval_contract_id": KEY_VALUE_CONTRACT,
+        "memory_mode": KEY_VALUE_MEMORY_MODE,
+        "static_retrieval_aggregation": "softmax_cosine_topk",
+        "static_retrieval_temperature": 1.0,
+        "static_key_value_tied": False,
+        "static_key_initialization": "clone_values_no_rng",
+        "persistent_mem_size": 16,
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "time_memory_route": "separate_key_static_matcher",
+        "quantity_memory_route": "separate_key_static_matcher",
+    }
+    if (payload.get("backbone") != expected_backbone or type(dim) is not int or dim < 1
+            or any(metadata.get(key) != value for key, value in required.items())
+            or metadata.get("additional_parameter_count") != 64 * dim):
+        raise ValueError("Separate-key checkpoint retrieval metadata mismatch")
+    time_head = metadata.get("time_head", {})
+    if (payload.get("variant") != LOG_MSE_VARIANT or not isinstance(time_head, dict)
+            or time_head.get("mode") != TIME_HEAD_MODE_LEGACY_CLAMPED):
+        raise ValueError("Separate-key checkpoint head/objective mismatch")
+    if "model_state_dict" in payload:
+        if not isinstance(state, dict) or any(
+            tuple(getattr(state.get(name), "shape", ())) != (1, 64, dim)
+            for name in ("lmm.mem", "lmm.memory_keys")
+        ):
+            raise ValueError("Separate-key checkpoint requires both key and value banks")
+
+
 def validate_checkpoint_route(payload: dict[str, Any], expected_backbone: str) -> None:
     """Validate explicit candidate identity; compatible tensor shapes are not enough."""
+    validate_key_value_checkpoint(payload, expected_backbone)
     validate_static_memory_checkpoint(payload, expected_backbone)
     metadata = payload.get("encoder_config", {})
     if not isinstance(metadata, dict):
@@ -112,6 +166,12 @@ def build_count_aware_model(
     titans_memory_gradient_clip: float | None = None,
 ) -> tuple[SharedTimeCountModel, dict[str, Any]]:
     """Construct one controlled backbone and its serializable metadata."""
+    if backbone == KEY_VALUE_BACKBONE and (
+        quantity_variant != LOG_MSE_VARIANT
+        or time_head_mode != TIME_HEAD_MODE_LEGACY_CLAMPED
+        or lambda_tail != 0.0
+    ):
+        raise ValueError("Separate-key candidate requires direct log-MSE, legacy time head and no tail loss")
     if backbone == HARD_LOCAL_TIME_BACKBONE and (
         quantity_variant != LOG_MSE_VARIANT
         or time_head_mode != TIME_HEAD_MODE_LEGACY_CLAMPED
@@ -193,6 +253,7 @@ def build_count_aware_model(
             },
         )
     titan_modes = {
+        KEY_VALUE_BACKBONE: (KEY_VALUE_MEMORY_MODE, TITAN_QUANTITY_GRADIENT_SHARED),
         "titantpp": (
             TITAN_MEMORY_MODE_STATIC_HARD,
             TITAN_QUANTITY_GRADIENT_SHARED,
@@ -249,6 +310,7 @@ def build_count_aware_model(
             TITAN_MEMORY_MODE_STATIC_HARD,
             TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
             TITAN_MEMORY_MODE_STATIC_WEIGHTED,
+            KEY_VALUE_MEMORY_MODE,
             TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
             TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
             TITAN_MEMORY_MODE_TITANS_MAC,
@@ -258,6 +320,7 @@ def build_count_aware_model(
             TITAN_MEMORY_MODE_STATIC_HARD,
             TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
             TITAN_MEMORY_MODE_STATIC_WEIGHTED,
+            KEY_VALUE_MEMORY_MODE,
             TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
         }
         uses_soft_memory = memory_mode == TITAN_MEMORY_MODE_STATIC_SOFT_GATED
@@ -275,6 +338,7 @@ def build_count_aware_model(
             **quantity_kwargs,
         )
         candidate_names = {
+            KEY_VALUE_BACKBONE: "count_titan_static_top4_separate_keys_tau1",
             "titantpp": "count_titan_small_lmm",
             HARD_LOCAL_TIME_BACKBONE: "count_titan_hard_quantity_local_time",
             "titantpp_weighted_static_memory": "count_titan_static_top4_weighted_tau1",
@@ -303,6 +367,14 @@ def build_count_aware_model(
             {
                 "candidate_name": candidate_names[backbone],
                 **({
+                    "static_retrieval_contract_id": KEY_VALUE_CONTRACT,
+                    "static_retrieval_aggregation": "softmax_cosine_topk",
+                    "static_retrieval_temperature": 1.0,
+                    "static_key_value_tied": False,
+                    "static_key_initialization": "clone_values_no_rng",
+                    "additional_parameter_count": 64 * hidden_dim,
+                } if memory_mode == KEY_VALUE_MEMORY_MODE else {}),
+                **({
                     "routing_contract_id": HARD_LOCAL_TIME_CONTRACT,
                     "static_retrieval_aggregation": "arithmetic_mean",
                     "additional_parameter_count": 0,
@@ -314,7 +386,9 @@ def build_count_aware_model(
                     "additional_parameter_count": 0,
                 } if memory_mode == TITAN_MEMORY_MODE_STATIC_WEIGHTED else {}),
                 "backbone_contract_id": (
-                    HARD_LOCAL_TIME_CONTRACT
+                    KEY_VALUE_CONTRACT
+                    if memory_mode == KEY_VALUE_MEMORY_MODE
+                    else HARD_LOCAL_TIME_CONTRACT
                     if memory_mode == TITAN_MEMORY_MODE_HARD_LOCAL_TIME
                     else "W0"
                     if memory_mode == TITAN_MEMORY_MODE_STATIC_WEIGHTED
@@ -339,6 +413,7 @@ def build_count_aware_model(
                         TITAN_MEMORY_MODE_TITANS_MAC,
                         TITAN_MEMORY_MODE_TPP_GATED,
                         TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
+                        KEY_VALUE_MEMORY_MODE,
                     }
                     else None
                 ),
@@ -433,7 +508,9 @@ def build_count_aware_model(
                     0.0 if uses_soft_memory or uses_surprise_memory else None
                 ),
                 "time_memory_route": (
-                    "local_encoder_with_persistent_tokens"
+                    "separate_key_static_matcher"
+                    if memory_mode == KEY_VALUE_MEMORY_MODE
+                    else "local_encoder_with_persistent_tokens"
                     if memory_mode == TITAN_MEMORY_MODE_HARD_LOCAL_TIME
                     else "similarity_weighted_static_matcher"
                     if memory_mode == TITAN_MEMORY_MODE_STATIC_WEIGHTED
@@ -446,7 +523,9 @@ def build_count_aware_model(
                     else "shared_memory_state"
                 ),
                 "quantity_memory_route": (
-                    "hard_local_memory_matcher"
+                    "separate_key_static_matcher"
+                    if memory_mode == KEY_VALUE_MEMORY_MODE
+                    else "hard_local_memory_matcher"
                     if memory_mode == TITAN_MEMORY_MODE_HARD_LOCAL_TIME
                     else "hard_lmm_plus_surprise_residual"
                     if memory_mode == TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE
