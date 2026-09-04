@@ -15,7 +15,7 @@ sys.path.insert(0, str(ROOT))
 from paper.scripts.run_hard_lmm_key_value_smoke import frozen_documents, reference_files
 
 
-def package(output):
+def package(output, *, screening=False):
     spec, rows = frozen_documents()
     revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
     paths = ["models", "data_loader", "simple_lab_test", "paper/scripts", "paper/contracts", "utils"]
@@ -36,9 +36,10 @@ def package(output):
             if hashlib.sha256(data).hexdigest() != expected:
                 raise ValueError(f"Frozen reference mismatch: {path}")
             contents[f"references/{row['dataset']}/{name}"] = data
-    manifest = {"source_revision": revision, "scope": spec["scope"],
+    manifest = {"source_revision": revision,
+                "scope": "candidate_only_taxi_instacart_seed42_fresh_e300" if screening else spec["scope"],
                 "frozen_model_revision": spec["frozen_model_revision"],
-                "performance_training_authorized": False, "empty_directories": ["sample_data"],
+                "performance_training_authorized": screening, "empty_directories": ["sample_data"],
                 "files": {name: hashlib.sha256(data).hexdigest() for name, data in sorted(contents.items())}}
     contents["source_manifest.json"] = (json.dumps(manifest, indent=2) + "\n").encode()
     with output.open("xb") as stream, tarfile.open(fileobj=stream, mode="w:gz") as target:
@@ -58,4 +59,6 @@ def package(output):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
-    package(parser.parse_args().output)
+    parser.add_argument("--screening", action="store_true", help="User-approved e300 execution amendment")
+    args = parser.parse_args()
+    package(args.output, screening=args.screening)

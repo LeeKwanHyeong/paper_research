@@ -121,7 +121,7 @@ def test_changed_input_rejected_before_loading_checkpoint(monkeypatch, tmp_path)
     load.assert_not_called()
 
 
-def test_real_runner_synthetic_e1_and_audit_reject_drift(monkeypatch, tmp_path):
+def create_synthetic_e1(monkeypatch, tmp_path):
     _, rows = smoke.frozen_documents()
     row = rows[0]
     data, split, output = tmp_path / "data.parquet", tmp_path / "split.json", tmp_path / "fresh"
@@ -142,6 +142,11 @@ def test_real_runner_synthetic_e1_and_audit_reject_drift(monkeypatch, tmp_path):
     reference = copy.deepcopy(summary)
     reference["parameter_count"] = row["baseline_parameters"]
     synthetic_row = row | {"train_targets": 38, "validation_targets": 6}
+    return output, synthetic_row, launch, reference
+
+
+def test_real_runner_synthetic_e1_and_audit_reject_drift(monkeypatch, tmp_path):
+    output, synthetic_row, launch, reference = create_synthetic_e1(monkeypatch, tmp_path)
     assert smoke.audit_run(output, synthetic_row, (launch, reference), "a" * 40)["status"] == "passed"
     for change in ({"epochs": 300}, {"partial_smoke": True}, {"held_out_test_evaluated": True},
                    {"source_revision": "wrong"}, {"lambda_tail": .1}):

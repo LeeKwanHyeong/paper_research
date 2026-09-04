@@ -88,13 +88,34 @@ def command(row, project, output, revision):
     return cmd
 
 
-def audit_run(output, row, reference, revision):
+def validate_history(history, summary, row, *, screening=False):
+    budget, minimum, patience = (300, 40, 40) if screening else (1, 1, 1)
+    require(minimum <= len(history) <= budget, "Unexpected history length")
+    require([h["epoch"] for h in history] == list(range(1, len(history) + 1)), "Nonconsecutive fresh history")
+    require(all(h["train_all_finite"] is True and h["train_event_count"] == row["train_targets"]
+                for h in history), "Partial or nonfinite train epoch")
+    best = min(history, key=lambda h: h["val_joint_objective"])
+    require(summary["epochs"] == budget and summary["completed_epochs"] == len(history) and
+            summary["best_epoch"] == best["epoch"], "History/selection mismatch")
+    if screening:
+        # Verify the first legal stop, not just the final patience distance.
+        from paper.scripts.count_aware_tpp_backbone.training import early_stopping_exhausted
+        stops = [i for i in range(1, len(history) + 1) if early_stopping_exhausted(
+            history[:i], min_epochs=minimum, patience=patience)]
+        require(not stops or stops[0] == len(history), "Training continued past early stopping")
+        require(len(history) == budget or bool(stops), "Premature training termination")
+        require(summary["stopped_early"] == (len(history) < budget), "Wrong stop metadata")
+    return best
+
+
+def audit_run(output, row, reference, revision, *, screening=False, write_audit=True):
     import torch
     from models.TPPs.CountAwareFactory import build_count_aware_model, validate_checkpoint_route
     from paper.scripts.count_aware_tpp_backbone.core import target_outputs
     from simple_lab_test.search.common.runner import canonical_state_dict_sha256
 
     ref_contract, ref_summary = reference
+    budget, minimum = (300, 40) if screening else (1, 1)
     c, s = read(output / "launch_contract.json"), read(output / SUMMARY)
     run = (output / SUMMARY).parent
     history = read(run / "history.json")["history"]
@@ -102,7 +123,7 @@ def audit_run(output, row, reference, revision):
         finite(payload)
     require(c["status"] == "complete" and c["completed_run_count"] == 1, "Run incomplete")
     for key, expected in {
-        "backbones": [BACKBONE], "seeds": [42], "model_role": ROLE, "epochs": 1,
+        "backbones": [BACKBONE], "seeds": [42], "model_role": ROLE, "epochs": budget,
         "batch_size": 128, "lr": .001, "hidden_dim": 64, "grad_clip": 1.,
         "lambda_log_qty": 1., "lambda_tail": 0., "data_sha256": row["data_sha256"],
         "split_manifest_sha256": row["split_manifest_sha256"],
@@ -111,8 +132,7 @@ def audit_run(output, row, reference, revision):
         "history_length_contract": ref_contract["history_length_contract"],
     }.items():
         require(c[key] == expected, f"Launch contract mismatch: {key}")
-    require(s["status"] == "success" and s["backbone"] == BACKBONE and s["seed"] == 42 and
-            s["epochs"] == s["completed_epochs"] == s["best_epoch"] == 1, "Not a successful fresh e1")
+    require(s["status"] == "success" and s["backbone"] == BACKBONE and s["seed"] == 42, "Not a successful run")
     require(c["source_revision"] == s["source_revision"] == revision and
             s["source_revision_history"] == [revision], "Revision/resume mismatch")
     require(not c["partial_smoke"] and set(c["split_rows"]) == {"train", "validation"}, "Partial/test materialization")
@@ -124,12 +144,10 @@ def audit_run(output, row, reference, revision):
     for key, expected in {"mode": "legacy_clamped_rmtpp", "time_scale": 3., "time_w_max": 10. / 3.,
                           "time_intercept_limit": 30., "time_wd_safety_limit": 40., "time_head_lr_multiplier": 1.}.items():
         require(c["time_head"][key] == expected, f"Time launch contract mismatch: {key}")
-    for key, expected in {"min_epochs": 1, "patience": 1, "monitor": "validation_joint_objective"}.items():
+    for key, expected in {"min_epochs": minimum, "patience": minimum, "monitor": "validation_joint_objective"}.items():
         require(c["early_stopping"][key] == expected, f"Selection mismatch: {key}")
-    require(len(history) == 1 and history[0]["epoch"] == 1 and history[0]["train_all_finite"] is True,
-            "Unexpected history or nonfinite training")
-    require(history[0]["train_event_count"] == c["time_head"]["train_time_statistics"]["target_count"] ==
-            row["train_targets"], "Partial train epoch")
+    best = validate_history(history, s, row, screening=screening)
+    require(c["time_head"]["train_time_statistics"]["target_count"] == row["train_targets"], "Partial train epoch")
     for key in ("quantity_rows", "history_rows"):
         rows = s[key]
         require(sum(r["count"] for r in rows) == row["validation_targets"], "Partial validation epoch")
@@ -144,7 +162,7 @@ def audit_run(output, row, reference, revision):
     validate_quantity_initialization(s, ref_summary, row)
     validate_checkpoint_route(s, BACKBONE)
     for key in ("qty_mae", "qty_rmse", "time_nll", "log_qty_mse", "joint_objective"):
-        require(math.isclose(s["best_val_" + key], history[0]["val_" + key], rel_tol=1e-10, abs_tol=1e-8),
+        require(math.isclose(s["best_val_" + key], best["val_" + key], rel_tol=1e-10, abs_tol=1e-8),
                 "Summary/history mismatch")
     checkpoint_path = run / "best_val_joint_objective_model.pt"
     checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
@@ -154,17 +172,21 @@ def audit_run(output, row, reference, revision):
         require(payload["source_revision"] == revision, "Checkpoint source mismatch")
         finite_tensors(payload)
     state_hash = canonical_state_dict_sha256(checkpoint["model_state_dict"])
-    require(state_hash == s["checkpoint_state_sha256"] == canonical_state_dict_sha256(last["model_state_dict"]) ==
-            canonical_state_dict_sha256(last["best_state_dict"]), "e1 checkpoint digest mismatch")
+    require(state_hash == s["checkpoint_state_sha256"] == canonical_state_dict_sha256(last["best_state_dict"]),
+            "Best checkpoint digest mismatch")
+    require(last["epoch"] == len(history) and last["history"] == history, "Last checkpoint history mismatch")
+    if not screening:
+        require(state_hash == canonical_state_dict_sha256(last["model_state_dict"]), "e1 checkpoint digest mismatch")
     groups = last["optimizer_state_dict"]["param_groups"]
     require(len(groups) == 1, "Unexpected optimizer groups")
     for key, expected in {"lr": .001, "weight_decay": .01, "eps": 1e-8, "betas": (.9, .999), "amsgrad": False}.items():
         require(groups[0][key] == expected, f"Optimizer mismatch: {key}")
     predictions = []
-    for payload in (checkpoint, last):
+    replay_states = (checkpoint["model_state_dict"], last["best_state_dict"])
+    for state in replay_states:
         model, _ = build_count_aware_model(BACKBONE, hidden_dim=64, train_log_mean=1.5,
                                           max_seq_len=row["max_seq_len"], quantity_variant=VARIANT)
-        model.load_state_dict(payload["model_state_dict"], strict=True)
+        model.load_state_dict(state, strict=True)
         model.eval()
         dt, qty = torch.tensor([[1., 2., 3., 0.]]), torch.tensor([[2., 5., 8., 0.]])
         with torch.no_grad():
@@ -174,13 +196,15 @@ def audit_run(output, row, reference, revision):
         finite_tensors(predictions[0][key])
     key_value_distance = (model.lmm.memory_keys - model.lmm.mem).detach().norm().item()
     require(key_value_distance > 0, "Keys and values unexpectedly remained identical")
-    result = {"status": "passed", "dataset": row["dataset"], "phase": "full_e1_only",
+    result = {"status": "passed", "dataset": row["dataset"], "phase": "seed42_e300" if screening else "full_e1_only",
               "summary_sha256": digest(output / SUMMARY), "history_sha256": digest(run / "history.json"),
               "checkpoint_file_sha256": digest(checkpoint_path), "checkpoint_state_sha256": state_hash,
               "train_targets": row["train_targets"], "validation_targets": row["validation_targets"],
-              "finite": True, "held_out_test_evaluated": False, "checkpoint_replay": "exact_best_last_cpu",
-              "key_value_distance": key_value_distance, "performance_acceptance": "not_evaluated_e1_only"}
-    save(output / "audit.json", result)
+              "finite": True, "held_out_test_evaluated": False, "checkpoint_replay": "exact_best_vs_last_best_state_cpu",
+              "key_value_distance": key_value_distance,
+              "performance_acceptance": "separate_comparison_required" if screening else "not_evaluated_e1_only"}
+    if write_audit:
+        save(output / "audit.json", result)
     return result
 
 
