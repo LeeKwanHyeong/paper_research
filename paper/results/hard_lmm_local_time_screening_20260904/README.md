@@ -1,6 +1,48 @@
 # Hard-LMM Local Time: Approved Fresh Screening
 
-## Latest Status: Awaiting User Sudo Authentication
+## Latest Status: Fresh Screening Running
+
+2026-09-04 **13:16:00 KST**: started the approved Taxi-to-RAF seed-42 fresh
+screening on 5080, tmux `hard_lmm_local_time_seed42_0904`, artifact
+`search_artifacts/hard_lmm_local_time_seed42_e300_20260904`.
+The user completed GDM shutdown. Preflight confirmed GDM/graphics inactive,
+no CUDA compute jobs, 15,825 MiB free VRAM, no recent readable kernel Xid/OOM,
+unchanged source manifests, and a nonexistent output directory before launch.
+No GDM/sudo retry, new source transfer, CUDA/e1 rerun or model edit was needed.
+
+`launch_5080.json` preserves the exact command and source revisions. Initial
+observation at **13:16:42 KST** (`initial_observation_5080.json`) confirms the
+parent tmux and CUDA child PID 4675, Taxi epoch 3 complete / joint-best epoch 2,
+zero of two completed runs, GDM inactive, GPU 2,252 MiB used / 76% utilization.
+The actual contract is e300/min40/patience40, seed42, full train/validation,
+dedicated local-time backbone/role, frozen training revision and validation-only.
+The observed epoch had 38,393 train events and finite train/validation metrics.
+These are startup checks, not a completed performance result or gate decision.
+
+An hourly thread heartbeat **`hard-lmm-local-time-5080`** is ACTIVE. It performs
+one check per run, reports meaningful changes and required actions, avoids
+unchanged-state noise and extra polling, and never retries/resumes training.
+It audits/synchronizes completed artifacts without `--delete`, compares the
+fixed gates, updates and re-reads the existing Notion page, commits related
+results to local `paper_research/master`, and pauses after completion or a
+clear failure. No benchmark retraining, 5090 work, push or held-out evaluation.
+
+Initial ETA, conditional on unchanged speed: approximately **13:30-14:35 KST**.
+Taxi epochs 2-3 averaged 11.372 seconds; RAF still uses the prior full-e1
+measurement of 2.662 seconds, not a current measured epoch. A no-further-best
+Taxi stop at e42 followed by minimum-length RAF would reach about 13:26 before
+startup/audit overhead. Both running to e300 extrapolate to about 14:26 before
+overhead. Best-checkpoint improvements, contention and speed changes can extend
+these estimates; the monitor should replace them with actual RAF speed later.
+
+Next: leave both approved runs uninterrupted. At completion, validate the full
+evidence and report official joint-selected quantity/body/tail/time metrics and
+costs against the fixed Hard-LMM baseline. Do not infer success from early epochs.
+Keep GDM inactive during training. If the user needs their desktop after the
+job, they can run `ssh -t 5080 'sudo systemctl start gdm'`; do not request the
+sudo password in chat or automatically restart the graphical service.
+
+## Earlier State: Awaiting User Sudo Authentication
 
 2026-09-04 12:51 KST: the user explicitly approved temporarily stopping 5080
 GDM after the graphical-session termination risk was explained. The authorized
