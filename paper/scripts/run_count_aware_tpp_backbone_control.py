@@ -8,7 +8,7 @@ import math
 import os
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -33,6 +33,7 @@ from models.TPPs.CountAwareTPP import (
 from models.TPPs.CountAwareFactory import (
     build_count_aware_model as build_model,
 )
+from models.TPPs.CountAwareTHPStaticMemory import THP_STATIC_MEMORY_ROLE
 from models.TPPs.NeuralHawkesTPP import CountAwareNHP
 from models.TPPs.SelfAttentiveHawkesTPP import CountAwareSAHP
 from paper.scripts.count_aware_tpp_backbone.constants import (
@@ -74,6 +75,11 @@ from paper.scripts.count_aware_tpp_backbone.reporting import (
 from paper.scripts.count_aware_tpp_backbone.training import (
     early_stopping_exhausted,
     train_one,
+)
+from paper.scripts.count_aware_tpp_backbone.thp_static_contract import (
+    record_static_memory_failure,
+    validate_static_memory_data,
+    validate_static_memory_launch,
 )
 from paper.scripts.run_intermittent_log_backbone_control import (
     HISTORY_BOUNDARIES,
@@ -256,6 +262,14 @@ def normalize_quantity_variants(raw: str) -> tuple[str, ...]:
 
 def main() -> None:
     args = parse_args()
+    if args.model_role == THP_STATIC_MEMORY_ROLE:
+        with record_static_memory_failure(args.output_dir) as claim_created_output:
+            run(args, output_created=claim_created_output)
+    else:
+        run(args)
+
+
+def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None = None) -> None:
     if args.device.startswith("cuda") and not torch.cuda.is_available():
         raise RuntimeError("CUDA was requested but is unavailable")
     if len(args.source_revision) != 40:
@@ -269,6 +283,10 @@ def main() -> None:
         quantity_variants=quantity_variants,
         time_head_mode=args.time_head_mode,
         lambda_tail=args.lambda_tail,
+    )
+    static_memory_reference = (
+        validate_static_memory_launch(args, seeds)
+        if args.model_role == THP_STATIC_MEMORY_ROLE else None
     )
     if any(backbone not in SUPPORTED_BACKBONES for backbone in backbones):
         raise ValueError(f"Unsupported backbone selection: {backbones}")
@@ -365,7 +383,8 @@ def main() -> None:
         raise ValueError(f"Unexpected fixed-split SHA-256: {data_sha256}")
     if manifest_sha256 != dataset_contract["split_manifest_sha256"]:
         raise ValueError(f"Unexpected split-manifest SHA-256: {manifest_sha256}")
-    if args.model_role in {MODEL_ROLE_WEIGHTED_STATIC, MODEL_ROLE_HARD_LOCAL_TIME}:
+    if (args.model_role in {MODEL_ROLE_WEIGHTED_STATIC, MODEL_ROLE_HARD_LOCAL_TIME}
+            or args.model_role == THP_STATIC_MEMORY_ROLE):
         # Keep the new candidate's held-out rows outside materialized memory.
         raw_frame = load_train_validation_frame(args.data)
     else:
@@ -612,7 +631,11 @@ def main() -> None:
         "execution_role": args.execution_role,
         "partial_smoke": args.max_train_batches is not None or args.max_val_batches is not None,
     }
-    args.output_dir.mkdir(parents=True, exist_ok=True)
+    if static_memory_reference is not None:
+        contract.update(validate_static_memory_data(contract, frame, static_memory_reference))
+    args.output_dir.mkdir(parents=True, exist_ok=static_memory_reference is None)
+    if output_created is not None:
+        output_created()
     save_json(args.output_dir / "launch_contract.json", contract)
 
     summaries: list[dict[str, Any]] = []

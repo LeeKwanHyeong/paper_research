@@ -29,6 +29,12 @@ from models.TPPs.CountAwareTPP import (
 )
 from models.TPPs.NeuralHawkesTPP import CountAwareNHP
 from models.TPPs.SelfAttentiveHawkesTPP import CountAwareSAHP
+from models.TPPs.CountAwareTHPStaticMemory import (
+    CountAwareTHPStaticMemory,
+    THP_STATIC_MEMORY_BACKBONE,
+    static_memory_metadata,
+    validate_static_memory_checkpoint,
+)
 
 
 HARD_LOCAL_TIME_BACKBONE = "titantpp_hard_memory_local_time"
@@ -36,7 +42,8 @@ HARD_LOCAL_TIME_CONTRACT = "hard_lmm_local_time_v1"
 
 
 def validate_checkpoint_route(payload: dict[str, Any], expected_backbone: str) -> None:
-    """Equal tensor shapes do not identify the local-time routing ablation."""
+    """Validate explicit candidate identity; compatible tensor shapes are not enough."""
+    validate_static_memory_checkpoint(payload, expected_backbone)
     metadata = payload.get("encoder_config", {})
     if not isinstance(metadata, dict):
         raise ValueError("Invalid checkpoint encoder metadata")
@@ -173,6 +180,9 @@ def build_count_aware_model(
                 "shared_time_head": True,
             },
         )
+    if backbone == THP_STATIC_MEMORY_BACKBONE:
+        model = CountAwareTHPStaticMemory(hidden_dim, train_log_mean, **quantity_kwargs)
+        return with_time_metadata(model, static_memory_metadata())
     if backbone == "thp":
         model = CountAwareTHP(hidden_dim, train_log_mean, **quantity_kwargs)
         return with_time_metadata(

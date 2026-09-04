@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "status": "local_cpu_implementation_verified_cuda_and_performance_pending",
+  "verified_on": "2026-09-04",
+  "repository": "paper_research",
+  "branch": "master",
+  "source_parent_revision": "7f0bf8de81a627db3df7609b6d00c3e9617769cc",
+  "candidate": "thp_static_hard_memory",
+  "contract_id": "count_aware_thp_static_hard_memory_v1",
+  "contract_sha256": "77ed967b5be633095219b825a117b174b162f84cc4122c50410fb7d1eb2a9158",
+  "baseline_registry_sha256": "92c6165b43c7a11fa515ce66be326b133a4f83b428a28d240a26985d2c2d7a8e",
+  "runtime": {
+    "python": "3.12.10",
+    "torch": "2.7.1",
+    "polars": "1.31.0",
+    "pytest": "9.0.3",
+    "device": "cpu",
+    "cuda_available": false,
+    "packages_modified": false
+  },
+  "tests": {
+    "passed": 209,
+    "failed": 0,
+    "skipped": 0,
+    "pytest_duration_seconds": 2.25,
+    "new_model_tests": 35,
+    "new_runner_tests": 41,
+    "new_candidate_document_tests": 21,
+    "existing_regression_tests": 112,
+    "junit": "paper/results/thp_static_hard_memory_implementation_20260904/local_tests.xml",
+    "junit_sha256": "62f58fc2a1984202f1717dc6097545b8c4cef84e7aa9de63af8404430512aba8",
+    "environment": {"MPLCONFIGDIR": "/private/tmp/weighted-mpl"},
+    "command_prefix": ["/usr/local/bin/python3", "-s", "-m", "pytest", "-q"],
+    "test_paths": [
+      "simple_lab_test/search/tests/test_thp_static_hard_memory_model.py",
+      "simple_lab_test/search/tests/test_thp_static_hard_memory_runner.py",
+      "simple_lab_test/search/tests/test_thp_static_hard_memory_contract.py",
+      "simple_lab_test/search/tests/test_count_aware_tpp_contract.py",
+      "simple_lab_test/search/tests/test_count_aware_model_role_contract.py",
+      "simple_lab_test/search/tests/test_count_aware_dataset_contracts.py",
+      "simple_lab_test/search/tests/test_hard_lmm_local_time_memory.py",
+      "simple_lab_test/search/tests/test_hard_lmm_local_time_contract.py",
+      "simple_lab_test/search/tests/test_hard_lmm_local_time_smoke.py",
+      "simple_lab_test/search/tests/test_hard_lmm_local_time_screening.py",
+      "simple_lab_test/search/tests/test_hard_lmm_weighted_static_memory.py",
+      "simple_lab_test/search/tests/test_hard_lmm_weighted_static_runner.py"
+    ],
+    "command_suffix": ["--junitxml=paper/results/thp_static_hard_memory_implementation_20260904/local_tests.xml"]
+  },
+  "implementation_requirements": {
+    "base_thp_parameter_names_shapes_values_and_caller_rng_unchanged_at_initialization": "cpu_passed",
+    "exactly_one_4096_parameter_bank_and_total_104387": "cpu_passed",
+    "base_encoder_and_matcher_each_called_once": "cpu_passed",
+    "zero_residual_matches_existing_thp_states_predictions_and_gradients": "cpu_exact_passed_train_and_eval",
+    "nonzero_bank_uses_original_cosine_top4_unnormalized_value_mean": "cpu_passed",
+    "mask_after_residual_zeroes_padding_even_with_nonzero_bank": "cpu_passed",
+    "time_and_quantity_paths_share_h_plus_r_no_detach": "cpu_passed",
+    "each_task_reaches_selected_bank_values_with_nonzero_head_fixture": "cpu_passed",
+    "target_quantity_duration_future_and_padding_perturbations_do_not_change_history_prediction": "cpu_passed",
+    "batch_order_and_series_isolation_and_no_evaluation_parameter_mutation": "cpu_passed",
+    "finite_forward_backward_extreme_inputs_and_short_history": "cpu_synthetic_passed",
+    "checkpoint_replay_with_bank_and_route_metadata_rejects_wrong_or_incomplete_candidate": "cpu_passed_including_optimizer_next_update",
+    "legacy_thp_and_titantpp_outputs_remain_unchanged": "cpu_exact_passed_against_original_factory",
+    "runner_metadata_and_cache_reuse_reject_wrong_route_scope_or_contract": "cpu_synthetic_passed_fresh_only",
+    "full_train_validation_counts_cutoffs_and_histories_match_registry": "local_real_train_validation_loader_indices_passed_no_model_forward",
+    "held_out_rows_filtered_before_materialization_and_no_test_artifacts": "filtered_real_data_and_synthetic_entrypoint_passed"
+  },
+  "parameter_count": {"thp": 100291, "candidate": 104387, "additional": 4096},
+  "real_data_identity": {
+    "yellow_trip_hourly": {"train_targets": 38393, "validation_targets": 8268, "quantity_and_history_bin_counts": "match_thp_and_hard_lmm_seed42"},
+    "raf_spare_parts": {"train_targets": 25779, "validation_targets": 6690, "quantity_and_history_bin_counts": "match_thp_and_hard_lmm_seed42_with_empty_bins_omitted"}
+  },
+  "reviewed_changed_source_sha256": {
+    "models/TPPs/CountAwareTHPStaticMemory.py": "44fcc1717ca5f19eef36386e8531a3423d7a3444d39f4e462e12c14f98c4b8ee",
+    "models/TPPs/CountAwareFactory.py": "74e4ab2035e87bff2ff21bb9beffa2fd8eb2b00c398ef824054590afd4229eba",
+    "paper/scripts/count_aware_tpp_backbone/constants.py": "b8ddf0a752f3cca11f2af552944927075ed0fed20aadc0838e5e1333ea25d073",
+    "paper/scripts/count_aware_tpp_backbone/training.py": "83cc946dc4034be98e57b0f8bfe3dbe744e64717e90706684688bebd1bdc64c3",
+    "paper/scripts/count_aware_tpp_backbone/thp_static_contract.py": "96919909906c1fec5b447234dfc77612a43f6b62ab64bca31185a6480f0fc490",
+    "paper/scripts/run_count_aware_tpp_backbone_control.py": "bbfbefab679bb76c3e4b4b488929a060bfc419ed7df22707f94a524d3820a35e",
+    "simple_lab_test/search/tests/test_thp_static_hard_memory_model.py": "98c8d43aa7f40746ca28da5c83b3febf1340c10febfa29b148b41ba4d6703fe8",
+    "simple_lab_test/search/tests/test_thp_static_hard_memory_runner.py": "fcbe90af0d298fb680dd791176661ecb483e63680f5febbac47617888e7d6a10"
+  },
+  "unchanged_against_parent": [
+    "models/TPPs/CountAwareTPP.py",
+    "models/Titan/common/memory.py",
+    "models/TPPs/TransformerHawkesTPP.py",
+    "models/TPPs/config.py",
+    "paper/scripts/count_aware_tpp_backbone/core.py",
+    "paper/scripts/count_aware_tpp_backbone/datasets.py",
+    "data_loader/event_seq_data_module.py",
+    "paper/contracts/count_aware_thp_static_hard_memory_v1.json",
+    "paper/contracts/count_aware_thp_static_hard_memory_baselines_v1.json"
+  ],
+  "scope": {
+    "training": "synthetic_cpu_contract_test_only",
+    "actual_data_model_inference_or_training": false,
+    "held_out_test_materialized_or_evaluated": false,
+    "server_access_or_sync": false,
+    "cuda_or_actual_data_e1": false,
+    "service_changes": false,
+    "scheduler": false,
+    "notion_write": false,
+    "push": false,
+    "performance_gate_changed": false
+  },
+  "limits": [
+    "CPU tests do not certify CUDA numerics, peak VRAM, speed or performance improvement.",
+    "Raw THP versus candidate is not parameter matched; 4096 extra parameters are explicit.",
+    "Only ordinary Python exceptions can update failure status; SIGKILL/reboot/driver failure still needs external monitoring.",
+    "Historical baseline test-row materialization was not disproven; this candidate filters test before collection.",
+    "Installed fs/pkg_resources emitted a deprecation warning; dependencies were not changed."
+  ],
+  "next": [
+    "Separate approval: 5080 source checksum sync, CUDA model contracts and full Taxi/RAF e1 feasibility.",
+    "Separate approval after feasibility: fresh Taxi/RAF seed42 e300 screening and monitoring.",
+    "Apply unchanged per-dataset gates; no automatic expansion or model adoption."
+  ]
+}

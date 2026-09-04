@@ -17,6 +17,7 @@ from models.TPPs.CountAwareFactory import (
     build_count_aware_model,
     validate_checkpoint_route,
 )
+from models.TPPs.CountAwareTHPStaticMemory import THP_STATIC_MEMORY_BACKBONE
 from paper.scripts.count_aware_tpp_backbone.constants import (
     BACKBONE_LABELS,
     TAIL_VARIANTS,
@@ -260,6 +261,8 @@ def train_one(
     seed: int,
 ) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
     run_dir = args.output_dir / "runs" / backbone / quantity_variant / f"seed_{seed}"
+    if backbone == THP_STATIC_MEMORY_BACKBONE and run_dir.exists():
+        raise FileExistsError("THP static memory requires a fresh run; cache reuse/resume/overwrite is forbidden")
     summary_path = run_dir / "summary.json"
     best_path = run_dir / "best_val_joint_objective_model.pt"
     last_path = run_dir / "last_epoch_state.pt"

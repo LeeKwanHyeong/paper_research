@@ -2,6 +2,11 @@
 
 import math
 
+from models.TPPs.CountAwareTHPStaticMemory import (
+    THP_STATIC_MEMORY_BACKBONE,
+    THP_STATIC_MEMORY_ROLE,
+)
+
 from models.TPPs.CountAwareTPP import (
     LOG_MSE_VARIANT,
     LOGNORMAL_VARIANT,
@@ -38,7 +43,7 @@ TITAN_MEMORY_BACKBONES = (
     "titantpp_weighted_static_memory",
     "titantpp_hard_memory_local_time",
 )
-SUPPORTED_BACKBONES = (*BACKBONES, *TITAN_MEMORY_BACKBONES)
+SUPPORTED_BACKBONES = (*BACKBONES, *TITAN_MEMORY_BACKBONES, THP_STATIC_MEMORY_BACKBONE)
 VARIANT = LOG_MSE_VARIANT
 FROZEN_TAIL_LAMBDA = 0.09111380335463036
 MODEL_ROLE_EXPERIMENTAL = "experimental"
@@ -58,6 +63,7 @@ MODEL_ROLES = (
     MODEL_ROLE_TITAN_B012_SCREENING,
     MODEL_ROLE_WEIGHTED_STATIC,
     MODEL_ROLE_HARD_LOCAL_TIME,
+    THP_STATIC_MEMORY_ROLE,
 )
 T0_COMMON_BACKBONES = ("rmtpp", "thp", "nhp", "sahp", "titantpp")
 TITAN_B012_BACKBONES = (
@@ -76,6 +82,7 @@ QUANTITY_VARIANT_ALIASES = {
     TAIL_HEAD_ONLY_VARIANT: TAIL_HEAD_ONLY_VARIANT,
 }
 BACKBONE_LABELS = {
+    THP_STATIC_MEMORY_BACKBONE: "Count-aware THP + Static Hard Memory",
     "rmtpp": "Count-aware RMTPP",
     "thp": "Count-aware THP",
     "titantpp": "Count-aware TitanTPP",
@@ -108,6 +115,13 @@ def validate_model_role_contract(
     lambda_tail: float,
 ) -> None:
     """Reject official-role runs that drift from the frozen baseline contract."""
+    if model_role == THP_STATIC_MEMORY_ROLE or THP_STATIC_MEMORY_BACKBONE in backbones:
+        if model_role != THP_STATIC_MEMORY_ROLE or backbones != (THP_STATIC_MEMORY_BACKBONE,):
+            raise ValueError("THP static memory requires its dedicated single-backbone role")
+        if (quantity_variants != (VARIANT,) or time_head_mode != TIME_HEAD_MODE_LEGACY_CLAMPED
+                or lambda_tail != 0.):
+            raise ValueError("THP static memory requires direct log-MSE, legacy head and no tail loss")
+        return
     if model_role == MODEL_ROLE_HARD_LOCAL_TIME or "titantpp_hard_memory_local_time" in backbones:
         if model_role != MODEL_ROLE_HARD_LOCAL_TIME or backbones != ("titantpp_hard_memory_local_time",):
             raise ValueError("Local-time candidate requires its dedicated single-backbone role")
@@ -214,6 +228,8 @@ __all__ = [
     "TITAN_HISTORICAL_MEMORY_BACKBONES",
     "TITAN_MEMORY_BACKBONES",
     "TITAN_PERSISTENT_MEMORY_BACKBONES",
+    "THP_STATIC_MEMORY_BACKBONE",
+    "THP_STATIC_MEMORY_ROLE",
     "VARIANT",
     "validate_model_role_contract",
 ]
