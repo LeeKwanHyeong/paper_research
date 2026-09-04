@@ -1,0 +1,78 @@
+{
+  "reference": "original_hard_lmm",
+  "candidate": "titantpp_key_value_static_memory",
+  "gate": {
+    "body_mae_minimum_relative_improvement": 0.05,
+    "quantity_rmse_maximum_relative_regression": 0.02,
+    "gt_p99_mae_maximum_relative_regression": 0.02,
+    "time_nll_maximum_increase": 0.01,
+    "all_metrics_finite": true
+  },
+  "datasets": {
+    "yellow_trip_hourly": {
+      "baseline": {
+        "body_mae": 23.16740661211176,
+        "quantity_mae": 51.76773159866986,
+        "quantity_rmse": 181.5375935825544,
+        "gt_p99_mae": 1166.2824212569224,
+        "time_nll": 1.3664302460355464
+      },
+      "candidate": {
+        "body_mae": 16.96621640628812,
+        "quantity_mae": 33.836107893278765,
+        "quantity_rmse": 119.39059532262276,
+        "gt_p99_mae": 696.4048593255538,
+        "time_nll": 1.365848076807801
+      },
+      "relative_changes": {
+        "body_mae": -0.2676687257080256,
+        "quantity_mae": -0.34638612030378857,
+        "quantity_rmse": -0.3423367966573283,
+        "gt_p99_mae": -0.40288488737142547
+      },
+      "time_nll_delta": -0.0005821692277454549,
+      "gates": {
+        "body": true,
+        "rmse": true,
+        "tail": true,
+        "time": true
+      },
+      "passed": true
+    },
+    "insta_market_basket": {
+      "baseline": {
+        "body_mae": 3.424545637259682,
+        "quantity_mae": 4.026534853916616,
+        "quantity_rmse": 5.974160013596838,
+        "gt_p99_mae": 23.00099934296864,
+        "time_nll": 3.2064400114488096
+      },
+      "candidate": {
+        "body_mae": 3.422798711765601,
+        "quantity_mae": 4.036541785116903,
+        "quantity_rmse": 5.996654487917521,
+        "gt_p99_mae": 23.312413343161126,
+        "time_nll": 3.2065402619360674
+      },
+      "relative_changes": {
+        "body_mae": -0.000510118911856261,
+        "quantity_mae": 0.002485246387611051,
+        "quantity_rmse": 0.003765294915015094,
+        "gt_p99_mae": 0.013539150866837657
+      },
+      "time_nll_delta": 0.0001002504872578136,
+      "gates": {
+        "body": false,
+        "rmse": true,
+        "tail": true,
+        "time": true
+      },
+      "passed": false
+    }
+  },
+  "overall": {
+    "passed_datasets": 1,
+    "evaluated_datasets": 2,
+    "accepted_for_expansion": false
+  }
+}
