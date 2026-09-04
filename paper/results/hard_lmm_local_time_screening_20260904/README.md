@@ -1,6 +1,105 @@
 # Hard-LMM Local Time: Approved Fresh Screening
 
-## Latest Status: Fresh Screening Running
+## Latest Status: Complete, Candidate Held
+
+2026-09-04 **13:26:11 KST**: both approved fresh runs completed normally,
+with total launcher wall time **610.877 seconds (10m11s)**. Taxi stopped at
+e42 / best e2 and RAF at e60 / best e20, exactly 40 epochs without a lower
+validation joint objective. This is successful execution, not a CUDA failure.
+The final observation at 14:20:39 KST found no tmux or CUDA job, GPU 10 MiB
+used / utilization 0%, GDM inactive, no graphics processes and no recent
+readable kernel Xid/OOM. GDM was not restarted automatically.
+
+Raw artifacts were synchronized without `--delete` and independently audited
+locally. **Technical verification: passed; performance acceptance: 0/2, hold.**
+No retry, extra training, model edit, runtime installation, new seed, dataset
+expansion, benchmark retraining or held-out test evaluation was performed.
+
+Final results were published to the existing Notion page and read back; the
+parent and earlier weighted-candidate cancellation remain intact. Evidence:
+`notion_publication_final.json`. The hourly heartbeat `hard-lmm-local-time-5080`
+is now **PAUSED**, with all other saved fields unchanged
+(`automation_completed.json`). Startup/approval/ETA records below are historical.
+Only related result evidence is committed to local `paper_research/master`;
+no push is performed, and unrelated untracked `scripts/` is untouched.
+
+### Official Joint-Selected Results
+
+Values are original Hard-LMM seed42 -> local-time candidate seed42; lower is
+better. Body is the count-weighted union of train-p95-and-below strata, not an
+unweighted average. Tail is strictly above train p99. These are validation
+results, not test results or a 3-seed mean.
+
+| Dataset | Quantity MAE | Quantity RMSE | Body MAE | >p99 MAE | Time NLL |
+| --- | --- | --- | --- | --- | --- |
+| Taxi | 51.767732 -> 47.929515 | 181.537594 -> 167.029045 | 23.167407 -> 22.489830 | 1166.282421 -> 1035.041538 | 1.366430 -> 1.366140 |
+| RAF | 9.086491 -> 9.088708 | 36.123388 -> 36.141799 | 4.225942 -> 4.225432 | 313.510813 -> 313.682982 | 3.285116 -> 3.295697 |
+
+| Dataset | Body improvement (required >=5%) | RMSE change (max +2%) | >p99 MAE change (max +2%) | Time NLL change (max +0.01) | Fixed decision |
+| --- | --- | --- | --- | --- | --- |
+| Taxi | 2.924698%, fail | -7.992035%, pass | -11.252925%, pass | -0.000290579, pass | Rejected |
+| RAF | 0.012078%, fail | +0.050966%, pass | +0.054917%, pass | +0.010580934, fail | Rejected |
+
+The Taxi quantity improvement is real in these recorded selected-checkpoint
+metrics: overall MAE decreases 7.414303% and RMSE 7.992035%. It does not meet
+the predeclared body target. Taxi MAE improves only 0.244323% at <=p50 and
+0.846121% at p50-p90, versus 5.329910% at p90-p95 and more than 10% above p95.
+Thus the route change does not resolve the common low-quantity prediction gap.
+Taxi history >128 MAE improves 7.446632%; this is a descriptive association,
+not evidence that history length causes the gain, because quantity and history
+groups can be correlated. RAF quantity is essentially unchanged, with a small
+Time NLL increase exceeding the original guardrail by 0.000580934.
+
+The candidate remains held. Do not lower gates, substitute a later raw-MAE
+minimum checkpoint, or expand seeds/datasets. The conclusion is about this
+single routing candidate, not all memory models. A single validation seed and
+historical runtime baseline cannot establish significance or general superiority.
+The shared encoder still receives both task gradients; keeping the quantity
+route unchanged at fixed weights does not keep it unchanged after fresh training.
+
+### Verification and Cost
+
+`final_verification.json` records independent audit passes for both runs.
+Both manifests match their pinned digests; 250 training and 253 orchestration
+file hashes match committed Git objects. Dataset/split/baseline file identities,
+full target counts, fresh source history, optimizer, legacy launch time values,
+route metadata and earliest joint-minimum selection match the contract.
+All numeric JSON/CSV metrics and checkpoint/optimizer tensors are finite.
+All six CSVs per dataset reconcile with summaries; quantity/history weighted
+aggregates reconstruct global MAE, RMSE, Time NLL, log-MSE and joint objective.
+Best checkpoint state hashes agree with summary and last-checkpoint saved best
+states. The local audit made no forward pass or optimizer step, and all 36 raw
+artifact files retain their pre-audit hashes. Held-out artifacts are absent.
+
+`final_tests.xml`: **41 passed**, focused screening/smoke regression tests using
+the existing local Python 3.12.10 / PyTorch 2.7.1. No CUDA training was repeated.
+
+| Dataset | Epoch seconds, excluding first | Child wall time incl. startup | Peak allocated / reserved MiB |
+| --- | --- | --- | --- |
+| Taxi | 11.357921 | 480.703860 s | 1800.845 / 1898 |
+| RAF | 2.080224 | 126.909226 s | 481.168 / 510 |
+
+Compilation was not separately instrumented. No matched-runtime baseline cost
+ratio is claimed. `validation_comparison.png` shows full histories and official
+checkpoint changes; later raw-MAE improvements do not replace the joint selector.
+The rendered figure was inspected for labels, clipping and metric direction.
+
+Evidence: `source_5080/` contains immutable nonbinary artifact copies;
+`baseline_evidence/` contains original selected summaries/contracts/histories;
+`artifact_inventory.json` records all raw file hashes including both checkpoint
+types. `official_metrics.csv`, `scale_wise_comparison.csv`, `exact_comparison.json`
+and `costs.json` are reproducible with `audit_results.py` (CPU, no inference):
+
+```bash
+env MPLCONFIGDIR=/private/tmp/weighted-mpl /usr/local/bin/python3 -s paper/results/hard_lmm_local_time_screening_20260904/audit_results.py
+```
+
+Next: keep the fixed baselines and this negative gate result; discuss a separate,
+prospectively defined component experiment before implementing or training one.
+Desktop restoration, only if needed, is a user action:
+`ssh -t 5080 'sudo systemctl start gdm'`.
+
+## Historical State: Fresh Screening Running
 
 2026-09-04 **13:16:00 KST**: started the approved Taxi-to-RAF seed-42 fresh
 screening on 5080, tmux `hard_lmm_local_time_seed42_0904`, artifact
