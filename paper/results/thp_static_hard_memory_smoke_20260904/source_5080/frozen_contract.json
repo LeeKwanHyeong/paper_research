@@ -1,0 +1,342 @@
+{
+  "schema_version": 1,
+  "contract_id": "count_aware_thp_static_hard_memory_v1",
+  "created_on": "2026-09-04",
+  "status": "contract_frozen_implementation_not_started",
+  "scope": "prospective_static_memory_addition_to_existing_count_aware_thp",
+  "authorization": {
+    "local_contract_and_document_validation": true,
+    "local_baseline_metadata_and_checkpoint_audit": true,
+    "candidate_implementation": false,
+    "server_access_or_source_sync": false,
+    "cuda_or_e1_smoke": false,
+    "performance_training": false,
+    "scheduler": false,
+    "notion_publication": false,
+    "push": false
+  },
+  "candidate": {
+    "label": "Count-aware THP + Static Hard Memory",
+    "backbone_id_reserved": "thp_static_hard_memory",
+    "model_role_reserved": "t0_thp_static_hard_memory",
+    "registered_in_factory_at_freeze": false,
+    "adopted_primary_model": false,
+    "original_titans_reproduction": false,
+    "direct_reference_backbone": "thp",
+    "secondary_reference_backbone": "titantpp",
+    "single_factor": "append one original static hard top-4 prototype residual after the complete CountAwareTHP encoder",
+    "hypothesis": "adding static prototypes to the unchanged THP representation improves RMSE and extreme-tail MAE without sacrificing THP body or overall MAE",
+    "hypothesis_confirmed": false,
+    "new_parameters": 4096,
+    "reference_parameter_count": 100291,
+    "expected_parameter_count": 104387,
+    "parameter_count_status": "derived_from_baseline_plus_64_times_64_not_measured_on_candidate"
+  },
+  "encoder": {
+    "implementation_reference": "models/TPPs/CountAwareTPP.py::CountAwareTHP",
+    "block_reference": "models/TPPs/TransformerHawkesTPP.py::THPEncoderLayer",
+    "input_features": [
+      "log1p_delta_t",
+      "log1p_raw_quantity"
+    ],
+    "input_projection": "Linear(2,64)",
+    "hidden_dim": 64,
+    "n_layers": 2,
+    "n_heads": 4,
+    "ff_dim": 256,
+    "dropout": 0.1,
+    "activation": "gelu",
+    "normalize_before": false,
+    "layernorm_epsilon": 1e-06,
+    "attention": "existing MultiheadAttention with causal and padding blocked mask",
+    "persistent_tokens": 0,
+    "contextual_memory_size": 0,
+    "learned_positional_embedding": false,
+    "sinusoidal_temporal_encoding": false,
+    "add_temporal_encoding_each_layer": false,
+    "use_rnn": false,
+    "identity_boundary": "preserve the project CountAwareTHP, not THPTemporalEncoder or a new faithful-original THP implementation"
+  },
+  "memory": {
+    "implementation_reference": "models/Titan/common/memory.py::HardLocalMemoryMatcher",
+    "parameter_name_reserved": "lmm.mem",
+    "shape": [
+      1,
+      64,
+      64
+    ],
+    "prototype_count": 64,
+    "topk": 4,
+    "initialization": "randn(1,64,64)*0.02",
+    "similarity": "cosine via original F.normalize p=2 dim=-1 and torch.topk",
+    "selected_values": "original unnormalized trainable prototype vectors",
+    "aggregation": "arithmetic_mean",
+    "placement": "once after the final THP layer; no extra normalization or activation",
+    "forward": "(h + mean(selected_prototypes)) * valid_mask",
+    "score_gradient": "hard indices are nondifferentiable; selected values receive gradients, no learned addressing claim",
+    "train_update": "outer_optimizer_only",
+    "online_writes": false,
+    "persistent_attention_tokens": false,
+    "mutable_series_state": false,
+    "validation_parameter_update": false,
+    "forbidden_additions": [
+      "similarity_weighting",
+      "temperature",
+      "confidence_gate",
+      "null_memory",
+      "shrinkage",
+      "calibration",
+      "learned_qkv_projection",
+      "adaptive_topk",
+      "MAC",
+      "surprise_update"
+    ]
+  },
+  "routing": {
+    "reference": {
+      "time": "h",
+      "quantity": "h"
+    },
+    "candidate": {
+      "time": "h+r",
+      "quantity": "h+r"
+    },
+    "encode_task_states_order": [
+      "time",
+      "quantity"
+    ],
+    "encode_returns": "h+r",
+    "encoder_calls_per_forward": 1,
+    "matcher_calls_per_forward": 1,
+    "mask_after_residual": true,
+    "detach_any_state": false,
+    "time_and_quantity_gradient_to_bank": "both, with nondegenerate head fixtures",
+    "local_time_route_combined": false
+  },
+  "initialization": {
+    "all_parameters_fresh_and_trainable": true,
+    "reference_weights_used_for_training": false,
+    "smoke_weights_used_for_screening": false,
+    "preserve_base_parameter_names_shapes_and_init_order": true,
+    "bank_construction": "after all original THP parameters; CPU torch.random.fork_rng(devices=[]) preserves caller RNG state",
+    "base_parameter_equality_test": "same seed -> original THP parameters exactly equal before training",
+    "zero_residual_control": "diagnostic-only bypass or zero bank must reproduce THP with copied shared weights and same RNG",
+    "full_candidate_output_identity_required": false,
+    "historical_cuda_trajectory_identity_claimed": false
+  },
+  "training": {
+    "seed": 42,
+    "maximum_epochs": 300,
+    "minimum_epochs": 40,
+    "patience": 40,
+    "batch_size": 128,
+    "learning_rate": 0.001,
+    "optimizer": {
+      "type": "AdamW",
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "eps": 1e-08,
+      "weight_decay": 0.01,
+      "amsgrad": false,
+      "parameter_groups": 1,
+      "time_head_lr_multiplier": 1.0
+    },
+    "gradient_clip": {
+      "norm_type": 2.0,
+      "max_norm": 1.0,
+      "scope": "all_trainable_parameters_together"
+    },
+    "quantity_objective": "direct_mse_on_log1p_quantity",
+    "quantity_decoder": "original_linear_softplus_log1p_location_expm1_point_prediction",
+    "lambda_log_qty": 1.0,
+    "lambda_tail": 0.0,
+    "time_head": {
+      "mode": "legacy_clamped_rmtpp",
+      "time_scale": 3.0,
+      "time_w_max": 3.3333333333333335,
+      "time_intercept_limit": 30.0,
+      "time_wd_safety_limit": 40.0,
+      "time_initial_intercept": 0.0,
+      "w_raw_initial": -3.0
+    },
+    "derived_time_statistics": "fit on train only; distinct from legacy launch arguments",
+    "checkpoint_monitor": "validation_joint_objective",
+    "checkpoint_formula": "mean_time_nll + mean_log1p_quantity_mse",
+    "checkpoint_comparison": "strict_less_than; ties keep earliest epoch",
+    "epoch_zero_eligible": false,
+    "posthoc_mae_or_rmse_selection": false,
+    "lr_schedule_or_pcgrad": false,
+    "new_amp_or_compile_policy": false,
+    "loader": {
+      "train_shuffle": true,
+      "validation_shuffle": false,
+      "dedicated_generator_seed": 42,
+      "num_workers": 0,
+      "drop_last": false
+    },
+    "reproducibility": "existing seeded warn-only deterministic policy; record runtime/backend flags and warnings"
+  },
+  "data_and_evaluation": {
+    "datasets": [
+      "yellow_trip_hourly",
+      "raf_spare_parts"
+    ],
+    "split_mode": "fixed",
+    "allowed_materialized_splits": [
+      "train",
+      "validation"
+    ],
+    "filter_test_before_materialization": true,
+    "evaluation_scope": "validation_only",
+    "held_out_test_evaluated": false,
+    "subsample_train_or_validation": false,
+    "target_quantity_in_encoder": "masked_zero",
+    "prediction_position": "length-2 after right-padding; target at length-1",
+    "target_dt_policy": "density evaluation target only; causal mask blocks its influence on history prediction",
+    "body_strata": [
+      "le_p50",
+      "p50_p90",
+      "p90_p95"
+    ],
+    "body_formula": "sum(count*qty_mae)/sum(count) across body strata",
+    "extreme_tail_stratum": "gt_p99",
+    "thresholds": "baseline train-derived quantity and history cutoffs, not validation-fitted",
+    "series_isolation": "no forward-mutated state; static trainable parameters intentionally shared across series and frozen in evaluation",
+    "context": {
+      "yellow_trip_hourly": {
+        "lookback": 168,
+        "time_unit": "hour",
+        "max_seq_len": 256,
+        "train_targets": 38393,
+        "validation_targets": 8268
+      },
+      "raf_spare_parts": {
+        "lookback": 84,
+        "time_unit": "month",
+        "max_seq_len": 84,
+        "train_targets": 25779,
+        "validation_targets": 6690
+      }
+    }
+  },
+  "baseline_reuse": {
+    "registry": "paper/contracts/count_aware_thp_static_hard_memory_baselines_v1.json",
+    "registry_sha256": "92c6165b43c7a11fa515ce66be326b133a4f83b428a28d240a26985d2c2d7a8e",
+    "primary": "original_thp_seed42_joint_selected",
+    "secondary": "original_titantpp_hard_lmm_seed42_joint_selected",
+    "reuse_scope": "historical_validation_results; not weights for training or bitwise matched-runtime replay",
+    "requirements": [
+      "source_and_file_and_checkpoint_state_digests",
+      "same_data_split_full_target_counts_and_strata",
+      "same_mark_free_input_and_direct_log_mse_variant",
+      "same_head_optimizer_batch_lr_context_epoch_patience_selector",
+      "finite_metrics_and_checkpoint_tensors",
+      "validation_only_no_test_metrics",
+      "original_thp_encoder_semantics_unchanged",
+      "runtime_difference_disclosed"
+    ],
+    "historical_test_metadata": "split_rows includes test counts; test was not evaluated, but absence of historical test-row materialization is not claimed",
+    "missing_or_mismatched_reference": "block comparison; obtain exact missing evidence or propose separately approved matched rerun; never silently substitute",
+    "retrain_benchmarks_automatically": false,
+    "compare_candidate_seed42_to_baseline_three_seed_mean": false,
+    "local_time_weighted_or_mac_as_reference": false
+  },
+  "decision": {
+    "direct_thp_gate": {
+      "body_mae_regression_max": 0.0,
+      "overall_mae_regression_max": 0.0,
+      "overall_rmse_improvement_min": 0.02,
+      "gt_p99_mae_improvement_min": 0.02,
+      "time_nll_absolute_increase_max": 0.01
+    },
+    "hard_lmm_compatibility_gate": {
+      "body_le_p95_mae_improvement_min": 0.05,
+      "overall_rmse_regression_max": 0.02,
+      "gt_p99_mae_regression_max": 0.02,
+      "time_nll_absolute_increase_max": 0.01
+    },
+    "new_gate_rationale": "THP body/overall MAE must be preserved; 2% RMSE and tail improvement is a prospective minimum-effect screen to avoid accepting negligible changes, not a significance threshold or inherited prior rule",
+    "per_dataset": "all direct THP and original Hard-LMM compatibility conditions must pass",
+    "all_datasets_required": true,
+    "comparisons": "unrounded values; candidate <= reference*(1-improvement) or *(1+regression); time uses absolute difference",
+    "invalid_missing_empty_nonfinite_or_zero_reference": "not_evaluable for missing/empty/nonfinite metrics or nonpositive quantity reference denominators; finite time NLL may be zero or negative",
+    "any_performance_failure": "hold_no_expansion",
+    "technical_failure": "invalid_preserve_evidence_no_automatic_retry",
+    "both_pass": "eligible_for_separate_followup_not_model_adoption_or_significance",
+    "thresholds_changed_after_candidate_results": false,
+    "historical_local_time_decision_changed": false,
+    "cost": "report parameter delta, epoch and startup times and peak VRAM; no matched-runtime cost or efficiency claim without matched evidence"
+  },
+  "implementation_acceptance": {
+    "state": "not_run_candidate_not_implemented",
+    "cpu_identity_tolerance": {
+      "rtol": 0.0,
+      "atol": 0.0
+    },
+    "cuda_zero_residual_tolerance": {
+      "rtol": 1e-05,
+      "atol": 1e-06
+    },
+    "requirements": [
+      "base_thp_parameter_names_shapes_values_and_caller_rng_unchanged_at_initialization",
+      "exactly_one_4096_parameter_bank_and_total_104387",
+      "base_encoder_and_matcher_each_called_once",
+      "zero_residual_matches_existing_thp_states_predictions_and_gradients",
+      "nonzero_bank_uses_original_cosine_top4_unnormalized_value_mean",
+      "mask_after_residual_zeroes_padding_even_with_nonzero_bank",
+      "time_and_quantity_paths_share_h_plus_r_no_detach",
+      "each_task_reaches_selected_bank_values_with_nonzero_head_fixture",
+      "target_quantity_duration_future_and_padding_perturbations_do_not_change_history_prediction",
+      "batch_order_and_series_isolation_and_no_evaluation_parameter_mutation",
+      "finite_forward_backward_extreme_inputs_and_short_history",
+      "checkpoint_replay_with_bank_and_route_metadata_rejects_wrong_or_incomplete_candidate",
+      "legacy_thp_and_titantpp_outputs_remain_unchanged",
+      "runner_metadata_and_cache_reuse_reject_wrong_route_scope_or_contract",
+      "full_train_validation_counts_cutoffs_and_histories_match_registry",
+      "held_out_rows_filtered_before_materialization_and_no_test_artifacts"
+    ]
+  },
+  "future_execution": {
+    "implementation_source_revision": null,
+    "run_commands": [],
+    "server_if_separately_approved": "5080",
+    "stages": [
+      "separate_implementation_approval_then_local_model_contract_tests",
+      "separate_server_sync_cuda_and_full_e1_approval",
+      "separate_fresh_taxi_and_raf_seed42_screening_approval"
+    ],
+    "candidate_screening_runs": 2,
+    "cuda_model_tests_before_full_e1": true,
+    "e1_is_feasibility_not_performance": true,
+    "evaluate_both_datasets_despite_first_performance_rejection": true,
+    "fresh_artifact_only": true,
+    "independent_process_per_dataset": true,
+    "minimum_free_vram_mib": 12000,
+    "gdm_graphics_and_competing_compute_must_be_inactive": true,
+    "readable_kernel_log_without_recent_xid_oom": true,
+    "service_changes_require_explicit_approval": true,
+    "atomic_failed_status": true,
+    "automatic_retry_resume_or_expansion": false,
+    "sync_delete_allowed": false,
+    "scheduler_now": false,
+    "conditional_datasets_or_seeds": "not scheduled; separate contract and approval only after both datasets pass"
+  },
+  "evidence": {
+    "reviewed_code_revision": "af14bcfba59fef6f5b9f1d7c4682fba804beddaa",
+    "prior_mechanism_analysis": "paper/results/hard_lmm_weighted_static_20260903/mechanism_analysis.md",
+    "local_time_result": "paper/results/hard_lmm_local_time_screening_20260904/exact_comparison.json",
+    "reviewed_source_sha256": {
+      "models/TPPs/CountAwareTPP.py": "28987221f868a91ef41ac369938b2da57096bc05b7ce287a06d5bb72cd3dcd27",
+      "models/TPPs/CountAwareFactory.py": "0937ccf3219f5c75f5d8ec01cee6a5716e2472cdf546734029f021f9bfc8c588",
+      "models/TPPs/TransformerHawkesTPP.py": "a74cbb43bd1d47d541bb903dfcdf336ef8647ec489fd5b776da27aa2a7eb3f77",
+      "models/Titan/common/memory.py": "77cd312055d826e8080fca35239872098168438c179569615d6ef7a206068d42",
+      "paper/scripts/count_aware_tpp_backbone/core.py": "025dfbe75a5a4e235466807f31873aa085f8ddffe680485fb4b9f4f7ef60c598",
+      "paper/scripts/count_aware_tpp_backbone/training.py": "8f6d84a2f9519deb0e883a86071109b8e0ac1b77a335829efb9389d420c1dc29",
+      "paper/scripts/count_aware_tpp_backbone/datasets.py": "0a2982d92a21d6dd0518adba5e631d40cf2222c9eb9ee476d861b27211623274",
+      "paper/scripts/run_count_aware_tpp_backbone_control.py": "3aa7b50b6dadf6e09b5f18623c7b959b3736c4af13469afb6d93523522c20eff",
+      "data_loader/event_seq_data_module.py": "7c11d9ace6c4e4d3bb03861aae92393aa946a38452d702dc7625210b339897ca"
+    }
+  }
+}
