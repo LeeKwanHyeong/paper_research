@@ -360,7 +360,9 @@ def test_checkpoint_and_next_optimizer_step_replay():
     torch.manual_seed(501)
     step(restored, restored_optimizer)
     for name, value in model.state_dict().items():
-        torch.testing.assert_close(value, restored.state_dict()[name], rtol=0, atol=0)
+        # CUDA reductions need not be bitwise deterministic across backward calls.
+        tolerance = 1e-6 if DEVICE.startswith("cuda") else 0.
+        torch.testing.assert_close(value, restored.state_dict()[name], rtol=tolerance, atol=tolerance)
 
 
 def test_checkpoint_identity_and_strict_state_reject_mislabeling():
