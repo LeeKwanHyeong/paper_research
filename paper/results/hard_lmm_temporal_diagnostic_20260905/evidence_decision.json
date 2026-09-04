@@ -1,0 +1,31 @@
+{
+  "status": "diagnostic_complete_association_inconclusive",
+  "decision": "hold_relative_elapsed_time_architecture_candidate",
+  "one_hypothesis": "Among histories with comparable observed quantity level, quantity changes, absolute mean gap and length, does mismatch between event-index age and actual elapsed age correspond to higher body quantity error?",
+  "architecture_candidate_selected": false,
+  "instacart": {
+    "separate_key_descriptive_relative_excess_body_mae": 0.04488869378822196,
+    "required_relative_excess": 0.05,
+    "history_length_smd_by_fold": [-0.3254771277733549, -0.25621184864498625],
+    "maximum_absolute_smd": 0.25,
+    "support_and_balance_passed": false,
+    "interpretation": "Observed positive contrast is below the relevance threshold and remains confounded by history length; it cannot isolate the timing relationship"
+  },
+  "taxi": {
+    "retained_control_cells_by_fold": [0, 0],
+    "interpretation": "No common comparison cells met support requirements; timing variation exists, so this is not evidence of no time effect"
+  },
+  "sensitivity_conclusion": "Changing interior observed gap or quantity order changes local states and predictions; the encoder does not ignore these inputs. Perturbation magnitude is not feature importance or adequacy of representation.",
+  "bootstrap_executed": false,
+  "bootstrap_reason": "Predeclared support and balance prerequisites were not met",
+  "official_baseline": "original TitanTPP-HardLMM",
+  "prior_query_value_fusion_holds_preserved": true,
+  "post_result_threshold_or_feature_changes": false,
+  "model_implemented": false,
+  "model_trained": false,
+  "remote_5090_used": false,
+  "held_out_used": false,
+  "next_review": "Only as a separately preregistered Instacart follow-up, assess input-only balanced sampling from train series unused in this diagnostic; keep the same feature and relevance requirements, stop if common support is unavailable. Taxi has no unused train series for this design.",
+  "unused_train_series_in_this_diagnostic": {"insta_market_basket": 198361, "yellow_trip_hourly": 0},
+  "scope_caveat": "Frozen train-internal diagnostic with validation-selected checkpoints; neither causation nor independent generalization was established"
+}
