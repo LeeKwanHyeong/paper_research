@@ -36,10 +36,16 @@ def package(output):
     manifest = {"source_revision": revision, "scope": "5080_cuda_and_full_taxi_raf_e1_only",
                 "reference_revision": "7f0bf8de81a627db3df7609b6d00c3e9617769cc",
                 "reference_file": REFERENCE_PATH, "performance_training_authorized": False,
+                "empty_directories": ["sample_data"],
                 "files": {name: hashlib.sha256(data).hexdigest() for name, data in sorted(contents.items())}}
     contents["source_manifest.json"] = (json.dumps(manifest, indent=2) + "\n").encode()
     # Exclusive creation avoids silently replacing a previously approved package.
     with output.open("xb") as stream, tarfile.open(fileobj=stream, mode="w:gz") as target:
+        # Root discovery requires this sentinel, but datasets stay in the existing
+        # server project and are passed to the runner by explicit absolute paths.
+        directory = tarfile.TarInfo("sample_data")
+        directory.type, directory.mode = tarfile.DIRTYPE, 0o755
+        target.addfile(directory)
         for name, data in sorted(contents.items()):
             item = tarfile.TarInfo(name)
             item.size, item.mode = len(data), 0o644

@@ -3,15 +3,18 @@
 import argparse
 import copy
 import json
+import io
 from pathlib import Path
 import subprocess
 import sys
+import tarfile
 from unittest.mock import Mock
 
 import pytest
 
 from paper.scripts import run_count_aware_tpp_backbone_control as entry
 from paper.scripts import run_thp_static_hard_memory_smoke as smoke
+from paper.scripts import package_thp_static_memory_smoke as packager
 from paper.scripts.count_aware_tpp_backbone.thp_static_contract import validate_static_memory_launch
 from simple_lab_test.search.tests.test_thp_static_hard_memory_model import frozen_factory_source
 from simple_lab_test.search.tests.test_thp_static_hard_memory_runner import (
@@ -42,6 +45,35 @@ def test_exported_reference_factory_is_pinned(monkeypatch, tmp_path):
     path.write_text(reference + "\n")
     with pytest.raises(ValueError, match="checksum"):
         frozen_factory_source()
+
+
+def test_packaged_snapshot_has_root_sentinel_without_data_or_notebooks(monkeypatch, tmp_path):
+    from simple_lab_test.common.pathing import resolve_project_root
+    stream = io.BytesIO()
+    with tarfile.open(fileobj=stream, mode="w") as archive:
+        for name in ("models/__init__.py", "utils/example.py", "simple_lab_test/example.ipynb"):
+            data = b"# fixture\n"
+            member = tarfile.TarInfo(name)
+            member.size = len(data)
+            archive.addfile(member, io.BytesIO(data))
+    reference = frozen_factory_source().encode()
+    def git(cmd, **kwargs):
+        return {"rev-parse": "a" * 40, "diff": b"", "archive": stream.getvalue(), "show": reference}[cmd[1]]
+    monkeypatch.setattr(packager.subprocess, "check_output", git)
+    output = tmp_path / "source.tar.gz"
+    packager.package(output)
+    snapshot = tmp_path / "isolated"
+    snapshot.mkdir()
+    with tarfile.open(output) as archive:
+        archive.extractall(snapshot, filter="data")
+    assert resolve_project_root(snapshot / "models") == snapshot
+    assert list((snapshot / "sample_data").iterdir()) == []
+    assert not list(snapshot.rglob("*.ipynb"))
+    manifest = json.loads((snapshot / "source_manifest.json").read_text())
+    assert manifest["empty_directories"] == ["sample_data"]
+    assert manifest["performance_training_authorized"] is False
+    with pytest.raises(FileExistsError):
+        packager.package(output)
 
 
 @pytest.mark.parametrize("failure", [None, "preflight", "cuda", "dataset", "audit"])
