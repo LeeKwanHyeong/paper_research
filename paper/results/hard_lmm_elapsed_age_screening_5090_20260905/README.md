@@ -1,7 +1,7 @@
 # Hard-LMM 경과시간 encoder — seed42 e300 screening
 
-**진행 중: 사용자가 Taxi·Instacart seed42 e300 실행과 사전 기준 평가를 승인했다.**
-현재 문서는 실행 준비 기록이다. 학습 시작과 완료 상태는 실제 증적 확인 후 갱신한다.
+**진행 중: 5090에서 Taxi·Instacart fresh seed42 e300을 시작했다.**
+2026-09-05 10:19:54 KST에 시작했으며, 10:20:25 KST 초기 확인에서 Taxi epoch 1–3과 GPU 학습 프로세스를 확인했다. Instacart는 Taxi 실행·감사 이후 순서대로 진행한다. 성능 판정은 아직 완료하지 않았다.
 
 새 실행기와 기존 e1 실행기 대상 로컬 테스트 **31개 통과, 실패·제외 0개**를 확인했다. 실행 명령·원시 XML hash는 [로컬 검증](local_validation.json)에 기록했다.
 
@@ -21,16 +21,27 @@
 - 모든 기준을 반올림 전 참조값으로 계산한다. 성능 gate 미달이어도 승인된 다음 데이터셋을 실행하며, 실행·무결성 감사 실패는 중단한다.
 - 단일 seed의 validation screening이므로 일반화나 최종 모델 채택의 증거로 확대 해석하지 않는다.
 
+## 실행과 초기 확인
+
+- 실행 소스 커밋: `e6e59337a816d53e9d1d3afaf0f6cede48ef5e2f` (`paper_research/master`). 모델·학습 의존 파일 167개가 e1 소스와 동일하다.
+- Snapshot: `/home/leekwanhyeong/workspace/paper_research_elapsed_age_screening_e6e5933_5090`.
+- 서버 결과: `/home/leekwanhyeong/workspace/paper_research/search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905`.
+- tmux: `elapsed_age_taxi_insta_e300_0905_e6e5933`.
+- 전송한 소스·참조 534개를 검증했고, 실행 직전 Runtime·data·split·참조와 기존 CUDA56개/full e1 감사를 다시 통과했다.
+- 실제 Taxi 설정은 최대300/min40/patience40, seed42, batch128, lr0.001, validation-only, `partial_smoke=false`다. 초기 GPU process는 PID3930103/Python, 2684MiB를 사용했다.
+- [실행 명령](launch_record.json), [전송 검증](deployment.json), [실행 직전 감사](launch_preflight.json), [초기 학습 확인](initial_training_check.json), [검증 요약](launch_verification.json)에 증적을 보존했다.
+- 초기 epoch 지표는 학습 진입 확인에만 사용하며 성능 채택이나 조기 gate 판단에 사용하지 않는다.
+
 ## 실행 전 확인
 
 [초기 preflight](initial_preflight.json): 5090 GPU compute process 없음, GDM inactive, 최근 kernel 오류 없음, 여유 메모리 32,107MiB. Runtime은 Python3.12.13/PyTorch2.11.0+cu130/CUDA13.0/Polars1.39.3이다. 기존 e1 소스 manifest와 두 데이터셋·split·원본 참조 checksum 검증을 통과했다.
 
 ## 남은 작업 순서
 
-**진행 중 — 실행 준비·초기 학습 확인 / 로컬·5090**
-- 새 실행 계약·runner를 검증하고 `paper_research/master`에 커밋한 소스만 별도 snapshot으로 전송한다. 소스 무결성을 확인한 뒤 tmux에서 실행한다.
+**현재 기준선 · 완료 — 실행 준비·초기 학습 확인 / 로컬·5090**
+- 새 계약·실행기 검증과 독립 커밋, 전송 무결성, 기존 CUDA/e1 재감사, tmux 학습 시작 및 Taxi epoch1–3을 확인했다.
 
-**외부 작업 대기 — e300 실행·자동 감사 / 5090**
+**진행 중 · 외부 작업 대기 — e300 실행·자동 감사 / 5090**
 - 초기 설정·GPU process·첫 학습 진입까지만 확인한다. `TEST_SESSION_PROTOCOL.md`의 현재 세션 운영 지침에 따라 지속 polling이나 scheduler는 추가하지 않는다.
 - 각 데이터셋 종료 시 runner가 처리 건수, 최적/마지막 checkpoint, optimizer step과 beta 학습, 사전 성능 기준을 검사해 저장한다.
 

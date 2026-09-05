@@ -1,0 +1,67 @@
+{
+  "checked_at": "2026-09-05T01:20:25.718764+00:00",
+  "status": "running",
+  "phase": "candidate_only_seed42_e300",
+  "current_dataset": "yellow_trip_hourly",
+  "source_revision": "e6e59337a816d53e9d1d3afaf0f6cede48ef5e2f",
+  "source_manifest_sha256": "4963d1f1985b96d1c65b3956017875e4aded1006b58c96838db62dee4001df2a",
+  "smoke_gate": "passed",
+  "runtime": {
+    "python": "3.12.13",
+    "torch": "2.11.0+cu130",
+    "cuda": "13.0",
+    "polars": "1.39.3",
+    "platform": "Linux-7.0.0-28-generic-x86_64-with-glibc2.39",
+    "executable": "/opt/miniconda3/envs/ai_env/bin/python"
+  },
+  "preflight": {
+    "free_vram_mib": 32107,
+    "gdm": "inactive",
+    "compute_processes": [],
+    "recent_kernel_errors": []
+  },
+  "completed_datasets": [],
+  "launch_contract": {
+    "status": "running",
+    "epochs": 300,
+    "early_stopping": {
+      "formula_by_variant": {
+        "count_only_log_mse_tail_head_only": "time_nll + lambda_log_qty * (log1p_quantity_mse + lambda_tail * tail_raw_huber)",
+        "count_only_log_mse_tail_shared": "time_nll + lambda_log_qty * (log1p_quantity_mse + lambda_tail * tail_raw_huber)",
+        "count_only_log_regression": "time_nll + lambda_log_qty * log1p_quantity_mse",
+        "count_only_lognormal_k1": "time_nll + lambda_log_qty * (gaussian_nll_on_log1p_quantity + lambda_location_huber * location_huber)"
+      },
+      "min_epochs": 40,
+      "monitor": "validation_joint_objective",
+      "patience": 40,
+      "restore": "best_validation_joint_objective"
+    },
+    "batch_size": 128,
+    "lr": 0.001,
+    "hidden_dim": 64,
+    "backbones": [
+      "titantpp_elapsed_age_static_memory"
+    ],
+    "seeds": [
+      42
+    ],
+    "partial_smoke": false,
+    "evaluation_scope": "validation_only",
+    "held_out_test_evaluated": false,
+    "split_rows": {
+      "train": 38524,
+      "validation": 8268
+    },
+    "source_revision": "e6e59337a816d53e9d1d3afaf0f6cede48ef5e2f"
+  },
+  "gpu_processes": "3930103, /opt/miniconda3/envs/ai_env/bin/python, 2684 MiB",
+  "gpu": "69 %, 2694 MiB, 29418 MiB",
+  "training_log_tail": [
+    "[epoch 001] backbone=titantpp_elapsed_age_static_memory variant=count_only_log_regression seed=42 train_joint=1.75299090 train_time=1.40084727 batch_p99=6.37661130 grad_norm=4.58962767 clip_fraction=0.966667 val_joint=1.62176212 time_nll=1.37114201 log_qty_mse=0.25062011 tail_aux=0.00000000 qty_mae=78.99320172",
+    "[epoch 002] backbone=titantpp_elapsed_age_static_memory variant=count_only_log_regression seed=42 train_joint=1.55139294 train_time=1.36662204 batch_p99=1.90003226 grad_norm=2.78247138 clip_fraction=0.953333 val_joint=1.55222896 time_nll=1.36904530 log_qty_mse=0.18318367 tail_aux=0.00000000 qty_mae=40.63105870",
+    "[epoch 003] backbone=titantpp_elapsed_age_static_memory variant=count_only_log_regression seed=42 train_joint=1.53148294 train_time=1.35402816 batch_p99=1.88190208 grad_norm=2.37596756 clip_fraction=0.860000 val_joint=1.56720377 time_nll=1.37996308 log_qty_mse=0.18724069 tail_aux=0.00000000 qty_mae=36.32747362"
+  ],
+  "launch_log_tail": [
+    "RUN /opt/miniconda3/envs/ai_env/bin/python -s -u /home/leekwanhyeong/workspace/paper_research_elapsed_age_screening_e6e5933_5090/paper/scripts/run_count_aware_tpp_backbone_control.py --data /home/leekwanhyeong/workspace/paper_research/sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet --split-manifest /home/leekwanhyeong/workspace/paper_research/sample_data/new_york_taxi/yellow_trip_hourly_split_manifest.json --output-dir /home/leekwanhyeong/workspace/paper_research/search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/yellow_trip_hourly --source-revision e6e59337a816d53e9d1d3afaf0f6cede48ef5e2f --execution-role elapsed_age_static_e300_5090 --dataset-contract yellow_trip_hourly --model-role t0_elapsed_age_static_retrieval --device cuda --epochs 300 --min-epochs 40 --early-stopping-patience 40 --batch-size 128 --lr 0.001 --grad-clip 1.0 --hidden-dim 64 --lookback-weeks 168 --max-seq-len 256 --quantity-variants log_mse --backbones titantpp_elapsed_age_static_memory --seeds 42 --lambda-log-qty 1.0 --lambda-tail 0.0 --time-head-mode legacy_clamped_rmtpp --time-scale 3.0 --time-w-max 3.3333333333333335 --time-intercept-limit 30.0 --time-wd-safety-limit 40.0 --time-head-lr-multiplier 1.0 --tail-threshold 1562.0 --tail-normalization-scale 1562.0 --tail-clip-cap 3449.0 --tail-huber-delta 1.0 --allow-partial-contract"
+  ]
+}
