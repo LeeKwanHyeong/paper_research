@@ -1,0 +1,310 @@
+{
+  "schema_version": 1,
+  "contract_id": "hard_lmm_elapsed_age_screening_5090_v1",
+  "created_on": "2026-09-05",
+  "scope": "candidate_only_taxi_instacart_seed42_fresh_elapsed_age_e300_validation",
+  "authorization": "The user explicitly approved the next 5090 fresh Taxi/Instacart seed42 e300 performance screening and evaluation against the previously frozen original/separate-key gates. This new execution authorization supersedes the earlier e1-only scope without modifying the prior model or e1 contracts.",
+  "source_isolation": "Execute a new committed paper_research/master snapshot, pinned by full source revision and per-file SHA256; preserve the validated model/training files byte-for-byte. Existing project/data/runtime/services remain unchanged. Do not include untracked scripts/.",
+  "performance_training_authorized": true,
+  "server": "5090",
+  "python": "/opt/miniconda3/envs/ai_env/bin/python",
+  "tmux": "/opt/miniconda3/envs/ai_env/bin/tmux",
+  "data_project": "/home/leekwanhyeong/workspace/paper_research",
+  "runtime": {
+    "python": "3.12.13",
+    "torch": "2.11.0+cu130",
+    "cuda": "13.0",
+    "polars": "1.39.3"
+  },
+  "backbone": "titantpp_elapsed_age_static_memory",
+  "model_role": "t0_elapsed_age_static_retrieval",
+  "model_contract": "paper/contracts/hard_lmm_elapsed_age_v1.json",
+  "model_contract_sha256": "3d7294d8177e4254fc573e478f176b326504a54c304881d36cc8a5a0a1ffd058",
+  "frozen_model_revision": "77e5f4a05751b412f38e1ed148bc4bef10e70a75",
+  "frozen_model_revision_meaning": "Implemented candidate; later ad81a17 changes only the AdamW scalar step restoration test, and e97a12a records the successful CUDA/e1 evidence. Actual screening executable revision is frozen in the new package manifest.",
+  "smoke_snapshot": "/home/leekwanhyeong/workspace/paper_research_elapsed_age_smoke_ad81a17_5090",
+  "smoke_output_root": "/home/leekwanhyeong/workspace/paper_research/search_artifacts/hard_lmm_elapsed_age_smoke_5090_20260905_r2",
+  "smoke_source_revision": "ad81a1704340245172252b1004483dd980503e51",
+  "smoke_source_manifest_sha256": "c17da878f6bc0d283702447b46510be5aa66d199c01568351c67cefa1b0503fa",
+  "smoke_package_sha256": "2a7ae1f328064b75d8b3eed0a4c64922e201e55f6f6809dd6a3244101ecde243",
+  "smoke_status_sha256": "c774ef27f1de27c0cdba6c40a6b3729b29d8b4e7038da68c672058bbef678dde",
+  "smoke_cuda_xml_sha256": "0f5eaf19647d2510d19296e214bddcbb50a4a889ecd43a5051183792feacbf64",
+  "smoke_cuda_test_count": 56,
+  "frozen_files": {
+    "paper/contracts/hard_lmm_elapsed_age_v1.json": "3d7294d8177e4254fc573e478f176b326504a54c304881d36cc8a5a0a1ffd058",
+    "paper/contracts/count_aware_hard_lmm_frozen_probe_v1.json": "a9430a67f81c5c6a3b2baccd5a0fef425b57b98d3706637f9f3040c909540356",
+    "paper/results/hard_lmm_instacart_balanced_20260905/evidence_decision.json": "e15b694e84245b0dcd7d4110965981cbd95a2256d34240f52d8b8ee44a14e87d",
+    "paper/results/hard_lmm_instacart_balanced_20260905/analysis.json": "d09c22767bc943452bcdba6617b21cf637e4bfb1b3e725b48aee5fc62c168410",
+    "paper/results/hard_lmm_key_value_screening_5090_20260904/validation_comparison.json": "8abac2ca48e3b2b03b327741d1ee9fe00370b86bdbf6ba46a0a15fa016690441",
+    "paper/results/hard_lmm_key_value_screening_5090_20260904/final_audit.json": "64f9dc05e1edf8bb74a81908c04b79da30fcaa990fad0ce231663fde461599f9",
+    "paper/contracts/hard_lmm_elapsed_age_cuda_e1_5090_v1.json": "52816b2ee3f7b033a7f1595172cbb4111f9dc510e5d94f2ea24ba93a9c145770",
+    "paper/results/hard_lmm_elapsed_age_smoke_5090_20260905/completion.json": "f404cc2ca2946acc77691eb5b471e859fca239d4e4c8860744dd5c376d65e539",
+    "paper/results/hard_lmm_elapsed_age_smoke_5090_20260905/independent_audit.json": "7d39a7b29ce4e22845247803be2cc9edd36cbe2b018674f21830bf2072e13a97",
+    "paper/results/hard_lmm_elapsed_age_smoke_5090_20260905/source_manifest.json": "c17da878f6bc0d283702447b46510be5aa66d199c01568351c67cefa1b0503fa",
+    "paper/results/hard_lmm_elapsed_age_smoke_5090_20260905/status.json": "c774ef27f1de27c0cdba6c40a6b3729b29d8b4e7038da68c672058bbef678dde",
+    "paper/results/hard_lmm_elapsed_age_smoke_5090_20260905/cuda_contract_tests.xml": "0f5eaf19647d2510d19296e214bddcbb50a4a889ecd43a5051183792feacbf64"
+  },
+  "gpu_preflight": {
+    "minimum_free_mib": 12000,
+    "gdm": "inactive",
+    "compute_processes": 0,
+    "recent_xid_oom": 0
+  },
+  "preconditions": [
+    "Successful frozen CUDA report: 56 tests, zero failures/errors/skips",
+    "Both full e1 audits and final independent audit passed",
+    "Packaged model and training source identical to the validated smoke snapshot",
+    "Exact frozen runtime and source/data/split/reference checksums",
+    "GDM inactive, no GPU compute process, at least 12000 MiB free, no recent Xid/OOM",
+    "Fresh nonexisting output directory; no checkpoint initialization or automatic resume"
+  ],
+  "dataset_order": [
+    "yellow_trip_hourly",
+    "insta_market_basket"
+  ],
+  "datasets": [
+    {
+      "dataset": "yellow_trip_hourly",
+      "train_targets": 38393,
+      "validation_targets": 8268,
+      "baseline_parameters": 89795,
+      "separate_key_parameters": 93891,
+      "candidate_parameters": 93899,
+      "data_path": "sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+      "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+      "split_manifest_path": "sample_data/new_york_taxi/yellow_trip_hourly_split_manifest.json",
+      "split_manifest_sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85",
+      "lookback": 168,
+      "max_seq_len": 256,
+      "time_unit": "hour",
+      "train_p95_quantity": 1562.0,
+      "train_p99_quantity": 3449.0
+    },
+    {
+      "dataset": "insta_market_basket",
+      "train_targets": 1991192,
+      "validation_targets": 503733,
+      "baseline_parameters": 77507,
+      "separate_key_parameters": 81603,
+      "candidate_parameters": 81611,
+      "data_path": "sample_data/insta_market_basket/instacart_marked_target_with_split.parquet",
+      "data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+      "split_manifest_path": "sample_data/insta_market_basket/instacart_marked_target_split_manifest.json",
+      "split_manifest_sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d",
+      "lookback": 52,
+      "max_seq_len": 64,
+      "time_unit": "day",
+      "train_p95_quantity": 25.0,
+      "train_p99_quantity": 35.0
+    }
+  ],
+  "run": {
+    "seed": 42,
+    "epochs": 300,
+    "min_epochs": 40,
+    "patience": 40,
+    "batch_size": 128,
+    "lr": 0.001,
+    "full_train_validation": true
+  },
+  "epoch_budget_semantics": "300 is the maximum epoch budget. Retain the existing min40/patience40 early-stopping algorithm; an earlier valid stop is completion, not an incomplete 300-epoch run.",
+  "training_contract": {
+    "input": "mark-free log1p gap and quantity",
+    "hidden_dim": 64,
+    "n_layers": 2,
+    "n_heads": 4,
+    "d_ff": 128,
+    "dropout": 0.1,
+    "pre_norm": true,
+    "learned_position_embeddings": true,
+    "persistent_tokens": 16,
+    "prototype_count": 64,
+    "topk": 4,
+    "temperature": 1.0,
+    "memory": "static separate keys and values; no online/contextual update",
+    "query": "existing h without added statistics or projection",
+    "fusion": "h+r",
+    "quantity_variant": "count_only_log_regression",
+    "quantity_loss": "direct MSE on log1p(quantity)",
+    "lambda_log_qty": 1.0,
+    "lambda_tail": 0.0,
+    "time_head": "legacy_clamped_rmtpp",
+    "time_scale": 3.0,
+    "time_w_max": 3.3333333333333335,
+    "checkpoint_selection": "earliest strict minimum validation_joint_objective",
+    "optimizer": "AdamW lr.001 betas(.9,.999) eps1e-8 weight_decay.01 one group time-head multiplier1; grad_clip1",
+    "data_context": "Existing fixed train/validation splits, lookback52/168 and max_seq_len64/256 including target; original train-only body p95 and tail p99 thresholds"
+  },
+  "selection": {
+    "monitor": "validation_joint_objective",
+    "formula": "validation time_nll + 1.0 * validation log1p_quantity_mse",
+    "strict_improvement": true,
+    "tie_policy": "earliest strict minimum",
+    "min_epochs": 40,
+    "patience": 40,
+    "restore": "best_validation_joint_objective",
+    "performance_gate_checkpoint": "selected best checkpoint only; never choose a checkpoint by body/RMSE/tail gate"
+  },
+  "reproducibility": "Retain the validated count-aware seed42 RNG, optimizer, loader, precision and execution path used for matched separate-key comparisons. PYTHONHASHSEED=42 and full committed source provenance are explicit. Strict in the selection contract means strictly smaller validation joint objective; do not introduce a new deterministic training mode or performance-affecting runtime flag.",
+  "fresh_parameters_and_artifact": true,
+  "initialize_from_smoke_checkpoint": false,
+  "initialize_from_reference_checkpoint": false,
+  "automatic_resume_retry": false,
+  "evaluation_scope": "validation_only",
+  "held_out_test": false,
+  "baseline_retraining": false,
+  "other_benchmark_retraining": false,
+  "additional_datasets_or_seeds": false,
+  "candidate_or_hyperparameter_sweep": false,
+  "scheduler": false,
+  "service_changes": false,
+  "runtime_changes": false,
+  "push": false,
+  "performance_gate_source": {
+    "path": "paper/contracts/hard_lmm_elapsed_age_v1.json",
+    "sha256": "3d7294d8177e4254fc573e478f176b326504a54c304881d36cc8a5a0a1ffd058",
+    "key": "prospective_performance_gate_not_evaluated_in_e1"
+  },
+  "performance_gates": {
+    "evaluation_scope": "Future separately authorized matched seed42 validation-only screening with original e300/min40/patience40 batch128 lr.001 selector; fresh initialization, no threshold changes after results",
+    "apply_all_simultaneously": true,
+    "both_datasets_vs_original": {
+      "body_le_p95_mae_improvement_min": 0.05,
+      "overall_rmse_regression_max": 0.02,
+      "gt_p99_mae_regression_max": 0.02,
+      "time_nll_absolute_increase_max": 0.01,
+      "finite_required": true
+    },
+    "instacart_vs_separate_key": {
+      "body_le_p95_mae_improvement_min": 0.05
+    },
+    "taxi_vs_separate_key": {
+      "body_le_p95_mae_regression_max": 0.01
+    },
+    "both_datasets_vs_separate_key": {
+      "overall_rmse_regression_max": 0.01,
+      "gt_p99_mae_regression_max": 0.01,
+      "time_nll_absolute_increase_max": 0.01
+    },
+    "reference_precision": "Use full precision frozen validation_comparison artifacts, not rounded README values; stricter simultaneous bound wins",
+    "scope_limit": "Validation screening relevance only; no held-out, extra seeds, dataset expansion or performance adoption authorized by e1"
+  },
+  "performance_gate_scope_note": "The copied gate retains its historical e1 wording to make equality with the original frozen object auditable. This contract authorizes that future matched validation screening only; it does not change thresholds or authorize held-out evaluation or general model adoption.",
+  "reference_metrics_source": {
+    "path": "paper/results/hard_lmm_key_value_screening_5090_20260904/validation_comparison.json",
+    "sha256": "8abac2ca48e3b2b03b327741d1ee9fe00370b86bdbf6ba46a0a15fa016690441",
+    "original_key": "datasets.<dataset>.baseline",
+    "separate_key_key": "datasets.<dataset>.candidate"
+  },
+  "reference_metrics": {
+    "yellow_trip_hourly": {
+      "original_hard_lmm": {
+        "body_mae": 23.16740661211176,
+        "quantity_mae": 51.76773159866986,
+        "quantity_rmse": 181.5375935825544,
+        "gt_p99_mae": 1166.2824212569224,
+        "time_nll": 1.3664302460355464
+      },
+      "separate_key": {
+        "body_mae": 16.96621640628812,
+        "quantity_mae": 33.836107893278765,
+        "quantity_rmse": 119.39059532262276,
+        "gt_p99_mae": 696.4048593255538,
+        "time_nll": 1.365848076807801
+      }
+    },
+    "insta_market_basket": {
+      "original_hard_lmm": {
+        "body_mae": 3.424545637259682,
+        "quantity_mae": 4.026534853916616,
+        "quantity_rmse": 5.974160013596838,
+        "gt_p99_mae": 23.00099934296864,
+        "time_nll": 3.2064400114488096
+      },
+      "separate_key": {
+        "body_mae": 3.422798711765601,
+        "quantity_mae": 4.036541785116903,
+        "quantity_rmse": 5.996654487917521,
+        "gt_p99_mae": 23.312413343161126,
+        "time_nll": 3.2065402619360674
+      }
+    }
+  },
+  "derived_candidate_upper_bounds": {
+    "yellow_trip_hourly": {
+      "vs_original": {
+        "body_mae": 22.00903628150617,
+        "quantity_rmse": 185.16834545420548,
+        "gt_p99_mae": 1189.608069682061,
+        "time_nll": 1.3764302460355464
+      },
+      "vs_separate_key": {
+        "body_mae": 17.135878570351,
+        "quantity_rmse": 120.584501275849,
+        "gt_p99_mae": 703.3689079188094,
+        "time_nll": 1.375848076807801
+      },
+      "all_simultaneously": {
+        "body_mae": 17.135878570351,
+        "quantity_rmse": 120.584501275849,
+        "gt_p99_mae": 703.3689079188094,
+        "time_nll": 1.375848076807801
+      }
+    },
+    "insta_market_basket": {
+      "vs_original": {
+        "body_mae": 3.253318355396698,
+        "quantity_rmse": 6.093643213868774,
+        "gt_p99_mae": 23.461019329828012,
+        "time_nll": 3.2164400114488094
+      },
+      "vs_separate_key": {
+        "body_mae": 3.2516587761773206,
+        "quantity_rmse": 6.056621032796696,
+        "gt_p99_mae": 23.545537476592738,
+        "time_nll": 3.2165402619360672
+      },
+      "all_simultaneously": {
+        "body_mae": 3.2516587761773206,
+        "quantity_rmse": 6.056621032796696,
+        "gt_p99_mae": 23.461019329828012,
+        "time_nll": 3.2164400114488094
+      }
+    }
+  },
+  "bound_calculation": "For each quantity metric use reference*(1-improvement_min) or reference*(1+regression_max); for time_nll use reference+absolute_increase_max. Apply every original and separate-key constraint simultaneously. Upper bounds are explanatory binary64-derived values; authoritative decisions recompute the frozen gate directly from full-precision source metrics, without rounding or added tolerance.",
+  "metric_contract": {
+    "body_mae": "Count-weighted raw-quantity MAE across all validation targets with quantity <= pinned train p95",
+    "quantity_rmse": "Raw-quantity RMSE across all validation targets; use the same point predictions as MAE",
+    "gt_p99_mae": "Raw-quantity MAE on validation targets strictly above pinned train p99",
+    "time_nll": "Validation time likelihood NLL only; do not substitute joint loss or total NLL",
+    "quantity_mae": "Report overall raw-quantity MAE for context; no additional threshold beyond the originally frozen gate",
+    "finite": "All candidate and reference decision metrics finite; no rounding before comparison"
+  },
+  "decision": {
+    "per_dataset_pass": "Finite metrics AND all original-baseline constraints AND all applicable separate-key constraints",
+    "cross_dataset_screening_pass": "Both Taxi and Instacart must pass; do not accept on an average or select the better dataset",
+    "performance_failure": "Record failed gates and unchanged thresholds; complete the other authorized dataset unless a runtime/source/data/finite audit failure stops execution",
+    "execution_failure": "Record failure and preserve artifacts; no automatic retry, resume, changed candidate or fallback server",
+    "adoption": "Passing makes the candidate eligible for a separately scoped confirmation decision; it does not establish general superiority, held-out benefit, or automatic production/primary-model adoption",
+    "current_primary_model": "original_hard_lmm"
+  },
+  "completion_audit": [
+    "Source, data, split, runtime and frozen-reference identity",
+    "Full train/validation target counts and finite metrics",
+    "Fresh seed42 history, early stopping, earliest strict validation joint minimum and selected checkpoint consistency",
+    "Finite learned beta tensor with nonzero L2 distance from zero and valid AdamW moments/step; tensor-level requirement, not all eight coefficients required to move",
+    "Selected best and last checkpoint state/optimizer provenance, peak CUDA memory and restoration audit",
+    "Full-precision original and separate-key comparisons, every individual gate and combined two-dataset decision",
+    "No held-out evaluation/artifacts, unauthorized seeds/datasets/retraining, services/runtime mutation or automatic recovery",
+    "Local artifact verification and independent calculation audit before final performance conclusion"
+  ],
+  "limitations": [
+    "Eight additional parameters and changed shared training dynamics; not parameter-count-matched proof",
+    "Short-history-centered train association does not imply long-history or tail effect",
+    "Signed scalar geometry may be insufficient; no candidate or normalization sweep authorized",
+    "Equal-gap B0 does not guarantee trained Taxi parameters or outputs remain unchanged; explicit preservation gate applies",
+    "One fixed seed and two validation datasets provide screening evidence only; reuse of validation for checkpoint selection and prior design limits confirmatory interpretation.",
+    "Original and separate-key results are frozen historical runs, not newly paired repeats; preserved execution contracts do not imply bitwise repeated training or measured seed variance."
+  ]
+}

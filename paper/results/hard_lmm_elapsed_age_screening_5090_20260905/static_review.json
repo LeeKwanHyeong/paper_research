@@ -1,0 +1,118 @@
+{
+  "status": "passed",
+  "review_type": "independent_local_static_and_pure_function_validation",
+  "reviewer": "screening_review",
+  "reviewed_at_utc": "2026-09-05T01:17:55.097808+00:00",
+  "base_revision": "e97a12a85ebfb790e1fbf98f1ec2996428307fd8",
+  "reviewed_file_sha256": {
+    "paper/scripts/run_hard_lmm_elapsed_age_screening.py": "1bf848bfa6791aa5b89dcee8b4365d14f8360c3da6f0c5fef99280a3c4c2bf1b",
+    "paper/scripts/package_hard_lmm_elapsed_age_screening.py": "28b0fbe42a9abc47ad2c7dc7849a89bdd312c31ee30393cc9b5089fb68fab96f",
+    "paper/contracts/hard_lmm_elapsed_age_screening_5090_v1.json": "95eb691cd7ac6a597b7a0aecadff0ede38e533a1c63acce4f4915fc7aa50e41d",
+    "paper/contracts/hard_lmm_elapsed_age_screening_5090_v1.md": "ad6ac83737bd6fc2e6cd6ed8a976f2e2cd8f56bec445ec2aac3188521352730c",
+    "simple_lab_test/search/tests/test_hard_lmm_elapsed_age_screening.py": "541a54dfa9fdf8e1f7f080ce824fc2546f10bf19057dd88179e659a1a0c47b07"
+  },
+  "checks": {
+    "syntax_ast_parse": "passed_for_three_python_files",
+    "frozen_documents": "passed_actual_contract_and_original_launch_metadata",
+    "frozen_document_hash_count": 12,
+    "prospective_gate_object_unchanged": true,
+    "prior_e1_training_dependency_file_count": 167,
+    "prior_e1_training_dependencies_byte_identical": true,
+    "entire_selected_current_training_dependency_set_matches_e1": true,
+    "performance_comparisons": {
+      "yellow_trip_hourly": {
+        "baseline_metric_exact_match": true,
+        "independently_calculated_bounds_exact_match": true,
+        "inclusive_boundary_pass": true,
+        "one_ulp_above_boundary": {
+          "body_mae": "rejected_one_ulp_above_strictest_bound",
+          "quantity_rmse": "rejected_one_ulp_above_strictest_bound",
+          "gt_p99_mae": "rejected_one_ulp_above_strictest_bound",
+          "time_nll": "rejected_one_ulp_above_strictest_bound"
+        },
+        "perfect_zero_error_permitted": true,
+        "nan_inf_negative_error_rejected": true,
+        "command_diff_only": [
+          "--execution-role",
+          "--epochs",
+          "--min-epochs",
+          "--early-stopping-patience"
+        ]
+      },
+      "insta_market_basket": {
+        "baseline_metric_exact_match": true,
+        "independently_calculated_bounds_exact_match": true,
+        "inclusive_boundary_pass": true,
+        "one_ulp_above_boundary": {
+          "body_mae": "rejected_one_ulp_above_strictest_bound",
+          "quantity_rmse": "rejected_one_ulp_above_strictest_bound",
+          "gt_p99_mae": "rejected_one_ulp_above_strictest_bound",
+          "time_nll": "rejected_one_ulp_above_strictest_bound"
+        },
+        "perfect_zero_error_permitted": true,
+        "nan_inf_negative_error_rejected": true,
+        "command_diff_only": [
+          "--execution-role",
+          "--epochs",
+          "--min-epochs",
+          "--early-stopping-patience"
+        ]
+      }
+    },
+    "early_stopping": [
+      "earliest_tied_minimum_epoch1_selected",
+      "first_legal_stop_epoch41_passed",
+      "premature_epoch40_rejected",
+      "continuation_to_epoch42_rejected",
+      "later_tied_best_rejected",
+      "monotonic_improvement_full_epoch300_passed"
+    ]
+  },
+  "static_findings_resolved": [
+    {
+      "finding": "Expanded new dataset rows exceeded original e1 schema",
+      "resolution": "Hash-verified original launch contract supplies time_unit and train p95/p99 fields; actual frozen_documents now passes."
+    },
+    {
+      "finding": "Explicit frozen CUDA XML was filtered by packager suffix whitelist",
+      "resolution": "All explicit frozen_files are included regardless of suffix; inspected source, package execution still owned by root."
+    },
+    {
+      "finding": "Old training dependency selection omitted indirect paper scripts",
+      "resolution": "All prior paper/scripts Python dependencies frozen except the new orchestration pair; actual dependency set and hashes matched."
+    },
+    {
+      "finding": "E1 audit invariants do not apply to e300 last state",
+      "resolution": "Best state agrees with last-best, last-current is separately strict-loaded, optimizer steps sum all epochs, and at least one beta coefficient must move."
+    },
+    {
+      "finding": "Candidate zero error was disallowed",
+      "resolution": "Candidate errors accept zero; reference denominators remain strictly positive; pure-function validation passed."
+    }
+  ],
+  "test_source_review": {
+    "file": "simple_lab_test/search/tests/test_hard_lmm_elapsed_age_screening.py",
+    "coverage_inspected": [
+      "command diff and CLI scope",
+      "all simultaneous inclusive gate bounds plus one-ULP failures",
+      "nonfinite/negative metric rejection",
+      "indirect dependency coverage",
+      "fresh output and fail-closed orchestration including completing second dataset after first performance failure",
+      "synthetic best-vs-last and optimizer-step audit",
+      "first legal stop and tie selection"
+    ],
+    "synthetic_fixture_scope": "The saved-state fixture expands one CPU step into synthetic e41 audit metadata; it is explicitly not actual performance evidence.",
+    "pytest_executed_by_this_reviewer": false
+  },
+  "execution_scope": {
+    "ssh": false,
+    "cuda": false,
+    "real_data_training": false,
+    "model_inference": false,
+    "held_out_evaluation": false,
+    "package_creation": false,
+    "commit": false,
+    "claim": "This review certifies inspected local code, frozen hashes and pure-function checks only; it makes no 5090 execution or e300 performance claim."
+  },
+  "open_blocking_findings": []
+}
