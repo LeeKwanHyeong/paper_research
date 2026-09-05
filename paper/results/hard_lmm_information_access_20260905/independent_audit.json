@@ -1,0 +1,190 @@
+{
+  "status": "passed",
+  "completed_at": "2026-09-05T06:24:08.199264+00:00",
+  "method": "Independent saved-artifact NumPy audit; no production analysis helper imports, no decoder refits, no model inference, no training, no remote access, no held-out or validation rows",
+  "numeric_tolerance": {
+    "atol": 1e-10,
+    "rtol": 1e-09
+  },
+  "checks": 85821,
+  "hash_checks": 205,
+  "max_absolute_difference": {
+    "metrics": 0.0,
+    "bootstrap": 0.0,
+    "fit_metadata": 0.0
+  },
+  "datasets": {
+    "yellow_trip_hourly": {
+      "original": {
+        "n": 8192,
+        "fold_series": [
+          75,
+          56
+        ],
+        "history_usefulness": {
+          "linear": true,
+          "random128": true
+        },
+        "eligible_contrasts": {
+          "history_at_h": false,
+          "history_at_fused": false,
+          "fusion_accessibility": false,
+          "head_accessibility": true
+        },
+        "bootstrap_comparisons": 16,
+        "bootstrap_repeats": 10000
+      },
+      "separate_key": {
+        "n": 8192,
+        "fold_series": [
+          75,
+          56
+        ],
+        "history_usefulness": {
+          "linear": true,
+          "random128": false
+        },
+        "eligible_contrasts": {
+          "history_at_h": false,
+          "history_at_fused": false,
+          "fusion_accessibility": false,
+          "head_accessibility": false
+        },
+        "bootstrap_comparisons": 16,
+        "bootstrap_repeats": 10000
+      }
+    },
+    "insta_market_basket": {
+      "original": {
+        "n": 8192,
+        "fold_series": [
+          3842,
+          4006
+        ],
+        "history_usefulness": {
+          "linear": false,
+          "random128": false
+        },
+        "eligible_contrasts": {
+          "history_at_h": false,
+          "history_at_fused": false,
+          "fusion_accessibility": false,
+          "head_accessibility": false
+        },
+        "bootstrap_comparisons": 16,
+        "bootstrap_repeats": 10000
+      },
+      "separate_key": {
+        "n": 8192,
+        "fold_series": [
+          3842,
+          4006
+        ],
+        "history_usefulness": {
+          "linear": false,
+          "random128": false
+        },
+        "eligible_contrasts": {
+          "history_at_h": false,
+          "history_at_fused": false,
+          "fusion_accessibility": false,
+          "head_accessibility": false
+        },
+        "bootstrap_comparisons": 16,
+        "bootstrap_repeats": 10000
+      }
+    }
+  },
+  "common_evidence": {
+    "history_at_h": {
+      "cells": {
+        "yellow_trip_hourly/original": false,
+        "yellow_trip_hourly/separate_key": false,
+        "insta_market_basket/original": false,
+        "insta_market_basket/separate_key": false
+      },
+      "passes": false
+    },
+    "history_at_fused": {
+      "cells": {
+        "yellow_trip_hourly/original": false,
+        "yellow_trip_hourly/separate_key": false,
+        "insta_market_basket/original": false,
+        "insta_market_basket/separate_key": false
+      },
+      "passes": false
+    },
+    "fusion_accessibility": {
+      "cells": {
+        "yellow_trip_hourly/original": false,
+        "yellow_trip_hourly/separate_key": false,
+        "insta_market_basket/original": false,
+        "insta_market_basket/separate_key": false
+      },
+      "passes": false
+    },
+    "head_accessibility": {
+      "cells": {
+        "yellow_trip_hourly/original": true,
+        "yellow_trip_hourly/separate_key": false,
+        "insta_market_basket/original": false,
+        "insta_market_basket/separate_key": false
+      },
+      "passes": false
+    }
+  },
+  "manifest_sha256": "3e94c0a08bee9abd4eaaa40234cf69bdc1a31f4a7ba47582244a4eec37ebd979",
+  "analysis_sha256": "6828f1f7646bca0a3e2c04e8bc0c6ddb5c9abdeabcaaa200023153c21a4d313e",
+  "decision_sha256": "a9494214574aa5e0cee3ebb4dd6b220eaeadd25d6692824bdd802c41c9d3afd7",
+  "contract_sha256": "a94b87b996712dc1536f3b4d261cd64aa40f45cfaab1bb2705aa7dbdb33ff60d",
+  "auditor_script_sha256": "51ed412662ebfe1c4cf0ca75df0d16c974bcb96547ea88bc0acee7ae7f850743",
+  "limits": [
+    "Underlying history feature extraction was not rerun from parquet; stage cache integrity, prior identity/parity and construction identities were audited.",
+    "Checkpoint unchanged state is reconciled to pinned prior state hashes and execution metadata; no model object was restored.",
+    "Fit metadata is checked against opposite-fold inputs and labels; decoders are not independently refitted.",
+    "Bootstrap reproduces fixed OOF conditional stability, not sample-selection or fitting uncertainty.",
+    "No information-theoretic deletion, causal architecture effect, independent generalization or new model adoption is established."
+  ],
+  "original_numeric_auditor_script_sha256": "183bb9f7aca4203d73744fd197d54fbfc1ce75901c9d1a49248beee72bc29456",
+  "auditor_script_path": "paper/results/hard_lmm_information_access_20260905/independent_audit.py",
+  "reproduce_command": "OPENBLAS_NUM_THREADS=4 VECLIB_MAXIMUM_THREADS=4 OMP_NUM_THREADS=4 python3 paper/results/hard_lmm_information_access_20260905/independent_audit.py --output /private/tmp/hard_lmm_information_audit_rerun.json",
+  "document_audit": {
+    "status": "passed",
+    "checks": 4470,
+    "csv_rows": {
+      "decoder_metrics.csv": 144,
+      "feature_reconstruction.csv": 480,
+      "contrast_checks.csv": 64,
+      "history_usefulness.csv": 8
+    },
+    "readme_tables": 5,
+    "pytest": {
+      "tests": 49,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "local_links_verified": 15,
+    "file_sha256": {
+      "README.md": "74af1e95f81571ea6579ddd0dd1a3fa7f9ffae17726218e6135523db87145081",
+      "decoder_metrics.csv": "adb85164cbef0967d4439853619c7c21fa36bf181ceaf8d3a6c790a2023c358c",
+      "feature_reconstruction.csv": "c5d5948a11816d08e2a2973aef8461bfe3b84894af317cebcf663b1376f4d62a",
+      "contrast_checks.csv": "0e13e089ba53800aaf7b29022a4a6f75f17fccd08937947f565b1eda7ea60d6c",
+      "history_usefulness.csv": "0f1acdbabcd9a6c43db99e3cc56679c4bc44e6290a553f9d765a202de47aaafe",
+      "build_summary_tables.py": "7e4310ffec5ca02421b7426f0303f8ca29af8008fbfba9822e70c52e42d092f3",
+      "pytest.xml": "d24aba071d84069d41b1c3821e15b8951daa62a570870b773de14323855158d9",
+      "pytest.log": "fda50e3915a62fc96dd1cd38d01607a20676e0b21468bd37fdce258fea3138bd",
+      "extraction.log": "9069656000b81c600d3fb9ef1aac4a8598f60c30927bfbf53d98667f91448d27",
+      "analysis.log": "6ed995c655aaa88e68ef77eb6bdfc6255506b5272f7f30f123ea38b809ab28f5"
+    },
+    "interpretation_review": "README correctly limits claims to retrospective frozen-checkpoint access via F12 and fixed probes; no common architecture bottleneck or causal information deletion claimed. Lower reconstruction alone is not treated as target-predictive loss. Independent audit scope limitations are stated.",
+    "numeric_or_interpretation_findings": [],
+    "line_ending_recheck": {
+      "status": "passed",
+      "csv_files": 4,
+      "method": "Replacing each new LF with CRLF exactly recovers its previously audited SHA256. Removing only the explicit LF writer argument recovers the previous builder SHA256.",
+      "numeric_recomputation_required": false,
+      "other_document_and_analysis_hashes_unchanged": true
+    }
+  }
+}

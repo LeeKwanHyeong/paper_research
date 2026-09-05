@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "contract_id": "hard_lmm_information_access_v1",
+  "created_on": "2026-09-05",
+  "source_context_revision": "e8fdd11",
+  "scope": "local_frozen_train_retrospective_stagewise_information_accessibility_not_backbone_training",
+  "authorization": {
+    "local_diagnostic_tests_and_evidence": true,
+    "server_access": false,
+    "backbone_parameter_updates": false,
+    "held_out_test": false,
+    "validation_inference": false,
+    "new_architecture_or_performance_training": false,
+    "push": false
+  },
+  "datasets": [
+    "yellow_trip_hourly",
+    "insta_market_basket"
+  ],
+  "models": [
+    "original",
+    "separate_key"
+  ],
+  "prior_manifest": "paper/results/hard_lmm_query_diagnostic_20260905/execution_manifest.json",
+  "frozen_documents": {
+    "paper/results/hard_lmm_query_diagnostic_20260905/execution_manifest.json": "d73ba6bc4278fb0196295eea1f44fad317bfd936b8b1bf5c073411b666421256",
+    "paper/contracts/hard_lmm_query_diagnostic_v1.json": "93216a8183206a4deb62ad5571a2a32caba60dc45df660566ba21a62f7e51206",
+    "paper/contracts/count_aware_hard_lmm_frozen_probe_v1.json": "a9430a67f81c5c6a3b2baccd5a0fef425b57b98d3706637f9f3040c909540356",
+    "paper/results/hard_lmm_key_value_screening_5090_20260904/final_audit.json": "64f9dc05e1edf8bb74a81908c04b79da30fcaa990fad0ce231663fde461599f9",
+    "paper/results/hard_lmm_elapsed_age_screening_5090_20260905/completion.json": "c03a79d5338291d5f23a4e359cc8fa44a25879030cd74e1c0e7093b56cfda4db"
+  },
+  "sampling": {
+    "reuse": "Exactly the prior paired8192 query diagnostic target indices/series/context endpoints per dataset; verify cache hashes before loading",
+    "maximum_targets": 8192,
+    "new_unused_series_claim": false,
+    "reason": "Retrospective diagnosis of a known fixed cohort; Taxi prior diagnostics already covered all131trainseries. No outcome-based resampling or cohort selection.",
+    "fold": "Reuse disjoint series SHA256(20260905:<series_index>) modulo2 folds; standardization, fitting and correction use opposite fold only.",
+    "minimum_series_per_fold": 10,
+    "scope_limit": "All backbones saw full train and checkpoints were validation-selected; helper OOF is not independent model generalization."
+  },
+  "prior_caches": {
+    "yellow_trip_hourly": {
+      "original": {
+        "path": "search_artifacts/hard_lmm_query_diagnostic_20260905/yellow_trip_hourly/original_cache.pt",
+        "sha256": "1010d60d6fb7c95ee51f77cf47f84c416a4ee4fdb4922e26879b48e6ef251aed"
+      },
+      "separate_key": {
+        "path": "search_artifacts/hard_lmm_query_diagnostic_20260905/yellow_trip_hourly/separate_key_cache.pt",
+        "sha256": "af3c916d1260449f5cc945e678832caef3c564f5a771144a97d6c54decd06b22"
+      }
+    },
+    "insta_market_basket": {
+      "original": {
+        "path": "search_artifacts/hard_lmm_query_diagnostic_20260905/insta_market_basket/original_cache.pt",
+        "sha256": "bc5fcd2539773d90703c99cd32d2186db2d07cf2c53d8335a226ffd9cb3f569a"
+      },
+      "separate_key": {
+        "path": "search_artifacts/hard_lmm_query_diagnostic_20260905/insta_market_basket/separate_key_cache.pt",
+        "sha256": "53b6e2a1f0d13ec72a0caa350552e43ff3c7ac1c76a3a22ab436e416a61ddc41"
+      }
+    }
+  },
+  "runtime": {
+    "device": "cpu",
+    "torch_threads": 4,
+    "batch_size": 64,
+    "numpy_blas_threads": 4
+  },
+  "stages": {
+    "input_last": "Last observed event actual encoder input including position; only latesteventinput, not full history",
+    "input_mean": "Mean actual encoder input over observed events only",
+    "layer1_last": "Last observed state after encoderlayer1",
+    "layer1_mean": "Mean observed states after layer1",
+    "layer2_last": "Last observed state after encoderlayer2; identical to h if no additional transform exists",
+    "layer2_mean": "Mean observed states after encoderlayer2",
+    "h": "Final local state at last observed event",
+    "r": "Actual retrieved memory residual at that event",
+    "fused": "h+r",
+    "concat_hr": "Concatenation [h,r]; dimension-matched sham comparator required"
+  },
+  "history_features": {
+    "names": [
+      "log_history_length",
+      "mean_log_quantity",
+      "last_log_quantity",
+      "std_log_quantity",
+      "recent3_mean_log_quantity",
+      "last_minus_mean_log_quantity",
+      "normalized_rank_log_quantity_slope",
+      "mean_internal_log_gap",
+      "last_internal_log_gap",
+      "std_internal_log_gap",
+      "log_internal_span",
+      "age_distortion"
+    ],
+    "definition": "Fixed12 observed-history summaries; quantity/gap use nonnegative log1p; means/std population; recent3 takes min(3,H); slope OLS against eventrank/(H-1); internalgaps excludefirstretainedgap; J same existingage_distortion. No target/padding/future values.",
+    "short_history": "H1 slope/internalgap stats/span/J=0. H2 internalgap std0 andJ0. J0 forzero span. log_history_length=log1p(H).",
+    "scope": "These summaries are a restricted interpretable input-feature set, not all raw-history information. Failure cannot establish no recoverable predictive information."
+  },
+  "labels": {
+    "residual": "log1p(target_quantity)-base_logpred; base_logpred=softplus(frozen_quantity_logit)",
+    "reconstruction": "The12 observed-history summaries, linearmultioutputprobe only",
+    "target_boundary": "Remove selected target before all model/stage/summary calculations; quantity only label/report; target gap never a feature",
+    "observed_mask": "All pooling excludes target and padding; hooks removed after each call; model remains frozen eval.",
+    "zero_reconstruction_variance": "OOF R2 null when constant-control denominator0; MSE still reported"
+  },
+  "decoders": {
+    "linear": {
+      "objective": "sum squared residual error +1*sum squared slopes",
+      "ridge": 1.0,
+      "intercept": "unpenalized trainingfold label mean; inputs centered on trainingfold",
+      "standardization": "trainingfold population mean/std only; constant std0 replaced1",
+      "precision": "float64"
+    },
+    "nonlinear": {
+      "kind": "same ridge on concatenation of standardized originalX and128 fixed tanh features",
+      "projection": "W iidNormal(0,1/d), bias iidNormal(0,1); seed20260905 perinputdimension, independentoflabels",
+      "features": 128,
+      "seed": 20260905
+    },
+    "no_tuning": true,
+    "no_validation_selection": true
+  },
+  "controls": {
+    "constant": "Oppositefold residualmean",
+    "zero": "Original frozenmodel no residualcorrection, descriptive",
+    "sham": "IID standardnormal featurematrices fixedseed independentoflabels andinput; sameextra dimension as F12 or r64",
+    "reconstruction": "OOF oppositefold featuremean control; Ftruth identity sanity",
+    "coverage": "input_last and pooledhistory have different coverage; no preencoder informationloss inference fromthatcomparison",
+    "sham_seed": 20260906,
+    "random_feature_matrix_reuse": "Same matrix for equal input dimensions across stages and sham controls; no output-dependent seed selection",
+    "random_streams": "RF and bootstrapseed20260905; shamfeatureseed20260906, independent of RF sequence; no result-dependent seed choice"
+  },
+  "primary_contrasts": {
+    "history_at_h": {
+      "candidate": "h+F",
+      "references": [
+        "h",
+        "h+shamF"
+      ]
+    },
+    "history_at_fused": {
+      "candidate": "fused+F",
+      "references": [
+        "fused",
+        "fused+shamF"
+      ]
+    },
+    "fusion_accessibility": {
+      "candidate": "concat_hr",
+      "references": [
+        "fused",
+        "fused+sham64"
+      ]
+    },
+    "head_accessibility": {
+      "candidate": "fused",
+      "references": [
+        "constant",
+        "sham64"
+      ]
+    }
+  },
+  "evidence_gate": {
+    "relative_pooled_residual_mse_improvement_minimum": 0.01,
+    "both_folds_positive": true,
+    "both_fixed_decoder_families_required": true,
+    "both_references_required": true,
+    "paired_series_bootstrap": {
+      "repeats": 10000,
+      "seed": 20260905,
+      "lower_quantile": 0.0015625,
+      "lower_bound_strictly_positive": true,
+      "resampling": "Series within each fold, retain targetcluster multiplicities, paired residual squared-error differences; same resamples acrosscomparisons",
+      "interpretation": "Conservative conditional stability check across32 prespecified decisioncells; not a calibrated causal/heldout significance claim; fixed OOF errors only, no refitting or sample-selection uncertainty; extreme quantile has finite Monte Carlo resolution"
+    },
+    "F_usefulness": "F-only must improve constant pooledresidualMSE >=1% and bothfoldspositive inbothfixeddecoderfamilies forhistory-at-h/fused claims",
+    "quantity_metric_guard": "If positive logresidualMSE contrast conflicts with corrected bodyrawMAE direction, withholdarchitecture-bottleneck evidence; reportbody/RMSE/tail separately",
+    "common_backbone": "Samecontrast must pass inbothTaxi/Instacart andbothoriginal/separate-key; no datasetwise stagewinner combination",
+    "reconstruction": "OOF perfeatureR2 and stagechange descriptive; low reconstructionalone is not usefulinformationloss"
+  },
+  "reporting": {
+    "corrected_log_quantity": "clip(base_logpred+OOFresidual,0,20), reportlower/upperclampcounts; primaryresidualMSE usesunclippedresidual",
+    "body": "target_quantity<=frozenoriginaltrainp95",
+    "tail": "target_quantity>frozenoriginaltrainp99",
+    "all_metrics": "MSEresidual, rawbodyMAE, overallRMSE, tailMAE; not actualtrainedmodel performance"
+  },
+  "limitations": [
+    "Linear or fixed-random-nonlinear probe accessibility is not information-theoretic loss; poor probes may miss nonlinear/rare information.",
+    "Extra dimensions/capacity/statistics/coordinate changes can affect probes even withsham controls.",
+    "Positive residual decodability may reflect readout calibration or objective mismatch; it does not proveencoderdefect or a trainable architecturalfix.",
+    "Meanpooling can discardorder; input_last seesonlyoneevent. Neither is a fullhistory oracle.",
+    "Reusedtargets and backbonetrainexposure meannoindependentgeneralizationclaim.",
+    "Noautomaticimplementation, GPUtraining, dataexpansion, seedsearch or oldcriterionrelaxation follows thisdiagnostic.",
+    "F addition may ease conditioning or nonlinear accessibility of already-encoded information; this is not proof of deletion.",
+    "Fused residual probe cannot separate quantity-head restrictions, training loss, and checkpoint selection causes."
+  ],
+  "methodology_sources": [
+    {
+      "title": "Understanding intermediate layers using linear classifier probes",
+      "url": "https://arxiv.org/abs/1610.01644",
+      "use": "Independent fixedprobes forstagewiseaccessibility, adaptedfromclassificationtoregression."
+    },
+    {
+      "title": "Designing and Interpreting Probes with Control Tasks",
+      "url": "https://aclanthology.org/D19-1275/",
+      "use": "Probe capacity/controls caution; our IIDshamregressioncontrol is nottheirlinguisticcontroltask."
+    }
+  ]
+}
