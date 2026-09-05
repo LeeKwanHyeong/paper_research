@@ -12,6 +12,7 @@ from models.TPPs.CountAwareTHPStaticMemory import (
 from models.TPPs.CountAwareTPP import (
     LOG_MSE_VARIANT,
     LOGNORMAL_VARIANT,
+    QUANTILE_ADAPTIVE_VARIANT,
     TAIL_HEAD_ONLY_VARIANT,
     TAIL_SHARED_VARIANT,
     TAIL_VARIANTS,
@@ -58,6 +59,13 @@ MODEL_ROLE_TIME_HEAD_DIAGNOSTIC = "time_head_diagnostic"
 MODEL_ROLE_TITAN_B012_SCREENING = "titan_b012_screening"
 MODEL_ROLE_WEIGHTED_STATIC = "t0_weighted_static_retrieval"
 MODEL_ROLE_HARD_LOCAL_TIME = "t0_hard_memory_local_time"
+MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT = "quantile_checkpoint_alignment"
+CHECKPOINT_MONITOR_JOINT = "validation_joint_objective"
+CHECKPOINT_MONITOR_RAW_QUANTITY_RMSE = "validation_raw_quantity_rmse"
+CHECKPOINT_HISTORY_RAW_QUANTITY_RMSE = "val_qty_rmse"
+QUANTILE_ADAPTIVE_QUANTILES = (0.5, 0.9, 0.95, 0.99)
+QUANTILE_ADAPTIVE_RAW_WEIGHTS = (1.0, 1.0, 1.5, 2.0, 3.0)
+QUANTILE_ADAPTIVE_STRENGTH = 1.0
 MODEL_ROLES = (
     ELAPSED_AGE_ROLE,
     KEY_VALUE_ROLE,
@@ -69,6 +77,7 @@ MODEL_ROLES = (
     MODEL_ROLE_TITAN_B012_SCREENING,
     MODEL_ROLE_WEIGHTED_STATIC,
     MODEL_ROLE_HARD_LOCAL_TIME,
+    MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT,
     THP_STATIC_MEMORY_ROLE,
 )
 T0_COMMON_BACKBONES = ("rmtpp", "thp", "nhp", "sahp", "titantpp")
@@ -82,6 +91,8 @@ QUANTITY_VARIANT_ALIASES = {
     VARIANT: VARIANT,
     "lognormal_k1": LOGNORMAL_VARIANT,
     LOGNORMAL_VARIANT: LOGNORMAL_VARIANT,
+    "quantile_adaptive": QUANTILE_ADAPTIVE_VARIANT,
+    QUANTILE_ADAPTIVE_VARIANT: QUANTILE_ADAPTIVE_VARIANT,
     "tail_shared": TAIL_SHARED_VARIANT,
     TAIL_SHARED_VARIANT: TAIL_SHARED_VARIANT,
     "tail_head_only": TAIL_HEAD_ONLY_VARIANT,
@@ -152,6 +163,23 @@ def validate_model_role_contract(
             raise ValueError("Local-time role requires direct log-MSE, legacy time head and no tail loss")
         return
     if model_role == MODEL_ROLE_EXPERIMENTAL:
+        return
+    if model_role == MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT:
+        if backbones != ("titantpp",):
+            raise ValueError(
+                "Quantile checkpoint alignment requires backbone=titantpp"
+            )
+        if quantity_variants != (VARIANT, QUANTILE_ADAPTIVE_VARIANT):
+            raise ValueError(
+                "Quantile checkpoint alignment requires ordered unweighted and "
+                "quantile-adaptive variants"
+            )
+        if time_head_mode != TIME_HEAD_MODE_LEGACY_CLAMPED:
+            raise ValueError(
+                "Quantile checkpoint alignment requires legacy_clamped_rmtpp"
+            )
+        if not math.isclose(lambda_tail, 0.0, rel_tol=0.0, abs_tol=1e-15):
+            raise ValueError("Quantile checkpoint alignment requires lambda_tail=0")
         return
     if model_role == MODEL_ROLE_WEIGHTED_STATIC:
         if backbones != ("titantpp_weighted_static_memory",):
@@ -229,6 +257,9 @@ __all__ = [
     "BACKBONES",
     "BACKBONE_LABELS",
     "FROZEN_TAIL_LAMBDA",
+    "CHECKPOINT_HISTORY_RAW_QUANTITY_RMSE",
+    "CHECKPOINT_MONITOR_JOINT",
+    "CHECKPOINT_MONITOR_RAW_QUANTITY_RMSE",
     "LOGNORMAL_VARIANT",
     "MODEL_ROLES",
     "MODEL_ROLE_EXPERIMENTAL",
@@ -238,8 +269,13 @@ __all__ = [
     "MODEL_ROLE_TITAN_B012_SCREENING",
     "MODEL_ROLE_WEIGHTED_STATIC",
     "MODEL_ROLE_HARD_LOCAL_TIME",
+    "MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT",
     "MODEL_ROLE_TIME_HEAD_DIAGNOSTIC",
     "QUANTITY_VARIANT_ALIASES",
+    "QUANTILE_ADAPTIVE_QUANTILES",
+    "QUANTILE_ADAPTIVE_RAW_WEIGHTS",
+    "QUANTILE_ADAPTIVE_STRENGTH",
+    "QUANTILE_ADAPTIVE_VARIANT",
     "SEEDS",
     "SUPPORTED_BACKBONES",
     "TAIL_HEAD_ONLY_VARIANT",

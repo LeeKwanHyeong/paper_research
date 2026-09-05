@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 import math
 import os
 import sys
@@ -47,6 +49,10 @@ from paper.scripts.count_aware_tpp_backbone.constants import (
     MODEL_ROLE_EXPERIMENTAL,
     MODEL_ROLE_WEIGHTED_STATIC,
     MODEL_ROLE_HARD_LOCAL_TIME,
+    MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT,
+    QUANTILE_ADAPTIVE_QUANTILES,
+    QUANTILE_ADAPTIVE_RAW_WEIGHTS,
+    QUANTILE_ADAPTIVE_VARIANT,
     QUANTITY_VARIANT_ALIASES,
     SEEDS,
     SUPPORTED_BACKBONES,
@@ -184,6 +190,146 @@ def validate_scaled_time_contract(
         )
 
 
+def exact_target_population(
+    frame: pl.DataFrame,
+    *,
+    target_split: str,
+    lookback_weeks: int,
+    max_seq_len: int,
+) -> tuple[np.ndarray, dict[str, Any]]:
+    """Return exact loader targets and a stable target-identity contract."""
+    if target_split not in {"train", "validation"}:
+        raise ValueError("Only train and validation target populations are allowed")
+    dataset = RMTPPWeekLookbackDataset(
+        frame,
+        lookback_weeks=lookback_weeks,
+        max_seq_len=max_seq_len,
+        val_ratio=0.2,
+        mode="all",
+        split_col="chronological_split",
+        target_splits={target_split},
+    )
+    if not dataset.index:
+        raise ValueError(f"{target_split} target population is empty")
+    part_indices = np.fromiter(
+        (part_index for part_index, _ in dataset.index),
+        dtype=np.int64,
+        count=len(dataset.index),
+    )
+    target_positions = np.fromiter(
+        (context_end + 1 for _, context_end in dataset.index),
+        dtype=np.int64,
+        count=len(dataset.index),
+    )
+    target_sequences = np.fromiter(
+        (
+            int(dataset.seq_lists[part_index][context_end + 1])
+            for part_index, context_end in dataset.index
+        ),
+        dtype=np.int64,
+        count=len(dataset.index),
+    )
+    target_quantities = np.fromiter(
+        (
+            float(dataset.val_lists[part_index][context_end + 1])
+            for part_index, context_end in dataset.index
+        ),
+        dtype=np.float64,
+        count=len(dataset.index),
+    )
+    if not np.isfinite(target_quantities).all() or bool((target_quantities < 0).any()):
+        raise ValueError(f"{target_split} target quantities must be finite and nonnegative")
+    identity_hasher = hashlib.sha256()
+    identity_hasher.update(b"hard_lmm_target_identity_v1\0")
+    identity_hasher.update(target_split.encode("utf-8") + b"\0")
+    identity_hasher.update(
+        json.dumps(
+            [str(part) for part in dataset.parts],
+            ensure_ascii=False,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    )
+    for values in (part_indices, target_positions, target_sequences):
+        identity_hasher.update(values.astype("<i8", copy=False).tobytes())
+    quantity_hasher = hashlib.sha256()
+    quantity_hasher.update(b"hard_lmm_target_quantity_v1\0")
+    quantity_hasher.update(target_quantities.astype("<f8", copy=False).tobytes())
+    return target_quantities, {
+        "schema_version": 1,
+        "split": target_split,
+        "target_count": int(target_quantities.size),
+        "target_identity_sha256": identity_hasher.hexdigest(),
+        "target_quantity_sha256": quantity_hasher.hexdigest(),
+        "identity_fields": ["oper_part_no", "target_position", "target_seq"],
+        "loader": "RMTPPWeekLookbackDataset",
+        "lookback_weeks": int(lookback_weeks),
+        "max_seq_len": int(max_seq_len),
+    }
+
+
+def derive_quantile_adaptive_contract(
+    frame: pl.DataFrame,
+    *,
+    lookback_weeks: int,
+    max_seq_len: int,
+) -> dict[str, Any]:
+    """Fit the frozen shared weight rule on exact train next-event targets."""
+    targets, population = exact_target_population(
+        frame,
+        target_split="train",
+        lookback_weeks=lookback_weeks,
+        max_seq_len=max_seq_len,
+    )
+    boundaries = np.quantile(
+        targets,
+        np.asarray(QUANTILE_ADAPTIVE_QUANTILES, dtype=np.float64),
+        method="nearest",
+    ).astype(np.float64)
+    if not np.isfinite(boundaries).all() or bool(np.any(np.diff(boundaries) <= 0.0)):
+        raise ValueError(
+            f"Quantile-adaptive boundaries must be finite and strictly increasing: "
+            f"{boundaries.tolist()}"
+        )
+    raw_weights = np.asarray(QUANTILE_ADAPTIVE_RAW_WEIGHTS, dtype=np.float64)
+    bin_ids = np.searchsorted(boundaries, targets, side="left")
+    bin_counts = np.bincount(bin_ids, minlength=raw_weights.size).astype(np.int64)
+    normalization_mean = float(np.mean(raw_weights[bin_ids], dtype=np.float64))
+    if not math.isfinite(normalization_mean) or normalization_mean <= 0.0:
+        raise ValueError("Quantile-adaptive normalization mean must be finite and positive")
+    normalized_weights = raw_weights / normalization_mean
+    weighted_mean = float(
+        np.sum(bin_counts.astype(np.float64) * normalized_weights, dtype=np.float64)
+        / targets.size
+    )
+    if not math.isclose(weighted_mean, 1.0, rel_tol=0.0, abs_tol=1e-12):
+        raise ValueError("Normalized train-target weights must have arithmetic mean one")
+    payload = {
+        "schema_version": 1,
+        "statistics_source_split": "train",
+        "statistics_population": "exact_canonical_next_event_targets",
+        "quantiles": list(QUANTILE_ADAPTIVE_QUANTILES),
+        "interpolation": "nearest",
+        "boundary_semantics": "equality_in_lower_bin",
+        "boundaries": boundaries.tolist(),
+        "raw_bin_weights": raw_weights.tolist(),
+        "normalized_bin_weights": normalized_weights.tolist(),
+        "bin_counts": bin_counts.tolist(),
+        "normalization": "raw_weight_divided_by_float64_train_target_mean",
+        "normalization_mean": normalization_mean,
+        "normalized_train_target_mean": weighted_mean,
+        "reduction": "target_event_mean_without_batch_renormalization",
+        "population": population,
+    }
+    digest_payload = json.dumps(
+        payload,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    payload["contract_sha256"] = hashlib.sha256(digest_payload).hexdigest()
+    return payload
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data", type=Path, required=True)
@@ -212,6 +358,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--backbones", default=",".join(BACKBONES))
     parser.add_argument("--seeds", default=",".join(str(seed) for seed in SEEDS))
     parser.add_argument("--quantity-variants", default=VARIANT)
+    parser.add_argument(
+        "--checkpoint-monitor",
+        choices=("validation_joint_objective", "validation_raw_quantity_rmse"),
+        default="validation_joint_objective",
+    )
+    parser.add_argument("--quantile-adaptive-strength", type=float, default=0.0)
     parser.add_argument(
         "--model-role",
         choices=MODEL_ROLES,
@@ -286,6 +438,13 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
         time_head_mode=args.time_head_mode,
         lambda_tail=args.lambda_tail,
     )
+    if (
+        QUANTILE_ADAPTIVE_VARIANT in quantity_variants
+        and args.model_role != MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT
+    ):
+        raise ValueError(
+            "The quantile-adaptive variant is only available under its frozen model role"
+        )
     static_memory_reference = (
         validate_static_memory_launch(args, seeds)
         if args.model_role == THP_STATIC_MEMORY_ROLE else None
@@ -304,6 +463,21 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
         raise ValueError("The qualified Intermittent contract does not allow max_series")
     if args.lambda_log_qty != 1.0:
         raise ValueError("Frozen contract requires lambda_log_qty=1.0")
+    if args.model_role == MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT:
+        if args.checkpoint_monitor != "validation_raw_quantity_rmse":
+            raise ValueError("Quantile alignment requires raw-RMSE checkpoint selection")
+        if not math.isclose(
+            args.quantile_adaptive_strength, 1.0, rel_tol=0.0, abs_tol=1e-15
+        ):
+            raise ValueError("Quantile alignment requires frozen adaptive strength=1")
+        if not math.isclose(
+            args.time_intercept_limit, 300.0, rel_tol=0.0, abs_tol=1e-12
+        ):
+            raise ValueError("Quantile alignment requires executed T0 legacy intercept cap=300")
+    elif not math.isclose(
+        args.quantile_adaptive_strength, 0.0, rel_tol=0.0, abs_tol=1e-15
+    ):
+        raise ValueError("Quantile-adaptive strength is only allowed for its frozen model role")
     if args.time_wd_safety_limit <= 0.0:
         raise ValueError("time_wd_safety_limit must be positive")
     if args.time_head_lr_multiplier <= 0.0:
@@ -385,10 +559,17 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
         raise ValueError(f"Unexpected fixed-split SHA-256: {data_sha256}")
     if manifest_sha256 != dataset_contract["split_manifest_sha256"]:
         raise ValueError(f"Unexpected split-manifest SHA-256: {manifest_sha256}")
+    # Bind the already-verified input bytes into every cache/resume identity.
+    # These fields are intentionally attached only after checksum validation so
+    # train_one cannot reuse a state produced from different data under the same
+    # filesystem path.
+    args.data_sha256 = data_sha256
+    args.split_manifest_sha256 = manifest_sha256
     if (args.model_role in {MODEL_ROLE_WEIGHTED_STATIC, MODEL_ROLE_HARD_LOCAL_TIME}
             or args.model_role == KEY_VALUE_ROLE
             or args.model_role == ELAPSED_AGE_ROLE
-            or args.model_role == THP_STATIC_MEMORY_ROLE):
+            or args.model_role == THP_STATIC_MEMORY_ROLE
+            or args.model_role == MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT):
         # Keep the new candidate's held-out rows outside materialized memory.
         raw_frame = load_train_validation_frame(args.data)
     else:
@@ -411,6 +592,20 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
         ).sort(["oper_part_no", "seq"])
     quantity_contract = train_quantile_contract(raw_frame)
     frame = prepare_count_frame(raw_frame)
+    quantile_adaptive_contract = None
+    validation_target_population = None
+    if args.model_role == MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT:
+        quantile_adaptive_contract = derive_quantile_adaptive_contract(
+            frame,
+            lookback_weeks=args.lookback_weeks,
+            max_seq_len=args.max_seq_len,
+        )
+        _, validation_target_population = exact_target_population(
+            frame,
+            target_split="validation",
+            lookback_weeks=args.lookback_weeks,
+            max_seq_len=args.max_seq_len,
+        )
     train_time_contract = derive_train_time_contract(
         frame,
         lookback_weeks=args.lookback_weeks,
@@ -539,6 +734,14 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
             "tail_huber_delta": args.tail_huber_delta,
         },
     }
+    if quantile_adaptive_contract is not None:
+        interface_by_variant[QUANTILE_ADAPTIVE_VARIANT] = {
+            **shared_interface,
+            "mode": "mark_free_count_aware_quantile_adaptive_log_regression",
+            "quantity_loss": "train_quantile_weighted_mse_on_log1p_quantity",
+            "quantile_adaptive_strength": args.quantile_adaptive_strength,
+            "quantile_adaptive_contract": quantile_adaptive_contract,
+        }
     split_rows = {
         str(row["chronological_split"]): int(row["len"])
         for row in raw_frame.group_by("chronological_split").agg(pl.len()).iter_rows(named=True)
@@ -557,6 +760,8 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
         "split_manifest_sha256": manifest_sha256,
         "split_rows": split_rows,
         "quantity_contract": quantity_contract,
+        "quantile_adaptive_contract": quantile_adaptive_contract,
+        "validation_target_population": validation_target_population,
         "history_length_contract": {
             "boundaries": list(HISTORY_BOUNDARIES),
             "strata": list(HISTORY_STRATA),
@@ -575,6 +780,7 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
         "lr": args.lr,
         "lambda_log_qty": args.lambda_log_qty,
         "lambda_tail": args.lambda_tail,
+        "quantile_adaptive_strength": args.quantile_adaptive_strength,
         "time_head": {
             "mode": args.time_head_mode,
             "time_scale": args.time_scale,
@@ -611,19 +817,29 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
         "grad_clip": args.grad_clip,
         "titans_memory_gradient_clip": args.titans_memory_gradient_clip,
         "early_stopping": {
-            "monitor": "validation_joint_objective",
+            "monitor": args.checkpoint_monitor,
             "formula_by_variant": {
-                VARIANT: "time_nll + lambda_log_qty * log1p_quantity_mse",
+                VARIANT: (
+                    "raw_quantity_rmse"
+                    if args.checkpoint_monitor == "validation_raw_quantity_rmse"
+                    else "time_nll + lambda_log_qty * log1p_quantity_mse"
+                ),
                 LOGNORMAL_VARIANT: "time_nll + lambda_log_qty * "
                 "(gaussian_nll_on_log1p_quantity + lambda_location_huber * location_huber)",
                 TAIL_SHARED_VARIANT: "time_nll + lambda_log_qty * "
                 "(log1p_quantity_mse + lambda_tail * tail_raw_huber)",
                 TAIL_HEAD_ONLY_VARIANT: "time_nll + lambda_log_qty * "
                 "(log1p_quantity_mse + lambda_tail * tail_raw_huber)",
+                QUANTILE_ADAPTIVE_VARIANT: "raw_quantity_rmse",
             },
             "min_epochs": args.min_epochs,
             "patience": args.early_stopping_patience,
-            "restore": "best_validation_joint_objective",
+            "comparison": "earliest_strict_finite_minimum",
+            "restore": (
+                "best_validation_raw_quantity_rmse"
+                if args.checkpoint_monitor == "validation_raw_quantity_rmse"
+                else "best_validation_joint_objective"
+            ),
         },
         "lookback_weeks": args.lookback_weeks,
         "max_seq_len": args.max_seq_len,

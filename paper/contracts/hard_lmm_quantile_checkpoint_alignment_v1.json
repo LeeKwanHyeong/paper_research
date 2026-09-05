@@ -1,0 +1,241 @@
+{
+  "schema_version": 1,
+  "contract_id": "hard_lmm_quantile_checkpoint_alignment_v1",
+  "created_on": "2026-09-06",
+  "status": "frozen_before_candidate_implementation",
+  "repository": "paper_research",
+  "branch": "codex/quantile-checkpoint-alignment",
+  "parent_revision": "815ec62ebd945d286aa18149be6231454d4cdb58",
+  "research_question": "Can a shared train-quantile-weighted log-count objective add raw-RMSE benefit beyond prospectively aligning checkpoint selection to validation raw RMSE on the unchanged Hard-LMM T0 backbone?",
+  "priority": "common_raw_quantity_performance_after_transition_backbone_gate_failed",
+  "scope": {
+    "backbone": "titantpp",
+    "architecture": "unchanged original mark-free Hard-LMM T0",
+    "time_head": "legacy_clamped_rmtpp with execution-compatible intercept cap 300",
+    "quantity_head": "unchanged softplus log1p-location head with expm1 point prediction",
+    "optimizer": "AdamW",
+    "learning_rate": 0.001,
+    "batch_size": 128,
+    "gradient_clip": 1.0,
+    "maximum_epochs": 300,
+    "minimum_epochs": 40,
+    "patience": 40,
+    "screening_seed": 42,
+    "evaluation_scope": "validation_only",
+    "held_out_test_evaluated": false
+  },
+  "datasets": [
+    {
+      "dataset": "intermittent_frozen_5000",
+      "data_path": "sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+      "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+      "split_manifest_path": "sample_data/intermittent_v2/intermittent_frozen_5000_split_manifest.json",
+      "split_manifest_sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04",
+      "lookback": 520,
+      "max_sequence_length": 256,
+      "expected_train_targets": 393824,
+      "expected_validation_targets": 86285,
+      "expected_loss_boundaries": [2.0, 31.0, 47.0, 188.0],
+      "expected_loss_bin_counts": [204536, 152755, 17165, 15434, 3934],
+      "expected_loss_normalization_mean": 1.080961292353945,
+      "expected_loss_contract_sha256": "7ffc2d0c67a61215d43bfdbfa0738df895643b4a9f7297a43e537f079342ca5f",
+      "expected_train_target_identity_sha256": "fb8737489bc18e528adc322e2e55e26fcc5793aa6ff8021d93ceac98d7768aed",
+      "expected_train_target_quantity_sha256": "c4a9c3721d3861c190e81abe35156488f545b00c8ddbbed4022a9a82a4b3a215",
+      "expected_validation_target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+      "expected_validation_target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385",
+      "reporting_body_max_train_p95": 46.0,
+      "reporting_tail_min_train_p99": 187.0,
+      "joint_t0_reference": {
+        "artifact_path": "search_artifacts/count_aware_b012_seed42_screening_e300_20260828_recovery1/intermittent_frozen_5000/titan_b012_screening",
+        "source_revision": "08e59880cd61cbd27cec40aa04636452b87bebfc",
+        "launch_contract_sha256": "1df9f459e72b98949c8dadda69cddb1b42840c56aa087ab10439ba4c29989a8e",
+        "summary_sha256": "943423569b8fd09d9ddf7beaddde001d6d42fb5516a1d2a564a7fd1bb98173f6",
+        "checkpoint_file_sha256": "f1d876e9e93162546031ab6719a5a13a68f46b8a8317aca3288dcfe7ebee3c6f",
+        "checkpoint_state_sha256": "6f8fa31c987a0ac58daa45a467b112d158b930feed2ccde5a4a3dddba4851999",
+        "effective_legacy_time_intercept_cap": 300.0
+      }
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "data_path": "sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+      "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+      "split_manifest_path": "sample_data/new_york_taxi/yellow_trip_hourly_split_manifest.json",
+      "split_manifest_sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85",
+      "lookback": 168,
+      "max_sequence_length": 256,
+      "expected_train_targets": 38393,
+      "expected_validation_targets": 8268,
+      "expected_loss_boundaries": [7.0, 686.0, 1562.0, 3448.0],
+      "expected_loss_bin_counts": [19434, 15121, 1919, 1535, 384],
+      "expected_loss_normalization_mean": 1.0849764279946865,
+      "expected_loss_contract_sha256": "a46de3ad6c9e3a57e4808356780598bb5b4e5e72c79ae530342974823fea5175",
+      "expected_train_target_identity_sha256": "fc6453af5a9a34c93dd3f299cd545c9ab946be11752ee001f38055e52cc9e637",
+      "expected_train_target_quantity_sha256": "bbabe4e040831f05bc96680afdb4c45a1856673e418bdd1db9495cda3f693680",
+      "expected_validation_target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+      "expected_validation_target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd",
+      "reporting_body_max_train_p95": 1562.0,
+      "reporting_tail_min_train_p99": 3449.0,
+      "joint_t0_reference": {
+        "artifact_path": "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control",
+        "source_revision": "6a01aea9024db9e3ef6cfdd2c3d0219ceb320856",
+        "launch_contract_sha256": "f9d1d380ac8f96d359d2cc976fb705113fddc2293b01088fe6696127547ba069",
+        "summary_sha256": "771bc13643ad71e21c7533586dbb457ff043a57a12804c77355fcffb192a8c44",
+        "checkpoint_file_sha256": "d5a69ac6c12b2249b3812631a244657042d168b1030755fd2aa63ab980ea6ab3",
+        "checkpoint_state_sha256": "2e9ed10989e8a78c881e5b4e6888f769fffaa0d19030b4a2b91abd202135f0a6",
+        "effective_legacy_time_intercept_cap": 300.0
+      }
+    },
+    {
+      "dataset": "insta_market_basket",
+      "data_path": "sample_data/insta_market_basket/instacart_marked_target_with_split.parquet",
+      "data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+      "split_manifest_path": "sample_data/insta_market_basket/instacart_marked_target_split_manifest.json",
+      "split_manifest_sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d",
+      "lookback": 52,
+      "max_sequence_length": 64,
+      "expected_train_targets": 1991192,
+      "expected_validation_targets": 503733,
+      "expected_loss_boundaries": [8.0, 20.0, 25.0, 35.0],
+      "expected_loss_bin_counts": [1022434, 782701, 98144, 68685, 19228],
+      "expected_loss_normalization_mean": 1.0784520026195363,
+      "expected_loss_contract_sha256": "361efcf5d972b1c65fd70c39984aae67dd973a50e318edc221343ef4efe87acc",
+      "expected_train_target_identity_sha256": "c361f5e9904c25f18c91007f6e1209518a02fb755799e81c8300ee759b2a1210",
+      "expected_train_target_quantity_sha256": "07e98693d5ac26caeaeb3c60d6d31fad21ab8f1e40ac649f231ac299963817d8",
+      "expected_validation_target_identity_sha256": "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8",
+      "expected_validation_target_quantity_sha256": "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184",
+      "reporting_body_max_train_p95": 25.0,
+      "reporting_tail_min_train_p99": 35.0,
+      "joint_t0_reference": {
+        "artifact_path": "search_artifacts/count_aware_instacart_t0_e300_20260824_recovery1/insta_market_basket/t0_common_control",
+        "source_revision": "28293c43521615be2ed8fad5b043dc9df8e5e457",
+        "launch_contract_sha256": "b1e908652913ab2744e7567f18803c8796f2de08b42a65cc83a0791a06072b2b",
+        "summary_sha256": "f6fc651d7ccea6773235162f6e05d9e5f2d160749adde6c742c9af4e4f8a3ed2",
+        "checkpoint_file_sha256": "c99a59417b34b6712fdc5d733ea8a3565d554f9efe07ddee8fb97fa68d607888",
+        "checkpoint_state_sha256": "d1e60a684822d7d32a190b627e392a83626a138ba4890ea0c2bd31327ba5acaf",
+        "effective_legacy_time_intercept_cap": 300.0
+      }
+    }
+  ],
+  "arms": {
+    "A_t0_joint": {
+      "quantity_objective": "unweighted MSE on log1p quantity",
+      "checkpoint_monitor": "validation_joint_objective",
+      "early_stopping_monitor": "validation_joint_objective",
+      "role": "frozen incumbent reference; reuse exact audited seed42 artifact"
+    },
+    "B_t0_raw_rmse": {
+      "quantity_objective": "unweighted MSE on log1p quantity",
+      "checkpoint_monitor": "validation_raw_quantity_rmse",
+      "early_stopping_monitor": "validation_raw_quantity_rmse",
+      "role": "fresh aligned-T0 run"
+    },
+    "C_quantile_raw_rmse": {
+      "quantity_objective": "train-quantile-weighted MSE on log1p quantity",
+      "checkpoint_monitor": "validation_raw_quantity_rmse",
+      "early_stopping_monitor": "validation_raw_quantity_rmse",
+      "role": "fresh quantile-adaptive candidate"
+    }
+  },
+  "quantile_objective": {
+    "statistics_split": "train only",
+    "statistics_population": "exact next-event targets admitted by the canonical train loader; non-target first events are excluded",
+    "quantiles": [0.5, 0.9, 0.95, 0.99],
+    "interpolation": "nearest",
+    "boundary_semantics": "equality remains in the lower bin",
+    "bins": ["le_p50", "p50_p90", "p90_p95", "p95_p99", "gt_p99"],
+    "raw_bin_weights": [1.0, 1.0, 1.5, 2.0, 3.0],
+    "normalization": "divide every raw bin weight by its float64 arithmetic mean over the exact train-target population",
+    "loss": "normalized_weight(target_quantity) * squared(softplus(quantity_preactivation) - log1p(target_quantity))",
+    "reduction": "mean over target events; no per-batch renormalization",
+    "strength": 1.0,
+    "disabled_identity": "strength zero returns the original unweighted log-MSE directly for identical loss and gradients",
+    "prohibited": [
+      "validation-fitted quantiles or normalization",
+      "held-out-fitted statistics",
+      "dataset-specific manual weights",
+      "dataset-specific lambda",
+      "per-batch weight normalization",
+      "post-outcome weight, boundary, or loss changes",
+      "raw-quantity auxiliary loss",
+      "new trainable parameters"
+    ]
+  },
+  "checkpoint_selection": {
+    "raw_monitor_history_key": "val_qty_rmse",
+    "rule": "earliest strict finite minimum validation raw quantity RMSE",
+    "early_stopping": "same monitor, minimum 40 epochs, patience 40",
+    "other_metrics_in_selector": false,
+    "time_body_tail_usage": "acceptance guardrails only",
+    "resume": "selector identity, quantile contract, model, optimizer, RNG, train-loader generator, history, current state, and best state must restore exactly",
+    "cache_policy": "reject cached summaries or resume states whose selector or objective identity differs"
+  },
+  "seed42_gate": {
+    "comparison_order": [
+      "report B_t0_raw_rmse versus A_t0_joint as checkpoint-selection effect",
+      "judge C_quantile_raw_rmse versus B_t0_raw_rmse as incremental loss effect",
+      "report C_quantile_raw_rmse versus A_t0_joint as total raw-performance effect"
+    ],
+    "required_on_every_dataset": {
+      "candidate_raw_rmse_vs_aligned_t0": "strictly lower",
+      "candidate_raw_rmse_vs_joint_t0": "strictly lower",
+      "candidate_body_mae_regression_vs_aligned_t0_max": 0.02,
+      "candidate_gt_p99_mae_regression_vs_aligned_t0_max": 0.02,
+      "candidate_time_loss_increase_vs_aligned_t0_max": 0.01,
+      "candidate_time_loss_increase_vs_joint_t0_max": 0.01,
+      "finite_metrics": true,
+      "identical_validation_target_ids_and_counts": true
+    },
+    "dataset_pooling": false,
+    "metric_rounding_before_decision": false,
+    "failure_action": "stop after seed42; do not run seeds52 or62 and do not change the frozen loss or selector",
+    "pass_action": "make seeds52 and62 a separately reported next stage; no held-out access"
+  },
+  "reference_evidence": {
+    "incumbent_registry": "paper/contracts/count_aware_hard_lmm_frozen_probe_v1.json",
+    "incumbent_registry_sha256": "a9430a67f81c5c6a3b2baccd5a0fef425b57b98d3706637f9f3040c909540356",
+    "intermittent_reference_override": "The registry artifact directory is absent locally; the explicitly pinned B0 recovery artifact has the same frozen checkpoint-state SHA256.",
+    "legacy_time_compatibility": "The A revisions hard-coded the effective legacy intercept cap at 300 even though launch metadata recorded the then-unused configured value 30; B and C set 300 explicitly.",
+    "target_population_loader_source_sha256": {
+      "paper/scripts/count_aware_tpp_backbone/datasets.py": "0a2982d92a21d6dd0518adba5e631d40cf2222c9eb9ee476d861b27211623274",
+      "data_loader/event_seq_data_module.py": "7c11d9ace6c4e4d3bb03861aae92393aa946a38452d702dc7625210b339897ca"
+    },
+    "target_population_loader_source_audit": "All three pinned A source revisions and the B/C parent revision have byte-identical target-loader files; combined with identical data, split manifest, lookback, and max sequence length, this binds A/B/C to the same deterministic validation target IDs.",
+    "prior_tail_candidate": "T1 p95 raw-Huber is not an arm; it improved Intermittent but worsened Taxi and cannot be retuned here",
+    "historical_epoch_metrics": "may justify the prospective selector but cannot replace a missing raw-RMSE-selected checkpoint state"
+  },
+  "execution": {
+    "local_contract_and_unit_tests": true,
+    "paper_research_source_commit": true,
+    "rtx5090_cuda_and_full_data_e1": true,
+    "rtx5090_seed42_e300": true,
+    "rtx5090_seeds52_and62": false,
+    "held_out_test": false,
+    "source_transfer": "committed files only in an isolated server directory with SHA256 manifest",
+    "overwrite": false,
+    "automatic_retry": false
+  },
+  "runtime_policy": {
+    "execution_server": "5090",
+    "required_gpu_name_contains": "RTX 5090",
+    "minimum_free_vram_mib": 12000,
+    "require_no_existing_compute_process": true,
+    "require_gdm_inactive": true,
+    "deterministic_environment": {
+      "CUDA_VISIBLE_DEVICES": "0",
+      "PYTHONHASHSEED": "42",
+      "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1"
+    },
+    "phase_order": [
+      "cuda_contract_tests",
+      "full_data_e1_all_datasets",
+      "seed42_e300_all_datasets",
+      "local_A_B_C_audit"
+    ]
+  },
+  "deferred_follow_up": {
+    "name": "quantile-adaptive loss and checkpoint alignment",
+    "must_be_repeated_in_each_progress_update": true
+  }
+}

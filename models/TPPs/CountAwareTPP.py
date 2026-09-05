@@ -38,6 +38,7 @@ from models.Titan.common.tpp_gated_memory import (
 
 
 LOG_MSE_VARIANT = "count_only_log_regression"
+QUANTILE_ADAPTIVE_VARIANT = "count_only_quantile_adaptive_log_regression"
 LOGNORMAL_VARIANT = "count_only_lognormal_k1"
 TAIL_SHARED_VARIANT = "count_only_log_mse_tail_shared"
 TAIL_HEAD_ONLY_VARIANT = "count_only_log_mse_tail_head_only"
@@ -113,6 +114,13 @@ class SharedTimeCountModel(nn.Module):
         *,
         train_log_std: float = 1.0,
         quantity_variant: str = LOG_MSE_VARIANT,
+        quantile_adaptive_strength: float = 0.0,
+        quantile_adaptive_boundaries: tuple[
+            float, float, float, float
+        ] | None = None,
+        quantile_adaptive_weights: tuple[
+            float, float, float, float, float
+        ] | None = None,
         quantity_sigma_floor: float = 1e-3,
         lambda_location_huber: float = 1.0,
         location_huber_delta: float = 0.25,
@@ -138,10 +146,65 @@ class SharedTimeCountModel(nn.Module):
             raise ValueError("train_log_std must be finite and positive")
         if quantity_variant not in {
             LOG_MSE_VARIANT,
+            QUANTILE_ADAPTIVE_VARIANT,
             LOGNORMAL_VARIANT,
             *TAIL_VARIANTS,
         }:
             raise ValueError(f"Unsupported quantity_variant: {quantity_variant}")
+        if (
+            not math.isfinite(quantile_adaptive_strength)
+            or quantile_adaptive_strength not in {0.0, 1.0}
+        ):
+            raise ValueError(
+                "quantile_adaptive_strength must be finite and either 0 or 1"
+            )
+        if (quantile_adaptive_boundaries is None) != (
+            quantile_adaptive_weights is None
+        ):
+            raise ValueError(
+                "quantile-adaptive boundaries and weights must be provided together"
+            )
+        if quantile_adaptive_boundaries is not None:
+            if len(quantile_adaptive_boundaries) != 4:
+                raise ValueError("quantile-adaptive boundaries must contain four values")
+            if not all(
+                math.isfinite(value) for value in quantile_adaptive_boundaries
+            ):
+                raise ValueError("quantile-adaptive boundaries must be finite")
+            if not all(
+                lower < upper
+                for lower, upper in zip(
+                    quantile_adaptive_boundaries,
+                    quantile_adaptive_boundaries[1:],
+                )
+            ):
+                raise ValueError(
+                    "quantile-adaptive boundaries must be strictly increasing"
+                )
+            if len(quantile_adaptive_weights) != 5:
+                raise ValueError("quantile-adaptive weights must contain five values")
+            if not all(
+                math.isfinite(value) and value > 0.0
+                for value in quantile_adaptive_weights
+            ):
+                raise ValueError(
+                    "quantile-adaptive weights must be finite and positive"
+                )
+        if quantity_variant == QUANTILE_ADAPTIVE_VARIANT:
+            if (
+                quantile_adaptive_strength > 0.0
+                and quantile_adaptive_boundaries is None
+            ):
+                raise ValueError(
+                    "active quantile-adaptive loss requires boundaries and weights"
+                )
+        elif (
+            quantile_adaptive_strength != 0.0
+            or quantile_adaptive_boundaries is not None
+        ):
+            raise ValueError(
+                "quantile-adaptive settings require the quantile-adaptive variant"
+            )
         if quantity_sigma_floor <= 0.0:
             raise ValueError("quantity_sigma_floor must be positive")
         if lambda_location_huber < 0.0:
@@ -183,6 +246,19 @@ class SharedTimeCountModel(nn.Module):
 
         self.hidden_dim = int(hidden_dim)
         self.quantity_variant = quantity_variant
+        self.quantile_adaptive_strength = float(quantile_adaptive_strength)
+        # These are immutable, non-persistent data-contract values. Keeping them
+        # out of buffers preserves the exact T0 parameter and state-dict schema.
+        self.quantile_adaptive_boundaries = (
+            None
+            if quantile_adaptive_boundaries is None
+            else tuple(float(value) for value in quantile_adaptive_boundaries)
+        )
+        self.quantile_adaptive_weights = (
+            None
+            if quantile_adaptive_weights is None
+            else tuple(float(value) for value in quantile_adaptive_weights)
+        )
         self.quantity_sigma_floor = float(quantity_sigma_floor)
         self.lambda_location_huber = float(lambda_location_huber)
         self.location_huber_delta = float(location_huber_delta)
@@ -535,9 +611,34 @@ class SharedTimeCountModel(nn.Module):
         target = torch.log1p(true_quantity.clamp_min(0.0))
         log_mse = F.mse_loss(location, target, reduction="none")
         zeros = torch.zeros_like(log_mse)
-        if self.quantity_variant == LOG_MSE_VARIANT:
+        if self.quantity_variant in {LOG_MSE_VARIANT, QUANTILE_ADAPTIVE_VARIANT}:
+            # The explicit zero-strength route is the legacy tensor itself. Do
+            # not multiply by one: this path is the bitwise forward/gradient
+            # identity contract used to audit the new objective.
+            train_loss = log_mse
+            if (
+                self.quantity_variant == QUANTILE_ADAPTIVE_VARIANT
+                and self.quantile_adaptive_strength != 0.0
+            ):
+                assert self.quantile_adaptive_boundaries is not None
+                assert self.quantile_adaptive_weights is not None
+                boundaries = log_mse.new_tensor(
+                    self.quantile_adaptive_boundaries
+                )
+                normalized_weights = log_mse.new_tensor(
+                    self.quantile_adaptive_weights
+                )
+                # right=False assigns equality to the lower interval:
+                # <=p50, (p50,p90], (p90,p95], (p95,p99], >p99.
+                bucket = torch.bucketize(
+                    true_quantity.to(dtype=log_mse.dtype),
+                    boundaries,
+                    right=False,
+                )
+                selected_weight = normalized_weights[bucket]
+                train_loss = selected_weight * log_mse
             return {
-                "train_loss": log_mse,
+                "train_loss": train_loss,
                 "log_mse": log_mse,
                 "distribution_nll": zeros,
                 "location_huber": zeros,
@@ -1007,6 +1108,7 @@ __all__ = [
     "CountAwareTitanTPP",
     "LOG_MSE_VARIANT",
     "LOGNORMAL_VARIANT",
+    "QUANTILE_ADAPTIVE_VARIANT",
     "SharedTimeCountModel",
     "TAIL_HEAD_ONLY_VARIANT",
     "TAIL_SHARED_VARIANT",

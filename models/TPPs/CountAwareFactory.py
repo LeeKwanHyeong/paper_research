@@ -206,6 +206,13 @@ def build_count_aware_model(
     max_seq_len: int,
     train_log_std: float = 1.0,
     quantity_variant: str = LOG_MSE_VARIANT,
+    quantile_adaptive_strength: float = 0.0,
+    quantile_adaptive_boundaries: tuple[
+        float, float, float, float
+    ] | None = None,
+    quantile_adaptive_weights: tuple[
+        float, float, float, float, float
+    ] | None = None,
     quantity_sigma_floor: float = 1e-3,
     lambda_location_huber: float = 1.0,
     location_huber_delta: float = 0.25,
@@ -252,6 +259,9 @@ def build_count_aware_model(
     quantity_kwargs = {
         "train_log_std": train_log_std,
         "quantity_variant": quantity_variant,
+        "quantile_adaptive_strength": quantile_adaptive_strength,
+        "quantile_adaptive_boundaries": quantile_adaptive_boundaries,
+        "quantile_adaptive_weights": quantile_adaptive_weights,
         "quantity_sigma_floor": quantity_sigma_floor,
         "lambda_location_huber": lambda_location_huber,
         "location_huber_delta": location_huber_delta,
