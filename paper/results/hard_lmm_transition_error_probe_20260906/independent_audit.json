@@ -1,0 +1,85 @@
+{
+  "artifact_hashes": {
+    "analysis.json": "7cb2dd736527c736d3d19484b9f26e62ca0f93deed69c3013fb0b2e321814945",
+    "evidence_decision.json": "5a5e6e7b8af7eee0d5f7e5799f62dc6433025d889a42c4a02d45a0ee7622856c",
+    "execution_contract.json": "9cb645dddb6b9bf3242a2c8db83081c0f40457513c1cfc85bd2db880b1f03b17",
+    "execution_manifest.json": "5c4350acb0d63caa53ddf88bb86016a56dd5fc65b25006f04e971caa800b4e7c",
+    "reader_evidence.json": "215a45937ad4c1e754ed56a39b0ebc13ff5e0d01de3579d25e32d7bdaea19155"
+  },
+  "audit_id": "hard_lmm_transition_error_independent_audit_20260906",
+  "audited_decision": "FAIL_DO_NOT_IMPLEMENT_OR_RUN_E300",
+  "audited_decision_matches": true,
+  "checks": {
+    "bootstrap_10000_reproduced_exactly": true,
+    "cache_npz_analysis_fields_match": true,
+    "canonical_dataset_row_alignment_mismatches": 0,
+    "contract_registry_source_input_cache_and_output_hashes_match": true,
+    "contract_tests_passed": 34,
+    "oof_reconstruction_max_abs": 0.0,
+    "series_fold_overlap_count": 0,
+    "target_padding_first_batch_invariance": true,
+    "transition_formula_and_masks_match_contract": true
+  },
+  "datasets": {
+    "insta_market_basket": {
+      "candidate_body_vs_t0_passes": false,
+      "candidate_vs_sham_relative_gain": 5.7693689936210795e-05,
+      "candidate_vs_strong_control_relative_gain": 2.893978051422744e-05,
+      "dataset_gate_passes": false,
+      "fold_series": {
+        "0": 3959,
+        "1": 3889
+      },
+      "fold_targets": {
+        "0": 4132,
+        "1": 4060
+      },
+      "n_targets": 8192,
+      "official_prediction_max_abs": 0.0,
+      "target_padding_feature_max_abs": 0.0
+    },
+    "intermittent_v2": {
+      "candidate_body_vs_t0_passes": true,
+      "candidate_vs_sham_relative_gain": 0.0016870944806782078,
+      "candidate_vs_strong_control_relative_gain": -8.950144030464063e-05,
+      "dataset_gate_passes": false,
+      "fold_series": {
+        "0": 1911,
+        "1": 1827
+      },
+      "fold_targets": {
+        "0": 4239,
+        "1": 3953
+      },
+      "n_targets": 8192,
+      "official_prediction_max_abs": 0.0,
+      "target_padding_feature_max_abs": 0.0
+    },
+    "yellow_trip_hourly": {
+      "candidate_body_vs_t0_passes": true,
+      "candidate_vs_sham_relative_gain": 0.0012221169847349718,
+      "candidate_vs_strong_control_relative_gain": 0.0009190532794584304,
+      "dataset_gate_passes": false,
+      "fold_series": {
+        "0": 64,
+        "1": 67
+      },
+      "fold_targets": {
+        "0": 4023,
+        "1": 4169
+      },
+      "n_targets": 8192,
+      "official_prediction_max_abs": 0.0,
+      "target_padding_feature_max_abs": 0.0
+    }
+  },
+  "deferred_follow_up": "quantile-adaptive loss and checkpoint alignment",
+  "limitations": [
+    "Real-data target and padding perturbation was executed on the first batch of each dataset; exhaustive synthetic causal and mask tests cover the helper.",
+    "The execution manifest did not record the SciPy version; the independent audit environment reports 1.15.3.",
+    "The cyclic sham is causal for the final target because it uses only its fully observed history, but its intermediate token-aligned values can use prototype assignments from later positions in that observed history. The sham is diagnostic-only.",
+    "This rejects the frozen-T0 candidate contract and does not prove every end-to-end transition-error architecture must fail."
+  ],
+  "schema_version": 1,
+  "status": "PASS_NO_BLOCKING_INTEGRITY_FINDING"
+}

@@ -1,0 +1,187 @@
+{
+  "schema_version": 1,
+  "contract_id": "hard_lmm_transition_error_v1",
+  "created_on": "2026-09-06",
+  "research_question": "Does a causal prototype-conditioned summary of already observed T0 quantity errors provide common next-quantity signal across Intermittent, Taxi, and Instacart?",
+  "priority": "backbone_contribution_first",
+  "stages": [
+    "train_only_frozen_signal_diagnostic",
+    "local_candidate_contract_and_unit_validation_if_signal_passes",
+    "rtx5090_cuda_and_full_data_e1_if_local_contract_passes",
+    "rtx5090_seed42_e300_screening_if_e1_passes",
+    "seeds52_and62_only_if_seed42_common_screen_passes"
+  ],
+  "reference": {
+    "registry": "paper/contracts/count_aware_hard_lmm_frozen_probe_v1.json",
+    "registry_sha256": "a9430a67f81c5c6a3b2baccd5a0fef425b57b98d3706637f9f3040c909540356",
+    "backbone": "titantpp",
+    "checkpoint_seed": 42,
+    "memory": "tied_static_64_prototypes_cosine_top4_arithmetic_mean",
+    "checkpoint_selection": "minimum_validation_joint_objective",
+    "checkpoint_parameters_frozen_during_diagnostic": true
+  },
+  "datasets": [
+    {
+      "dataset": "intermittent_v2",
+      "body_threshold_train_p95": 46.0,
+      "tail_threshold_train_p99": 187.0,
+      "train_rows": 398824,
+      "train_series": 5000,
+      "local_checkpoint_override": {
+        "reason": "canonical registry checkpoint file is absent locally; this audited e300 checkpoint has the exact registry-pinned model_state_sha256",
+        "artifact_dir": "search_artifacts/count_aware_b012_seed42_screening_e300_20260828_recovery1/intermittent_frozen_5000/titan_b012_screening",
+        "launch_contract_sha256": "1df9f459e72b98949c8dadda69cddb1b42840c56aa087ab10439ba4c29989a8e",
+        "checkpoint_file_sha256": "f1d876e9e93162546031ab6719a5a13a68f46b8a8317aca3288dcfe7ebee3c6f",
+        "checkpoint_state_sha256": "6f8fa31c987a0ac58daa45a467b112d158b930feed2ccde5a4a3dddba4851999",
+        "summary_sha256": "943423569b8fd09d9ddf7beaddde001d6d42fb5516a1d2a564a7fd1bb98173f6"
+      }
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "body_threshold_train_p95": 1562.0,
+      "tail_threshold_train_p99": 3449.0,
+      "train_rows": 38524,
+      "train_series": 131
+    },
+    {
+      "dataset": "insta_market_basket",
+      "body_threshold_train_p95": 25.0,
+      "tail_threshold_train_p99": 35.0,
+      "train_rows": 2197401,
+      "train_series": 206209
+    }
+  ],
+  "diagnostic_scope": {
+    "allowed_split": "train_only",
+    "validation_rows_materialized": false,
+    "held_out_test_evaluated": false,
+    "maximum_targets_per_dataset": 8192,
+    "target_sampling": "uniform_without_replacement_seed42_then_sorted",
+    "sample_seed": 42,
+    "series_fold_rule": "sha256('20260906:'+series_index)_first8_big_endian_mod_2",
+    "minimum_targets_per_fold": 512,
+    "minimum_unique_series_per_fold": 30,
+    "history_length_one_policy": "retain_with_zero_transition_summary",
+    "window_semantics": "all token predictions and retrieval traces come from the same legal target window used for the final prediction"
+  },
+  "transition_feature": {
+    "base_quantity_preactivation": "a_t = quantity_head(h_t + r_t)",
+    "base_log_location": "softplus(a_t)",
+    "observed_error": "e_t = log1p(q_t) - softplus(stop_gradient(a_(t-1)))",
+    "valid_transition": "both endpoints are observed and memory-write-eligible",
+    "write_assignment": "e_t is assigned uniformly to each of the previous state's four T0 prototype indices",
+    "causal_prefix": "state i may read only transitions with observed endpoint t <= i",
+    "prototype_value": "per-prototype arithmetic mean of assigned observed errors",
+    "read": "arithmetic mean of the current state's four prototype values; unseen prototypes contribute zero",
+    "target_exclusion": "the final target quantity, its error, padding, and non-write positions never enter the summary",
+    "gradient": "base logits, errors, and discrete prototype assignment are detached from the candidate correction path",
+    "sham": "within each legal window cyclically permute only the past write assignments while retaining the actual current read indices",
+    "history_one_output": 0.0
+  },
+  "probe": {
+    "folding": "two series-disjoint out-of-fold fits; fit and standardization use the opposite fold only",
+    "fixed_context": [
+      "base_quantity_preactivation",
+      "log1p_history_length",
+      "log1p_transition_count",
+      "current_top4_occupied_fraction",
+      "log1p_current_top4_mean_count",
+      "log1p_current_top4_count_std",
+      "last_observed_error",
+      "unconditioned_mean_observed_error"
+    ],
+    "arms": {
+      "t0": "no fitted correction",
+      "strong_control": "fixed_context",
+      "prototype_candidate": "fixed_context plus prototype-conditioned error",
+      "prototype_sham": "fixed_context plus sham prototype-conditioned error"
+    },
+    "correction": "a_corrected = a_base + intercept + standardized_features times coefficients",
+    "objective": "summed squared error between softplus(a_corrected) and log1p(target_quantity), plus L2 penalty",
+    "optimizer": "scipy_least_squares_zero_initialization_analytic_jacobian",
+    "l2_penalty": 1.0,
+    "hyperparameter_search": false,
+    "clipping_selected_after_outcomes": false,
+    "l2_penalty_interpretation": "standard Ridge alpha=1 on summed squared error; intercept unpenalized"
+  },
+  "signal_gate": {
+    "primary_metric": "out_of_fold_log1p_mse",
+    "comparisons": [
+      "prototype_candidate_vs_strong_control",
+      "prototype_candidate_vs_prototype_sham"
+    ],
+    "minimum_pooled_relative_improvement_each_comparison": 0.01,
+    "require_positive_improvement_in_both_folds_each_comparison": true,
+    "paired_series_bootstrap": {
+      "repeats": 10000,
+      "seed": 20260906,
+      "shared_draws_within_dataset": true,
+      "one_sided_family_size": 6,
+      "lower_quantile": 0.008333333333333333,
+      "interpretation": "fixed-prediction stability interval, not a formal refitted-probe significance test"
+    },
+    "body_metric": "raw_quantity_mae_for_target_quantity_le_train_p95",
+    "body_requirement": "prototype candidate must not worsen pooled or either-fold body MAE versus T0, strong control, or sham",
+    "common_requirement": "both comparisons and all guardrails pass for all three datasets",
+    "failure_action": "do_not_implement_or_train_the_candidate",
+    "pass_interpretation": "necessary train-internal signal for implementation, not validation performance or model adoption"
+  },
+  "candidate_if_signal_passes": {
+    "backbone": "titantpp_transition_error_memory",
+    "candidate_name": "count_titan_hard_lmm_transition_error",
+    "model_role": "hard_lmm_transition_error_candidate",
+    "shared_structure": "one identical graph and training rule across all datasets with no dataset ID branch",
+    "time_route": "unchanged T0 h plus static Hard-LMM residual",
+    "quantity_route": "T0 fused state plus scalar causal transition read times a learned hidden direction",
+    "new_parameter": "one zero-initialized hidden_dim direction vector",
+    "initial_identity": "same seed, parameters, RNG state, time state, quantity state, and outputs equal T0 before the new path is trained",
+    "base_error_prediction": "current correction-independent T0 branch detached before transition aggregation",
+    "unchanged": [
+      "encoder",
+      "persistent tokens",
+      "static prototype bank",
+      "cosine top4",
+      "arithmetic retrieval",
+      "time head",
+      "quantity head",
+      "direct log-MSE loss",
+      "optimizer",
+      "checkpoint selection"
+    ],
+    "cost_gate": {
+      "steady_training_step_ratio_vs_t0_max": 1.5,
+      "peak_memory_ratio_vs_t0_max": 1.25,
+      "additional_parameter_ratio_vs_t0_max": 0.02
+    }
+  },
+  "performance_evaluation_if_implemented": {
+    "scope": "validation_only",
+    "held_out_test_evaluated": false,
+    "seed42_common_screen": {
+      "common_raw_goal": "raw quantity RMSE strictly improves versus paired T0 on all three datasets",
+      "body_guardrail": "body MAE regression versus paired T0 no greater than 2 percent on every dataset",
+      "tail_guardrail": "greater-than-train-p99 MAE regression versus paired T0 no greater than 2 percent on every dataset",
+      "time_guardrail": "time NLL increase versus paired T0 no greater than 0.01 on every dataset",
+      "continuation": "run seeds 52 and 62 only when every condition passes"
+    },
+    "historical_strong_effect_criterion": {
+      "metric": "body MAE",
+      "relative_improvement_minimum": 0.05,
+      "meaning": "reported separately from the common raw-RMSE goal; it is not silently weakened"
+    },
+    "three_seed_decision": "paired-seed aggregate versus T0, with RMTPP and THP superiority assessed separately",
+    "e1_interpretation": "execution and contract compliance only; never a performance decision"
+  },
+  "authorization": {
+    "local_diagnostic_implementation_and_tests": true,
+    "paper_research_branch_commit_after_tests": true,
+    "rtx5090_cuda_e1_seed42_e300": true,
+    "rtx5090_seeds52_and62_if_frozen_gate_passes": true,
+    "held_out_test": false
+  },
+  "deferred_follow_up": {
+    "name": "quantile-adaptive loss and checkpoint alignment",
+    "priority_condition": "after the Backbone candidate is resolved, use this when common raw performance across the three datasets is the higher priority",
+    "must_be_repeated_in_each_progress_update": true
+  }
+}

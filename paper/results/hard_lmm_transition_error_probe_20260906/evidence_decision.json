@@ -1,0 +1,56 @@
+{
+  "comparisons": {
+    "sham": {
+      "datasets": {
+        "insta_market_basket": false,
+        "intermittent_v2": false,
+        "yellow_trip_hourly": false
+      },
+      "passes": false
+    },
+    "strong_control": {
+      "datasets": {
+        "insta_market_basket": false,
+        "intermittent_v2": false,
+        "yellow_trip_hourly": false
+      },
+      "passes": false
+    }
+  },
+  "datasets": {
+    "insta_market_basket": {
+      "assessable": true,
+      "original_t0_body_mae": false,
+      "passes": false,
+      "sham": false,
+      "strong_control": false
+    },
+    "intermittent_v2": {
+      "assessable": true,
+      "original_t0_body_mae": true,
+      "passes": false,
+      "sham": false,
+      "strong_control": false
+    },
+    "yellow_trip_hourly": {
+      "assessable": true,
+      "original_t0_body_mae": true,
+      "passes": false,
+      "sham": false,
+      "strong_control": false
+    }
+  },
+  "interpretation": "Common implementation gate: every named dataset must be assessable and the candidate must pass both fixed comparisons plus the original-T0 body-MAE guard.",
+  "passes": false,
+  "protocol": "hard_lmm_transition_error_oof_v1",
+  "required_comparisons": [
+    "strong_control",
+    "sham"
+  ],
+  "required_datasets": [
+    "intermittent_v2",
+    "yellow_trip_hourly",
+    "insta_market_basket"
+  ],
+  "status": "FAIL"
+}
