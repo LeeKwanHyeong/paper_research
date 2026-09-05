@@ -1,0 +1,146 @@
+{
+  "status": "PASS",
+  "source_revision": "c21aea563aeaa7f82a8814552594dbc77b8da458",
+  "contract_sha256": "81f874eaf7568c0daf262d2cf49371c425a43352789ba227124d6d0b2152ebf7",
+  "device": "cuda",
+  "cuda_available": true,
+  "checks": {
+    "source_revision_binding": true,
+    "contract_hash_binding": true,
+    "source_hash_binding": true,
+    "parent_process_binding": true,
+    "benchmark_row_contract": true,
+    "python_version": true,
+    "torch_version": true,
+    "cuda_version": true,
+    "polars_version": true,
+    "cuda_available": true,
+    "device_is_5090": true,
+    "minimum_free_memory": true,
+    "execution_completed": true
+  },
+  "benchmark_row": {
+    "backbone": "titantpp",
+    "history_length": 16,
+    "sequence_length": 17,
+    "batch_size": 128,
+    "allocated_before_model_bytes": 0,
+    "initial_parameter_sha256": "43935d633dd62f1dbb63220538d76a3401f789a45969ee9ac428457ccc0ba3b0",
+    "parameter_count": 89795,
+    "input_sha256": "1f6780bdaf380b750beaa75b98a92262ec84ae6db61d40525e83b06dd0961db9",
+    "execution_backend": "static_T0",
+    "warmup_steps_completed": 3,
+    "measured_steps_completed": 10,
+    "step_seconds": [
+      0.004233162151649594,
+      0.004259014967828989,
+      0.004295239923521876,
+      0.004224315984174609,
+      0.004318332998082042,
+      0.0042427279986441135,
+      0.004184617893770337,
+      0.004198160953819752,
+      0.004260631976649165,
+      0.004252892918884754
+    ],
+    "step_telemetry": [
+      {
+        "joint_loss": 2.140502691268921,
+        "pre_clip_gradient_norm": 2.559861660003662
+      },
+      {
+        "joint_loss": 2.1399006843566895,
+        "pre_clip_gradient_norm": 2.0488674640655518
+      },
+      {
+        "joint_loss": 2.1586945056915283,
+        "pre_clip_gradient_norm": 3.5763533115386963
+      },
+      {
+        "joint_loss": 2.162567377090454,
+        "pre_clip_gradient_norm": 4.1158013343811035
+      },
+      {
+        "joint_loss": 2.15899395942688,
+        "pre_clip_gradient_norm": 3.804431915283203
+      },
+      {
+        "joint_loss": 2.138702869415283,
+        "pre_clip_gradient_norm": 2.641876459121704
+      },
+      {
+        "joint_loss": 2.1313796043395996,
+        "pre_clip_gradient_norm": 1.267531394958496
+      },
+      {
+        "joint_loss": 2.1273179054260254,
+        "pre_clip_gradient_norm": 0.6724807620048523
+      },
+      {
+        "joint_loss": 2.1338629722595215,
+        "pre_clip_gradient_norm": 1.4130456447601318
+      },
+      {
+        "joint_loss": 2.135685920715332,
+        "pre_clip_gradient_norm": 1.687581181526184
+      }
+    ],
+    "cold_compile_and_first_step_seconds": 0.6345744989812374,
+    "cold_step_telemetry": {
+      "joint_loss": 2.6607792377471924,
+      "pre_clip_gradient_norm": 13.542032241821289
+    },
+    "cold_peak_allocated_bytes": 129634816,
+    "cold_peak_reserved_bytes": 159383552,
+    "compile_time_note": "Cold wall includes the first training step; it is excluded from warmup and measured timings.",
+    "compiler_timing_metrics_seconds": {},
+    "warmup_step_seconds": [
+      0.005817379103973508,
+      0.0040837000124156475,
+      0.004085876047611237
+    ],
+    "warmup_peak_allocated_bytes": 130364928,
+    "measured_peak_allocated_bytes": 130364928,
+    "measured_peak_reserved_bytes": 159383552,
+    "peak_allocated_bytes": 130364928,
+    "median_step_seconds": 0.004247810458764434,
+    "finite_steps": true,
+    "parameters_finite": true,
+    "allocated_after_cleanup_bytes": 68157440
+  },
+  "worker_pid": 4126187,
+  "worker_parent_pid": 4126181,
+  "measurement_isolation": "fresh_subprocess",
+  "held_out_test_evaluated": false,
+  "real_data_used": false,
+  "checkpoint_loaded": false,
+  "source_file_sha256": {
+    "models/TPPs/CountAwareFactory.py": "0ae6799cf4b0a16489f047ad69bdf3c97e89e048e2dd8977122337c203f5206c",
+    "models/TPPs/CountAwareTPP.py": "86ce901c963b9b1c073794b4845aa71e537f46dfa40f27e7f741140a40d3b0ed",
+    "models/Titan/common/titans_mac.py": "75fb9b3266e85cfcd8a5e336d38839cd78f84a22a79b12f785697650a6653844",
+    "models/Titan/common/titans_mac_prior_prefix.py": "ae44cbb323369412559b9ec34c9c9366f1d95a88f404e5acb68ae1c7da0fd4b8",
+    "models/Titan/common/titans_mac_optimized.py": "3464986d7ef49ba88b7a9703691c1291c7525a2f13c9d0a02b48b7007c408966",
+    "models/Titan/common/titans_memory_stability.py": "d7681b65e65f239377d174596b970d5509de075a9f03a5d34c001c7801031e86",
+    "paper/scripts/count_aware_tpp_backbone/core.py": "025dfbe75a5a4e235466807f31873aa085f8ddffe680485fb4b9f4f7ef60c598",
+    "paper/scripts/validate_titans_mac_prior_prefix_cuda.py": "d6b83a12bbb10eefe900d640ea87a720b5b2731dde8071cf3216275db140bdb4"
+  },
+  "runtime": {
+    "python": "3.12.13",
+    "torch": "2.11.0+cu130",
+    "cuda": "13.0",
+    "polars": "1.39.3",
+    "cuda_available": true,
+    "device_name": "NVIDIA GeForce RTX 5090",
+    "free_bytes": 32611041280,
+    "total_bytes": 33670758400,
+    "capability": [
+      12,
+      0
+    ]
+  },
+  "dynamo_policy": {
+    "recompile_limit": 64,
+    "accumulated_recompile_limit": 512,
+    "suppress_errors": false
+  }
+}

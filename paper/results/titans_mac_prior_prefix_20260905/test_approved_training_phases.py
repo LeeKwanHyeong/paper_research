@@ -10,6 +10,7 @@ from pathlib import Path
 import signal
 import subprocess
 import sys
+import tarfile
 
 import pytest
 
@@ -177,9 +178,35 @@ def test_phase_proof_rejects_duplicate_runs_and_evidence_tamper(args):
 
 
 def test_controller_rejects_wrong_source_before_import(args):
-    args.source_revision = "a" * 40
-    with pytest.raises(ValueError, match="Only the approved"):
+    args.source_revision = "add02baae27c25da02008873c578f11926f8d125"
+    with pytest.raises(ValueError, match="Only the approved c21aea5"):
         controller.load_frozen_launcher(args)
+
+
+def test_controller_binding_matches_committed_package_and_rejects_old_proof(args, monkeypatch, tmp_path):
+    # The controller is deliberately outside the archived source. Re-create the
+    # committed package locally to verify its real binding without any GPU use.
+    repository = Path(__file__).resolve().parents[3]
+    spec = importlib.util.spec_from_file_location("binding_packager", repository / "paper/scripts/package_titans_mac_prior_prefix.py")
+    packager = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(packager)
+    archive_path = tmp_path / "source.tar"
+    report = packager.package(repository, controller.REVISION, archive_path)
+    assert report["source_manifest_sha256"] == controller.MANIFEST_SHA256
+    assert report["contract_sha256"] == controller.CONTRACT_SHA256
+    with tarfile.open(archive_path) as archive:
+        archive.extractall(args.source_root, filter="data")
+    assert controller.digest(args.source_root / controller.LAUNCHER) == controller.LAUNCHER_SHA256
+    monkeypatch.setattr(controller, "PYTHON", sys.executable)
+    frozen = controller.load_frozen_launcher(args)
+    assert len(frozen.TESTS) == 2
+    path, proof = write_proof(args, "e1")
+    assert controller.verify_phase(path, "e1", args, frozen)[1] is None
+    proof["source_revision"] = "add02baae27c25da02008873c578f11926f8d125"
+    proof["source_manifest_sha256"] = "62ad41b97ea73cfab82b00f0f93ad2689cb50ac4e2a6066bd4b6a469f5d20d3c"
+    controller.save(path, proof)
+    with pytest.raises(ValueError, match="Phase source or contract mismatch"):
+        controller.verify_phase(path, "e1", args, frozen)
 
 
 def test_controller_refuses_source_file_namespace(args, monkeypatch):

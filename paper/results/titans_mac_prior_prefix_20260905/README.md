@@ -65,3 +65,10 @@ Seed42의 1–3이 모두 통과해야 seeds52/62로 확장한다. e1은 정상 
 
 - 수정 후 실제 main 진입점 9개 테스트를 CUDA 필수 suite에도 추가했다. 관련 로컬 통합은 163 passed / CUDA 3 skipped (`local_input_scope_gate_tests.xml`). 단계별 source/package 검증도 새 테스트의 포함을 요구한다.
 - 기각된 B1 checkpoint는 나머지 coverage/CPU restore 검사만 별도 진단했으며 `qualifies_e1=false`, 원본 FAIL을 유지했다. 추가 오류는 없었고 정상 proof로 사용하지 않는다.
+
+## 입력 범위를 수정한 최신 CUDA 통과 — c21aea5
+
+- `cuda_c21aea5/status.json`: 기존 계약 89 + 실제 입력 진입점 9 = 98 passed / 0 skipped. 9개 비용 행도 독립 측정을 완료했고 기존 gate를 모두 통과했다.
+- 현재 실행 source는 `c21aea563aeaa7f82a8814552594dbc77b8da458`, manifest는 `3e992336ae6dde285797d7aa093ca741a8800c8f3ba9de2937a8dfb4d99ec1c1`이다. JSON 계약과 모델 소스는 유지됐다.
+- 최신 후보/B1 step 비율은 H16/64/255에서 1.4130 / 1.2833 / 1.2765이며 peak 최대는 7.6096 GiB다. 후보/T0 step은 6.50–21.32배로 여전히 크다.
+- 외부 controller를 새 source/hash에만 고정했고 실제 commit archive의 hash 결속을 포함한 테스트 22개가 통과했다. 이전 add02ba proof는 새 source의 선행 증거로 수용하지 않는다.

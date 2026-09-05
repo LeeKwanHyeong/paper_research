@@ -18,10 +18,10 @@ import subprocess
 import sys
 
 
-REVISION = "add02baae27c25da02008873c578f11926f8d125"
-MANIFEST_SHA256 = "62ad41b97ea73cfab82b00f0f93ad2689cb50ac4e2a6066bd4b6a469f5d20d3c"
+REVISION = "c21aea563aeaa7f82a8814552594dbc77b8da458"
+MANIFEST_SHA256 = "3e992336ae6dde285797d7aa093ca741a8800c8f3ba9de2937a8dfb4d99ec1c1"
 CONTRACT_SHA256 = "81f874eaf7568c0daf262d2cf49371c425a43352789ba227124d6d0b2152ebf7"
-LAUNCHER_SHA256 = "c1ff96fbb07098969d879feb378705e690a3011354d63f20d8c29d1030ca7416"
+LAUNCHER_SHA256 = "c24de5e0194aad637ff3bf8c98f33e2b72236fa7741e9d13d61b8c1498fc8d06"
 LAUNCHER = "paper/scripts/run_titans_mac_prior_prefix_5090.py"
 CONTRACT = "paper/contracts/titans_mac_prior_prefix_v1.json"
 PHASES = ("e1", "screening", "confirm")
@@ -53,7 +53,7 @@ def save(path, value):
 
 
 def load_frozen_launcher(args):
-    require(args.source_revision == REVISION, "Only the approved add02ba source is allowed")
+    require(args.source_revision == REVISION, "Only the approved c21aea5 source is allowed")
     root = args.source_root
     require(not Path(__file__).resolve().is_relative_to(root), "Controller must stay outside frozen source")
     require(digest(root / "source_manifest.json") == MANIFEST_SHA256, "Frozen source manifest changed")
