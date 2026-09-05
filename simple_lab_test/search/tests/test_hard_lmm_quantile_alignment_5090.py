@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import json
 from pathlib import Path
+import sys
 
 import pytest
 
@@ -16,6 +17,7 @@ def contract() -> dict:
 
 
 def test_contract_and_commands_freeze_only_seed42_e1_then_e300(tmp_path) -> None:
+    assert str(runner.PROJECT_ROOT) in sys.path
     frozen = contract()
     datasets = runner.validate_contract(frozen)
     assert tuple(datasets) == runner.DATASETS

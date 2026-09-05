@@ -18,6 +18,10 @@ from typing import Any
 import xml.etree.ElementTree as ET
 
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 CONTRACT_REL = Path("paper/contracts/hard_lmm_quantile_checkpoint_alignment_v1.json")
 TRAINER_REL = Path("paper/scripts/run_count_aware_tpp_backbone_control.py")
 ROLE = "quantile_checkpoint_alignment"
