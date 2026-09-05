@@ -1,5 +1,8 @@
 # B1 prior-prefix 출력 read 실행 증적
 
+> 최신 수집 상태 (2026-09-05T12:06:23.134916+00:00 UTC): source `c21aea5`, CUDA 98개 및 비용 gate PASS. Taxi B1·후보 e1 2/6 정상 감사 완료, Intermittent B1 실행 중. Screening·held-out 평가는 미실행. 아래 초기 시도는 보존한 이력이며 현재 결과와 구분한다.
+
+
 - 저장소/작업 브랜치: `paper_research/codex/b1-prior-prefix-read`.
 - [기계 판정 계약](../../contracts/titans_mac_prior_prefix_v1.json), [설명 계약](../../contracts/titans_mac_prior_prefix_v1.md).
 - 현재 논문 T0 기준선은 그대로 유지한다. 이 디렉터리는 한 후보의 별도 연구 증적이다.
@@ -72,3 +75,5 @@ Seed42의 1–3이 모두 통과해야 seeds52/62로 확장한다. e1은 정상 
 - 현재 실행 source는 `c21aea563aeaa7f82a8814552594dbc77b8da458`, manifest는 `3e992336ae6dde285797d7aa093ca741a8800c8f3ba9de2937a8dfb4d99ec1c1`이다. JSON 계약과 모델 소스는 유지됐다.
 - 최신 후보/B1 step 비율은 H16/64/255에서 1.4130 / 1.2833 / 1.2765이며 peak 최대는 7.6096 GiB다. 후보/T0 step은 6.50–21.32배로 여전히 크다.
 - 외부 controller를 새 source/hash에만 고정했고 실제 commit archive의 hash 결속을 포함한 테스트 22개가 통과했다. 이전 add02ba proof는 새 source의 선행 증거로 수용하지 않는다.
+
+- `training_c21aea5_snapshot/`: 새 source의 Taxi paired e1 통과·Intermittent 시작 상태. `execution_record.json`과 함께 수집 시점 snapshot이며 최신 원격 phase proof는 `remote_status_path`에서 확인한다.
