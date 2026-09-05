@@ -165,17 +165,31 @@ def test_cuda_proof_rejects_skips_and_cost_failure(tmp_path):
             launcher.verify_proof(path, "cuda", REVISION, CONTRACT_HASH, MANIFEST_HASH)
 
 
-@pytest.mark.parametrize("extra,count", [("", 1), ("<skipped/>", 1), ("<failure/>", 1), ("", 0)])
+@pytest.mark.parametrize("extra,count", [("", 2), ("<skipped/>", 2), ("<failure/>", 2), ("", 0)])
 def test_junit_requires_actual_non_skipped_cuda_contract_tests(tmp_path, extra, count):
     path = tmp_path / "result.xml"
     path.write_text(f'<testsuites><testsuite tests="{count}" failures="0" errors="0" skipped="0">'
                     '<testcase classname="simple_lab_test.search.tests.test_titans_mac_prior_prefix_contract" '
-                    f'name="test_cuda">{extra}</testcase></testsuite></testsuites>')
-    if extra or count != 1:
+                    f'name="test_cuda">{extra}</testcase>'
+                    '<testcase classname="simple_lab_test.search.tests.test_titans_mac_train_validation_entrypoint" '
+                    'name="test_actual_main"/></testsuite></testsuites>')
+    if extra or count != 2:
         with pytest.raises(ValueError):
             launcher.audit_xml(path)
     else:
-        assert launcher.audit_xml(path)["tests"] == 1
+        audit = launcher.audit_xml(path)
+        assert audit["tests"] == 2
+        assert audit["modules"] == {Path(test).stem: 1 for test in launcher.TESTS}
+
+
+@pytest.mark.parametrize("remaining", launcher.TESTS)
+def test_junit_rejects_missing_either_required_module(tmp_path, remaining):
+    path = tmp_path / "incomplete.xml"
+    path.write_text('<testsuites><testsuite tests="1" failures="0" errors="0" skipped="0">'
+                    f'<testcase classname="simple_lab_test.search.tests.{Path(remaining).stem}" '
+                    'name="test_present"/></testsuite></testsuites>')
+    with pytest.raises(ValueError, match="Both mandatory CUDA test modules"):
+        launcher.audit_xml(path)
 
 
 def test_committed_archive_excludes_dirty_untracked_and_root_scripts(tmp_path):
@@ -222,7 +236,7 @@ def test_package_rejects_unsafe_paths_and_uncommitted_revision():
 
 def test_source_manifest_binds_runtime_files_contract_and_frozen_references(tmp_path):
     (tmp_path / "sample_data").mkdir()
-    required = (launcher.TEST, launcher.CUDA_VALIDATOR, launcher.COMPARATOR, launcher.TRAINER,
+    required = (*launcher.TESTS, launcher.CUDA_VALIDATOR, launcher.COMPARATOR, launcher.TRAINER,
                 launcher.POLICY, launcher.DIAGNOSTIC, "models/TPPs/CountAwareFactory.py",
                 "models/Titan/common/titans_mac.py", "paper/scripts/run_titans_mac_prior_prefix_5090.py",
                 "paper/contracts/titans_mac_prior_prefix_v1.json",

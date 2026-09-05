@@ -393,8 +393,11 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
     if (args.model_role in {MODEL_ROLE_WEIGHTED_STATIC, MODEL_ROLE_HARD_LOCAL_TIME}
             or args.model_role == KEY_VALUE_ROLE
             or args.model_role == ELAPSED_AGE_ROLE
-            or args.model_role == THP_STATIC_MEMORY_ROLE):
-        # Keep the new candidate's held-out rows outside materialized memory.
+            or args.model_role == THP_STATIC_MEMORY_ROLE
+            or any(backbone in {"titantpp_titans_mac", "titantpp_titans_mac_prior_prefix"}
+                   for backbone in backbones)):
+        # Keep protected candidates and their B1 comparator validation-only
+        # before parquet rows are materialized, regardless of comparison role.
         raw_frame = load_train_validation_frame(args.data)
     else:
         raw_frame = pl.read_parquet(args.data).sort(["oper_part_no", "seq"])

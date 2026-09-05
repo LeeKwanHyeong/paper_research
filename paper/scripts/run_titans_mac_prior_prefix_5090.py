@@ -26,6 +26,7 @@ CANDIDATE = "titantpp_titans_mac_prior_prefix"
 BACKBONES = (BASELINE, CANDIDATE)
 VARIANT = "count_only_log_regression"
 TEST = "simple_lab_test/search/tests/test_titans_mac_prior_prefix_contract.py"
+TESTS = (TEST, "simple_lab_test/search/tests/test_titans_mac_train_validation_entrypoint.py")
 CUDA_VALIDATOR = "paper/scripts/validate_titans_mac_prior_prefix_cuda.py"
 COMPARATOR = "paper/scripts/compare_titans_mac_prior_prefix.py"
 TRAINER = "paper/scripts/run_count_aware_tpp_backbone_control.py"
@@ -110,7 +111,7 @@ def verify_source(manifest_path, revision, contract_path, *, root=ROOT):
         path = root / relative
         require(path.is_file() and not path.is_symlink(), f"Source file missing or linked: {name}")
         require(digest(path) == expected, f"Source file changed: {name}")
-    required = (TEST, CUDA_VALIDATOR, COMPARATOR, TRAINER, POLICY, DIAGNOSTIC,
+    required = (*TESTS, CUDA_VALIDATOR, COMPARATOR, TRAINER, POLICY, DIAGNOSTIC,
                 "models/TPPs/CountAwareFactory.py", "models/Titan/common/titans_mac.py",
                 "paper/scripts/run_titans_mac_prior_prefix_5090.py",
                 "paper/contracts/titans_mac_prior_prefix_v1.json",
@@ -193,13 +194,18 @@ def audit_xml(path):
     cases = list(root.iter("testcase"))
     require(bool(cases), "CUDA test suite executed no tests")
     require(not any(list(root.iter(tag)) for tag in ("failure", "error", "skipped")), "CUDA tests failed or skipped")
-    require(all("test_titans_mac_prior_prefix_contract" in case.get("classname", "") for case in cases),
-            "Unexpected CUDA test module")
+    modules = {Path(test).stem: 0 for test in TESTS}
+    for case in cases:
+        matched = set(case.get("classname", "").split(".")) & modules.keys()
+        require(len(matched) == 1, "Unexpected CUDA test module")
+        modules[matched.pop()] += 1
+    require(all(modules.values()), "Both mandatory CUDA test modules must execute")
     suites = [root] if root.tag == "testsuite" else list(root.iter("testsuite"))
     require(sum(int(s.get("tests", 0)) for s in suites) == len(cases), "JUnit count mismatch")
     require(all(int(s.get(key, 0)) == 0 for s in suites for key in ("failures", "errors", "skipped")),
             "JUnit reports failed or skipped tests")
-    return {"tests": len(cases), "failures": 0, "errors": 0, "skipped": 0, "xml_sha256": digest(path)}
+    return {"tests": len(cases), "failures": 0, "errors": 0, "skipped": 0,
+            "modules": modules, "xml_sha256": digest(path)}
 
 
 def verify_proof(path, phase, revision, contract_hash, manifest_hash):
@@ -451,7 +457,8 @@ def execute(args):
             update()
             if args.phase == "cuda":
                 xml = args.output_root / "cuda_contract_tests.xml"
-                run([sys.executable, "-s", "-m", "pytest", str(ROOT / TEST), "-q", f"--junitxml={xml}"],
+                run([sys.executable, "-s", "-m", "pytest", *(str(ROOT / test) for test in TESTS),
+                     "-q", f"--junitxml={xml}"],
                     args.output_root / "cuda_contract_tests.log", {"REQUIRE_CUDA": "1"})
                 state["tests"] = audit_xml(xml)
                 audit_path = args.output_root / "cuda_audit.json"

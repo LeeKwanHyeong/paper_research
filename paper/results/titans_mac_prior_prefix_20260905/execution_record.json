@@ -1,6 +1,6 @@
 {
-  "status": "CUDA_PASS_E1_READY",
-  "recorded_at": "2026-09-05T11:29:56.400526+00:00",
+  "status": "E1_FAILED_PREMATERIALIZATION_CONTRACT",
+  "recorded_at": "2026-09-05T11:45:36.234519+00:00",
   "source_revision": "add02baae27c25da02008873c578f11926f8d125",
   "branch": "codex/b1-prior-prefix-read",
   "remote": "5090",
@@ -14,8 +14,8 @@
     "cuda_skipped": 4,
     "failures": 0
   },
-  "tmux_session": "prior_prefix_cuda_add02ba",
-  "e1_started": false,
+  "tmux_session": "prior_prefix_training_add02ba",
+  "e1_started": true,
   "screening_started": false,
   "held_out_test_evaluated": false,
   "attempts": [
@@ -37,6 +37,18 @@
       "cost_measurement_completed": false,
       "failure": "cuBLAS workspace survives tensor cleanup, so the next model could not start from zero allocated memory",
       "evidence": "attempt_a2fda0e_cuda"
+    },
+    {
+      "source_revision": "add02baae27c25da02008873c578f11926f8d125",
+      "phase": "e1",
+      "status": "FAIL",
+      "dataset": "yellow_trip_hourly",
+      "backbone": "titantpp_titans_mac",
+      "training_completed_epochs": 1,
+      "accepted_e1_runs": 0,
+      "failure": "Baseline and candidate absent from pre-materialization exclusion branch; rejected B1 launch contains test:8327",
+      "held_out_test_evaluated": false,
+      "evidence": "e1_add02ba_rejected"
     }
   ],
   "cuda_tests": {
@@ -102,5 +114,15 @@
       "passed": true,
       "T0_ratios_are_report_only": true
     }
-  ]
+  ],
+  "controller_revision": "2842eccf200091f472e1e6df4223b5a778cc73ab",
+  "controller_sha256": "ac3334945006456900c25118105d9d98b34d2082245694e370c01885a56a8949",
+  "controller_path": "/home/leekwanhyeong/workspace/prior_prefix_control_2842ecc/run_approved_training_phases.py",
+  "remote_status_path": "/home/leekwanhyeong/workspace/paper_research_prior_prefix_add02ba_5090/outputs/full_validation/status.json",
+  "snapshot_only": true,
+  "current_dataset": "yellow_trip_hourly",
+  "current_backbone": "titantpp_titans_mac",
+  "current_seed": 42,
+  "held_out_rows_materialized_in_rejected_run": true,
+  "accepted_e1_runs": 0
 }

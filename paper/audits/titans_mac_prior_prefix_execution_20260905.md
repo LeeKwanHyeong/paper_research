@@ -4,7 +4,7 @@
 
 **현재 판단**
 
-후보 계약과 구현, 로컬 검증, 5090 CUDA 정확성·비용 검증을 완료했다. 실제 데이터의 정상 실행과 공통 성능 개선은 후속 단계이며, 이 문서의 CUDA 통과를 성능 채택으로 해석하지 않는다.
+후보 계약과 구현, 로컬 검증, 5090 CUDA 정확성·비용 검증을 완료했다. 첫 실제 데이터 e1은 held-out 사전 제외 계약을 어겨 감사에서 중단됐으며, 통과한 e1은 없다. 공통 성능 개선은 아직 미판정이다. 이 문서의 CUDA 통과를 성능 채택으로 해석하지 않는다.
 
 **완료 / 로컬 — 하나의 개입과 판정 계약**
 
@@ -41,7 +41,7 @@
 
 첫 CUDA 시도에서는 CPU permutation bitwise 검사가 실패했고, 기존 B1에도 있는 반올림임을 확인해 이미 동결된 CPU tolerance로 검사만 수정했다. 두 번째 시도에서는 cuBLAS workspace가 남아 독립 비용 측정 시작 검사가 실패했다. 측정기를 subprocess로 분리했으며, 세 시도 동안 모델 코드·JSON 계약·성능/비용 문턱은 바꾸지 않았다. 실패 증적도 보존했다.
 
-**다음 작업 / 5090 — full e1 정상 실행 검증**
+**차단됨 / 5090 — full e1 정상 실행 검증; 로컬 로딩 분기 수정 중**
 
 - 같은 source·seed42의 B1/후보를 Taxi → Intermittent → Instacart 순서로 전체 train/validation에서 실행한다.
 - 데이터별 train targets는 38,393 / 393,824 / 1,991,192, validation targets는 8,268 / 86,285 / 503,733이다.
@@ -55,3 +55,15 @@
 - B1 추가 효과와 T0의 두 기준이 세 데이터셋 모두에서 통과할 때만 seeds52/62로 확장한다. 3-seed 평균·최소2/3 RMSE 개선 방향·개별 seed time/tail 보존을 확인한다.
 - 모든 단계는 검증된 선행 proof와 hash를 요구한다. 실행 오류나 성능 gate 실패에서는 해당 증거를 보존하고 중단한다. 자동 재시도·checkpoint resume는 하지 않는다.
 - Held-out 평가, v0.7 최종 T0 교체, `paper_research/master` 병합·push는 수행하지 않았다.
+
+**실행 중 작업의 확인 경로**
+
+- 시작 확인 시점: 2026-09-05T11:37:37.319541+00:00 (UTC). Taxi B1 seed42 e1의 실행을 확인했다.
+- 학습 source는 `add02ba`, 제어 스크립트의 커밋은 `2842ecc`다. 제어 스크립트는 frozen source 밖에서 각 phase launcher를 명시 호출한다.
+- tmux: `prior_prefix_training_add02ba`. 전체 상태: `/home/leekwanhyeong/workspace/paper_research_prior_prefix_add02ba_5090/outputs/full_validation/status.json`.
+- `training_launch_snapshot/`은 시작 시점 복사본이다. 최신 상태로 취급하지 말고 5090의 원본 status와 비교한다.
+- 실행은 유한 job으로 이어지며 e1/screening/confirm 완료 증거에 따라 통과·미달·실행 오류를 구분한다. 현재 snapshot에서 e1은 진행 중, screening/confirm/held-out은 미실행이다.
+
+**최신 상태 정정 — 첫 실제 e1 감사 실패**
+
+`add02ba`의 첫 Taxi B1 학습은 1 epoch를 완료했지만 test 8,327행이 원본 frame에 적재되어 e1 감사가 FAIL했다. 두 모델이 기존 main의 사전 제외 분기에 누락된 것이 원인이다. 실제 평가 artifact는 validation-only이나, 사전 제외 계약 실패를 통과 처리하지 않는다. Controller는 중단했고 candidate e1·screening·confirm은 미실행이다. `e1_add02ba_rejected/`에 원본을 보존했다. 로딩 분기와 실제 진입점 테스트를 수정한 뒤 새 source로 다시 CUDA/full e1을 검증한다.

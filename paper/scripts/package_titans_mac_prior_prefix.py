@@ -24,7 +24,8 @@ REQUIRED = ("paper/contracts/titans_mac_prior_prefix_v1.json",
             "paper/scripts/validate_titans_mac_prior_prefix_cuda.py",
             "paper/scripts/compare_titans_mac_prior_prefix.py",
             "paper/results/titans_mac_prior_prefix_20260905/frozen_references.json",
-            "simple_lab_test/search/tests/test_titans_mac_prior_prefix_contract.py")
+            "simple_lab_test/search/tests/test_titans_mac_prior_prefix_contract.py",
+            "simple_lab_test/search/tests/test_titans_mac_train_validation_entrypoint.py")
 
 
 def digest_bytes(value: bytes) -> str:

@@ -54,3 +54,14 @@ Seed42의 1–3이 모두 통과해야 seeds52/62로 확장한다. e1은 정상 
 - CUDA proof → e1 6 runs → 정상 감사 통과 시 screening 6 runs → 공통 성능 gate 통과 시 confirm 12 runs를 한 번만 실행한다. 각 phase는 기존 frozen launcher를 명시 호출한다. Screening 미달은 정상 분석 완료로 기록하고 confirm을 시작하지 않는다.
 - `local_training_controller_tests.xml`: 21 passed / 0 skipped. 순서·proof/hash·완전 paired grid·성능 미달 중단·실제 별도 process group 종료를 검증했다.
 - 별도 예약 작업이나 서비스가 아니며 retry/resume/overwrite를 하지 않는다. 실행 상태는 remote `outputs/full_validation/status.json`과 각 phase status에 남긴다.
+
+- 실제 시작 확인: 2026-09-05T11:37:37.319541+00:00 UTC. `prior_prefix_training_add02ba`에서 Taxi B1 seed42 e1이 RUNNING이다. `training_launch_snapshot/` 및 `execution_record.json`은 이 시점의 복사본이며 최신 상태는 5090 원본 `outputs/full_validation/status.json`으로 확인한다. Screening과 추가 seed는 선행 조건을 충족할 때만 시작한다.
+
+## 첫 실제 e1은 계약 위반으로 제외
+
+- `add02ba` Taxi B1 seed42는 train 1 epoch와 validation을 마쳤지만 감사에서 FAIL 처리됐다. 승인된 controller도 중단됐으며 candidate e1/screening/confirm은 시작되지 않았다.
+- `launch_contract.json`의 split_rows에 test 8,327행이 있었다. 기존 main loader의 사전 filter 분기가 B1·prior-prefix를 포함하지 않아 test행도 메모리에 적재했다. artifact의 held_out_test_evaluated=false와 평가 대상 validation-only는 별개로, 이 실행은 적재 전 제외 계약을 충족하지 못했다.
+- `e1_add02ba_rejected/`에 원본 launch/summary/history/상태/로그를 보존한다. 성능 판단·정상 e1 증거·새 대조군으로 사용하지 않는다. 코드에서 통계/target/history의 test 사용 여부를 별도 감사하고 실제 main 진입점 회귀검사를 추가한다.
+
+- 수정 후 실제 main 진입점 9개 테스트를 CUDA 필수 suite에도 추가했다. 관련 로컬 통합은 163 passed / CUDA 3 skipped (`local_input_scope_gate_tests.xml`). 단계별 source/package 검증도 새 테스트의 포함을 요구한다.
+- 기각된 B1 checkpoint는 나머지 coverage/CPU restore 검사만 별도 진단했으며 `qualifies_e1=false`, 원본 FAIL을 유지했다. 추가 오류는 없었고 정상 proof로 사용하지 않는다.
