@@ -12,10 +12,12 @@ import gc
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import platform
 import re
 import statistics
+import subprocess
 import sys
 import time
 import traceback
@@ -33,6 +35,13 @@ B1 = "titantpp_titans_mac"
 CANDIDATE = "titantpp_titans_mac_prior_prefix"
 MODELS = (T0, B1, CANDIDATE)
 DEFAULT_CONTRACT = PROJECT_ROOT / "paper/contracts/titans_mac_prior_prefix_v1.json"
+SOURCE_FILES = (
+    "models/TPPs/CountAwareFactory.py", "models/TPPs/CountAwareTPP.py",
+    "models/Titan/common/titans_mac.py", "models/Titan/common/titans_mac_prior_prefix.py",
+    "models/Titan/common/titans_mac_optimized.py", "models/Titan/common/titans_memory_stability.py",
+    "paper/scripts/count_aware_tpp_backbone/core.py",
+    "paper/scripts/validate_titans_mac_prior_prefix_cuda.py",
+)
 
 
 def sha256(path: Path) -> str:
@@ -101,8 +110,17 @@ def evaluate_cost_gate(
             errors.append(f"Invalid peak allocation: {key}")
         if row.get("finite_steps") is not True or row.get("parameters_finite") is not True:
             errors.append(f"Missing finite checks: {key}")
-        if row.get("allocated_before_model_bytes") != 0 or row.get("allocated_after_cleanup_bytes") != 0:
+        if (row.get("allocated_before_model_bytes") != 0
+                or row.get("measurement_isolation") != "fresh_subprocess"
+                or row.get("worker_process_exited") is not True
+                or row.get("worker_evidence_verified") is not True
+                or row.get("worker_returncode") != 0):
             errors.append(f"GPU allocation was not isolated: {key}")
+        # CUDA/cuBLAS may retain process-local workspaces after Python objects
+        # are freed. They are reported, and the worker exits before the next row.
+        cleanup = row.get("allocated_after_cleanup_bytes")
+        if isinstance(cleanup, bool) or not isinstance(cleanup, int) or cleanup < 0:
+            errors.append(f"Missing cleanup allocation telemetry: {key}")
     if set(indexed) != expected_keys:
         errors.append("Expected complete 3-model x 3-history matrix")
     comparisons: list[dict[str, Any]] = []
@@ -234,7 +252,7 @@ def _profile_one(row: dict[str, Any], contract: dict[str, Any]) -> None:
     _release_cuda()
     row["allocated_before_model_bytes"] = int(torch.cuda.memory_allocated())
     if row["allocated_before_model_bytes"] != 0:
-        raise RuntimeError("Previous GPU tensor allocation survived model cleanup")
+        raise RuntimeError("Fresh benchmark worker has a GPU tensor allocation before model creation")
     model = optimizer = batch = None
     try:
         model = _build_model(row["backbone"], contract)
@@ -310,25 +328,176 @@ def _profile_one(row: dict[str, Any], contract: dict[str, Any]) -> None:
         row["allocated_after_cleanup_bytes"] = int(torch.cuda.memory_allocated())
 
 
+def _source_file_hashes() -> dict[str, str]:
+    return {name: sha256(PROJECT_ROOT / name) for name in SOURCE_FILES}
+
+
+def _configure_dynamo(contract: dict[str, Any]) -> dict[str, Any]:
+    import torch._dynamo.config as dynamo_config
+
+    dynamo_config.recompile_limit = contract["runtime"]["dynamo_recompile_limit"]
+    dynamo_config.accumulated_recompile_limit = contract["runtime"]["dynamo_accumulated_recompile_limit"]
+    dynamo_config.suppress_errors = False
+    return {
+        "recompile_limit": dynamo_config.recompile_limit,
+        "accumulated_recompile_limit": dynamo_config.accumulated_recompile_limit,
+        "suppress_errors": dynamo_config.suppress_errors,
+    }
+
+
+def _load_contract(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
+    if not re.fullmatch(r"[0-9a-f]{40}", args.source_revision):
+        raise ValueError("--source-revision must be a full lowercase git SHA")
+    contract_bytes = args.contract.read_bytes()
+    contract = json.loads(contract_bytes)
+    if contract.get("contract_id") != "titans_mac_prior_prefix_v1":
+        raise ValueError("Unexpected prior-prefix contract identity")
+    if contract["cost_gate"]["history_lengths"] != [16, 64, 255] or contract["cost_gate"]["batch_size"] != 128:
+        raise ValueError("Unexpected cost benchmark shapes")
+    return contract, hashlib.sha256(contract_bytes).hexdigest()
+
+
+def _write_report(path: Path, report: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("x", encoding="utf-8") as handle:
+        json.dump(report, handle, indent=2, ensure_ascii=False, allow_nan=False)
+        handle.write("\n")
+
+
+def validate_worker(args: argparse.Namespace) -> dict[str, Any]:
+    """Measure one row in a process that has never constructed another model."""
+    report: dict[str, Any] = {
+        "status": "FAIL", "source_revision": args.source_revision,
+        "contract_sha256": None, "device": "cuda", "cuda_available": False,
+        "checks": {}, "benchmark_row": {}, "worker_pid": os.getpid(),
+        "worker_parent_pid": os.getppid(), "measurement_isolation": "fresh_subprocess",
+        "held_out_test_evaluated": False, "real_data_used": False,
+        "checkpoint_loaded": False,
+    }
+    try:
+        request = json.loads(args.worker_request.read_text(encoding="utf-8"))
+        contract, contract_digest = _load_contract(args)
+        report["contract_sha256"] = contract_digest
+        source_hashes = _source_file_hashes()
+        report["source_file_sha256"] = source_hashes
+        checks = {
+            "source_revision_binding": request.get("source_revision") == args.source_revision,
+            "contract_hash_binding": request.get("contract_sha256") == contract_digest,
+            "source_hash_binding": request.get("source_file_sha256") == source_hashes,
+            "parent_process_binding": request.get("parent_pid") == os.getppid() != os.getpid(),
+        }
+        report["checks"].update(checks)
+        if not all(checks.values()):
+            raise ValueError(f"Worker request binding failed: {[name for name, passed in checks.items() if not passed]}")
+        row = request["benchmark_row"]
+        if (row.get("backbone") not in MODELS
+                or row.get("history_length") not in contract["cost_gate"]["history_lengths"]
+                or row.get("sequence_length") != row["history_length"] + 1
+                or row.get("batch_size") != contract["cost_gate"]["batch_size"]):
+            raise ValueError("Worker request contains an invalid benchmark row")
+        report["benchmark_row"] = dict(row)
+        report["checks"]["benchmark_row_contract"] = True
+        observed = observe_runtime()
+        report["runtime"] = observed
+        report["cuda_available"] = observed["cuda_available"]
+        runtime_checks = runtime_version_checks(contract["runtime"], observed)
+        report["checks"].update(runtime_checks)
+        if not all(runtime_checks.values()):
+            raise RuntimeError(f"Frozen CUDA worker runtime check failed: {[name for name, passed in runtime_checks.items() if not passed]}")
+        report["dynamo_policy"] = _configure_dynamo(contract)
+        _profile_one(report["benchmark_row"], contract)
+        report["checks"]["execution_completed"] = True
+        report["status"] = "PASS"
+    except Exception as error:
+        report["checks"]["execution_completed"] = False
+        report["error"] = {"type": type(error).__name__, "message": str(error)}
+        report["traceback"] = traceback.format_exc()
+    return report
+
+
+def _profile_in_subprocess(
+    row: dict[str, Any], args: argparse.Namespace,
+    binding: dict[str, Any], evidence_dir: Path,
+) -> None:
+    stem = f"history{row['history_length']:03d}_{row['backbone']}"
+    request_path = evidence_dir / f"{stem}.request.json"
+    output_path = evidence_dir / f"{stem}.result.json"
+    request = {
+        "source_revision": args.source_revision,
+        "contract_sha256": binding["contract_sha256"],
+        "source_file_sha256": binding["source_file_sha256"],
+        "parent_pid": os.getpid(), "benchmark_row": dict(row),
+    }
+    _write_report(request_path, request)
+    if output_path.exists():
+        raise FileExistsError(f"Worker result exists; automatic retry is prohibited: {output_path}")
+    command = [
+        sys.executable, "-s", "-B", str(Path(__file__).resolve()),
+        "--output", str(output_path), "--source-revision", args.source_revision,
+        "--contract", str(args.contract.resolve()), "--worker-request", str(request_path),
+    ]
+    row.update(
+        measurement_isolation="fresh_subprocess", worker_request_path=str(request_path),
+        worker_result_path=str(output_path), worker_evidence_verified=False,
+        worker_process_exited=False,
+    )
+    # Inherit stdout/stderr so the launcher retains compiler progress and errors.
+    # Each Popen is a new interpreter; no CUDA context/model is inherited by fork.
+    process = subprocess.Popen(command, cwd=PROJECT_ROOT)
+    row["worker_pid"] = process.pid
+    row["worker_parent_pid"] = os.getpid()
+    row["worker_returncode"] = process.wait()
+    row["worker_process_exited"] = True
+    if not output_path.is_file():
+        raise RuntimeError(f"Benchmark worker exited {process.returncode} without a result: {stem}")
+    worker = json.loads(output_path.read_text(encoding="utf-8"))
+    worker_row = worker.get("benchmark_row", {})
+    identity = ("backbone", "history_length", "sequence_length", "batch_size")
+    checks = {
+        "worker_pid": worker.get("worker_pid") == process.pid != os.getpid(),
+        "worker_parent_pid": worker.get("worker_parent_pid") == os.getpid(),
+        "source_revision": worker.get("source_revision") == args.source_revision,
+        "contract_sha256": worker.get("contract_sha256") == binding["contract_sha256"],
+        "source_file_sha256": worker.get("source_file_sha256") == binding["source_file_sha256"],
+        "row_identity": all(worker_row.get(name) == request["benchmark_row"][name] for name in identity),
+        "measurement_isolation": worker.get("measurement_isolation") == "fresh_subprocess",
+        "held_out_test_not_evaluated": worker.get("held_out_test_evaluated") is False,
+        "real_data_not_used": worker.get("real_data_used") is False,
+        "checkpoint_not_loaded": worker.get("checkpoint_loaded") is False,
+    }
+    row["worker_binding_checks"] = checks
+    # Preserve partial measurements even if compilation/measurement failed. The
+    # parent process metadata and requested identity cannot be overwritten.
+    for name, value in worker_row.items():
+        if name not in row:
+            row[name] = value
+    row["worker_checks"] = worker.get("checks", {})
+    row["worker_runtime"] = worker.get("runtime", {})
+    if worker.get("error"):
+        row["worker_error"] = worker["error"]
+    row["worker_evidence_verified"] = all(checks.values())
+    if not row["worker_evidence_verified"]:
+        raise RuntimeError(f"Benchmark worker evidence binding failed: {stem}: {[name for name, passed in checks.items() if not passed]}")
+    if (process.returncode != 0 or worker.get("status") != "PASS"
+            or not worker.get("checks") or not all(value is True for value in worker["checks"].values())):
+        raise RuntimeError(f"Benchmark worker failed: {stem}: {worker.get('error', {'returncode': process.returncode})}")
+
+
 def validate(args: argparse.Namespace) -> dict[str, Any]:
     report: dict[str, Any] = {
         "status": "FAIL", "source_revision": args.source_revision,
         "contract_sha256": None, "device": "cuda", "cuda_available": False,
-        "checks": {}, "cost_gate_pass": False, "benchmark_rows": [],
+        "checks": {}, "cost_gate_pass": False, "cost_gate_evaluated": False, "benchmark_rows": [],
         "cost_comparisons": [], "held_out_test_evaluated": False,
         "real_data_used": False, "checkpoint_loaded": False,
         "scope": "runtime and synthetic full training-step cost; no performance adoption",
+        "measurement_isolation": "one fresh subprocess per benchmark row",
+        "cleanup_allocation_note": "Post-cleanup CUDA/cuBLAS workspace allocations are reported; worker process exit isolates the next row.",
     }
     try:
-        if not re.fullmatch(r"[0-9a-f]{40}", args.source_revision):
-            raise ValueError("--source-revision must be a full lowercase git SHA")
+        contract, contract_digest = _load_contract(args)
         report["checks"]["source_revision_format"] = True
-        contract = json.loads(args.contract.read_text(encoding="utf-8"))
-        report["contract_sha256"] = sha256(args.contract)
-        if contract.get("contract_id") != "titans_mac_prior_prefix_v1":
-            raise ValueError("Unexpected prior-prefix contract identity")
-        if contract["cost_gate"]["history_lengths"] != [16, 64, 255] or contract["cost_gate"]["batch_size"] != 128:
-            raise ValueError("Unexpected cost benchmark shapes")
+        report["contract_sha256"] = contract_digest
         report["checks"]["contract_identity"] = True
         observed = observe_runtime()
         report["cuda_available"] = observed["cuda_available"]
@@ -337,24 +506,12 @@ def validate(args: argparse.Namespace) -> dict[str, Any]:
         report["checks"].update(checks)
         if not all(checks.values()):
             raise RuntimeError(f"Frozen CUDA runtime check failed: {[k for k, v in checks.items() if not v]}")
-        import torch._dynamo.config as dynamo_config
-        dynamo_config.recompile_limit = contract["runtime"]["dynamo_recompile_limit"]
-        dynamo_config.accumulated_recompile_limit = contract["runtime"]["dynamo_accumulated_recompile_limit"]
-        dynamo_config.suppress_errors = False
-        report["dynamo_policy"] = {
-            "recompile_limit": dynamo_config.recompile_limit,
-            "accumulated_recompile_limit": dynamo_config.accumulated_recompile_limit,
-            "suppress_errors": dynamo_config.suppress_errors,
-        }
-        source_files = [
-            "models/TPPs/CountAwareFactory.py", "models/TPPs/CountAwareTPP.py",
-            "models/Titan/common/titans_mac.py", "models/Titan/common/titans_mac_prior_prefix.py",
-            "models/Titan/common/titans_mac_optimized.py", "models/Titan/common/titans_memory_stability.py",
-            "paper/scripts/count_aware_tpp_backbone/core.py",
-            "paper/scripts/validate_titans_mac_prior_prefix_cuda.py",
-        ]
-        report["source_file_sha256"] = {name: sha256(PROJECT_ROOT / name) for name in source_files}
+        report["dynamo_policy"] = _configure_dynamo(contract)
+        report["source_file_sha256"] = _source_file_hashes()
         report["source_binding_note"] = "Launcher manifest binds these isolated source hashes to source_revision; no .git is required here."
+        evidence_dir = args.output.resolve().parent / f"{args.output.name}.workers"
+        evidence_dir.mkdir(parents=True, exist_ok=False)
+        report["worker_evidence_directory"] = str(evidence_dir)
         for history_length in contract["cost_gate"]["history_lengths"]:
             for backbone in MODELS:
                 row = {
@@ -363,8 +520,9 @@ def validate(args: argparse.Namespace) -> dict[str, Any]:
                 }
                 report["benchmark_rows"].append(row)
                 print(json.dumps({"phase": "profile_start", **row}), flush=True)
-                _profile_one(row, contract)
+                _profile_in_subprocess(row, args, report, evidence_dir)
         gate = evaluate_cost_gate(report["benchmark_rows"], contract["cost_gate"])
+        report["cost_gate_evaluated"] = True
         report["cost_gate_pass"] = gate["passed"]
         report["cost_comparisons"] = gate["comparisons"]
         report["cost_gate_errors"] = gate["errors"]
@@ -385,15 +543,13 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--source-revision", required=True)
     parser.add_argument("--contract", type=Path, default=DEFAULT_CONTRACT)
+    parser.add_argument("--worker-request", type=Path, help=argparse.SUPPRESS)
     args = parser.parse_args()
     if args.output.exists():
         parser.error("Output exists; automatic overwrite/retry is prohibited")
-    report = validate(args)
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    with args.output.open("x", encoding="utf-8") as handle:
-        json.dump(report, handle, indent=2, ensure_ascii=False, allow_nan=False)
-        handle.write("\n")
-    print(json.dumps({"status": report["status"], "output": str(args.output), "cost_gate_pass": report["cost_gate_pass"]}), flush=True)
+    report = validate_worker(args) if args.worker_request is not None else validate(args)
+    _write_report(args.output, report)
+    print(json.dumps({"status": report["status"], "output": str(args.output), "cost_gate_pass": report.get("cost_gate_pass"), "worker": args.worker_request is not None}), flush=True)
     return 0 if report["status"] == "PASS" else 1
 
 

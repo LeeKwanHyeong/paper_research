@@ -5,6 +5,8 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import os
+from pathlib import Path
 import statistics
 
 import pytest
@@ -36,6 +38,9 @@ def benchmark_rows(cost):
                 "initial_parameter_sha256": "a" * 64,
                 "input_sha256": "b" * 64,
                 "allocated_before_model_bytes": 0, "allocated_after_cleanup_bytes": 0,
+                "measurement_isolation": "fresh_subprocess",
+                "worker_process_exited": True, "worker_evidence_verified": True,
+                "worker_returncode": 0,
             })
     return rows
 
@@ -82,7 +87,7 @@ def test_one_history_failure_rejects_whole_gate_without_rounding(contract, failu
     assert not next(row for row in result["comparisons"] if row["history_length"] == 64)["passed"]
 
 
-@pytest.mark.parametrize("failure", ["missing", "duplicate", "steps", "warmup", "nan", "median", "finite", "leaked_allocation", "shape"])
+@pytest.mark.parametrize("failure", ["missing", "duplicate", "steps", "warmup", "nan", "median", "finite", "leaked_allocation", "shape", "no_subprocess", "worker_running", "worker_unverified", "worker_failed", "no_cleanup_telemetry"])
 def test_incomplete_or_invalid_measurements_cannot_pass(contract, failure):
     rows = benchmark_rows(contract["cost_gate"])
     candidate = candidate_row(rows)
@@ -101,7 +106,17 @@ def test_incomplete_or_invalid_measurements_cannot_pass(contract, failure):
     elif failure == "finite":
         candidate["parameters_finite"] = False
     elif failure == "leaked_allocation":
-        candidate["allocated_after_cleanup_bytes"] = 4
+        candidate["allocated_before_model_bytes"] = 4
+    elif failure == "no_subprocess":
+        candidate["measurement_isolation"] = "same_process"
+    elif failure == "worker_running":
+        candidate["worker_process_exited"] = False
+    elif failure == "worker_unverified":
+        candidate["worker_evidence_verified"] = False
+    elif failure == "worker_failed":
+        candidate["worker_returncode"] = 1
+    elif failure == "no_cleanup_telemetry":
+        candidate.pop("allocated_after_cleanup_bytes")
     else:
         candidate["sequence_length"] = 64
     result = validator.evaluate_cost_gate(rows, contract["cost_gate"])
@@ -114,6 +129,13 @@ def test_runtime_requires_every_exact_version_cuda_and_5090(contract):
     assert all(validator.runtime_version_checks(expected, observed).values())
     for key, wrong in (("python", "3.12.12"), ("torch", "2.11.0"), ("cuda", "12.8"), ("polars", "1.39.2"), ("cuda_available", False), ("device_name", "RTX 5080"), ("free_bytes", observed["free_bytes"] - 1)):
         assert not all(validator.runtime_version_checks(expected, {**observed, key: wrong}).values())
+
+
+def test_process_local_workspace_does_not_contaminate_a_fresh_worker(contract):
+    rows = benchmark_rows(contract["cost_gate"])
+    for row in rows:
+        row["allocated_after_cleanup_bytes"] = 68157440
+    assert validator.evaluate_cost_gate(rows, contract["cost_gate"])["passed"]
 
 
 def test_cpu_failure_writes_proof_and_refuses_overwrite(monkeypatch, tmp_path):
@@ -141,11 +163,11 @@ def test_profile_exception_preserves_fail_proof_and_partial_matrix(monkeypatch, 
     for name in ("recompile_limit", "accumulated_recompile_limit", "suppress_errors"):
         monkeypatch.setattr(dynamo_config, name, getattr(dynamo_config, name))
 
-    def fail_profile(row, frozen):
+    def fail_profile(row, args, binding, evidence_dir):
         row["measured_steps_completed"] = 2
         raise RuntimeError("synthetic compiler failure fixture")
 
-    monkeypatch.setattr(validator, "_profile_one", fail_profile)
+    monkeypatch.setattr(validator, "_profile_in_subprocess", fail_profile)
     report = validator.validate(argparse.Namespace(
         source_revision="a" * 40, contract=validator.DEFAULT_CONTRACT,
         output=tmp_path / "unused.json",
@@ -172,3 +194,150 @@ def test_paired_cpu_factory_initialization_and_synthetic_inputs(contract):
         assert all(t.shape == (128, history + 1) for t in first)
         assert bool((first[0] > 0).all()) and bool((first[2] > 0).all())
         assert bool(first[1].all())
+
+
+def fake_worker_processes(monkeypatch, contract, *, failure=None):
+    commands = []
+
+    class FakeProcess:
+        def __init__(self, command, *, cwd):
+            assert cwd == validator.PROJECT_ROOT
+            assert command[1:3] == ["-s", "-B"]
+            assert Path(command[3]) == Path(validator.__file__).resolve()
+            commands.append(command)
+            self.pid = os.getpid() + 100000 + len(commands)
+            self.returncode = None
+            self.command = command
+
+        def wait(self):
+            def argument(name):
+                return self.command[self.command.index(name) + 1]
+
+            request = json.loads(Path(argument("--worker-request")).read_text())
+            assert request["parent_pid"] == os.getpid()
+            assert request["source_revision"] == argument("--source-revision")
+            assert request["contract_sha256"] == validator.sha256(Path(argument("--contract")))
+            assert request["source_file_sha256"] == validator._source_file_hashes()
+            requested = request["benchmark_row"]
+            row = next(copy.deepcopy(row) for row in benchmark_rows(contract["cost_gate"])
+                       if (row["backbone"], row["history_length"]) == (requested["backbone"], requested["history_length"]))
+            for key in ("measurement_isolation", "worker_process_exited", "worker_evidence_verified", "worker_returncode"):
+                row.pop(key)
+            row["allocated_after_cleanup_bytes"] = 68157440
+            result = {
+                "status": "PASS", "source_revision": request["source_revision"],
+                "contract_sha256": request["contract_sha256"],
+                "source_file_sha256": request["source_file_sha256"],
+                "worker_pid": self.pid, "worker_parent_pid": os.getpid(),
+                "measurement_isolation": "fresh_subprocess", "benchmark_row": row,
+                "checks": {"execution_completed": True},
+                "runtime": valid_runtime(contract["runtime"]),
+                "held_out_test_evaluated": False, "real_data_used": False,
+                "checkpoint_loaded": False,
+            }
+            self.returncode = 0
+            if failure == "partial":
+                result["status"] = "FAIL"
+                result["checks"]["execution_completed"] = False
+                result["error"] = {"type": "RuntimeError", "message": "fixture compile failure"}
+                row["measured_steps_completed"] = 2
+                row["step_seconds"] = row["step_seconds"][:2]
+                self.returncode = 1
+            elif failure in ("source_file_sha256", "contract_sha256", "worker_pid"):
+                result[failure] = None
+            elif failure == "missing_report":
+                self.returncode = -9
+                return self.returncode
+            validator._write_report(Path(argument("--output")), result)
+            return self.returncode
+
+    monkeypatch.setattr(validator.subprocess, "Popen", FakeProcess)
+    return commands
+
+
+def test_parent_dispatches_nine_new_workers_and_preserves_nonzero_cleanup(monkeypatch, contract, tmp_path):
+    monkeypatch.setattr(validator, "observe_runtime", lambda: valid_runtime(contract["runtime"]))
+    monkeypatch.setattr(validator, "_configure_dynamo", lambda frozen: {"suppress_errors": False})
+    monkeypatch.setattr(validator, "_profile_one", lambda *args: pytest.fail("Parent must never profile a model"))
+    commands = fake_worker_processes(monkeypatch, contract)
+    report = validator.validate(argparse.Namespace(
+        source_revision="a" * 40, contract=validator.DEFAULT_CONTRACT, output=tmp_path / "validation.json",
+    ))
+    assert report["status"] == "PASS" and report["cost_gate_evaluated"] and report["cost_gate_pass"]
+    assert len(commands) == len(report["benchmark_rows"]) == 9
+    assert len({row["worker_pid"] for row in report["benchmark_rows"]}) == 9
+    assert all(row["allocated_before_model_bytes"] == 0 and row["allocated_after_cleanup_bytes"] == 68157440
+               and row["worker_process_exited"] and row["worker_evidence_verified"] for row in report["benchmark_rows"])
+    directory = Path(report["worker_evidence_directory"])
+    assert len(list(directory.glob("*.request.json"))) == len(list(directory.glob("*.result.json"))) == 9
+
+
+@pytest.mark.parametrize("failure", ["partial", "source_file_sha256", "contract_sha256", "worker_pid", "missing_report"])
+def test_parent_rejects_failed_or_unbound_worker_and_preserves_partial_evidence(monkeypatch, contract, tmp_path, failure):
+    monkeypatch.setattr(validator, "observe_runtime", lambda: valid_runtime(contract["runtime"]))
+    monkeypatch.setattr(validator, "_configure_dynamo", lambda frozen: {"suppress_errors": False})
+    commands = fake_worker_processes(monkeypatch, contract, failure=failure)
+    report = validator.validate(argparse.Namespace(
+        source_revision="a" * 40, contract=validator.DEFAULT_CONTRACT, output=tmp_path / "validation.json",
+    ))
+    assert report["status"] == "FAIL" and not report["cost_gate_evaluated"] and not report["cost_gate_pass"]
+    assert len(commands) == len(report["benchmark_rows"]) == 1
+    row = report["benchmark_rows"][0]
+    assert row["worker_process_exited"]
+    assert Path(row["worker_request_path"]).is_file()
+    if failure == "partial":
+        assert row["measured_steps_completed"] == len(row["step_seconds"]) == 2
+        assert row["worker_error"]["message"] == "fixture compile failure"
+    elif failure != "missing_report":
+        assert not row["worker_evidence_verified"]
+
+
+def worker_args(tmp_path):
+    request_path = tmp_path / "request.json"
+    validator._write_report(request_path, {
+        "source_revision": "a" * 40,
+        "contract_sha256": validator.sha256(validator.DEFAULT_CONTRACT),
+        "source_file_sha256": validator._source_file_hashes(),
+        "parent_pid": os.getppid(),
+        "benchmark_row": {"backbone": validator.T0, "history_length": 16, "sequence_length": 17, "batch_size": 128},
+    })
+    return argparse.Namespace(
+        source_revision="a" * 40, contract=validator.DEFAULT_CONTRACT,
+        worker_request=request_path, output=tmp_path / "result.json",
+    )
+
+
+@pytest.mark.parametrize("failure", [None, "partial", "source_revision", "contract_sha256", "source_file_sha256", "parent_pid", "shape"])
+def test_worker_checks_binding_before_profiling_and_retains_partial_row(monkeypatch, contract, tmp_path, failure):
+    args = worker_args(tmp_path)
+    calls = []
+    monkeypatch.setattr(validator, "observe_runtime", lambda: valid_runtime(contract["runtime"]))
+    monkeypatch.setattr(validator, "_configure_dynamo", lambda frozen: {"suppress_errors": False})
+
+    def profile(row, frozen):
+        calls.append(copy.deepcopy(row))
+        row["measured_steps_completed"] = 2 if failure == "partial" else 10
+        if failure == "partial":
+            raise RuntimeError("worker fixture partial failure")
+
+    monkeypatch.setattr(validator, "_profile_one", profile)
+    if failure not in (None, "partial"):
+        request = json.loads(args.worker_request.read_text())
+        if failure == "shape":
+            request["benchmark_row"]["sequence_length"] = 16
+        else:
+            request[failure] = None
+        args.worker_request.write_text(json.dumps(request))
+    report = validator.validate_worker(args)
+    assert report["worker_pid"] == os.getpid()
+    assert report["worker_parent_pid"] == os.getppid()
+    if failure is None:
+        assert report["status"] == "PASS" and len(calls) == 1
+        assert report["contract_sha256"] == validator.sha256(validator.DEFAULT_CONTRACT)
+        assert report["source_file_sha256"] == validator._source_file_hashes()
+    else:
+        assert report["status"] == "FAIL" and report["checks"]["execution_completed"] is False
+        if failure == "partial":
+            assert len(calls) == 1 and report["benchmark_row"]["measured_steps_completed"] == 2
+        else:
+            assert not calls

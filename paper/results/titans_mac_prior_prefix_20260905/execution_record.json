@@ -1,12 +1,12 @@
 {
-  "status": "FIRST_CUDA_FAILED_TEST_ASSERTION_CORRECTED",
-  "recorded_at": "2026-09-05T11:10:28.195757+00:00",
-  "source_revision": "5206e46ea21a07aa49e2b6b773154fee49cb5aec",
+  "status": "CUDA_CORRECTNESS_PASS_COST_ISOLATION_FIX_PENDING",
+  "recorded_at": "2026-09-05T11:15:14.559152+00:00",
+  "source_revision": "a2fda0efe23e8c77e0c9333f64da3b9853e09bc5",
   "branch": "codex/b1-prior-prefix-read",
   "remote": "5090",
-  "source_root": "/home/leekwanhyeong/workspace/paper_research_prior_prefix_5206e46_5090",
-  "package_sha256": "a37be9fbe65a3ffccd8bdd09b11cfc6045285d36f50656499fd92fa708302825",
-  "source_manifest_sha256": "32cc836c4c2e9310eeb62172da659e97ce8afd504345772c41720af6d5c12bc8",
+  "source_root": "/home/leekwanhyeong/workspace/paper_research_prior_prefix_a2fda0e_5090",
+  "package_sha256": "cbe49da3538e1ccf7e2c777aa9c76fd30d90d2dc58b3cace44b670b3b83ff50c",
+  "source_manifest_sha256": "df3418c8599c1caddb403f542a9965dcfe35515702ce3fa0fa59913fc171ed9e",
   "contract_sha256": "81f874eaf7568c0daf262d2cf49371c425a43352789ba227124d6d0b2152ebf7",
   "verified_source_files": 389,
   "local_tests": {
@@ -14,7 +14,7 @@
     "cuda_skipped": 4,
     "failures": 0
   },
-  "tmux_session": "prior_prefix_cuda_5206e46",
+  "tmux_session": "prior_prefix_cuda_a2fda0e",
   "e1_started": false,
   "screening_started": false,
   "held_out_test_evaluated": false,
@@ -27,6 +27,16 @@
       "tests_failed": 1,
       "failure": "CPU batch permutation bitwise assertion; both legacy B1 and candidate are within the unchanged frozen CPU tolerance",
       "evidence": "attempt_5206e46_cuda"
+    },
+    {
+      "source_revision": "a2fda0efe23e8c77e0c9333f64da3b9853e09bc5",
+      "phase": "cuda",
+      "status": "FAIL",
+      "tests_passed": 89,
+      "tests_failed": 0,
+      "cost_measurement_completed": false,
+      "failure": "cuBLAS workspace survives tensor cleanup, so the next model could not start from zero allocated memory",
+      "evidence": "attempt_a2fda0e_cuda"
     }
   ]
 }
