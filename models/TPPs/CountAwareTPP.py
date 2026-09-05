@@ -65,6 +65,7 @@ TITAN_MEMORY_MODE_SURPRISE_GATED = "surprise_gated"
 TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED = "persistent_surprise_gated"
 TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE = "dual_hard_surprise"
 TITAN_MEMORY_MODE_TITANS_MAC = "titans_mac"
+TITAN_MEMORY_MODE_TITANS_MAC_PRIOR_PREFIX = "titans_mac_prior_prefix"
 TITAN_MEMORY_MODE_TPP_GATED = "tpp_gated_memory"
 TITAN_MEMORY_MODES = (
     TITAN_MEMORY_MODE_NONE,
@@ -79,6 +80,7 @@ TITAN_MEMORY_MODES = (
     TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
     TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
     TITAN_MEMORY_MODE_TITANS_MAC,
+    TITAN_MEMORY_MODE_TITANS_MAC_PRIOR_PREFIX,
     TITAN_MEMORY_MODE_TPP_GATED,
 )
 TITAN_QUANTITY_GRADIENT_SHARED = "shared"
@@ -735,7 +737,10 @@ class CountAwareTitanTPP(SharedTimeCountModel):
         ):
             raise ValueError("Elapsed-age candidate requires direct log-MSE, legacy time head and no tail loss")
         self.quantity_memory_gradient_mode = quantity_memory_gradient_mode
-        uses_titans_mac = memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+        uses_titans_mac = memory_mode in {
+            TITAN_MEMORY_MODE_TITANS_MAC,
+            TITAN_MEMORY_MODE_TITANS_MAC_PRIOR_PREFIX,
+        }
         uses_tpp_gated_memory = memory_mode == TITAN_MEMORY_MODE_TPP_GATED
         uses_persistent_memory = memory_mode in {
             TITAN_MEMORY_MODE_PERSISTENT_ONLY,
@@ -791,6 +796,11 @@ class CountAwareTitanTPP(SharedTimeCountModel):
                 segment_size=16,
                 max_len=max_seq_len,
                 dropout=0.1,
+                output_read_policy=(
+                    "prior_prefix"
+                    if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC_PRIOR_PREFIX
+                    else "segment_start"
+                ),
             )
             if uses_titans_mac
             else None
@@ -1026,6 +1036,7 @@ __all__ = [
     "TITAN_MEMORY_MODE_SURPRISE_GATED",
     "TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE",
     "TITAN_MEMORY_MODE_TITANS_MAC",
+    "TITAN_MEMORY_MODE_TITANS_MAC_PRIOR_PREFIX",
     "TITAN_MEMORY_MODE_TPP_GATED",
     "TITAN_MEMORY_MODES",
     "TITAN_QUANTITY_GRADIENT_ADAPTER_ONLY",

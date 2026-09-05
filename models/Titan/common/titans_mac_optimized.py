@@ -413,6 +413,7 @@ def _optimized_encoder_from_frozen(
             segment_size=frozen.segment_size,
             max_len=frozen.max_len,
             dropout=float(first_layer.attention.dropout),
+            output_read_policy=frozen.output_read_policy,
         ).to(device=first_parameter.device, dtype=first_parameter.dtype)
         replacement = OptimizedTitansNeuralMemory(
             frozen.d_model,

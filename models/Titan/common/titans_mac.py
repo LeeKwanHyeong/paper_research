@@ -1,9 +1,11 @@
-"""Faithful Titans neural memory and Memory-as-Context event encoder.
+"""Titans neural memory and Memory-as-Context event encoders.
 
 The neural memory follows equations 11--15 of Behrouz et al. (2025). The
 event-domain MAC wrapper keeps a stricter prediction-before-write order: a
 segment reads its start state, builds causal prediction states, and only then
-writes valid observed events for later segments.
+writes valid observed events for later segments. The opt-in prior-prefix output
+read additionally exposes earlier observed writes from the same segment; the
+current event is still read before it is written.
 """
 
 from __future__ import annotations
@@ -17,6 +19,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from .titans_memory_stability import clip_associative_gradients
+from .titans_mac_prior_prefix import read_prior_prefix_with_fixed_shape_scan
 
 
 @dataclass(frozen=True)
@@ -696,6 +699,7 @@ class TitansMACEncoder(nn.Module):
         segment_size: int = 16,
         max_len: int = 512,
         dropout: float = 0.1,
+        output_read_policy: str = "segment_start",
     ) -> None:
         super().__init__()
         if segment_size < 1:
@@ -704,11 +708,15 @@ class TitansMACEncoder(nn.Module):
             raise ValueError("persistent_memory_size must be positive")
         if max_len < 1:
             raise ValueError("max_len must be positive")
+        if output_read_policy not in {"segment_start", "prior_prefix"}:
+            raise ValueError("output_read_policy must be segment_start or prior_prefix")
         self.input_dim = int(input_dim)
         self.d_model = int(d_model)
         self.segment_size = int(segment_size)
         self.persistent_memory_size = int(persistent_memory_size)
         self.max_len = int(max_len)
+        # Execution policy only: preserve B1 parameter names, values, and RNG.
+        self.output_read_policy = output_read_policy
         self.input_projection = nn.Linear(self.input_dim, self.d_model)
         self.position_embedding = nn.Parameter(
             torch.randn(1, self.max_len, self.d_model) * 0.02
@@ -809,6 +817,74 @@ class TitansMACEncoder(nn.Module):
             series_ids=series_ids,
         )
 
+    def _read_prior_prefix_and_write(
+        self,
+        state: TitansMemoryState,
+        attention_output: torch.Tensor,
+        output_queries: torch.Tensor,
+        segment_start_reads: torch.Tensor,
+        write_mask: torch.Tensor,
+        *,
+        chunk_size: Optional[int] = None,
+    ) -> tuple[torch.Tensor, TitansMemoryState, dict[str, torch.Tensor]]:
+        """Read each observed prefix, then apply the unchanged B1 token write.
+
+        The pre-attention context stays at the segment-start state. Only these
+        final reads see earlier valid writes from the current segment. Writes
+        consume the original causal attention outputs, never the fused outputs,
+        so the end-of-segment memory trajectory is unchanged at fixed weights.
+
+        CPU and explicitly uncompiled CUDA use the eager reference below. CUDA
+        compilation uses a separate read/write scan, leaving the existing B1
+        write-only scan unchanged. Chunking never detaches the memory graph.
+        """
+        if attention_output.device.type == "cuda" and self.neural_memory.compile_cuda_scan:
+            return read_prior_prefix_with_fixed_shape_scan(
+                self.neural_memory, state, attention_output, output_queries,
+                segment_start_reads, write_mask, chunk_size=chunk_size,
+            )
+        length = attention_output.size(1)
+        step = length if chunk_size is None else int(chunk_size)
+        if step < 1:
+            raise ValueError("chunk_size must be positive")
+        seen_writes = torch.zeros(
+            attention_output.size(0), device=attention_output.device, dtype=torch.bool,
+        )
+        reads: list[torch.Tensor] = []
+        collected: dict[str, list[torch.Tensor]] = {
+            "associative_loss": [],
+            "update_rate": [],
+            "momentum_rate": [],
+            "forgetting_rate": [],
+            "write_applied": [],
+        }
+        for chunk_start in range(0, length, step):
+            chunk_end = min(chunk_start + step, length)
+            for position in range(chunk_start, chunk_end):
+                initial_read = segment_start_reads[:, position : position + 1]
+                if position == 0:
+                    retrieved = initial_read
+                else:
+                    prefix_read = self.neural_memory.read(
+                        state, output_queries[:, position : position + 1],
+                    )
+                    # Preserve exact B1 output before the first valid write,
+                    # including when every write is disabled. A token-sized
+                    # GEMM can otherwise round differently from the old read.
+                    retrieved = torch.where(
+                        seen_writes[:, None, None], prefix_read, initial_read,
+                    )
+                reads.append(retrieved)
+                state, diagnostics = self.neural_memory.write_token(
+                    state, attention_output[:, position], write_mask[:, position],
+                )
+                seen_writes = seen_writes | write_mask[:, position]
+                for name, value in diagnostics.items():
+                    collected[name].append(value)
+        return torch.cat(reads, dim=1), state, {
+            name: torch.stack(values, dim=1) for name, values in collected.items()
+        }
+
     def forward_with_state(
         self,
         inputs: torch.Tensor,
@@ -901,27 +977,54 @@ class TitansMACEncoder(nn.Module):
             event_start = self.persistent_memory_size + (end - start)
             attention_output = mac_tokens[:, event_start:]
 
-            # The prediction state reads the segment-start memory. Writes occur
-            # only after these states are complete, so the target cannot leak.
+            # The default preserves the historical segment-start output read.
             output_query = self.neural_memory.project_query(attention_output)
             output_memory = self.neural_memory.read(state, output_query)
+            if self.output_read_policy == "prior_prefix":
+                segment_start_output_memory = output_memory
+                output_memory, state, write_diagnostics = (
+                    self._read_prior_prefix_and_write(
+                        state,
+                        attention_output,
+                        output_query,
+                        output_memory,
+                        current_write_mask,
+                        chunk_size=write_chunk_size,
+                    )
+                )
             normalized_output = self.output_norm(attention_output)
             gated_memory = (
                 torch.sigmoid(self.output_gate(normalized_output))
                 * self.memory_output_projection(output_memory)
             )
+            if self.output_read_policy == "prior_prefix":
+                segment_start_gated_memory = (
+                    torch.sigmoid(self.output_gate(normalized_output))
+                    * self.memory_output_projection(segment_start_output_memory)
+                )
+                prior_writes = (
+                    current_write_mask.long().cumsum(dim=1)
+                    - current_write_mask.long()
+                ) > 0
+                # Concatenating prefix reads can change tensor strides and the
+                # output GEMM's rounding. Preserve the complete old residual
+                # before each row's first valid write, not just its read values.
+                gated_memory = torch.where(
+                    prior_writes.unsqueeze(-1), gated_memory, segment_start_gated_memory,
+                )
             prediction_state = attention_output + gated_memory
             prediction_state = prediction_state * current_mask.unsqueeze(-1).to(
                 dtype=prediction_state.dtype
             )
             outputs.append(prediction_state)
 
-            state, write_diagnostics = self.neural_memory.write_sequence(
-                state,
-                attention_output,
-                current_write_mask,
-                chunk_size=write_chunk_size,
-            )
+            if self.output_read_policy == "segment_start":
+                state, write_diagnostics = self.neural_memory.write_sequence(
+                    state,
+                    attention_output,
+                    current_write_mask,
+                    chunk_size=write_chunk_size,
+                )
             for name, value in write_diagnostics.items():
                 diagnostics[name].append(value)
 

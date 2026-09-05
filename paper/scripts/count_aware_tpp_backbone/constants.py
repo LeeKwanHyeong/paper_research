@@ -2,6 +2,8 @@
 
 import math
 
+from models.TPPs.CountAwareFactory import PRIOR_PREFIX_BACKBONE, PRIOR_PREFIX_ROLE
+
 from models.Titan.common.key_value_memory import KEY_VALUE_BACKBONE, KEY_VALUE_ROLE
 from models.Titan.common.elapsed_age import ELAPSED_AGE_BACKBONE, ELAPSED_AGE_ROLE
 from models.TPPs.CountAwareTHPStaticMemory import (
@@ -41,6 +43,7 @@ TITAN_MEMORY_BACKBONES = (
     *TITAN_HISTORICAL_MEMORY_BACKBONES,
     *TITAN_PERSISTENT_MEMORY_BACKBONES,
     "titantpp_titans_mac",
+    PRIOR_PREFIX_BACKBONE,
     "titantpp_tpp_gated_memory",
     "titantpp_weighted_static_memory",
     "titantpp_hard_memory_local_time",
@@ -59,6 +62,7 @@ MODEL_ROLE_TITAN_B012_SCREENING = "titan_b012_screening"
 MODEL_ROLE_WEIGHTED_STATIC = "t0_weighted_static_retrieval"
 MODEL_ROLE_HARD_LOCAL_TIME = "t0_hard_memory_local_time"
 MODEL_ROLES = (
+    PRIOR_PREFIX_ROLE,
     ELAPSED_AGE_ROLE,
     KEY_VALUE_ROLE,
     MODEL_ROLE_EXPERIMENTAL,
@@ -88,6 +92,7 @@ QUANTITY_VARIANT_ALIASES = {
     TAIL_HEAD_ONLY_VARIANT: TAIL_HEAD_ONLY_VARIANT,
 }
 BACKBONE_LABELS = {
+    PRIOR_PREFIX_BACKBONE: "TitanTPP-MAC Prior-Prefix Output Read",
     ELAPSED_AGE_BACKBONE: "TitanTPP-HardLMM Elapsed-Age Encoder",
     KEY_VALUE_BACKBONE: "TitanTPP-HardLMM Separate-Key Sparse Retrieval",
     THP_STATIC_MEMORY_BACKBONE: "Count-aware THP + Static Hard Memory",
@@ -123,6 +128,13 @@ def validate_model_role_contract(
     lambda_tail: float,
 ) -> None:
     """Reject official-role runs that drift from the frozen baseline contract."""
+    if model_role == PRIOR_PREFIX_ROLE or PRIOR_PREFIX_BACKBONE in backbones:
+        if model_role != PRIOR_PREFIX_ROLE or backbones != (PRIOR_PREFIX_BACKBONE,):
+            raise ValueError("Prior-prefix requires its dedicated single-backbone role")
+        if (quantity_variants != (VARIANT,) or time_head_mode != TIME_HEAD_MODE_LEGACY_CLAMPED
+                or lambda_tail != 0.0):
+            raise ValueError("Prior-prefix requires direct log-MSE, legacy head and no tail loss")
+        return
     if model_role == ELAPSED_AGE_ROLE or ELAPSED_AGE_BACKBONE in backbones:
         if model_role != ELAPSED_AGE_ROLE or backbones != (ELAPSED_AGE_BACKBONE,):
             raise ValueError("Elapsed-age memory requires its dedicated single-backbone role")

@@ -14,6 +14,7 @@ import torch
 
 from models.TPPs.CountAwareFactory import (
     HARD_LOCAL_TIME_BACKBONE,
+    PRIOR_PREFIX_BACKBONE,
     build_count_aware_model,
     validate_checkpoint_route,
 )
@@ -263,6 +264,8 @@ def train_one(
     seed: int,
 ) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
     run_dir = args.output_dir / "runs" / backbone / quantity_variant / f"seed_{seed}"
+    if backbone == PRIOR_PREFIX_BACKBONE and run_dir.exists():
+        raise FileExistsError("Prior-prefix runs require a fresh output directory")
     if backbone == ELAPSED_AGE_BACKBONE and run_dir.exists():
         raise FileExistsError("Elapsed-age candidate requires a fresh run; automatic reuse/resume/overwrite is forbidden")
     if backbone == KEY_VALUE_BACKBONE and run_dir.exists():
@@ -332,8 +335,15 @@ def train_one(
         time_sigma_floor=args.time_sigma_floor,
         titans_memory_gradient_clip=getattr(args, "titans_memory_gradient_clip", None),
     )
+    if getattr(args, "titans_mac_execution_backend", "reference") == "optimized":
+        if backbone not in {"titantpp_titans_mac", PRIOR_PREFIX_BACKBONE}:
+            raise ValueError("MAC optimized execution requires a MAC backbone")
+        from models.Titan.common.titans_mac_optimized import apply_titantpp_mac_semantic_optimization
+        apply_titantpp_mac_semantic_optimization(model)
+        encoder_config["mac_execution_backend"] = "optimized"
     model.to(args.device)
-    if backbone == ELAPSED_AGE_BACKBONE and torch.device(args.device).type == "cuda":
+    if (backbone in {ELAPSED_AGE_BACKBONE, PRIOR_PREFIX_BACKBONE, "titantpp_titans_mac"}
+            and torch.device(args.device).type == "cuda"):
         torch.cuda.reset_peak_memory_stats(torch.device(args.device))
     parameter_count = sum(
         parameter.numel()
@@ -578,7 +588,7 @@ def train_one(
         "quantity_rows": quantity_rows,
         "history_rows": history_rows,
     }
-    if backbone == ELAPSED_AGE_BACKBONE:
+    if backbone in {ELAPSED_AGE_BACKBONE, PRIOR_PREFIX_BACKBONE, "titantpp_titans_mac"}:
         cuda_device = torch.device(args.device).type == "cuda"
         summary.update({
             "training_device": str(args.device),

@@ -32,6 +32,7 @@ from models.TPPs.CountAwareTPP import (
 )
 from models.TPPs.CountAwareFactory import (
     build_count_aware_model as build_model,
+    PRIOR_PREFIX_ROLE,
 )
 from models.TPPs.CountAwareTHPStaticMemory import THP_STATIC_MEMORY_ROLE
 from models.Titan.common.key_value_memory import KEY_VALUE_ROLE
@@ -207,6 +208,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--lambda-log-qty", type=float, default=1.0)
     parser.add_argument("--grad-clip", type=float, default=1.0)
     parser.add_argument("--titans-memory-gradient-clip", type=float, default=None)
+    parser.add_argument("--titans-mac-execution-backend", choices=("reference", "optimized"), default="reference")
     parser.add_argument("--early-stopping-patience", type=int, default=40)
     parser.add_argument("--min-epochs", type=int, default=40)
     parser.add_argument("--backbones", default=",".join(BACKBONES))
@@ -295,6 +297,9 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
     if not args.allow_partial_contract:
         if set(backbones) != set(BACKBONES) or set(seeds) != set(SEEDS):
             raise ValueError("Qualified run requires all backbones and seeds 42/52/62")
+    if args.model_role == PRIOR_PREFIX_ROLE:
+        from paper.scripts.titans_mac_prior_prefix_contract import validate_candidate_launch
+        validate_candidate_launch(args)
     dataset_contract = DATASET_CONTRACTS[args.dataset_contract]
     if args.hidden_dim != 64:
         raise ValueError("Frozen contract requires hidden_dim=64")

@@ -25,6 +25,7 @@ from models.TPPs.CountAwareTPP import (
     TITAN_MEMORY_MODE_STATIC_SOFT_GATED,
     TITAN_MEMORY_MODE_SURPRISE_GATED,
     TITAN_MEMORY_MODE_TITANS_MAC,
+    TITAN_MEMORY_MODE_TITANS_MAC_PRIOR_PREFIX,
     TITAN_MEMORY_MODE_TPP_GATED,
     TITAN_QUANTITY_GRADIENT_ADAPTER_ONLY,
     TITAN_QUANTITY_GRADIENT_SHARED,
@@ -48,8 +49,62 @@ from models.Titan.common.elapsed_age import (
 )
 
 
+PRIOR_PREFIX_BACKBONE = "titantpp_titans_mac_prior_prefix"
+PRIOR_PREFIX_CONTRACT = "titans_mac_prior_prefix_v1"
+PRIOR_PREFIX_ROLE = "titans_mac_prior_prefix_screening"
+
+
 HARD_LOCAL_TIME_BACKBONE = "titantpp_hard_memory_local_time"
 HARD_LOCAL_TIME_CONTRACT = "hard_lmm_local_time_v1"
+
+
+def validate_prior_prefix_checkpoint(payload: dict[str, Any], expected_backbone: str) -> bool:
+    """Disambiguate identical tensor schemas using the frozen read policy."""
+    metadata = payload.get("encoder_config", {})
+    if not isinstance(metadata, dict):
+        raise ValueError("Invalid checkpoint encoder metadata")
+    is_candidate = (
+        payload.get("backbone") == PRIOR_PREFIX_BACKBONE
+        or metadata.get("memory_mode") == TITAN_MEMORY_MODE_TITANS_MAC_PRIOR_PREFIX
+        or metadata.get("titans_output_read_policy") == "prior_prefix"
+        or metadata.get("titans_prefix_read_contract_id") == PRIOR_PREFIX_CONTRACT
+        or metadata.get("backbone_contract_id") == PRIOR_PREFIX_CONTRACT
+    )
+    if expected_backbone != PRIOR_PREFIX_BACKBONE:
+        if is_candidate:
+            raise ValueError("Prior-prefix checkpoint cannot be loaded as another backbone")
+        return False
+    required = {
+        "memory_mode": TITAN_MEMORY_MODE_TITANS_MAC_PRIOR_PREFIX,
+        "backbone_contract_id": PRIOR_PREFIX_CONTRACT,
+        "titans_prefix_read_contract_id": PRIOR_PREFIX_CONTRACT,
+        "titans_output_read_policy": "prior_prefix",
+        "titans_pre_attention_read_policy": "segment_start",
+        "titans_write_input": "causal_attention_output",
+        "titans_mac_segment_size": 16,
+        "titans_neural_memory_depth": 2,
+        "titans_neural_memory_hidden_expansion": 2,
+        "persistent_mem_size": 16,
+        "titans_memory_gradient_clip": 1.0,
+        "additional_parameter_count": 0,
+    }
+    if (payload.get("backbone") != expected_backbone
+            or any(metadata.get(k) != v for k, v in required.items())):
+        raise ValueError("Prior-prefix checkpoint read policy/encoder metadata mismatch")
+    time_head = metadata.get("time_head")
+    if (payload.get("variant") != LOG_MSE_VARIANT
+            or not isinstance(time_head, dict)
+            or time_head.get("mode") != TIME_HEAD_MODE_LEGACY_CLAMPED
+            or payload.get("evaluation_scope") != "validation_only"
+            or payload.get("held_out_test_evaluated") is not False):
+        raise ValueError("Prior-prefix checkpoint head/objective/scope mismatch")
+    states = [payload[k] for k in ("model_state_dict", "best_state_dict") if k in payload]
+    if not states or any(not isinstance(state, dict)
+        or any(not isinstance(key, str) for key in state) or not any(
+            key.startswith("titans_mac_encoder.neural_memory.initial_") for key in state
+        ) for state in states):
+        raise ValueError("Prior-prefix checkpoint requires explicit neural memory model state")
+    return True
 
 
 def validate_elapsed_age_checkpoint(payload: dict[str, Any], expected_backbone: str) -> bool:
@@ -154,6 +209,8 @@ def validate_key_value_checkpoint(payload: dict[str, Any], expected_backbone: st
 
 def validate_checkpoint_route(payload: dict[str, Any], expected_backbone: str) -> None:
     """Validate explicit candidate identity; compatible tensor shapes are not enough."""
+    if validate_prior_prefix_checkpoint(payload, expected_backbone):
+        return
     if validate_elapsed_age_checkpoint(payload, expected_backbone):
         return
     validate_key_value_checkpoint(payload, expected_backbone)
@@ -243,11 +300,19 @@ def build_count_aware_model(
         or lambda_tail != 0.0
     ):
         raise ValueError("Local-time candidate requires direct log-MSE, legacy time head and no tail loss")
+    if backbone == PRIOR_PREFIX_BACKBONE:
+        if (quantity_variant != LOG_MSE_VARIANT
+                or time_head_mode != TIME_HEAD_MODE_LEGACY_CLAMPED or lambda_tail != 0.):
+            raise ValueError("Prior-prefix requires direct log-MSE, legacy time head and no tail loss")
+        if titans_memory_gradient_clip is None:
+            titans_memory_gradient_clip = 1.0
+        if titans_memory_gradient_clip != 1.0:
+            raise ValueError("Prior-prefix requires frozen inner gradient clip 1")
     if titans_memory_gradient_clip is not None:
         if (not math.isfinite(titans_memory_gradient_clip)
                 or titans_memory_gradient_clip <= 0):
             raise ValueError("titans_memory_gradient_clip must be finite and positive")
-        if backbone != "titantpp_titans_mac":
+        if backbone not in {"titantpp_titans_mac", PRIOR_PREFIX_BACKBONE}:
             raise ValueError("Titans inner gradient clipping requires titantpp_titans_mac")
     quantity_kwargs = {
         "train_log_std": train_log_std,
@@ -360,6 +425,10 @@ def build_count_aware_model(
             TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
             TITAN_QUANTITY_GRADIENT_ADAPTER_ONLY,
         ),
+        PRIOR_PREFIX_BACKBONE: (
+            TITAN_MEMORY_MODE_TITANS_MAC_PRIOR_PREFIX,
+            TITAN_QUANTITY_GRADIENT_SHARED,
+        ),
         "titantpp_titans_mac": (
             TITAN_MEMORY_MODE_TITANS_MAC,
             TITAN_QUANTITY_GRADIENT_SHARED,
@@ -371,6 +440,9 @@ def build_count_aware_model(
     }
     if backbone in titan_modes:
         memory_mode, quantity_memory_gradient_mode = titan_modes[backbone]
+        is_titans_mac = memory_mode in {
+            TITAN_MEMORY_MODE_TITANS_MAC, TITAN_MEMORY_MODE_TITANS_MAC_PRIOR_PREFIX,
+        }
         uses_persistent_memory = memory_mode in {
             TITAN_MEMORY_MODE_PERSISTENT_ONLY,
             TITAN_MEMORY_MODE_STATIC_HARD,
@@ -381,6 +453,7 @@ def build_count_aware_model(
             TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
             TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
             TITAN_MEMORY_MODE_TITANS_MAC,
+            TITAN_MEMORY_MODE_TITANS_MAC_PRIOR_PREFIX,
             TITAN_MEMORY_MODE_TPP_GATED,
         }
         uses_hard_memory = memory_mode in {
@@ -422,19 +495,28 @@ def build_count_aware_model(
             "titantpp_dual_memory_adapter_only": (
                 "count_titan_dual_memory_adapter_only"
             ),
+            PRIOR_PREFIX_BACKBONE: "count_titan_mac_prior_prefix",
             "titantpp_titans_mac": "count_titan_faithful_titans_mac",
             "titantpp_tpp_gated_memory": "count_titan_tpp_specific_gated_memory",
         }
-        if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC:
+        if is_titans_mac:
             model.titans_mac_encoder.neural_memory.gradient_max_norm = (
                 titans_memory_gradient_clip
             )
-            if titans_memory_gradient_clip is not None:
+            if titans_memory_gradient_clip is not None and backbone != PRIOR_PREFIX_BACKBONE:
                 candidate_names[backbone] = "count_titan_mac_inner_grad_clipped"
         return with_time_metadata(
             model,
             {
                 "candidate_name": candidate_names[backbone],
+                **({
+                    "titans_prefix_read_contract_id": PRIOR_PREFIX_CONTRACT,
+                    "titans_output_read_policy": "prior_prefix",
+                    "titans_pre_attention_read_policy": "segment_start",
+                    "titans_write_input": "causal_attention_output",
+                    "additional_parameter_count": 0,
+                    "initialization_contract": "same_B1_parameters_no_active_output_identity",
+                } if backbone == PRIOR_PREFIX_BACKBONE else {}),
                 **({
                     "static_retrieval_contract_id": KEY_VALUE_CONTRACT,
                     "static_retrieval_aggregation": "softmax_cosine_topk",
@@ -455,14 +537,16 @@ def build_count_aware_model(
                     "additional_parameter_count": 0,
                 } if memory_mode == TITAN_MEMORY_MODE_STATIC_WEIGHTED else {}),
                 "backbone_contract_id": (
-                    KEY_VALUE_CONTRACT
+                    PRIOR_PREFIX_CONTRACT
+                    if backbone == PRIOR_PREFIX_BACKBONE
+                    else KEY_VALUE_CONTRACT
                     if memory_mode == KEY_VALUE_MEMORY_MODE
                     else HARD_LOCAL_TIME_CONTRACT
                     if memory_mode == TITAN_MEMORY_MODE_HARD_LOCAL_TIME
                     else "W0"
                     if memory_mode == TITAN_MEMORY_MODE_STATIC_WEIGHTED
                     else "B1"
-                    if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+                    if is_titans_mac
                     else "B2"
                     if memory_mode == TITAN_MEMORY_MODE_TPP_GATED
                     else "B0"
@@ -480,6 +564,7 @@ def build_count_aware_model(
                     if memory_mode
                     in {
                         TITAN_MEMORY_MODE_TITANS_MAC,
+                        TITAN_MEMORY_MODE_TITANS_MAC_PRIOR_PREFIX,
                         TITAN_MEMORY_MODE_TPP_GATED,
                         TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
                         KEY_VALUE_MEMORY_MODE,
@@ -512,32 +597,36 @@ def build_count_aware_model(
                 "surprise_state_scope": (
                     "independent_input_sequence"
                     if uses_surprise_memory
-                    or memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+                    or is_titans_mac
                     else None
                 ),
                 "titans_neural_memory_depth": (
-                    2 if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC else 0
+                    2 if is_titans_mac else 0
                 ),
                 "titans_neural_memory_hidden_expansion": (
-                    2 if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC else 0
+                    2 if is_titans_mac else 0
                 ),
                 "titans_mac_segment_size": (
-                    16 if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC else 0
+                    16 if is_titans_mac else 0
                 ),
                 "titans_scan_backend": (
-                    "compiled_sequence_cuda"
-                    if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+                    "compiled_prior_prefix_cuda"
+                    if backbone == PRIOR_PREFIX_BACKBONE
+                    else "compiled_sequence_cuda"
+                    if is_titans_mac
                     else None
                 ),
                 "titans_online_update": (
                     "surprise_momentum_adaptive_forgetting"
-                    if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+                    if is_titans_mac
                     else None
                 ),
                 "titans_memory_gradient_clip": titans_memory_gradient_clip,
                 "titans_event_order": (
-                    "segment_read_prediction_then_observed_write"
-                    if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+                    "segment_attention_then_prior_prefix_read_then_observed_write"
+                    if backbone == PRIOR_PREFIX_BACKBONE
+                    else "segment_read_prediction_then_observed_write"
+                    if is_titans_mac
                     else None
                 ),
                 "tpp_gated_memory_size": (
@@ -587,7 +676,7 @@ def build_count_aware_model(
                     else "hard_local_memory_matcher"
                     if uses_hard_memory
                     else "titans_mac"
-                    if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+                    if is_titans_mac
                     else "tpp_specific_gated_memory"
                     if memory_mode == TITAN_MEMORY_MODE_TPP_GATED
                     else "shared_memory_state"

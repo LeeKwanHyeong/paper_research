@@ -1,0 +1,290 @@
+{
+  "schema_version": 1,
+  "contract_id": "titans_mac_prior_prefix_v1",
+  "frozen_on": "2026-09-05",
+  "status": "frozen_before_candidate_training",
+  "authorization": "User approved local contract/implementation, CUDA/full-data e1, fixed seed42 screening and conditional seed52/62. Held-out remains locked.",
+  "repository": "paper_research",
+  "implementation_branch": "codex/b1-prior-prefix-read",
+  "parent_revision": "567196e510e14211e0ee400ea312872bb3ec2703",
+  "source_revision_binding": "Committed full revision and per-file SHA256 pinned by execution source manifest; paired source remains identical.",
+  "backbone": "titantpp_titans_mac_prior_prefix",
+  "model_role": "titans_mac_prior_prefix_screening",
+  "baseline": "titantpp_titans_mac",
+  "datasets": {
+    "intermittent_frozen_5000": {
+      "data_path": "sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+      "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+      "split_manifest_path": "sample_data/intermittent_v2/intermittent_frozen_5000_split_manifest.json",
+      "split_manifest_sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04",
+      "lookback": 520,
+      "max_seq_len": 256,
+      "train_targets": 393824,
+      "validation_targets": 86285,
+      "train_p95_quantity": 46,
+      "train_p99_quantity": 187,
+      "time_unit": "week"
+    },
+    "yellow_trip_hourly": {
+      "data_path": "sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+      "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+      "split_manifest_path": "sample_data/new_york_taxi/yellow_trip_hourly_split_manifest.json",
+      "split_manifest_sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85",
+      "lookback": 168,
+      "max_seq_len": 256,
+      "train_targets": 38393,
+      "validation_targets": 8268,
+      "train_p95_quantity": 1562,
+      "train_p99_quantity": 3449,
+      "time_unit": "hour"
+    },
+    "insta_market_basket": {
+      "data_path": "sample_data/insta_market_basket/instacart_marked_target_with_split.parquet",
+      "data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+      "split_manifest_path": "sample_data/insta_market_basket/instacart_marked_target_split_manifest.json",
+      "split_manifest_sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d",
+      "lookback": 52,
+      "max_seq_len": 64,
+      "train_targets": 1991192,
+      "validation_targets": 503733,
+      "train_p95_quantity": 25,
+      "train_p99_quantity": 35,
+      "time_unit": "day"
+    }
+  },
+  "dataset_order": [
+    "yellow_trip_hourly",
+    "intermittent_frozen_5000",
+    "insta_market_basket"
+  ],
+  "architecture": {
+    "output_read_policy": "prior_prefix",
+    "pre_attention_read_policy": "segment_start",
+    "write_input": "causal_attention_output",
+    "read_state": "M_(i-1), before current observed i write",
+    "prediction_target": "i+1",
+    "segment_size": 16,
+    "hidden_dim": 64,
+    "layers": 2,
+    "heads": 4,
+    "ffn_dim": 128,
+    "persistent_tokens": 16,
+    "memory_depth": 2,
+    "memory_hidden_expansion": 2,
+    "inner_gradient_clip": 1.0,
+    "additional_parameters": 0,
+    "new_gate": false,
+    "reset": "independent_target_window",
+    "write_trajectory": "identical_to_stable_B1_for_identical_parameters_and_inputs",
+    "current_fused_output_written": false
+  },
+  "initialization": {
+    "same_B1_parameter_values_and_RNG": true,
+    "active_candidate_initial_output_identity_required": false,
+    "reason": "Direct final-read replacement; no zero-scale interpolation",
+    "legacy_segment_start_output_state_gradient_identity": "bitwise for identical CPU arithmetic and input",
+    "candidate_H1_identity": "numerical tolerance; no prior observed write",
+    "first_key_value_write_gradient_visible_history": 2,
+    "first_momentum_coefficient_gradient_visible_history": 3,
+    "quantity_head_zero_init": "Check gradients after quantity head opens"
+  },
+  "phases": {
+    "cuda": {
+      "required": true,
+      "skipped_tests_allowed": false
+    },
+    "e1": {
+      "seed": 42,
+      "epochs": 1,
+      "min_epochs": 1,
+      "patience": 1,
+      "full_train_and_validation": true,
+      "models": [
+        "titantpp_titans_mac",
+        "titantpp_titans_mac_prior_prefix"
+      ],
+      "runs": 6,
+      "performance_adoption": false
+    },
+    "screening": {
+      "seeds": [
+        42
+      ],
+      "runs": 6,
+      "requires_all_e1_pass": true
+    },
+    "confirm": {
+      "seeds": [
+        52,
+        62
+      ],
+      "runs": 12,
+      "requires_screening_pass": true
+    }
+  },
+  "numerical_tolerances": {
+    "cpu_prefix_state_read": {
+      "atol": 1e-07,
+      "rtol": 1e-06
+    },
+    "cuda_output_state": {
+      "atol": 2e-05,
+      "rtol": 0.0002
+    },
+    "cuda_gradient": {
+      "atol": 2e-05,
+      "rtol": 0.003
+    },
+    "cuda_optimizer_step": {
+      "atol": 2e-05,
+      "rtol": 0.0003
+    },
+    "same_backend_restore": "bitwise with restored RNG"
+  },
+  "cost_gate": {
+    "scope": "incremental mechanism experiment budget, not T0-level efficiency claim",
+    "batch_size": 128,
+    "history_lengths": [
+      16,
+      64,
+      255
+    ],
+    "warmup_steps": 3,
+    "measured_steps": 10,
+    "statistic": "median synchronized forward_backward_optimizer step",
+    "candidate_to_B1_step_ratio_max": 2.0,
+    "candidate_to_B1_peak_allocated_ratio_max": 1.5,
+    "candidate_peak_allocated_bytes_max": 30064771072,
+    "report_T0_relative_cost": true,
+    "historical_B1_3x_T0_cost_gate": "failed previously; not reclassified by this new incremental budget",
+    "compile_time_reported_separately": true
+  },
+  "performance_gates": {
+    "B1_incremental": {
+      "instacart_body_mae_improvement_min": 0.01,
+      "all_datasets_body_mae_regression_max": 0.01,
+      "all_datasets_rmse_regression_max": 0.0,
+      "all_datasets_tail_mae_regression_max": 0.02,
+      "all_datasets_time_loss_increase_max": 0.01
+    },
+    "T0_legacy_gate": {
+      "all_datasets_body_mae_improvement_min": 0.05,
+      "all_datasets_rmse_regression_max": 0.02,
+      "all_datasets_tail_mae_regression_max": 0.02,
+      "all_datasets_time_loss_increase_max": 0.01
+    },
+    "T0_common_RMSE": {
+      "all_datasets_strict_rmse_decrease": true,
+      "all_datasets_overall_mae_regression_max": 0.02
+    },
+    "external_TPP_claim": {
+      "comparators": [
+        "rmtpp",
+        "thp"
+      ],
+      "all_datasets_strict_rmse_decrease": true,
+      "all_datasets_overall_mae_regression_max": 0.02,
+      "all_datasets_time_loss_increase_max": 0.01,
+      "required_for_seed_expansion": false,
+      "claim_scope": "RMSE superiority on three named datasets, not all metrics/all TPPs"
+    },
+    "screening_pass": "All B1_incremental, T0_legacy_gate and T0_common_RMSE conditions on every dataset at seed42; external claim reported separately",
+    "confirmation": "same gates on arithmetic mean paired seeds42/52/62; RMSE improvement vs T0 and B1 in at least2/3 seeds for each dataset; each seed time/tail guardrails also pass",
+    "finite_required": true,
+    "metric_rounding_before_decision": false,
+    "additional_numerical_tolerance_for_metric_gates": 0.0,
+    "dataset_pooling": false,
+    "checkpoint_reselection": false,
+    "statistical_claim": "3-seed screening is not formal noninferiority or universal superiority"
+  },
+  "frozen_references": {
+    "path": "paper/results/titans_mac_prior_prefix_20260905/frozen_references.json",
+    "sha256": "c711759398ce403e887cc7a8cdaab56e0187638afa9f3ce02eac8873ced4b9a5",
+    "models": [
+      "titantpp",
+      "rmtpp",
+      "thp"
+    ],
+    "B1_policy": "fresh same-source cap300 controls; historical stable52/62 cap30 not pooled"
+  },
+  "runtime": {
+    "server": "5090",
+    "python": "/opt/miniconda3/envs/ai_env/bin/python",
+    "tmux": "/opt/miniconda3/envs/ai_env/bin/tmux",
+    "expected_python": "3.12.13",
+    "expected_torch": "2.11.0+cu130",
+    "expected_cuda": "13.0",
+    "expected_polars": "1.39.3",
+    "minimum_free_mib": 12000,
+    "require_gdm_inactive": true,
+    "require_no_compute_process": true,
+    "dynamo_recompile_limit": 64,
+    "dynamo_accumulated_recompile_limit": 512,
+    "source_isolated": true,
+    "overwrite": false,
+    "automatic_retry": false,
+    "service_mutation": false
+  },
+  "prohibited": [
+    "future_target_write",
+    "padding_write",
+    "cross_series_state_share",
+    "cross_window_state_carry",
+    "new_head_or_loss",
+    "new_gate",
+    "segment_size_shrink",
+    "dataset_specific_model_selection",
+    "test_access",
+    "performance_adoption_from_e1",
+    "silent_eager_fallback"
+  ],
+  "required_local_checks": [
+    "legacy_full_forward_state_gradient_parity",
+    "same_parameter_schema_count_and_rng",
+    "prefix_read_reference_and_scan_parity",
+    "H1_H2_H3_H16_H17_visibility",
+    "causal_future_and_target_mutation",
+    "padding_holes_empty_and_masked_writes",
+    "batch_permutation_series_reset",
+    "segment_end_state_parity",
+    "finite_extremes",
+    "quantity_and_time_gradients_after_head_open",
+    "checkpoint_route_identity",
+    "optimizer_rng_restore_next_step",
+    "source_and_contract_identity"
+  ],
+  "completion_boundary": "Opt-in research does not replace v0.7/T0. e1 proves execution only. Held-out and final paper-model replacement retain their later scope.",
+  "training": {
+    "quantity_variant": "count_only_log_regression",
+    "quantity_loss": "MSE(log1p_quantity)",
+    "lambda_log_qty": 1.0,
+    "lambda_tail": 0.0,
+    "time_head": "legacy_clamped_rmtpp",
+    "time_score_label": "clamped_time_loss_not_normalized_NLL",
+    "time_scale": 3.0,
+    "time_w_max": 3.3333333333333335,
+    "time_intercept_limit": 300.0,
+    "time_wd_safety_limit": 40.0,
+    "effective_duration_cap": 10.0,
+    "optimizer": "AdamW",
+    "lr": 0.001,
+    "batch_size": 128,
+    "weight_decay": 0.01,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "eps": 1e-08,
+    "time_head_lr_multiplier": 1.0,
+    "outer_gradient_clip": 1.0,
+    "inner_gradient_clip": 1.0,
+    "max_epochs": 300,
+    "min_epochs": 40,
+    "patience": 40,
+    "checkpoint_selection": "earliest strict minimum validation_joint_objective",
+    "execution_backend": "optimized",
+    "fresh": true,
+    "resume": false,
+    "held_out_test_evaluated": false
+  }
+}

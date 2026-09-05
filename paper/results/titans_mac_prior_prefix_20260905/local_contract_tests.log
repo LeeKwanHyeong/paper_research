@@ -1,0 +1,44 @@
+Scope: final integrated synthetic CPU tests; CUDA-only cases skipped locally.
+No real data training or held-out evaluation in this test run.
+Python: 3.12.10 (v3.12.10:0cc81280367, Apr  8 2025, 08:46:59) [Clang 13.0.0 (clang-1300.0.29.30)]
+Executable: /usr/local/bin/python3
+Platform: macOS-26.6.2-arm64-arm-64bit
+Environment: OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1
+Command: /usr/local/bin/python3 -s -B -m pytest simple_lab_test/search/tests/test_titans_mac_prior_prefix_contract.py simple_lab_test/search/tests/test_count_aware_titans_mac_contract.py simple_lab_test/search/tests/test_count_aware_titantpp_mac_optimization_contract.py simple_lab_test/search/tests/test_titans_stability_model_contract.py simple_lab_test/search/tests/test_count_aware_titan_memory_backbones.py simple_lab_test/search/tests/test_count_aware_model_role_contract.py simple_lab_test/search/tests/test_count_aware_b012_screening_contract.py simple_lab_test/search/tests/test_count_aware_t0_primary_contract.py simple_lab_test/search/tests/test_titans_mac_prior_prefix_cuda_validator.py simple_lab_test/search/tests/test_titans_mac_prior_prefix_launcher.py simple_lab_test/search/tests/test_titans_mac_prior_prefix_comparison.py -q -ra --junitxml=paper/results/titans_mac_prior_prefix_20260905/local_contract_tests.xml
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/fs/__init__.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  __import__("pkg_resources").declare_namespace(__name__)  # type: ignore
+........................................................................ [ 34%]
+..............sss.........................................s............. [ 68%]
+...................................................................      [100%]
+=========================== short test summary info ============================
+SKIPPED [1] simple_lab_test/search/tests/test_titans_mac_prior_prefix_contract.py:942: CUDA parity is opt-in on a GPU host
+SKIPPED [1] simple_lab_test/search/tests/test_titans_mac_prior_prefix_contract.py:965: Compiled parity requires a GPU host
+SKIPPED [1] simple_lab_test/search/tests/test_titans_mac_prior_prefix_contract.py:984: Compiled model integration requires a GPU host
+SKIPPED [1] simple_lab_test/search/tests/test_count_aware_titan_memory_backbones.py:651: CUDA is required
+207 passed, 4 skipped in 8.97s
+
+Exit code: 0
+Source SHA256 captured after tests:
+{
+  "models/TPPs/CountAwareFactory.py": "0ae6799cf4b0a16489f047ad69bdf3c97e89e048e2dd8977122337c203f5206c",
+  "models/TPPs/CountAwareTPP.py": "86ce901c963b9b1c073794b4845aa71e537f46dfa40f27e7f741140a40d3b0ed",
+  "models/Titan/common/titans_mac.py": "75fb9b3266e85cfcd8a5e336d38839cd78f84a22a79b12f785697650a6653844",
+  "models/Titan/common/titans_mac_optimized.py": "3464986d7ef49ba88b7a9703691c1291c7525a2f13c9d0a02b48b7007c408966",
+  "paper/scripts/count_aware_tpp_backbone/constants.py": "7471a2cb0d6145ae388ce8514e7769887101eafba96ace30ade20b7eb19b8fc7",
+  "paper/scripts/count_aware_tpp_backbone/training.py": "06a911ed2e86b1eb1bcadb437d5b9cd4870b13c7b9123e3e44126f403a64b458",
+  "paper/scripts/run_count_aware_tpp_backbone_control.py": "7493d92977504efad81008e1e6d3964b473d15c346f768ed2e5e59984e013654",
+  "simple_lab_test/search/tests/test_count_aware_titan_memory_backbones.py": "e8b5cb5939184344c6214c07c78c572d7ab439a3b73d766e5ded7b6b595ced9b",
+  "models/Titan/common/titans_mac_prior_prefix.py": "ae44cbb323369412559b9ec34c9c9366f1d95a88f404e5acb68ae1c7da0fd4b8",
+  "paper/contracts/titans_mac_prior_prefix_v1.json": "81f874eaf7568c0daf262d2cf49371c425a43352789ba227124d6d0b2152ebf7",
+  "paper/contracts/titans_mac_prior_prefix_v1.md": "de5cacc917475a20dd1df22005262276bfdde757cd1ed0677d6366c8a26d94bb",
+  "paper/scripts/compare_titans_mac_prior_prefix.py": "c4ebfb2a6a04b1745c972c77b7d60311ae32bca5d9162c6990aaaa4b8155f789",
+  "paper/scripts/package_titans_mac_prior_prefix.py": "15489ea944655d95d4bb70e03470d38360148e341cb40dcc03cc210c9ad620c6",
+  "paper/scripts/run_titans_mac_prior_prefix_5090.py": "c1ff96fbb07098969d879feb378705e690a3011354d63f20d8c29d1030ca7416",
+  "paper/scripts/titans_mac_prior_prefix_contract.py": "ec3e644720448d3a515af9543a40348d7d2755288493fcb98a9803461f4a4af9",
+  "paper/scripts/validate_titans_mac_prior_prefix_cuda.py": "7489e264cb384c0bd4f05518784d446d50353c3ba06a3b6a20f740f99280512e",
+  "simple_lab_test/search/tests/test_titans_mac_prior_prefix_comparison.py": "a3ba8257750a332c51a12fb8273ec90ae1bbbdbe7eb8e93e750a5b0e2020ddd0",
+  "simple_lab_test/search/tests/test_titans_mac_prior_prefix_contract.py": "07bd73e14e05db7852bb4ca6f416ad687c71ffbc9914ccf22fefbd7f507e06ee",
+  "simple_lab_test/search/tests/test_titans_mac_prior_prefix_cuda_validator.py": "40bbb0913f1e931d9523250d991275d289384dc2e79b6d59466c7e2b7e751c00",
+  "simple_lab_test/search/tests/test_titans_mac_prior_prefix_launcher.py": "48e60fc6cc7b142e7900a2027318fb0b81a58e3e4edbe199b48ccb01211b32f3",
+  "paper/results/titans_mac_prior_prefix_20260905/frozen_references.json": "c711759398ce403e887cc7a8cdaab56e0187638afa9f3ce02eac8873ced4b9a5"
+}
