@@ -1,0 +1,40 @@
+...............F........................................................ [ 80%]
+.................                                                        [100%]
+=================================== FAILURES ===================================
+_____ test_series_reset_and_batch_permutation_keep_memory_row_independent ______
+
+    def test_series_reset_and_batch_permutation_keep_memory_row_independent():
+        model = encoder()
+        x = inputs(length=19)
+        ids = torch.tensor([11, 22])
+        permutation = torch.tensor([1, 0])
+        with torch.no_grad():
+            output, state, diag = model.forward_with_state(x, series_ids=ids)
+            permuted, perm_state, perm_diag = model.forward_with_state(
+                x[permutation], series_ids=ids[permutation],
+            )
+            continued, continued_state, _ = model.forward_with_state(
+                x[:, :3], state=state, series_ids=torch.tensor([33, 22]),
+            )
+            fresh, fresh_state, _ = model.forward_with_state(
+                x[:, :3], series_ids=torch.tensor([33, 22]),
+            )
+>       assert torch.equal(permuted, output[permutation])
+E       assert False
+E        +  where False = <built-in method equal of type object at 0x75d06df3e180>(tensor([[[-7.0135e-01,  3.1920e-02, -1.8185e-01,  1.0367e+00,  2.7866e-01,\n          -5.8800e-01, -1.2417e+00, -9.0339...  [ 7.2319e-01, -1.9701e+00,  2.5961e-01, -1.0872e+00, -7.3395e-01,\n           4.7144e-01, -1.4875e+00, -1.1960e+00]]]), tensor([[[-7.0135e-01,  3.1920e-02, -1.8185e-01,  1.0367e+00,  2.7866e-01,\n          -5.8800e-01, -1.2417e+00, -9.0339...  [ 7.2319e-01, -1.9701e+00,  2.5961e-01, -1.0872e+00, -7.3395e-01,\n           4.7144e-01, -1.4875e+00, -1.1960e+00]]]))
+E        +    where <built-in method equal of type object at 0x75d06df3e180> = torch.equal
+
+simple_lab_test/search/tests/test_titans_mac_prior_prefix_contract.py:440: AssertionError
+=============================== warnings summary ===============================
+simple_lab_test/search/tests/test_titans_mac_prior_prefix_contract.py: 14 warnings
+  /opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/torch/jit/_script.py:365: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+simple_lab_test/search/tests/test_titans_mac_prior_prefix_contract.py::test_cuda_compiled_fixed_scan_matches_eager_forward_and_gradients
+  /opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/torch/_inductor/compile_fx.py:322: UserWarning: TensorFloat32 tensor cores for float32 matrix multiplication available but not enabled. Consider setting `torch.set_float32_matmul_precision('high')` for better performance.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED simple_lab_test/search/tests/test_titans_mac_prior_prefix_contract.py::test_series_reset_and_batch_permutation_keep_memory_row_independent
+1 failed, 88 passed, 15 warnings in 66.56s (0:01:06)

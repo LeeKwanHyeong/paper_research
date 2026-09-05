@@ -437,11 +437,15 @@ def test_series_reset_and_batch_permutation_keep_memory_row_independent():
         fresh, fresh_state, _ = model.forward_with_state(
             x[:, :3], series_ids=torch.tensor([33, 22]),
         )
-    assert torch.equal(permuted, output[permutation])
+    # CPU batch reordering can change SIMD rounding (also in legacy B1).
+    # Use the already frozen CPU tolerance; legacy replay and reset below
+    # retain their separate bitwise requirements.
+    tolerance = json.loads((ROOT / "paper/contracts/titans_mac_prior_prefix_v1.json").read_text())["numerical_tolerances"]["cpu_prefix_state_read"]
+    torch.testing.assert_close(permuted, output[permutation], **tolerance)
     for left, right in zip(tensors(perm_state), tensors(state), strict=True):
-        assert torch.equal(left, right[permutation])
+        torch.testing.assert_close(left, right[permutation], **tolerance)
     for name in diag:
-        assert torch.equal(perm_diag[name], diag[name][permutation])
+        torch.testing.assert_close(perm_diag[name], diag[name][permutation], **tolerance)
     assert torch.equal(continued[0], fresh[0])
     for left, right in zip(tensors(continued_state), tensors(fresh_state), strict=True):
         assert torch.equal(left[0], right[0])
