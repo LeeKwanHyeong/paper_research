@@ -1,0 +1,135 @@
+{
+  "authorization": {
+    "checkpoint_inference": true,
+    "held_out_test": false,
+    "local_input_extraction_probe_fitting_tests_and_commit": true,
+    "model_parameter_updates": false,
+    "new_backbone_or_candidate_training": false,
+    "push": false,
+    "server_or_5090_access": false,
+    "validation_rows": false
+  },
+  "cohort": {
+    "contexts_per_series": 1,
+    "dataset": "insta_market_basket",
+    "expected_excluded_history_gt32": 11,
+    "expected_kept_rows": 65525,
+    "expected_source_rows": 65536,
+    "fold": "Reuse the frozen series-level fold in selection.pt; no row-level split or reassignment",
+    "outcome_blinding_note": "A J-extreme subset had target errors read by the earlier temporal study, but neither the H<=32 filter nor this raw-vs-h probe comparison uses those outcomes",
+    "prior_diagnostic_exclusion": "All 65536 series were excluded from the earlier target-weighted8192 information-access cohort",
+    "row_filter": "Keep history_length between 3 and 32 inclusive before reading target labels or loading checkpoints",
+    "series_uniqueness_required": true,
+    "source_pool": "The input-only 65536 one-context-per-series pool selected before outcome access by hard_lmm_instacart_balanced_v1",
+    "split": "train"
+  },
+  "contract_id": "hard_lmm_instacart_raw_history_access_v1",
+  "controls": {
+    "constant": "Opposite-fold label mean with zero input dimensions",
+    "history_only64": "Same valid slots as raw64, time coordinate one and quantity coordinate zero; isolates history length/position support",
+    "same_capacity": "raw64, h64, history_only64 and sham64 have the same 64 input dimensions and the same downstream family design size",
+    "sham64": "IID N(0,1) row features, seed20260906, independent of inputs and labels; procedural sanity only"
+  },
+  "created_on": "2026-09-05",
+  "frozen_inputs": {
+    "paper/contracts/count_aware_hard_lmm_frozen_probe_v1.json": "a9430a67f81c5c6a3b2baccd5a0fef425b57b98d3706637f9f3040c909540356",
+    "paper/contracts/hard_lmm_instacart_balanced_v1.json": "d0378dd94802fa60c1061c8976bf2763c48d8ae3515d718878a966633b9c6ce7",
+    "paper/contracts/hard_lmm_query_diagnostic_v1.json": "93216a8183206a4deb62ad5571a2a32caba60dc45df660566ba21a62f7e51206",
+    "paper/results/hard_lmm_instacart_balanced_20260905/design_manifest.json": "bd004a89c7b8d1916457ed5dee7e261beebcb03995150f86986e186037afcda5",
+    "paper/results/hard_lmm_instacart_balanced_20260905/input_gate.json": "a60c14bad715c49a49e838902d30b209f784af585edf21c1726fe76322cce5e8",
+    "paper/results/hard_lmm_key_value_screening_5090_20260904/final_audit.json": "64f9dc05e1edf8bb74a81908c04b79da30fcaa990fad0ce231663fde461599f9",
+    "sample_data/insta_market_basket/instacart_marked_target_with_split.parquet": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+    "search_artifacts/hard_lmm_instacart_balanced_20260905/histories.pt": "d50ea254a224c9d92f2f9fe9bd83647c963e60c5a474c2ec90c709d3cb9b88f6",
+    "search_artifacts/hard_lmm_instacart_balanced_20260905/selection.pt": "ccad9a109b684a1adcb4df6978a7f9d032acad4475d11eeef3bbab4a6c48bd2c"
+  },
+  "input_boundary": {
+    "first_boundary_gap": "Include the first retained event delta_t because it is part of the frozen encoder input",
+    "h64": "Final local encoder state at the last observed event before memory retrieval",
+    "h_dimension": 64,
+    "history_order": "Oldest observed event to latest observed event",
+    "observed_only": "histories.pt contains only events strictly before the selected target; target gap and target quantity are absent",
+    "padding": "Padding values must be zero and are never transformed or treated as observed",
+    "positive_observed_values_required": true,
+    "raw64": "For each complete H<=32 history, right-align 32 event slots and interleave [log1p(delta_t),log1p(quantity)] per slot; unused left slots are exactly zero",
+    "raw_dimension": 64,
+    "target_access_barrier": "Persist and hash the input-only H<=32 row identity, folds and raw64 before reading any selected target quantity or restoring a checkpoint"
+  },
+  "limitations": [
+    "The flattened latest-aligned linear/fixed-random-feature probes are not an oracle for every sequence interaction.",
+    "Equal input and fitted design dimensions do not equalize the functional complexity that produced raw64 and h64.",
+    "Both frozen backbones trained on these train series and were selected using validation, so OOF probe results are conditional accessibility evidence rather than model generalization.",
+    "Positive raw64 superiority can still mix encoder compression, optimization, objective and readout accessibility; it does not prove literal information deletion.",
+    "Failure cannot establish irreducible noise, a defective dataset or impossibility of comprehensive improvement.",
+    "No architecture implementation, 5090 run, seed search, validation inference or held-out test follows automatically."
+  ],
+  "models": {
+    "base_prediction": "softplus(quantity_head(h+r)); log quantity scale",
+    "checkpoint_seed": 42,
+    "frozen_eval": true,
+    "primary": "separate_key",
+    "replication": "original",
+    "state_hash_unchanged_required": true
+  },
+  "primary_decision": {
+    "both_fold_mean_squared_error_differences_strictly_positive": true,
+    "checkpoint_common_encoder_bottleneck": "The complete three-reference condition must also pass for original in both families",
+    "comparison_cells": "2 checkpoints x 2 decoder families x raw64 versus each of constant,history_only64,h64 = 12 fixed cells",
+    "current_encoder_bottleneck": "For separate_key, raw_signal and raw64>h64 must pass in both families",
+    "inconclusive": "Any family, fold, bootstrap, body-direction or sham-guard disagreement withholds a bottleneck claim",
+    "paired_series_bootstrap": {
+      "derivation": "0.05/(2*12) simultaneous conservative lower-tail quantile",
+      "lower_bound_strictly_positive": true,
+      "lower_quantile": 0.0020833333333333333,
+      "repeats": 10000,
+      "resampling": "Resample one-context series within each frozen fold; use identical draws across all fixed cells; fixed OOF errors only",
+      "seed": 20260905
+    },
+    "quantity_guard": "A positive residual-MSE contrast fails if raw64 corrected body MAE is worse than the corresponding reference",
+    "raw_signal": "raw64 must beat constant and history_only64 in both families",
+    "relative_pooled_residual_mse_improvement_minimum": 0.01,
+    "sham_guard": "Invalidate a model/family interpretation if sham64 itself beats constant by the same 1%, fold and bootstrap conditions"
+  },
+  "probe": {
+    "families": [
+      "linear",
+      "random128"
+    ],
+    "folding": "Two-fold OOF; input standardization and fitting use only the opposite series fold",
+    "input_dimension": 64,
+    "linear": "Float64 ridge minimizing SSE+1*sum(slopes^2), unpenalized opposite-fold target-mean intercept",
+    "no_tuning_or_validation_selection": true,
+    "nonlinear": "The same ridge on standardized input64 concatenated with 128 fixed tanh features; W~N(0,1/64), b~N(0,1), seed20260905",
+    "random_seed": 20260905,
+    "random_width": 128,
+    "ridge": 1.0
+  },
+  "reporting": {
+    "corrected_quantity": "clip(base_logpred+predicted_residual,0,20), then expm1",
+    "negative_wording": "The bounded matched-capacity probes did not find accessible raw residual signal missing from h; this is not proof that the data contain no signal or that improvement is impossible",
+    "primary_metric": "Unclipped OOF residual MSE",
+    "secondary_metrics": [
+      "body MAE for target<=25",
+      "overall RMSE",
+      "tail MAE for target>35",
+      "direct log1p quantity OOF MSE",
+      "fold metrics",
+      "clamp counts"
+    ]
+  },
+  "runtime": {
+    "device": "cpu",
+    "inference_batch_size": 128,
+    "numpy_blas_threads": 4,
+    "torch_threads": 4
+  },
+  "schema_version": 1,
+  "scope": "Local frozen train-internal matched-capacity comparison of complete observed raw histories against Hard-LMM encoder h on Instacart series excluded from the earlier target-weighted8192 information-access cohort",
+  "source_baseline_revision": "815f3b3",
+  "targets": {
+    "body_threshold": 25.0,
+    "primary": "model-specific frozen-base residual: log1p(target_quantity)-base_logpred",
+    "secondary": "direct log1p(target_quantity), used only to describe whether raw history carries bounded-probe next-quantity signal",
+    "tail_threshold": 35.0,
+    "target_gap_read": false
+  }
+}

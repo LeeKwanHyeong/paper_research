@@ -1,0 +1,125 @@
+{
+  "audit_completed_at": "2026-09-05T07:54:48.368221+00:00",
+  "auditor": "independent saved-OOF arithmetic and artifact-chain audit",
+  "auditor_script_sha256": "d505cc34e4a66142e542e7f38472f585ae381a41b8d97ef654f8d9ae29b59bfd",
+  "cohort": {
+    "folds": {
+      "0": {
+        "rows": 32657,
+        "series": 32657
+      },
+      "1": {
+        "rows": 32868,
+        "series": 32868
+      }
+    },
+    "history_length_inclusive": [
+      3,
+      32
+    ],
+    "one_context_per_series": true,
+    "rows": 65525
+  },
+  "conclusion": "Raw64 carries direct next-quantity signal but is worse than h64 in both fixed decoder families. It also fails to improve frozen-base residual MSE over h64 or the constant correction. These bounded train-internal probes do not support an encoder information-loss bottleneck.",
+  "decision": {
+    "checkpoint_common_encoder_bottleneck_evidence": false,
+    "classification": "bounded_probes_do_not_establish_missing_accessible_residual_signal",
+    "separate_key_encoder_bottleneck_evidence": false
+  },
+  "key_metrics": {
+    "original": {
+      "linear": {
+        "direct_log_mse": {
+          "constant": 0.485317047611191,
+          "h64": 0.2447235340711141,
+          "raw64": 0.25362011331317774,
+          "raw_gain_vs_constant": 0.477413549428076,
+          "raw_gain_vs_h64": -0.03635359090343302
+        },
+        "frozen_base_residual_mse": {
+          "constant": 0.24479840033621456,
+          "h64": 0.2447053250856693,
+          "raw64": 0.24512275643789144,
+          "raw_gain_vs_constant": -0.001324992733740928,
+          "raw_gain_vs_h64": -0.0017058531606371744
+        }
+      },
+      "random128": {
+        "direct_log_mse": {
+          "constant": 0.485317047611191,
+          "h64": 0.2453957422297784,
+          "raw64": 0.25096947702744926,
+          "raw_gain_vs_constant": 0.4828752085615751,
+          "raw_gain_vs_h64": -0.022713249818539463
+        },
+        "frozen_base_residual_mse": {
+          "constant": 0.24479840033621456,
+          "h64": 0.24537504034671348,
+          "raw64": 0.2464021012369795,
+          "raw_gain_vs_constant": -0.006551108579804322,
+          "raw_gain_vs_h64": -0.004185677927203977
+        }
+      }
+    },
+    "separate_key": {
+      "linear": {
+        "direct_log_mse": {
+          "constant": 0.485317047611191,
+          "h64": 0.2445874355505859,
+          "raw64": 0.25362011331317774,
+          "raw_gain_vs_constant": 0.477413549428076,
+          "raw_gain_vs_h64": -0.03693026071539022
+        },
+        "frozen_base_residual_mse": {
+          "constant": 0.2448563406628782,
+          "h64": 0.24458018223802858,
+          "raw64": 0.24503500153970093,
+          "raw_gain_vs_constant": -0.0007296559130919366,
+          "raw_gain_vs_h64": -0.0018595918013901592
+        }
+      },
+      "random128": {
+        "direct_log_mse": {
+          "constant": 0.485317047611191,
+          "h64": 0.2455144996949643,
+          "raw64": 0.25096947702744926,
+          "raw_gain_vs_constant": 0.4828752085615751,
+          "raw_gain_vs_h64": -0.022218554664846304
+        },
+        "frozen_base_residual_mse": {
+          "constant": 0.2448563406628782,
+          "h64": 0.24551730817609996,
+          "raw64": 0.24626720339415964,
+          "raw_gain_vs_constant": -0.0057620020272374055,
+          "raw_gain_vs_h64": -0.003054347669541128
+        }
+      }
+    }
+  },
+  "limits": [
+    "The audit recomputes saved OOF arithmetic; it does not refit probes or rerun checkpoint inference.",
+    "The negative result is bounded to latest-aligned linear and fixed-random-feature probes.",
+    "Train-internal accessibility does not establish held-out generalization or irreducible noise."
+  ],
+  "passed": true,
+  "reader_artifact_hashes": {
+    "paper/results/hard_lmm_instacart_raw_history_20260905/README.md": "45ffb794aaafa52df2092b6501c57ad68d8b6ff8e9af4095ff6e0a34b275f911",
+    "paper/results/hard_lmm_instacart_raw_history_20260905/build_summary_tables.py": "be4ab35058295af328267c0a5a412d5b1fbb4f0c1fd5d51b8e20b4f5131263a8",
+    "paper/results/hard_lmm_instacart_raw_history_20260905/decoder_metrics.csv": "158fdd1d24eece23ba06043affe70f30e008c37ae5f354eebfe434a84172eed3",
+    "paper/results/hard_lmm_instacart_raw_history_20260905/pytest.xml": "9a81a9c00d46e83543f24e74fb6b76968df854df14dd99f40e42b65bd6bf1ab2",
+    "paper/results/hard_lmm_instacart_raw_history_20260905/raw64_comparisons.csv": "40a46fea675debd39d8ea14a1f77b03bbc112444ee826c33cc85fa79baed262c"
+  },
+  "verified_artifact_hashes": {
+    "paper/contracts/hard_lmm_instacart_raw_history_access_v1.json": "13fee162f4cdf3605719d6433862949ee3f7a9dd509b2e818ff4a244281b6ad2",
+    "paper/results/hard_lmm_instacart_raw_history_20260905/analysis.json": "3f3543ba4447e148d81fd2c28ff835238be2f9fa7557a3c228b41a4cc2e42007",
+    "paper/results/hard_lmm_instacart_raw_history_20260905/evidence_decision.json": "3ce47a5d5a096e0e0b1810e81fa5412e85726396428bff09cd436567b71e30c5",
+    "paper/results/hard_lmm_instacart_raw_history_20260905/input_manifest.json": "19100b0238cc5b1564e34a5a609b6e0fb4e5de1582c5c3c76de59662f6d18ad6",
+    "search_artifacts/count_aware_instacart_t0_e300_20260824_recovery1/insta_market_basket/t0_common_control/runs/titantpp/count_only_log_regression/seed_42/best_val_joint_objective_model.pt": "c99a59417b34b6712fdc5d733ea8a3565d554f9efe07ddee8fb97fa68d607888",
+    "search_artifacts/hard_lmm_instacart_raw_history_20260905/input_cache.pt": "a1540ba13293465803e1f324ee198a68d7125859333bac2fd2e919e6dfa94b30",
+    "search_artifacts/hard_lmm_instacart_raw_history_20260905/oof_predictions.npz": "d531da44ea6581707fc8df0a171b403fa927bb7a16185d2c3e13ddc6dd00c843",
+    "search_artifacts/hard_lmm_instacart_raw_history_20260905/probe_cache.pt": "d8261cb871b86c76eb692d224a581c554f5ed6528e1be17f8e2a0bcd8e7d4f95",
+    "search_artifacts/hard_lmm_key_value_seed42_e300_5090_20260904/insta_market_basket/runs/titantpp_key_value_static_memory/count_only_log_regression/seed_42/best_val_joint_objective_model.pt": "d20e0c1a3c89f7c69f977875543c8226b2cd2477a46126ee5c66ea96dbcbe72e"
+  },
+  "verified_bootstrap_cells": 16,
+  "verified_oof_metric_cells": 40
+}
