@@ -34,3 +34,23 @@ Seed42의 1–3이 모두 통과해야 seeds52/62로 확장한다. e1은 정상 
 - 각 비용 행을 독립 subprocess에서 측정해 프로세스 종료로 다음 행과 완전히 분리하도록 보강한다. 기준·횟수·모델·성능 계약은 동일하다. `attempt_a2fda0e_cuda/`에 원본 증거를 보존한다. e1·screening·held-out은 미실행이다.
 
 - 비용 측정 subprocess 격리 구현 후 validator38 + launcher28 = 66 tests passed, 0 skipped (`local_cost_isolation_tests.xml`, `local_cost_isolation_validation.json`). 각 worker의 source/contract hash·PID·시작 allocation0·정상 종료를 확인한 후만 비용 gate를 계산한다.
+
+## CUDA 통과 — source add02ba
+
+- `cuda_add02ba/status.json`: 89 mandatory tests passed, 0 skipped; source·contract·data·Runtime 검증 및 9개 독립 측정 행 완료. 비용 gate PASS.
+- `cuda_add02ba/cuda_audit.json.workers/`는 각 fresh worker의 source/contract/hash/PID·측정 결과를 보존한다.
+
+| H | 후보/B1 step | 후보/B1 peak allocation | 후보 peak GiB | 후보/T0 step |
+|---:|---:|---:|---:|---:|
+| 16 | 1.5501 | 1.2092 | 1.1704 | 6.7610 |
+| 64 | 1.3932 | 1.0550 | 2.4670 | 17.0950 |
+| 255 | 1.2737 | 1.0341 | 7.7058 | 22.1338 |
+
+표는 표시용 반올림이며 gate는 JSON 원수치로 판단했다. T0 대비 6.76–22.13배 step 비용은 material limitation이다. 이번 incremental B1 비용 gate 통과를 T0 수준 효율이나 성능 채택으로 표현하지 않는다. 실제 데이터 e1·screening은 별도 phase proof가 필요하다.
+
+## 승인된 후속 학습의 유한 실행
+
+- `run_approved_training_phases.py`는 frozen source add02ba 밖에 두는 제어 스크립트다. 소스·manifest·contract·launcher hash를 고정하며 실제 model code를 수정하지 않는다.
+- CUDA proof → e1 6 runs → 정상 감사 통과 시 screening 6 runs → 공통 성능 gate 통과 시 confirm 12 runs를 한 번만 실행한다. 각 phase는 기존 frozen launcher를 명시 호출한다. Screening 미달은 정상 분석 완료로 기록하고 confirm을 시작하지 않는다.
+- `local_training_controller_tests.xml`: 21 passed / 0 skipped. 순서·proof/hash·완전 paired grid·성능 미달 중단·실제 별도 process group 종료를 검증했다.
+- 별도 예약 작업이나 서비스가 아니며 retry/resume/overwrite를 하지 않는다. 실행 상태는 remote `outputs/full_validation/status.json`과 각 phase status에 남긴다.

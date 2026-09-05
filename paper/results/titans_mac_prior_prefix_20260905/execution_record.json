@@ -1,12 +1,12 @@
 {
-  "status": "CUDA_CORRECTNESS_PASS_COST_ISOLATION_FIX_PENDING",
-  "recorded_at": "2026-09-05T11:15:14.559152+00:00",
-  "source_revision": "a2fda0efe23e8c77e0c9333f64da3b9853e09bc5",
+  "status": "CUDA_PASS_E1_READY",
+  "recorded_at": "2026-09-05T11:29:56.400526+00:00",
+  "source_revision": "add02baae27c25da02008873c578f11926f8d125",
   "branch": "codex/b1-prior-prefix-read",
   "remote": "5090",
-  "source_root": "/home/leekwanhyeong/workspace/paper_research_prior_prefix_a2fda0e_5090",
-  "package_sha256": "cbe49da3538e1ccf7e2c777aa9c76fd30d90d2dc58b3cace44b670b3b83ff50c",
-  "source_manifest_sha256": "df3418c8599c1caddb403f542a9965dcfe35515702ce3fa0fa59913fc171ed9e",
+  "source_root": "/home/leekwanhyeong/workspace/paper_research_prior_prefix_add02ba_5090",
+  "package_sha256": "16fd0b8bda3e0631857b747b14f9d21f6caf36c39803fbd0fe3af05c3dc364f4",
+  "source_manifest_sha256": "62ad41b97ea73cfab82b00f0f93ad2689cb50ac4e2a6066bd4b6a469f5d20d3c",
   "contract_sha256": "81f874eaf7568c0daf262d2cf49371c425a43352789ba227124d6d0b2152ebf7",
   "verified_source_files": 389,
   "local_tests": {
@@ -14,7 +14,7 @@
     "cuda_skipped": 4,
     "failures": 0
   },
-  "tmux_session": "prior_prefix_cuda_a2fda0e",
+  "tmux_session": "prior_prefix_cuda_add02ba",
   "e1_started": false,
   "screening_started": false,
   "held_out_test_evaluated": false,
@@ -37,6 +37,70 @@
       "cost_measurement_completed": false,
       "failure": "cuBLAS workspace survives tensor cleanup, so the next model could not start from zero allocated memory",
       "evidence": "attempt_a2fda0e_cuda"
+    }
+  ],
+  "cuda_tests": {
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "tests": 89,
+    "xml_sha256": "0c7132be01b5535d81bd37e2c77f07b4370aa50f4958c168b8bbb9fd78290415"
+  },
+  "cost_gate_pass": true,
+  "cost_comparisons": [
+    {
+      "history_length": 16,
+      "candidate_to_B1_step_ratio": 1.5500741390278239,
+      "candidate_to_B1_peak_allocated_ratio": 1.2092360473749058,
+      "candidate_to_T0_step_ratio": 6.7609770143030525,
+      "B1_to_T0_step_ratio": 4.361712026589518,
+      "candidate_to_T0_peak_allocated_ratio": 9.640164323950687,
+      "candidate_peak_allocated_bytes": 1256739328,
+      "checks": {
+        "same_B1_initial_parameters": true,
+        "same_synthetic_inputs": true,
+        "step_ratio": true,
+        "peak_allocated_ratio": true,
+        "absolute_peak_allocated": true
+      },
+      "passed": true,
+      "T0_ratios_are_report_only": true
+    },
+    {
+      "history_length": 64,
+      "candidate_to_B1_step_ratio": 1.3932260620462864,
+      "candidate_to_B1_peak_allocated_ratio": 1.05495008087911,
+      "candidate_to_T0_step_ratio": 17.09499275101755,
+      "B1_to_T0_step_ratio": 12.270078213947171,
+      "candidate_to_T0_peak_allocated_ratio": 8.057964716858002,
+      "candidate_peak_allocated_bytes": 2648945152,
+      "checks": {
+        "same_B1_initial_parameters": true,
+        "same_synthetic_inputs": true,
+        "step_ratio": true,
+        "peak_allocated_ratio": true,
+        "absolute_peak_allocated": true
+      },
+      "passed": true,
+      "T0_ratios_are_report_only": true
+    },
+    {
+      "history_length": 255,
+      "candidate_to_B1_step_ratio": 1.2736542658686212,
+      "candidate_to_B1_peak_allocated_ratio": 1.0341020776580205,
+      "candidate_to_T0_step_ratio": 22.133828196963897,
+      "B1_to_T0_step_ratio": 17.378207563941082,
+      "candidate_to_T0_peak_allocated_ratio": 5.395053365694388,
+      "candidate_peak_allocated_bytes": 8274012672,
+      "checks": {
+        "same_B1_initial_parameters": true,
+        "same_synthetic_inputs": true,
+        "step_ratio": true,
+        "peak_allocated_ratio": true,
+        "absolute_peak_allocated": true
+      },
+      "passed": true,
+      "T0_ratios_are_report_only": true
     }
   ]
 }

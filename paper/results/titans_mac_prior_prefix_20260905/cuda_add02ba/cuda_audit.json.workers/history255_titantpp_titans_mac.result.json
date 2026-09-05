@@ -1,0 +1,525 @@
+{
+  "status": "PASS",
+  "source_revision": "add02baae27c25da02008873c578f11926f8d125",
+  "contract_sha256": "81f874eaf7568c0daf262d2cf49371c425a43352789ba227124d6d0b2152ebf7",
+  "device": "cuda",
+  "cuda_available": true,
+  "checks": {
+    "source_revision_binding": true,
+    "contract_hash_binding": true,
+    "source_hash_binding": true,
+    "parent_process_binding": true,
+    "benchmark_row_contract": true,
+    "python_version": true,
+    "torch_version": true,
+    "cuda_version": true,
+    "polars_version": true,
+    "cuda_available": true,
+    "device_is_5090": true,
+    "minimum_free_memory": true,
+    "execution_completed": true
+  },
+  "benchmark_row": {
+    "backbone": "titantpp_titans_mac",
+    "history_length": 255,
+    "sequence_length": 256,
+    "batch_size": 128,
+    "allocated_before_model_bytes": 0,
+    "initial_parameter_sha256": "d4861b3ffa32ff19d7a408b5ec890b3750bdf1a57b3602919804a9348c16afb4",
+    "parameter_count": 122246,
+    "input_sha256": "1bc395687276e6f640483accfab768cb0507d5478efc1296889d6b5c48d091b3",
+    "execution_backend": "optimized_compiled_cuda",
+    "warmup_steps_completed": 3,
+    "measured_steps_completed": 10,
+    "step_seconds": [
+      0.17608760204166174,
+      0.17713289987295866,
+      0.1764987730421126,
+      0.17632034211419523,
+      0.17814373807050288,
+      0.17726015811786056,
+      0.1822196610737592,
+      0.1810155939310789,
+      0.17705903900787234,
+      0.17678325599990785
+    ],
+    "step_telemetry": [
+      {
+        "joint_loss": 2.153240919113159,
+        "pre_clip_gradient_norm": 1.2133784294128418
+      },
+      {
+        "joint_loss": 2.159464120864868,
+        "pre_clip_gradient_norm": 1.992114543914795
+      },
+      {
+        "joint_loss": 2.1676344871520996,
+        "pre_clip_gradient_norm": 2.5884361267089844
+      },
+      {
+        "joint_loss": 2.16685152053833,
+        "pre_clip_gradient_norm": 2.6129586696624756
+      },
+      {
+        "joint_loss": 2.159803867340088,
+        "pre_clip_gradient_norm": 2.09188175201416
+      },
+      {
+        "joint_loss": 2.150632381439209,
+        "pre_clip_gradient_norm": 1.3272498846054077
+      },
+      {
+        "joint_loss": 2.1500744819641113,
+        "pre_clip_gradient_norm": 0.7204383611679077
+      },
+      {
+        "joint_loss": 2.1496787071228027,
+        "pre_clip_gradient_norm": 0.9116755127906799
+      },
+      {
+        "joint_loss": 2.152012586593628,
+        "pre_clip_gradient_norm": 1.2376272678375244
+      },
+      {
+        "joint_loss": 2.1503772735595703,
+        "pre_clip_gradient_norm": 1.3314484357833862
+      }
+    ],
+    "cold_compile_and_first_step_seconds": 46.94497709302232,
+    "cold_step_telemetry": {
+      "joint_loss": 2.583622932434082,
+      "pre_clip_gradient_norm": 11.456835746765137
+    },
+    "cold_peak_allocated_bytes": 7966604800,
+    "cold_peak_reserved_bytes": 8115978240,
+    "compile_time_note": "Cold wall includes the first training step; it is excluded from warmup and measured timings.",
+    "compiler_timing_metrics_seconds": {
+      "_compile.compile_inner": [
+        11.475440669,
+        10.87640465
+      ],
+      "compile_attempt_0": [
+        11.448354039,
+        10.854958858
+      ],
+      "bytecode_tracing": [
+        0.687818561,
+        0.562224106
+      ],
+      "get_fake_value": [
+        0.39662533,
+        0.296316624
+      ],
+      "create_proxy": [
+        0.074651852,
+        0.069083422
+      ],
+      "wrap_to_fake_tensor_and_record": [
+        0.011030388,
+        0.012866075
+      ],
+      "variable_builder_call": [
+        0.031336641,
+        0.015755252
+      ],
+      "insert_deferred_runtime_asserts": [
+        0.110816113,
+        0.024419979
+      ],
+      "OutputGraph.call_user_compiler": [
+        10.643973018,
+        10.263897134
+      ],
+      "inductor_codecache_torch_key": [
+        0.039642801
+      ],
+      "_recursive_pre_grad_passes": [
+        0.00655431,
+        0.004814467
+      ],
+      "pass.pre_grad_passes.group_batch_fusion_passes": [
+        1.7247e-05,
+        1.5863e-05
+      ],
+      "pass.pre_grad_passes.efficient_conv_bn_eval_pass": [
+        0.000884539,
+        0.000938118
+      ],
+      "pass.pre_grad_passes.apply_gumbel_max_trick_pass": [
+        1.385e-05,
+        1.1807e-05
+      ],
+      "create_aot_dispatcher_function": [
+        10.421526838,
+        10.19776572
+      ],
+      "aot_collect_metadata": [
+        0.610022725,
+        0.507820736
+      ],
+      "aot_trace_joint_graph": [
+        2.250053331,
+        2.378017757
+      ],
+      "_recursive_joint_graph_passes": [
+        0.558253408,
+        0.469760189
+      ],
+      "pass.joint_graph_passes.remove_noop_ops": [
+        0.01807315,
+        0.017080249
+      ],
+      "pass.joint_graph_passes.constant_fold_uniform_value": [
+        0.131541831,
+        0.134842029
+      ],
+      "pass.joint_graph_passes.pass_pattern_0": [
+        0.25867616,
+        0.259052963
+      ],
+      "pass.joint_graph_passes.pass_pattern_1": [
+        0.006673431,
+        0.006617509
+      ],
+      "min_cut_rematerialization_partition": [
+        0.94024997,
+        0.832415711
+      ],
+      "compile_fx.<locals>.fw_compiler_base": [
+        5.87882211,
+        5.819543705
+      ],
+      "compile_fx_inner": [
+        5.878617757,
+        5.819331001,
+        10.17523258,
+        9.473891236
+      ],
+      "fx_codegen_and_compile": [
+        5.872028569,
+        5.812877579,
+        10.158882338,
+        9.456124207
+      ],
+      "additional_fake_tensor_prop": [
+        0.173753956,
+        0.165362855,
+        0.346705276,
+        0.33033989
+      ],
+      "_recursive_post_grad_passes": [
+        0.049526657,
+        0.043217259,
+        0.211253856,
+        0.199015138
+      ],
+      "pass.post_grad_passes.remove_profiler_ops": [
+        0.00015704,
+        0.000162569,
+        0.000348134,
+        0.00032059
+      ],
+      "pass.post_grad_passes.post_grad_custom_pre_pass": [
+        1.8425e-05,
+        1.1516e-05,
+        1.2199e-05,
+        1.2472e-05
+      ],
+      "pass.post_grad_passes.remove_noop_ops": [
+        0.002005169,
+        0.001975065,
+        0.000461599,
+        0.000440201
+      ],
+      "pass.post_grad_passes.remove_assert_ops": [
+        1.135e-05,
+        1.2027e-05,
+        9.05e-06,
+        8.72e-06
+      ],
+      "pass.post_grad_passes.pass_pattern_0": [
+        6.095e-06,
+        6.147e-06,
+        5.222e-06,
+        4.937e-06
+      ],
+      "pass.post_grad_passes.pass_pattern_1": [
+        0.025109723,
+        0.025412381,
+        0.059154769,
+        0.057353212
+      ],
+      "pass.post_grad_passes.pass_pattern_2": [
+        0.003128072,
+        0.003215852,
+        0.01026818,
+        0.009928801
+      ],
+      "pass.post_grad_passes.stable_sort": [
+        0.000906364,
+        0.000887674,
+        0.002052572,
+        0.001871354
+      ],
+      "pass.post_grad_passes.move_constructors_to_cuda": [
+        0.000992676,
+        0.000963937,
+        0.002317866,
+        0.002071602
+      ],
+      "pass.post_grad_passes.reinplace_inplaceable_ops": [
+        0.006376215,
+        0.006362443,
+        0.066886317,
+        0.060132182
+      ],
+      "pass.post_grad_passes.decompose_triton_kernel_wrapper_functional": [
+        3.2773e-05,
+        3.4887e-05,
+        4.1462e-05,
+        4.1787e-05
+      ],
+      "pass.post_grad_passes.decompose_auto_functionalized": [
+        0.001082264,
+        0.001078582,
+        0.00300471,
+        0.002674636
+      ],
+      "pass.post_grad_passes.decompose_scan_to_while_loop": [
+        2.4712e-05,
+        2.1932e-05,
+        2.4976e-05,
+        2.661e-05
+      ],
+      "pass.post_grad_passes.decompose_map_to_while_loop": [
+        1.6632e-05,
+        1.5732e-05,
+        1.5387e-05,
+        1.8563e-05
+      ],
+      "GraphLowering.run": [
+        0.83564999,
+        1.155545112,
+        1.542406137,
+        1.96942967
+      ],
+      "GraphLowering.compile_to_fn": [
+        4.667202526,
+        4.31927854,
+        7.677790341,
+        6.678901466
+      ],
+      "GraphLowering.compile_to_module": [
+        4.667133529,
+        4.319208714,
+        7.677759333,
+        6.678869751
+      ],
+      "GraphLowering.codegen": [
+        4.591510917,
+        4.254983752,
+        7.402442368,
+        6.588578793
+      ],
+      "Scheduler.__init__": [
+        2.243715673,
+        1.999489249,
+        3.950040522,
+        3.362056501
+      ],
+      "Scheduler.fused_nodes": [
+        1.501067706,
+        1.516213396,
+        2.926292015,
+        2.792892222
+      ],
+      "Scheduler.codegen": [
+        2.302971667,
+        2.210273201,
+        3.371676178,
+        3.154088165
+      ],
+      "PythonWrapperCodegen.generate": [
+        0.04377699,
+        0.044629994,
+        0.075584739,
+        0.067344248
+      ],
+      "PyCodeCache.load_by_key_path": [
+        0.072576833,
+        0.062341479,
+        0.271847254,
+        0.087194904
+      ],
+      "async_compile.wait": [
+        0.055374107,
+        0.049296383,
+        0.243519124,
+        0.063430358
+      ],
+      "TritonBundler.collect": [
+        0.016535061,
+        0.007777967,
+        0.055219813,
+        0.018895163
+      ],
+      "build_guards": [
+        0.017787881,
+        0.018090839
+      ],
+      "gc": [
+        0.000120849,
+        0.000510295
+      ],
+      "CachingAutotuner.benchmark_all_configs": [
+        0.031340047,
+        0.025850778,
+        0.031053993,
+        0.027030358,
+        0.031123883,
+        0.025739976,
+        0.031126014,
+        0.025775177,
+        0.031165721,
+        0.025769709,
+        0.031153387,
+        0.025559271,
+        0.030932882,
+        0.025670542,
+        0.031194099,
+        0.025831791,
+        0.031004957,
+        0.025745239,
+        0.030949192,
+        0.025779485,
+        0.03124855,
+        0.025729141,
+        0.031019767,
+        0.025773892,
+        0.031112866,
+        0.025761167,
+        0.031177299,
+        0.025778133,
+        0.03097961,
+        0.025849077,
+        0.031028531,
+        0.025670338,
+        0.025711768,
+        0.040038725,
+        0.041880975,
+        0.026771263,
+        0.085707791,
+        0.040102407,
+        0.039956022,
+        0.079433909,
+        0.026298076,
+        0.041118779,
+        0.027293034,
+        0.085881334,
+        0.040088909,
+        0.079544727,
+        0.039974693,
+        0.026317066,
+        0.041066882,
+        0.027252548,
+        0.085908893,
+        0.040064007,
+        0.079264515,
+        0.039957109,
+        0.026306518,
+        0.041089421,
+        0.027222529,
+        0.08603084,
+        0.040041485,
+        0.079320294,
+        0.040077584,
+        0.026237222,
+        0.041108767,
+        0.027307094,
+        0.086185875,
+        0.040058394,
+        0.079514386,
+        0.040077259,
+        0.026337561,
+        0.041097421,
+        0.027201345,
+        0.08610713,
+        0.040038268,
+        0.079655369,
+        0.040104722,
+        0.026302404,
+        0.041168669,
+        0.02730196,
+        0.085708504,
+        0.04011057,
+        0.079453826,
+        0.040163337,
+        0.041134971,
+        0.027245053,
+        0.086305269,
+        0.039944467,
+        0.079546472,
+        0.027645529,
+        0.041265655,
+        0.084602051
+      ],
+      "backward._backward_impl": [
+        10.333606867,
+        9.617980618
+      ],
+      "compile_fx.<locals>.bw_compiler": [
+        10.175644217,
+        9.474234562
+      ]
+    },
+    "warmup_step_seconds": [
+      0.1798913599923253,
+      0.17689373902976513,
+      0.17614069301635027
+    ],
+    "warmup_peak_allocated_bytes": 8001156608,
+    "measured_peak_allocated_bytes": 8001156608,
+    "measured_peak_reserved_bytes": 8118075392,
+    "peak_allocated_bytes": 8001156608,
+    "median_step_seconds": 0.1770959694404155,
+    "finite_steps": true,
+    "parameters_finite": true,
+    "quantity_head_opened": true,
+    "allocated_after_cleanup_bytes": 68157440
+  },
+  "worker_pid": 4115309,
+  "worker_parent_pid": 4111181,
+  "measurement_isolation": "fresh_subprocess",
+  "held_out_test_evaluated": false,
+  "real_data_used": false,
+  "checkpoint_loaded": false,
+  "source_file_sha256": {
+    "models/TPPs/CountAwareFactory.py": "0ae6799cf4b0a16489f047ad69bdf3c97e89e048e2dd8977122337c203f5206c",
+    "models/TPPs/CountAwareTPP.py": "86ce901c963b9b1c073794b4845aa71e537f46dfa40f27e7f741140a40d3b0ed",
+    "models/Titan/common/titans_mac.py": "75fb9b3266e85cfcd8a5e336d38839cd78f84a22a79b12f785697650a6653844",
+    "models/Titan/common/titans_mac_prior_prefix.py": "ae44cbb323369412559b9ec34c9c9366f1d95a88f404e5acb68ae1c7da0fd4b8",
+    "models/Titan/common/titans_mac_optimized.py": "3464986d7ef49ba88b7a9703691c1291c7525a2f13c9d0a02b48b7007c408966",
+    "models/Titan/common/titans_memory_stability.py": "d7681b65e65f239377d174596b970d5509de075a9f03a5d34c001c7801031e86",
+    "paper/scripts/count_aware_tpp_backbone/core.py": "025dfbe75a5a4e235466807f31873aa085f8ddffe680485fb4b9f4f7ef60c598",
+    "paper/scripts/validate_titans_mac_prior_prefix_cuda.py": "d6b83a12bbb10eefe900d640ea87a720b5b2731dde8071cf3216275db140bdb4"
+  },
+  "runtime": {
+    "python": "3.12.13",
+    "torch": "2.11.0+cu130",
+    "cuda": "13.0",
+    "polars": "1.39.3",
+    "cuda_available": true,
+    "device_name": "NVIDIA GeForce RTX 5090",
+    "free_bytes": 32611041280,
+    "total_bytes": 33670758400,
+    "capability": [
+      12,
+      0
+    ]
+  },
+  "dynamo_policy": {
+    "recompile_limit": 64,
+    "accumulated_recompile_limit": 512,
+    "suppress_errors": false
+  }
+}

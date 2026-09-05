@@ -1,0 +1,660 @@
+{
+  "status": "PASS",
+  "source_revision": "add02baae27c25da02008873c578f11926f8d125",
+  "contract_sha256": "81f874eaf7568c0daf262d2cf49371c425a43352789ba227124d6d0b2152ebf7",
+  "device": "cuda",
+  "cuda_available": true,
+  "checks": {
+    "source_revision_binding": true,
+    "contract_hash_binding": true,
+    "source_hash_binding": true,
+    "parent_process_binding": true,
+    "benchmark_row_contract": true,
+    "python_version": true,
+    "torch_version": true,
+    "cuda_version": true,
+    "polars_version": true,
+    "cuda_available": true,
+    "device_is_5090": true,
+    "minimum_free_memory": true,
+    "execution_completed": true
+  },
+  "benchmark_row": {
+    "backbone": "titantpp_titans_mac_prior_prefix",
+    "history_length": 16,
+    "sequence_length": 17,
+    "batch_size": 128,
+    "allocated_before_model_bytes": 0,
+    "initial_parameter_sha256": "d4861b3ffa32ff19d7a408b5ec890b3750bdf1a57b3602919804a9348c16afb4",
+    "parameter_count": 122246,
+    "input_sha256": "1f6780bdaf380b750beaa75b98a92262ec84ae6db61d40525e83b06dd0961db9",
+    "execution_backend": "optimized_compiled_cuda",
+    "warmup_steps_completed": 3,
+    "measured_steps_completed": 10,
+    "step_seconds": [
+      0.029756393050774932,
+      0.029831688851118088,
+      0.029696721816435456,
+      0.029724459163844585,
+      0.029557023895904422,
+      0.029383376939222217,
+      0.02963258302770555,
+      0.029855383094400167,
+      0.029559758957475424,
+      0.029561383882537484
+    ],
+    "step_telemetry": [
+      {
+        "joint_loss": 2.1471519470214844,
+        "pre_clip_gradient_norm": 3.044748067855835
+      },
+      {
+        "joint_loss": 2.1368906497955322,
+        "pre_clip_gradient_norm": 2.040950298309326
+      },
+      {
+        "joint_loss": 2.1572628021240234,
+        "pre_clip_gradient_norm": 3.5093395709991455
+      },
+      {
+        "joint_loss": 2.166375160217285,
+        "pre_clip_gradient_norm": 4.560248851776123
+      },
+      {
+        "joint_loss": 2.157999038696289,
+        "pre_clip_gradient_norm": 4.249495983123779
+      },
+      {
+        "joint_loss": 2.1429567337036133,
+        "pre_clip_gradient_norm": 3.017104387283325
+      },
+      {
+        "joint_loss": 2.1317334175109863,
+        "pre_clip_gradient_norm": 1.317050814628601
+      },
+      {
+        "joint_loss": 2.1320369243621826,
+        "pre_clip_gradient_norm": 1.0319489240646362
+      },
+      {
+        "joint_loss": 2.1342649459838867,
+        "pre_clip_gradient_norm": 1.470619559288025
+      },
+      {
+        "joint_loss": 2.1332180500030518,
+        "pre_clip_gradient_norm": 1.4761346578598022
+      }
+    ],
+    "cold_compile_and_first_step_seconds": 67.71119374292903,
+    "cold_step_telemetry": {
+      "joint_loss": 2.769230842590332,
+      "pre_clip_gradient_norm": 14.602957725524902
+    },
+    "cold_peak_allocated_bytes": 1256739328,
+    "cold_peak_reserved_bytes": 1289748480,
+    "compile_time_note": "Cold wall includes the first training step; it is excluded from warmup and measured timings.",
+    "compiler_timing_metrics_seconds": {
+      "_compile.compile_inner": [
+        14.716207234,
+        14.113745083
+      ],
+      "compile_attempt_0": [
+        14.688381166,
+        14.092339583
+      ],
+      "bytecode_tracing": [
+        0.929102137,
+        0.671429389
+      ],
+      "get_fake_value": [
+        0.589943071,
+        0.364421811
+      ],
+      "create_proxy": [
+        0.087299511,
+        0.08119524
+      ],
+      "wrap_to_fake_tensor_and_record": [
+        0.013599333,
+        0.011341019
+      ],
+      "variable_builder_call": [
+        0.035338047,
+        0.01479514
+      ],
+      "insert_deferred_runtime_asserts": [
+        0.031292516,
+        0.029042257
+      ],
+      "OutputGraph.call_user_compiler": [
+        13.720543085,
+        13.386603806
+      ],
+      "inductor_codecache_torch_key": [
+        0.039636024
+      ],
+      "_recursive_pre_grad_passes": [
+        0.00798454,
+        0.005694902
+      ],
+      "pass.pre_grad_passes.group_batch_fusion_passes": [
+        1.8603e-05,
+        1.5828e-05
+      ],
+      "pass.pre_grad_passes.efficient_conv_bn_eval_pass": [
+        0.001180272,
+        0.001090063
+      ],
+      "pass.pre_grad_passes.apply_gumbel_max_trick_pass": [
+        1.4767e-05,
+        1.3169e-05
+      ],
+      "create_aot_dispatcher_function": [
+        13.468248957,
+        13.302098901
+      ],
+      "aot_collect_metadata": [
+        0.734074185,
+        0.597823817
+      ],
+      "aot_trace_joint_graph": [
+        2.830161159,
+        3.020205972
+      ],
+      "_recursive_joint_graph_passes": [
+        1.100174586,
+        0.895355784
+      ],
+      "pass.joint_graph_passes.remove_noop_ops": [
+        0.029840553,
+        0.030247597
+      ],
+      "pass.joint_graph_passes.constant_fold_uniform_value": [
+        0.266515104,
+        0.281917772
+      ],
+      "pass.joint_graph_passes.pass_pattern_0": [
+        0.486943917,
+        0.496740702
+      ],
+      "pass.joint_graph_passes.pass_pattern_1": [
+        0.008216952,
+        0.008400782
+      ],
+      "min_cut_rematerialization_partition": [
+        1.207425757,
+        1.415437225
+      ],
+      "compile_fx.<locals>.fw_compiler_base": [
+        7.281412375,
+        7.047056266
+      ],
+      "compile_fx_inner": [
+        7.281187072,
+        7.046814689,
+        13.714414672,
+        14.10768361
+      ],
+      "fx_codegen_and_compile": [
+        7.272044999,
+        7.037448765,
+        13.692737506,
+        13.353065873
+      ],
+      "additional_fake_tensor_prop": [
+        0.233597227,
+        0.234551349,
+        0.440638097,
+        0.42943591
+      ],
+      "_recursive_post_grad_passes": [
+        0.062545357,
+        0.057225541,
+        0.266672405,
+        0.266370011
+      ],
+      "pass.post_grad_passes.remove_profiler_ops": [
+        0.000220625,
+        0.000220016,
+        0.000438793,
+        0.00041231
+      ],
+      "pass.post_grad_passes.post_grad_custom_pre_pass": [
+        1.8748e-05,
+        1.2692e-05,
+        1.3004e-05,
+        1.3236e-05
+      ],
+      "pass.post_grad_passes.remove_noop_ops": [
+        0.002938375,
+        0.002934443,
+        0.001124246,
+        0.001137258
+      ],
+      "pass.post_grad_passes.remove_assert_ops": [
+        1.23e-05,
+        1.2737e-05,
+        9.98e-06,
+        1.1309e-05
+      ],
+      "pass.post_grad_passes.pass_pattern_0": [
+        6.052e-06,
+        6.179e-06,
+        5.544e-06,
+        6.203e-06
+      ],
+      "pass.post_grad_passes.pass_pattern_1": [
+        0.031409311,
+        0.032096028,
+        0.071486435,
+        0.07065908
+      ],
+      "pass.post_grad_passes.pass_pattern_2": [
+        0.004135,
+        0.004190448,
+        0.012609219,
+        0.012395782
+      ],
+      "pass.post_grad_passes.stable_sort": [
+        0.001285681,
+        0.001275637,
+        0.002679152,
+        0.002567303
+      ],
+      "pass.post_grad_passes.move_constructors_to_cuda": [
+        0.001313736,
+        0.001351428,
+        0.002905315,
+        0.002882992
+      ],
+      "pass.post_grad_passes.reinplace_inplaceable_ops": [
+        0.008798744,
+        0.009136071,
+        0.090502111,
+        0.083536718
+      ],
+      "pass.post_grad_passes.decompose_triton_kernel_wrapper_functional": [
+        3.3914e-05,
+        3.7542e-05,
+        4.72e-05,
+        4.36e-05
+      ],
+      "pass.post_grad_passes.decompose_auto_functionalized": [
+        0.001556363,
+        0.00156065,
+        0.004181345,
+        0.00388091
+      ],
+      "pass.post_grad_passes.decompose_scan_to_while_loop": [
+        2.5022e-05,
+        2.2778e-05,
+        2.7349e-05,
+        2.8833e-05
+      ],
+      "pass.post_grad_passes.decompose_map_to_while_loop": [
+        1.7113e-05,
+        1.5937e-05,
+        1.6481e-05,
+        1.5731e-05
+      ],
+      "GraphLowering.run": [
+        1.044099628,
+        0.987558849,
+        2.305542138,
+        1.827406742
+      ],
+      "GraphLowering.compile_to_fn": [
+        5.72523736,
+        5.550473837,
+        10.220061279,
+        10.372676261
+      ],
+      "GraphLowering.compile_to_module": [
+        5.725030495,
+        5.550270803,
+        10.220030127,
+        10.372646219
+      ],
+      "GraphLowering.codegen": [
+        5.558557252,
+        5.35251241,
+        8.460800385,
+        8.574684595
+      ],
+      "Scheduler.__init__": [
+        2.786943271,
+        3.035216939,
+        4.837898947,
+        4.964201895
+      ],
+      "Scheduler.fused_nodes": [
+        1.92653321,
+        2.48663618,
+        3.723033973,
+        3.737864512
+      ],
+      "Scheduler.codegen": [
+        2.705479817,
+        2.25443927,
+        3.518775419,
+        3.509758724
+      ],
+      "PythonWrapperCodegen.generate": [
+        0.0649325,
+        0.062237035,
+        0.098235759,
+        0.094742888
+      ],
+      "PyCodeCache.load_by_key_path": [
+        0.163732929,
+        0.194130437,
+        1.755224625,
+        1.791052871
+      ],
+      "async_compile.wait": [
+        0.143502506,
+        0.175210287,
+        1.726443536,
+        1.758427498
+      ],
+      "TritonBundler.collect": [
+        0.0247251,
+        0.015511794,
+        0.056574338,
+        0.053827976
+      ],
+      "build_guards": [
+        0.017972118,
+        0.017967142
+      ],
+      "gc": [
+        0.000251146,
+        0.000145714
+      ],
+      "CachingAutotuner.benchmark_all_configs": [
+        0.026219144,
+        0.039041484,
+        0.038751874,
+        0.02645324,
+        0.026087413,
+        0.026930604,
+        0.026462072,
+        0.030832198,
+        0.026312637,
+        0.026023503,
+        0.030889745,
+        0.026169464,
+        0.025850142,
+        0.030973333,
+        0.026148067,
+        0.025907803,
+        0.030781231,
+        0.026191611,
+        0.02595792,
+        0.030850988,
+        0.026327213,
+        0.026067428,
+        0.030970742,
+        0.026122923,
+        0.025897111,
+        0.030839324,
+        0.026147347,
+        0.025980433,
+        0.031053267,
+        0.026267997,
+        0.026080379,
+        0.031009368,
+        0.026210873,
+        0.025964368,
+        0.030858594,
+        0.02619941,
+        0.025947756,
+        0.030791825,
+        0.026182706,
+        0.026063274,
+        0.030815657,
+        0.026194607,
+        0.025927083,
+        0.031104142,
+        0.026239571,
+        0.025943045,
+        0.030845581,
+        0.025630862,
+        0.025544976,
+        0.025553112,
+        0.063697043,
+        0.025874892,
+        0.026244637,
+        0.039132096,
+        0.026251196,
+        0.02596533,
+        0.027086554,
+        0.026409114,
+        0.030975731,
+        0.026283601,
+        0.026006348,
+        0.031158137,
+        0.026188633,
+        0.025653931,
+        0.031053169,
+        0.026250018,
+        0.025750052,
+        0.031071328,
+        0.026158323,
+        0.025765896,
+        0.031241255,
+        0.026215366,
+        0.025787682,
+        0.031076009,
+        0.026212882,
+        0.025770579,
+        0.031271878,
+        0.026292693,
+        0.02607241,
+        0.031173541,
+        0.026283579,
+        0.025938808,
+        0.031036899,
+        0.02629196,
+        0.026049284,
+        0.031139215,
+        0.026215084,
+        0.025906426,
+        0.031234531,
+        0.026349346,
+        0.025925662,
+        0.031235404,
+        0.026238006,
+        0.026015861,
+        0.031163434,
+        0.026219232,
+        0.026008166,
+        0.031104783,
+        0.025656381,
+        0.02563573,
+        0.039403029,
+        0.041835676,
+        0.0281531,
+        0.088327604,
+        0.07219213,
+        0.040587542,
+        0.081198453,
+        0.066785487,
+        0.040743139,
+        0.027123323,
+        0.026281165,
+        0.087469758,
+        0.072707814,
+        0.040178164,
+        0.079930947,
+        0.066727868,
+        0.039179105,
+        0.0410833,
+        0.027135107,
+        0.072869079,
+        0.087470073,
+        0.040333943,
+        0.040546999,
+        0.066644489,
+        0.080017096,
+        0.041013916,
+        0.027247408,
+        0.073012248,
+        0.087523778,
+        0.040221922,
+        0.066690729,
+        0.080164587,
+        0.039167181,
+        0.041129155,
+        0.027305844,
+        0.072969764,
+        0.087170791,
+        0.040294568,
+        0.040592632,
+        0.066764672,
+        0.080323249,
+        0.041057634,
+        0.027161724,
+        0.07217609,
+        0.087053645,
+        0.040295695,
+        0.06668606,
+        0.079894687,
+        0.039310337,
+        0.041229651,
+        0.027100767,
+        0.072251138,
+        0.087123331,
+        0.040334337,
+        0.040262711,
+        0.066749181,
+        0.080064223,
+        0.0410046,
+        0.027595418,
+        0.072760909,
+        0.086945454,
+        0.040397423,
+        0.026349476,
+        0.026252219,
+        0.026292477,
+        0.064372002,
+        0.079688208,
+        0.066310999,
+        0.037696097,
+        0.041930914,
+        0.028137912,
+        0.087038588,
+        0.071934796,
+        0.040556414,
+        0.080872108,
+        0.067219973,
+        0.040841291,
+        0.027152512,
+        0.026271693,
+        0.087486828,
+        0.073059943,
+        0.080023676,
+        0.066606963,
+        0.039315794,
+        0.041176861,
+        0.027276653,
+        0.072819034,
+        0.0888465,
+        0.040612422,
+        0.066550139,
+        0.079773419,
+        0.041136294,
+        0.027381305,
+        0.072940789,
+        0.087752651,
+        0.066586538,
+        0.080155877,
+        0.039304006,
+        0.04120179,
+        0.027243612,
+        0.072351638,
+        0.087439179,
+        0.04062437,
+        0.066624765,
+        0.079949158,
+        0.041050086,
+        0.027345693,
+        0.072713925,
+        0.087363748,
+        0.066600967,
+        0.079955228,
+        0.039352485,
+        0.041196314,
+        0.027326425,
+        0.07219386,
+        0.087192841,
+        0.04125215,
+        0.066591153,
+        0.080118236,
+        0.041056969,
+        0.027289583,
+        0.070547631,
+        0.085065523,
+        0.080516132,
+        0.066550333
+      ],
+      "backward._backward_impl": [
+        13.918319659,
+        14.289634146
+      ],
+      "compile_fx.<locals>.bw_compiler": [
+        13.714907546,
+        14.108082544
+      ]
+    },
+    "warmup_step_seconds": [
+      0.03437533602118492,
+      0.03022876288741827,
+      0.02963613998144865
+    ],
+    "warmup_peak_allocated_bytes": 1153927680,
+    "measured_peak_allocated_bytes": 1153927680,
+    "measured_peak_reserved_bytes": 1289748480,
+    "peak_allocated_bytes": 1256739328,
+    "median_step_seconds": 0.029664652422070503,
+    "finite_steps": true,
+    "parameters_finite": true,
+    "quantity_head_opened": true,
+    "allocated_after_cleanup_bytes": 68157440
+  },
+  "worker_pid": 4112159,
+  "worker_parent_pid": 4111181,
+  "measurement_isolation": "fresh_subprocess",
+  "held_out_test_evaluated": false,
+  "real_data_used": false,
+  "checkpoint_loaded": false,
+  "source_file_sha256": {
+    "models/TPPs/CountAwareFactory.py": "0ae6799cf4b0a16489f047ad69bdf3c97e89e048e2dd8977122337c203f5206c",
+    "models/TPPs/CountAwareTPP.py": "86ce901c963b9b1c073794b4845aa71e537f46dfa40f27e7f741140a40d3b0ed",
+    "models/Titan/common/titans_mac.py": "75fb9b3266e85cfcd8a5e336d38839cd78f84a22a79b12f785697650a6653844",
+    "models/Titan/common/titans_mac_prior_prefix.py": "ae44cbb323369412559b9ec34c9c9366f1d95a88f404e5acb68ae1c7da0fd4b8",
+    "models/Titan/common/titans_mac_optimized.py": "3464986d7ef49ba88b7a9703691c1291c7525a2f13c9d0a02b48b7007c408966",
+    "models/Titan/common/titans_memory_stability.py": "d7681b65e65f239377d174596b970d5509de075a9f03a5d34c001c7801031e86",
+    "paper/scripts/count_aware_tpp_backbone/core.py": "025dfbe75a5a4e235466807f31873aa085f8ddffe680485fb4b9f4f7ef60c598",
+    "paper/scripts/validate_titans_mac_prior_prefix_cuda.py": "d6b83a12bbb10eefe900d640ea87a720b5b2731dde8071cf3216275db140bdb4"
+  },
+  "runtime": {
+    "python": "3.12.13",
+    "torch": "2.11.0+cu130",
+    "cuda": "13.0",
+    "polars": "1.39.3",
+    "cuda_available": true,
+    "device_name": "NVIDIA GeForce RTX 5090",
+    "free_bytes": 32611041280,
+    "total_bytes": 33670758400,
+    "capability": [
+      12,
+      0
+    ]
+  },
+  "dynamo_policy": {
+    "recompile_limit": 64,
+    "accumulated_recompile_limit": 512,
+    "suppress_errors": false
+  }
+}
