@@ -1,0 +1,43 @@
+......................F.................................                 [100%]
+=================================== FAILURES ===================================
+_______ test_checkpoint_optimizer_moments_and_next_training_step_replay ________
+
+    def test_checkpoint_optimizer_moments_and_next_training_step_replay():
+        model, metadata = build()
+        optimizer = build_optimizer(model, lr=.001)
+
+        def step(m, opt):
+            m.train()
+            opt.zero_grad(set_to_none=True)
+            outputs(m)["joint_loss"].mean().backward()
+            torch.nn.utils.clip_grad_norm_(m.parameters(), 1.)
+            opt.step()
+
+        step(model, optimizer)
+        beta = model.encoder.elapsed_age_beta
+        assert len(optimizer.param_groups) == 1
+        assert beta.abs().sum() > 0
+        for key in ("exp_avg", "exp_avg_sq"):
+            moment = optimizer.state[beta][key]
+            assert torch.isfinite(moment).all() and moment.abs().sum() > 0
+        payload = {"backbone": CANDIDATE, "variant": VARIANT, "encoder_config": metadata,
+                   "model_state_dict": model.state_dict(), "optimizer_state_dict": optimizer.state_dict(),
+                   "evaluation_scope": "validation_only", "held_out_test_evaluated": False}
+        buffer = io.BytesIO()
+        torch.save(payload, buffer)
+        buffer.seek(0)
+        saved = torch.load(buffer, weights_only=True, map_location=DEVICE)
+        validate_checkpoint_route(saved, CANDIDATE)
+        restored, _ = build()
+        restored.load_state_dict(saved["model_state_dict"], strict=True)
+        restored_optimizer = build_optimizer(restored, lr=.001)
+        restored_optimizer.load_state_dict(saved["optimizer_state_dict"])
+        for key in ("step", "exp_avg", "exp_avg_sq"):
+>           torch.testing.assert_close(optimizer.state[beta][key],
+                                       restored_optimizer.state[restored.encoder.elapsed_age_beta][key], rtol=0, atol=0)
+E           AssertionError: The values for attribute 'device' do not match: cpu != cuda:0.
+
+simple_lab_test/search/tests/test_hard_lmm_elapsed_age_memory.py:331: AssertionError
+=========================== short test summary info ============================
+FAILED simple_lab_test/search/tests/test_hard_lmm_elapsed_age_memory.py::test_checkpoint_optimizer_moments_and_next_training_step_replay
+1 failed, 55 passed in 2.57s

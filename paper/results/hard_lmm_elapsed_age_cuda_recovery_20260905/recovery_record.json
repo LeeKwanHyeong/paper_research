@@ -1,0 +1,26 @@
+{
+  "status": "test_harness_fixed_before_real_e1",
+  "recorded_at": "2026-09-05T00:49:16.794659+00:00",
+  "failed_source_revision": "77e5f4a05751b412f38e1ed148bc4bef10e70a75",
+  "failed_cuda_tests": {
+    "passed": 55,
+    "failed": 1,
+    "skipped": 0
+  },
+  "real_data_runs_started": 0,
+  "cause": "Original AdamW scalar step is CPU; torch.load(map_location=cuda) can restore the same scalar value to CUDA. Exact raw-device assertion failed before the next-step replay.",
+  "fix": "Compare only the step scalar on CPU at rtol=atol=0 with dtype preserved. Keep moment device/value assertions, actual map_location=DEVICE and unchanged numerical next-step replay.",
+  "model_optimizer_geometry_or_tolerance_changes": false,
+  "local_replay": {
+    "passed": 1,
+    "failed": 0
+  },
+  "changed_file": "simple_lab_test/search/tests/test_hard_lmm_elapsed_age_memory.py",
+  "changed_file_sha256": "05c13e5d261e32e655601733edbae73a5424ce5b1de9a60565b0ce6b15802772",
+  "retry_policy": "No automatic launcher retry or resume; preserve failed snapshot/artifacts, commit this test-only fix, then use a fresh source snapshot and output under the existing approval for complete CUDA/full e1 validation.",
+  "tracked_log_normalization": "Only trailing whitespace removed from tracked failure log/XML to satisfy repository diff checks; exact original files remain in ignored raw artifacts.",
+  "raw_failure_hashes": {
+    "search_artifacts/hard_lmm_elapsed_age_smoke_5090_20260905/cuda_contract_tests.log": "ef4de86890f192c0a4a4a622d5447d510c101995e79f795782fa43505661643f",
+    "search_artifacts/hard_lmm_elapsed_age_smoke_5090_20260905/cuda_contract_tests.xml": "6e0afb83bb06258748b7c0d0b1024660d2697bf268f100bf872db587e464a850"
+  }
+}

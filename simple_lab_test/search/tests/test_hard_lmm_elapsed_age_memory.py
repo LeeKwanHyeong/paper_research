@@ -327,7 +327,12 @@ def test_checkpoint_optimizer_moments_and_next_training_step_replay():
     restored.load_state_dict(saved["model_state_dict"], strict=True)
     restored_optimizer = build_optimizer(restored, lr=.001)
     restored_optimizer.load_state_dict(saved["optimizer_state_dict"])
-    for key in ("step", "exp_avg", "exp_avg_sq"):
+    # map_location moves the restored scalar counter to CUDA, while fresh
+    # noncapturable AdamW keeps it on CPU. Compare its exact value and dtype.
+    torch.testing.assert_close(optimizer.state[beta]["step"].cpu(),
+                               restored_optimizer.state[restored.encoder.elapsed_age_beta]["step"].cpu(),
+                               rtol=0, atol=0)
+    for key in ("exp_avg", "exp_avg_sq"):
         torch.testing.assert_close(optimizer.state[beta][key],
                                    restored_optimizer.state[restored.encoder.elapsed_age_beta][key], rtol=0, atol=0)
     torch.manual_seed(501)
