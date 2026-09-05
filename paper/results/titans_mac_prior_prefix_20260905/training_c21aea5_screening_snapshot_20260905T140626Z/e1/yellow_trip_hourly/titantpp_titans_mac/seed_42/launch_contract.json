@@ -1,0 +1,210 @@
+{
+  "backbones": [
+    "titantpp_titans_mac"
+  ],
+  "batch_size": 128,
+  "completed_run_count": 1,
+  "data_path": "/home/leekwanhyeong/workspace/paper_research/sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+  "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+  "dataset": "yellow_trip_hourly",
+  "dataset_time_unit": "hour",
+  "early_stopping": {
+    "formula_by_variant": {
+      "count_only_log_mse_tail_head_only": "time_nll + lambda_log_qty * (log1p_quantity_mse + lambda_tail * tail_raw_huber)",
+      "count_only_log_mse_tail_shared": "time_nll + lambda_log_qty * (log1p_quantity_mse + lambda_tail * tail_raw_huber)",
+      "count_only_log_regression": "time_nll + lambda_log_qty * log1p_quantity_mse",
+      "count_only_lognormal_k1": "time_nll + lambda_log_qty * (gaussian_nll_on_log1p_quantity + lambda_location_huber * location_huber)"
+    },
+    "min_epochs": 1,
+    "monitor": "validation_joint_objective",
+    "patience": 1,
+    "restore": "best_validation_joint_objective"
+  },
+  "epochs": 1,
+  "evaluation_scope": "validation_only",
+  "execution_host": "RTX5090-server",
+  "execution_role": "prior_prefix_e1_5090",
+  "expected_run_count": 1,
+  "experiment": "mark_free_count_aware_quantity_screening",
+  "grad_clip": 1.0,
+  "held_out_test_evaluated": false,
+  "hidden_dim": 64,
+  "history_length_contract": {
+    "boundaries": [
+      64,
+      128
+    ],
+    "definition": "number of observed events before the validation target",
+    "strata": [
+      {
+        "stratum": "history_le_64",
+        "stratum_label": "History <= 64",
+        "stratum_order": 0
+      },
+      {
+        "stratum": "history_65_128",
+        "stratum_label": "History 65-128",
+        "stratum_order": 1
+      },
+      {
+        "stratum": "history_gt_128",
+        "stratum_label": "History > 128",
+        "stratum_order": 2
+      }
+    ]
+  },
+  "interfaces": {
+    "count_only_log_regression": {
+      "fitted_on": "train",
+      "history_features": [
+        "log1p_delta_t",
+        "log1p_raw_quantity"
+      ],
+      "mode": "mark_free_count_aware_log_regression",
+      "point_prediction": "distribution_median_expm1_location",
+      "point_prediction_shared_by_mae_and_rmse": true,
+      "product_type_used": false,
+      "quantity_inverse_transform": "expm1",
+      "quantity_loss": "mse_on_log1p_quantity",
+      "quantity_mark_used": false,
+      "quantity_output_activation": "softplus",
+      "quantity_residual_used": false,
+      "target": "log1p_raw_quantity",
+      "target_quantity_masked_from_history": true,
+      "time_head": {
+        "mode": "legacy_clamped_rmtpp",
+        "statistics_source_split": "train",
+        "time_head_lr_multiplier": 1.0,
+        "time_initial_intercept": 0.0,
+        "time_initial_location": null,
+        "time_initial_scale": null,
+        "time_intercept_limit": 300.0,
+        "time_intercept_transform": "legacy_upper_clamp",
+        "time_scale": 3.0,
+        "time_sigma_floor": 0.001,
+        "time_w_max": 3.3333333333333335,
+        "time_wd_safety_limit": 40.0,
+        "train_time_statistics": {
+          "statistics_source_split": "train",
+          "target_count": 38393,
+          "target_dt_max": 115.0,
+          "target_dt_mean": 1.739926549110515,
+          "target_dt_min": 1.0,
+          "target_dt_p50": 1.0,
+          "target_dt_p99": 15.0,
+          "target_log_scaled_mean": 0.2357508697949888,
+          "target_log_scaled_std": 0.5898045019331329,
+          "time_initial_intercept": -0.553842899180561,
+          "time_scale": 1.0,
+          "time_w_max": 0.34782608695652173,
+          "wd_safety_limit": 40.0
+        }
+      },
+      "train_target_mean": 2.837734592747447,
+      "train_target_std": 2.1840596349132664
+    }
+  },
+  "lambda_log_qty": 1.0,
+  "lambda_tail": 0.0,
+  "lookback_weeks": 168,
+  "lr": 0.001,
+  "max_seq_len": 256,
+  "max_series": null,
+  "model_role": "experimental",
+  "partial_smoke": false,
+  "quantity_contract": {
+    "boundaries": [
+      7.0,
+      686.0,
+      1562.0,
+      3449.0
+    ],
+    "quantiles": [
+      0.5,
+      0.9,
+      0.95,
+      0.99
+    ],
+    "strata": [
+      {
+        "stratum": "le_p50",
+        "stratum_label": "<= 7",
+        "stratum_order": 0
+      },
+      {
+        "stratum": "p50_p90",
+        "stratum_label": "(7, 686]",
+        "stratum_order": 1
+      },
+      {
+        "stratum": "p90_p95",
+        "stratum_label": "(686, 1562]",
+        "stratum_order": 2
+      },
+      {
+        "stratum": "p95_p99",
+        "stratum_label": "(1562, 3449]",
+        "stratum_order": 3
+      },
+      {
+        "stratum": "gt_p99",
+        "stratum_label": "> 3449",
+        "stratum_order": 4
+      }
+    ]
+  },
+  "quantity_variants": [
+    "count_only_log_regression"
+  ],
+  "schema_version": 1,
+  "seeds": [
+    42
+  ],
+  "source_revision": "c21aea563aeaa7f82a8814552594dbc77b8da458",
+  "split_manifest_path": "/home/leekwanhyeong/workspace/paper_research/sample_data/new_york_taxi/yellow_trip_hourly_split_manifest.json",
+  "split_manifest_sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85",
+  "split_rows": {
+    "train": 38524,
+    "validation": 8268
+  },
+  "status": "complete",
+  "tail_contract": {
+    "clip_cap": 187.0,
+    "huber_delta": 1.0,
+    "normalization_scale": 46.0,
+    "statistics_source_split": "train",
+    "threshold": 46.0
+  },
+  "time_head": {
+    "density_unit": "legacy_delta_t_clamped_objective",
+    "mode": "legacy_clamped_rmtpp",
+    "statistics_source_split": "train",
+    "time_head_lr_multiplier": 1.0,
+    "time_initial_intercept": 0.0,
+    "time_initial_location": null,
+    "time_initial_scale": null,
+    "time_intercept_limit": 300.0,
+    "time_intercept_transform": "legacy_upper_clamp",
+    "time_scale": 3.0,
+    "time_sigma_floor": 0.001,
+    "time_w_max": 3.3333333333333335,
+    "time_wd_safety_limit": 40.0,
+    "train_time_statistics": {
+      "statistics_source_split": "train",
+      "target_count": 38393,
+      "target_dt_max": 115.0,
+      "target_dt_mean": 1.739926549110515,
+      "target_dt_min": 1.0,
+      "target_dt_p50": 1.0,
+      "target_dt_p99": 15.0,
+      "target_log_scaled_mean": 0.2357508697949888,
+      "target_log_scaled_std": 0.5898045019331329,
+      "time_initial_intercept": -0.553842899180561,
+      "time_scale": 1.0,
+      "time_w_max": 0.34782608695652173,
+      "wd_safety_limit": 40.0
+    },
+    "wd_clamp": 10.0
+  },
+  "titans_memory_gradient_clip": 1.0
+}

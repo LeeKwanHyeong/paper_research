@@ -4,7 +4,7 @@
 
 **현재 상태**
 
-후보 계약·구현·로컬 검사와 수정된 source의 5090 CUDA 정확성·비용 검증을 완료했다. 새 source로 전체 데이터 e1을 실행 중이다. 공통 성능 개선은 아직 미판정이며, screening·추가 seed·held-out 평가는 시작하지 않았다.
+후보 계약·구현·로컬 검사와 수정된 source의 5090 CUDA 정확성·비용 검증을 완료했다. 새 source의 전체 데이터 e1 6개가 모두 정상 감사를 통과했고 seed42 screening을 실행 중이다. Taxi B1은 51 epoch에서 실행 감사를 통과했으며 현재 Taxi 후보를 학습 중이다. 공통 성능 개선은 아직 미판정이며, 추가 seed·held-out 평가는 시작하지 않았다.
 
 **완료 / 로컬 — 한 후보와 서로 다른 판정 계약**
 
@@ -38,15 +38,16 @@
 
 원수치 기준 시간≤2배 B1, peak≤1.5배 B1 및≤28GiB를 모두 통과했다. 다만 T0 대비 step 시간이 6.50–21.32배다. 이 연구 비용 gate 통과를 T0 수준 효율이나 성능 개선으로 표현하지 않는다. [현재 CUDA proof와 원수치](../results/titans_mac_prior_prefix_20260905/cuda_c21aea5/status.json).
 
-**진행 중 / 5090 — full e1 정상 실행 검증**
+**완료 / 5090 — full e1 정상 실행 검증**
 
-- 새 source·seed42의 B1/후보를 Taxi → Intermittent → Instacart 순서로 실행한다. Taxi B1·후보 2개 실행이 모두 정상 감사를 통과했고 현재 Intermittent B1 e1을 실행 중이다. Taxi의 실제 launch에는 train38,524 / validation8,268만 포함됐고, 각 실행은 train target38,393 / validation target8,268을 처리했다.
+- 새 source·seed42의 B1/후보를 Taxi → Intermittent → Instacart 순서로 실행했으며 6개 모두 정상 감사를 통과했다. Taxi의 실제 launch에는 train38,524 / validation8,268만 포함됐고, 각 실행은 train target38,393 / validation target8,268을 처리했다.
 - 각 dataset의 처리 대상 train targets는 38,393 / 393,824 / 1,991,192, validation targets는 8,268 / 86,285 / 503,733이다. 원본 행 수와 history가 필요한 target 수는 다르다.
-- 6 runs 모두 full coverage, finite 계산, 실제 writer optimizer 활동, 동일 인터페이스, checkpoint·optimizer 복원 감사를 통과해야 screening으로 진행한다. e1 수치로 성능을 채택하지 않는다.
+- 6 runs 모두 full coverage, finite 계산, 실제 writer optimizer 활동, 동일 인터페이스, checkpoint·optimizer 복원 감사를 통과했다. e1 수치로 성능을 채택하지 않는다. 완료 시점은 2026-09-05T13:07:25 UTC이며 완료 proof SHA256 `a395f22dfd6b88ef25d569a2747c06aba39e83f72915b24c5fa63d54f98eb7c2`가 controller의 다음 단계 입력과 일치한다. 30개 증적 파일의 원격 hash를 다시 확인했다.
 
-**후속 작업 / 5090 — 고정 후보 공통 성능 판정**
+**진행 중 / 5090 — 고정 후보 seed42 screening**
 
-- e1 통과 후 seed42 최대e300/min40/pat40의 6 runs를 수행한다. B1 추가 효과와 T0의 body/RMSE 조건이 세 데이터셋 모두에서 통과해야 seeds52/62의 12 runs로 확장한다.
+- e1 통과 후 seed42 최대e300/min40/pat40의 6 runs를 시작했다. Taxi B1은 51 epoch에서 정상 종료·실행 감사 PASS, Taxi 후보를 학습 중이다. 수집 시점에 완료 1/6이며 데이터셋 간 공통 성능 판정은 미완료다. 완료된 Taxi B1의 5개 증적 파일 hash도 다시 확인했다.
+- B1 추가 효과와 T0의 body/RMSE 조건이 세 데이터셋 모두에서 통과해야 seeds52/62의 12 runs로 확장한다. Controller hash와 이 진입·중단 조건을 읽기 전용으로 재확인했다. 기존 프로세스를 유지하며 중복 실행은 시작하지 않았다.
 - 3-seed 산술평균·최소2/3 RMSE 개선 방향·개별 seed time/tail 보존을 확인한다. RMTPP/THP 우위는 별도 판정이다.
 - 제어 스크립트는 각 phase를 명시 호출하고 선행 proof·모든 evidence hash를 재검증한다. 실행 오류와 성능 미달을 구분하며 실패 시 중단한다. 재시도·checkpoint resume·덮어쓰기는 하지 않는다.
 - tmux: `prior_prefix_training_c21aea5`. 최신 상태는 `/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/status.json` 및 각 phase의 `status.json`으로 확인한다.
@@ -59,6 +60,6 @@
 
 코드와 고정 chronological split 계약상 test target의 학습·평가·checkpoint 선택 경로는 확인되지 않았다. 실제 test 행을 다시 조회하거나 평가하지 않았으며, test 행의 적재·전처리 위반 자체는 명확히 기록한다. [독립 데이터 범위 감사](../results/titans_mac_prior_prefix_20260905/e1_add02ba_rejected/data_scope_audit.md). `c21aea5`에서 두 모델을 적재 전 제외 분기에 넣고 실제 main 회귀 검사와 5090 검증을 완료했다.
 
-현재 e1 6개 중 2개가 정상 감사를 마쳤고 나머지 실행과 성능 판정은 미완료다. Held-out 평가, v0.7 최종 T0 교체, `paper_research/master` 병합·push는 수행하지 않았다. 모든 로컬 상태 복사본은 수집 시점 snapshot이며 최신 원격 상태와 구분한다.
+현재 e1은 6/6 완료, seed42 screening은 1/6 완료이며 나머지 실행과 성능 판정은 미완료다. Held-out 평가, v0.7 최종 T0 교체, `paper_research/master` 병합·push는 수행하지 않았다. 모든 로컬 상태 복사본은 수집 시점 snapshot이며 최신 원격 상태와 구분한다.
 
-최신 로컬 수집 시점: 2026-09-05T12:06:23.134916+00:00 UTC. `training_c21aea5_snapshot/`은 이 시점의 복사본이며 원격 작업은 계속 진행된다. 제어 스크립트 커밋은 `fbea9ce`, 학습 source는 `c21aea5`로 구분한다.
+최신 로컬 상태 수집 시점: 2026-09-05T14:06:26.809356+00:00 UTC. [상태와 검증 증적](../results/titans_mac_prior_prefix_20260905/training_c21aea5_screening_snapshot_20260905T140626Z/snapshot_audit.json)에 파일 hash와 추가 증적 수집 시각을 기록했다. 이전 `training_c21aea5_snapshot/`은 e1 2/6 당시의 이력으로 보존한다. 원격 작업은 계속 진행되며, 제어 스크립트 커밋은 `fbea9ce`, 학습 source는 `c21aea5`로 구분한다.

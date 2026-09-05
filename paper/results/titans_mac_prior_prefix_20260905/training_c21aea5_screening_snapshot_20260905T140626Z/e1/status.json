@@ -1,0 +1,883 @@
+{
+  "child_pid": null,
+  "command": [
+    "/opt/miniconda3/envs/ai_env/bin/python",
+    "-s",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/paper/scripts/diagnose_titantpp_mac_nonfinite.py",
+    "--snapshot-dir",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/insta_market_basket/titantpp_titans_mac_prior_prefix/diagnostic_seed_42",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/paper/scripts/run_with_titantpp_mac_dynamo_policy.py",
+    "--recompile-limit",
+    "64",
+    "--accumulated-recompile-limit",
+    "512",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/paper/scripts/run_count_aware_tpp_backbone_control.py",
+    "--data",
+    "/home/leekwanhyeong/workspace/paper_research/sample_data/insta_market_basket/instacart_marked_target_with_split.parquet",
+    "--split-manifest",
+    "/home/leekwanhyeong/workspace/paper_research/sample_data/insta_market_basket/instacart_marked_target_split_manifest.json",
+    "--output-dir",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/insta_market_basket/titantpp_titans_mac_prior_prefix/seed_42",
+    "--source-revision",
+    "c21aea563aeaa7f82a8814552594dbc77b8da458",
+    "--execution-role",
+    "prior_prefix_e1_5090",
+    "--dataset-contract",
+    "insta_market_basket",
+    "--model-role",
+    "titans_mac_prior_prefix_screening",
+    "--device",
+    "cuda",
+    "--epochs",
+    "1",
+    "--min-epochs",
+    "1",
+    "--early-stopping-patience",
+    "1",
+    "--batch-size",
+    "128",
+    "--lr",
+    "0.001",
+    "--hidden-dim",
+    "64",
+    "--lookback-weeks",
+    "52",
+    "--max-seq-len",
+    "64",
+    "--quantity-variants",
+    "log_mse",
+    "--lambda-log-qty",
+    "1",
+    "--lambda-tail",
+    "0",
+    "--backbones",
+    "titantpp_titans_mac_prior_prefix",
+    "--seeds",
+    "42",
+    "--time-head-mode",
+    "legacy_clamped_rmtpp",
+    "--time-scale",
+    "3",
+    "--time-w-max",
+    "3.3333333333333335",
+    "--time-intercept-limit",
+    "300",
+    "--grad-clip",
+    "1",
+    "--titans-memory-gradient-clip",
+    "1",
+    "--titans-mac-execution-backend",
+    "optimized",
+    "--allow-partial-contract"
+  ],
+  "completed_run_count": 6,
+  "contract_sha256": "81f874eaf7568c0daf262d2cf49371c425a43352789ba227124d6d0b2152ebf7",
+  "current_backbone": "titantpp_titans_mac_prior_prefix",
+  "current_dataset": "insta_market_basket",
+  "current_seed": 42,
+  "evidence_files": {
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/insta_market_basket/titantpp_titans_mac/seed_42/launch_contract.json": "ea50003bc9bc2357b141b0ac9054d88cec9d4609a8329606db9652fda53b1a23",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/insta_market_basket/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/best_val_joint_objective_model.pt": "ae3f2777a9ee5549509e03935a1dcb256325c5fa0ba27a1349b370edf5c185fc",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/insta_market_basket/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/history.json": "823eb04c6553d121d4901f6e62688afa56231ed7ee29d1a8a5f1a73b734de21d",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/insta_market_basket/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/last_epoch_state.pt": "38f8b580b87a4f2257b12cffab2c387b6b92069ca64fd3d59ee5ee19cb735d89",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/insta_market_basket/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/summary.json": "2b37cf3a808af58d2e968696282563fc3d935b8e9fb99f8916aa332cedd06cd4",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/insta_market_basket/titantpp_titans_mac_prior_prefix/seed_42/launch_contract.json": "a3974cbffa02d556e5717eec6e057ef6761578a1db1d31984b1d5af143f4da67",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/insta_market_basket/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/best_val_joint_objective_model.pt": "d5b5ab5d787d89b2a73481bb00698f17d3adffc2d21fc4bf54af609e08bfdbc4",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/insta_market_basket/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/history.json": "5e975eb4571aa64f9f12c9e63e805c28900f2a905725db1f6f9a3d3f5adaf326",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/insta_market_basket/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/last_epoch_state.pt": "84a546008fe995ab64b237b3ea515afbcafb737036f98cd3817591ec214a6363",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/insta_market_basket/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/summary.json": "e5722b1b11def82dd7f60e4ad3a403fed1dafa94e711fd9ac1058100bb8ad904",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/intermittent_frozen_5000/titantpp_titans_mac/seed_42/launch_contract.json": "f8fd4fd42d21168062f7ad8c1a66944391a1f9f0f2b19dd4a097160b184b10dc",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/intermittent_frozen_5000/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/best_val_joint_objective_model.pt": "b4587d154b532a89ef473a32a2909342d54b5c90cff3a09acfb100db98269648",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/intermittent_frozen_5000/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/history.json": "6618a42372cfcdfb2f1dd407ca13b48088290e508d1c3f6fb3d061245c5cbd16",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/intermittent_frozen_5000/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/last_epoch_state.pt": "c9febedd21e4d1903640b0323a4bb6a40c422273891ef66acabd918d1e89c051",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/intermittent_frozen_5000/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/summary.json": "78524b257b138345e0d20370b19c23de5f84972bfc75eb1a2c7abf6782656854",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/intermittent_frozen_5000/titantpp_titans_mac_prior_prefix/seed_42/launch_contract.json": "1b802fa12bdffd64bf7734ed602d6b31512b82b4b8cdda1ecacb5a89e35572af",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/intermittent_frozen_5000/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/best_val_joint_objective_model.pt": "2f14e1db05875ccd238fcf02e365390a26d27cfdd7c9397c1b5f19acc2cffa74",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/intermittent_frozen_5000/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/history.json": "339008fa2a6b820a78faad2fc3439fb7b5b3e5b14679d8af1e0259634a03cbc0",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/intermittent_frozen_5000/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/last_epoch_state.pt": "cd7b1c577a2bc2fa66d8d10ac8b088ab17bd038b5ddbe06a4fd7894a7220b005",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/intermittent_frozen_5000/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/summary.json": "67831ad29493315b6c6a844643dab69df109586e05675f867c14cf86d19ba02c",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/yellow_trip_hourly/titantpp_titans_mac/seed_42/launch_contract.json": "be330e6f3ccf482dd955f8baa204911c1bfe48af5582c92efa6b00785a95e445",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/yellow_trip_hourly/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/best_val_joint_objective_model.pt": "2df7c007daf762267fef396731afa12ca1746c95e3a789e2f23feeeb3773a6b1",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/yellow_trip_hourly/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/history.json": "480994b52cf0c76de330290c60da6e20c05fdc622e8a6fedce3f84eda3de2d83",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/yellow_trip_hourly/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/last_epoch_state.pt": "c731809bc5ee423070c1ffbf0ee62290f08551ac5e514d96e28ca5513329f684",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/yellow_trip_hourly/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/summary.json": "9e3fa41e7535f913f384e1b9b5040168a88665cb1b8055f637cf265678c63ea6",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/yellow_trip_hourly/titantpp_titans_mac_prior_prefix/seed_42/launch_contract.json": "5b58c1be9fb7907f9278fc792bd5c3af28689b4659a4ee3b62e7820526121900",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/yellow_trip_hourly/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/best_val_joint_objective_model.pt": "5ac706335d4941faee4305e8d2bfe8ea809289be6a1bcd4e43479d8e3a496c11",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/yellow_trip_hourly/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/history.json": "900deaeb0e1aadb68ad68341f67cb8b53513cb81a6c7d596429325a5bb5b1cc4",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/yellow_trip_hourly/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/last_epoch_state.pt": "b974214b975dddff5761b7890a8797b6f15c03c9fb4c0720d1d7a905a961d4b7",
+    "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/yellow_trip_hourly/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/summary.json": "47ad4348385b8dcb5b98722fdd3aad0e96c680ffadcc2cef0b5bef572e72e37a"
+  },
+  "gpu_preflight": {
+    "compute": "",
+    "gdm": "inactive",
+    "gpu": "NVIDIA GeForce RTX 5090, 32107"
+  },
+  "held_out_test_evaluated": false,
+  "log_path": "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/insta_market_basket_titantpp_titans_mac_prior_prefix_42.log",
+  "performance_acceptance": "not_evaluated_e1_only",
+  "phase": "e1",
+  "run_root": "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1",
+  "runs": [
+    {
+      "backbone": "titantpp_titans_mac",
+      "checkpoint_prediction_replay_exact": true,
+      "checkpoint_replay_rows": 2,
+      "checkpoint_replay_source": "first_sorted_validation_series_observed_history",
+      "checkpoint_state_sha256": "56f5b45949fcf19c25fcbd61bb33bc225c5dc7ec5aa4d6db7e44e2295329b5fc",
+      "completed_epochs": 1,
+      "cuda_peak_memory_allocated_bytes": 8061910528,
+      "cuda_peak_memory_reserved_bytes": 8143241216,
+      "dataset": "yellow_trip_hourly",
+      "evidence_files": {
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/yellow_trip_hourly/titantpp_titans_mac/seed_42/launch_contract.json": "be330e6f3ccf482dd955f8baa204911c1bfe48af5582c92efa6b00785a95e445",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/yellow_trip_hourly/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/best_val_joint_objective_model.pt": "2df7c007daf762267fef396731afa12ca1746c95e3a789e2f23feeeb3773a6b1",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/yellow_trip_hourly/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/history.json": "480994b52cf0c76de330290c60da6e20c05fdc622e8a6fedce3f84eda3de2d83",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/yellow_trip_hourly/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/last_epoch_state.pt": "c731809bc5ee423070c1ffbf0ee62290f08551ac5e514d96e28ca5513329f684",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/yellow_trip_hourly/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/summary.json": "9e3fa41e7535f913f384e1b9b5040168a88665cb1b8055f637cf265678c63ea6"
+      },
+      "held_out_test_evaluated": false,
+      "history_length_contract": {
+        "boundaries": [
+          64,
+          128
+        ],
+        "definition": "number of observed events before the validation target",
+        "strata": [
+          {
+            "stratum": "history_le_64",
+            "stratum_label": "History <= 64",
+            "stratum_order": 0
+          },
+          {
+            "stratum": "history_65_128",
+            "stratum_label": "History 65-128",
+            "stratum_order": 1
+          },
+          {
+            "stratum": "history_gt_128",
+            "stratum_label": "History > 128",
+            "stratum_order": 2
+          }
+        ]
+      },
+      "optimizer_restore_pass": true,
+      "optimizer_steps": 300,
+      "parameter_count": 122246,
+      "quantity_contract": {
+        "boundaries": [
+          7.0,
+          686.0,
+          1562.0,
+          3449.0
+        ],
+        "quantiles": [
+          0.5,
+          0.9,
+          0.95,
+          0.99
+        ],
+        "strata": [
+          {
+            "stratum": "le_p50",
+            "stratum_label": "<= 7",
+            "stratum_order": 0
+          },
+          {
+            "stratum": "p50_p90",
+            "stratum_label": "(7, 686]",
+            "stratum_order": 1
+          },
+          {
+            "stratum": "p90_p95",
+            "stratum_label": "(686, 1562]",
+            "stratum_order": 2
+          },
+          {
+            "stratum": "p95_p99",
+            "stratum_label": "(1562, 3449]",
+            "stratum_order": 3
+          },
+          {
+            "stratum": "gt_p99",
+            "stratum_label": "> 3449",
+            "stratum_order": 4
+          }
+        ]
+      },
+      "seed": 42,
+      "status": "PASS",
+      "train_targets": 38393,
+      "validation_targets": 8268,
+      "writer_optimizer_activity": {
+        "titans_mac_encoder.neural_memory.forgetting_projection.bias": {
+          "exp_avg_nonzero": true,
+          "step": 300
+        },
+        "titans_mac_encoder.neural_memory.forgetting_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 300
+        },
+        "titans_mac_encoder.neural_memory.key_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 300
+        },
+        "titans_mac_encoder.neural_memory.momentum_projection.bias": {
+          "exp_avg_nonzero": true,
+          "step": 300
+        },
+        "titans_mac_encoder.neural_memory.momentum_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 300
+        },
+        "titans_mac_encoder.neural_memory.update_rate_projection.bias": {
+          "exp_avg_nonzero": true,
+          "step": 300
+        },
+        "titans_mac_encoder.neural_memory.update_rate_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 300
+        },
+        "titans_mac_encoder.neural_memory.value_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 300
+        }
+      }
+    },
+    {
+      "backbone": "titantpp_titans_mac_prior_prefix",
+      "checkpoint_prediction_replay_exact": true,
+      "checkpoint_replay_rows": 2,
+      "checkpoint_replay_source": "first_sorted_validation_series_observed_history",
+      "checkpoint_state_sha256": "c1264a49a07d67d30465c971ad094c804a8db18de3b8472e70a74eff0822f484",
+      "completed_epochs": 1,
+      "cuda_peak_memory_allocated_bytes": 8340509696,
+      "cuda_peak_memory_reserved_bytes": 8405385216,
+      "dataset": "yellow_trip_hourly",
+      "evidence_files": {
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/yellow_trip_hourly/titantpp_titans_mac_prior_prefix/seed_42/launch_contract.json": "5b58c1be9fb7907f9278fc792bd5c3af28689b4659a4ee3b62e7820526121900",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/yellow_trip_hourly/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/best_val_joint_objective_model.pt": "5ac706335d4941faee4305e8d2bfe8ea809289be6a1bcd4e43479d8e3a496c11",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/yellow_trip_hourly/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/history.json": "900deaeb0e1aadb68ad68341f67cb8b53513cb81a6c7d596429325a5bb5b1cc4",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/yellow_trip_hourly/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/last_epoch_state.pt": "b974214b975dddff5761b7890a8797b6f15c03c9fb4c0720d1d7a905a961d4b7",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/yellow_trip_hourly/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/summary.json": "47ad4348385b8dcb5b98722fdd3aad0e96c680ffadcc2cef0b5bef572e72e37a"
+      },
+      "held_out_test_evaluated": false,
+      "history_length_contract": {
+        "boundaries": [
+          64,
+          128
+        ],
+        "definition": "number of observed events before the validation target",
+        "strata": [
+          {
+            "stratum": "history_le_64",
+            "stratum_label": "History <= 64",
+            "stratum_order": 0
+          },
+          {
+            "stratum": "history_65_128",
+            "stratum_label": "History 65-128",
+            "stratum_order": 1
+          },
+          {
+            "stratum": "history_gt_128",
+            "stratum_label": "History > 128",
+            "stratum_order": 2
+          }
+        ]
+      },
+      "optimizer_restore_pass": true,
+      "optimizer_steps": 300,
+      "parameter_count": 122246,
+      "quantity_contract": {
+        "boundaries": [
+          7.0,
+          686.0,
+          1562.0,
+          3449.0
+        ],
+        "quantiles": [
+          0.5,
+          0.9,
+          0.95,
+          0.99
+        ],
+        "strata": [
+          {
+            "stratum": "le_p50",
+            "stratum_label": "<= 7",
+            "stratum_order": 0
+          },
+          {
+            "stratum": "p50_p90",
+            "stratum_label": "(7, 686]",
+            "stratum_order": 1
+          },
+          {
+            "stratum": "p90_p95",
+            "stratum_label": "(686, 1562]",
+            "stratum_order": 2
+          },
+          {
+            "stratum": "p95_p99",
+            "stratum_label": "(1562, 3449]",
+            "stratum_order": 3
+          },
+          {
+            "stratum": "gt_p99",
+            "stratum_label": "> 3449",
+            "stratum_order": 4
+          }
+        ]
+      },
+      "seed": 42,
+      "status": "PASS",
+      "train_targets": 38393,
+      "validation_targets": 8268,
+      "writer_optimizer_activity": {
+        "titans_mac_encoder.neural_memory.forgetting_projection.bias": {
+          "exp_avg_nonzero": true,
+          "step": 300
+        },
+        "titans_mac_encoder.neural_memory.forgetting_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 300
+        },
+        "titans_mac_encoder.neural_memory.key_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 300
+        },
+        "titans_mac_encoder.neural_memory.momentum_projection.bias": {
+          "exp_avg_nonzero": true,
+          "step": 300
+        },
+        "titans_mac_encoder.neural_memory.momentum_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 300
+        },
+        "titans_mac_encoder.neural_memory.update_rate_projection.bias": {
+          "exp_avg_nonzero": true,
+          "step": 300
+        },
+        "titans_mac_encoder.neural_memory.update_rate_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 300
+        },
+        "titans_mac_encoder.neural_memory.value_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 300
+        }
+      }
+    },
+    {
+      "backbone": "titantpp_titans_mac",
+      "checkpoint_prediction_replay_exact": true,
+      "checkpoint_replay_rows": 2,
+      "checkpoint_replay_source": "first_sorted_validation_series_observed_history",
+      "checkpoint_state_sha256": "9db128efe69c13e4b484f433c97a3bb53877c9d60398ecd5e06a6035b8a16e02",
+      "completed_epochs": 1,
+      "cuda_peak_memory_allocated_bytes": 8002187776,
+      "cuda_peak_memory_reserved_bytes": 8017412096,
+      "dataset": "intermittent_frozen_5000",
+      "evidence_files": {
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/intermittent_frozen_5000/titantpp_titans_mac/seed_42/launch_contract.json": "f8fd4fd42d21168062f7ad8c1a66944391a1f9f0f2b19dd4a097160b184b10dc",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/intermittent_frozen_5000/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/best_val_joint_objective_model.pt": "b4587d154b532a89ef473a32a2909342d54b5c90cff3a09acfb100db98269648",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/intermittent_frozen_5000/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/history.json": "6618a42372cfcdfb2f1dd407ca13b48088290e508d1c3f6fb3d061245c5cbd16",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/intermittent_frozen_5000/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/last_epoch_state.pt": "c9febedd21e4d1903640b0323a4bb6a40c422273891ef66acabd918d1e89c051",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/intermittent_frozen_5000/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/summary.json": "78524b257b138345e0d20370b19c23de5f84972bfc75eb1a2c7abf6782656854"
+      },
+      "held_out_test_evaluated": false,
+      "history_length_contract": {
+        "boundaries": [
+          64,
+          128
+        ],
+        "definition": "number of observed events before the validation target",
+        "strata": [
+          {
+            "stratum": "history_le_64",
+            "stratum_label": "History <= 64",
+            "stratum_order": 0
+          },
+          {
+            "stratum": "history_65_128",
+            "stratum_label": "History 65-128",
+            "stratum_order": 1
+          },
+          {
+            "stratum": "history_gt_128",
+            "stratum_label": "History > 128",
+            "stratum_order": 2
+          }
+        ]
+      },
+      "optimizer_restore_pass": true,
+      "optimizer_steps": 3077,
+      "parameter_count": 122246,
+      "quantity_contract": {
+        "boundaries": [
+          2.0,
+          31.0,
+          46.0,
+          187.0
+        ],
+        "quantiles": [
+          0.5,
+          0.9,
+          0.95,
+          0.99
+        ],
+        "strata": [
+          {
+            "stratum": "le_p50",
+            "stratum_label": "<= 2",
+            "stratum_order": 0
+          },
+          {
+            "stratum": "p50_p90",
+            "stratum_label": "(2, 31]",
+            "stratum_order": 1
+          },
+          {
+            "stratum": "p90_p95",
+            "stratum_label": "(31, 46]",
+            "stratum_order": 2
+          },
+          {
+            "stratum": "p95_p99",
+            "stratum_label": "(46, 187]",
+            "stratum_order": 3
+          },
+          {
+            "stratum": "gt_p99",
+            "stratum_label": "> 187",
+            "stratum_order": 4
+          }
+        ]
+      },
+      "seed": 42,
+      "status": "PASS",
+      "train_targets": 393824,
+      "validation_targets": 86285,
+      "writer_optimizer_activity": {
+        "titans_mac_encoder.neural_memory.forgetting_projection.bias": {
+          "exp_avg_nonzero": true,
+          "step": 3077
+        },
+        "titans_mac_encoder.neural_memory.forgetting_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 3077
+        },
+        "titans_mac_encoder.neural_memory.key_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 3077
+        },
+        "titans_mac_encoder.neural_memory.momentum_projection.bias": {
+          "exp_avg_nonzero": true,
+          "step": 3077
+        },
+        "titans_mac_encoder.neural_memory.momentum_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 3077
+        },
+        "titans_mac_encoder.neural_memory.update_rate_projection.bias": {
+          "exp_avg_nonzero": true,
+          "step": 3077
+        },
+        "titans_mac_encoder.neural_memory.update_rate_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 3077
+        },
+        "titans_mac_encoder.neural_memory.value_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 3077
+        }
+      }
+    },
+    {
+      "backbone": "titantpp_titans_mac_prior_prefix",
+      "checkpoint_prediction_replay_exact": true,
+      "checkpoint_replay_rows": 2,
+      "checkpoint_replay_source": "first_sorted_validation_series_observed_history",
+      "checkpoint_state_sha256": "5784b72b95fe7d381b0f97397d88e2185a0fdf3879fc5641ca59fd7043f443aa",
+      "completed_epochs": 1,
+      "cuda_peak_memory_allocated_bytes": 8170450944,
+      "cuda_peak_memory_reserved_bytes": 8204058624,
+      "dataset": "intermittent_frozen_5000",
+      "evidence_files": {
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/intermittent_frozen_5000/titantpp_titans_mac_prior_prefix/seed_42/launch_contract.json": "1b802fa12bdffd64bf7734ed602d6b31512b82b4b8cdda1ecacb5a89e35572af",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/intermittent_frozen_5000/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/best_val_joint_objective_model.pt": "2f14e1db05875ccd238fcf02e365390a26d27cfdd7c9397c1b5f19acc2cffa74",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/intermittent_frozen_5000/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/history.json": "339008fa2a6b820a78faad2fc3439fb7b5b3e5b14679d8af1e0259634a03cbc0",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/intermittent_frozen_5000/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/last_epoch_state.pt": "cd7b1c577a2bc2fa66d8d10ac8b088ab17bd038b5ddbe06a4fd7894a7220b005",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/intermittent_frozen_5000/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/summary.json": "67831ad29493315b6c6a844643dab69df109586e05675f867c14cf86d19ba02c"
+      },
+      "held_out_test_evaluated": false,
+      "history_length_contract": {
+        "boundaries": [
+          64,
+          128
+        ],
+        "definition": "number of observed events before the validation target",
+        "strata": [
+          {
+            "stratum": "history_le_64",
+            "stratum_label": "History <= 64",
+            "stratum_order": 0
+          },
+          {
+            "stratum": "history_65_128",
+            "stratum_label": "History 65-128",
+            "stratum_order": 1
+          },
+          {
+            "stratum": "history_gt_128",
+            "stratum_label": "History > 128",
+            "stratum_order": 2
+          }
+        ]
+      },
+      "optimizer_restore_pass": true,
+      "optimizer_steps": 3077,
+      "parameter_count": 122246,
+      "quantity_contract": {
+        "boundaries": [
+          2.0,
+          31.0,
+          46.0,
+          187.0
+        ],
+        "quantiles": [
+          0.5,
+          0.9,
+          0.95,
+          0.99
+        ],
+        "strata": [
+          {
+            "stratum": "le_p50",
+            "stratum_label": "<= 2",
+            "stratum_order": 0
+          },
+          {
+            "stratum": "p50_p90",
+            "stratum_label": "(2, 31]",
+            "stratum_order": 1
+          },
+          {
+            "stratum": "p90_p95",
+            "stratum_label": "(31, 46]",
+            "stratum_order": 2
+          },
+          {
+            "stratum": "p95_p99",
+            "stratum_label": "(46, 187]",
+            "stratum_order": 3
+          },
+          {
+            "stratum": "gt_p99",
+            "stratum_label": "> 187",
+            "stratum_order": 4
+          }
+        ]
+      },
+      "seed": 42,
+      "status": "PASS",
+      "train_targets": 393824,
+      "validation_targets": 86285,
+      "writer_optimizer_activity": {
+        "titans_mac_encoder.neural_memory.forgetting_projection.bias": {
+          "exp_avg_nonzero": true,
+          "step": 3077
+        },
+        "titans_mac_encoder.neural_memory.forgetting_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 3077
+        },
+        "titans_mac_encoder.neural_memory.key_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 3077
+        },
+        "titans_mac_encoder.neural_memory.momentum_projection.bias": {
+          "exp_avg_nonzero": true,
+          "step": 3077
+        },
+        "titans_mac_encoder.neural_memory.momentum_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 3077
+        },
+        "titans_mac_encoder.neural_memory.update_rate_projection.bias": {
+          "exp_avg_nonzero": true,
+          "step": 3077
+        },
+        "titans_mac_encoder.neural_memory.update_rate_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 3077
+        },
+        "titans_mac_encoder.neural_memory.value_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 3077
+        }
+      }
+    },
+    {
+      "backbone": "titantpp_titans_mac",
+      "checkpoint_prediction_replay_exact": true,
+      "checkpoint_replay_rows": 1,
+      "checkpoint_replay_source": "first_sorted_validation_series_observed_history",
+      "checkpoint_state_sha256": "a0286afc022c442d88cc65806a2e3c6ce17274281d1acf280d1c758b1b412335",
+      "completed_epochs": 1,
+      "cuda_peak_memory_allocated_bytes": 2066369024,
+      "cuda_peak_memory_reserved_bytes": 2178940928,
+      "dataset": "insta_market_basket",
+      "evidence_files": {
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/insta_market_basket/titantpp_titans_mac/seed_42/launch_contract.json": "ea50003bc9bc2357b141b0ac9054d88cec9d4609a8329606db9652fda53b1a23",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/insta_market_basket/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/best_val_joint_objective_model.pt": "ae3f2777a9ee5549509e03935a1dcb256325c5fa0ba27a1349b370edf5c185fc",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/insta_market_basket/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/history.json": "823eb04c6553d121d4901f6e62688afa56231ed7ee29d1a8a5f1a73b734de21d",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/insta_market_basket/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/last_epoch_state.pt": "38f8b580b87a4f2257b12cffab2c387b6b92069ca64fd3d59ee5ee19cb735d89",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/insta_market_basket/titantpp_titans_mac/seed_42/runs/titantpp_titans_mac/count_only_log_regression/seed_42/summary.json": "2b37cf3a808af58d2e968696282563fc3d935b8e9fb99f8916aa332cedd06cd4"
+      },
+      "held_out_test_evaluated": false,
+      "history_length_contract": {
+        "boundaries": [
+          64,
+          128
+        ],
+        "definition": "number of observed events before the validation target",
+        "strata": [
+          {
+            "stratum": "history_le_64",
+            "stratum_label": "History <= 64",
+            "stratum_order": 0
+          },
+          {
+            "stratum": "history_65_128",
+            "stratum_label": "History 65-128",
+            "stratum_order": 1
+          },
+          {
+            "stratum": "history_gt_128",
+            "stratum_label": "History > 128",
+            "stratum_order": 2
+          }
+        ]
+      },
+      "optimizer_restore_pass": true,
+      "optimizer_steps": 15557,
+      "parameter_count": 109958,
+      "quantity_contract": {
+        "boundaries": [
+          8.0,
+          20.0,
+          25.0,
+          35.0
+        ],
+        "quantiles": [
+          0.5,
+          0.9,
+          0.95,
+          0.99
+        ],
+        "strata": [
+          {
+            "stratum": "le_p50",
+            "stratum_label": "<= 8",
+            "stratum_order": 0
+          },
+          {
+            "stratum": "p50_p90",
+            "stratum_label": "(8, 20]",
+            "stratum_order": 1
+          },
+          {
+            "stratum": "p90_p95",
+            "stratum_label": "(20, 25]",
+            "stratum_order": 2
+          },
+          {
+            "stratum": "p95_p99",
+            "stratum_label": "(25, 35]",
+            "stratum_order": 3
+          },
+          {
+            "stratum": "gt_p99",
+            "stratum_label": "> 35",
+            "stratum_order": 4
+          }
+        ]
+      },
+      "seed": 42,
+      "status": "PASS",
+      "train_targets": 1991192,
+      "validation_targets": 503733,
+      "writer_optimizer_activity": {
+        "titans_mac_encoder.neural_memory.forgetting_projection.bias": {
+          "exp_avg_nonzero": true,
+          "step": 15557
+        },
+        "titans_mac_encoder.neural_memory.forgetting_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 15557
+        },
+        "titans_mac_encoder.neural_memory.key_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 15557
+        },
+        "titans_mac_encoder.neural_memory.momentum_projection.bias": {
+          "exp_avg_nonzero": true,
+          "step": 15557
+        },
+        "titans_mac_encoder.neural_memory.momentum_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 15557
+        },
+        "titans_mac_encoder.neural_memory.update_rate_projection.bias": {
+          "exp_avg_nonzero": true,
+          "step": 15557
+        },
+        "titans_mac_encoder.neural_memory.update_rate_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 15557
+        },
+        "titans_mac_encoder.neural_memory.value_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 15557
+        }
+      }
+    },
+    {
+      "backbone": "titantpp_titans_mac_prior_prefix",
+      "checkpoint_prediction_replay_exact": true,
+      "checkpoint_replay_rows": 1,
+      "checkpoint_replay_source": "first_sorted_validation_series_observed_history",
+      "checkpoint_state_sha256": "f894210d1604d41203fac3249bc58f69c34d344e0725e25fbc56ab32b2bc0569",
+      "completed_epochs": 1,
+      "cuda_peak_memory_allocated_bytes": 2299456000,
+      "cuda_peak_memory_reserved_bytes": 2321547264,
+      "dataset": "insta_market_basket",
+      "evidence_files": {
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/insta_market_basket/titantpp_titans_mac_prior_prefix/seed_42/launch_contract.json": "a3974cbffa02d556e5717eec6e057ef6761578a1db1d31984b1d5af143f4da67",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/insta_market_basket/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/best_val_joint_objective_model.pt": "d5b5ab5d787d89b2a73481bb00698f17d3adffc2d21fc4bf54af609e08bfdbc4",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/insta_market_basket/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/history.json": "5e975eb4571aa64f9f12c9e63e805c28900f2a905725db1f6f9a3d3f5adaf326",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/insta_market_basket/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/last_epoch_state.pt": "84a546008fe995ab64b237b3ea515afbcafb737036f98cd3817591ec214a6363",
+        "/home/leekwanhyeong/workspace/paper_research_prior_prefix_c21aea5_5090/outputs/full_validation/e1/insta_market_basket/titantpp_titans_mac_prior_prefix/seed_42/runs/titantpp_titans_mac_prior_prefix/count_only_log_regression/seed_42/summary.json": "e5722b1b11def82dd7f60e4ad3a403fed1dafa94e711fd9ac1058100bb8ad904"
+      },
+      "held_out_test_evaluated": false,
+      "history_length_contract": {
+        "boundaries": [
+          64,
+          128
+        ],
+        "definition": "number of observed events before the validation target",
+        "strata": [
+          {
+            "stratum": "history_le_64",
+            "stratum_label": "History <= 64",
+            "stratum_order": 0
+          },
+          {
+            "stratum": "history_65_128",
+            "stratum_label": "History 65-128",
+            "stratum_order": 1
+          },
+          {
+            "stratum": "history_gt_128",
+            "stratum_label": "History > 128",
+            "stratum_order": 2
+          }
+        ]
+      },
+      "optimizer_restore_pass": true,
+      "optimizer_steps": 15557,
+      "parameter_count": 109958,
+      "quantity_contract": {
+        "boundaries": [
+          8.0,
+          20.0,
+          25.0,
+          35.0
+        ],
+        "quantiles": [
+          0.5,
+          0.9,
+          0.95,
+          0.99
+        ],
+        "strata": [
+          {
+            "stratum": "le_p50",
+            "stratum_label": "<= 8",
+            "stratum_order": 0
+          },
+          {
+            "stratum": "p50_p90",
+            "stratum_label": "(8, 20]",
+            "stratum_order": 1
+          },
+          {
+            "stratum": "p90_p95",
+            "stratum_label": "(20, 25]",
+            "stratum_order": 2
+          },
+          {
+            "stratum": "p95_p99",
+            "stratum_label": "(25, 35]",
+            "stratum_order": 3
+          },
+          {
+            "stratum": "gt_p99",
+            "stratum_label": "> 35",
+            "stratum_order": 4
+          }
+        ]
+      },
+      "seed": 42,
+      "status": "PASS",
+      "train_targets": 1991192,
+      "validation_targets": 503733,
+      "writer_optimizer_activity": {
+        "titans_mac_encoder.neural_memory.forgetting_projection.bias": {
+          "exp_avg_nonzero": true,
+          "step": 15557
+        },
+        "titans_mac_encoder.neural_memory.forgetting_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 15557
+        },
+        "titans_mac_encoder.neural_memory.key_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 15557
+        },
+        "titans_mac_encoder.neural_memory.momentum_projection.bias": {
+          "exp_avg_nonzero": true,
+          "step": 15557
+        },
+        "titans_mac_encoder.neural_memory.momentum_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 15557
+        },
+        "titans_mac_encoder.neural_memory.update_rate_projection.bias": {
+          "exp_avg_nonzero": true,
+          "step": 15557
+        },
+        "titans_mac_encoder.neural_memory.update_rate_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 15557
+        },
+        "titans_mac_encoder.neural_memory.value_projection.weight": {
+          "exp_avg_nonzero": true,
+          "step": 15557
+        }
+      }
+    }
+  ],
+  "runtime": {
+    "cuda": "13.0",
+    "polars": "1.39.3",
+    "python": "3.12.13",
+    "torch": "2.11.0+cu130"
+  },
+  "source_manifest_sha256": "3e992336ae6dde285797d7aa093ca741a8800c8f3ba9de2937a8dfb4d99ec1c1",
+  "source_revision": "c21aea563aeaa7f82a8814552594dbc77b8da458",
+  "started_at": "2026-09-05T11:57:40.727898+00:00",
+  "status": "PASS",
+  "updated_at": "2026-09-05T13:07:25.006170+00:00"
+}

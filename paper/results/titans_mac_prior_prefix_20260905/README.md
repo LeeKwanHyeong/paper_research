@@ -1,6 +1,6 @@
 # B1 prior-prefix 출력 read 실행 증적
 
-> 최신 수집 상태 (2026-09-05T12:06:23.134916+00:00 UTC): source `c21aea5`, CUDA 98개 및 비용 gate PASS. Taxi B1·후보 e1 2/6 정상 감사 완료, Intermittent B1 실행 중. Screening·held-out 평가는 미실행. 아래 초기 시도는 보존한 이력이며 현재 결과와 구분한다.
+> 최신 수집 상태 (2026-09-05T14:06:26.809356+00:00 UTC): source `c21aea5`, CUDA 98개 및 비용 gate PASS. 전체 e1 6/6 정상 감사 완료. Seed42 screening의 Taxi B1은 51 epoch에서 실행 감사 PASS, Taxi 후보 실행 중(완료 1/6). 공통 성능·추가 seed 진입은 미판정이며 held-out 평가는 미실행. 아래 초기 시도와 이전 snapshot은 보존한 이력이다.
 
 
 - 저장소/작업 브랜치: `paper_research/codex/b1-prior-prefix-read`.
