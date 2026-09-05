@@ -1,0 +1,162 @@
+{
+  "status": "PASS",
+  "schema_version": 1,
+  "scope": "train-only metadata; no model forward/backward, fitting, or prediction metrics",
+  "project_root": "/Users/igwanhyeong/PycharmProjects/paper_research",
+  "script_path": "/private/tmp/titans_common_improvement_review/train_write_visibility_audit.py",
+  "script_sha256": "76c3138134f8b1b3d42750391af0b4a647d4310b5cdcf2f506310212a42b4dab",
+  "contract_path": "/Users/igwanhyeong/PycharmProjects/paper_research/paper/contracts/count_aware_hard_lmm_frozen_probe_v1.json",
+  "contract_sha256": "a9430a67f81c5c6a3b2baccd5a0fef425b57b98d3706637f9f3040c909540356",
+  "parquet_filter": "chronological_split == train (lazy predicate before collect)",
+  "decoded_parquet_columns": [
+    "chronological_split (predicate)",
+    "oper_part_no",
+    "seq"
+  ],
+  "cache_fields_used": [
+    "target_index",
+    "history_length"
+  ],
+  "cache_loading_note": "Existing train-only tensors are loaded with weights_only=True; quantity/time/prediction fields are not used.",
+  "denominator": "Every eligible next-event TRAIN target, once per epoch; not rows, series, segments, or cached sample size.",
+  "target_stride": "One target per consecutive event, i=0..n-2 within each sorted train series; no downsampling.",
+  "window_rule": "Observed context seq in [seq_i-(W-1), seq_i], then append target i+1 and retain most recent max_seq_len tokens; H excludes target and padding.",
+  "H_formula": "min(i+1-searchsorted(seq, seq_i-(W-1), side=left), max_seq_len-1)",
+  "reset_boundary": "This is effective history in each independent input window. No cross-window/cross-batch memory is added. MAC state-reset semantics are a separate code audit.",
+  "MAC_relevance_assumption": "For the independently audited segment-16 MAC: output for last observed position cannot read writes from its own segment; H<=16 has no earlier written segment. This metadata audit does not itself execute or prove that code behavior.",
+  "not_identified": [
+    "A causal explanation of static T0 performance; static memory has no chunk-16 write restriction.",
+    "The exact fraction of useful or nonzero gradients when H>16; visibility is necessary, not sufficient.",
+    "A guarantee that changing write/read cadence improves held-out prediction.",
+    "Validation/test H proportions; only existing launch metadata is read, no validation/test rows or new predictions."
+  ],
+  "source_references": {
+    "dataset": "data_loader/event_seq_data_module.py:295 (target indexing), :337 (window/target/truncation)",
+    "cached_H": "paper/scripts/hard_lmm_frozen_probe.py:52,:72 (right-padded valid length minus target)",
+    "cache_sample": "paper/scripts/hard_lmm_frozen_probe.py:91 (seed42 uniform without replacement)"
+  },
+  "runtime": {
+    "numpy": "2.3.1",
+    "polars": "1.31.0",
+    "torch": "2.7.1"
+  },
+  "datasets": [
+    {
+      "dataset": "intermittent_frozen_5000",
+      "data_path": "/Users/igwanhyeong/PycharmProjects/paper_research/sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+      "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+      "train_rows": 398824,
+      "train_series": 5000,
+      "train_targets": 393824,
+      "lookback": 520,
+      "max_seq_len_including_target": 256,
+      "H_le16": 79971,
+      "H_gt16": 313853,
+      "H_le16_pct": 20.306278946940765,
+      "H_le8": 40000,
+      "H_le32": 158842,
+      "H_eq16": 4983,
+      "H_min": 1,
+      "H_max": 192,
+      "cache_path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/hard_lmm_frozen_probe_20260903/intermittent_v2/train_cache.pt",
+      "cache_sha256": "f260d1d51829eca9409a46d962af3d0d4d6ad9d89e8c26d51cfec1f46084ee91",
+      "cache_audit_path": "/Users/igwanhyeong/PycharmProjects/paper_research/paper/results/count_aware_hard_lmm_frozen_probe_20260903/intermittent_v2/baseline_audit.json",
+      "cache_audit_sha256": "6f1add6480e15c82a1fac95cc89aafed785cf42219501a652fdb494407299278",
+      "cache_parity_rows": 65536,
+      "cache_H_exact_parity": true,
+      "cache_sample_H_le16": 13341,
+      "mac_stable_completed_e300_launches": [
+        {
+          "seed": 52,
+          "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/count_aware_titantpp_mac_stable_seed52_e300_20260831_5090/validation_e300/intermittent_frozen_5000/seed_52/launch_contract.json",
+          "sha256": "6175e67df2291ae798b287950c4906a38b519b674ea4900a16420d33654b5715",
+          "context_data_target_count_match": true
+        },
+        {
+          "seed": 62,
+          "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/count_aware_titantpp_mac_stable_seed62_e300_20260831_5080/validation_e300/intermittent_frozen_5000/seed_62/launch_contract.json",
+          "sha256": "fff62395137e9b1fc09536f8c8be934f8cc9fbad8a6a87d91527a8a732c9ae4a",
+          "context_data_target_count_match": true
+        }
+      ]
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "data_path": "/Users/igwanhyeong/PycharmProjects/paper_research/sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+      "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+      "train_rows": 38524,
+      "train_series": 131,
+      "train_targets": 38393,
+      "lookback": 168,
+      "max_seq_len_including_target": 256,
+      "H_le16": 2340,
+      "H_gt16": 36053,
+      "H_le16_pct": 6.0948610423775165,
+      "H_le8": 1064,
+      "H_le32": 5418,
+      "H_eq16": 179,
+      "H_min": 1,
+      "H_max": 168,
+      "cache_path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/hard_lmm_frozen_probe_20260903/yellow_trip_hourly/train_cache.pt",
+      "cache_sha256": "d4469d5c6b44a043fa6f63b54d6f14a00ca02ce14982ea37df2c41184f2686d5",
+      "cache_audit_path": "/Users/igwanhyeong/PycharmProjects/paper_research/paper/results/count_aware_hard_lmm_frozen_probe_20260903/yellow_trip_hourly/baseline_audit.json",
+      "cache_audit_sha256": "c088655d10225772a4ef92ab90280518701d05dfc013f3b2ec033e243882e6b2",
+      "cache_parity_rows": 38393,
+      "cache_H_exact_parity": true,
+      "cache_sample_H_le16": 2340,
+      "mac_stable_completed_e300_launches": [
+        {
+          "seed": 52,
+          "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/count_aware_titantpp_mac_stable_seed52_e300_20260831_5090/validation_e300/yellow_trip_hourly/seed_52/launch_contract.json",
+          "sha256": "8b2a009a4a255c3802ce000c791bfbaae96f301a8f2e5c334bcc04ef25d1aaf4",
+          "context_data_target_count_match": true
+        },
+        {
+          "seed": 62,
+          "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/count_aware_titantpp_mac_stable_seed62_e300_20260831_5080/validation_e300/yellow_trip_hourly/seed_62/launch_contract.json",
+          "sha256": "62dcda9fc32c1498ca4842e8ce35ce478b5cf3fca8cdd5e678bbf53c6d6215fd",
+          "context_data_target_count_match": true
+        }
+      ]
+    },
+    {
+      "dataset": "insta_market_basket",
+      "data_path": "/Users/igwanhyeong/PycharmProjects/paper_research/sample_data/insta_market_basket/instacart_marked_target_with_split.parquet",
+      "data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+      "train_rows": 2197401,
+      "train_series": 206209,
+      "train_targets": 1991192,
+      "lookback": 52,
+      "max_seq_len_including_target": 64,
+      "H_le16": 1933102,
+      "H_gt16": 58090,
+      "H_le16_pct": 97.08265199940539,
+      "H_le8": 1568289,
+      "H_le32": 1990262,
+      "H_eq16": 17406,
+      "H_min": 1,
+      "H_max": 45,
+      "cache_path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/hard_lmm_frozen_probe_20260903/insta_market_basket/train_cache.pt",
+      "cache_sha256": "40abc4d00341b32b93b8713077774e3ccf59062161f652b7fbe0fbc33c4df8a7",
+      "cache_audit_path": "/Users/igwanhyeong/PycharmProjects/paper_research/paper/results/count_aware_hard_lmm_frozen_probe_20260903/insta_market_basket/baseline_audit.json",
+      "cache_audit_sha256": "4bef83a9868dce8ffad8b49f765b7fd12c07213e0680279afaecebf5796b5f48",
+      "cache_parity_rows": 65536,
+      "cache_H_exact_parity": true,
+      "cache_sample_H_le16": 63662,
+      "mac_stable_completed_e300_launches": [
+        {
+          "seed": 52,
+          "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/count_aware_titantpp_mac_stable_seed52_e300_20260831_5090/validation_e300/insta_market_basket/seed_52/launch_contract.json",
+          "sha256": "bc204a5ecd6f126e81f8676adb2d868bfde7e2f6f0e5c9f9f33ee16d6129e803",
+          "context_data_target_count_match": true
+        },
+        {
+          "seed": 62,
+          "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/count_aware_titantpp_mac_stable_seed62_e300_20260831_5080/validation_e300/insta_market_basket/seed_62/launch_contract.json",
+          "sha256": "257a6638149000d954612ee5156dc2b8742e1149d5f1ce706c8d36d793894eb3",
+          "context_data_target_count_match": true
+        }
+      ]
+    }
+  ]
+}

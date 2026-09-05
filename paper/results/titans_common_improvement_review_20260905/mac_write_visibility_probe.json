@@ -1,0 +1,423 @@
+{
+  "status": "PASS",
+  "scope": "Synthetic random-initialized existing B1 MAC; structural visibility/gradient audit only",
+  "real_data_used": false,
+  "training_performed": false,
+  "optimizer_steps": 0,
+  "gpu_used": false,
+  "checkpoint_loaded": false,
+  "model_parameters_unchanged": true,
+  "interpretation": [
+    "H=16 writes occur, but the last observed prediction state uses initial segment-start memory, so those writes cannot affect that target state.",
+    "H=17 prediction crosses one segment boundary, allowing the first 16 observed writes to affect its selected state and writer gradients.",
+    "The synthetic scalar loss probes encoder visibility, not benchmark quantity/time metrics or trained performance.",
+    "This cannot establish that the visibility boundary causes Instacart errors or that a new schedule improves any dataset."
+  ],
+  "environment": {
+    "python": "3.12.10 (v3.12.10:0cc81280367, Apr  8 2025, 08:46:59) [Clang 13.0.0 (clang-1300.0.29.30)]",
+    "executable": "/usr/local/bin/python3",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "torch": "2.7.1",
+    "device": "cpu",
+    "dtype": "float32",
+    "torch_num_threads": 1,
+    "model_mode": "eval",
+    "dropout_active": false,
+    "compiled_scan": false,
+    "inner_gradient_max_norm": 1.0
+  },
+  "model_configuration": {
+    "input_dim": 2,
+    "hidden_dim": 64,
+    "layers": 2,
+    "heads": 4,
+    "ffn_dim": 128,
+    "persistent_tokens": 16,
+    "segment_size": 16,
+    "max_len": 32,
+    "configured_dropout": 0.1
+  },
+  "seeds": {
+    "initialization": 314159,
+    "synthetic_inputs_and_probe": 271828
+  },
+  "model_parameters_sha256": "0eb2834511a32faf19717fdb510bbf248485c1f3f7072e8bbd711e8fe45a7d22",
+  "repo": "/Users/igwanhyeong/PycharmProjects/paper_research",
+  "git_head": "567196e510e14211e0ee400ea312872bb3ec2703",
+  "source_sha256": {
+    "models/Titan/common/titans_mac.py": "9436fea650c66025fceb7aebb820941176f2c10c80e47d61c55555d8430e0ab1",
+    "models/Titan/common/titans_memory_stability.py": "d7681b65e65f239377d174596b970d5509de075a9f03a5d34c001c7801031e86",
+    "paper/scripts/count_aware_tpp_backbone/core.py": "025dfbe75a5a4e235466807f31873aa085f8ddffe680485fb4b9f4f7ef60c598",
+    "data_loader/event_seq_data_module.py": "7c11d9ace6c4e4d3bb03861aae92393aa946a38452d702dc7625210b339897ca"
+  },
+  "script_sha256": "42bb902fa794c8ac6a8ff9d9bab8e3c55f1f27a4601dd2730eea392f26b373fd",
+  "reproduce_command": "/usr/local/bin/python3 -s -B /private/tmp/titans_common_improvement_review/mac_write_visibility_probe.py",
+  "cases": [
+    {
+      "history_length": 16,
+      "target_position_zero_based": 16,
+      "prediction_history_position_zero_based": 15,
+      "prediction_segment_start_zero_based": 0,
+      "prior_visible_write_count": 0,
+      "input_sequence_length_with_right_padding": 32,
+      "valid_token_count_including_masked_target": 17,
+      "full_write_count": 16,
+      "no_update_write_count": 0,
+      "full_vs_no_update_selected_state_bitwise_equal": true,
+      "full_vs_no_update_selected_state_max_abs": 0.0,
+      "full_vs_no_update_selected_state_l2": 0.0,
+      "final_memory_full_vs_no_update_max_abs": 0.2304089218378067,
+      "full_selected_state_sha256": "9cbad6292851777bf1236d63cb6d21fe903cebaaec4c0ff10375b4d433125460",
+      "no_update_selected_state_sha256": "9cbad6292851777bf1236d63cb6d21fe903cebaaec4c0ff10375b4d433125460",
+      "synthetic_input_sha256": "d2f97c2c5668b6eabbbdc5d5005f741a4899a5b14c06d1df2b362886798e2de7",
+      "writer_gradient_summary": {
+        "key_projection.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.0,
+          "max_abs": 0.0,
+          "nonzero_elements": 0
+        },
+        "value_projection.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.0,
+          "max_abs": 0.0,
+          "nonzero_elements": 0
+        },
+        "update_rate_projection.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.0,
+          "max_abs": 0.0,
+          "nonzero_elements": 0
+        },
+        "update_rate_projection.bias": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.0,
+          "max_abs": 0.0,
+          "nonzero_elements": 0
+        },
+        "momentum_projection.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.0,
+          "max_abs": 0.0,
+          "nonzero_elements": 0
+        },
+        "momentum_projection.bias": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.0,
+          "max_abs": 0.0,
+          "nonzero_elements": 0
+        },
+        "forgetting_projection.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.0,
+          "max_abs": 0.0,
+          "nonzero_elements": 0
+        },
+        "forgetting_projection.bias": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.0,
+          "max_abs": 0.0,
+          "nonzero_elements": 0
+        }
+      },
+      "all_memory_parameter_gradient_summary": {
+        "initial_weight_1": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 12.181516062521164,
+          "max_abs": 1.2444628477096558,
+          "nonzero_elements": 8192
+        },
+        "initial_bias_1": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 12.537397133281193,
+          "max_abs": 2.9391894340515137,
+          "nonzero_elements": 128
+        },
+        "initial_weight_2": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 11.577938107398516,
+          "max_abs": 0.8978500962257385,
+          "nonzero_elements": 8192
+        },
+        "initial_bias_2": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 22.05404418573288,
+          "max_abs": 6.407506465911865,
+          "nonzero_elements": 64
+        },
+        "input_norm.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.9332633001026222,
+          "max_abs": 0.28845125436782837,
+          "nonzero_elements": 64
+        },
+        "input_norm.bias": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 1.0811300892395062,
+          "max_abs": 0.41195112466812134,
+          "nonzero_elements": 64
+        },
+        "query_projection.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 16.182765957781413,
+          "max_abs": 2.4583959579467773,
+          "nonzero_elements": 4096
+        },
+        "key_projection.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.0,
+          "max_abs": 0.0,
+          "nonzero_elements": 0
+        },
+        "value_projection.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.0,
+          "max_abs": 0.0,
+          "nonzero_elements": 0
+        },
+        "update_rate_projection.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.0,
+          "max_abs": 0.0,
+          "nonzero_elements": 0
+        },
+        "update_rate_projection.bias": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.0,
+          "max_abs": 0.0,
+          "nonzero_elements": 0
+        },
+        "momentum_projection.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.0,
+          "max_abs": 0.0,
+          "nonzero_elements": 0
+        },
+        "momentum_projection.bias": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.0,
+          "max_abs": 0.0,
+          "nonzero_elements": 0
+        },
+        "forgetting_projection.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.0,
+          "max_abs": 0.0,
+          "nonzero_elements": 0
+        },
+        "forgetting_projection.bias": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.0,
+          "max_abs": 0.0,
+          "nonzero_elements": 0
+        }
+      }
+    },
+    {
+      "history_length": 17,
+      "target_position_zero_based": 17,
+      "prediction_history_position_zero_based": 16,
+      "prediction_segment_start_zero_based": 16,
+      "prior_visible_write_count": 16,
+      "input_sequence_length_with_right_padding": 32,
+      "valid_token_count_including_masked_target": 18,
+      "full_write_count": 17,
+      "no_update_write_count": 0,
+      "full_vs_no_update_selected_state_bitwise_equal": false,
+      "full_vs_no_update_selected_state_max_abs": 0.12397432327270508,
+      "full_vs_no_update_selected_state_l2": 0.3246626741182588,
+      "final_memory_full_vs_no_update_max_abs": 0.2510609030723572,
+      "full_selected_state_sha256": "51fba93a026e21bcaf046d7b6fece9047bc4bedf89e76036c9353e226d9189a6",
+      "no_update_selected_state_sha256": "19b497645d986b097e684b82c3a945791465af1b6d510e1e7096f1b440d247b2",
+      "synthetic_input_sha256": "1ec61c4030ca34e615e95f40b36187847201f546ef1dccc13a70ec4ac182c792",
+      "writer_gradient_summary": {
+        "key_projection.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.8359158500703322,
+          "max_abs": 0.07920016348361969,
+          "nonzero_elements": 4096
+        },
+        "value_projection.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 4.707131681756402,
+          "max_abs": 0.4507875442504883,
+          "nonzero_elements": 4096
+        },
+        "update_rate_projection.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 1.204281199238391,
+          "max_abs": 0.3029513657093048,
+          "nonzero_elements": 64
+        },
+        "update_rate_projection.bias": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.15353959798812866,
+          "max_abs": 0.15353959798812866,
+          "nonzero_elements": 1
+        },
+        "momentum_projection.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.43527261940491413,
+          "max_abs": 0.10921114683151245,
+          "nonzero_elements": 64
+        },
+        "momentum_projection.bias": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.05656774342060089,
+          "max_abs": 0.05656774342060089,
+          "nonzero_elements": 1
+        },
+        "forgetting_projection.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.011066343435990436,
+          "max_abs": 0.002795102074742317,
+          "nonzero_elements": 64
+        },
+        "forgetting_projection.bias": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.001397019368596375,
+          "max_abs": 0.001397019368596375,
+          "nonzero_elements": 1
+        }
+      },
+      "all_memory_parameter_gradient_summary": {
+        "initial_weight_1": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 1.828449580721064,
+          "max_abs": 0.12879855930805206,
+          "nonzero_elements": 8192
+        },
+        "initial_bias_1": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 1.1486476424278171,
+          "max_abs": 0.2743780314922333,
+          "nonzero_elements": 128
+        },
+        "initial_weight_2": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 1.9763233730576348,
+          "max_abs": 0.14620961248874664,
+          "nonzero_elements": 8192
+        },
+        "initial_bias_2": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 2.156639372576742,
+          "max_abs": 0.5317113995552063,
+          "nonzero_elements": 64
+        },
+        "input_norm.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.3973055536216002,
+          "max_abs": 0.17529702186584473,
+          "nonzero_elements": 64
+        },
+        "input_norm.bias": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.42560275638663075,
+          "max_abs": 0.12193749845027924,
+          "nonzero_elements": 64
+        },
+        "query_projection.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 2.2039994263723885,
+          "max_abs": 0.19718579947948456,
+          "nonzero_elements": 4096
+        },
+        "key_projection.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.8359158500703322,
+          "max_abs": 0.07920016348361969,
+          "nonzero_elements": 4096
+        },
+        "value_projection.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 4.707131681756402,
+          "max_abs": 0.4507875442504883,
+          "nonzero_elements": 4096
+        },
+        "update_rate_projection.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 1.204281199238391,
+          "max_abs": 0.3029513657093048,
+          "nonzero_elements": 64
+        },
+        "update_rate_projection.bias": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.15353959798812866,
+          "max_abs": 0.15353959798812866,
+          "nonzero_elements": 1
+        },
+        "momentum_projection.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.43527261940491413,
+          "max_abs": 0.10921114683151245,
+          "nonzero_elements": 64
+        },
+        "momentum_projection.bias": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.05656774342060089,
+          "max_abs": 0.05656774342060089,
+          "nonzero_elements": 1
+        },
+        "forgetting_projection.weight": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.011066343435990436,
+          "max_abs": 0.002795102074742317,
+          "nonzero_elements": 64
+        },
+        "forgetting_projection.bias": {
+          "is_none": false,
+          "finite": true,
+          "l2_norm": 0.001397019368596375,
+          "max_abs": 0.001397019368596375,
+          "nonzero_elements": 1
+        }
+      }
+    }
+  ]
+}
