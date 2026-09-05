@@ -1,0 +1,193 @@
+{
+  "candidate": "titantpp_elapsed_age_static_memory",
+  "evaluation_scope": "validation_only",
+  "held_out_test_evaluated": false,
+  "gate_source": "paper/contracts/hard_lmm_elapsed_age_v1.json",
+  "gates": {
+    "evaluation_scope": "Future separately authorized matched seed42 validation-only screening with original e300/min40/patience40 batch128 lr.001 selector; fresh initialization, no threshold changes after results",
+    "apply_all_simultaneously": true,
+    "both_datasets_vs_original": {
+      "body_le_p95_mae_improvement_min": 0.05,
+      "overall_rmse_regression_max": 0.02,
+      "gt_p99_mae_regression_max": 0.02,
+      "time_nll_absolute_increase_max": 0.01,
+      "finite_required": true
+    },
+    "instacart_vs_separate_key": {
+      "body_le_p95_mae_improvement_min": 0.05
+    },
+    "taxi_vs_separate_key": {
+      "body_le_p95_mae_regression_max": 0.01
+    },
+    "both_datasets_vs_separate_key": {
+      "overall_rmse_regression_max": 0.01,
+      "gt_p99_mae_regression_max": 0.01,
+      "time_nll_absolute_increase_max": 0.01
+    },
+    "reference_precision": "Use full precision frozen validation_comparison artifacts, not rounded README values; stricter simultaneous bound wins",
+    "scope_limit": "Validation screening relevance only; no held-out, extra seeds, dataset expansion or performance adoption authorized by e1"
+  },
+  "datasets": {
+    "yellow_trip_hourly": {
+      "original": {
+        "body_mae": 23.16740661211176,
+        "quantity_mae": 51.76773159866986,
+        "quantity_rmse": 181.5375935825544,
+        "gt_p99_mae": 1166.2824212569224,
+        "time_nll": 1.3664302460355464
+      },
+      "separate_key": {
+        "body_mae": 16.96621640628812,
+        "quantity_mae": 33.836107893278765,
+        "quantity_rmse": 119.39059532262276,
+        "gt_p99_mae": 696.4048593255538,
+        "time_nll": 1.365848076807801
+      },
+      "candidate": {
+        "body_mae": 20.7751131533715,
+        "quantity_mae": 40.63105870189301,
+        "quantity_rmse": 140.76289844177248,
+        "gt_p99_mae": 811.6005334009099,
+        "time_nll": 1.369045296338773
+      },
+      "relative_changes": {
+        "vs_original": {
+          "body_mae": -0.103261167673795,
+          "quantity_mae": -0.21512769736781356,
+          "quantity_rmse": -0.22460744541179334,
+          "gt_p99_mae": -0.3041132073942826
+        },
+        "vs_separate_key": {
+          "body_mae": 0.22449888978615795,
+          "quantity_mae": 0.20081951594568603,
+          "quantity_rmse": 0.17901161361492912,
+          "gt_p99_mae": 0.16541480509903295
+        }
+      },
+      "time_nll_delta": {
+        "vs_original": 0.002615050303226507,
+        "vs_separate_key": 0.003197219530971962
+      },
+      "upper_bounds": {
+        "vs_original": {
+          "body_mae": 22.00903628150617,
+          "quantity_rmse": 185.16834545420548,
+          "gt_p99_mae": 1189.608069682061,
+          "time_nll": 1.3764302460355464
+        },
+        "vs_separate_key": {
+          "body_mae": 17.135878570351,
+          "quantity_rmse": 120.584501275849,
+          "gt_p99_mae": 703.3689079188094,
+          "time_nll": 1.375848076807801
+        },
+        "simultaneous": {
+          "body_mae": 17.135878570351,
+          "quantity_rmse": 120.584501275849,
+          "gt_p99_mae": 703.3689079188094,
+          "time_nll": 1.375848076807801
+        }
+      },
+      "gates": {
+        "vs_original": {
+          "body_mae": true,
+          "quantity_rmse": true,
+          "gt_p99_mae": true,
+          "time_nll": true
+        },
+        "vs_separate_key": {
+          "body_mae": false,
+          "quantity_rmse": false,
+          "gt_p99_mae": false,
+          "time_nll": true
+        }
+      },
+      "finite": true,
+      "passed": false
+    },
+    "insta_market_basket": {
+      "original": {
+        "body_mae": 3.424545637259682,
+        "quantity_mae": 4.026534853916616,
+        "quantity_rmse": 5.974160013596838,
+        "gt_p99_mae": 23.00099934296864,
+        "time_nll": 3.2064400114488096
+      },
+      "separate_key": {
+        "body_mae": 3.422798711765601,
+        "quantity_mae": 4.036541785116903,
+        "quantity_rmse": 5.996654487917521,
+        "gt_p99_mae": 23.312413343161126,
+        "time_nll": 3.2065402619360674
+      },
+      "candidate": {
+        "body_mae": 3.424271044578015,
+        "quantity_mae": 4.037590276763017,
+        "quantity_rmse": 5.999203838478448,
+        "gt_p99_mae": 23.26175880846873,
+        "time_nll": 3.206375936792195
+      },
+      "relative_changes": {
+        "vs_original": {
+          "body_mae": -8.018368296203171e-05,
+          "quantity_mae": 0.0027456419098537133,
+          "quantity_rmse": 0.004192024456092902,
+          "gt_p99_mae": 0.01133687548144735
+        },
+        "vs_separate_key": {
+          "body_mae": 0.00043015465892093374,
+          "quantity_mae": 0.00025974997954425483,
+          "quantity_rmse": 0.00042512880574729905,
+          "gt_p99_mae": -0.0021728567500393092
+        }
+      },
+      "time_nll_delta": {
+        "vs_original": -6.40746566147321e-05,
+        "vs_separate_key": -0.0001643251438725457
+      },
+      "upper_bounds": {
+        "vs_original": {
+          "body_mae": 3.253318355396698,
+          "quantity_rmse": 6.093643213868774,
+          "gt_p99_mae": 23.461019329828012,
+          "time_nll": 3.2164400114488094
+        },
+        "vs_separate_key": {
+          "body_mae": 3.2516587761773206,
+          "quantity_rmse": 6.056621032796696,
+          "gt_p99_mae": 23.545537476592738,
+          "time_nll": 3.2165402619360672
+        },
+        "simultaneous": {
+          "body_mae": 3.2516587761773206,
+          "quantity_rmse": 6.056621032796696,
+          "gt_p99_mae": 23.461019329828012,
+          "time_nll": 3.2164400114488094
+        }
+      },
+      "gates": {
+        "vs_original": {
+          "body_mae": false,
+          "quantity_rmse": true,
+          "gt_p99_mae": true,
+          "time_nll": true
+        },
+        "vs_separate_key": {
+          "body_mae": false,
+          "quantity_rmse": true,
+          "gt_p99_mae": true,
+          "time_nll": true
+        }
+      },
+      "finite": true,
+      "passed": false
+    }
+  },
+  "overall": {
+    "passed_datasets": 0,
+    "evaluated_datasets": 2,
+    "all_frozen_gates_passed": false,
+    "performance_adopted": false,
+    "additional_runs_authorized": false
+  }
+}

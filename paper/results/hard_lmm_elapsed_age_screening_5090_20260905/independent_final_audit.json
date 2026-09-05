@@ -1,0 +1,182 @@
+{
+  "status": "passed",
+  "created_at": "2026-09-05T05:55:47.581223+00:00",
+  "scope": "Independent local saved-artifact audit of authorized candidate-only seed42 e300 validation screening",
+  "independence": "Standalone standard-library and torch tensor parsing; no production audit/comparison imports, model instantiation, inference, training, SSH or held-out access. Canonical hash framing mirrors the documented serialization-independent format. No independent repeated data-level evaluation.",
+  "source_revision": "e6e59337a816d53e9d1d3afaf0f6cede48ef5e2f",
+  "verified_manifest_files": 534,
+  "verified_frozen_references": 12,
+  "source_package_sha256": "de82a77730ec716552f116323b2b4c8965600a5e1ccdcb2d5a335264c2cd07fa",
+  "checks_passed": 2850,
+  "csv_numeric_cells_checked": 532,
+  "maximum_numeric_absolute_difference": 2.842170943040401e-14,
+  "readme_and_copied_evidence_verified": true,
+  "separately_accumulated_objective_components": {
+    "maximum_absolute_difference": 1.7304910282511798e-09,
+    "rounding_audit_tolerance": 1e-08,
+    "checkpoint_selection": "Earliest strict minimum of the actual saved joint objective, with no tolerance in selection"
+  },
+  "datasets": {
+    "yellow_trip_hourly": {
+      "status": "passed",
+      "completed_epochs": 42,
+      "earliest_strict_best_epoch": 2,
+      "early_stop_patience": 40,
+      "train_targets_every_epoch": 38393,
+      "selected_checkpoint_validation_targets": 8268,
+      "train_batches_every_epoch": 300,
+      "optimizer_steps_all_37_parameters": 12600,
+      "best_state_sha256": "47e1afc9ac6710347968c63ecc8d56d97f26908cd45b8f90902d08658d2be23b",
+      "last_best_state_exact": true,
+      "last_current_state_sha256": "96e3169168dda538042a6b532ac5b4f652f016064c6ae775686df7d1a8f2a20b",
+      "best_beta_nonzero_count": 8,
+      "last_beta_nonzero_count": 8,
+      "candidate_metrics_independently_recomputed": {
+        "body_mae": 20.7751131533715,
+        "quantity_mae": 40.63105870189301,
+        "quantity_rmse": 140.7628984417725,
+        "time_nll": 1.369045296338773,
+        "gt_p99_mae": 811.6005334009099
+      },
+      "relative_changes": {
+        "vs_original": {
+          "body_mae": -0.103261167673795,
+          "quantity_mae": -0.21512769736781356,
+          "quantity_rmse": -0.22460744541179323,
+          "gt_p99_mae": -0.3041132073942826
+        },
+        "vs_separate_key": {
+          "body_mae": 0.22449888978615795,
+          "quantity_mae": 0.20081951594568603,
+          "quantity_rmse": 0.17901161361492934,
+          "gt_p99_mae": 0.16541480509903295
+        }
+      },
+      "frozen_gates": {
+        "vs_original": {
+          "body_mae": true,
+          "quantity_rmse": true,
+          "gt_p99_mae": true,
+          "time_nll": true
+        },
+        "vs_separate_key": {
+          "body_mae": false,
+          "quantity_rmse": false,
+          "gt_p99_mae": false,
+          "time_nll": true
+        }
+      },
+      "performance_gates_passed": false
+    },
+    "insta_market_basket": {
+      "status": "passed",
+      "completed_epochs": 66,
+      "earliest_strict_best_epoch": 26,
+      "early_stop_patience": 40,
+      "train_targets_every_epoch": 1991192,
+      "selected_checkpoint_validation_targets": 503733,
+      "train_batches_every_epoch": 15557,
+      "optimizer_steps_all_37_parameters": 1026762,
+      "best_state_sha256": "ed9c0763acfe12a6863a7f84c43da89f6b2b5eb48441e1ab12bd515505571bd4",
+      "last_best_state_exact": true,
+      "last_current_state_sha256": "d7b57f75509b49ee89435fa1c9813746ebae3c0b92c3c729d47ec1dbf260d743",
+      "best_beta_nonzero_count": 8,
+      "last_beta_nonzero_count": 8,
+      "candidate_metrics_independently_recomputed": {
+        "body_mae": 3.424271044578015,
+        "quantity_mae": 4.037590276763017,
+        "quantity_rmse": 5.999203838478438,
+        "time_nll": 3.206375936792195,
+        "gt_p99_mae": 23.26175880846873
+      },
+      "relative_changes": {
+        "vs_original": {
+          "body_mae": -8.018368296203171e-05,
+          "quantity_mae": 0.0027456419098537133,
+          "quantity_rmse": 0.004192024456091348,
+          "gt_p99_mae": 0.01133687548144735
+        },
+        "vs_separate_key": {
+          "body_mae": 0.00043015465892093374,
+          "quantity_mae": 0.00025974997954425483,
+          "quantity_rmse": 0.0004251288057455227,
+          "gt_p99_mae": -0.0021728567500393092
+        }
+      },
+      "frozen_gates": {
+        "vs_original": {
+          "body_mae": false,
+          "quantity_rmse": true,
+          "gt_p99_mae": true,
+          "time_nll": true
+        },
+        "vs_separate_key": {
+          "body_mae": false,
+          "quantity_rmse": true,
+          "gt_p99_mae": true,
+          "time_nll": true
+        }
+      },
+      "performance_gates_passed": false
+    }
+  },
+  "overall": {
+    "run_contract_audit": "passed",
+    "frozen_performance_gate_result": "failed_both_datasets",
+    "performance_adopted": false,
+    "held_out_test_evaluated": false
+  },
+  "limitations": [
+    "History records expose full train counts on every epoch; validation count is directly verified for selected-checkpoint quantity/history aggregates and the fixed launch contract, not from a separate per-epoch validation count field.",
+    "This audit verifies saved metrics and provenance; it does not rerun inference or establish causality, seed robustness, or held-out benefit."
+  ],
+  "input_sha256": {
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/source_manifest.json": "4963d1f1985b96d1c65b3956017875e4aded1006b58c96838db62dee4001df2a",
+    "paper/results/hard_lmm_elapsed_age_screening_5090_20260905/package.json": "05b6a951b442cd4ec921739521ef68fe9d61f0e39f4e3858e123e65d9473262a",
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/execution_contract.json": "95eb691cd7ac6a597b7a0aecadff0ede38e533a1c63acce4f4915fc7aa50e41d",
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/status.json": "bd8928dce36af1a7e5faf4b9c966436e8510d7950a0f196546ea810c95b22d96",
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/validation_comparison.json": "df1fb5347ec6df01e7cebb23692f033e61412a5b2bf66c3f3c8f80f56b55aaf9",
+    "paper/results/hard_lmm_key_value_screening_5090_20260904/validation_comparison.json": "8abac2ca48e3b2b03b327741d1ee9fe00370b86bdbf6ba46a0a15fa016690441",
+    "search_artifacts/hard_lmm_elapsed_age_screening_preparation_20260905/source_e6e5933.tar.gz": "de82a77730ec716552f116323b2b4c8965600a5e1ccdcb2d5a335264c2cd07fa",
+    "paper/contracts/count_aware_hard_lmm_frozen_probe_v1.json": "a9430a67f81c5c6a3b2baccd5a0fef425b57b98d3706637f9f3040c909540356",
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/yellow_trip_hourly/runs/titantpp_elapsed_age_static_memory/count_only_log_regression/seed_42/summary.json": "c52f7824f7056366ad544203c55aa7d9ef9e4721215ce9aa62c60849d9d27021",
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/yellow_trip_hourly/runs/titantpp_elapsed_age_static_memory/count_only_log_regression/seed_42/history.json": "742bed7e03b6a3bf2456389a6738b400b248d9a422e8dfe4fe6611b0adbef85f",
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/yellow_trip_hourly/audit.json": "fe5c3d3f03b27f971013f6484cd7de3c8d312a36c8fcc44e47399be92fd0a501",
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/yellow_trip_hourly/launch_contract.json": "35d51eb6a75585147b486298182184700b05f49985ea8fd2b60597dbb992d126",
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/yellow_trip_hourly/runs/titantpp_elapsed_age_static_memory/count_only_log_regression/seed_42/best_val_joint_objective_model.pt": "bed5949ffa26a856a1d4482c1f865b4a81fa172234a59a462f40b25abb8f09a9",
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/yellow_trip_hourly/runs/titantpp_elapsed_age_static_memory/count_only_log_regression/seed_42/last_epoch_state.pt": "059322b668a406fceb205c79a82ec729c599113b975916258c974e303823ac63",
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/yellow_trip_hourly/quantity_seed_metrics.csv": "22fe33d4a265c430fe089ff8f583dd2f3203be83aa8a75d3a3195b3f1e89cb06",
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/yellow_trip_hourly/quantity_summary.csv": "39fb538ea2bd81a36c6a426abc2a7beaaa50ee32549d20f2768fcd5110f12400",
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/yellow_trip_hourly/history_seed_metrics.csv": "c28f4d743971929e3ebe160187a88e799f952319929a48f08053f08feedaf123",
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/yellow_trip_hourly/history_summary.csv": "d907c6b42d5b8c8ab2890b4da040cb26ba44a1fb94dcfe53df5b9b0d09e4ccba",
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/insta_market_basket/runs/titantpp_elapsed_age_static_memory/count_only_log_regression/seed_42/summary.json": "9c52c210fce9802bcaad2f6ab1ae0d93effb4bbdfd65e880dbb84a10d4b5ba2f",
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/insta_market_basket/runs/titantpp_elapsed_age_static_memory/count_only_log_regression/seed_42/history.json": "169c09fd14fbcdb4864804e421f62da94274594c1a203f125fd9ea0a13f14728",
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/insta_market_basket/audit.json": "0e4eafc74b727cf4e10efc18241341c6836abd86f341b550296205b3e9edbbd4",
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/insta_market_basket/launch_contract.json": "0c6589ace5890062e72bb203acf6f54b9ca062d8dfbdaac5b1366d3b543a6125",
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/insta_market_basket/runs/titantpp_elapsed_age_static_memory/count_only_log_regression/seed_42/best_val_joint_objective_model.pt": "60bf404f2581d0cd6222f3b93139f2a62f44006ea09ddcc7062c811e1b58a195",
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/insta_market_basket/runs/titantpp_elapsed_age_static_memory/count_only_log_regression/seed_42/last_epoch_state.pt": "d8cb09ae3d161f8a42b16b29deeb763d84e8cf8ce5d58decabcb3349936a2855",
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/insta_market_basket/quantity_seed_metrics.csv": "7a6c002460c9375f819bc10b7ae8723624e88f9f561ae0cc7aad045d6a37ff5a",
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/insta_market_basket/quantity_summary.csv": "e1627d70f1e199929ff44ec6a3607b85613e6d92d2d65e25b15204da9e60bc2b",
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/insta_market_basket/history_seed_metrics.csv": "949750785225dde12e0e1950ba6403400af43bd29e636404a25ad00567eb35a0",
+    "search_artifacts/hard_lmm_elapsed_age_screening_5090_20260905/insta_market_basket/history_summary.csv": "d87e610565ffe15475ee070b30126406425a68255d28808f41ef5914c8983458",
+    "paper/results/hard_lmm_elapsed_age_screening_5090_20260905/README.md": "d2c1ba1e0278b162634419f0475f8d29b374e2ee35596a1ea83af8db6ad9d456",
+    "paper/results/hard_lmm_elapsed_age_screening_5090_20260905/yellow_trip_hourly/summary.json": "c52f7824f7056366ad544203c55aa7d9ef9e4721215ce9aa62c60849d9d27021",
+    "paper/results/hard_lmm_elapsed_age_screening_5090_20260905/yellow_trip_hourly/history.json": "742bed7e03b6a3bf2456389a6738b400b248d9a422e8dfe4fe6611b0adbef85f",
+    "paper/results/hard_lmm_elapsed_age_screening_5090_20260905/yellow_trip_hourly/audit.json": "fe5c3d3f03b27f971013f6484cd7de3c8d312a36c8fcc44e47399be92fd0a501",
+    "paper/results/hard_lmm_elapsed_age_screening_5090_20260905/yellow_trip_hourly/launch_contract.json": "35d51eb6a75585147b486298182184700b05f49985ea8fd2b60597dbb992d126",
+    "paper/results/hard_lmm_elapsed_age_screening_5090_20260905/yellow_trip_hourly/quantity_seed_metrics.csv": "22fe33d4a265c430fe089ff8f583dd2f3203be83aa8a75d3a3195b3f1e89cb06",
+    "paper/results/hard_lmm_elapsed_age_screening_5090_20260905/yellow_trip_hourly/quantity_summary.csv": "39fb538ea2bd81a36c6a426abc2a7beaaa50ee32549d20f2768fcd5110f12400",
+    "paper/results/hard_lmm_elapsed_age_screening_5090_20260905/yellow_trip_hourly/history_seed_metrics.csv": "c28f4d743971929e3ebe160187a88e799f952319929a48f08053f08feedaf123",
+    "paper/results/hard_lmm_elapsed_age_screening_5090_20260905/yellow_trip_hourly/history_summary.csv": "d907c6b42d5b8c8ab2890b4da040cb26ba44a1fb94dcfe53df5b9b0d09e4ccba",
+    "paper/results/hard_lmm_elapsed_age_screening_5090_20260905/yellow_trip_hourly/run_summaries.csv": "2a6785b9914252891c901d27f2646295eeabac1914418bd3a8b7045b8590fe54",
+    "paper/results/hard_lmm_elapsed_age_screening_5090_20260905/insta_market_basket/summary.json": "9c52c210fce9802bcaad2f6ab1ae0d93effb4bbdfd65e880dbb84a10d4b5ba2f",
+    "paper/results/hard_lmm_elapsed_age_screening_5090_20260905/insta_market_basket/history.json": "169c09fd14fbcdb4864804e421f62da94274594c1a203f125fd9ea0a13f14728",
+    "paper/results/hard_lmm_elapsed_age_screening_5090_20260905/insta_market_basket/audit.json": "0e4eafc74b727cf4e10efc18241341c6836abd86f341b550296205b3e9edbbd4",
+    "paper/results/hard_lmm_elapsed_age_screening_5090_20260905/insta_market_basket/launch_contract.json": "0c6589ace5890062e72bb203acf6f54b9ca062d8dfbdaac5b1366d3b543a6125",
+    "paper/results/hard_lmm_elapsed_age_screening_5090_20260905/insta_market_basket/quantity_seed_metrics.csv": "7a6c002460c9375f819bc10b7ae8723624e88f9f561ae0cc7aad045d6a37ff5a",
+    "paper/results/hard_lmm_elapsed_age_screening_5090_20260905/insta_market_basket/quantity_summary.csv": "e1627d70f1e199929ff44ec6a3607b85613e6d92d2d65e25b15204da9e60bc2b",
+    "paper/results/hard_lmm_elapsed_age_screening_5090_20260905/insta_market_basket/history_seed_metrics.csv": "949750785225dde12e0e1950ba6403400af43bd29e636404a25ad00567eb35a0",
+    "paper/results/hard_lmm_elapsed_age_screening_5090_20260905/insta_market_basket/history_summary.csv": "d87e610565ffe15475ee070b30126406425a68255d28808f41ef5914c8983458",
+    "paper/results/hard_lmm_elapsed_age_screening_5090_20260905/insta_market_basket/run_summaries.csv": "ded3e3ae3911b48a3f80e19668fc1a9859cc0d8d81d0a01bcce7bb676ac6a17d"
+  }
+}
