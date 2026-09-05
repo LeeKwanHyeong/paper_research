@@ -1,0 +1,50 @@
+{
+  "status": "local_contract_validation_passed",
+  "completed_at": "2026-09-05T00:39:24.154349+00:00",
+  "source_context_revision": "9155cd38eb550bbc7f62895c8c3b43bddbffb0b6",
+  "candidate": "titantpp_elapsed_age_static_memory",
+  "runtime": {
+    "python": "3.12.10 (v3.12.10:0cc81280367, Apr  8 2025, 08:46:59) [Clang 13.0.0 (clang-1300.0.29.30)]",
+    "torch": "2.14.0",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "device": "cpu"
+  },
+  "tests": {
+    "passed": 122,
+    "skipped": 1,
+    "failed": 0,
+    "skip_reason": "CPU float16 autocast probe; required on 5090 CUDA before e1",
+    "xml_sha256": "2d0a9c44477a52c64182a1af7bbf1e3d075363e2f58cafe042492e6e6dde9896",
+    "log_sha256": "b9c680148fb67f5b70e3bb8c4699959bbc0c59117cfd75cc675b76f48279631e"
+  },
+  "additional_parameters_vs_separate_key": 8,
+  "numerical_contracts": [
+    "CPU seeded shared parameters and RNG exact",
+    "CPU beta0 train/eval output exact",
+    "Geometry matches independent formula and original J",
+    "CPU model/optimizer next train step exact"
+  ],
+  "source_hashes": {
+    "models/Titan/common/elapsed_age.py": "fb04e96ea180974e306c5688ef4b51c5b615a516d671edd472c0049d3f1e651d",
+    "models/Titan/common/memory.py": "d0ab4de1eb5a7499c4bd09333a57d6e75e099e34663867cd276d99dab49767e1",
+    "models/Titan/backbone.py": "f3531234235a9f50de05cf36c80b0a742a45709145d49555440249c814a20e98",
+    "models/TPPs/CountAwareTPP.py": "5cb337557d86975869b83e286f510f9ad74b6c46f4cc34789d37676ecf594c24",
+    "models/TPPs/CountAwareFactory.py": "0eecfacf5443496b1fdcd327052bb8e8218ff75ecea069cf4a1c3872a1c02411",
+    "paper/scripts/count_aware_tpp_backbone/constants.py": "80d4ceaad27180526200130143b3617f6469f63b18cf64e72438b9675235dfbd",
+    "paper/scripts/count_aware_tpp_backbone/training.py": "649745cdde4c1bfdea9efacb5dd812f0e0f79e7726071343cb19128007d028b9",
+    "paper/scripts/run_count_aware_tpp_backbone_control.py": "a291413f490d76ac57eee9da80e269d8eb3a784e3c1c5b5c684f37dcbe141ba8",
+    "paper/scripts/run_hard_lmm_elapsed_age_smoke.py": "3c3035021b0bdb77372b005aac1b08cdd1ade20fef8dbbe4c90d560d62ea2393",
+    "paper/scripts/package_hard_lmm_elapsed_age_smoke.py": "fa920326462e2b40dced1b5cf0f3cbf4b967bcec258d724e1ef1d7851d183c71",
+    "paper/contracts/hard_lmm_elapsed_age_v1.json": "3d7294d8177e4254fc573e478f176b326504a54c304881d36cc8a5a0a1ffd058",
+    "paper/contracts/hard_lmm_elapsed_age_v1.md": "42af837568a71e20284d1a593202bdc073071c0c9092d621ff6e4fcc79137847",
+    "paper/contracts/hard_lmm_elapsed_age_cuda_e1_5090_v1.json": "52816b2ee3f7b033a7f1595172cbb4111f9dc510e5d94f2ea24ba93a9c145770",
+    "simple_lab_test/search/tests/test_hard_lmm_elapsed_age_memory.py": "79bed9fceb5f6317790d002d148ca870096ec3660c036dbf28cfe90d0a5d92c2",
+    "simple_lab_test/search/tests/test_hard_lmm_elapsed_age_contract.py": "7097ead1009b144aa7e862894c7c7f1093a0c90f6fe680b6ea527b327b54163f",
+    "simple_lab_test/search/tests/test_hard_lmm_elapsed_age_smoke.py": "a16adb07e05719abdfd999c64ce9361115ffce53246ad769206b46e0b9276622"
+  },
+  "local_real_data_fitting": false,
+  "local_tests_use_synthetic_data_only": true,
+  "performance_acceptance": "not_evaluated",
+  "held_out_test": false,
+  "next_authorized_step": "Commit source, isolated5090 transfer, CUDA model tests then Taxi and Instacart full e1"
+}

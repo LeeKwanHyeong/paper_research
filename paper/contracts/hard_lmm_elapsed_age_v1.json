@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "contract_id": "hard_lmm_elapsed_age_v1",
+  "created_on": "2026-09-05",
+  "source_context_revision": "9155cd38eb550bbc7f62895c8c3b43bddbffb0b6",
+  "scope": "Single causal signed elapsed-age attention-bias candidate on the separate-key Hard-LMM; authorized local implementation/tests/commit plus 5090 CUDA/full e1 only",
+  "authorization": {
+    "local_implementation_tests_commit": true,
+    "server": "5090",
+    "isolated_source_sync": true,
+    "cuda_and_full_e1_taxi_instacart": true,
+    "performance_screening": false,
+    "scheduler": false,
+    "automatic_retry_resume": false,
+    "held_out_test": false,
+    "push": false,
+    "service_or_runtime_changes": false
+  },
+  "candidate": {
+    "label": "TitanTPP-HardLMM Causal Elapsed-Age Bias",
+    "backbone": "titantpp_elapsed_age_static_memory",
+    "model_role": "t0_elapsed_age_static_retrieval",
+    "adopted_primary_model": false,
+    "official_reference": "titantpp",
+    "mechanism_reference": "titantpp_key_value_static_memory",
+    "only_change_vs_mechanism_reference": "Eight zero-initialized signed scalars add causal normalized elapsed-age minus event-rank-age geometry to encoder attention logits",
+    "new_parameters": 8,
+    "novelty_claim": false,
+    "memory_mode": "elapsed_age_static_lmm"
+  },
+  "evidence": {
+    "path": "paper/results/hard_lmm_instacart_balanced_20260905/evidence_decision.json",
+    "sha256": "e15b694e84245b0dcd7d4110965981cbd95a2256d34240f52d8b8ee44a14e87d",
+    "analysis_path": "paper/results/hard_lmm_instacart_balanced_20260905/analysis.json",
+    "analysis_sha256": "d09c22767bc943452bcdba6617b21cf637e4bfb1b3e725b48aee5fc62c168410",
+    "interpretation": "Prospectively balanced train-internal short-history body groups show larger errors for larger J; supports testing the geometry hypothesis without claiming causal encoder deficiency or expected performance gain"
+  },
+  "geometry": {
+    "formula": "B[b,i,j] = (S[b,i]-S[b,j])/S[b,i] - (r[b,i]-r[b,j])/r[b,i] for valid observed j<=i with r[b,i]>=2 and S[b,i]>0; otherwise zero",
+    "rank": "r=cumsum(observed_mask)-1; first observed event has rank0; padded locations are excluded",
+    "prefix_span": "S=cumsum(where(observed_mask AND r>0, clamp_min(raw_delta_t,0),0)); both sums include the current observed gap dt[i]",
+    "mask": "Use memory_write_mask when provided as the history observation boundary, otherwise validity mask. Require observed_mask to be a subset of validity and reject malformed masks. Selected target and padding are zeroed BEFORE cumulative sums. Each query uses its OWN causal prefix span and rank, never final-window span.",
+    "first_gap": "The first retained observed gap may cross the window boundary and is excluded from this geometry. The original log-gap input path remains unchanged.",
+    "time_units": "Dimensionless ratios; original raw delta_t unit (Taxi hours, Instacart days) cancels. No new dataset statistics, fixed lookback divisor, train mean, or validation fitting.",
+    "short_or_zero_history": "No valid history, first query, H<=2, or zero-span prefix gives zero geometry. Equal internal gaps give mathematical zero.",
+    "pair_boundary": "Future, padded, non-observed and persistent-memory key columns have exactly zero bias. Persistent tokens retain their original attention mechanism.",
+    "precision": "Finite nonnegative float32-range raw gaps; negative gaps clamped to0 in geometry only. Mask invalid positions before arithmetic. Compute cumulative sums and ratios in float64 outside autocast, emit float32 geometry, cast beta*B to existing attention-score dtype before addition.",
+    "invariance_scope": "B is invariant to common positive gap scaling and the excluded first gap; the full model is not, because its existing log-gap input is retained.",
+    "reference_identity": "RMS of the last observed query B over its valid observed keys equals the existing age_distortion J within declared float32 tolerance."
+  },
+  "attention": {
+    "location": "After QK/sqrt(head_dim), before existing causal/padding masks and softmax",
+    "formula": "score[layer,head,b,i,j] += beta[layer,head] * B[b,i,j]",
+    "beta_shape": [
+      2,
+      4
+    ],
+    "initial_value": 0.0,
+    "constraint": "Unconstrained signed trainable scalars; no softplus, fixed recency sign, gate, projection, additional loss or beta-zero bypass",
+    "gradient": "Keep beta*B on autograd graph at beta0; nondegenerate irregular histories must provide finite nonzero beta gradients and optimizer updates",
+    "persistent_bias": 0.0,
+    "parameter_state_key": "encoder.elapsed_age_beta"
+  },
+  "initialization": {
+    "shared_parameters": "Exactly the same fresh seed42 RNG draws and parameter values as separate-key; beta zeros consume no RNG",
+    "identity": "At beta0 and identical inputs/mode/RNG, equal initial encoder/retrieval/head outputs; no silent conversion or pretrained initialization",
+    "training": "All shared parameters and beta trainable with the same original AdamW group; fresh parameters for each dataset",
+    "checkpoint": "New backbone/role/contract identity; strict state+metadata+optimizer restoration; legacy separate-key and new checkpoints must not silently cross-load"
+  },
+  "unchanged": {
+    "input": "mark-free log1p gap and quantity",
+    "hidden_dim": 64,
+    "n_layers": 2,
+    "n_heads": 4,
+    "d_ff": 128,
+    "dropout": 0.1,
+    "pre_norm": true,
+    "learned_position_embeddings": true,
+    "persistent_tokens": 16,
+    "prototype_count": 64,
+    "topk": 4,
+    "temperature": 1.0,
+    "memory": "static separate keys and values; no online/contextual update",
+    "query": "existing h without added statistics or projection",
+    "fusion": "h+r",
+    "quantity_variant": "count_only_log_regression",
+    "quantity_loss": "direct MSE on log1p(quantity)",
+    "lambda_log_qty": 1.0,
+    "lambda_tail": 0.0,
+    "time_head": "legacy_clamped_rmtpp",
+    "time_scale": 3.0,
+    "time_w_max": 3.3333333333333335,
+    "checkpoint_selection": "earliest strict minimum validation_joint_objective",
+    "optimizer": "AdamW lr.001 betas(.9,.999) eps1e-8 weight_decay.01 one group time-head multiplier1; grad_clip1",
+    "data_context": "Existing fixed train/validation splits, lookback52/168 and max_seq_len64/256 including target; original train-only body p95 and tail p99 thresholds"
+  },
+  "references": {
+    "original_registry": "paper/contracts/count_aware_hard_lmm_frozen_probe_v1.json",
+    "original_registry_sha256": "a9430a67f81c5c6a3b2baccd5a0fef425b57b98d3706637f9f3040c909540356",
+    "separate_key_validation_comparison": "paper/results/hard_lmm_key_value_screening_5090_20260904/validation_comparison.json",
+    "separate_key_validation_comparison_sha256": "8abac2ca48e3b2b03b327741d1ee9fe00370b86bdbf6ba46a0a15fa016690441",
+    "separate_key_final_audit": "paper/results/hard_lmm_key_value_screening_5090_20260904/final_audit.json",
+    "separate_key_final_audit_sha256": "64f9dc05e1edf8bb74a81908c04b79da30fcaa990fad0ce231663fde461599f9"
+  },
+  "prospective_performance_gate_not_evaluated_in_e1": {
+    "evaluation_scope": "Future separately authorized matched seed42 validation-only screening with original e300/min40/patience40 batch128 lr.001 selector; fresh initialization, no threshold changes after results",
+    "apply_all_simultaneously": true,
+    "both_datasets_vs_original": {
+      "body_le_p95_mae_improvement_min": 0.05,
+      "overall_rmse_regression_max": 0.02,
+      "gt_p99_mae_regression_max": 0.02,
+      "time_nll_absolute_increase_max": 0.01,
+      "finite_required": true
+    },
+    "instacart_vs_separate_key": {
+      "body_le_p95_mae_improvement_min": 0.05
+    },
+    "taxi_vs_separate_key": {
+      "body_le_p95_mae_regression_max": 0.01
+    },
+    "both_datasets_vs_separate_key": {
+      "overall_rmse_regression_max": 0.01,
+      "gt_p99_mae_regression_max": 0.01,
+      "time_nll_absolute_increase_max": 0.01
+    },
+    "reference_precision": "Use full precision frozen validation_comparison artifacts, not rounded README values; stricter simultaneous bound wins",
+    "scope_limit": "Validation screening relevance only; no held-out, extra seeds, dataset expansion or performance adoption authorized by e1"
+  },
+  "numerical_tolerances": {
+    "cpu_initial_identity": {
+      "rtol": 0,
+      "atol": 0
+    },
+    "cuda_float32_initial_identity": {
+      "rtol": 1e-06,
+      "atol": 1e-06
+    },
+    "geometry_float32_vs_independent_float64": {
+      "rtol": 1e-06,
+      "atol": 1e-07
+    },
+    "cpu_next_optimizer_step": {
+      "rtol": 0,
+      "atol": 0
+    },
+    "cuda_next_optimizer_step": {
+      "rtol": 1e-06,
+      "atol": 1e-06
+    },
+    "amp": "Check finite forward/backward and preserve original score dtype at beta0; no performance conclusion from mixed precision probes"
+  },
+  "local_acceptance": [
+    "RNG and common seeded parameter identity",
+    "zero-beta initial full output identity",
+    "independent formula and existing J agreement",
+    "causal-prefix normalization and target/future/padding leakage barriers",
+    "persistent columns unbiased",
+    "first-gap and common-time-scale invariance of geometry only",
+    "H<=2/zero span/equal gaps neutral geometry",
+    "nonzero finite beta gradients and actual attention/retrieval/prediction response on irregular synthetic history",
+    "finite extreme inputs and supported CUDA autocast",
+    "strict wrong-route metadata/state rejection and optimizer next-step replay",
+    "actual h64 L64/L256 training-shaped forward/backward/step",
+    "unchanged legacy original/separate-key contracts"
+  ],
+  "limitations": [
+    "Eight additional parameters and changed shared training dynamics; not parameter-count-matched proof",
+    "Short-history-centered train association does not imply long-history or tail effect",
+    "Signed scalar geometry may be insufficient; no candidate or normalization sweep authorized",
+    "Equal-gap B0 does not guarantee trained Taxi parameters or outputs remain unchanged; explicit preservation gate applies"
+  ]
+}

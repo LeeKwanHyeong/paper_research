@@ -117,6 +117,8 @@ class MemoryAttention(nn.Module):
         self,
         x: torch.Tensor,
         mask: Optional[torch.Tensor] = None,
+        *,
+        event_attention_bias: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         """
         x: [B, L, D]
@@ -152,6 +154,13 @@ class MemoryAttention(nn.Module):
         # --- Attention Score ---
         # scores: [B, H, L, L + n_mem]
         scores = torch.matmul(qh, kh.transpose(-2, -1)) * self.scale
+        if event_attention_bias is not None:
+            if event_attention_bias.shape != (B, self.n_heads, L, L):
+                raise ValueError("Event attention bias must have shape [batch, heads, length, length]")
+            # Persistent/context keys have no event age. Preserve the original
+            # autocast score dtype even when the new coefficients are float32.
+            bias = F.pad(event_attention_bias.to(dtype=scores.dtype, device=scores.device), (n_mem, 0))
+            scores = scores + bias
 
         # --- Causal Masking ---
         full_mask: torch.Tensor | None = None

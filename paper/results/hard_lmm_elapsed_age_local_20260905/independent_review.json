@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "review_id": "hard_lmm_elapsed_age_local_independent_static_review_v1",
+  "reviewed_at_utc": "2026-09-05T00:41:32.885761+00:00",
+  "reviewer": "/root/proposal_critique",
+  "status": "no_static_blocker_for_authorized_cuda_and_full_e1",
+  "review_type": "independent static source and contract review; root-owned test evidence inspected separately",
+  "base_revision_before_candidate_commit": "9155cd38eb550bbc7f62895c8c3b43bddbffb0b6",
+  "resolved_contract_ambiguities": {
+    "observation_mask": {
+      "resolved": true,
+      "contract": "Use memory_write_mask when provided as the history observation boundary, otherwise validity mask. Require observed_mask to be a subset of validity and reject malformed masks. Selected target and padding are zeroed BEFORE cumulative sums. Each query uses its OWN causal prefix span and rank, never final-window span.",
+      "implementation": "causal_elapsed_age_geometry rejects observed positions outside validity before cumulative arithmetic; canonical target_outputs supplies a valid subset."
+    },
+    "beta_activity": {
+      "resolved": true,
+      "contract": "The [2,4] beta tensor has finite strictly positive L2 distance from its all-zero initialization, and corresponding AdamW exp_avg/exp_avg_sq tensors are finite with positive norms and positive step. At least one element must move; all eight need not be nonzero.",
+      "implementation": "Full-e1 audit requires finite beta and AdamW moment tensors with at least one nonzero entry and the full train-batch step count; it does not require all eight coefficients to move."
+    }
+  },
+  "static_checks": [
+    {
+      "area": "single mechanism and causal boundary",
+      "result": "consistent",
+      "detail": "Signed query-prefix elapsed-age minus rank-age geometry is added after scaled QK and before masks/softmax. First boundary gap, non-observed pairs and persistent columns have no new bias. Existing J relationship and per-query prefix logic were reviewed previously and remain unchanged."
+    },
+    {
+      "area": "zero identity and legacy path",
+      "result": "consistent",
+      "detail": "Zero beta construction consumes no RNG; beta times geometry stays on the gradient graph. Optional bias None preserves original call paths. Casting occurs to the existing attention score dtype, with persistent columns padded on the left."
+    },
+    {
+      "area": "Factory and real CLI training path",
+      "result": "consistent",
+      "detail": "Dedicated backbone and role register together; direct log-MSE, legacy time head and no tail loss are enforced. Candidate CLI uses filtered train/validation materialization, the existing optimizer/loss/selector, and explicit observed-target boundaries."
+    },
+    {
+      "area": "checkpoint and run isolation",
+      "result": "consistent",
+      "detail": "New route metadata and finite beta/key/value shapes are validated before legacy key-value routing; relabelled candidate states and cross-loading are rejected. Existing candidate output directories fail before training, including forced rerun requests. State restoration uses strict load_state_dict."
+    },
+    {
+      "area": "source package and execution boundary",
+      "result": "consistent",
+      "detail": "Packager exports committed git archive source, rejects tracked source drift, checks required source/frozen references, disallows links/special files, and emits per-file hashes. E1 runner verifies runtime/source/data, requires CUDA test XML without failures/errors/skips, executes Taxi then Instacart, and does not retry or resume."
+    },
+    {
+      "area": "full population and e1 audit",
+      "result": "consistent",
+      "detail": "Audit checks full train batch counts and train target statistics, exact validation strata/counts, finite model/optimizer state, beta activity, source identities, best/last checkpoint consistency, peak CUDA memory and held-out absence. E1 completion does not evaluate the prospective performance adoption gate."
+    },
+    {
+      "area": "test scope reviewed statically",
+      "result": "consistent",
+      "detail": "Synthetic e1 test invokes the actual CLI/train path on temporary train/validation data with a held-out poison sentinel; synthetic hashes/counts are deliberately substituted and do not validate production data. h64 training-shape tests use B2 locally and B128 under CUDA for L64/L256. CUDA float16/bfloat16 and next-step replay remain required server checks."
+    }
+  ],
+  "actionable_findings": [],
+  "blocking_findings": [],
+  "root_owned_test_evidence": {
+    "executed_by_reviewer": false,
+    "source": "Root integrated local pytest run; reviewer read completed log and JUnit XML only",
+    "testcases": 123,
+    "passed": 122,
+    "failures": 0,
+    "errors": 0,
+    "skipped": [
+      {
+        "name": "test_autocast_preserves_zero_beta_score_dtype_and_finite_gradients[dtype1]",
+        "reason": "CPU autocast coverage uses bfloat16"
+      }
+    ],
+    "junit_seconds": 8.517,
+    "log_path": "/private/tmp/hard_lmm_elapsed_age_local_20260905.log",
+    "log_sha256": "b9c680148fb67f5b70e3bb8c4699959bbc0c59117cfd75cc675b76f48279631e",
+    "xml_path": "/private/tmp/hard_lmm_elapsed_age_local_20260905.xml",
+    "xml_sha256": "2d0a9c44477a52c64182a1af7bbf1e3d075363e2f58cafe042492e6e6dde9896",
+    "cuda_execution_established_by_this_evidence": false,
+    "production_full_e1_established_by_this_evidence": false
+  },
+  "pending_authorized_checks": [
+    "5090 runtime/GPU/data/source preflight and isolated committed-source transfer",
+    "CUDA contracts including actual B128 h64 L64/L256 and supported autocast, with zero skipped tests",
+    "Fresh full Taxi and Instacart e1 plus independent output audit"
+  ],
+  "performance_and_authorization": "No performance adoption, e300 screening, new seeds/datasets, held-out evaluation, push or service/runtime change is established or authorized by this review.",
+  "reviewed_code_and_json_contract_sha256": {
+    "models/Titan/common/elapsed_age.py": "fb04e96ea180974e306c5688ef4b51c5b615a516d671edd472c0049d3f1e651d",
+    "models/Titan/common/memory.py": "d0ab4de1eb5a7499c4bd09333a57d6e75e099e34663867cd276d99dab49767e1",
+    "models/Titan/backbone.py": "f3531234235a9f50de05cf36c80b0a742a45709145d49555440249c814a20e98",
+    "models/TPPs/CountAwareTPP.py": "5cb337557d86975869b83e286f510f9ad74b6c46f4cc34789d37676ecf594c24",
+    "models/TPPs/CountAwareFactory.py": "0eecfacf5443496b1fdcd327052bb8e8218ff75ecea069cf4a1c3872a1c02411",
+    "paper/scripts/count_aware_tpp_backbone/constants.py": "80d4ceaad27180526200130143b3617f6469f63b18cf64e72438b9675235dfbd",
+    "paper/scripts/count_aware_tpp_backbone/training.py": "649745cdde4c1bfdea9efacb5dd812f0e0f79e7726071343cb19128007d028b9",
+    "paper/scripts/count_aware_tpp_backbone/core.py": "025dfbe75a5a4e235466807f31873aa085f8ddffe680485fb4b9f4f7ef60c598",
+    "paper/scripts/run_count_aware_tpp_backbone_control.py": "a291413f490d76ac57eee9da80e269d8eb3a784e3c1c5b5c684f37dcbe141ba8",
+    "paper/scripts/package_hard_lmm_elapsed_age_smoke.py": "fa920326462e2b40dced1b5cf0f3cbf4b967bcec258d724e1ef1d7851d183c71",
+    "paper/scripts/run_hard_lmm_elapsed_age_smoke.py": "3c3035021b0bdb77372b005aac1b08cdd1ade20fef8dbbe4c90d560d62ea2393",
+    "simple_lab_test/search/tests/test_hard_lmm_elapsed_age_memory.py": "79bed9fceb5f6317790d002d148ca870096ec3660c036dbf28cfe90d0a5d92c2",
+    "simple_lab_test/search/tests/test_hard_lmm_elapsed_age_contract.py": "7097ead1009b144aa7e862894c7c7f1093a0c90f6fe680b6ea527b327b54163f",
+    "simple_lab_test/search/tests/test_hard_lmm_elapsed_age_smoke.py": "a16adb07e05719abdfd999c64ce9361115ffce53246ad769206b46e0b9276622",
+    "paper/contracts/hard_lmm_elapsed_age_v1.json": "3d7294d8177e4254fc573e478f176b326504a54c304881d36cc8a5a0a1ffd058",
+    "paper/contracts/hard_lmm_elapsed_age_cuda_e1_5090_v1.json": "52816b2ee3f7b033a7f1595172cbb4111f9dc510e5d94f2ea24ba93a9c145770"
+  },
+  "hash_scope_note": "README and other actively edited Markdown documentation are excluded. This file is not a source package manifest and does not substitute for the execution source manifest."
+}

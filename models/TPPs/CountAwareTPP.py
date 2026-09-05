@@ -29,6 +29,7 @@ from models.Titan.common.key_value_memory import (
     KEY_VALUE_MEMORY_MODE,
     KeyValueLocalMemoryMatcher,
 )
+from models.Titan.common.elapsed_age import ELAPSED_AGE_MEMORY_MODE, causal_elapsed_age_geometry
 from models.Titan.common.titans_mac import TitansMACEncoder, TitansMemoryState
 from models.Titan.common.tpp_gated_memory import (
     TPPGatedMemoryState,
@@ -72,6 +73,7 @@ TITAN_MEMORY_MODES = (
     TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
     TITAN_MEMORY_MODE_STATIC_WEIGHTED,
     KEY_VALUE_MEMORY_MODE,
+    ELAPSED_AGE_MEMORY_MODE,
     TITAN_MEMORY_MODE_STATIC_SOFT_GATED,
     TITAN_MEMORY_MODE_SURPRISE_GATED,
     TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
@@ -726,6 +728,12 @@ class CountAwareTitanTPP(SharedTimeCountModel):
                 "adapter_only quantity routing is valid only for dual memory"
             )
         self.memory_mode = memory_mode
+        if memory_mode == ELAPSED_AGE_MEMORY_MODE and (
+            self.quantity_variant != LOG_MSE_VARIANT
+            or self.time_head_mode != TIME_HEAD_MODE_LEGACY_CLAMPED
+            or self.lambda_tail != 0.0
+        ):
+            raise ValueError("Elapsed-age candidate requires direct log-MSE, legacy time head and no tail loss")
         self.quantity_memory_gradient_mode = quantity_memory_gradient_mode
         uses_titans_mac = memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
         uses_tpp_gated_memory = memory_mode == TITAN_MEMORY_MODE_TPP_GATED
@@ -735,6 +743,7 @@ class CountAwareTitanTPP(SharedTimeCountModel):
             TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
             TITAN_MEMORY_MODE_STATIC_WEIGHTED,
             KEY_VALUE_MEMORY_MODE,
+            ELAPSED_AGE_MEMORY_MODE,
             TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
             TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
             TITAN_MEMORY_MODE_TPP_GATED,
@@ -744,6 +753,7 @@ class CountAwareTitanTPP(SharedTimeCountModel):
             TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
             TITAN_MEMORY_MODE_STATIC_WEIGHTED,
             KEY_VALUE_MEMORY_MODE,
+            ELAPSED_AGE_MEMORY_MODE,
             TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
         }
         uses_surprise_memory = memory_mode in {
@@ -767,6 +777,7 @@ class CountAwareTitanTPP(SharedTimeCountModel):
                 use_pos_emb=True,
                 max_len=max_seq_len,
                 use_causal=True,
+                use_elapsed_age_bias=memory_mode == ELAPSED_AGE_MEMORY_MODE,
             )
         )
         self.titans_mac_encoder = (
@@ -786,7 +797,7 @@ class CountAwareTitanTPP(SharedTimeCountModel):
         )
         matcher = (
             KeyValueLocalMemoryMatcher
-            if memory_mode == KEY_VALUE_MEMORY_MODE
+            if memory_mode in {KEY_VALUE_MEMORY_MODE, ELAPSED_AGE_MEMORY_MODE}
             else SimilarityWeightedLocalMemoryMatcher
             if memory_mode == TITAN_MEMORY_MODE_STATIC_WEIGHTED
             else HardLocalMemoryMatcher
@@ -852,7 +863,12 @@ class CountAwareTitanTPP(SharedTimeCountModel):
         else:
             if self.encoder is None:
                 raise RuntimeError("Titan encoder is not initialized")
-            encoded = self.encoder(x, mask=mask, update_context_memory=False)
+            if self.memory_mode == ELAPSED_AGE_MEMORY_MODE:
+                geometry = causal_elapsed_age_geometry(dts, mask, observed_mask=memory_write_mask)
+                encoded = self.encoder(x, mask=mask, update_context_memory=False,
+                                       elapsed_age_geometry=geometry)
+            else:
+                encoded = self.encoder(x, mask=mask, update_context_memory=False)
             if self.tpp_gated_memory is not None:
                 encoded = self.tpp_gated_memory(
                     encoded,

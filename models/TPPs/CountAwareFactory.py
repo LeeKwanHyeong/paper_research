@@ -6,6 +6,8 @@ from dataclasses import asdict
 import math
 from typing import Any
 
+import torch
+
 from models.TPPs.CountAwareTPP import (
     LOG_MSE_VARIANT,
     TIME_HEAD_MODE_LEGACY_CLAMPED,
@@ -40,10 +42,66 @@ from models.Titan.common.key_value_memory import (
     KEY_VALUE_CONTRACT,
     KEY_VALUE_MEMORY_MODE,
 )
+from models.Titan.common.elapsed_age import (
+    ELAPSED_AGE_BACKBONE, ELAPSED_AGE_BETA_KEY, ELAPSED_AGE_CONTRACT,
+    ELAPSED_AGE_MEMORY_MODE, elapsed_age_metadata,
+)
 
 
 HARD_LOCAL_TIME_BACKBONE = "titantpp_hard_memory_local_time"
 HARD_LOCAL_TIME_CONTRACT = "hard_lmm_local_time_v1"
+
+
+def validate_elapsed_age_checkpoint(payload: dict[str, Any], expected_backbone: str) -> bool:
+    """Validate this independent encoder route before legacy K/V detection."""
+    metadata = payload.get("encoder_config", {})
+    if not isinstance(metadata, dict):
+        raise ValueError("Invalid checkpoint encoder metadata")
+    states = [payload[name] for name in ("model_state_dict", "best_state_dict") if name in payload]
+    is_candidate = (
+        payload.get("backbone") == ELAPSED_AGE_BACKBONE
+        or metadata.get("elapsed_age_contract_id") == ELAPSED_AGE_CONTRACT
+        or metadata.get("memory_mode") == ELAPSED_AGE_MEMORY_MODE
+        or any(isinstance(state, dict) and ELAPSED_AGE_BETA_KEY in state for state in states)
+    )
+    if expected_backbone != ELAPSED_AGE_BACKBONE:
+        if is_candidate:
+            raise ValueError("Elapsed-age checkpoint cannot be loaded as another backbone")
+        return False
+    dim = metadata.get("d_model")
+    if type(dim) is not int or dim < 1 or dim % 4:
+        raise ValueError("Elapsed-age checkpoint hidden dimension mismatch")
+    required = {
+        **elapsed_age_metadata(dim),
+        "static_retrieval_contract_id": KEY_VALUE_CONTRACT,
+        "static_retrieval_aggregation": "softmax_cosine_topk",
+        "static_retrieval_temperature": 1.0,
+        "static_key_value_tied": False,
+        "static_key_initialization": "clone_values_no_rng",
+        "n_layers": 2, "n_heads": 4, "d_ff": dim * 2,
+        "persistent_mem_size": 16, "lmm_mem_size": 64, "lmm_topk": 4,
+    }
+    if (payload.get("backbone") != expected_backbone
+            or any(metadata.get(key) != value for key, value in required.items())):
+        raise ValueError("Elapsed-age checkpoint encoder metadata mismatch")
+    time_head = metadata.get("time_head", {})
+    if (payload.get("variant") != LOG_MSE_VARIANT
+            or not isinstance(time_head, dict)
+            or time_head.get("mode") != TIME_HEAD_MODE_LEGACY_CLAMPED
+            or payload.get("evaluation_scope") != "validation_only"
+            or payload.get("held_out_test_evaluated") is not False):
+        raise ValueError("Elapsed-age checkpoint head, objective or scope mismatch")
+    if not states:
+        raise ValueError("Elapsed-age checkpoint requires model state")
+    for state in states:
+        shapes = {ELAPSED_AGE_BETA_KEY: (2, 4), "lmm.mem": (1, 64, dim), "lmm.memory_keys": (1, 64, dim)}
+        if not isinstance(state, dict) or any(
+            not isinstance(state.get(name), torch.Tensor)
+            or tuple(state[name].shape) != shape or not bool(torch.isfinite(state[name]).all())
+            for name, shape in shapes.items()
+        ):
+            raise ValueError("Elapsed-age checkpoint requires finite beta, key and value tensors")
+    return True
 
 
 def validate_key_value_checkpoint(payload: dict[str, Any], expected_backbone: str) -> None:
@@ -96,6 +154,8 @@ def validate_key_value_checkpoint(payload: dict[str, Any], expected_backbone: st
 
 def validate_checkpoint_route(payload: dict[str, Any], expected_backbone: str) -> None:
     """Validate explicit candidate identity; compatible tensor shapes are not enough."""
+    if validate_elapsed_age_checkpoint(payload, expected_backbone):
+        return
     validate_key_value_checkpoint(payload, expected_backbone)
     validate_static_memory_checkpoint(payload, expected_backbone)
     metadata = payload.get("encoder_config", {})
@@ -166,6 +226,11 @@ def build_count_aware_model(
     titans_memory_gradient_clip: float | None = None,
 ) -> tuple[SharedTimeCountModel, dict[str, Any]]:
     """Construct one controlled backbone and its serializable metadata."""
+    if backbone == ELAPSED_AGE_BACKBONE and (
+        quantity_variant != LOG_MSE_VARIANT or time_head_mode != TIME_HEAD_MODE_LEGACY_CLAMPED
+        or lambda_tail != 0.0
+    ):
+        raise ValueError("Elapsed-age candidate requires direct log-MSE, legacy time head and no tail loss")
     if backbone == KEY_VALUE_BACKBONE and (
         quantity_variant != LOG_MSE_VARIANT
         or time_head_mode != TIME_HEAD_MODE_LEGACY_CLAMPED
@@ -253,6 +318,7 @@ def build_count_aware_model(
             },
         )
     titan_modes = {
+        ELAPSED_AGE_BACKBONE: (ELAPSED_AGE_MEMORY_MODE, TITAN_QUANTITY_GRADIENT_SHARED),
         KEY_VALUE_BACKBONE: (KEY_VALUE_MEMORY_MODE, TITAN_QUANTITY_GRADIENT_SHARED),
         "titantpp": (
             TITAN_MEMORY_MODE_STATIC_HARD,
@@ -311,6 +377,7 @@ def build_count_aware_model(
             TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
             TITAN_MEMORY_MODE_STATIC_WEIGHTED,
             KEY_VALUE_MEMORY_MODE,
+            ELAPSED_AGE_MEMORY_MODE,
             TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
             TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
             TITAN_MEMORY_MODE_TITANS_MAC,
@@ -321,6 +388,7 @@ def build_count_aware_model(
             TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
             TITAN_MEMORY_MODE_STATIC_WEIGHTED,
             KEY_VALUE_MEMORY_MODE,
+            ELAPSED_AGE_MEMORY_MODE,
             TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
         }
         uses_soft_memory = memory_mode == TITAN_MEMORY_MODE_STATIC_SOFT_GATED
@@ -338,6 +406,7 @@ def build_count_aware_model(
             **quantity_kwargs,
         )
         candidate_names = {
+            ELAPSED_AGE_BACKBONE: "count_titan_elapsed_age_separate_keys",
             KEY_VALUE_BACKBONE: "count_titan_static_top4_separate_keys_tau1",
             "titantpp": "count_titan_small_lmm",
             HARD_LOCAL_TIME_BACKBONE: "count_titan_hard_quantity_local_time",
@@ -373,7 +442,7 @@ def build_count_aware_model(
                     "static_key_value_tied": False,
                     "static_key_initialization": "clone_values_no_rng",
                     "additional_parameter_count": 64 * hidden_dim,
-                } if memory_mode == KEY_VALUE_MEMORY_MODE else {}),
+                } if memory_mode in {KEY_VALUE_MEMORY_MODE, ELAPSED_AGE_MEMORY_MODE} else {}),
                 **({
                     "routing_contract_id": HARD_LOCAL_TIME_CONTRACT,
                     "static_retrieval_aggregation": "arithmetic_mean",
@@ -414,6 +483,7 @@ def build_count_aware_model(
                         TITAN_MEMORY_MODE_TPP_GATED,
                         TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
                         KEY_VALUE_MEMORY_MODE,
+                        ELAPSED_AGE_MEMORY_MODE,
                     }
                     else None
                 ),
@@ -537,6 +607,7 @@ def build_count_aware_model(
                     else "shared_state"
                 ),
                 "max_len": max_seq_len,
+                **(elapsed_age_metadata(hidden_dim) if memory_mode == ELAPSED_AGE_MEMORY_MODE else {}),
             },
         )
     raise ValueError(f"Unsupported backbone: {backbone}")

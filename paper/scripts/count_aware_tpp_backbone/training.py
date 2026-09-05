@@ -19,6 +19,7 @@ from models.TPPs.CountAwareFactory import (
 )
 from models.TPPs.CountAwareTHPStaticMemory import THP_STATIC_MEMORY_BACKBONE
 from models.Titan.common.key_value_memory import KEY_VALUE_BACKBONE
+from models.Titan.common.elapsed_age import ELAPSED_AGE_BACKBONE
 from paper.scripts.count_aware_tpp_backbone.constants import (
     BACKBONE_LABELS,
     TAIL_VARIANTS,
@@ -262,6 +263,8 @@ def train_one(
     seed: int,
 ) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
     run_dir = args.output_dir / "runs" / backbone / quantity_variant / f"seed_{seed}"
+    if backbone == ELAPSED_AGE_BACKBONE and run_dir.exists():
+        raise FileExistsError("Elapsed-age candidate requires a fresh run; automatic reuse/resume/overwrite is forbidden")
     if backbone == KEY_VALUE_BACKBONE and run_dir.exists():
         raise FileExistsError("Separate-key candidate requires a fresh run; automatic reuse/resume/overwrite is forbidden")
     if backbone == THP_STATIC_MEMORY_BACKBONE and run_dir.exists():
@@ -330,6 +333,8 @@ def train_one(
         titans_memory_gradient_clip=getattr(args, "titans_memory_gradient_clip", None),
     )
     model.to(args.device)
+    if backbone == ELAPSED_AGE_BACKBONE and torch.device(args.device).type == "cuda":
+        torch.cuda.reset_peak_memory_stats(torch.device(args.device))
     parameter_count = sum(
         parameter.numel()
         for parameter in model.parameters()
@@ -573,6 +578,17 @@ def train_one(
         "quantity_rows": quantity_rows,
         "history_rows": history_rows,
     }
+    if backbone == ELAPSED_AGE_BACKBONE:
+        cuda_device = torch.device(args.device).type == "cuda"
+        summary.update({
+            "training_device": str(args.device),
+            "cuda_peak_memory_allocated_bytes": (
+                torch.cuda.max_memory_allocated(torch.device(args.device)) if cuda_device else None
+            ),
+            "cuda_peak_memory_reserved_bytes": (
+                torch.cuda.max_memory_reserved(torch.device(args.device)) if cuda_device else None
+            ),
+        })
     save_json(summary_path, summary)
     returned = dict(summary)
     returned.pop("quantity_rows")

@@ -66,10 +66,13 @@ class TitanBackbone(nn.Module):
         self,
         x: torch.Tensor,
         mask: Optional[torch.Tensor] = None,
+        *,
+        event_attention_bias: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         # attn
         h = self.norm1(x)
-        h = self.attn(h, mask=mask)
+        h = (self.attn(h, mask=mask) if event_attention_bias is None
+             else self.attn(h, mask=mask, event_attention_bias=event_attention_bias))
         x = x + self.drop1(h)
         if mask is not None:
             x = x * mask.to(device=x.device, dtype=x.dtype).unsqueeze(-1)
@@ -116,7 +119,8 @@ class MemoryEncoder(nn.Module):
         use_context_update: bool = False,
         use_pos_emb: bool = True,
         max_len: int = 512,
-        use_causal: bool = True
+        use_causal: bool = True,
+        use_elapsed_age_bias: bool = False,
     ):
         super().__init__()
         self.input_proj = nn.Linear(int(input_dim), int(d_model))
@@ -144,6 +148,12 @@ class MemoryEncoder(nn.Module):
             self.pos_emb = nn.Parameter(torch.randn(1, self.max_len, int(d_model)) * 0.02)
         else:
             self.register_parameter("pos_emb", None)
+        # Zero construction consumes no RNG and leaves all legacy parameters
+        # and their initialization order intact.
+        self.register_parameter(
+            "elapsed_age_beta",
+            nn.Parameter(torch.zeros(int(n_layers), int(n_heads))) if use_elapsed_age_bias else None,
+        )
 
     def _get_pos(
         self,
@@ -216,7 +226,12 @@ class MemoryEncoder(nn.Module):
         update_context_memory: Optional[bool] = None,
         position_offset: int | torch.Tensor = 0,
         context_memory_update: str = "all",
+        elapsed_age_geometry: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
+        if (elapsed_age_geometry is None) != (self.elapsed_age_beta is None):
+            raise ValueError("Elapsed-age geometry and enabled coefficients must be supplied together")
+        if elapsed_age_geometry is not None and elapsed_age_geometry.shape != (x.size(0), x.size(1), x.size(1)):
+            raise ValueError("Elapsed-age geometry must have shape [batch, length, length]")
         # x: [B, L, input_dim]
         x = self.input_proj(x)  # [B, L, D]
 
@@ -232,8 +247,14 @@ class MemoryEncoder(nn.Module):
             else bool(self.training and self.use_context_update)
         )
 
-        for layer in self.layers:
-            x = layer(x, mask=mask)
+        for index, layer in enumerate(self.layers):
+            if elapsed_age_geometry is None:
+                x = layer(x, mask=mask)
+            else:
+                # Keep the zero coefficient in autograd: bypassing a zero
+                # coefficient would prevent the new mechanism from learning.
+                event_bias = elapsed_age_geometry.unsqueeze(1) * self.elapsed_age_beta[index].view(1, -1, 1, 1)
+                x = layer(x, mask=mask, event_attention_bias=event_bias)
             if should_update:
                 # TTM-Lite updates memory only after processing observed tokens.
                 # Callers must avoid passing future target tokens when this flag
