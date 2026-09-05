@@ -1,72 +1,54 @@
-# Figure register: F1-F3
+# TitanTPP figure register
 
-> Status: manuscript-ready draft figures. F1 and F2 are implementation-backed schematics;
-> F3 is generated from frozen fixed-split datasets and does not use model predictions.
+> Status: v0.7 validation freeze. 현재 본문 그림은 F1과 F2다. 두 그림 모두
+> held-out prediction을 사용하지 않는다.
 
-## F1. Problem formulation
+## F1 v0.7. Mark-free TitanTPP architecture
 
-**Purpose.** Explain why zero-heavy demand is represented as a positive-demand event sequence
-and why a categorical mark alone cannot recover continuous demand quantity.
+**Purpose.** 공통 continuous-count event interface와 Backbone 비교에서 고정한
+TitanTPP-T0 구조를 설명한다.
 
-**Caption draft.** Problem formulation for quantity-aware marked event prediction. Regular
-zero-heavy observations are converted into positive-demand events with inter-event times.
-Each positive quantity is factorized into a tail-clipped coarse magnitude mark
-`m=min(floor(log_b q), M)` and a continuous residual `r=log_b q-m`, which permits exact
-reconstruction through `q=b^(m+r)`. The next-event task jointly predicts the magnitude mark,
-arrival time, and continuous quantity component.
+**Caption.** Mark-free Count-aware TitanTPP. Each observed event token contains the
+log-transformed inter-event time and quantity. Two causal memory-attention layers
+combine learned persistent tokens with static Hard-LMM top-4 prototype retrieval to form
+a shared history state. Common clamped RMTPP time-score and direct log-count heads predict the next
+event. RMTPP and THP replace only the history encoder under the matched comparison.
 
-**Files.** `F1_problem_formulation.{svg,pdf,png}`
+**Files.** `F1_v0_7_mark_free_architecture.{svg,pdf,png}`
 
-## F2. TitanTPP architecture
+**Generator.** `paper/scripts/generate_v0_7_mark_free_figures.py`
 
-**Purpose.** Show the controlled RMTPP-to-TitanTPP backbone redesign and the quantity-aware
-prediction path used by the frozen comparison contract.
+## F2 v0.7. Dataset-level validation errors
 
-**Caption draft.** TitanTPP receives the observed magnitude mark, log inter-event time, and
-quantity residual at each event. A causal Titan encoder and static local memory matching module
-produce history representations for mark, time, and residual heads. The differentiable decoder
-combines mark probabilities and residual predictions to reconstruct continuous quantity and
-supports the hybrid residual-plus-quantity objective. RMTPP-matched retains the quantity input,
-prediction tasks, decoder, and loss while using a GRU with shared heads. For Taxi, TitanTPP V3b
-adds mark-conditioned residual experts and stops the quantity-loss gradient at the mark gate;
-the TitanTPP V2 control isolates this specialization from the encoder change.
+**Analytical question.** 같은 T0 구조의 상대 quantity error가 세 데이터셋에서
+어떻게 달라지는가?
 
-**Files.** `F2_titantpp_architecture.{svg,pdf,png}`
+**Chart contract.** 각 데이터셋의 3-seed mean MAE와 RMSE를 해당 RMTPP mean으로
+나눈 두 panel grouped bar chart다. 비율 1은 RMTPP 기준선이며 1보다 낮으면 비교
+encoder의 평균 오차가 작다. Sample standard deviation은 T3에서, paired-seed
+일관성은 T4에서 별도로 보고한다.
 
-## F2-clean. TitanTPP architecture for manuscript
+**Caption.** Three-seed validation quantity MAE and RMSE relative to RMTPP within each
+dataset. TitanTPP produces a large reduction relative to recurrent RMTPP on Intermittent-5000,
+a small mean-RMSE reduction with higher MAE on Taxi, and no reduction on Instacart.
+Absolute values and sample standard
+deviations appear in T3; paired-seed outcomes appear in T4.
 
-**Purpose.** Provide the main paper architecture figure without internal experiment-management
-language or baseline-control notes.
+**Files.** `F2_v0_7_dataset_validation_errors.{svg,pdf,png}` and
+`source_data/F2_v0_7_dataset_validation_errors.csv`
 
-**Caption draft.** TitanTPP architecture for quantity-aware event prediction. Each observed
-event token combines a magnitude mark, an inter-event-time feature, and a quantity residual.
-The Titan history encoder produces a causal history state, which feeds mark, time, and residual
-prediction heads. The quantity decoder reconstructs continuous demand by combining the mark
-probabilities and residual estimates, and the training objective combines mark, time, residual,
-and reconstructed-quantity losses.
-
-**Files.** `F2_titantpp_architecture_clean.{svg,pdf,png}`
-
-## F3. Quantity and sequence distributions
-
-**Analytical question.** How strongly do the three datasets differ in history length and
-quantity tail behavior?
-
-**Chart contract.** Two empirical survival plots with logarithmic horizontal and vertical
-scales. Panel (a) uses one observation per sequence; panel (b) uses one observation per event.
-Color and line style jointly identify each dataset.
-
-**Caption draft.** Empirical survival distributions of sequence length and positive event
-quantity in the frozen datasets. Taxi contains substantially longer event histories and a heavy
-quantity tail, Intermittent combines mostly short histories with rare extreme quantities, and
-Instacart contains many moderate-length user histories with a narrower quantity range. Curves
-describe the complete fixed datasets and do not include model outputs or held-out performance.
-
-**Files.** `F3_quantity_sequence_distributions.{svg,pdf,png}` and
-`source_data/F3_quantity_sequence_distributions.csv`.
+**Generator.** `paper/scripts/build_v0_7_paper_artifacts.py`
 
 ## Rebuild
 
 ```bash
-python paper/scripts/build_f1_f3.py
+python paper/scripts/generate_v0_7_mark_free_figures.py
+python paper/scripts/build_v0_7_paper_artifacts.py
 ```
+
+## Archived v0.6 figures
+
+`F1_problem_formulation.*`, `F2_titantpp_architecture*` and
+`F3_quantity_sequence_distributions.*` describe or support the former
+magnitude-mark/residual revision. They remain as provenance and are not current v0.7
+manuscript figures.

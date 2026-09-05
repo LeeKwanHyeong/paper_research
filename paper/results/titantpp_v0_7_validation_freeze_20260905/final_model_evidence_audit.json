@@ -1,0 +1,53 @@
+{
+  "audit_id": "titantpp_v0_7_common_final_model_evidence_audit_20260905",
+  "evaluation_scope": "validation_only",
+  "held_out_test_evaluated": false,
+  "required_common_datasets": [
+    "taxi",
+    "instacart"
+  ],
+  "required_seeds": [
+    42,
+    52,
+    62
+  ],
+  "candidates": {
+    "original_mark_free_hard_lmm_t0": {
+      "decision": "PASS_THREE_SEED_COVERAGE_ON_BOTH_DATASETS",
+      "dataset_seed_coverage": {
+        "taxi": [
+          42,
+          52,
+          62
+        ],
+        "instacart": [
+          42,
+          52,
+          62
+        ]
+      },
+      "same_model_role": "t0_common_control",
+      "eligible_as_common_final_structure": true,
+      "performance_qualification": "Coverage passes, but common performance superiority does not: Taxi has a mean-RMSE-only trade-off and Instacart does not establish a Hard-LMM advantage."
+    },
+    "separate_key_hard_lmm": {
+      "decision": "FAIL_THREE_SEED_COVERAGE_AND_PROSPECTIVE_CROSS_DATASET_GATE",
+      "dataset_seed_coverage": {
+        "taxi": [
+          42
+        ],
+        "instacart": [
+          42
+        ]
+      },
+      "dataset_gates_passed": 1,
+      "dataset_gates_evaluated": 2,
+      "candidate_accepted_for_expansion": false,
+      "rejection_reason": "Instacart failed the prospective body MAE improvement gate.",
+      "eligible_as_common_final_structure": false,
+      "paper_use": "single_seed_diagnostic_only"
+    }
+  },
+  "final_structure_decision": "FREEZE_ORIGINAL_MARK_FREE_HARD_LMM_T0",
+  "separate_key_in_main_tables": false
+}

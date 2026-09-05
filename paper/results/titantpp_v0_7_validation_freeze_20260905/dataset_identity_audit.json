@@ -1,0 +1,89 @@
+{
+  "audit_id": "titantpp_v0_7_dataset_identity_audit_20260905",
+  "v0_7_three_dataset_identity_decision": "FAIL_INTERMITTENT_POPULATION_MISMATCH",
+  "taxi_instacart_integrated_table_decision": "PASS_SAME_ARTIFACT_IDENTITIES_ONLY",
+  "integrated_validation_table_datasets": [
+    "taxi",
+    "instacart"
+  ],
+  "intermittent_included_in_integrated_validation_table": false,
+  "checks": [
+    {
+      "dataset": "taxi",
+      "table_dataset_id": "yellow_trip_hourly",
+      "evaluated_dataset_id": "yellow_trip_hourly",
+      "decision": "PASS_SAME_ARTIFACT_IDENTITY",
+      "same_data_sha256": true,
+      "same_split_manifest_sha256": true,
+      "table_data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+      "evaluated_data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+      "table_split_manifest_sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85",
+      "evaluated_split_manifest_sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85",
+      "table_split_rows": {
+        "train": 38524,
+        "validation": 8268,
+        "test": 8327
+      },
+      "evaluated_split_rows": {
+        "test": 8327,
+        "train": 38524,
+        "validation": 8268
+      }
+    },
+    {
+      "dataset": "instacart",
+      "table_dataset_id": "insta_market_basket",
+      "evaluated_dataset_id": "insta_market_basket",
+      "decision": "PASS_SAME_ARTIFACT_IDENTITY",
+      "same_data_sha256": true,
+      "same_split_manifest_sha256": true,
+      "table_data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+      "evaluated_data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+      "table_split_manifest_sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d",
+      "evaluated_split_manifest_sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d",
+      "table_split_rows": {
+        "train": 2197401,
+        "validation": 503733,
+        "test": 578387
+      },
+      "evaluated_split_rows": {
+        "test": 578387,
+        "train": 2197401,
+        "validation": 503733
+      }
+    },
+    {
+      "dataset": "intermittent",
+      "table_dataset_id": "intermittent",
+      "evaluated_dataset_id": "intermittent_frozen_5000",
+      "decision": "FAIL_POPULATION_IDENTITY_MISMATCH",
+      "same_data_sha256": false,
+      "same_split_manifest_sha256": false,
+      "same_population_counts": false,
+      "table_population": {
+        "sequences": 23387,
+        "events_total": 242888,
+        "split_rows": {
+          "train": 159643,
+          "validation": 41901,
+          "test": 41344
+        },
+        "data_sha256": "dab4d8a7217f9c14d1c2336f649aef9ddaf2ba440d074e446d8fd5cc41506a30",
+        "split_manifest_sha256": "49752a1bd4ccaf1c2b8e37321e3657cb098d303c51a093eecf1c91ea3ef9bdfe"
+      },
+      "evaluated_population": {
+        "sequences": 5000,
+        "events_total": 573128,
+        "split_rows": {
+          "train": 398824,
+          "validation": 86285,
+          "test": 88019
+        },
+        "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+        "split_manifest_sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04"
+      },
+      "required_action": "Do not combine the legacy T1 Intermittent statistics row with intermittent_frozen_5000 results. Rebuild the row from the frozen artifact or omit Intermittent from the v0.7 integrated table until identity is frozen."
+    }
+  ],
+  "paper_rule": "An aggregate/statistics row and a model result may be integrated only when their data and split artifact identities match."
+}

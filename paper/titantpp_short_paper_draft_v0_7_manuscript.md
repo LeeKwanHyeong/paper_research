@@ -55,7 +55,7 @@ Three encoders map the observed prefix to a history state $h_i$. Count-aware RMT
 
 The prototype bank contains learned parameters rather than event-specific external storage. It does not update from validation or held-out observations. Separate-key retrieval and elapsed-age variants were evaluated only as exploratory candidates and are not part of the frozen model.
 
-![Mark-free Count-aware TitanTPP architecture](paper/figures/F1_v0_7_mark_free_architecture.png)
+![Mark-free Count-aware TitanTPP architecture](figures/F1_v0_7_mark_free_architecture.png)
 
 *Figure 1. Count-aware TitanTPP maps observed log-time and log-count tokens to one causal history state. The state drives the shared event-time interface and direct log-count head. Persistent tokens and static top-four prototype retrieval belong to the Titan-inspired encoder; the prototype bank does not update at inference.*
 
@@ -144,13 +144,13 @@ Taxi does not reproduce the Intermittent-5000 effect. TitanTPP has the lowest me
 
 Instacart provides a null or negative boundary under the same architecture. RMTPP leads all four reported metrics. TitanTPP has higher MAE in every paired seed and lower RMSE in only one of three. Its aggregate quantity errors remain close to THP, so the result indicates competitiveness rather than an improvement.
 
-![Validation quantity error relative to RMTPP](paper/figures/F2_v0_7_dataset_validation_errors.png)
+![Validation quantity error relative to RMTPP](figures/F2_v0_7_dataset_validation_errors.png)
 
 *Figure 2. Three-seed validation quantity MAE and RMSE relative to RMTPP within each dataset. A ratio below one favors the compared encoder. The figure displays dataset-level relative errors because the final claim concerns cross-dataset variation; raw values and sample standard deviations appear in Table 2.*
 
 ### 4.3 Error regimes and diagnostic boundary
 
-Quantity-stratified results on Intermittent-5000 place TitanTPP's largest RMSE advantage over THP in the largest train-defined target-quantity stratum, $q>187$, but the model does not improve every upper-quantity stratum or every metric. The [complete three-dataset stratum table](paper/tables/T5_v0_7_quantity_strata_validation.md) reports identical validation-target membership across models, seed means, and sample standard deviations. History-stratified results are more restrictive. For histories longer than 128 events, TitanTPP has higher MAE than RMTPP and THP in all three seeds, and its RMSE reduction relative to RMTPP is smaller than in the shortest stratum. The registered long-history gate therefore fails.
+Quantity-stratified results on Intermittent-5000 place TitanTPP's largest RMSE advantage over THP in the largest train-defined target-quantity stratum, $q>187$, but the model does not improve every upper-quantity stratum or every metric. The [complete three-dataset stratum table](tables/T5_v0_7_quantity_strata_validation.md) reports identical validation-target membership across models, seed means, and sample standard deviations. History-stratified results are more restrictive. For histories longer than 128 events, TitanTPP has higher MAE than RMTPP and THP in all three seeds, and its RMSE reduction relative to RMTPP is smaller than in the shortest stratum. The registered long-history gate therefore fails.
 
 Taxi has longer observed sequences and a wider quantity range than Instacart, yet the dataset contrast cannot identify which property accounts for their different outcomes. Sequence construction, event semantics, target distribution, sample size, and context truncation change together. Separate-key retrieval improved Taxi in one screening seed but failed the Instacart gate, while an elapsed-age extension failed the shared two-dataset gate. These exploratory results are not included as alternative main models.
 

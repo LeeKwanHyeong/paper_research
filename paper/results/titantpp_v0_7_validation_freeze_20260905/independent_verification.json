@@ -1,0 +1,344 @@
+{
+  "verification_id": "titantpp_v0_7_validation_freeze_independent_20260905",
+  "status": "PASS",
+  "method": "Independent standard-library recomputation from T0 run_summaries.csv, quantity_seed_metrics.csv and history_seed_metrics.csv; no import from the builder and no per-run summary JSON metric read.",
+  "evaluation_scope": "validation_only",
+  "held_out_test_evaluated": false,
+  "counts": {
+    "rows_compared": 329,
+    "cells_compared": 6327,
+    "numeric_cells_compared": 3721,
+    "categorical_cells_compared": 2606,
+    "source_files_hashed": 41,
+    "checks": 64,
+    "failed_checks": 0
+  },
+  "max_abs_error": 0.0,
+  "tolerance": {
+    "absolute": 1e-12,
+    "relative": 1e-12
+  },
+  "checks": [
+    {
+      "name": "taxi_source_contract_validation_only",
+      "passed": true,
+      "detail": "scope=validation_only, held_out=False, seeds=[42, 52, 62], role=t0_common_control"
+    },
+    {
+      "name": "taxi_source_run_matrix",
+      "passed": true,
+      "detail": "observed=9 expected=9"
+    },
+    {
+      "name": "taxi_run_rows_validation_only",
+      "passed": true,
+      "detail": "all selected rows must be successful validation-only rows with held-out=false"
+    },
+    {
+      "name": "taxi_joint_objective_identity",
+      "passed": true,
+      "detail": "joint objective must equal clamped time loss plus log-quantity MSE"
+    },
+    {
+      "name": "instacart_source_contract_validation_only",
+      "passed": true,
+      "detail": "scope=validation_only, held_out=False, seeds=[42, 52, 62], role=t0_common_control"
+    },
+    {
+      "name": "instacart_source_run_matrix",
+      "passed": true,
+      "detail": "observed=9 expected=9"
+    },
+    {
+      "name": "instacart_run_rows_validation_only",
+      "passed": true,
+      "detail": "all selected rows must be successful validation-only rows with held-out=false"
+    },
+    {
+      "name": "instacart_joint_objective_identity",
+      "passed": true,
+      "detail": "joint objective must equal clamped time loss plus log-quantity MSE"
+    },
+    {
+      "name": "source_seed_row_count",
+      "passed": true,
+      "detail": "observed=18 expected=18"
+    },
+    {
+      "name": "validation_seed_metrics.csv_schema",
+      "passed": true,
+      "detail": "observed=['dataset', 'dataset_label', 'model', 'model_label', 'seed', 'best_epoch', 'completed_epochs', 'joint_objective', 'time_nll', 'log_qty_mse', 'qty_mae', 'qty_rmse', 'parameter_count', 'source_revision', 'checkpoint_state_sha256', 'evaluation_scope', 'held_out_test_evaluated', 'source_summary']; expected=['dataset', 'dataset_label', 'model', 'model_label', 'seed', 'best_epoch', 'completed_epochs', 'joint_objective', 'time_nll', 'log_qty_mse', 'qty_mae', 'qty_rmse', 'parameter_count', 'source_revision', 'checkpoint_state_sha256', 'evaluation_scope', 'held_out_test_evaluated', 'source_summary']"
+    },
+    {
+      "name": "validation_seed_metrics.csv_row_keys",
+      "passed": true,
+      "detail": "observed_rows=18 expected_rows=18"
+    },
+    {
+      "name": "validation_seed_metrics.csv_all_cells",
+      "passed": true,
+      "detail": "compared_rows=18; tolerance=abs 1e-12, rel 1e-12"
+    },
+    {
+      "name": "validation_aggregate.csv_schema",
+      "passed": true,
+      "detail": "observed=['dataset', 'dataset_label', 'model', 'model_label', 'n_seeds', 'joint_objective_mean', 'joint_objective_std', 'time_nll_mean', 'time_nll_std', 'log_qty_mse_mean', 'log_qty_mse_std', 'qty_mae_mean', 'qty_mae_std', 'qty_rmse_mean', 'qty_rmse_std']; expected=['dataset', 'dataset_label', 'model', 'model_label', 'n_seeds', 'joint_objective_mean', 'joint_objective_std', 'time_nll_mean', 'time_nll_std', 'log_qty_mse_mean', 'log_qty_mse_std', 'qty_mae_mean', 'qty_mae_std', 'qty_rmse_mean', 'qty_rmse_std']"
+    },
+    {
+      "name": "validation_aggregate.csv_row_keys",
+      "passed": true,
+      "detail": "observed_rows=6 expected_rows=6"
+    },
+    {
+      "name": "validation_aggregate.csv_all_cells",
+      "passed": true,
+      "detail": "compared_rows=6; tolerance=abs 1e-12, rel 1e-12"
+    },
+    {
+      "name": "paired_seed_deltas.csv_schema",
+      "passed": true,
+      "detail": "observed=['dataset', 'dataset_label', 'candidate', 'candidate_label', 'reference', 'reference_label', 'seed', 'time_nll_candidate_minus_reference', 'time_nll_relative_improvement_pct', 'time_nll_candidate_better', 'log_qty_mse_candidate_minus_reference', 'log_qty_mse_relative_improvement_pct', 'log_qty_mse_candidate_better', 'qty_mae_candidate_minus_reference', 'qty_mae_relative_improvement_pct', 'qty_mae_candidate_better', 'qty_rmse_candidate_minus_reference', 'qty_rmse_relative_improvement_pct', 'qty_rmse_candidate_better']; expected=['dataset', 'dataset_label', 'candidate', 'candidate_label', 'reference', 'reference_label', 'seed', 'time_nll_candidate_minus_reference', 'time_nll_relative_improvement_pct', 'time_nll_candidate_better', 'log_qty_mse_candidate_minus_reference', 'log_qty_mse_relative_improvement_pct', 'log_qty_mse_candidate_better', 'qty_mae_candidate_minus_reference', 'qty_mae_relative_improvement_pct', 'qty_mae_candidate_better', 'qty_rmse_candidate_minus_reference', 'qty_rmse_relative_improvement_pct', 'qty_rmse_candidate_better']"
+    },
+    {
+      "name": "paired_seed_deltas.csv_row_keys",
+      "passed": true,
+      "detail": "observed_rows=12 expected_rows=12"
+    },
+    {
+      "name": "paired_seed_deltas.csv_all_cells",
+      "passed": true,
+      "detail": "compared_rows=12; tolerance=abs 1e-12, rel 1e-12"
+    },
+    {
+      "name": "paired_delta_summary.csv_schema",
+      "passed": true,
+      "detail": "observed=['dataset', 'dataset_label', 'candidate', 'candidate_label', 'reference', 'reference_label', 'n_paired_seeds', 'time_nll_mean_delta', 'time_nll_std_delta', 'time_nll_mean_paired_relative_improvement_pct', 'time_nll_better_seed_count', 'log_qty_mse_mean_delta', 'log_qty_mse_std_delta', 'log_qty_mse_mean_paired_relative_improvement_pct', 'log_qty_mse_better_seed_count', 'qty_mae_mean_delta', 'qty_mae_std_delta', 'qty_mae_mean_paired_relative_improvement_pct', 'qty_mae_better_seed_count', 'qty_rmse_mean_delta', 'qty_rmse_std_delta', 'qty_rmse_mean_paired_relative_improvement_pct', 'qty_rmse_better_seed_count']; expected=['dataset', 'dataset_label', 'candidate', 'candidate_label', 'reference', 'reference_label', 'n_paired_seeds', 'time_nll_mean_delta', 'time_nll_std_delta', 'time_nll_mean_paired_relative_improvement_pct', 'time_nll_better_seed_count', 'log_qty_mse_mean_delta', 'log_qty_mse_std_delta', 'log_qty_mse_mean_paired_relative_improvement_pct', 'log_qty_mse_better_seed_count', 'qty_mae_mean_delta', 'qty_mae_std_delta', 'qty_mae_mean_paired_relative_improvement_pct', 'qty_mae_better_seed_count', 'qty_rmse_mean_delta', 'qty_rmse_std_delta', 'qty_rmse_mean_paired_relative_improvement_pct', 'qty_rmse_better_seed_count']"
+    },
+    {
+      "name": "paired_delta_summary.csv_row_keys",
+      "passed": true,
+      "detail": "observed_rows=4 expected_rows=4"
+    },
+    {
+      "name": "paired_delta_summary.csv_all_cells",
+      "passed": true,
+      "detail": "compared_rows=4; tolerance=abs 1e-12, rel 1e-12"
+    },
+    {
+      "name": "quantity_strata_seed_metrics.csv_schema",
+      "passed": true,
+      "detail": "observed=['dataset', 'dataset_label', 'model', 'model_label', 'seed', 'stratum_order', 'stratum', 'stratum_label', 'count', 'share', 'time_nll', 'log_qty_mse', 'qty_mae', 'qty_rmse', 'qty_bias']; expected=['dataset', 'dataset_label', 'model', 'model_label', 'seed', 'stratum_order', 'stratum', 'stratum_label', 'count', 'share', 'time_nll', 'log_qty_mse', 'qty_mae', 'qty_rmse', 'qty_bias']"
+    },
+    {
+      "name": "quantity_strata_seed_metrics.csv_row_keys",
+      "passed": true,
+      "detail": "observed_rows=90 expected_rows=90"
+    },
+    {
+      "name": "quantity_strata_seed_metrics.csv_all_cells",
+      "passed": true,
+      "detail": "compared_rows=90; tolerance=abs 1e-12, rel 1e-12"
+    },
+    {
+      "name": "quantity_strata_aggregate.csv_schema",
+      "passed": true,
+      "detail": "observed=['dataset', 'dataset_label', 'model', 'model_label', 'stratum_order', 'stratum', 'stratum_label', 'count_per_seed', 'share', 'n_seeds', 'time_nll_mean', 'time_nll_std', 'log_qty_mse_mean', 'log_qty_mse_std', 'qty_mae_mean', 'qty_mae_std', 'qty_rmse_mean', 'qty_rmse_std', 'qty_bias_mean', 'qty_bias_std']; expected=['dataset', 'dataset_label', 'model', 'model_label', 'stratum_order', 'stratum', 'stratum_label', 'count_per_seed', 'share', 'n_seeds', 'time_nll_mean', 'time_nll_std', 'log_qty_mse_mean', 'log_qty_mse_std', 'qty_mae_mean', 'qty_mae_std', 'qty_rmse_mean', 'qty_rmse_std', 'qty_bias_mean', 'qty_bias_std']"
+    },
+    {
+      "name": "quantity_strata_aggregate.csv_row_keys",
+      "passed": true,
+      "detail": "observed_rows=30 expected_rows=30"
+    },
+    {
+      "name": "quantity_strata_aggregate.csv_all_cells",
+      "passed": true,
+      "detail": "compared_rows=30; tolerance=abs 1e-12, rel 1e-12"
+    },
+    {
+      "name": "quantity_strata_paired_seed_deltas.csv_schema",
+      "passed": true,
+      "detail": "observed=['dataset', 'dataset_label', 'candidate', 'candidate_label', 'reference', 'reference_label', 'seed', 'stratum_order', 'stratum', 'stratum_label', 'count', 'share', 'time_nll_candidate_minus_reference', 'time_nll_relative_improvement_pct', 'time_nll_candidate_better', 'log_qty_mse_candidate_minus_reference', 'log_qty_mse_relative_improvement_pct', 'log_qty_mse_candidate_better', 'qty_mae_candidate_minus_reference', 'qty_mae_relative_improvement_pct', 'qty_mae_candidate_better', 'qty_rmse_candidate_minus_reference', 'qty_rmse_relative_improvement_pct', 'qty_rmse_candidate_better']; expected=['dataset', 'dataset_label', 'candidate', 'candidate_label', 'reference', 'reference_label', 'seed', 'stratum_order', 'stratum', 'stratum_label', 'count', 'share', 'time_nll_candidate_minus_reference', 'time_nll_relative_improvement_pct', 'time_nll_candidate_better', 'log_qty_mse_candidate_minus_reference', 'log_qty_mse_relative_improvement_pct', 'log_qty_mse_candidate_better', 'qty_mae_candidate_minus_reference', 'qty_mae_relative_improvement_pct', 'qty_mae_candidate_better', 'qty_rmse_candidate_minus_reference', 'qty_rmse_relative_improvement_pct', 'qty_rmse_candidate_better']"
+    },
+    {
+      "name": "quantity_strata_paired_seed_deltas.csv_row_keys",
+      "passed": true,
+      "detail": "observed_rows=60 expected_rows=60"
+    },
+    {
+      "name": "quantity_strata_paired_seed_deltas.csv_all_cells",
+      "passed": true,
+      "detail": "compared_rows=60; tolerance=abs 1e-12, rel 1e-12"
+    },
+    {
+      "name": "quantity_strata_paired_delta_summary.csv_schema",
+      "passed": true,
+      "detail": "observed=['dataset', 'dataset_label', 'candidate', 'candidate_label', 'reference', 'reference_label', 'stratum_order', 'stratum', 'stratum_label', 'count_per_seed', 'share', 'n_paired_seeds', 'time_nll_mean_delta', 'time_nll_std_delta', 'time_nll_mean_paired_relative_improvement_pct', 'time_nll_better_seed_count', 'log_qty_mse_mean_delta', 'log_qty_mse_std_delta', 'log_qty_mse_mean_paired_relative_improvement_pct', 'log_qty_mse_better_seed_count', 'qty_mae_mean_delta', 'qty_mae_std_delta', 'qty_mae_mean_paired_relative_improvement_pct', 'qty_mae_better_seed_count', 'qty_rmse_mean_delta', 'qty_rmse_std_delta', 'qty_rmse_mean_paired_relative_improvement_pct', 'qty_rmse_better_seed_count']; expected=['dataset', 'dataset_label', 'candidate', 'candidate_label', 'reference', 'reference_label', 'stratum_order', 'stratum', 'stratum_label', 'count_per_seed', 'share', 'n_paired_seeds', 'time_nll_mean_delta', 'time_nll_std_delta', 'time_nll_mean_paired_relative_improvement_pct', 'time_nll_better_seed_count', 'log_qty_mse_mean_delta', 'log_qty_mse_std_delta', 'log_qty_mse_mean_paired_relative_improvement_pct', 'log_qty_mse_better_seed_count', 'qty_mae_mean_delta', 'qty_mae_std_delta', 'qty_mae_mean_paired_relative_improvement_pct', 'qty_mae_better_seed_count', 'qty_rmse_mean_delta', 'qty_rmse_std_delta', 'qty_rmse_mean_paired_relative_improvement_pct', 'qty_rmse_better_seed_count']"
+    },
+    {
+      "name": "quantity_strata_paired_delta_summary.csv_row_keys",
+      "passed": true,
+      "detail": "observed_rows=20 expected_rows=20"
+    },
+    {
+      "name": "quantity_strata_paired_delta_summary.csv_all_cells",
+      "passed": true,
+      "detail": "compared_rows=20; tolerance=abs 1e-12, rel 1e-12"
+    },
+    {
+      "name": "history_strata_seed_metrics.csv_schema",
+      "passed": true,
+      "detail": "observed=['dataset', 'dataset_label', 'model', 'model_label', 'seed', 'stratum_order', 'stratum', 'stratum_label', 'count', 'share', 'time_nll', 'log_qty_mse', 'qty_mae', 'qty_rmse', 'qty_bias']; expected=['dataset', 'dataset_label', 'model', 'model_label', 'seed', 'stratum_order', 'stratum', 'stratum_label', 'count', 'share', 'time_nll', 'log_qty_mse', 'qty_mae', 'qty_rmse', 'qty_bias']"
+    },
+    {
+      "name": "history_strata_seed_metrics.csv_row_keys",
+      "passed": true,
+      "detail": "observed_rows=36 expected_rows=36"
+    },
+    {
+      "name": "history_strata_seed_metrics.csv_all_cells",
+      "passed": true,
+      "detail": "compared_rows=36; tolerance=abs 1e-12, rel 1e-12"
+    },
+    {
+      "name": "history_strata_aggregate.csv_schema",
+      "passed": true,
+      "detail": "observed=['dataset', 'dataset_label', 'model', 'model_label', 'stratum_order', 'stratum', 'stratum_label', 'count_per_seed', 'share', 'n_seeds', 'time_nll_mean', 'time_nll_std', 'log_qty_mse_mean', 'log_qty_mse_std', 'qty_mae_mean', 'qty_mae_std', 'qty_rmse_mean', 'qty_rmse_std', 'qty_bias_mean', 'qty_bias_std']; expected=['dataset', 'dataset_label', 'model', 'model_label', 'stratum_order', 'stratum', 'stratum_label', 'count_per_seed', 'share', 'n_seeds', 'time_nll_mean', 'time_nll_std', 'log_qty_mse_mean', 'log_qty_mse_std', 'qty_mae_mean', 'qty_mae_std', 'qty_rmse_mean', 'qty_rmse_std', 'qty_bias_mean', 'qty_bias_std']"
+    },
+    {
+      "name": "history_strata_aggregate.csv_row_keys",
+      "passed": true,
+      "detail": "observed_rows=12 expected_rows=12"
+    },
+    {
+      "name": "history_strata_aggregate.csv_all_cells",
+      "passed": true,
+      "detail": "compared_rows=12; tolerance=abs 1e-12, rel 1e-12"
+    },
+    {
+      "name": "history_strata_paired_seed_deltas.csv_schema",
+      "passed": true,
+      "detail": "observed=['dataset', 'dataset_label', 'candidate', 'candidate_label', 'reference', 'reference_label', 'seed', 'stratum_order', 'stratum', 'stratum_label', 'count', 'share', 'time_nll_candidate_minus_reference', 'time_nll_relative_improvement_pct', 'time_nll_candidate_better', 'log_qty_mse_candidate_minus_reference', 'log_qty_mse_relative_improvement_pct', 'log_qty_mse_candidate_better', 'qty_mae_candidate_minus_reference', 'qty_mae_relative_improvement_pct', 'qty_mae_candidate_better', 'qty_rmse_candidate_minus_reference', 'qty_rmse_relative_improvement_pct', 'qty_rmse_candidate_better']; expected=['dataset', 'dataset_label', 'candidate', 'candidate_label', 'reference', 'reference_label', 'seed', 'stratum_order', 'stratum', 'stratum_label', 'count', 'share', 'time_nll_candidate_minus_reference', 'time_nll_relative_improvement_pct', 'time_nll_candidate_better', 'log_qty_mse_candidate_minus_reference', 'log_qty_mse_relative_improvement_pct', 'log_qty_mse_candidate_better', 'qty_mae_candidate_minus_reference', 'qty_mae_relative_improvement_pct', 'qty_mae_candidate_better', 'qty_rmse_candidate_minus_reference', 'qty_rmse_relative_improvement_pct', 'qty_rmse_candidate_better']"
+    },
+    {
+      "name": "history_strata_paired_seed_deltas.csv_row_keys",
+      "passed": true,
+      "detail": "observed_rows=24 expected_rows=24"
+    },
+    {
+      "name": "history_strata_paired_seed_deltas.csv_all_cells",
+      "passed": true,
+      "detail": "compared_rows=24; tolerance=abs 1e-12, rel 1e-12"
+    },
+    {
+      "name": "history_strata_paired_delta_summary.csv_schema",
+      "passed": true,
+      "detail": "observed=['dataset', 'dataset_label', 'candidate', 'candidate_label', 'reference', 'reference_label', 'stratum_order', 'stratum', 'stratum_label', 'count_per_seed', 'share', 'n_paired_seeds', 'time_nll_mean_delta', 'time_nll_std_delta', 'time_nll_mean_paired_relative_improvement_pct', 'time_nll_better_seed_count', 'log_qty_mse_mean_delta', 'log_qty_mse_std_delta', 'log_qty_mse_mean_paired_relative_improvement_pct', 'log_qty_mse_better_seed_count', 'qty_mae_mean_delta', 'qty_mae_std_delta', 'qty_mae_mean_paired_relative_improvement_pct', 'qty_mae_better_seed_count', 'qty_rmse_mean_delta', 'qty_rmse_std_delta', 'qty_rmse_mean_paired_relative_improvement_pct', 'qty_rmse_better_seed_count']; expected=['dataset', 'dataset_label', 'candidate', 'candidate_label', 'reference', 'reference_label', 'stratum_order', 'stratum', 'stratum_label', 'count_per_seed', 'share', 'n_paired_seeds', 'time_nll_mean_delta', 'time_nll_std_delta', 'time_nll_mean_paired_relative_improvement_pct', 'time_nll_better_seed_count', 'log_qty_mse_mean_delta', 'log_qty_mse_std_delta', 'log_qty_mse_mean_paired_relative_improvement_pct', 'log_qty_mse_better_seed_count', 'qty_mae_mean_delta', 'qty_mae_std_delta', 'qty_mae_mean_paired_relative_improvement_pct', 'qty_mae_better_seed_count', 'qty_rmse_mean_delta', 'qty_rmse_std_delta', 'qty_rmse_mean_paired_relative_improvement_pct', 'qty_rmse_better_seed_count']"
+    },
+    {
+      "name": "history_strata_paired_delta_summary.csv_row_keys",
+      "passed": true,
+      "detail": "observed_rows=8 expected_rows=8"
+    },
+    {
+      "name": "history_strata_paired_delta_summary.csv_all_cells",
+      "passed": true,
+      "detail": "compared_rows=8; tolerance=abs 1e-12, rel 1e-12"
+    },
+    {
+      "name": "quantity_interface_observed_metrics.csv_schema",
+      "passed": true,
+      "detail": "observed=['dataset', 'variant', 'metric', 'n_seeds', 'mean', 'sample_std', 'qualification']; expected=['dataset', 'variant', 'metric', 'n_seeds', 'mean', 'sample_std', 'qualification']"
+    },
+    {
+      "name": "quantity_interface_observed_metrics.csv_row_keys",
+      "passed": true,
+      "detail": "observed_rows=9 expected_rows=9"
+    },
+    {
+      "name": "quantity_interface_observed_metrics.csv_all_cells",
+      "passed": true,
+      "detail": "compared_rows=9; tolerance=abs 1e-12, rel 1e-12"
+    },
+    {
+      "name": "source_manifest_validation_boundary",
+      "passed": true,
+      "detail": "scope=validation_only, held_out=False"
+    },
+    {
+      "name": "source_manifest_required_inputs",
+      "passed": true,
+      "detail": "missing=[]"
+    },
+    {
+      "name": "source_manifest_all_hashes",
+      "passed": true,
+      "detail": "hashed_files=41"
+    },
+    {
+      "name": "dataset_identity_top_level_decision",
+      "passed": true,
+      "detail": "expected Taxi/Instacart-only integration and an explicit Intermittent population mismatch"
+    },
+    {
+      "name": "dataset_identity_per_dataset_decisions",
+      "passed": true,
+      "detail": "observed={'taxi': 'PASS_SAME_ARTIFACT_IDENTITY', 'instacart': 'PASS_SAME_ARTIFACT_IDENTITY', 'intermittent': 'FAIL_POPULATION_IDENTITY_MISMATCH'}; expected={'taxi': 'PASS_SAME_ARTIFACT_IDENTITY', 'instacart': 'PASS_SAME_ARTIFACT_IDENTITY', 'intermittent': 'FAIL_POPULATION_IDENTITY_MISMATCH'}"
+    },
+    {
+      "name": "final_model_evidence_top_level_decision",
+      "passed": true,
+      "detail": "expected original mark-free T0 freeze under a validation-only boundary"
+    },
+    {
+      "name": "original_hard_lmm_three_seed_coverage",
+      "passed": true,
+      "detail": "coverage={'taxi': [42, 52, 62], 'instacart': [42, 52, 62]}"
+    },
+    {
+      "name": "separate_key_single_seed_rejection",
+      "passed": true,
+      "detail": "coverage={'taxi': [42], 'instacart': [42]}, accepted=False"
+    },
+    {
+      "name": "quantity_interface_audit_decision",
+      "passed": true,
+      "detail": "decision=FAIL, paper_use=diagnostic_only"
+    },
+    {
+      "name": "quantity_interface_common_contract_configuration",
+      "passed": true,
+      "detail": "differing_fields=[]"
+    },
+    {
+      "name": "quantity_interface_source_revision_mismatch",
+      "passed": true,
+      "detail": "categorical=32eb40317d208b050c5dc1b83cabc07e5c99864b, direct=19ee084161887a1247819c8d535aedb5b5e4aa38"
+    },
+    {
+      "name": "quantity_interface_train_fitted_bins_and_representatives",
+      "passed": true,
+      "detail": "uniform and quantile bins must be train-fitted with one representative per bin"
+    },
+    {
+      "name": "quantity_interface_history_is_not_active_mark_free_token",
+      "passed": true,
+      "detail": "direct_history_quantity_input=log10_within_mark_residual; active_features_present=False"
+    },
+    {
+      "name": "quantity_interface_exact_six_blockers",
+      "passed": true,
+      "detail": "observed=['single_frozen_source_revision', 'mark_free_common_history_input', 'only_quantity_target_head_and_reconstruction_change', 'exact_log_transformed_categorical_binning_control', 'same_checkpoint_selector_semantics_and_active_v0_7_selector', 'supporting_reconstructed_log_quantity_mse_reported']; expected=['exact_log_transformed_categorical_binning_control', 'mark_free_common_history_input', 'only_quantity_target_head_and_reconstruction_change', 'same_checkpoint_selector_semantics_and_active_v0_7_selector', 'single_frozen_source_revision', 'supporting_reconstructed_log_quantity_mse_reported']"
+    },
+    {
+      "name": "quantity_interface_audit_check_flags",
+      "passed": true,
+      "detail": "all six blockers must be false and all six established conditions must be true"
+    },
+    {
+      "name": "quantity_interface_audit_scope_and_revisions",
+      "passed": true,
+      "detail": "scope={'dataset': 'Taxi only', 'evaluation': 'validation_only', 'held_out_test_evaluated': False, 'categorical_source_revision': '32eb40317d208b050c5dc1b83cabc07e5c99864b', 'direct_log_source_revision': '19ee084161887a1247819c8d535aedb5b5e4aa38'}"
+    }
+  ],
+  "errors": []
+}

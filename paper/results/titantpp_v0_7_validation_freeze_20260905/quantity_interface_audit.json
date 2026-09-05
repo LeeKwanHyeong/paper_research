@@ -1,0 +1,92 @@
+{
+  "audit_id": "titantpp_v0_7_quantity_interface_existing_evidence_audit_20260905",
+  "decision": "FAIL",
+  "paper_use": "diagnostic_only",
+  "question": "Do the existing Taxi direct-log and categorical artifacts satisfy the v0.7 controlled quantity-interface contract?",
+  "answer": "No. They share the dataset, RMTPP family, seeds and budget, and the bins/reconstruction are train-fitted, but the input is not mark-free or common, no exact log-binned categorical control exists, selector semantics are category-dependent, and reconstructed log-MSE is absent.",
+  "checks": [
+    {
+      "requirement": "same_rmtpp_encoder_family_and_dimensions",
+      "passed": true,
+      "evidence": "All runs use the RMTPP/PositiveRegressionRMTPP GRU path with hidden_dim=128; the latter subclasses RMTPP and adds a quantity head."
+    },
+    {
+      "requirement": "same_dataset_split_seeds_budget_and_optimizer_settings",
+      "passed": true,
+      "evidence": "The contracts share data SHA-256, split row counts, seeds 42/52/62, e300, batch128, lr0.001, grad clip1, lookback168, max_seq_len256, hidden128, min50 and patience60."
+    },
+    {
+      "requirement": "single_frozen_source_revision",
+      "passed": false,
+      "evidence": "Categorical revision=32eb40317d208b050c5dc1b83cabc07e5c99864b; direct-log revision=19ee084161887a1247819c8d535aedb5b5e4aa38."
+    },
+    {
+      "requirement": "mark_free_common_history_input",
+      "passed": false,
+      "evidence": "Categorical variants replace quantity with a learned categorical mark and value_input_mode=none; direct-log retains the original quantity-derived mark plus log10 within-mark residual. Neither path uses the active [log1p(delta_t), log1p(raw_quantity)] token."
+    },
+    {
+      "requirement": "only_quantity_target_head_and_reconstruction_change",
+      "passed": false,
+      "evidence": "The history input and mark vocabulary change between categorical and direct-log variants, so the experiment changes more than the output interface."
+    },
+    {
+      "requirement": "exact_log_transformed_categorical_binning_control",
+      "passed": false,
+      "evidence": "The stored categorical controls are uniform bins on raw quantity and train-quantile bins on raw quantity; no pure categorical log1p-quantity binning row is present."
+    },
+    {
+      "requirement": "train_fitted_bin_edges_and_numeric_representatives",
+      "passed": true,
+      "evidence": "Both categorical contracts say fitted_on=train and store four train-bin medians as reconstruction representatives."
+    },
+    {
+      "requirement": "same_checkpoint_selector_identifier",
+      "passed": true,
+      "evidence": "Both contracts name best_val_nll with the same min-epoch/patience rule."
+    },
+    {
+      "requirement": "same_checkpoint_selector_semantics_and_active_v0_7_selector",
+      "passed": false,
+      "evidence": "val_nll contains category-dependent mark NLL plus the legacy clamped time loss; the categorical mark definition differs, direct-log quantity MSE is not part of selection, and this is not the active T0 validation_joint_objective selector."
+    },
+    {
+      "requirement": "raw_scale_rmse_and_mae_reported",
+      "passed": true,
+      "evidence": "All nine compared runs report validation raw quantity MAE and RMSE."
+    },
+    {
+      "requirement": "supporting_reconstructed_log_quantity_mse_reported",
+      "passed": false,
+      "evidence": "The legacy interface artifacts report raw MAE/RMSE/bias and event NLL, but not log1p error of the reconstructed numeric quantity."
+    },
+    {
+      "requirement": "held_out_test_locked",
+      "passed": true,
+      "evidence": "Both contracts and all run summaries are validation_only with held_out_test_evaluated=false."
+    }
+  ],
+  "blocking_requirements": [
+    "single_frozen_source_revision",
+    "mark_free_common_history_input",
+    "only_quantity_target_head_and_reconstruction_change",
+    "exact_log_transformed_categorical_binning_control",
+    "same_checkpoint_selector_semantics_and_active_v0_7_selector",
+    "supporting_reconstructed_log_quantity_mse_reported"
+  ],
+  "exact_missing_work": [
+    "Run direct log regression and a pure log1p-binned categorical head from one frozen source revision on the same RMTPP encoder.",
+    "Feed both variants the active mark-free observed token [log1p(delta_t), log1p(raw_quantity)] so only the prediction head, loss and reconstruction change.",
+    "Freeze one category-independent checkpoint rule before execution; the legacy mark-NLL selector is not comparable across changing bin definitions.",
+    "Fit log-bin boundaries and every numeric reconstruction representative on train only, then record them in the launch contract.",
+    "Report raw RMSE, raw MAE and reconstructed log1p quantity MSE on identical validation targets and train-derived quantity strata.",
+    "Add Instacart only if the manuscript makes a cross-dataset empirical superiority claim for the count interface; the existing controlled interface evidence covers Taxi only."
+  ],
+  "scope": {
+    "dataset": "Taxi only",
+    "evaluation": "validation_only",
+    "held_out_test_evaluated": false,
+    "categorical_source_revision": "32eb40317d208b050c5dc1b83cabc07e5c99864b",
+    "direct_log_source_revision": "19ee084161887a1247819c8d535aedb5b5e4aa38"
+  }
+}
