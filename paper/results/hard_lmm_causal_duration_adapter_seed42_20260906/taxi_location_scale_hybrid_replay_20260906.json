@@ -1,0 +1,74 @@
+{
+  "inputs": {
+    "A": {
+      "cache_path": "search_artifacts/duration_observation_likelihood_audit_20260906/remote_taxi_matched/A/cache/validation_features.pt",
+      "cache_sha256": "e57833791aeb3e5a4f6bd5e7a723bd8e8ce0f7733b3fe842e04e135f18718548",
+      "checkpoint_path": "search_artifacts/duration_observation_likelihood_audit_20260906/remote_taxi_matched_full/A/best_validation_proper_time_nll_model.pt",
+      "checkpoint_sha256": "a06ae722f41759ff47c3dba4f874ea917b2aa8b47de7347126ebd1f561716cb5",
+      "source_checkpoint_selector": null
+    },
+    "B": {
+      "cache_path": "search_artifacts/hard_lmm_time_adapter_diagnostic_20260906/cache/yellow_trip_hourly/cache/validation_features.pt",
+      "cache_sha256": "6bc4880f4b116688e9d0c8d642218642fe668f1811e175fba701014b6a4e1361",
+      "checkpoint_path": "search_artifacts/hard_lmm_frozen_lognormal_duration_seed42_5090_20260906_c04d32b/full/yellow_trip_hourly/best_validation_proper_time_nll_model.pt",
+      "checkpoint_sha256": "37e4ac6e3f016cc01004cf6248b3cab2b2e3220b66d39db0a6f64f614d2e6917",
+      "source_checkpoint_selector": null
+    }
+  },
+  "model_source_revision": "17b215a5c74453940a627dee049a5ee91796f005",
+  "purpose": "Output-parameter swap diagnostic. It isolates how the selected A/B location and scale arrays affect the same validation targets; it is not a trainable model result or a causal attribution.",
+  "rows": {
+    "A_location_A_scale": {
+      "continuous_density_nll": -0.4435557907603325,
+      "count": 8268,
+      "dt_equals_1_count": 6790,
+      "fold_to_one_normalized_nll": 0.8117923191119579,
+      "legacy_subnormalized_centered_score": 0.8244428630817175,
+      "mean_missing_mass_below_half": 0.012633220476207544,
+      "time_median_mae": 0.7470837953008257,
+      "time_median_rmse": 2.74607456385928,
+      "zero_truncated_normalized_nll": 0.8113275654529074
+    },
+    "A_location_B_scale": {
+      "continuous_density_nll": 0.24204843622362257,
+      "count": 8268,
+      "dt_equals_1_count": 6790,
+      "fold_to_one_normalized_nll": 0.8392924079218436,
+      "legacy_subnormalized_centered_score": 0.8874332364390571,
+      "mean_missing_mass_below_half": 0.038142524295507386,
+      "time_median_mae": 0.7470837953008257,
+      "time_median_rmse": 2.74607456385928,
+      "zero_truncated_normalized_nll": 0.8475415441038334
+    },
+    "B_location_A_scale": {
+      "continuous_density_nll": -0.3701009180039768,
+      "count": 8268,
+      "dt_equals_1_count": 6790,
+      "fold_to_one_normalized_nll": 0.815147055724519,
+      "legacy_subnormalized_centered_score": 0.8274266171004186,
+      "mean_missing_mass_below_half": 0.011890364339752827,
+      "time_median_mae": 0.7495786027727055,
+      "time_median_rmse": 2.6933017044439658,
+      "zero_truncated_normalized_nll": 0.8151171373072902
+    },
+    "B_location_B_scale": {
+      "continuous_density_nll": 0.2665581439888695,
+      "count": 8268,
+      "dt_equals_1_count": 6790,
+      "fold_to_one_normalized_nll": 0.8532671160198066,
+      "legacy_subnormalized_centered_score": 0.8999188466342886,
+      "mean_missing_mass_below_half": 0.03637363404170077,
+      "time_median_mae": 0.7495786027727055,
+      "time_median_rmse": 2.6933017044439658,
+      "zero_truncated_normalized_nll": 0.8620326136772002
+    }
+  },
+  "schema_version": 1,
+  "scope": {
+    "dataset": "yellow_trip_hourly",
+    "held_out_test_evaluated": false,
+    "split": "validation_only",
+    "target_count": 8268,
+    "training_or_checkpoint_selection": false
+  }
+}

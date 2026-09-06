@@ -1,0 +1,144 @@
+{
+  "inputs": {
+    "adapters": {
+      "causal_scale_adapter": {
+        "best_epoch": 1,
+        "checkpoint_file_sha256": "0d8525bcb87d61b49e72ca487ff3eb1361b96901fdfb00e25b355168724fec23",
+        "checkpoint_path": "search_artifacts/hard_lmm_causal_duration_adapter_seed42_5090_20260906_17b215a/seed42/yellow_trip_hourly/candidate/best_validation_continuous_nll_model.pt",
+        "module_state_sha256": "ee2b6dc7bf17b66a1a8b894fa888600bc1a07d0f21becb8c383efa2d8bc6b9cd"
+      },
+      "global_scale_control": {
+        "best_epoch": 5,
+        "checkpoint_file_sha256": "e23cad3ef6ff6b290e17098579b8b0b00fd95d166ac5aa528c9ae2400f060690",
+        "checkpoint_path": "search_artifacts/hard_lmm_causal_duration_adapter_seed42_5090_20260906_17b215a/seed42/yellow_trip_hourly/global_scale_control/best_validation_continuous_nll_model.pt",
+        "module_state_sha256": "94df59e9df6ed60f31604e42dd90bad694d5247f8726e336b9e498931d66818b"
+      }
+    },
+    "data": {
+      "path": "sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+      "sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46"
+    },
+    "files": {
+      "A": {
+        "cache_file_sha256": "e57833791aeb3e5a4f6bd5e7a723bd8e8ce0f7733b3fe842e04e135f18718548",
+        "cache_identity_sha256": "b8eb5f59acafd4c16c43acd3ff9a19d80ef251698f41501b26df05dcb4125cdc",
+        "cache_path": "search_artifacts/duration_observation_likelihood_audit_20260906/remote_taxi_matched/A/cache/validation_features.pt",
+        "checkpoint_file_sha256": "a06ae722f41759ff47c3dba4f874ea917b2aa8b47de7347126ebd1f561716cb5",
+        "checkpoint_path": "search_artifacts/duration_observation_likelihood_audit_20260906/remote_taxi_matched_full/A/best_validation_proper_time_nll_model.pt",
+        "checkpoint_state_sha256": "75c073cf9d06757a395edaf8cd2edf9a7bd93d68d1bb9ff6ce85122b1674c9e5"
+      },
+      "B": {
+        "cache_file_sha256": "6bc4880f4b116688e9d0c8d642218642fe668f1811e175fba701014b6a4e1361",
+        "cache_identity_sha256": "bd2f0932388e668ff8769e74dc6ef7e6703b725720d08a9a58f4d6d69212f6c9",
+        "cache_path": "search_artifacts/hard_lmm_time_adapter_diagnostic_20260906/cache/yellow_trip_hourly/cache/validation_features.pt",
+        "checkpoint_file_sha256": "37e4ac6e3f016cc01004cf6248b3cab2b2e3220b66d39db0a6f64f614d2e6917",
+        "checkpoint_path": "search_artifacts/hard_lmm_frozen_lognormal_duration_seed42_5090_20260906_c04d32b/full/yellow_trip_hourly/best_validation_proper_time_nll_model.pt",
+        "checkpoint_state_sha256": "63b927ef5d51219085511d38079e9efc9e52d4500c989cc7c5717abab485ef2e"
+      },
+      "rmtpp": {
+        "cache_file_sha256": "e1c29fc6301c8fe38c21e1ada2364f05e408512f4ea42fdafd4907f9485d459b",
+        "cache_identity_sha256": "7d43ff0d55296977a6fd520715f1c0fc25a2277ffe05059ef9c4077e31244843",
+        "cache_path": "search_artifacts/duration_observation_likelihood_audit_20260906/remote_taxi_matched/rmtpp/cache/validation_features.pt",
+        "checkpoint_file_sha256": "63993bbb9e84b406ccb90e05ac9c57cab76b255f808a585451ddbc0bc9335939",
+        "checkpoint_path": "search_artifacts/duration_observation_likelihood_audit_20260906/remote_taxi_matched_full/rmtpp/best_validation_proper_time_nll_model.pt",
+        "checkpoint_state_sha256": "faad2b1a648fdcc92ce869410950065b2ea0febba098a5826b9b6d3f811753ea"
+      },
+      "thp": {
+        "cache_file_sha256": "bf69b2cf7b4e9875fe88c8f71bed4388086e65ad52daf2dd28b433f3f14ec50f",
+        "cache_identity_sha256": "115a1ad73957d3b4ab4a3d965fdf2c752fe1be740e87422fdf65911774fc486f",
+        "cache_path": "search_artifacts/duration_observation_likelihood_audit_20260906/remote_taxi_matched/thp/cache/validation_features.pt",
+        "checkpoint_file_sha256": "68eead8cd0420bd8e76705de71a3ffc5841a7d0dad507c7daa6704f9defb9a23",
+        "checkpoint_path": "search_artifacts/duration_observation_likelihood_audit_20260906/remote_taxi_matched_full/thp/best_validation_proper_time_nll_model.pt",
+        "checkpoint_state_sha256": "bf239bae14a71b1be0ace7068faf967203ca9f7edb74818ecbf87794a991f05c"
+      }
+    },
+    "source_files": {
+      "data_loader/event_seq_data_module.py": "7c11d9ace6c4e4d3bb03861aae92393aa946a38452d702dc7625210b339897ca",
+      "models/TPPs/CausalLogDurationAdapter.py": "8d969ecc71fd30ad5cd3f38ac22019d72fc08c93d140274e78605bbe4c75844e",
+      "paper/scripts/audit_duration_observation_likelihood.py": "a55a882de22822e68c0cfadcefc98ba3abbbbadac5ec230a8b7aaaaf40487a27",
+      "paper/scripts/run_hard_lmm_causal_duration_adapter.py": "f40f646feb47a1eae113421b680c78ca72d59f92570b144cf177fed211042b1d"
+    }
+  },
+  "likelihood_conventions": {
+    "fold_to_one_normalized": "D=max(1,round(T)); p(1)=F(1.5), p(d)=F(d+0.5)-F(d-0.5) for d>=2",
+    "legacy_subnormalized": "p(d)=F(d+0.5)-F(max(0.5,d-0.5)); total mass S(0.5)",
+    "zero_truncated_normalized": "D=round(T) conditioned on D>=1; divide every legacy bin by S(0.5)"
+  },
+  "rows": {
+    "A": {
+      "count": 8268,
+      "dt_equals_1_count": 6790,
+      "fold_to_one_normalized_nll": 0.8117923191119579,
+      "legacy_replay_absolute_error": 0.0,
+      "legacy_replay_reference": 0.8244428630817175,
+      "legacy_subnormalized_centered_score": 0.8244428630817175,
+      "mean_missing_mass_below_half": 0.012633220476207544,
+      "selected_continuous_density_nll": -0.4435557907603325,
+      "zero_truncated_normalized_nll": 0.8113275654529074
+    },
+    "B": {
+      "count": 8268,
+      "dt_equals_1_count": 6790,
+      "fold_to_one_normalized_nll": 0.8532671160198066,
+      "legacy_replay_absolute_error": 0.0,
+      "legacy_replay_reference": 0.8999188466342886,
+      "legacy_subnormalized_centered_score": 0.8999188466342886,
+      "mean_missing_mass_below_half": 0.03637363404170077,
+      "selected_continuous_density_nll": 0.26655814398886946,
+      "zero_truncated_normalized_nll": 0.8620326136772002
+    },
+    "causal_scale_adapter": {
+      "count": 8268,
+      "dt_equals_1_count": 6790,
+      "fold_to_one_normalized_nll": 0.8644695899550184,
+      "legacy_replay_absolute_error": 2.3435260820825476e-07,
+      "legacy_replay_reference": 0.9069289202951727,
+      "legacy_subnormalized_centered_score": 0.9069291546477809,
+      "mean_missing_mass_below_half": 0.03335896638520805,
+      "selected_continuous_density_nll": 0.26478957919044177,
+      "zero_truncated_normalized_nll": 0.872286267513809
+    },
+    "global_scale_control": {
+      "count": 8268,
+      "dt_equals_1_count": 6790,
+      "fold_to_one_normalized_nll": 0.8712901317093693,
+      "legacy_replay_absolute_error": 2.220446049250313e-16,
+      "legacy_replay_reference": 0.9112638440974633,
+      "legacy_subnormalized_centered_score": 0.9112638440974631,
+      "mean_missing_mass_below_half": 0.031517865521714504,
+      "selected_continuous_density_nll": 0.26451139873011403,
+      "zero_truncated_normalized_nll": 0.8785905109457527
+    },
+    "rmtpp": {
+      "count": 8268,
+      "dt_equals_1_count": 6790,
+      "fold_to_one_normalized_nll": 1.0226459780418076,
+      "legacy_replay_absolute_error": 0.0,
+      "legacy_replay_reference": 1.0363887672357808,
+      "legacy_subnormalized_centered_score": 1.0363887672357808,
+      "mean_missing_mass_below_half": 0.012709032742995282,
+      "selected_continuous_density_nll": -0.42601507017592627,
+      "zero_truncated_normalized_nll": 1.0233994367032566
+    },
+    "thp": {
+      "count": 8268,
+      "dt_equals_1_count": 6790,
+      "fold_to_one_normalized_nll": 0.8575985730320507,
+      "legacy_replay_absolute_error": 0.0,
+      "legacy_replay_reference": 0.867298955371786,
+      "legacy_subnormalized_centered_score": 0.867298955371786,
+      "mean_missing_mass_below_half": 0.008842899637396914,
+      "selected_continuous_density_nll": -0.6258214575039622,
+      "zero_truncated_normalized_nll": 0.8582610769041958
+    }
+  },
+  "schema_version": 1,
+  "scope": {
+    "dataset": "yellow_trip_hourly",
+    "held_out_test_evaluated": false,
+    "split": "validation_only",
+    "target_count": 8268,
+    "training_or_checkpoint_selection": false
+  },
+  "source_revision": "17b215a5c74453940a627dee049a5ee91796f005"
+}

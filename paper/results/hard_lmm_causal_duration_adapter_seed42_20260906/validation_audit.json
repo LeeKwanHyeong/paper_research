@@ -1,0 +1,246 @@
+{
+  "decision": "reject_scale_only_causal_duration_adapter",
+  "decision_reason": "Taxi failed the fixed continuous-NLL history-attribution and matched-A gates. A normalized positive-integer replay also leaves the candidate worse than B and A. The historical centered-bin gate is subnormalized and is not used as acceptance evidence.",
+  "execution": {
+    "artifact_bytes": 439855,
+    "artifact_file_count": 24,
+    "artifact_manifest_sha256": "5a4f908dbe3919f2e1f5d32f396dbfef214e39e4deaf666e53b29fb5fe74be21",
+    "contract_sha256": "2a456ae64eae180f2c983a3c169c982e15b0f38877564f7613884e1ba63a4cbb",
+    "cuda_contract_test_count": 32,
+    "cuda_contract_tests_passed": true,
+    "e1_elapsed_seconds": 8.684048753930256,
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "peak_memory_allocated_bytes": 250416128,
+    "peak_memory_reserved_bytes": 383778816,
+    "seed42_elapsed_seconds": 59.3608841591049,
+    "source_manifest_sha256": "9683e34c036fe9b3df262e8d025d5f5e5d98ae3c8aa7364e61eeb4c6d49053f3",
+    "source_revision": "17b215a5c74453940a627dee049a5ee91796f005",
+    "train_count": 38393,
+    "validation_count": 8268
+  },
+  "experiment": "hard_lmm_causal_duration_adapter_seed42_20260906",
+  "frozen_B_invariants": {
+    "base_location_bitwise_identical": true,
+    "cross_device_median_formula_max_abs_error": 8.881784197001252e-16,
+    "epoch_zero_exact_B": true,
+    "quantity_prediction_bitwise_identical": true,
+    "source_model_state_unchanged": true,
+    "time_median_bitwise_identical": true
+  },
+  "held_out_access_disclosure": {
+    "consequence": "The Intermittent held-out split remains model-unevaluated but can no longer be described as analyst-blind. Taxi and Instacart test data were not accessed by this post-run check.",
+    "dataset": "intermittent_frozen_5000",
+    "experiment_runner_or_replay_loaded_test": false,
+    "fields_exposed": "aggregate delta_t count, minimum, maximum, integer-support flag, and five most frequent values",
+    "manual_read_occurred_after_candidate_decision": true,
+    "test_predictions_or_losses_computed": false,
+    "used_for_model_threshold_or_method_selection": false
+  },
+  "historical_fixed_gates": {
+    "final_decision_valid_continuous_gates": [
+      "candidate_beats_global_control_by_0_005",
+      "candidate_continuous_nll_at_most_A_plus_0_01"
+    ],
+    "legacy_interval_gate_valid_for_final_decision": false,
+    "values": {
+      "base_location_bitwise_identical": true,
+      "candidate_beats_global_control_by_0_005": false,
+      "candidate_continuous_nll_at_most_A_plus_0_01": false,
+      "candidate_continuous_nll_at_most_B": true,
+      "candidate_interval_nll_at_most_B": false,
+      "quantity_prediction_bitwise_identical": true,
+      "source_model_state_unchanged": true,
+      "time_median_bitwise_identical": true
+    }
+  },
+  "location_scale_output_decomposition": {
+    "B_to_A_gap_fraction_recovered_by_A_scale_with_B_location": {
+      "continuous_density_nll": 0.8965590320625119,
+      "fold_to_one_normalized_nll": 0.9191138507558027,
+      "zero_truncated_normalized_nll": 0.9252624346668663
+    },
+    "causal_attribution": false,
+    "interpretation": "Swapping A's selected scale array onto B's selected location array recovers most of the observed A-B gap while retaining B's time median. This output-parameter decomposition makes scale prediction the next focused hypothesis, but it does not identify which input or trainable architecture can reproduce A's scale values.",
+    "rows": {
+      "A_location_A_scale": {
+        "continuous_density_nll": -0.4435557907603325,
+        "count": 8268,
+        "dt_equals_1_count": 6790,
+        "fold_to_one_normalized_nll": 0.8117923191119579,
+        "legacy_subnormalized_centered_score": 0.8244428630817175,
+        "mean_missing_mass_below_half": 0.012633220476207544,
+        "time_median_mae": 0.7470837953008257,
+        "time_median_rmse": 2.74607456385928,
+        "zero_truncated_normalized_nll": 0.8113275654529074
+      },
+      "A_location_B_scale": {
+        "continuous_density_nll": 0.24204843622362257,
+        "count": 8268,
+        "dt_equals_1_count": 6790,
+        "fold_to_one_normalized_nll": 0.8392924079218436,
+        "legacy_subnormalized_centered_score": 0.8874332364390571,
+        "mean_missing_mass_below_half": 0.038142524295507386,
+        "time_median_mae": 0.7470837953008257,
+        "time_median_rmse": 2.74607456385928,
+        "zero_truncated_normalized_nll": 0.8475415441038334
+      },
+      "B_location_A_scale": {
+        "continuous_density_nll": -0.3701009180039768,
+        "count": 8268,
+        "dt_equals_1_count": 6790,
+        "fold_to_one_normalized_nll": 0.815147055724519,
+        "legacy_subnormalized_centered_score": 0.8274266171004186,
+        "mean_missing_mass_below_half": 0.011890364339752827,
+        "time_median_mae": 0.7495786027727055,
+        "time_median_rmse": 2.6933017044439658,
+        "zero_truncated_normalized_nll": 0.8151171373072902
+      },
+      "B_location_B_scale": {
+        "continuous_density_nll": 0.2665581439888695,
+        "count": 8268,
+        "dt_equals_1_count": 6790,
+        "fold_to_one_normalized_nll": 0.8532671160198066,
+        "legacy_subnormalized_centered_score": 0.8999188466342886,
+        "mean_missing_mass_below_half": 0.03637363404170077,
+        "time_median_mae": 0.7495786027727055,
+        "time_median_rmse": 2.6933017044439658,
+        "zero_truncated_normalized_nll": 0.8620326136772002
+      }
+    },
+    "training_or_checkpoint_selection_performed": false
+  },
+  "metric_definition_diagnostic": {
+    "B_minus_A_continuous_density_nll": 0.710113934749202,
+    "B_minus_A_legacy_centered_bin_score": 0.07547598355257101,
+    "interpretation": "The within-score B-versus-A numerical gap is smaller under the historical centered-bin calculation. That calculation omits mass below 0.5 and is not a normalized PMF on positive integers. The ratio is descriptive sensitivity only.",
+    "relative_gap_reduction_under_legacy_centered_score": 0.8937128538686857
+  },
+  "normalized_positive_integer_replay": {
+    "candidate_improvement_over_global_fold_to_one_nll": 0.006820541754350873,
+    "candidate_improvement_over_global_zero_truncated_nll": 0.00630424343194369,
+    "candidate_minus_A_fold_to_one_nll": 0.05267727084306051,
+    "candidate_minus_A_zero_truncated_nll": 0.06095870206090159,
+    "candidate_minus_B_fold_to_one_nll": 0.011202473935211787,
+    "candidate_minus_B_zero_truncated_nll": 0.010253653836608811,
+    "interpretation": "At their continuous-NLL-selected operating points, the candidate scores more than 0.005 below the history-free global scale control under both normalized conventions, but both are worse than Frozen-B and the candidate is worse than matched A. Different selection epochs and the missing same-capacity length-only control prohibit attributing this post-hoc difference to duration-prefix values.",
+    "primary_convention_proposed_for_future_work": "fold_to_one_round_and_clamp",
+    "rows": {
+      "A": {
+        "fold_to_one_nll": 0.8117923191119579,
+        "zero_truncated_nll": 0.8113275654529074
+      },
+      "B": {
+        "fold_to_one_nll": 0.8532671160198066,
+        "zero_truncated_nll": 0.8620326136772002
+      },
+      "causal_scale_adapter": {
+        "fold_to_one_nll": 0.8644695899550184,
+        "zero_truncated_nll": 0.872286267513809
+      },
+      "global_scale_control": {
+        "fold_to_one_nll": 0.8712901317093693,
+        "zero_truncated_nll": 0.8785905109457527
+      },
+      "rmtpp": {
+        "fold_to_one_nll": 1.0226459780418076,
+        "zero_truncated_nll": 1.0233994367032566
+      },
+      "thp": {
+        "fold_to_one_nll": 0.8575985730320507,
+        "zero_truncated_nll": 0.8582610769041958
+      }
+    },
+    "selector_match_warning": "These checkpoints were selected by continuous-density NLL, so this is a validation-only sensitivity replay rather than a matched-selector comparison.",
+    "training_or_checkpoint_selection_performed": false
+  },
+  "post_run_likelihood_correction": {
+    "candidate_rejection_still_identified": true,
+    "historical_centered_bin_score_is_normalized_pmf": false,
+    "historical_interval_gate_valid_for_final_decision": false,
+    "independent_valid_failures": [
+      "candidate continuous NLL did not beat the history-free global control by 0.005",
+      "candidate continuous NLL exceeded matched A plus 0.01"
+    ],
+    "missing_probability_mass": "F(0.5)",
+    "required_before_next_candidate": "Freeze a normalized positive-integer observation model and test total mass=1."
+  },
+  "schema_version": 1,
+  "scope": {
+    "additional_seeds_executed": false,
+    "analyst_blind_test_claim_allowed": false,
+    "held_out_test_evaluated": false,
+    "held_out_test_used_for_training_selection_or_method_choice": false,
+    "instacart_executed": false,
+    "intermittent_executed": false,
+    "manual_post_run_intermittent_test_target_aggregate_read": true,
+    "seed": 42,
+    "split": "validation_only"
+  },
+  "source_artifact_hashes": {
+    "location_scale_hybrid_replay_json": "3d744fa82d9a8acb38303a53d4fef594268415552937d2c6257a12cf9c530043",
+    "location_scale_hybrid_replay_script": "002c931530bb54914f2e9bbd503738599a07b1f3c24827dc722a78e742405f1c",
+    "normalized_positive_integer_replay_json": "9d33cc47d0eb5e535dbf3400f7a5ebdf88ca0c7f538557c6f2d1896bf9761e44",
+    "normalized_positive_integer_replay_script": "34c1dd35df91606e4d9dbf186c89cd9a882c4252c281a1cf4a5096179292a859",
+    "seed42_run_audit_json": "dfe8f309a5aac35d99a2bc2fec18091182fce53949877d0acd2d7c0ff8107245",
+    "seed42_summary_json": "1c8c83442f27e7e087ba34d876a8676b652e86d36cf109e37c0912b0c69e5483",
+    "status_json": "eeef52a2d2dec3e8d7a306a310389d0703ae9d7d2b5800cb194fa33d37a5b2bf",
+    "taxi_fourway_likelihood_audit_json": "d555f390714f3f569b76da6eac82e637e3c335c80ddf31f3908cdd42f85f5521"
+  },
+  "taxi_fourway_legacy_centered_bin_audit": {
+    "A": {
+      "continuous_density_nll": -0.4435557907603325,
+      "dt_equals_mode_legacy_centered_bin_score": 0.16197167216421127,
+      "dt_other_legacy_centered_bin_score": 3.8678659932101795,
+      "legacy_centered_bin_score": 0.8244428630817175
+    },
+    "B": {
+      "continuous_density_nll": 0.2665581439888695,
+      "dt_equals_mode_legacy_centered_bin_score": 0.2868482658387443,
+      "dt_other_legacy_centered_bin_score": 3.716393301033305,
+      "legacy_centered_bin_score": 0.8999188466342886
+    },
+    "rmtpp": {
+      "continuous_density_nll": -0.42601507017592627,
+      "dt_equals_mode_legacy_centered_bin_score": 0.1860492983982613,
+      "dt_other_legacy_centered_bin_score": 4.942887409594886,
+      "legacy_centered_bin_score": 1.0363887672357808
+    },
+    "thp": {
+      "continuous_density_nll": -0.6258214575039623,
+      "dt_equals_mode_legacy_centered_bin_score": 0.19793007033494123,
+      "dt_other_legacy_centered_bin_score": 3.9424104096344217,
+      "legacy_centered_bin_score": 0.867298955371786
+    }
+  },
+  "taxi_metrics": {
+    "A_continuous_nll": -0.4435557907603325,
+    "A_legacy_centered_bin_score": 0.8244428630817175,
+    "B_continuous_nll": 0.2665581439888695,
+    "B_legacy_centered_bin_score": 0.8999188466342888,
+    "candidate_continuous_nll": 0.26478957919044177,
+    "candidate_legacy_centered_bin_score": 0.9069289202951727,
+    "candidate_minus_B_continuous_nll": -0.0017685647984277408,
+    "candidate_minus_B_legacy_centered_bin_score": 0.007010073660883909,
+    "candidate_minus_control_continuous_nll": 0.00027818046032773713,
+    "candidate_scale_residual_mean": -0.03129331188016883,
+    "candidate_scale_residual_std": 0.0023382629424042707,
+    "control_continuous_nll": 0.26451139873011403,
+    "control_legacy_centered_bin_score": 0.9112638440974633,
+    "quantity": {
+      "body_count": 7888,
+      "body_mae": 18.997478121185097,
+      "gt_p99_count": 79,
+      "gt_p99_mae": 332.76974448674844,
+      "mae": 28.67402025115017,
+      "rmse": 88.19499665350457
+    }
+  },
+  "training_diagnostic": {
+    "candidate_best_epoch": 1,
+    "candidate_completed_epochs": 9,
+    "candidate_epoch_9_train_continuous_nll": -0.26417950928483613,
+    "candidate_epoch_9_validation_continuous_nll": 0.5822936152395629,
+    "candidate_epoch_9_validation_legacy_centered_bin_score": 1.2731534397593194,
+    "interpretation": "The learned history-dependent scale was almost constant. Training and validation continuous NLL diverged after the earliest optimum, which establishes a generalization failure but does not distinguish overfitting from distribution shift."
+  }
+}
