@@ -1,0 +1,133 @@
+{
+  "contract_id": "duration_observation_likelihood_audit_v1",
+  "schema_version": 1,
+  "purpose": "Read-only audit of whether continuous log-normal density NLL and centered integer-observation likelihood support the same Time NLL conclusion for the selected matched duration heads.",
+  "scope": {
+    "datasets": [
+      "intermittent_frozen_5000",
+      "yellow_trip_hourly",
+      "insta_market_basket"
+    ],
+    "model_roles": [
+      "A",
+      "B",
+      "rmtpp",
+      "thp"
+    ],
+    "source": "already selected matched proper heteroscedastic log-normal checkpoint and its immutable validation feature cache",
+    "evaluation_split": "validation",
+    "held_out_test": false,
+    "retraining": false,
+    "checkpoint_selection": false,
+    "additional_seeds": false
+  },
+  "datasets": [
+    {
+      "dataset": "intermittent_frozen_5000",
+      "time_unit": "week",
+      "observation_resolution": 1,
+      "integer_grid": true,
+      "top_code": null
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "time_unit": "hour",
+      "observation_resolution": 1,
+      "integer_grid": true,
+      "top_code": null
+    },
+    {
+      "dataset": "insta_market_basket",
+      "time_unit": "day",
+      "observation_resolution": 1,
+      "integer_grid": true,
+      "top_code": 30.0,
+      "top_code_observation": "dt=30 represents duration at least 29.5 days under centered integer bins"
+    }
+  ],
+  "observation_likelihood": {
+    "ordinary_integer_target": "P(max(0.5, dt - 0.5) < T <= dt + 0.5 | history)",
+    "instacart_top_code": "P(T > 29.5 | history)",
+    "continuous_replay": "original-unit log-normal density for ordinary rows and P(T > 30 | history) for the prior Instacart censor-aware selected metric",
+    "duration_mode_partition": [
+      "dt_equals_mode",
+      "dt_other"
+    ],
+    "mode_tie_break": "smallest integer among equal maximum counts"
+  },
+  "checkpoint_role_binding": {
+    "B": "resume_identity.contract_id must equal hard_lmm_frozen_lognormal_duration_v1 and model_role must be absent or B",
+    "A_rmtpp_thp": "resume_identity.contract_id must equal matched_frozen_lognormal_duration_v1 and checkpoint model_role must exactly match the requested role",
+    "full_run_identity": "resume_identity.planned_epochs must equal 100",
+    "verified_reference_policy": "only the 11 completed full-run rows are auditable and every pre-registered reference comparison must pass within its fixed absolute tolerance",
+    "excluded_row": "intermittent_frozen_5000/rmtpp is unavailable because its source checkpoint was missing"
+  },
+  "continuous_nll_decomposition": {
+    "quadratic": "0.5 * ((log(dt) - log(time_scale) - mu) / sigma)^2",
+    "log_sigma": "log(sigma)",
+    "jacobian": "log(dt)",
+    "constant": "0.5 * log(2*pi)",
+    "scope": "uncensored density rows; top-coded rows are reported as survival terms"
+  },
+  "numerical_contract": {
+    "calculation_dtype": "float64",
+    "direct_cdf_subtraction": false,
+    "positive_lower_z_branch": "log-survival difference",
+    "nonpositive_lower_z_branch": "log-CDF difference",
+    "log_difference": "piecewise log1mexp using log1p or expm1",
+    "finite_output_required": true
+  },
+  "verified_reference_values": {
+    "intermittent_frozen_5000/A": {
+      "continuous_validation_nll": 0.9398979433136108,
+      "absolute_tolerance": 0.000001
+    },
+    "intermittent_frozen_5000/B": {
+      "continuous_validation_nll": 0.7873644338139643,
+      "absolute_tolerance": 0.000001
+    },
+    "intermittent_frozen_5000/thp": {
+      "continuous_validation_nll": 0.5167205125904661,
+      "absolute_tolerance": 0.000001
+    },
+    "yellow_trip_hourly/A": {
+      "continuous_validation_nll": -0.4435557907603325,
+      "absolute_tolerance": 0.000001
+    },
+    "yellow_trip_hourly/B": {
+      "continuous_validation_nll": 0.26655814398886946,
+      "centered_integer_validation_nll": 0.8999188466,
+      "absolute_tolerance": 0.000001
+    },
+    "yellow_trip_hourly/rmtpp": {
+      "continuous_validation_nll": -0.42601507017592627,
+      "absolute_tolerance": 0.000001
+    },
+    "yellow_trip_hourly/thp": {
+      "continuous_validation_nll": -0.6258214575039622,
+      "absolute_tolerance": 0.000001
+    },
+    "insta_market_basket/A": {
+      "continuous_validation_nll": 2.8149334005893447,
+      "absolute_tolerance": 0.000001
+    },
+    "insta_market_basket/B": {
+      "continuous_validation_nll": 2.8168307983567824,
+      "absolute_tolerance": 0.000001
+    },
+    "insta_market_basket/rmtpp": {
+      "continuous_validation_nll": 2.813261181358036,
+      "absolute_tolerance": 0.000001
+    },
+    "insta_market_basket/thp": {
+      "continuous_validation_nll": 2.814391840599722,
+      "absolute_tolerance": 0.000001
+    }
+  },
+  "interpretation_boundary": {
+    "purpose_is_metric_audit": true,
+    "does_not_establish_backbone_improvement": true,
+    "does_not_change_the_predeclared_matched_experiment": true,
+    "cross_dataset_nll_aggregation": false
+  }
+}
