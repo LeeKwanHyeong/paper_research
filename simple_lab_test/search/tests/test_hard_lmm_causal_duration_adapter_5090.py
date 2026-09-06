@@ -33,7 +33,7 @@ def test_controller_required_cuda_adapter_contract_executes_on_cuda() -> None:
     ) == "1"
     if require_cuda:
         assert torch.cuda.is_available(), "Controller-required CUDA is unavailable"
-        device = torch.device("cuda")
+        device = torch.device("cuda:0")
         assert "RTX 5090" in torch.cuda.get_device_name(device)
     else:
         device = torch.device("cpu")
