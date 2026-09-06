@@ -47,14 +47,21 @@ TIME_HEAD_MODE_LEGACY_CLAMPED = "legacy_clamped_rmtpp"
 TIME_HEAD_MODE_SCALED_EXACT = "scaled_exact_rmtpp"
 TIME_HEAD_MODE_SCALED_EXACT_STABLE = "scaled_exact_stable_rmtpp"
 TIME_HEAD_MODE_LOGNORMAL_DURATION = "lognormal_duration"
+TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION = (
+    "heteroscedastic_lognormal_duration"
+)
 TIME_HEAD_EXACT_MODES = (
     TIME_HEAD_MODE_SCALED_EXACT,
     TIME_HEAD_MODE_SCALED_EXACT_STABLE,
 )
+TIME_HEAD_LOGNORMAL_MODES = (
+    TIME_HEAD_MODE_LOGNORMAL_DURATION,
+    TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION,
+)
 TIME_HEAD_MODES = (
     TIME_HEAD_MODE_LEGACY_CLAMPED,
     *TIME_HEAD_EXACT_MODES,
-    TIME_HEAD_MODE_LOGNORMAL_DURATION,
+    *TIME_HEAD_LOGNORMAL_MODES,
 )
 TITAN_MEMORY_MODE_NONE = "none"
 TITAN_MEMORY_MODE_PERSISTENT_ONLY = "persistent_only"
@@ -324,6 +331,42 @@ class SharedTimeCountModel(nn.Module):
                     inverse_softplus(initial_scale - self.time_sigma_floor),
                 )
             )
+        elif (
+            self.time_head_mode
+            == TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION
+        ):
+            initial_location = (
+                0.0
+                if time_initial_location is None
+                else float(time_initial_location)
+            )
+            initial_scale = (
+                1.0 if time_initial_scale is None else float(time_initial_scale)
+            )
+            if initial_scale <= self.time_sigma_floor:
+                raise ValueError(
+                    "time_initial_scale must exceed time_sigma_floor"
+                )
+            self.time_initial_intercept = 0.0
+            self.time_initial_location = initial_location
+            self.time_initial_scale = initial_scale
+            self.b_t = nn.Parameter(torch.full((1,), initial_location))
+            self.w_raw = nn.Parameter(
+                torch.full(
+                    (1,),
+                    inverse_softplus(initial_scale - self.time_sigma_floor),
+                )
+            )
+            # The conditional scale adds one zero-initialized tensor while the
+            # scalar w_raw remains its bias. Forking RNG preserves the common
+            # model initialization and caller random stream.
+            with torch.random.fork_rng(devices=[]):
+                self.time_scale_weight = nn.Linear(
+                    self.hidden_dim,
+                    1,
+                    bias=False,
+                )
+            nn.init.zeros_(self.time_scale_weight.weight)
         else:
             self.time_initial_intercept = 0.0
             self.time_initial_location = 0.0
@@ -402,7 +445,7 @@ class SharedTimeCountModel(nn.Module):
             wd = torch.clamp(w * dt_next, max=10.0)
             return intercept + wd - (exp_intercept / w) * torch.expm1(wd)
 
-        if self.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION:
+        if self.time_head_mode in TIME_HEAD_LOGNORMAL_MODES:
             output_dtype = hidden.dtype
             location, scale, log_dt = self._lognormal_time_terms(hidden, dt_next)
             standardized = (
@@ -414,6 +457,11 @@ class SharedTimeCountModel(nn.Module):
                 - log_dt
                 - 0.5 * math.log(2.0 * math.pi)
             )
+            if (
+                self.time_head_mode
+                == TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION
+            ):
+                return log_density
             return log_density.to(dtype=output_dtype)
 
         output_dtype = hidden.dtype
@@ -440,13 +488,19 @@ class SharedTimeCountModel(nn.Module):
             wd = torch.clamp(w * dt_next, max=10.0)
             return -(torch.exp(intercept) / w) * torch.expm1(wd)
 
-        if self.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION:
+        if self.time_head_mode in TIME_HEAD_LOGNORMAL_MODES:
             output_dtype = hidden.dtype
             location, scale, log_dt = self._lognormal_time_terms(hidden, dt_next)
             standardized = (
                 log_dt - math.log(self.time_scale) - location
             ) / scale
-            return torch.special.log_ndtr(-standardized).to(dtype=output_dtype)
+            log_survival = torch.special.log_ndtr(-standardized)
+            if (
+                self.time_head_mode
+                == TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION
+            ):
+                return log_survival
+            return log_survival.to(dtype=output_dtype)
 
         output_dtype = hidden.dtype
         intercept, w, scaled_dt = self._scaled_exact_time_terms(hidden, dt_next)
@@ -466,9 +520,23 @@ class SharedTimeCountModel(nn.Module):
             median = torch.log1p(w * math.log(2.0) * torch.exp(-intercept)) / w
             return median.to(dtype=output_dtype)
 
-        if self.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION:
-            location = self.time_location(hidden).to(dtype=torch.float64)
+        if self.time_head_mode in TIME_HEAD_LOGNORMAL_MODES:
+            if (
+                self.time_head_mode
+                == TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION
+            ):
+                location = F.linear(
+                    hidden.to(dtype=torch.float64),
+                    self.v_t.weight.to(dtype=torch.float64),
+                ).squeeze(-1) + self.b_t.to(dtype=torch.float64)
+            else:
+                location = self.time_location(hidden).to(dtype=torch.float64)
             median = self.time_scale * torch.exp(location)
+            if (
+                self.time_head_mode
+                == TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION
+            ):
+                return median
             return median.to(dtype=output_dtype)
 
         intercept, w, _ = self._scaled_exact_time_terms(
@@ -482,30 +550,56 @@ class SharedTimeCountModel(nn.Module):
 
     def positive_time_slope(self) -> torch.Tensor:
         """Return the positive slope in the active time coordinate."""
-        if self.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION:
+        if self.time_head_mode in TIME_HEAD_LOGNORMAL_MODES:
             raise RuntimeError("Log-normal duration head has no RMTPP slope")
         if self.time_head_mode == TIME_HEAD_MODE_LEGACY_CLAMPED:
             return F.softplus(self.w_raw) + 1e-3
         return (self.time_w_max * torch.sigmoid(self.w_raw)).clamp_min(1e-6)
 
-    def positive_time_sigma(self) -> torch.Tensor:
-        """Return the positive log-duration scale for the log-normal head."""
-        if self.time_head_mode != TIME_HEAD_MODE_LOGNORMAL_DURATION:
+    def positive_time_sigma(
+        self,
+        hidden: torch.Tensor | None = None,
+    ) -> torch.Tensor:
+        """Return the positive global or hidden-conditional log-duration scale."""
+        if self.time_head_mode not in TIME_HEAD_LOGNORMAL_MODES:
             raise RuntimeError("Only the log-normal duration head has sigma")
+        if (
+            self.time_head_mode
+            == TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION
+        ):
+            if hidden is None:
+                raise ValueError(
+                    "Heteroscedastic log-normal sigma requires hidden states"
+                )
+            raw_scale = (
+                self.time_scale_weight(hidden).squeeze(-1) + self.w_raw
+            )
+            return self.time_sigma_floor + F.softplus(raw_scale)
         return self.time_sigma_floor + F.softplus(self.w_raw)
 
     def time_location(self, hidden: torch.Tensor) -> torch.Tensor:
         """Return the conditional log-duration location."""
-        if self.time_head_mode != TIME_HEAD_MODE_LOGNORMAL_DURATION:
+        if self.time_head_mode not in TIME_HEAD_LOGNORMAL_MODES:
             raise RuntimeError("Only the log-normal duration head has location")
         return self.v_t(hidden).squeeze(-1) + self.b_t
 
     def time_head_telemetry(self) -> dict[str, float]:
-        """Expose the active scalar time-shape parameter without mislabeling it."""
+        """Expose the scalar slope or zero-hidden log-normal scale reference."""
         if self.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION:
             return {
                 "train_time_sigma": float(
                     self.positive_time_sigma().detach().cpu().item()
+                )
+            }
+        if (
+            self.time_head_mode
+            == TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION
+        ):
+            return {
+                "train_time_sigma": float(
+                    (
+                        self.time_sigma_floor + F.softplus(self.w_raw)
+                    ).detach().cpu().item()
                 )
             }
         return {
@@ -525,6 +619,27 @@ class SharedTimeCountModel(nn.Module):
                 "time_initial_scale": self.time_initial_scale,
                 "time_sigma_floor": self.time_sigma_floor,
                 "time_location_transform": "identity",
+                "slope_parameterized": False,
+                "jacobian_correction": True,
+                "wd_clamp": 0.0,
+            }
+        if (
+            self.time_head_mode
+            == TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION
+        ):
+            return {
+                "mode": self.time_head_mode,
+                "density_family": (
+                    "heteroscedastic_lognormal_on_scaled_duration"
+                ),
+                "time_scale": self.time_scale,
+                "time_initial_location": self.time_initial_location,
+                "time_initial_scale": self.time_initial_scale,
+                "time_sigma_floor": self.time_sigma_floor,
+                "time_location_transform": "identity",
+                "time_scale_conditioning": "linear_hidden",
+                "time_scale_transform": "softplus_plus_floor",
+                "time_scale_weight_initialization": "zeros",
                 "slope_parameterized": False,
                 "jacobian_correction": True,
                 "wd_clamp": 0.0,
@@ -555,11 +670,19 @@ class SharedTimeCountModel(nn.Module):
 
     def time_head_named_parameters(self) -> tuple[tuple[str, nn.Parameter], ...]:
         """Return the parameters optimized by the shared event-time head."""
-        return (
+        parameters = (
             ("v_t.weight", self.v_t.weight),
             ("b_t", self.b_t),
             ("w_raw", self.w_raw),
         )
+        if (
+            self.time_head_mode
+            == TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION
+        ):
+            return parameters + (
+                ("time_scale_weight.weight", self.time_scale_weight.weight),
+            )
+        return parameters
 
     def bounded_time_intercept(self, hidden: torch.Tensor) -> torch.Tensor:
         """Map the raw intensity intercept into its configured finite range."""
@@ -591,8 +714,23 @@ class SharedTimeCountModel(nn.Module):
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         if bool((dt_next <= 0.0).any()):
             raise ValueError("Log-normal duration targets must be strictly positive")
-        location = self.time_location(hidden).to(dtype=torch.float64)
-        scale = self.positive_time_sigma().to(dtype=torch.float64)
+        if (
+            self.time_head_mode
+            == TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION
+        ):
+            hidden_64 = hidden.to(dtype=torch.float64)
+            location = F.linear(
+                hidden_64,
+                self.v_t.weight.to(dtype=torch.float64),
+            ).squeeze(-1) + self.b_t.to(dtype=torch.float64)
+            raw_scale = F.linear(
+                hidden_64,
+                self.time_scale_weight.weight.to(dtype=torch.float64),
+            ).squeeze(-1) + self.w_raw.to(dtype=torch.float64)
+            scale = self.time_sigma_floor + F.softplus(raw_scale)
+        else:
+            location = self.time_location(hidden).to(dtype=torch.float64)
+            scale = self.positive_time_sigma(hidden).to(dtype=torch.float64)
         log_dt = torch.log(dt_next.to(dtype=torch.float64))
         return location, scale, log_dt
 
@@ -1114,10 +1252,12 @@ __all__ = [
     "TAIL_SHARED_VARIANT",
     "TAIL_VARIANTS",
     "TIME_HEAD_MODE_LEGACY_CLAMPED",
+    "TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION",
     "TIME_HEAD_MODE_LOGNORMAL_DURATION",
     "TIME_HEAD_MODE_SCALED_EXACT",
     "TIME_HEAD_MODE_SCALED_EXACT_STABLE",
     "TIME_HEAD_MODES",
+    "TIME_HEAD_LOGNORMAL_MODES",
     "TITAN_MEMORY_MODE_NONE",
     "TITAN_MEMORY_MODE_PERSISTENT_ONLY",
     "TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED",

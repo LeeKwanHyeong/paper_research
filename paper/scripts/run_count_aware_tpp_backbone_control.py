@@ -30,7 +30,6 @@ from models.TPPs.CountAwareTPP import (
     TIME_HEAD_MODE_LOGNORMAL_DURATION,
     TIME_HEAD_MODE_SCALED_EXACT,
     TIME_HEAD_MODE_SCALED_EXACT_STABLE,
-    TIME_HEAD_MODES,
 )
 from models.TPPs.CountAwareFactory import (
     build_count_aware_model as build_model,
@@ -106,6 +105,11 @@ from simple_lab_test.search.common.experiment_utils import filter_top_series
 TIME_WD_SAFETY_LIMIT = 40.0
 STABLE_TIME_WD_SAFETY_LIMIT = 8.0
 STABLE_TIME_INTERCEPT_LIMIT = 6.0
+JOINT_TRAINING_TIME_HEAD_MODES = (
+    TIME_HEAD_MODE_LEGACY_CLAMPED,
+    *TIME_HEAD_EXACT_MODES,
+    TIME_HEAD_MODE_LOGNORMAL_DURATION,
+)
 
 
 def derive_train_time_contract(
@@ -380,7 +384,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--tail-huber-delta", type=float, default=1.0)
     parser.add_argument(
         "--time-head-mode",
-        choices=TIME_HEAD_MODES,
+        choices=JOINT_TRAINING_TIME_HEAD_MODES,
         default=TIME_HEAD_MODE_LEGACY_CLAMPED,
     )
     parser.add_argument("--time-scale", type=float, default=3.0)
@@ -424,6 +428,11 @@ def main() -> None:
 
 
 def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None = None) -> None:
+    if args.time_head_mode not in JOINT_TRAINING_TIME_HEAD_MODES:
+        raise ValueError(
+            "This joint-training runner does not support the frozen "
+            "heteroscedastic duration head; use its dedicated runner"
+        )
     if args.device.startswith("cuda") and not torch.cuda.is_available():
         raise RuntimeError("CUDA was requested but is unavailable")
     if len(args.source_revision) != 40:
