@@ -18,7 +18,13 @@ import json
 import math
 from pathlib import Path
 import re
+import sys
 from typing import Any, Mapping
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from paper.scripts.compare_hard_lmm_quantile_checkpoint_alignment import (
     ALL_STRATA,
@@ -47,7 +53,6 @@ from paper.scripts.compare_hard_lmm_quantile_checkpoint_alignment import (
 )
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
 EXPECTED_CONTROLLER_ERROR = "InterruptedError('Controller received signal 15')"
 STOP_RECORD_RELATIVE_PATH = Path("control/stop_after_instacart_b.json")
 SCOPE_DATASETS = (
