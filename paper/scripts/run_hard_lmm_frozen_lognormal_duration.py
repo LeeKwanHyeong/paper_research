@@ -371,8 +371,17 @@ def build_frozen_lognormal_candidate(
     *,
     train_time_statistics: Mapping[str, Any],
     time_sigma_floor: float,
+    source_backbone: str = SOURCE_BACKBONE,
+    source_variant: str = SOURCE_VARIANT,
+    max_seq_len: int | None = None,
+    training_stage: str = "frozen_B_posthoc_duration_refit",
 ) -> tuple[SharedTimeCountModel, dict[str, Any], dict[str, Any]]:
-    """Build Hetero-LN and transplant every non-time B tensor exactly."""
+    """Build Hetero-LN and transplant every non-time source tensor exactly.
+
+    The optional source arguments keep the original Frozen-B contract as the
+    default while allowing the matched A/RMTPP/THP audit to reuse the exact
+    same 130-parameter duration head and state-copy implementation.
+    """
     initial_scale = float(
         train_time_statistics["target_log_scaled_std"]
     )
@@ -382,13 +391,33 @@ def build_frozen_lognormal_candidate(
     )
     encoder = source_payload["encoder_config"]
     interface = source_payload["interface_meta"]
+    hidden_dim = encoder.get("d_model", encoder.get("hidden_dim"))
+    require(
+        type(hidden_dim) is int and int(hidden_dim) > 0,
+        "Source hidden dimension is missing",
+    )
+    source_state = source_payload["model_state_dict"]
+    require(isinstance(source_state, Mapping), "Source model state is missing")
+    source_location_weight = source_state.get("v_t.weight")
+    require(
+        isinstance(source_location_weight, torch.Tensor)
+        and source_location_weight.ndim == 2
+        and tuple(source_location_weight.shape) == (1, int(hidden_dim)),
+        "Source hidden dimension disagrees with the time-head state",
+    )
+    resolved_max_seq_len = encoder.get("max_len", max_seq_len)
+    require(
+        type(resolved_max_seq_len) is int
+        and int(resolved_max_seq_len) > 0,
+        "Source maximum sequence length is missing",
+    )
     candidate, candidate_encoder = build_count_aware_model(
-        SOURCE_BACKBONE,
-        hidden_dim=int(encoder["d_model"]),
+        source_backbone,
+        hidden_dim=int(hidden_dim),
         train_log_mean=float(interface["train_target_mean"]),
         train_log_std=float(interface["train_target_std"]),
-        max_seq_len=int(encoder["max_len"]),
-        quantity_variant=SOURCE_VARIANT,
+        max_seq_len=int(resolved_max_seq_len),
+        quantity_variant=source_variant,
         lambda_tail=0.0,
         time_head_mode=CANDIDATE_TIME_HEAD_MODE,
         time_scale=float(train_time_statistics["time_scale"]),
@@ -398,8 +427,6 @@ def build_frozen_lognormal_candidate(
         time_initial_scale=initial_scale,
         time_sigma_floor=float(time_sigma_floor),
     )
-    source_state = source_payload["model_state_dict"]
-    require(isinstance(source_state, Mapping), "Source model state is missing")
     candidate_state = clone_state_dict(candidate)
     expected_candidate_keys = set(source_state) | {
         "time_scale_weight.weight"
@@ -453,7 +480,7 @@ def build_frozen_lognormal_candidate(
         ),
         "Scale weight is not zero initialized",
     )
-    probe = torch.zeros(2, int(encoder["d_model"]))
+    probe = torch.zeros(2, int(hidden_dim))
     require(
         torch.allclose(
             candidate.positive_time_sigma(probe),
@@ -469,7 +496,7 @@ def build_frozen_lognormal_candidate(
         **candidate.time_head_contract(),
         "statistics_source_split": "train",
         "train_time_statistics": dict(train_time_statistics),
-        "training_stage": "frozen_B_posthoc_duration_refit",
+        "training_stage": training_stage,
     }
     metadata = {
         "encoder_config": candidate_encoder,
@@ -786,6 +813,10 @@ def _resume_identity(
     grad_clip: float,
     min_epochs: int,
     patience: int,
+    contract_id: str = CONTRACT_ID,
+    model_role: str = "B",
+    source_backbone: str = SOURCE_BACKBONE,
+    source_variant: str = SOURCE_VARIANT,
 ) -> dict[str, Any]:
     train_mask = censor_mask(
         train_cache.target_dt, threshold=censor_threshold
@@ -793,9 +824,9 @@ def _resume_identity(
     validation_mask = censor_mask(
         validation_cache.target_dt, threshold=censor_threshold
     )
-    return {
+    identity = {
         "schema_version": 1,
-        "contract_id": CONTRACT_ID,
+        "contract_id": contract_id,
         "contract_sha256": contract_sha256,
         "dataset": dataset,
         "source_checkpoint_sha256": source_checkpoint_sha256,
@@ -845,6 +876,11 @@ def _resume_identity(
         "held_out_test_evaluated": False,
         "legacy_nll_compared": False,
     }
+    if contract_id != CONTRACT_ID:
+        identity["model_role"] = model_role
+        identity["source_backbone"] = source_backbone
+        identity["source_variant"] = source_variant
+    return identity
 
 
 def _validate_resume_payload(
@@ -1039,6 +1075,10 @@ def fit_time_head_from_cache(
     candidate_metadata: Mapping[str, Any] | None = None,
     source_metadata: Mapping[str, Any] | None = None,
     run_epoch_limit: int | None = None,
+    contract_id: str = CONTRACT_ID,
+    model_role: str = "B",
+    source_backbone: str = SOURCE_BACKBONE,
+    source_variant: str = SOURCE_VARIANT,
 ) -> dict[str, Any]:
     """Fit the isolated proper duration head with exact deterministic resume."""
     require(planned_epochs >= 0, "planned_epochs must be nonnegative")
@@ -1110,6 +1150,10 @@ def fit_time_head_from_cache(
         grad_clip=grad_clip,
         min_epochs=min_epochs,
         patience=patience,
+        contract_id=contract_id,
+        model_role=model_role,
+        source_backbone=source_backbone,
+        source_variant=source_variant,
     )
     optimizer = torch.optim.AdamW(
         parameters,
@@ -1434,8 +1478,9 @@ def fit_time_head_from_cache(
         "selected_time_head_state_sha256": (
             selected_time_head_sha256
         ),
-        "backbone": SOURCE_BACKBONE,
-        "variant": SOURCE_VARIANT,
+        "backbone": source_backbone,
+        "model_role": model_role,
+        "variant": source_variant,
         "time_head_mode": CANDIDATE_TIME_HEAD_MODE,
         "encoder_config": (
             candidate_metadata.get("encoder_config")
@@ -1464,9 +1509,12 @@ def fit_time_head_from_cache(
     atomic_torch_save(checkpoint, selected_path)
     summary = {
         "schema_version": 1,
-        "contract_id": CONTRACT_ID,
+        "contract_id": contract_id,
         "status": "success",
         "dataset": dataset,
+        "model_role": model_role,
+        "source_backbone": source_backbone,
+        "source_variant": source_variant,
         "seed": int(seed),
         "time_head_mode": CANDIDATE_TIME_HEAD_MODE,
         "source_checkpoint_sha256": source_checkpoint_sha256,
@@ -1620,13 +1668,20 @@ def build_candidate_from_selected_checkpoint(
         time_head.get("mode") == CANDIDATE_TIME_HEAD_MODE,
         "Selected encoder time-head mode drift",
     )
+    source_backbone = str(payload.get("backbone", SOURCE_BACKBONE))
+    hidden_dim = encoder.get("d_model", encoder.get("hidden_dim"))
+    require(
+        type(hidden_dim) is int and int(hidden_dim) > 0,
+        "Selected checkpoint hidden dimension is missing",
+    )
+    max_seq_len = encoder.get("max_len", 1)
     model, rebuilt_encoder = build_count_aware_model(
-        SOURCE_BACKBONE,
-        hidden_dim=int(encoder["d_model"]),
+        source_backbone,
+        hidden_dim=int(hidden_dim),
         train_log_mean=float(interface["train_target_mean"]),
         train_log_std=float(interface["train_target_std"]),
-        max_seq_len=int(encoder["max_len"]),
-        quantity_variant=SOURCE_VARIANT,
+        max_seq_len=int(max_seq_len),
+        quantity_variant=str(payload.get("variant", SOURCE_VARIANT)),
         lambda_tail=0.0,
         time_head_mode=CANDIDATE_TIME_HEAD_MODE,
         time_scale=float(time_head["time_scale"]),

@@ -1,0 +1,544 @@
+{
+  "contract_id": "matched_frozen_lognormal_duration_v1",
+  "schema_version": 1,
+  "purpose": "Fit the same isolated normalized heteroscedastic log-normal duration head on frozen A, B, RMTPP, and THP representations before making comparative Time NLL claims.",
+  "scope": {
+    "datasets": [
+      "intermittent_frozen_5000",
+      "yellow_trip_hourly",
+      "insta_market_basket"
+    ],
+    "model_roles": [
+      "A",
+      "B",
+      "rmtpp",
+      "thp"
+    ],
+    "input_splits": [
+      "train",
+      "validation"
+    ],
+    "optimization_split": "train",
+    "selection_split": "validation",
+    "evaluation_scope": "validation_only",
+    "held_out_test": false,
+    "seed": 42,
+    "additional_seeds": false
+  },
+  "comparison_policy": {
+    "same_duration_head_for_every_role": true,
+    "same_optimization_for_every_new_fit": true,
+    "B_result_policy": "reuse the audited c04d32b full result without refitting",
+    "source_checkpoint_selector_note": "A, RMTPP, and THP use their historical joint-objective checkpoints; B uses its predeclared raw-RMSE checkpoint. Time NLL therefore compares frozen representation information at those paper quantity checkpoints.",
+    "cross_dataset_nll_aggregation": false,
+    "legacy_nll_comparison": false,
+    "four_way_complete_requires_all_twelve_rows": true
+  },
+  "model_roles": {
+    "A": {
+      "label": "original Hard-LMM T0",
+      "backbone": "titantpp",
+      "execution": "fit_new",
+      "source_checkpoint_selection": "best_validation_joint_objective"
+    },
+    "B": {
+      "label": "raw-RMSE-selected Hard-LMM T0",
+      "backbone": "titantpp",
+      "execution": "reuse_c04d32b",
+      "source_checkpoint_selection": "best_validation_raw_quantity_rmse"
+    },
+    "rmtpp": {
+      "label": "RMTPP",
+      "backbone": "rmtpp",
+      "execution": "fit_new_when_available",
+      "source_checkpoint_selection": "best_validation_joint_objective"
+    },
+    "thp": {
+      "label": "THP",
+      "backbone": "thp",
+      "execution": "fit_new",
+      "source_checkpoint_selection": "best_validation_joint_objective"
+    }
+  },
+  "time_head": {
+    "location": "mu(h) = v_t(h) + b_t",
+    "scale": "sigma(h) = 0.001 + softplus(time_scale_weight(h) + w_raw)",
+    "time_scale": "exact train-target median",
+    "location_initialization": "zero weight and float32 parameter initialized from the exact train mean of log(dt / train median)",
+    "scale_initialization": "zero weight and float32 parameter initialized from the exact train standard deviation of log(dt / train median)",
+    "original_unit_jacobian": true,
+    "duration_clamp": false,
+    "calculation_dtype": "float64",
+    "trainable_parameter_names": [
+      "v_t.weight",
+      "b_t",
+      "w_raw",
+      "time_scale_weight.weight"
+    ],
+    "expected_trainable_parameter_count": 130
+  },
+  "parameter_boundary": {
+    "frozen_state": [
+      "source encoder",
+      "source memory when present",
+      "source quantity head",
+      "all source buffers and parameters outside the four named duration-head tensors"
+    ],
+    "non_time_state_copy": "bitwise copy from each pinned source checkpoint",
+    "encoder_mode": "eval",
+    "hidden_state_gradient": "detached",
+    "feature_strategy": "encode each admitted history once and cache float32 hidden states on CPU",
+    "dropout_during_cache": false,
+    "target_quantity_masked_before_encoding": true,
+    "target_memory_write_masked": true
+  },
+  "observation_likelihood": {
+    "uncensored": "log f(dt | h) in the original time unit",
+    "right_censored": "log S(threshold | h)",
+    "reduction": "arithmetic mean over admitted target events",
+    "instacart_top_code_source": {
+      "provider_release": "https://tech.instacart.com/3-million-instacart-orders-open-sourced-d40d29ead6f2",
+      "provider_data_dictionary": "https://gist.github.com/jeremystan/c3b39d947d9b88b3ccff3147dbcf6c6b#file-data_description-md-L8",
+      "field": "days_since_prior_order",
+      "semantics": "provider-capped at 30 days",
+      "local_preprocessing_adds_cap": false
+    }
+  },
+  "optimization": {
+    "shared_across_all_datasets": true,
+    "seed": 42,
+    "optimizer": "AdamW",
+    "learning_rate": 0.001,
+    "weight_decay": 0.0,
+    "encoder_batch_size": 128,
+    "cached_state_batch_size": 8192,
+    "gradient_clip": 1.0,
+    "epochs": 100,
+    "minimum_epochs": 20,
+    "early_stopping_patience": 20,
+    "training_objective": "mean negative censor-aware normalized log-normal duration log likelihood",
+    "scheduler": null,
+    "dataset_specific_hyperparameters": false
+  },
+  "checkpoint_selection": {
+    "candidate_epochs": "0 through the last completed refit epoch",
+    "epoch_zero": "train-only log-moment initialization nested in the candidate: exact mean and standard deviation of log(dt / train median), with both conditional weight tensors zero",
+    "epoch_zero_censor_note": "The Instacart top-code enters the initialization moments at its observed code 30; every optimization and validation likelihood term for that code is survival-based",
+    "monitor": "validation_proper_time_nll",
+    "rule": "earliest strict finite minimum",
+    "fallback": "epoch 0",
+    "other_metrics_in_selector": false,
+    "resume": "model, optimizer, contiguous history, current state, best state, source identity, cache identity, censor identity, and selection identity must restore exactly"
+  },
+  "identity_and_stability": {
+    "source_checkpoint_file_sha256_required": true,
+    "source_model_state_sha256_required": true,
+    "train_and_validation_target_identity_required": true,
+    "target_dt_sha256_required": true,
+    "censor_mask_sha256_required": true,
+    "non_time_state_sha256_must_match_source": true,
+    "quantity_prediction_required": "bitwise identical on every cached validation target",
+    "quantity_mae_and_rmse_required": "calculation-identical to each pinned source checkpoint",
+    "proper_time_nll_replay_absolute_tolerance": 1e-06,
+    "reported_quantity_metric_absolute_tolerance": 1e-06,
+    "reported_quantity_metric_relative_tolerance": 1e-05,
+    "finite_train_loss": true,
+    "finite_validation_loss": true,
+    "finite_gradient": true,
+    "finite_model_and_optimizer_state": true,
+    "selected_checkpoint_replay_required": true,
+    "density_integrates_to_one_required": true,
+    "survival_monotonic_required": true,
+    "median_survival_equals_one_half_required": true
+  },
+  "B_reuse": {
+    "required_source_revision": "c04d32b0ba80a463097d91c4128ea966f22ec660",
+    "artifact_contract_id": "hard_lmm_frozen_lognormal_duration_v1",
+    "artifact_root_hint": "search_artifacts/hard_lmm_frozen_lognormal_duration_seed42_5090_20260906_c04d32b",
+    "source_manifest_path": "control/source_manifest.json",
+    "source_manifest_file_sha256": "a66bb8d35f590335d404f1ca30e1beffb744d6d35b309b5ac46dcb436f012de1",
+    "decision_path": "decision.json",
+    "decision_file_sha256": "0e4a4d627711d6fb8809dd2403706c7b63085f957550d88e26c28c8d09f3d483",
+    "required_decision": "accepted"
+  },
+  "datasets": [
+    {
+      "dataset": "intermittent_frozen_5000",
+      "data_path": "sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+      "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+      "split_manifest_path": "sample_data/intermittent_v2/intermittent_frozen_5000_split_manifest.json",
+      "split_manifest_sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04",
+      "time_unit": "week",
+      "lookback": 520,
+      "max_sequence_length": 256,
+      "expected_train_targets": 393824,
+      "expected_validation_targets": 86285,
+      "expected_train_target_identity_sha256": "fb8737489bc18e528adc322e2e55e26fcc5793aa6ff8021d93ceac98d7768aed",
+      "expected_train_target_quantity_sha256": "c4a9c3721d3861c190e81abe35156488f545b00c8ddbbed4022a9a82a4b3a215",
+      "expected_validation_target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+      "expected_validation_target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385",
+      "expected_train_target_dt_sha256": "2f4a67cff3706611e45a1855a50efa21aa7e75b1b9dda05c6bae04fdbbe3e684",
+      "expected_validation_target_dt_sha256": "5ac9547d2fcbcb8f9e5394a88fc379d1c895683db8ea96b7ed6009d374eddea7",
+      "expected_train_censor_mask_sha256": "70e2f2090820766397c1b5210e3740042c1d140dfbb930857a9070541969a1bc",
+      "expected_validation_censor_mask_sha256": "3d2db7c87c20bf5b252f57394a7b557845c23e6ea5d036fc9bbcf64d3eeb2dd8",
+      "right_censor_threshold": null,
+      "expected_train_censored_targets": 0,
+      "expected_validation_censored_targets": 0,
+      "train_time_scale": 3.0,
+      "train_log_scaled_mean": -0.21389036220110552,
+      "train_log_scaled_std": 0.6816420108412236,
+      "reporting_body_max_train_p95": 46.0,
+      "reporting_tail_min_exclusive_train_p99": 187.0,
+      "sources": {
+        "A": {
+          "available": true,
+          "execution": "fit_new",
+          "backbone": "titantpp",
+          "quantity_variant": "count_only_log_regression",
+          "seed": 42,
+          "checkpoint_selection": "best_validation_joint_objective",
+          "checkpoint_path": "search_artifacts/count_aware_b012_seed42_screening_e300_20260828_recovery1/intermittent_frozen_5000/titan_b012_screening/runs/titantpp/count_only_log_regression/seed_42/best_val_joint_objective_model.pt",
+          "checkpoint_file_sha256": "f1d876e9e93162546031ab6719a5a13a68f46b8a8317aca3288dcfe7ebee3c6f",
+          "checkpoint_state_sha256": "6f8fa31c987a0ac58daa45a467b112d158b930feed2ccde5a4a3dddba4851999",
+          "training_source_revision": "08e59880cd61cbd27cec40aa04636452b87bebfc",
+          "training_source_revision_history": [
+            "08e59880cd61cbd27cec40aa04636452b87bebfc"
+          ],
+          "evaluation_scope": "validation_only",
+          "held_out_test_evaluated": false
+        },
+        "B": {
+          "available": true,
+          "execution": "reuse_c04d32b",
+          "backbone": "titantpp",
+          "quantity_variant": "count_only_log_regression",
+          "seed": 42,
+          "checkpoint_selection": "best_validation_raw_quantity_rmse",
+          "source_checkpoint_path": "search_artifacts/hard_lmm_raw_rmse_checkpoint_alignment_seed42_5090_20260906_f752434/seed42_e300/intermittent_frozen_5000/quantile_checkpoint_alignment/runs/titantpp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+          "source_checkpoint_file_sha256": "63d38ee4401c208dcfa24206682edaca56e2d2a5ca1037b09decdc2ffa567c08",
+          "source_checkpoint_state_sha256": "4b984d415d83a479fdacb49b12d964afa668adad136511590a54293df763c0d0",
+          "matched_summary_path": "full/intermittent_frozen_5000/summary.json",
+          "matched_summary_file_sha256": "d2015a1a0ba029eacec9c55652c04892c04e2021a2401231db81432a1a117602",
+          "matched_selected_checkpoint_path": "full/intermittent_frozen_5000/best_validation_proper_time_nll_model.pt",
+          "matched_selected_checkpoint_file_sha256": "a3077f674a41701aa7931a3f5744ce775786ac7b3af05b4dcbb7336a49c28737",
+          "matched_selected_state_sha256": "0b5c65245a8bc7ac6672ee5fe9980e93491548b2c0d2ccabb1715f7962d413bd",
+          "best_epoch": 30,
+          "best_validation_proper_time_nll": 0.7873644338139643,
+          "quantity_prediction_bitwise_identical": true,
+          "evaluation_scope": "validation_only",
+          "held_out_test_evaluated": false
+        },
+        "rmtpp": {
+          "available": false,
+          "execution": "blocked_missing_checkpoint",
+          "backbone": "rmtpp",
+          "quantity_variant": "count_only_log_regression",
+          "seed": 42,
+          "checkpoint_selection": "best_validation_joint_objective",
+          "reported_remote_path": "/home/leekwanhyeong/workspace/paper_research/search_artifacts/count_aware_tpp_backbone_control_e300_20260812/runs/rmtpp/count_only_log_regression/seed_42/best_val_joint_objective_model.pt",
+          "checkpoint_path": null,
+          "checkpoint_file_sha256": null,
+          "checkpoint_state_sha256": "f23c3ddc27ccf78b4be2cfcd6d8eae484f698adcb18504598cd92b74d39307be",
+          "missing_reason": "full-e300 checkpoint binary is not present locally or on the connected 5090 input root",
+          "evaluation_scope": "validation_only",
+          "held_out_test_evaluated": false
+        },
+        "thp": {
+          "available": true,
+          "execution": "fit_new",
+          "backbone": "thp",
+          "quantity_variant": "count_only_log_regression",
+          "seed": 42,
+          "checkpoint_selection": "best_validation_joint_objective",
+          "checkpoint_path": "search_artifacts/count_aware_lognormal_k1_screening_e300_20260815/runs/thp/count_only_log_regression/seed_42/best_val_joint_objective_model.pt",
+          "checkpoint_file_sha256": "806c13b52b2850930cebbae6ac0759f70b2c2a05156ab926bd9de30fe3d17994",
+          "checkpoint_state_sha256": "f453dbe5678fd67329b88f9b8980fa5f6dca73c5db49c9dc49ea3eeb9a62697c",
+          "training_source_revision": "a70d6af517ac8be6a3631679fe62393544834da5",
+          "training_source_revision_history": [
+            "a70d6af517ac8be6a3631679fe62393544834da5"
+          ],
+          "evaluation_scope": "validation_only",
+          "held_out_test_evaluated": false
+        }
+      }
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "data_path": "sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+      "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+      "split_manifest_path": "sample_data/new_york_taxi/yellow_trip_hourly_split_manifest.json",
+      "split_manifest_sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85",
+      "time_unit": "hour",
+      "lookback": 168,
+      "max_sequence_length": 256,
+      "expected_train_targets": 38393,
+      "expected_validation_targets": 8268,
+      "expected_train_target_identity_sha256": "fc6453af5a9a34c93dd3f299cd545c9ab946be11752ee001f38055e52cc9e637",
+      "expected_train_target_quantity_sha256": "bbabe4e040831f05bc96680afdb4c45a1856673e418bdd1db9495cda3f693680",
+      "expected_validation_target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+      "expected_validation_target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd",
+      "expected_train_target_dt_sha256": "3fb47361f8fa9a9edcf01cbb8d95cd0ee105024f1f0cd614f2d2fbe292d3f9aa",
+      "expected_validation_target_dt_sha256": "8a008bf3b74cd4e39128908cc358c1d482f4a499388234461c0c772f84c222bf",
+      "expected_train_censor_mask_sha256": "5e1b2a6b76c998403f713df072b0c167910db98b0474ded53bca1b47f0bf41a3",
+      "expected_validation_censor_mask_sha256": "5d93df2333617764cf705ad277c1816dbb7c95116d9d02a014c4dbc348c73c1c",
+      "right_censor_threshold": null,
+      "expected_train_censored_targets": 0,
+      "expected_validation_censored_targets": 0,
+      "train_time_scale": 1.0,
+      "train_log_scaled_mean": 0.2357508697949888,
+      "train_log_scaled_std": 0.5898045019331329,
+      "reporting_body_max_train_p95": 1562.0,
+      "reporting_tail_min_exclusive_train_p99": 3449.0,
+      "sources": {
+        "A": {
+          "available": true,
+          "execution": "fit_new",
+          "backbone": "titantpp",
+          "quantity_variant": "count_only_log_regression",
+          "seed": 42,
+          "checkpoint_selection": "best_validation_joint_objective",
+          "checkpoint_path": "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control/runs/titantpp/count_only_log_regression/seed_42/best_val_joint_objective_model.pt",
+          "checkpoint_file_sha256": "d5a69ac6c12b2249b3812631a244657042d168b1030755fd2aa63ab980ea6ab3",
+          "checkpoint_state_sha256": "2e9ed10989e8a78c881e5b4e6888f769fffaa0d19030b4a2b91abd202135f0a6",
+          "training_source_revision": "6a01aea9024db9e3ef6cfdd2c3d0219ceb320856",
+          "training_source_revision_history": [
+            "6a01aea9024db9e3ef6cfdd2c3d0219ceb320856"
+          ],
+          "evaluation_scope": "validation_only",
+          "held_out_test_evaluated": false
+        },
+        "B": {
+          "available": true,
+          "execution": "reuse_c04d32b",
+          "backbone": "titantpp",
+          "quantity_variant": "count_only_log_regression",
+          "seed": 42,
+          "checkpoint_selection": "best_validation_raw_quantity_rmse",
+          "source_checkpoint_path": "search_artifacts/hard_lmm_raw_rmse_checkpoint_alignment_seed42_5090_20260906_f752434/seed42_e300/yellow_trip_hourly/quantile_checkpoint_alignment/runs/titantpp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+          "source_checkpoint_file_sha256": "46b456816dbc3c36e4f9c115c05b480fc030a8c2004646d179416d528bd897d5",
+          "source_checkpoint_state_sha256": "eddc8b4a11b233606bf74508f0ef721e05e55bbcb047d18edab4aa61f2f43c41",
+          "matched_summary_path": "full/yellow_trip_hourly/summary.json",
+          "matched_summary_file_sha256": "1661ccaba76219b6853094874e23ef9ae6d7b94f2239e42b96b0111d3225888c",
+          "matched_selected_checkpoint_path": "full/yellow_trip_hourly/best_validation_proper_time_nll_model.pt",
+          "matched_selected_checkpoint_file_sha256": "37e4ac6e3f016cc01004cf6248b3cab2b2e3220b66d39db0a6f64f614d2e6917",
+          "matched_selected_state_sha256": "63b927ef5d51219085511d38079e9efc9e52d4500c989cc7c5717abab485ef2e",
+          "best_epoch": 11,
+          "best_validation_proper_time_nll": 0.26655814398886946,
+          "quantity_prediction_bitwise_identical": true,
+          "evaluation_scope": "validation_only",
+          "held_out_test_evaluated": false
+        },
+        "rmtpp": {
+          "available": true,
+          "execution": "fit_new",
+          "backbone": "rmtpp",
+          "quantity_variant": "count_only_log_regression",
+          "seed": 42,
+          "checkpoint_selection": "best_validation_joint_objective",
+          "checkpoint_path": "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control/runs/rmtpp/count_only_log_regression/seed_42/best_val_joint_objective_model.pt",
+          "checkpoint_file_sha256": "bd5f49d94628bb595096dcbcbc5b9ad5d5445c9a7038779f83ee810f2e6ffaea",
+          "checkpoint_state_sha256": "4966a9d329766447be06300473ef5b23416b25f9c20dde2628f6589ceece04f0",
+          "training_source_revision": "6a01aea9024db9e3ef6cfdd2c3d0219ceb320856",
+          "training_source_revision_history": [
+            "6a01aea9024db9e3ef6cfdd2c3d0219ceb320856"
+          ],
+          "evaluation_scope": "validation_only",
+          "held_out_test_evaluated": false
+        },
+        "thp": {
+          "available": true,
+          "execution": "fit_new",
+          "backbone": "thp",
+          "quantity_variant": "count_only_log_regression",
+          "seed": 42,
+          "checkpoint_selection": "best_validation_joint_objective",
+          "checkpoint_path": "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control/runs/thp/count_only_log_regression/seed_42/best_val_joint_objective_model.pt",
+          "checkpoint_file_sha256": "4f93471cf4131a8b85f12cc593ba8918ad75e3926422431d7828c21ca9e85960",
+          "checkpoint_state_sha256": "a85198edac465c61a2974d717f274fcfde253a468425d2a581fb99175dfbec07",
+          "training_source_revision": "6a01aea9024db9e3ef6cfdd2c3d0219ceb320856",
+          "training_source_revision_history": [
+            "6a01aea9024db9e3ef6cfdd2c3d0219ceb320856"
+          ],
+          "evaluation_scope": "validation_only",
+          "held_out_test_evaluated": false
+        }
+      }
+    },
+    {
+      "dataset": "insta_market_basket",
+      "data_path": "sample_data/insta_market_basket/instacart_marked_target_with_split.parquet",
+      "data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+      "split_manifest_path": "sample_data/insta_market_basket/instacart_marked_target_split_manifest.json",
+      "split_manifest_sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d",
+      "time_unit": "day",
+      "lookback": 52,
+      "max_sequence_length": 64,
+      "expected_train_targets": 1991192,
+      "expected_validation_targets": 503733,
+      "expected_train_target_identity_sha256": "c361f5e9904c25f18c91007f6e1209518a02fb755799e81c8300ee759b2a1210",
+      "expected_train_target_quantity_sha256": "07e98693d5ac26caeaeb3c60d6d31fad21ab8f1e40ac649f231ac299963817d8",
+      "expected_validation_target_identity_sha256": "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8",
+      "expected_validation_target_quantity_sha256": "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184",
+      "expected_train_target_dt_sha256": "a331a7f7f4788aea9bca26e604c85b25179a33b44bac1a72e301bf3d91edade4",
+      "expected_validation_target_dt_sha256": "422ab4522ae761662cd03c7c2cc8df54d38f9fb9185eb482ed95b77366f1c34d",
+      "expected_train_censor_mask_sha256": "b53dda80600712ffd9e63101effb9a89a426a5fd3d35e1c961ad10c3f5acbb85",
+      "expected_validation_censor_mask_sha256": "4460e8ba08ee8eae30f5f68c17c04f37549de715dba43264b0d9ba52164d0ab7",
+      "right_censor_threshold": 30.0,
+      "expected_train_censored_targets": 189607,
+      "expected_validation_censored_targets": 63923,
+      "train_time_scale": 7.0,
+      "train_log_scaled_mean": 0.07012359239272,
+      "train_log_scaled_std": 0.885319372563578,
+      "reporting_body_max_train_p95": 25.0,
+      "reporting_tail_min_exclusive_train_p99": 35.0,
+      "sources": {
+        "A": {
+          "available": true,
+          "execution": "fit_new",
+          "backbone": "titantpp",
+          "quantity_variant": "count_only_log_regression",
+          "seed": 42,
+          "checkpoint_selection": "best_validation_joint_objective",
+          "checkpoint_path": "search_artifacts/count_aware_instacart_t0_e300_20260824_recovery1/insta_market_basket/t0_common_control/runs/titantpp/count_only_log_regression/seed_42/best_val_joint_objective_model.pt",
+          "checkpoint_file_sha256": "c99a59417b34b6712fdc5d733ea8a3565d554f9efe07ddee8fb97fa68d607888",
+          "checkpoint_state_sha256": "d1e60a684822d7d32a190b627e392a83626a138ba4890ea0c2bd31327ba5acaf",
+          "training_source_revision": "28293c43521615be2ed8fad5b043dc9df8e5e457",
+          "training_source_revision_history": [
+            "28293c43521615be2ed8fad5b043dc9df8e5e457"
+          ],
+          "evaluation_scope": "validation_only",
+          "held_out_test_evaluated": false
+        },
+        "B": {
+          "available": true,
+          "execution": "reuse_c04d32b",
+          "backbone": "titantpp",
+          "quantity_variant": "count_only_log_regression",
+          "seed": 42,
+          "checkpoint_selection": "best_validation_raw_quantity_rmse",
+          "source_checkpoint_path": "search_artifacts/hard_lmm_raw_rmse_checkpoint_alignment_seed42_5090_20260906_f752434/seed42_e300/insta_market_basket/quantile_checkpoint_alignment/runs/titantpp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+          "source_checkpoint_file_sha256": "e594f8df0dcd66249c3724063f44eee3de213bc83a780ca81fdf39a094bfed07",
+          "source_checkpoint_state_sha256": "a74e1f3055b03db5ac85adf2fdb63711890ea9d06449965e3ca749aefccc2f02",
+          "matched_summary_path": "full/insta_market_basket/summary.json",
+          "matched_summary_file_sha256": "703ee50d81bbadba4e54b138c2861b54aa1d059b409d005bf48c8e909cd02eea",
+          "matched_selected_checkpoint_path": "full/insta_market_basket/best_validation_proper_time_nll_model.pt",
+          "matched_selected_checkpoint_file_sha256": "70cd3c59c6e001e0c8b46d4d745cd6fa7e2072226cd1386dbad31ae29ab5797b",
+          "matched_selected_state_sha256": "db5b02c19adab9fedc7bc8483876cb130989ff9c781f0873004a5dde7219fa34",
+          "best_epoch": 47,
+          "best_validation_proper_time_nll": 2.8168307983567824,
+          "quantity_prediction_bitwise_identical": true,
+          "evaluation_scope": "validation_only",
+          "held_out_test_evaluated": false
+        },
+        "rmtpp": {
+          "available": true,
+          "execution": "fit_new",
+          "backbone": "rmtpp",
+          "quantity_variant": "count_only_log_regression",
+          "seed": 42,
+          "checkpoint_selection": "best_validation_joint_objective",
+          "checkpoint_path": "search_artifacts/count_aware_instacart_t0_e300_20260824_recovery1/insta_market_basket/t0_common_control/runs/rmtpp/count_only_log_regression/seed_42/best_val_joint_objective_model.pt",
+          "checkpoint_file_sha256": "a9daa4c8f9e6ee54bbe6a8f1a575a217538064967fa82a402707497062821499",
+          "checkpoint_state_sha256": "8e7929210c3defb6fc9095fbc6e403d54aceaeeeb4ed301a1f938b79ea420a33",
+          "training_source_revision": "28293c43521615be2ed8fad5b043dc9df8e5e457",
+          "training_source_revision_history": [
+            "28293c43521615be2ed8fad5b043dc9df8e5e457"
+          ],
+          "evaluation_scope": "validation_only",
+          "held_out_test_evaluated": false
+        },
+        "thp": {
+          "available": true,
+          "execution": "fit_new",
+          "backbone": "thp",
+          "quantity_variant": "count_only_log_regression",
+          "seed": 42,
+          "checkpoint_selection": "best_validation_joint_objective",
+          "checkpoint_path": "search_artifacts/count_aware_instacart_t0_e300_20260824_recovery1/insta_market_basket/t0_common_control/runs/thp/count_only_log_regression/seed_42/best_val_joint_objective_model.pt",
+          "checkpoint_file_sha256": "7f4c63d6f6073775c7e313e74c852f7556b8c71e6f26e4b685a3ec02ec98438c",
+          "checkpoint_state_sha256": "14d845321f9462846fa9e6b2604505673543d826c09d38db6777ef091e25cd60",
+          "training_source_revision": "28293c43521615be2ed8fad5b043dc9df8e5e457",
+          "training_source_revision_history": [
+            "28293c43521615be2ed8fad5b043dc9df8e5e457"
+          ],
+          "evaluation_scope": "validation_only",
+          "held_out_test_evaluated": false
+        }
+      }
+    }
+  ],
+  "execution_order": [
+    {
+      "dataset": "intermittent_frozen_5000",
+      "model_role": "A",
+      "phase_order": [
+        "e1",
+        "full"
+      ]
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "model_role": "thp",
+      "phase_order": [
+        "e1",
+        "full"
+      ]
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "model_role": "A",
+      "phase_order": [
+        "e1",
+        "full"
+      ]
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "model_role": "rmtpp",
+      "phase_order": [
+        "e1",
+        "full"
+      ]
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "model_role": "thp",
+      "phase_order": [
+        "e1",
+        "full"
+      ]
+    },
+    {
+      "dataset": "insta_market_basket",
+      "model_role": "A",
+      "phase_order": [
+        "e1",
+        "full"
+      ]
+    },
+    {
+      "dataset": "insta_market_basket",
+      "model_role": "rmtpp",
+      "phase_order": [
+        "e1",
+        "full"
+      ]
+    },
+    {
+      "dataset": "insta_market_basket",
+      "model_role": "thp",
+      "phase_order": [
+        "e1",
+        "full"
+      ]
+    }
+  ],
+  "acceptance": {
+    "per_new_row": "CUDA e1 and full fit pass every checksum, target, censor, frozen-state, quantity-identity, likelihood-replay, optimizer-resume, and runtime audit",
+    "within_source": "selected validation proper Time NLL is the earliest strict finite minimum; epoch zero remains a valid fallback",
+    "B_vs_A_preservation_target": "B proper Time NLL is at most A proper Time NLL plus 0.01 on each dataset",
+    "four_way_claim": "prohibited until all twelve dataset-role rows are present and audited",
+    "current_known_blocker": "Intermittent RMTPP full-e300 checkpoint binary is unavailable",
+    "partial_results_allowed": "dataset-local and role-pair descriptive results may be reported with explicit incompleteness; no all-dataset four-way conclusion"
+  }
+}
