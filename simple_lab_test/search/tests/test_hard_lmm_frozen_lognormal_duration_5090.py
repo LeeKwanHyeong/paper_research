@@ -628,6 +628,64 @@ def test_audit_replays_proper_likelihood_quantity_and_resume(tmp_path):
     assert audit["changed_state_keys"] == []
 
 
+def test_audit_matches_source_and_candidate_on_same_device(tmp_path):
+    output, row, source_checkpoint, summary = write_synthetic_audit_artifacts(
+        tmp_path
+    )
+    cache_path = output / "cache" / "validation_features.pt"
+    payload = torch.load(cache_path, map_location="cpu", weights_only=False)
+    cached_prediction = payload["source_quantity_prediction"].clone()
+    cached_prediction[0] = torch.nextafter(
+        cached_prediction[0], torch.tensor(float("inf"))
+    )
+    assert not torch.equal(
+        cached_prediction, payload["source_quantity_prediction"]
+    )
+    cache = FrozenFeatureCache(
+        time_hidden=payload["time_hidden"],
+        target_dt=payload["target_dt"],
+        quantity_hidden=payload["quantity_hidden"],
+        target_quantity=payload["target_quantity"],
+        source_quantity_prediction=cached_prediction,
+    )
+    torch.save(cache.to_payload(identity=payload["identity"]), cache_path)
+    cached_sha = tensor_sha256("quantity_prediction", cached_prediction)
+    cache_sha = cache.digest()
+    summary["validation_cache"]["sha256"] = cache_sha
+    summary["resume_identity"]["validation_cache_sha256"] = cache_sha
+    summary["source_quantity_prediction_sha256"] = cached_sha
+    summary["selected_quantity_prediction_sha256"] = cached_sha
+    (output / "summary.json").write_text(
+        json.dumps(summary), encoding="utf-8"
+    )
+    for checkpoint_name in (
+        "best_validation_proper_time_nll_model.pt",
+        "last_epoch_state.pt",
+    ):
+        checkpoint_path = output / checkpoint_name
+        checkpoint = torch.load(
+            checkpoint_path, map_location="cpu", weights_only=False
+        )
+        checkpoint["resume_identity"]["validation_cache_sha256"] = cache_sha
+        torch.save(checkpoint, checkpoint_path)
+
+    audit = audit_run(
+        output,
+        contract=load_contract(),
+        row=row,
+        phase="e1",
+        source_checkpoint=source_checkpoint,
+        source_revision=CALIBRATION_REVISION,
+    )
+
+    assert audit["quantity_prediction_bitwise_identical"] is True
+    assert audit["cached_cuda_vs_cpu_source_close"] is True
+    assert audit["cached_cuda_quantity_prediction_sha256"] == cached_sha
+    assert (
+        audit["matched_cpu_quantity_prediction_sha256"] != cached_sha
+    )
+
+
 def test_audit_rejects_non_time_state_mutation(tmp_path):
     output, row, source_checkpoint, summary = write_synthetic_audit_artifacts(tmp_path)
     path = output / "best_validation_proper_time_nll_model.pt"

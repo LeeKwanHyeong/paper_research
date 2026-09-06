@@ -716,6 +716,7 @@ def audit_run(
         train_time_statistics_from_contract,
         validate_source_checkpoint,
     )
+    from paper.scripts.run_hard_lmm_time_head_refit import build_source_model
     from simple_lab_test.search.common.runner import (
         canonical_state_dict_sha256,
         torch_load_checkpoint,
@@ -1303,6 +1304,13 @@ def audit_run(
         absolute_tolerance=time_tolerance,
     )
 
+    source_replay_model = build_source_model(source_payload).to("cpu")
+    source_replay_quantity = cached_quantity_predictions(
+        model=source_replay_model,
+        cache=validation_cache,
+        device="cpu",
+        batch_size=int(contract["optimization"]["encoder_batch_size"]),
+    )
     selected_quantity = cached_quantity_predictions(
         model=replay_model,
         cache=validation_cache,
@@ -1313,16 +1321,43 @@ def audit_run(
     target_quantity = validation_cache.target_quantity
     require(source_quantity is not None, "Source quantity predictions are missing")
     require(target_quantity is not None, "Validation quantity targets are missing")
-    require(torch.equal(selected_quantity, source_quantity), "Quantity predictions changed")
+    require(
+        torch.equal(selected_quantity, source_replay_quantity),
+        "Quantity predictions changed under matched CPU replay",
+    )
+    quantity_tolerance = contract["identity_and_stability"]
+    quantity_abs = float(
+        quantity_tolerance["reported_quantity_metric_absolute_tolerance"]
+    )
+    quantity_rel = float(
+        quantity_tolerance["reported_quantity_metric_relative_tolerance"]
+    )
+    require(
+        torch.allclose(
+            source_replay_quantity,
+            source_quantity,
+            rtol=quantity_rel,
+            atol=quantity_abs,
+        ),
+        "Cached CUDA source quantity predictions drift from CPU replay",
+    )
     source_quantity_sha = tensor_sha256("quantity_prediction", source_quantity)
-    selected_quantity_sha = tensor_sha256("quantity_prediction", selected_quantity)
+    source_replay_quantity_sha = tensor_sha256(
+        "quantity_prediction", source_replay_quantity
+    )
+    selected_replay_quantity_sha = tensor_sha256(
+        "quantity_prediction", selected_quantity
+    )
     require(
         summary.get("quantity_prediction_bitwise_identical") is True
         and source_quantity_sha
-        == selected_quantity_sha
         == summary.get("source_quantity_prediction_sha256")
         == summary.get("selected_quantity_prediction_sha256"),
-        "Quantity prediction identity drift",
+        "Cached CUDA quantity prediction identity drift",
+    )
+    require(
+        source_replay_quantity_sha == selected_replay_quantity_sha,
+        "Matched CPU quantity prediction identity drift",
     )
     replay_quantity_metrics = quantity_metrics(selected_quantity, target_quantity)
     replay_quantity_metrics.update(
@@ -1334,9 +1369,6 @@ def audit_run(
             require_nonempty=True,
         )
     )
-    quantity_tolerance = contract["identity_and_stability"]
-    quantity_abs = float(quantity_tolerance["reported_quantity_metric_absolute_tolerance"])
-    quantity_rel = float(quantity_tolerance["reported_quantity_metric_relative_tolerance"])
     reported_quantity_metrics = summary.get("quantity_metrics")
     require(isinstance(reported_quantity_metrics, Mapping), "Quantity metrics are missing")
     for metric, source_name in (
@@ -1396,6 +1428,9 @@ def audit_run(
         "proper_time_nll_improvement_from_epoch_zero": epoch_zero_nll - selected_nll,
         "strictly_improves_epoch_zero": strict_improvement,
         "quantity_prediction_bitwise_identical": True,
+        "matched_cpu_quantity_prediction_sha256": selected_replay_quantity_sha,
+        "cached_cuda_quantity_prediction_sha256": source_quantity_sha,
+        "cached_cuda_vs_cpu_source_close": True,
         "source_state_sha256": summary["source_state_sha256"],
         "selected_state_sha256": selected_state_sha,
         "selected_time_head_state_sha256": selected_time_sha,
