@@ -1,0 +1,815 @@
+{
+  "acceptance": {
+    "interpretation": "The result supports post-hoc calibration of the frozen B time head. It does not establish a Backbone improvement or common recovery to A.",
+    "primary_time_nll_non_worse_than_B_all_datasets": true,
+    "quantity_predictions_and_metrics_preserved_all_datasets": true,
+    "strict_A_plus_0_01_all_datasets": false,
+    "strict_failed_datasets": [
+      "intermittent_frozen_5000",
+      "yellow_trip_hourly"
+    ],
+    "strict_passed_datasets": [
+      "insta_market_basket"
+    ]
+  },
+  "artifact_portability": {
+    "feature_caches_copied_locally": false,
+    "local_prediction_replay_available_without_rebuilding_cache": false,
+    "local_state_boundary_reverified": true,
+    "remote_controller_prediction_replay_recorded": true,
+    "reproduction_requirement": "Regenerate feature caches from the pinned data, B checkpoints, contract, and source revision before replaying predictions locally."
+  },
+  "as_of_utc": "2026-09-06T05:48:24.790172+00:00",
+  "check_summary": {
+    "failed": 0,
+    "passed": 105,
+    "total": 105
+  },
+  "checks": [
+    {
+      "detail": "f81427b28839883d567e72df3527d81082571f17819ab97aaaf1f369ba2ee88d",
+      "name": "contract_identity",
+      "passed": true
+    },
+    {
+      "detail": "revision=f514f0c202a9220781f11c49854dc2e11f67c2e2, manifest_sha=db4d88ae99c4dbc8e3b39cc780f725e98454d9d1877ac7137ea642cb24b937d3, files=1563",
+      "name": "source_identity",
+      "passed": true
+    },
+    {
+      "detail": "status=complete, stage=complete, heldout=False, additional_seeds=False",
+      "name": "controller_complete_validation_only",
+      "passed": true
+    },
+    {
+      "detail": "tests=14, errors=0, failures=0, skipped=0",
+      "name": "remote_contract_tests",
+      "passed": true
+    },
+    {
+      "detail": "[\"insta_market_basket\", \"intermittent_frozen_5000\", \"yellow_trip_hourly\"]",
+      "name": "dataset_coverage",
+      "passed": true
+    },
+    {
+      "detail": "status=success, epochs=1, device=NVIDIA GeForce RTX 5090",
+      "name": "e1:intermittent_frozen_5000:contract_smoke",
+      "passed": true
+    },
+    {
+      "detail": "status=success, epochs=1, device=NVIDIA GeForce RTX 5090",
+      "name": "e1:yellow_trip_hourly:contract_smoke",
+      "passed": true
+    },
+    {
+      "detail": "status=success, epochs=1, device=NVIDIA GeForce RTX 5090",
+      "name": "e1:insta_market_basket:contract_smoke",
+      "passed": true
+    },
+    {
+      "detail": "search_artifacts/hard_lmm_time_head_refit_seed42_5090_20260906_f514f0c/full/intermittent_frozen_5000/summary.json",
+      "name": "intermittent_frozen_5000:summary_present",
+      "passed": true
+    },
+    {
+      "detail": "search_artifacts/hard_lmm_time_head_refit_seed42_5090_20260906_f514f0c/full/intermittent_frozen_5000/best_validation_time_nll_model.pt",
+      "name": "intermittent_frozen_5000:selected checkpoint_present",
+      "passed": true
+    },
+    {
+      "detail": "search_artifacts/hard_lmm_time_head_refit_seed42_5090_20260906_f514f0c/full/intermittent_frozen_5000/last_epoch_state.pt",
+      "name": "intermittent_frozen_5000:last state_present",
+      "passed": true
+    },
+    {
+      "detail": "search_artifacts/hard_lmm_raw_rmse_checkpoint_alignment_seed42_5090_20260906_f752434/seed42_e300/intermittent_frozen_5000/quantile_checkpoint_alignment/runs/titantpp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "name": "intermittent_frozen_5000:B checkpoint_present",
+      "passed": true
+    },
+    {
+      "detail": "search_artifacts/hard_lmm_raw_rmse_checkpoint_alignment_seed42_5090_20260906_f752434/seed42_e300/intermittent_frozen_5000/quantile_checkpoint_alignment/runs/titantpp/count_only_log_regression/seed_42/summary.json",
+      "name": "intermittent_frozen_5000:B summary_present",
+      "passed": true
+    },
+    {
+      "detail": "63d38ee4401c208dcfa24206682edaca56e2d2a5ca1037b09decdc2ffa567c08",
+      "name": "intermittent_frozen_5000:B_checkpoint_file_sha256",
+      "passed": true
+    },
+    {
+      "detail": "4b984d415d83a479fdacb49b12d964afa668adad136511590a54293df763c0d0",
+      "name": "intermittent_frozen_5000:B_state_sha256",
+      "passed": true
+    },
+    {
+      "detail": "4b984d415d83a479fdacb49b12d964afa668adad136511590a54293df763c0d0",
+      "name": "intermittent_frozen_5000:B_summary_state_sha256",
+      "passed": true
+    },
+    {
+      "detail": "time=-3.483793693042792, rmse=1.4995550721471171, mae=0.6043404183562111",
+      "name": "intermittent_frozen_5000:B_summary_metrics",
+      "passed": true
+    },
+    {
+      "detail": "693a4ca0577d1aa8275a9e9f073fd0b38847d9c76dd9ad36524899970a8c9b18",
+      "name": "intermittent_frozen_5000:selected_state_sha256",
+      "passed": true
+    },
+    {
+      "detail": "4b984d415d83a479fdacb49b12d964afa668adad136511590a54293df763c0d0",
+      "name": "intermittent_frozen_5000:source_lineage",
+      "passed": true
+    },
+    {
+      "detail": "source=35 selected=35 tensors",
+      "name": "intermittent_frozen_5000:state_schema_equal",
+      "passed": true
+    },
+    {
+      "detail": "[\"b_t\", \"v_t.weight\", \"w_raw\"]",
+      "name": "intermittent_frozen_5000:changed_keys_exact",
+      "passed": true
+    },
+    {
+      "detail": "32 frozen tensors",
+      "name": "intermittent_frozen_5000:non_time_state_bitwise_equal",
+      "passed": true
+    },
+    {
+      "detail": "1b695440154dfc6f66545b5468409435b3ec08e16e54f20d724ad21f1789a18f",
+      "name": "intermittent_frozen_5000:non_time_state_sha256",
+      "passed": true
+    },
+    {
+      "detail": "source=e5bfd5836d210bcb9a8b5f1e9aad134ffa94e151f5343ad04222a238f2ab4079, selected=95ce7395479dead530917af44365351f979ff631d484d66940fdf003c100e1df",
+      "name": "intermittent_frozen_5000:time_head_state_sha256",
+      "passed": true
+    },
+    {
+      "detail": "source, selected, final-current, and final-best states",
+      "name": "intermittent_frozen_5000:finite_model_states",
+      "passed": true
+    },
+    {
+      "detail": "epochs 0..100",
+      "name": "intermittent_frozen_5000:history_contiguous",
+      "passed": true
+    },
+    {
+      "detail": "summary history equals resumable last-state history",
+      "name": "intermittent_frozen_5000:history_last_state_equal",
+      "passed": true
+    },
+    {
+      "detail": "best=100, value=-3.5377570005697496",
+      "name": "intermittent_frozen_5000:earliest_strict_minimum",
+      "passed": true
+    },
+    {
+      "detail": "693a4ca0577d1aa8275a9e9f073fd0b38847d9c76dd9ad36524899970a8c9b18",
+      "name": "intermittent_frozen_5000:selected_equals_last_best",
+      "passed": true
+    },
+    {
+      "detail": "693a4ca0577d1aa8275a9e9f073fd0b38847d9c76dd9ad36524899970a8c9b18",
+      "name": "intermittent_frozen_5000:last_current_sha256",
+      "passed": true
+    },
+    {
+      "detail": "best=100, completed=100, patience=20, planned=100",
+      "name": "intermittent_frozen_5000:early_stop_contract",
+      "passed": true
+    },
+    {
+      "detail": "steps=[4900, 4900, 4900], expected=4900",
+      "name": "intermittent_frozen_5000:optimizer_resume_coherent",
+      "passed": true
+    },
+    {
+      "detail": "epoch0=-3.483793693042792, B=-3.483793693042792",
+      "name": "intermittent_frozen_5000:epoch_zero_matches_B",
+      "passed": true
+    },
+    {
+      "detail": "selected=-3.5377570005697496, CPU replay=-3.5377569982017283",
+      "name": "intermittent_frozen_5000:selected_checkpoint_replay",
+      "passed": true
+    },
+    {
+      "detail": "B=-3.483793693042792, refit=-3.5377570005697496",
+      "name": "intermittent_frozen_5000:time_non_worse_than_B",
+      "passed": true
+    },
+    {
+      "detail": "bb0e2dd7c80f8d732502d850386a96ccc3cc43b8375130774b21f58249ebc875",
+      "name": "intermittent_frozen_5000:quantity_prediction_remote_bitwise_replay",
+      "passed": true
+    },
+    {
+      "detail": "{\"body_mae\": true, \"gt_p99_mae\": true, \"overall_mae\": true, \"raw_rmse\": true}",
+      "name": "intermittent_frozen_5000:quantity_metrics_match_B",
+      "passed": true
+    },
+    {
+      "detail": "data=85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f, split=393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04",
+      "name": "intermittent_frozen_5000:data_and_split_sha256",
+      "passed": true
+    },
+    {
+      "detail": "{\"split\": \"train\", \"target_count\": 393824, \"target_identity_sha256\": \"fb8737489bc18e528adc322e2e55e26fcc5793aa6ff8021d93ceac98d7768aed\", \"target_quantity_sha256\": \"c4a9c3721d3861c190e81abe35156488f545b00c8ddbbed4022a9a82a4b3a215\"}",
+      "name": "intermittent_frozen_5000:train_population_identity",
+      "passed": true
+    },
+    {
+      "detail": "{\"split\": \"validation\", \"target_count\": 86285, \"target_identity_sha256\": \"32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf\", \"target_quantity_sha256\": \"e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385\"}",
+      "name": "intermittent_frozen_5000:validation_population_identity",
+      "passed": true
+    },
+    {
+      "detail": "search_artifacts/hard_lmm_time_head_refit_seed42_5090_20260906_f514f0c/full/yellow_trip_hourly/summary.json",
+      "name": "yellow_trip_hourly:summary_present",
+      "passed": true
+    },
+    {
+      "detail": "search_artifacts/hard_lmm_time_head_refit_seed42_5090_20260906_f514f0c/full/yellow_trip_hourly/best_validation_time_nll_model.pt",
+      "name": "yellow_trip_hourly:selected checkpoint_present",
+      "passed": true
+    },
+    {
+      "detail": "search_artifacts/hard_lmm_time_head_refit_seed42_5090_20260906_f514f0c/full/yellow_trip_hourly/last_epoch_state.pt",
+      "name": "yellow_trip_hourly:last state_present",
+      "passed": true
+    },
+    {
+      "detail": "search_artifacts/hard_lmm_raw_rmse_checkpoint_alignment_seed42_5090_20260906_f752434/seed42_e300/yellow_trip_hourly/quantile_checkpoint_alignment/runs/titantpp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "name": "yellow_trip_hourly:B checkpoint_present",
+      "passed": true
+    },
+    {
+      "detail": "search_artifacts/hard_lmm_raw_rmse_checkpoint_alignment_seed42_5090_20260906_f752434/seed42_e300/yellow_trip_hourly/quantile_checkpoint_alignment/runs/titantpp/count_only_log_regression/seed_42/summary.json",
+      "name": "yellow_trip_hourly:B summary_present",
+      "passed": true
+    },
+    {
+      "detail": "46b456816dbc3c36e4f9c115c05b480fc030a8c2004646d179416d528bd897d5",
+      "name": "yellow_trip_hourly:B_checkpoint_file_sha256",
+      "passed": true
+    },
+    {
+      "detail": "eddc8b4a11b233606bf74508f0ef721e05e55bbcb047d18edab4aa61f2f43c41",
+      "name": "yellow_trip_hourly:B_state_sha256",
+      "passed": true
+    },
+    {
+      "detail": "eddc8b4a11b233606bf74508f0ef721e05e55bbcb047d18edab4aa61f2f43c41",
+      "name": "yellow_trip_hourly:B_summary_state_sha256",
+      "passed": true
+    },
+    {
+      "detail": "time=1.473390626529593, rmse=88.19499665350457, mae=28.67402025115017",
+      "name": "yellow_trip_hourly:B_summary_metrics",
+      "passed": true
+    },
+    {
+      "detail": "96ef1cf5f94ce26a0c95cd08275044ae59ef43f271bd0fc1d202b66daa9b71bf",
+      "name": "yellow_trip_hourly:selected_state_sha256",
+      "passed": true
+    },
+    {
+      "detail": "eddc8b4a11b233606bf74508f0ef721e05e55bbcb047d18edab4aa61f2f43c41",
+      "name": "yellow_trip_hourly:source_lineage",
+      "passed": true
+    },
+    {
+      "detail": "source=35 selected=35 tensors",
+      "name": "yellow_trip_hourly:state_schema_equal",
+      "passed": true
+    },
+    {
+      "detail": "[\"b_t\", \"v_t.weight\", \"w_raw\"]",
+      "name": "yellow_trip_hourly:changed_keys_exact",
+      "passed": true
+    },
+    {
+      "detail": "32 frozen tensors",
+      "name": "yellow_trip_hourly:non_time_state_bitwise_equal",
+      "passed": true
+    },
+    {
+      "detail": "99607c805d7581f2f898bb01bb8725af25a3b9ed26e910c1b9913354d294bcf6",
+      "name": "yellow_trip_hourly:non_time_state_sha256",
+      "passed": true
+    },
+    {
+      "detail": "source=5c96f5c5ad6bf29467d0096361eedba7e240577645b1b8dfb200b3a5c2ca2287, selected=6b0ed4c7ebe071fb32574fc55830c98238262dda8c0abce0204c100d0e74b962",
+      "name": "yellow_trip_hourly:time_head_state_sha256",
+      "passed": true
+    },
+    {
+      "detail": "source, selected, final-current, and final-best states",
+      "name": "yellow_trip_hourly:finite_model_states",
+      "passed": true
+    },
+    {
+      "detail": "epochs 0..23",
+      "name": "yellow_trip_hourly:history_contiguous",
+      "passed": true
+    },
+    {
+      "detail": "summary history equals resumable last-state history",
+      "name": "yellow_trip_hourly:history_last_state_equal",
+      "passed": true
+    },
+    {
+      "detail": "best=3, value=1.4457156769697022",
+      "name": "yellow_trip_hourly:earliest_strict_minimum",
+      "passed": true
+    },
+    {
+      "detail": "96ef1cf5f94ce26a0c95cd08275044ae59ef43f271bd0fc1d202b66daa9b71bf",
+      "name": "yellow_trip_hourly:selected_equals_last_best",
+      "passed": true
+    },
+    {
+      "detail": "4cbdd6cde10b2a8c5809f1a4c27fefd64668490845751dbe383b52418d1a5534",
+      "name": "yellow_trip_hourly:last_current_sha256",
+      "passed": true
+    },
+    {
+      "detail": "best=3, completed=23, patience=20, planned=100",
+      "name": "yellow_trip_hourly:early_stop_contract",
+      "passed": true
+    },
+    {
+      "detail": "steps=[115, 115, 115], expected=115",
+      "name": "yellow_trip_hourly:optimizer_resume_coherent",
+      "passed": true
+    },
+    {
+      "detail": "epoch0=1.473390626529593, B=1.473390626529593",
+      "name": "yellow_trip_hourly:epoch_zero_matches_B",
+      "passed": true
+    },
+    {
+      "detail": "selected=1.4457156769697022, CPU replay=1.445715643880041",
+      "name": "yellow_trip_hourly:selected_checkpoint_replay",
+      "passed": true
+    },
+    {
+      "detail": "B=1.473390626529593, refit=1.4457156769697022",
+      "name": "yellow_trip_hourly:time_non_worse_than_B",
+      "passed": true
+    },
+    {
+      "detail": "98d3128c638ee53ec9c7fba8dfe8bfff1f11ea6074daa94dd08540a8ab9acc57",
+      "name": "yellow_trip_hourly:quantity_prediction_remote_bitwise_replay",
+      "passed": true
+    },
+    {
+      "detail": "{\"body_mae\": true, \"gt_p99_mae\": true, \"overall_mae\": true, \"raw_rmse\": true}",
+      "name": "yellow_trip_hourly:quantity_metrics_match_B",
+      "passed": true
+    },
+    {
+      "detail": "data=b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46, split=4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85",
+      "name": "yellow_trip_hourly:data_and_split_sha256",
+      "passed": true
+    },
+    {
+      "detail": "{\"split\": \"train\", \"target_count\": 38393, \"target_identity_sha256\": \"fc6453af5a9a34c93dd3f299cd545c9ab946be11752ee001f38055e52cc9e637\", \"target_quantity_sha256\": \"bbabe4e040831f05bc96680afdb4c45a1856673e418bdd1db9495cda3f693680\"}",
+      "name": "yellow_trip_hourly:train_population_identity",
+      "passed": true
+    },
+    {
+      "detail": "{\"split\": \"validation\", \"target_count\": 8268, \"target_identity_sha256\": \"19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb\", \"target_quantity_sha256\": \"acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd\"}",
+      "name": "yellow_trip_hourly:validation_population_identity",
+      "passed": true
+    },
+    {
+      "detail": "search_artifacts/hard_lmm_time_head_refit_seed42_5090_20260906_f514f0c/full/insta_market_basket/summary.json",
+      "name": "insta_market_basket:summary_present",
+      "passed": true
+    },
+    {
+      "detail": "search_artifacts/hard_lmm_time_head_refit_seed42_5090_20260906_f514f0c/full/insta_market_basket/best_validation_time_nll_model.pt",
+      "name": "insta_market_basket:selected checkpoint_present",
+      "passed": true
+    },
+    {
+      "detail": "search_artifacts/hard_lmm_time_head_refit_seed42_5090_20260906_f514f0c/full/insta_market_basket/last_epoch_state.pt",
+      "name": "insta_market_basket:last state_present",
+      "passed": true
+    },
+    {
+      "detail": "search_artifacts/hard_lmm_raw_rmse_checkpoint_alignment_seed42_5090_20260906_f752434/seed42_e300/insta_market_basket/quantile_checkpoint_alignment/runs/titantpp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "name": "insta_market_basket:B checkpoint_present",
+      "passed": true
+    },
+    {
+      "detail": "search_artifacts/hard_lmm_raw_rmse_checkpoint_alignment_seed42_5090_20260906_f752434/seed42_e300/insta_market_basket/quantile_checkpoint_alignment/runs/titantpp/count_only_log_regression/seed_42/summary.json",
+      "name": "insta_market_basket:B summary_present",
+      "passed": true
+    },
+    {
+      "detail": "e594f8df0dcd66249c3724063f44eee3de213bc83a780ca81fdf39a094bfed07",
+      "name": "insta_market_basket:B_checkpoint_file_sha256",
+      "passed": true
+    },
+    {
+      "detail": "a74e1f3055b03db5ac85adf2fdb63711890ea9d06449965e3ca749aefccc2f02",
+      "name": "insta_market_basket:B_state_sha256",
+      "passed": true
+    },
+    {
+      "detail": "a74e1f3055b03db5ac85adf2fdb63711890ea9d06449965e3ca749aefccc2f02",
+      "name": "insta_market_basket:B_summary_state_sha256",
+      "passed": true
+    },
+    {
+      "detail": "time=3.2155228955007256, rmse=5.872216930452246, mae=3.9937810783167014",
+      "name": "insta_market_basket:B_summary_metrics",
+      "passed": true
+    },
+    {
+      "detail": "9f28793b6ffe5472d812b05a9a4b48a87c18b59bf196b361055b2c02c8751d7e",
+      "name": "insta_market_basket:selected_state_sha256",
+      "passed": true
+    },
+    {
+      "detail": "a74e1f3055b03db5ac85adf2fdb63711890ea9d06449965e3ca749aefccc2f02",
+      "name": "insta_market_basket:source_lineage",
+      "passed": true
+    },
+    {
+      "detail": "source=35 selected=35 tensors",
+      "name": "insta_market_basket:state_schema_equal",
+      "passed": true
+    },
+    {
+      "detail": "[\"b_t\", \"v_t.weight\", \"w_raw\"]",
+      "name": "insta_market_basket:changed_keys_exact",
+      "passed": true
+    },
+    {
+      "detail": "32 frozen tensors",
+      "name": "insta_market_basket:non_time_state_bitwise_equal",
+      "passed": true
+    },
+    {
+      "detail": "0e3dc70fc3dd9e9bc4eba8cfb945a94be6014a4a1778a54ce4796b6a24509542",
+      "name": "insta_market_basket:non_time_state_sha256",
+      "passed": true
+    },
+    {
+      "detail": "source=3b739838272c80089df474c5fbfc622e8d453c28f55ae45a7c21a7a331602113, selected=86771261f3c8071c1ccd4b6574ddc6a01f62c691d7f0796459bc37cb3d353a18",
+      "name": "insta_market_basket:time_head_state_sha256",
+      "passed": true
+    },
+    {
+      "detail": "source, selected, final-current, and final-best states",
+      "name": "insta_market_basket:finite_model_states",
+      "passed": true
+    },
+    {
+      "detail": "epochs 0..25",
+      "name": "insta_market_basket:history_contiguous",
+      "passed": true
+    },
+    {
+      "detail": "summary history equals resumable last-state history",
+      "name": "insta_market_basket:history_last_state_equal",
+      "passed": true
+    },
+    {
+      "detail": "best=5, value=3.211919485496434",
+      "name": "insta_market_basket:earliest_strict_minimum",
+      "passed": true
+    },
+    {
+      "detail": "9f28793b6ffe5472d812b05a9a4b48a87c18b59bf196b361055b2c02c8751d7e",
+      "name": "insta_market_basket:selected_equals_last_best",
+      "passed": true
+    },
+    {
+      "detail": "f769a23a4d03cbc2007b3ae526d7a6fa8ea666731b12f6d05aed878b5fea816b",
+      "name": "insta_market_basket:last_current_sha256",
+      "passed": true
+    },
+    {
+      "detail": "best=5, completed=25, patience=20, planned=100",
+      "name": "insta_market_basket:early_stop_contract",
+      "passed": true
+    },
+    {
+      "detail": "steps=[6100, 6100, 6100], expected=6100",
+      "name": "insta_market_basket:optimizer_resume_coherent",
+      "passed": true
+    },
+    {
+      "detail": "epoch0=3.2155228955007256, B=3.2155228955007256",
+      "name": "insta_market_basket:epoch_zero_matches_B",
+      "passed": true
+    },
+    {
+      "detail": "selected=3.211919485496434, CPU replay=3.2119194718780735",
+      "name": "insta_market_basket:selected_checkpoint_replay",
+      "passed": true
+    },
+    {
+      "detail": "B=3.2155228955007256, refit=3.211919485496434",
+      "name": "insta_market_basket:time_non_worse_than_B",
+      "passed": true
+    },
+    {
+      "detail": "4d0c6f93521696ffa23f22452ce42cd44c67afcad6ca24a642ebaa199eb7c9fb",
+      "name": "insta_market_basket:quantity_prediction_remote_bitwise_replay",
+      "passed": true
+    },
+    {
+      "detail": "{\"body_mae\": true, \"gt_p99_mae\": true, \"overall_mae\": true, \"raw_rmse\": true}",
+      "name": "insta_market_basket:quantity_metrics_match_B",
+      "passed": true
+    },
+    {
+      "detail": "data=06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2, split=6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d",
+      "name": "insta_market_basket:data_and_split_sha256",
+      "passed": true
+    },
+    {
+      "detail": "{\"split\": \"train\", \"target_count\": 1991192, \"target_identity_sha256\": \"c361f5e9904c25f18c91007f6e1209518a02fb755799e81c8300ee759b2a1210\", \"target_quantity_sha256\": \"07e98693d5ac26caeaeb3c60d6d31fad21ab8f1e40ac649f231ac299963817d8\"}",
+      "name": "insta_market_basket:train_population_identity",
+      "passed": true
+    },
+    {
+      "detail": "{\"split\": \"validation\", \"target_count\": 503733, \"target_identity_sha256\": \"28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8\", \"target_quantity_sha256\": \"28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184\"}",
+      "name": "insta_market_basket:validation_population_identity",
+      "passed": true
+    },
+    {
+      "detail": "primary=True, strict=False, quantity=True",
+      "name": "controller_aggregate_decision",
+      "passed": true
+    }
+  ],
+  "datasets": [
+    {
+      "A_time_nll": -3.592856040674848,
+      "B_time_nll": -3.483793693042792,
+      "B_to_refit_improvement": 0.05396330752695766,
+      "best_epoch": 100,
+      "cap_limited": true,
+      "changed_state_keys": [
+        "b_t",
+        "v_t.weight",
+        "w_raw"
+      ],
+      "completed_epochs": 100,
+      "dataset": "intermittent_frozen_5000",
+      "dataset_label": "Intermittent",
+      "fraction_of_A_to_B_loss_recovered": 0.49479319580588643,
+      "last_minus_best_time_nll": 0.0,
+      "last_state_file_sha256": "45f65dbbc9df5da58c85efb874d6307342e2b7999b4fcd1bc211271124305dd4",
+      "last_val_time_nll": -3.5377570005697496,
+      "local_feature_cache_present": false,
+      "non_time_state_bitwise_equal": true,
+      "optimizer_steps": [
+        4900,
+        4900,
+        4900
+      ],
+      "quantity_metrics": {
+        "body_count": 81739,
+        "body_mae": 0.4657896038725777,
+        "gt_p99_count": 1141,
+        "gt_p99_mae": 5.148108011792356,
+        "mae": 0.6043404183562111,
+        "rmse": 1.4995550721471158
+      },
+      "quantity_metrics_match_B": true,
+      "quantity_prediction_bitwise_identical": true,
+      "refit_minus_A": 0.055099040105098585,
+      "refit_minus_B": -0.05396330752695766,
+      "refit_time_nll": -3.5377570005697496,
+      "runtime": {
+        "cuda_available": true,
+        "device_name": "NVIDIA GeForce RTX 5090",
+        "elapsed_seconds": 20.817653140053153,
+        "peak_memory_allocated_bytes": 71739392,
+        "peak_memory_reserved_bytes": 90177536,
+        "requested_device": "cuda"
+      },
+      "selected_checkpoint_cpu_replay_time_nll": -3.5377569982017283,
+      "selected_checkpoint_file_sha256": "1d24e8cb8bf62d7193faa107965182dbecbff256957f66a05e627e7a0faf113c",
+      "selected_checkpoint_replay_abs_error": 2.3680213345755874e-09,
+      "selected_state_sha256": "693a4ca0577d1aa8275a9e9f073fd0b38847d9c76dd9ad36524899970a8c9b18",
+      "source_checkpoint_file_sha256": "63d38ee4401c208dcfa24206682edaca56e2d2a5ca1037b09decdc2ffa567c08",
+      "source_state_sha256": "4b984d415d83a479fdacb49b12d964afa668adad136511590a54293df763c0d0",
+      "stopped_early": false,
+      "strict_target_A_plus_0_01": -3.582856040674848,
+      "strict_target_pass": false,
+      "strict_target_signed_gap": 0.045099040105098354,
+      "train_target_count": 393824,
+      "validation_target_count": 86285
+    },
+    {
+      "A_time_nll": 1.3664302460355464,
+      "B_time_nll": 1.473390626529593,
+      "B_to_refit_improvement": 0.027674949559890916,
+      "best_epoch": 3,
+      "cap_limited": false,
+      "changed_state_keys": [
+        "b_t",
+        "v_t.weight",
+        "w_raw"
+      ],
+      "completed_epochs": 23,
+      "dataset": "yellow_trip_hourly",
+      "dataset_label": "Taxi",
+      "fraction_of_A_to_B_loss_recovered": 0.25874019363114814,
+      "last_minus_best_time_nll": 0.004915560054559842,
+      "last_state_file_sha256": "dfa62948e8b6ed2df33719a4aed495123d9d679f30d959f45ce3974c4f192f0c",
+      "last_val_time_nll": 1.450631237024262,
+      "local_feature_cache_present": false,
+      "non_time_state_bitwise_equal": true,
+      "optimizer_steps": [
+        115,
+        115,
+        115
+      ],
+      "quantity_metrics": {
+        "body_count": 7888,
+        "body_mae": 18.997478121185097,
+        "gt_p99_count": 79,
+        "gt_p99_mae": 332.76974448674844,
+        "mae": 28.67402025115017,
+        "rmse": 88.19499665350457
+      },
+      "quantity_metrics_match_B": true,
+      "quantity_prediction_bitwise_identical": true,
+      "refit_minus_A": 0.07928543093415574,
+      "refit_minus_B": -0.027674949559890916,
+      "refit_time_nll": 1.4457156769697022,
+      "runtime": {
+        "cuda_available": true,
+        "device_name": "NVIDIA GeForce RTX 5090",
+        "elapsed_seconds": 0.8763954520691186,
+        "peak_memory_allocated_bytes": 71739392,
+        "peak_memory_reserved_bytes": 90177536,
+        "requested_device": "cuda"
+      },
+      "selected_checkpoint_cpu_replay_time_nll": 1.445715643880041,
+      "selected_checkpoint_file_sha256": "a768ca0d2a8e76c5f1a18d3b1db2d870cf32f94c018295f150c1f30ed13fb9bd",
+      "selected_checkpoint_replay_abs_error": 3.30896612332765e-08,
+      "selected_state_sha256": "96ef1cf5f94ce26a0c95cd08275044ae59ef43f271bd0fc1d202b66daa9b71bf",
+      "source_checkpoint_file_sha256": "46b456816dbc3c36e4f9c115c05b480fc030a8c2004646d179416d528bd897d5",
+      "source_state_sha256": "eddc8b4a11b233606bf74508f0ef721e05e55bbcb047d18edab4aa61f2f43c41",
+      "stopped_early": true,
+      "strict_target_A_plus_0_01": 1.3764302460355464,
+      "strict_target_pass": false,
+      "strict_target_signed_gap": 0.06928543093415573,
+      "train_target_count": 38393,
+      "validation_target_count": 8268
+    },
+    {
+      "A_time_nll": 3.2064400114488096,
+      "B_time_nll": 3.2155228955007256,
+      "B_to_refit_improvement": 0.0036034100042914297,
+      "best_epoch": 5,
+      "cap_limited": false,
+      "changed_state_keys": [
+        "b_t",
+        "v_t.weight",
+        "w_raw"
+      ],
+      "completed_epochs": 25,
+      "dataset": "insta_market_basket",
+      "dataset_label": "Instacart",
+      "fraction_of_A_to_B_loss_recovered": 0.3967253114423862,
+      "last_minus_best_time_nll": 0.0023928018084116154,
+      "last_state_file_sha256": "1dc91a87f05b76886559c8c64f47458d01c17c64285e87bb6b0301883a16485e",
+      "last_val_time_nll": 3.2143122873048457,
+      "local_feature_cache_present": false,
+      "non_time_state_bitwise_equal": true,
+      "optimizer_steps": [
+        6100,
+        6100,
+        6100
+      ],
+      "quantity_metrics": {
+        "body_count": 477507,
+        "body_mae": 3.438601503150614,
+        "gt_p99_count": 6036,
+        "gt_p99_mae": 21.91779476530588,
+        "mae": 3.9937810783167014,
+        "rmse": 5.872216930452252
+      },
+      "quantity_metrics_match_B": true,
+      "quantity_prediction_bitwise_identical": true,
+      "refit_minus_A": 0.0054794740476245,
+      "refit_minus_B": -0.0036034100042914297,
+      "refit_time_nll": 3.211919485496434,
+      "runtime": {
+        "cuda_available": true,
+        "device_name": "NVIDIA GeForce RTX 5090",
+        "elapsed_seconds": 34.14798438595608,
+        "peak_memory_allocated_bytes": 71690240,
+        "peak_memory_reserved_bytes": 90177536,
+        "requested_device": "cuda"
+      },
+      "selected_checkpoint_cpu_replay_time_nll": 3.2119194718780735,
+      "selected_checkpoint_file_sha256": "bd9433c482dd2722b699d8345484429e79cb8b0ef07fe824b4c7bbd880c0aa30",
+      "selected_checkpoint_replay_abs_error": 1.3618360661382667e-08,
+      "selected_state_sha256": "9f28793b6ffe5472d812b05a9a4b48a87c18b59bf196b361055b2c02c8751d7e",
+      "source_checkpoint_file_sha256": "e594f8df0dcd66249c3724063f44eee3de213bc83a780ca81fdf39a094bfed07",
+      "source_state_sha256": "a74e1f3055b03db5ac85adf2fdb63711890ea9d06449965e3ca749aefccc2f02",
+      "stopped_early": true,
+      "strict_target_A_plus_0_01": 3.2164400114488094,
+      "strict_target_pass": true,
+      "strict_target_signed_gap": -0.004520525952375287,
+      "train_target_count": 1991192,
+      "validation_target_count": 503733
+    }
+  ],
+  "e1": [
+    {
+      "completed_epochs": 1,
+      "dataset": "intermittent_frozen_5000",
+      "quantity_prediction_bitwise_identical": true,
+      "runtime": {
+        "cuda_available": true,
+        "device_name": "NVIDIA GeForce RTX 5090",
+        "elapsed_seconds": 23.519322087056935,
+        "peak_memory_allocated_bytes": 416923648,
+        "peak_memory_reserved_bytes": 438304768,
+        "requested_device": "cuda"
+      },
+      "status": "success"
+    },
+    {
+      "completed_epochs": 1,
+      "dataset": "yellow_trip_hourly",
+      "quantity_prediction_bitwise_identical": true,
+      "runtime": {
+        "cuda_available": true,
+        "device_name": "NVIDIA GeForce RTX 5090",
+        "elapsed_seconds": 3.8694299671333283,
+        "peak_memory_allocated_bytes": 416923648,
+        "peak_memory_reserved_bytes": 434110464,
+        "requested_device": "cuda"
+      },
+      "status": "success"
+    },
+    {
+      "completed_epochs": 1,
+      "dataset": "insta_market_basket",
+      "quantity_prediction_bitwise_identical": true,
+      "runtime": {
+        "cuda_available": true,
+        "device_name": "NVIDIA GeForce RTX 5090",
+        "elapsed_seconds": 74.99080782779492,
+        "peak_memory_allocated_bytes": 79987712,
+        "peak_memory_reserved_bytes": 127926272,
+        "requested_device": "cuda"
+      },
+      "status": "success"
+    }
+  ],
+  "limitations": [
+    "Single seed42 validation evidence only.",
+    "Held-out test was not evaluated.",
+    "The time-head refit changes no Backbone tensor.",
+    "Intermittent reached the frozen 100-epoch cap while still improving.",
+    "Large feature caches were not included in the local evidence copy."
+  ],
+  "overall_assessment": "share_with_caveats",
+  "question": "Can a frozen post-hoc time-head refit preserve B quantity predictions while recovering validation Time NLL across all three datasets?",
+  "remote_contract_tests": {
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "tests": 14,
+    "xml_sha256": "31c05692c64312acb415f90b43fe79caa8f41c55eccd041c9fdab49943a6ba1e"
+  },
+  "schema_version": 1,
+  "scope": {
+    "additional_seeds_executed": false,
+    "device": "NVIDIA GeForce RTX 5090",
+    "evaluation_scope": "validation_only",
+    "held_out_test_evaluated": false,
+    "seed": 42,
+    "splits_read": [
+      "train",
+      "validation"
+    ]
+  },
+  "source_identity": {
+    "contract_path": "paper/contracts/hard_lmm_time_head_refit_v1.json",
+    "contract_sha256": "f81427b28839883d567e72df3527d81082571f17819ab97aaaf1f369ba2ee88d",
+    "source_manifest_file_count": 1563,
+    "source_manifest_sha256": "db4d88ae99c4dbc8e3b39cc780f725e98454d9d1877ac7137ea642cb24b937d3",
+    "source_revision": "f514f0c202a9220781f11c49854dc2e11f67c2e2",
+    "source_tree": "25328ac798011ead5200113043b0238c22b5d157"
+  },
+  "status": "passed"
+}
