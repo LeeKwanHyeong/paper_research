@@ -1,0 +1,362 @@
+{
+  "auditor": {
+    "base_revision": "00fb364",
+    "direct_cli_bootstrap_fix": {
+      "commit": "de0ffc9",
+      "path": "paper/scripts/audit_hard_lmm_raw_rmse_checkpoint_alignment.py",
+      "sha256": "95f09b036cf90ff5da918f589d3114c4da93859955e8d65a3e8062b0fd710900",
+      "status": "committed"
+    },
+    "revision": "de0ffc9",
+    "tests": {
+      "failed": 0,
+      "passed": 23
+    }
+  },
+  "b_only_final_validation": {
+    "all_A_and_B_datasets_audited": true,
+    "all_B_checkpoints_are_earliest_validation_raw_rmse": true,
+    "all_B_runs_cuda_full_train_and_validation": true,
+    "common_raw_rmse_goal_met": true,
+    "datasets": [
+      {
+        "A_t0_joint": {
+          "body_mae": 0.6033692769505261,
+          "gt_p99_mae": 6.067982826600672,
+          "raw_rmse": 1.7224032516352568,
+          "time_nll": -3.592856040674848
+        },
+        "B_t0_raw_rmse": {
+          "best_epoch": 77,
+          "body_mae": 0.4657896038725777,
+          "completed_epochs": 117,
+          "gt_p99_mae": 5.148108011792356,
+          "raw_rmse": 1.4995550721471171,
+          "time_nll": -3.483793693042792,
+          "training_device": "cuda"
+        },
+        "dataset": "intermittent_frozen_5000",
+        "effect_A_to_B": {
+          "body_mae_relative_change": -0.2280190230654211,
+          "gt_p99_mae_relative_change": -0.15159482831358584,
+          "raw_rmse_relative_improvement": 0.12938211726932503,
+          "time_nll_absolute_change": 0.10906234763205624
+        },
+        "raw_rmse_goal_met": true,
+        "validation_target_count": 86285
+      },
+      {
+        "A_t0_joint": {
+          "body_mae": 23.16740661211176,
+          "gt_p99_mae": 1166.2824212569224,
+          "raw_rmse": 181.5375935825544,
+          "time_nll": 1.3664302460355464
+        },
+        "B_t0_raw_rmse": {
+          "best_epoch": 45,
+          "body_mae": 18.997478121185097,
+          "completed_epochs": 85,
+          "gt_p99_mae": 332.76974448674844,
+          "raw_rmse": 88.19499665350457,
+          "time_nll": 1.473390626529593,
+          "training_device": "cuda"
+        },
+        "dataset": "yellow_trip_hourly",
+        "effect_A_to_B": {
+          "body_mae_relative_change": -0.1799911643432136,
+          "gt_p99_mae_relative_change": -0.7146748176757077,
+          "raw_rmse_relative_improvement": 0.5141777804088947,
+          "time_nll_absolute_change": 0.10696038049404666
+        },
+        "raw_rmse_goal_met": true,
+        "validation_target_count": 8268
+      },
+      {
+        "A_t0_joint": {
+          "body_mae": 3.424545637259682,
+          "gt_p99_mae": 23.00099934296864,
+          "raw_rmse": 5.974160013596838,
+          "time_nll": 3.2064400114488096
+        },
+        "B_t0_raw_rmse": {
+          "best_epoch": 72,
+          "body_mae": 3.438601503150614,
+          "completed_epochs": 112,
+          "gt_p99_mae": 21.91779476530588,
+          "raw_rmse": 5.872216930452246,
+          "time_nll": 3.2155228955007256,
+          "training_device": "cuda"
+        },
+        "dataset": "insta_market_basket",
+        "effect_A_to_B": {
+          "body_mae_relative_change": 0.004104446948524076,
+          "gt_p99_mae_relative_change": -0.04709380499129889,
+          "raw_rmse_relative_improvement": 0.017064002790781574,
+          "time_nll_absolute_change": 0.00908288405191593
+        },
+        "raw_rmse_goal_met": true,
+        "validation_target_count": 503733
+      }
+    ],
+    "evidence": {
+      "a_vs_b_metrics.csv": {
+        "path": "paper/results/hard_lmm_raw_rmse_checkpoint_alignment_seed42_20260906/a_vs_b_metrics.csv",
+        "sha256": "bf9086dadf470a2542626cb37011916ea209ed6ae4e039f6eb57d4cc9ac87b2b"
+      },
+      "a_vs_b_metrics.json": {
+        "path": "paper/results/hard_lmm_raw_rmse_checkpoint_alignment_seed42_20260906/a_vs_b_metrics.json",
+        "sha256": "17b1c432b58f0620d8e6eda1a291a92eb4c995af9c78d98be8d460be79079db3"
+      },
+      "a_vs_b_metrics.md": {
+        "path": "paper/results/hard_lmm_raw_rmse_checkpoint_alignment_seed42_20260906/a_vs_b_metrics.md",
+        "sha256": "0b88a4a716bc0526265f20627809410d38b341d93586b771c9d180b3354e58f7"
+      },
+      "b_only_run_audit.json": {
+        "path": "paper/results/hard_lmm_raw_rmse_checkpoint_alignment_seed42_20260906/b_only_run_audit.json",
+        "sha256": "63bcd4a08d7daf8172d98bc33c1236d5bc0fe7df9b7e7f3f82a1856963902f9d"
+      },
+      "b_only_scope_completion.json": {
+        "path": "paper/results/hard_lmm_raw_rmse_checkpoint_alignment_seed42_20260906/b_only_scope_completion.json",
+        "sha256": "98aaa62c53c6a37448b214dd0ea0a2f1fe1874dc388c3b7a6018d0bbfb276cb0"
+      }
+    },
+    "status": "passed"
+  },
+  "contract_path": "paper/contracts/hard_lmm_quantile_checkpoint_alignment_v1.json",
+  "contract_sha256": "a1a008079acf2c108632ac13ec8f32f9eb311742ed97bb50b559850a9c8a0dfb",
+  "decision": {
+    "C_adopted": false,
+    "body_tail_time_are_descriptive": true,
+    "common_raw_rmse_goal_met": true,
+    "comparison": "A_t0_joint_vs_B_t0_raw_rmse",
+    "frozen_A_B_C_gate_status": "not_claimed_after_C_scope_withdrawal",
+    "frozen_C_gate_reinterpreted": false,
+    "interpretation": "checkpoint-selection alignment evidence; not a Backbone architecture change",
+    "required_result": "B raw RMSE improves over A on every dataset",
+    "user_scope": "A_vs_B_only"
+  },
+  "evaluation_scope": "validation_only",
+  "held_out_test_evaluated": false,
+  "historical_selector_headroom": [
+    {
+      "dataset": "intermittent_frozen_5000",
+      "historical_earliest_raw_rmse_epoch": 203,
+      "historical_raw_rmse_minimum": 1.5654224440408195,
+      "historical_raw_rmse_relative_improvement": 0.09114056620910294,
+      "historical_time_nll_at_raw_rmse_epoch": -3.5922939008665353,
+      "joint_selected_epoch": 200,
+      "joint_selected_raw_rmse": 1.7224032516352568,
+      "note": "diagnostic headroom only; no post-hoc model checkpoint is claimed"
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "historical_earliest_raw_rmse_epoch": 35,
+      "historical_raw_rmse_minimum": 93.49819230924976,
+      "historical_raw_rmse_relative_improvement": 0.48496512229720967,
+      "historical_time_nll_at_raw_rmse_epoch": 1.3842851239512033,
+      "joint_selected_epoch": 2,
+      "joint_selected_raw_rmse": 181.5375935825544,
+      "note": "diagnostic headroom only; no post-hoc model checkpoint is claimed"
+    },
+    {
+      "dataset": "insta_market_basket",
+      "historical_earliest_raw_rmse_epoch": 21,
+      "historical_raw_rmse_minimum": 5.880964055581446,
+      "historical_raw_rmse_relative_improvement": 0.015599842957551124,
+      "historical_time_nll_at_raw_rmse_epoch": 3.2166457592335727,
+      "joint_selected_epoch": 26,
+      "joint_selected_raw_rmse": 5.974160013596838,
+      "note": "diagnostic headroom only; no post-hoc model checkpoint is claimed"
+    }
+  ],
+  "local_validation": {
+    "a_reference_and_input_checksums": "passed",
+    "b_only_auditor_tests": {
+      "failed": 0,
+      "passed": 23
+    },
+    "b_only_final_audit": "passed",
+    "controller_import_fix_tests": {
+      "failed": 0,
+      "passed": 19
+    },
+    "focused_contract_tests": {
+      "failed": 0,
+      "passed": 57
+    },
+    "git_diff_check": "passed",
+    "isolated_controller_import": "passed",
+    "legacy_regression_tests": {
+      "failed": 0,
+      "passed": 88
+    },
+    "py_compile": "passed"
+  },
+  "package": {
+    "bytes": 57715424,
+    "current_untracked_architecture_note_included": false,
+    "current_untracked_scripts_included": false,
+    "path": "/tmp/hard_lmm_quantile_alignment_f752434.tar.gz",
+    "sha256": "9c981aaabde197c8f089818195b1bde9eceb50550ece7975460687fe867dcff9"
+  },
+  "parent_revision": "815ec62ebd945d286aa18149be6231454d4cdb58",
+  "quantile_contracts": [
+    {
+      "dataset": "intermittent_frozen_5000",
+      "expected_loss_bin_counts": [
+        204536,
+        152755,
+        17165,
+        15434,
+        3934
+      ],
+      "expected_loss_boundaries": [
+        2.0,
+        31.0,
+        47.0,
+        188.0
+      ],
+      "expected_loss_contract_sha256": "7ffc2d0c67a61215d43bfdbfa0738df895643b4a9f7297a43e537f079342ca5f",
+      "expected_loss_normalization_mean": 1.080961292353945,
+      "expected_train_target_identity_sha256": "fb8737489bc18e528adc322e2e55e26fcc5793aa6ff8021d93ceac98d7768aed",
+      "expected_train_target_quantity_sha256": "c4a9c3721d3861c190e81abe35156488f545b00c8ddbbed4022a9a82a4b3a215",
+      "expected_train_targets": 393824,
+      "expected_validation_target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+      "expected_validation_target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385",
+      "expected_validation_targets": 86285
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "expected_loss_bin_counts": [
+        19434,
+        15121,
+        1919,
+        1535,
+        384
+      ],
+      "expected_loss_boundaries": [
+        7.0,
+        686.0,
+        1562.0,
+        3448.0
+      ],
+      "expected_loss_contract_sha256": "a46de3ad6c9e3a57e4808356780598bb5b4e5e72c79ae530342974823fea5175",
+      "expected_loss_normalization_mean": 1.0849764279946865,
+      "expected_train_target_identity_sha256": "fc6453af5a9a34c93dd3f299cd545c9ab946be11752ee001f38055e52cc9e637",
+      "expected_train_target_quantity_sha256": "bbabe4e040831f05bc96680afdb4c45a1856673e418bdd1db9495cda3f693680",
+      "expected_train_targets": 38393,
+      "expected_validation_target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+      "expected_validation_target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd",
+      "expected_validation_targets": 8268
+    },
+    {
+      "dataset": "insta_market_basket",
+      "expected_loss_bin_counts": [
+        1022434,
+        782701,
+        98144,
+        68685,
+        19228
+      ],
+      "expected_loss_boundaries": [
+        8.0,
+        20.0,
+        25.0,
+        35.0
+      ],
+      "expected_loss_contract_sha256": "361efcf5d972b1c65fd70c39984aae67dd973a50e318edc221343ef4efe87acc",
+      "expected_loss_normalization_mean": 1.0784520026195363,
+      "expected_train_target_identity_sha256": "c361f5e9904c25f18c91007f6e1209518a02fb755799e81c8300ee759b2a1210",
+      "expected_train_target_quantity_sha256": "07e98693d5ac26caeaeb3c60d6d31fad21ab8f1e40ac649f231ac299963817d8",
+      "expected_train_targets": 1991192,
+      "expected_validation_target_identity_sha256": "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8",
+      "expected_validation_target_quantity_sha256": "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184",
+      "expected_validation_targets": 503733
+    }
+  ],
+  "rtx5090_validation": {
+    "additional_seeds_executed": false,
+    "cuda_contract_tests": {
+      "failed": 0,
+      "passed": 34,
+      "skipped": 0
+    },
+    "full_data_e1": {
+      "arms_per_dataset": [
+        "B_t0_raw_rmse",
+        "C_quantile_raw_rmse"
+      ],
+      "datasets": [
+        "intermittent_frozen_5000",
+        "yellow_trip_hourly",
+        "insta_market_basket"
+      ],
+      "status": "passed"
+    },
+    "held_out_test_evaluated": false,
+    "preserved_superseded_failure": {
+      "cause": "controller audit import path missing after successful first Intermittent e1 training",
+      "follow_on_datasets_started": false,
+      "source_revision": "562206c3497ccd462de37451e04bf2fb7de26c69"
+    },
+    "seed42_e300": {
+      "B_completed_datasets": [
+        "intermittent_frozen_5000",
+        "yellow_trip_hourly",
+        "insta_market_basket"
+      ],
+      "C_adopted": false,
+      "C_artifacts": {
+        "insta_market_basket": "absent_excluded",
+        "intermittent_frozen_5000": "complete_present_excluded",
+        "yellow_trip_hourly": "complete_present_excluded"
+      },
+      "C_included_in_revised_comparison": false,
+      "additional_seeds_executed": false,
+      "held_out_test_evaluated": false,
+      "instacart_B_best_epoch": 72,
+      "instacart_B_completed_epochs": 112,
+      "intentional_stop_record_sha256": "594405a684375663c5a7c1104218a78328b272fbc5c5acab6787dba0642b57eb",
+      "intentional_stop_signal": "SIGTERM",
+      "original_controller_error": "InterruptedError('Controller received signal 15')",
+      "original_controller_outcome": "failed_intentional_sigterm",
+      "original_controller_status": "failed",
+      "post_stop_process_audit": {
+        "associated_gpu_compute_processes": [],
+        "controller_trainer_watcher_exited": true,
+        "instacart_C_started": false,
+        "path": "paper/results/hard_lmm_raw_rmse_checkpoint_alignment_seed42_20260906/post_stop_process_audit.json",
+        "sha256": "be6c2a3de5a29a6701eda32cb3d5f1f3ee79fcf7a9b936611180722e37893db5",
+        "status": "passed"
+      },
+      "status": "complete_for_revised_scope",
+      "user_scope": "A_vs_B_only"
+    },
+    "source_revision": "f75243473adc25d622319dbca9bda7e076d8240f"
+  },
+  "schema_version": 1,
+  "source_revision": "f75243473adc25d622319dbca9bda7e076d8240f",
+  "status": "complete_for_revised_scope",
+  "target_population_loader_source_audit": {
+    "08e59880cd61cbd27cec40aa04636452b87bebfc": {
+      "data_loader/event_seq_data_module.py": "7c11d9ace6c4e4d3bb03861aae92393aa946a38452d702dc7625210b339897ca",
+      "paper/scripts/count_aware_tpp_backbone/datasets.py": "0a2982d92a21d6dd0518adba5e631d40cf2222c9eb9ee476d861b27211623274"
+    },
+    "28293c43521615be2ed8fad5b043dc9df8e5e457": {
+      "data_loader/event_seq_data_module.py": "7c11d9ace6c4e4d3bb03861aae92393aa946a38452d702dc7625210b339897ca",
+      "paper/scripts/count_aware_tpp_backbone/datasets.py": "0a2982d92a21d6dd0518adba5e631d40cf2222c9eb9ee476d861b27211623274"
+    },
+    "6a01aea9024db9e3ef6cfdd2c3d0219ceb320856": {
+      "data_loader/event_seq_data_module.py": "7c11d9ace6c4e4d3bb03861aae92393aa946a38452d702dc7625210b339897ca",
+      "paper/scripts/count_aware_tpp_backbone/datasets.py": "0a2982d92a21d6dd0518adba5e631d40cf2222c9eb9ee476d861b27211623274"
+    },
+    "815ec62ebd945d286aa18149be6231454d4cdb58": {
+      "data_loader/event_seq_data_module.py": "7c11d9ace6c4e4d3bb03861aae92393aa946a38452d702dc7625210b339897ca",
+      "paper/scripts/count_aware_tpp_backbone/datasets.py": "0a2982d92a21d6dd0518adba5e631d40cf2222c9eb9ee476d861b27211623274"
+    },
+    "f75243473adc25d622319dbca9bda7e076d8240f": {
+      "data_loader/event_seq_data_module.py": "7c11d9ace6c4e4d3bb03861aae92393aa946a38452d702dc7625210b339897ca",
+      "paper/scripts/count_aware_tpp_backbone/datasets.py": "0a2982d92a21d6dd0518adba5e631d40cf2222c9eb9ee476d861b27211623274"
+    }
+  }
+}
