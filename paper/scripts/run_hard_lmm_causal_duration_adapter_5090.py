@@ -182,6 +182,24 @@ def validate_contract(contract: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
         "Frozen state may change",
     )
 
+    stability = _require_mapping(
+        contract.get("identity_and_stability"), "Identity contract"
+    )
+    require(
+        stability.get("time_median_identity_source")
+        == "canonical Frozen-B median tensor calculated on the requested runtime device",
+        "Time-median identity source drift",
+    )
+    require(
+        float(stability.get("cross_device_time_median_formula_absolute_tolerance"))
+        == 1e-12
+        and float(
+            stability.get("cross_device_time_median_formula_relative_tolerance")
+        )
+        == 1e-12,
+        "Cross-device median formula tolerance drift",
+    )
+
     adapter = _require_mapping(contract.get("adapter"), "Adapter contract")
     expected_adapter = {
         "appended_target_excluded": True,

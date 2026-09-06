@@ -6,6 +6,7 @@ import math
 from pathlib import Path
 import sys
 
+import pytest
 import torch
 from torch.utils.data import Dataset
 
@@ -20,6 +21,7 @@ from paper.scripts.run_hard_lmm_causal_duration_adapter import (
     FrozenBaseTimeCache,
     GlobalScaleControl,
     adapted_scale,
+    canonical_frozen_time_median,
     compact_masked_history,
     continuous_lognormal_log_likelihood,
     fit_scale_module,
@@ -170,6 +172,38 @@ def test_shared_adapter_zero_init_preserves_scale_location_and_median_exactly() 
     )
     residual = adapter.bounded_log_scale_residual(history, lengths)
     assert torch.equal(residual, torch.zeros_like(residual))
+
+
+def test_canonical_median_keeps_source_bits_across_formula_ulp_difference() -> None:
+    _, base = make_dataset_and_cache(3, offset=0)
+    implied = torch.exp(base.location)
+    canonical = torch.nextafter(implied, torch.full_like(implied, math.inf))
+    cache = FrozenBaseTimeCache(
+        location=base.location,
+        sigma=base.sigma,
+        median=canonical,
+        target_dt=base.target_dt,
+    )
+    observed, maximum_error = canonical_frozen_time_median(
+        base_cache=cache,
+        count=cache.count,
+        time_scale=1.0,
+    )
+    assert torch.equal(observed, canonical)
+    assert 0.0 < maximum_error <= 1e-12
+
+    invalid = FrozenBaseTimeCache(
+        location=base.location,
+        sigma=base.sigma,
+        median=canonical + 1e-4,
+        target_dt=base.target_dt,
+    )
+    with pytest.raises(ValueError, match="inconsistent"):
+        canonical_frozen_time_median(
+            base_cache=invalid,
+            count=invalid.count,
+            time_scale=1.0,
+        )
 
 
 def test_global_control_uses_floor_preserving_bounded_scale_formula() -> None:

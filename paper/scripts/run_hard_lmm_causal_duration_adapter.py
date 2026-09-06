@@ -518,6 +518,31 @@ def _censor_for_target(
     return censor_mask(target, threshold=censor_threshold)
 
 
+def canonical_frozen_time_median(
+    *,
+    base_cache: FrozenBaseTimeCache,
+    count: int,
+    time_scale: float,
+) -> tuple[torch.Tensor, float]:
+    """Return Frozen-B's exact median tensor after checking its formula.
+
+    ``base_cache.median`` is calculated by Frozen-B on the requested runtime
+    device. Re-evaluating ``exp(location)`` on CPU can differ from the CUDA
+    result by one float64 ULP, even though the location is identical. Keep the
+    canonical source tensor for the bitwise identity gate and use a tight
+    numerical check only for the cross-device formula replay.
+    """
+    canonical = base_cache.median[:count]
+    implied = time_scale * torch.exp(base_cache.location[:count].to(torch.float64))
+    difference = torch.abs(implied - canonical)
+    maximum = float(difference.max().item()) if difference.numel() else 0.0
+    require(
+        torch.allclose(implied, canonical, atol=1e-12, rtol=1e-12),
+        "Frozen-B median is inconsistent with its unchanged location",
+    )
+    return canonical, maximum
+
+
 @torch.no_grad()
 def evaluate_scale_module(
     *,
@@ -573,12 +598,10 @@ def evaluate_scale_module(
         deltas.append(delta.detach().cpu().to(torch.float64))
     require(observed == count, "Evaluation target count drift")
     delta_all = torch.cat(deltas).contiguous()
-    recomputed_median = time_scale * torch.exp(
-        base_cache.location[:count].to(torch.float64)
-    )
-    require(
-        torch.equal(recomputed_median, base_cache.median[:count]),
-        "Scale-only path did not replay the Frozen-B median exactly",
+    canonical_median, median_formula_max_abs_error = canonical_frozen_time_median(
+        base_cache=base_cache,
+        count=count,
+        time_scale=time_scale,
     )
     result = {
         "count": observed,
@@ -594,7 +617,10 @@ def evaluate_scale_module(
             "bounded_log_scale_residual", delta_all
         ),
         "time_median_sha256": _tensor_digest(
-            "time_median", recomputed_median
+            "time_median", canonical_median
+        ),
+        "cross_device_median_formula_max_abs_error": (
+            median_formula_max_abs_error
         ),
         "base_location_sha256": _tensor_digest(
             "base_location", base_cache.location[:count]
@@ -610,6 +636,7 @@ def evaluate_scale_module(
                 "bounded_log_scale_residual_std",
                 "bounded_log_scale_residual_min",
                 "bounded_log_scale_residual_max",
+                "cross_device_median_formula_max_abs_error",
             )
         ),
         "Non-finite evaluation telemetry",
@@ -1225,6 +1252,16 @@ def validate_contract(contract: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
         float(stability.get("cross_device_quantity_relative_tolerance"))
         == 1e-5,
         "Cross-device quantity relative tolerance drift",
+    )
+    require(
+        float(stability.get("cross_device_time_median_formula_absolute_tolerance"))
+        == 1e-12,
+        "Cross-device median formula absolute tolerance drift",
+    )
+    require(
+        float(stability.get("cross_device_time_median_formula_relative_tolerance"))
+        == 1e-12,
+        "Cross-device median formula relative tolerance drift",
     )
     policy = contract.get("execution_policy")
     require(isinstance(policy, Mapping), "Execution policy is missing")
