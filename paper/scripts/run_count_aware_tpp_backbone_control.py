@@ -49,6 +49,7 @@ from paper.scripts.count_aware_tpp_backbone.constants import (
     MODEL_ROLE_WEIGHTED_STATIC,
     MODEL_ROLE_HARD_LOCAL_TIME,
     MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT,
+    MODEL_ROLE_RAW_RMSE_BASELINE_ALIGNMENT,
     QUANTILE_ADAPTIVE_QUANTILES,
     QUANTILE_ADAPTIVE_RAW_WEIGHTS,
     QUANTILE_ADAPTIVE_VARIANT,
@@ -483,6 +484,23 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
             args.time_intercept_limit, 300.0, rel_tol=0.0, abs_tol=1e-12
         ):
             raise ValueError("Quantile alignment requires executed T0 legacy intercept cap=300")
+    elif args.model_role == MODEL_ROLE_RAW_RMSE_BASELINE_ALIGNMENT:
+        if args.checkpoint_monitor != "validation_raw_quantity_rmse":
+            raise ValueError(
+                "Raw-RMSE baseline alignment requires raw-RMSE checkpoint selection"
+            )
+        if not math.isclose(
+            args.quantile_adaptive_strength, 0.0, rel_tol=0.0, abs_tol=1e-15
+        ):
+            raise ValueError(
+                "Raw-RMSE baseline alignment requires quantile adaptive strength=0"
+            )
+        if not math.isclose(
+            args.time_intercept_limit, 300.0, rel_tol=0.0, abs_tol=1e-12
+        ):
+            raise ValueError(
+                "Raw-RMSE baseline alignment requires legacy intercept cap=300"
+            )
     elif not math.isclose(
         args.quantile_adaptive_strength, 0.0, rel_tol=0.0, abs_tol=1e-15
     ):
@@ -578,8 +596,9 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
             or args.model_role == KEY_VALUE_ROLE
             or args.model_role == ELAPSED_AGE_ROLE
             or args.model_role == THP_STATIC_MEMORY_ROLE
-            or args.model_role == MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT):
-        # Keep the new candidate's held-out rows outside materialized memory.
+            or args.model_role == MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT
+            or args.model_role == MODEL_ROLE_RAW_RMSE_BASELINE_ALIGNMENT):
+        # Dedicated prospective roles keep held-out rows outside materialized memory.
         raw_frame = load_train_validation_frame(args.data)
     else:
         raw_frame = pl.read_parquet(args.data).sort(["oper_part_no", "seq"])
@@ -609,6 +628,10 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
             lookback_weeks=args.lookback_weeks,
             max_seq_len=args.max_seq_len,
         )
+    if args.model_role in {
+        MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT,
+        MODEL_ROLE_RAW_RMSE_BASELINE_ALIGNMENT,
+    }:
         _, validation_target_population = exact_target_population(
             frame,
             target_split="validation",

@@ -60,6 +60,7 @@ MODEL_ROLE_TITAN_B012_SCREENING = "titan_b012_screening"
 MODEL_ROLE_WEIGHTED_STATIC = "t0_weighted_static_retrieval"
 MODEL_ROLE_HARD_LOCAL_TIME = "t0_hard_memory_local_time"
 MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT = "quantile_checkpoint_alignment"
+MODEL_ROLE_RAW_RMSE_BASELINE_ALIGNMENT = "raw_rmse_baseline_alignment"
 CHECKPOINT_MONITOR_JOINT = "validation_joint_objective"
 CHECKPOINT_MONITOR_RAW_QUANTITY_RMSE = "validation_raw_quantity_rmse"
 CHECKPOINT_HISTORY_RAW_QUANTITY_RMSE = "val_qty_rmse"
@@ -78,6 +79,7 @@ MODEL_ROLES = (
     MODEL_ROLE_WEIGHTED_STATIC,
     MODEL_ROLE_HARD_LOCAL_TIME,
     MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT,
+    MODEL_ROLE_RAW_RMSE_BASELINE_ALIGNMENT,
     THP_STATIC_MEMORY_ROLE,
 )
 T0_COMMON_BACKBONES = ("rmtpp", "thp", "nhp", "sahp", "titantpp")
@@ -163,6 +165,22 @@ def validate_model_role_contract(
             raise ValueError("Local-time role requires direct log-MSE, legacy time head and no tail loss")
         return
     if model_role == MODEL_ROLE_EXPERIMENTAL:
+        return
+    if model_role == MODEL_ROLE_RAW_RMSE_BASELINE_ALIGNMENT:
+        if not backbones or any(backbone not in {"rmtpp", "thp"} for backbone in backbones):
+            raise ValueError(
+                "Raw-RMSE baseline alignment is limited to RMTPP and THP"
+            )
+        if quantity_variants != (VARIANT,):
+            raise ValueError(
+                "Raw-RMSE baseline alignment requires the direct log-MSE variant"
+            )
+        if time_head_mode != TIME_HEAD_MODE_LEGACY_CLAMPED:
+            raise ValueError(
+                "Raw-RMSE baseline alignment requires legacy_clamped_rmtpp"
+            )
+        if not math.isclose(lambda_tail, 0.0, rel_tol=0.0, abs_tol=1e-15):
+            raise ValueError("Raw-RMSE baseline alignment requires lambda_tail=0")
         return
     if model_role == MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT:
         if backbones != ("titantpp",):
@@ -270,6 +288,7 @@ __all__ = [
     "MODEL_ROLE_WEIGHTED_STATIC",
     "MODEL_ROLE_HARD_LOCAL_TIME",
     "MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT",
+    "MODEL_ROLE_RAW_RMSE_BASELINE_ALIGNMENT",
     "MODEL_ROLE_TIME_HEAD_DIAGNOSTIC",
     "QUANTITY_VARIANT_ALIASES",
     "QUANTILE_ADAPTIVE_QUANTILES",
