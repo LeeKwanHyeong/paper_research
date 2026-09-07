@@ -1,13 +1,21 @@
 from __future__ import annotations
 
 import json
+import math
+
+import pytest
 
 from paper.scripts.count_aware_tpp_backbone.constants import MODEL_ROLES
 from paper.scripts.run_hard_lmm_backbone_candidate_campaign import (
+    ALL_QUANTITY_STRATA,
+    BODY_STRATA,
+    B_VALIDATION_POPULATION_REFERENCES,
     CONTRACT_PATH,
     DATASETS,
+    aggregate_quantity_metrics,
     evaluate_gate,
     job_command,
+    validate_validation_population,
 )
 
 
@@ -20,6 +28,52 @@ def _candidate(host: str) -> dict[str, str]:
     return {
         "backbone": "titantpp_hard_memory_film",
         "model_role": "hard_lmm_memory_film",
+    }
+
+
+def _quantity_summary() -> dict[str, object]:
+    counts = {
+        "le_p50": 10,
+        "p50_p90": 20,
+        "p90_p95": 30,
+        "p95_p99": 40,
+        "gt_p99": 50,
+    }
+    maes = {
+        "le_p50": 1.0,
+        "p50_p90": 2.0,
+        "p90_p95": 3.0,
+        "p95_p99": 100.0,
+        "gt_p99": 5.0,
+    }
+    rmses = {
+        "le_p50": 1.5,
+        "p50_p90": 2.5,
+        "p90_p95": 3.5,
+        "p95_p99": 100.5,
+        "gt_p99": 5.5,
+    }
+    time_losses = {name: 0.1 * (index + 1) for index, name in enumerate(ALL_QUANTITY_STRATA)}
+    rows = [
+        {
+            "stratum": name,
+            "count": counts[name],
+            "qty_mae": maes[name],
+            "qty_rmse": rmses[name],
+            "time_nll": time_losses[name],
+        }
+        for name in ALL_QUANTITY_STRATA
+    ]
+    count = sum(counts.values())
+    return {
+        "quantity_rows": rows,
+        "best_val_qty_mae": sum(counts[name] * maes[name] for name in counts) / count,
+        "best_val_qty_rmse": math.sqrt(
+            sum(counts[name] * rmses[name] ** 2 for name in counts) / count
+        ),
+        "best_val_time_nll": (
+            sum(counts[name] * time_losses[name] for name in counts) / count
+        ),
     }
 
 
@@ -76,3 +130,83 @@ def test_seed42_gate_requires_rmse_and_all_guardrails() -> None:
         result = evaluate_gate(failing, baseline)
         assert result["status"] == "failed"
         assert result["checks"][metric] is False
+
+
+def test_body_aggregation_excludes_p95_to_p99_stratum() -> None:
+    summary = _quantity_summary()
+
+    metrics = aggregate_quantity_metrics(summary, expected_count=150)
+
+    expected = (10 * 1.0 + 20 * 2.0 + 30 * 3.0) / 60
+    wrongly_including_p95_p99 = (10 * 1.0 + 20 * 2.0 + 30 * 3.0 + 40 * 100.0) / 100
+    assert BODY_STRATA == ("le_p50", "p50_p90", "p90_p95")
+    assert metrics["body_target_count"] == 60
+    assert metrics["body_mae"] == pytest.approx(expected)
+    assert metrics["body_mae"] != pytest.approx(wrongly_including_p95_p99)
+
+
+def test_quantity_aggregation_rejects_duplicate_or_missing_strata() -> None:
+    summary = _quantity_summary()
+    rows = summary["quantity_rows"]
+    assert isinstance(rows, list)
+    rows[-1] = dict(rows[0])
+
+    with pytest.raises(ValueError, match="Duplicate quantity stratum"):
+        aggregate_quantity_metrics(summary, expected_count=150)
+
+
+@pytest.mark.parametrize(
+    ("metric", "message"),
+    (
+        ("best_val_qty_mae", "Overall quantity MAE disagrees"),
+        ("best_val_qty_rmse", "Overall quantity RMSE disagrees"),
+    ),
+)
+def test_quantity_aggregation_rejects_summary_aggregate_mismatch(
+    metric: str,
+    message: str,
+) -> None:
+    summary = _quantity_summary()
+    summary[metric] = float(summary[metric]) + 0.01
+
+    with pytest.raises(ValueError, match=message):
+        aggregate_quantity_metrics(summary, expected_count=150)
+
+
+@pytest.mark.parametrize(
+    ("metric", "value", "message"),
+    (
+        ("qty_mae", None, "is not numeric"),
+        ("qty_rmse", float("nan"), "is not finite"),
+        ("time_nll", float("inf"), "is not finite"),
+    ),
+)
+def test_quantity_aggregation_rejects_missing_or_nonfinite_row_metrics(
+    metric: str,
+    value: object,
+    message: str,
+) -> None:
+    summary = _quantity_summary()
+    rows = summary["quantity_rows"]
+    assert isinstance(rows, list)
+    rows[0][metric] = value
+
+    with pytest.raises(ValueError, match=message):
+        aggregate_quantity_metrics(summary, expected_count=150)
+
+
+def test_validation_population_rejects_identity_and_quantity_hash_mismatch() -> None:
+    expected = B_VALIDATION_POPULATION_REFERENCES["insta_market_basket"]
+    assert validate_validation_population(
+        dataset="insta_market_basket",
+        population=dict(expected),
+    ) == expected
+
+    for key in ("target_identity_sha256", "target_quantity_sha256"):
+        mismatched = dict(expected)
+        mismatched[key] = "0" * 64
+        with pytest.raises(ValueError, match=key):
+            validate_validation_population(
+                dataset="insta_market_basket",
+                population=mismatched,
+            )

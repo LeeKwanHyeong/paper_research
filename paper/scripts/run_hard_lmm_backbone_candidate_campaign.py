@@ -43,6 +43,46 @@ DATASETS = {
     },
 }
 
+# The B reference audit defines body as raw quantity <= the train p95 boundary.
+# Keep these reporting keys explicit so p95-p99 is never silently folded into
+# the body guardrail.
+BODY_STRATA = ("le_p50", "p50_p90", "p90_p95")
+ALL_QUANTITY_STRATA = (*BODY_STRATA, "p95_p99", "gt_p99")
+
+# Pinned from the audited B launch contracts whose aggregate metrics are frozen
+# by hard_lmm_backbone_parallel_screening_v1.json.  Keeping the population
+# identity beside the runner makes the check available in isolated GPU source
+# packages without changing the historical contract artifact.
+B_VALIDATION_POPULATION_REFERENCES = {
+    "intermittent_frozen_5000": {
+        "target_count": 86285,
+        "target_identity_sha256": (
+            "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf"
+        ),
+        "target_quantity_sha256": (
+            "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385"
+        ),
+    },
+    "yellow_trip_hourly": {
+        "target_count": 8268,
+        "target_identity_sha256": (
+            "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb"
+        ),
+        "target_quantity_sha256": (
+            "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd"
+        ),
+    },
+    "insta_market_basket": {
+        "target_count": 503733,
+        "target_identity_sha256": (
+            "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8"
+        ),
+        "target_quantity_sha256": (
+            "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184"
+        ),
+    },
+}
+
 
 def read_json(path: Path) -> dict[str, Any]:
     value = json.loads(path.read_text(encoding="utf-8"))
@@ -71,6 +111,142 @@ def save_json(path: Path, payload: dict[str, Any]) -> None:
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise ValueError(message)
+
+
+def _finite_float(value: Any, *, label: str) -> float:
+    try:
+        converted = float(value)
+    except (TypeError, ValueError) as error:
+        raise ValueError(f"{label} is not numeric") from error
+    require(math.isfinite(converted), f"{label} is not finite")
+    return converted
+
+
+def validate_validation_population(
+    *,
+    dataset: str,
+    population: Any,
+    reference: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Bind a candidate validation population to the audited B population."""
+    require(dataset in DATASETS, f"Unknown dataset: {dataset}")
+    require(isinstance(population, dict), "Validation target population is missing")
+    expected = (
+        reference
+        if reference is not None
+        else B_VALIDATION_POPULATION_REFERENCES[dataset]
+    )
+    require(isinstance(expected, dict), "Validation population reference is invalid")
+    required_keys = (
+        "target_count",
+        "target_identity_sha256",
+        "target_quantity_sha256",
+    )
+    require(
+        all(key in expected for key in required_keys),
+        "Validation population reference is incomplete",
+    )
+    require(
+        expected["target_count"] == DATASETS[dataset]["validation_targets"],
+        "B validation target count reference drift",
+    )
+    for key in required_keys:
+        require(
+            population.get(key) == expected[key],
+            f"Validation population {key} differs from B reference",
+        )
+    return {key: population[key] for key in required_keys}
+
+
+def aggregate_quantity_metrics(
+    summary: dict[str, Any],
+    *,
+    expected_count: int,
+) -> dict[str, Any]:
+    """Validate quantity strata and reproduce the frozen B aggregates."""
+    rows = summary.get("quantity_rows")
+    require(isinstance(rows, list), "Quantity strata missing")
+    require(len(rows) == len(ALL_QUANTITY_STRATA), "Quantity strata count drift")
+
+    indexed: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        require(isinstance(row, dict), "Quantity stratum row is invalid")
+        stratum = row.get("stratum")
+        require(stratum in ALL_QUANTITY_STRATA, f"Unknown quantity stratum: {stratum}")
+        require(stratum not in indexed, f"Duplicate quantity stratum: {stratum}")
+        count = row.get("count")
+        require(
+            isinstance(count, int) and not isinstance(count, bool) and count > 0,
+            f"Quantity stratum {stratum} has invalid count",
+        )
+        indexed[stratum] = row
+    require(
+        set(indexed) == set(ALL_QUANTITY_STRATA),
+        "Quantity strata are incomplete",
+    )
+
+    counts = {name: int(indexed[name]["count"]) for name in ALL_QUANTITY_STRATA}
+    require(sum(counts.values()) == expected_count, "Quantity stratum population drift")
+    maes = {
+        name: _finite_float(indexed[name].get("qty_mae"), label=f"{name}.qty_mae")
+        for name in ALL_QUANTITY_STRATA
+    }
+    rmses = {
+        name: _finite_float(indexed[name].get("qty_rmse"), label=f"{name}.qty_rmse")
+        for name in ALL_QUANTITY_STRATA
+    }
+    time_losses = {
+        name: _finite_float(indexed[name].get("time_nll"), label=f"{name}.time_nll")
+        for name in ALL_QUANTITY_STRATA
+    }
+    require(all(value >= 0.0 for value in maes.values()), "Quantity MAE must be nonnegative")
+    require(all(value >= 0.0 for value in rmses.values()), "Quantity RMSE must be nonnegative")
+
+    body_count = sum(counts[name] for name in BODY_STRATA)
+    require(body_count > 0, "Body population is empty")
+    body_mae = (
+        sum(counts[name] * maes[name] for name in BODY_STRATA) / body_count
+    )
+    reconstructed_mae = (
+        sum(counts[name] * maes[name] for name in ALL_QUANTITY_STRATA)
+        / expected_count
+    )
+    reconstructed_rmse = math.sqrt(
+        sum(
+            counts[name] * rmses[name] * rmses[name]
+            for name in ALL_QUANTITY_STRATA
+        )
+        / expected_count
+    )
+    reconstructed_time = (
+        sum(counts[name] * time_losses[name] for name in ALL_QUANTITY_STRATA)
+        / expected_count
+    )
+    summary_mae = _finite_float(summary.get("best_val_qty_mae"), label="overall qty MAE")
+    summary_rmse = _finite_float(summary.get("best_val_qty_rmse"), label="overall qty RMSE")
+    summary_time = _finite_float(summary.get("best_val_time_nll"), label="overall time loss")
+    require(
+        math.isclose(summary_mae, reconstructed_mae, rel_tol=1e-10, abs_tol=1e-10),
+        "Overall quantity MAE disagrees with quantity strata",
+    )
+    require(
+        math.isclose(summary_rmse, reconstructed_rmse, rel_tol=1e-10, abs_tol=1e-10),
+        "Overall quantity RMSE disagrees with quantity strata",
+    )
+    require(
+        math.isclose(summary_time, reconstructed_time, rel_tol=1e-10, abs_tol=1e-10),
+        "Overall time loss disagrees with quantity strata",
+    )
+    return {
+        "raw_rmse": summary_rmse,
+        "overall_mae": summary_mae,
+        "body_mae": body_mae,
+        "gt_p99_mae": maes["gt_p99"],
+        "clamped_time_loss": summary_time,
+        "validation_target_count": expected_count,
+        "body_target_count": body_count,
+        "stratum_counts": counts,
+    }
 
 
 def gpu_preflight(expected_name: str) -> dict[str, Any]:
@@ -188,6 +364,7 @@ def audit_job(
     dataset: str,
     source_revision: str,
     expected_epochs: int,
+    population_reference: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     summary_path = (
         output
@@ -209,10 +386,10 @@ def audit_job(
     require(str(summary.get("training_device", "")).startswith("cuda"), "CUDA was not used")
     require(int(summary.get("cuda_peak_memory_allocated_bytes", 0)) > 0, "CUDA allocation missing")
     require(launch.get("status") == "complete", "Launch contract is incomplete")
-    population = launch.get("validation_target_population", {})
-    require(
-        population.get("target_count") == DATASETS[dataset]["validation_targets"],
-        "Validation target population drift",
+    population = validate_validation_population(
+        dataset=dataset,
+        population=launch.get("validation_target_population"),
+        reference=population_reference,
     )
     history = read_json(summary_path.parent / "history.json").get("history")
     require(isinstance(history, list) and len(history) == summary["completed_epochs"], "History drift")
@@ -222,20 +399,10 @@ def audit_job(
     )
     selected = min(history, key=lambda row: (float(row["val_qty_rmse"]), int(row["epoch"])))
     require(selected["epoch"] == summary["best_epoch"], "Earliest raw-RMSE minimum drift")
-    rows = summary.get("quantity_rows")
-    require(isinstance(rows, list) and len(rows) == 5, "Quantity strata missing")
-    body = [row for row in rows if row["stratum"] != "gt_p99"]
-    body_count = sum(int(row["count"]) for row in body)
-    body_mae = sum(int(row["count"]) * float(row["qty_mae"]) for row in body) / body_count
-    tail = next(row for row in rows if row["stratum"] == "gt_p99")
-    metrics = {
-        "raw_rmse": float(summary["best_val_qty_rmse"]),
-        "overall_mae": float(summary["best_val_qty_mae"]),
-        "body_mae": body_mae,
-        "gt_p99_mae": float(tail["qty_mae"]),
-        "clamped_time_loss": float(summary["best_val_time_nll"]),
-    }
-    require(all(math.isfinite(value) for value in metrics.values()), "Nonfinite metric")
+    metrics = aggregate_quantity_metrics(
+        summary,
+        expected_count=DATASETS[dataset]["validation_targets"],
+    )
     return {
         "status": "passed",
         "summary": str(summary_path),
