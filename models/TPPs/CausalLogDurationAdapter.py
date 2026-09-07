@@ -331,4 +331,20 @@ class CausalLogDurationAdapter(nn.Module):
         return time_scale * torch.exp(base_location)
 
 
-__all__ = ["CausalLogDurationAdapter"]
+class LengthOnlyCausalLogDurationAdapter(CausalLogDurationAdapter):
+    """Same-capacity control that sees prefix length but no duration values."""
+
+    def normalized_history(
+        self,
+        observed_delta_t: torch.Tensor,
+        lengths: torch.Tensor,
+    ) -> torch.Tensor:
+        active_mask, _ = self._validate_history(observed_delta_t, lengths)
+        return torch.zeros(
+            (*active_mask.shape, 1),
+            device=observed_delta_t.device,
+            dtype=self.gru.weight_ih_l0.dtype,
+        )
+
+
+__all__ = ["CausalLogDurationAdapter", "LengthOnlyCausalLogDurationAdapter"]
