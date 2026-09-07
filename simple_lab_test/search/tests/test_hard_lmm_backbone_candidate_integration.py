@@ -19,6 +19,9 @@ from models.TPPs.CountAwareTitanMemoryFiLM import (
     MEMORY_FILM_ROLE,
     CountAwareTitanMemoryFiLM,
 )
+from models.TPPs.CountAwareTitanCausalQKV import (
+    CAUSAL_QKV_BACKBONE, CAUSAL_QKV_ROLE, CountAwareTitanCausalQKVTPP,
+)
 from paper.scripts.count_aware_tpp_backbone.constants import (
     MODEL_ROLE_INTERLAYER_MEMORY,
     MODEL_ROLE_MEMORY_FILM,
@@ -45,6 +48,7 @@ def _build(backbone: str):
     [
         (INTERLAYER_MEMORY_BACKBONE, CountAwareTitanInterLayerMemoryTPP, INTERLAYER_MEMORY_ROLE, 1),
         (MEMORY_FILM_BACKBONE, CountAwareTitanMemoryFiLM, MEMORY_FILM_ROLE, 128),
+        (CAUSAL_QKV_BACKBONE, CountAwareTitanCausalQKVTPP, CAUSAL_QKV_ROLE, 576),
     ],
 )
 def test_factory_and_role_bind_each_candidate(backbone, model_type, role, added) -> None:
@@ -68,6 +72,7 @@ def test_factory_and_role_bind_each_candidate(backbone, model_type, role, added)
     [
         (MODEL_ROLE_INTERLAYER_MEMORY, INTERLAYER_MEMORY_BACKBONE),
         (MODEL_ROLE_MEMORY_FILM, MEMORY_FILM_BACKBONE),
+        (CAUSAL_QKV_ROLE, CAUSAL_QKV_BACKBONE),
     ],
 )
 def test_candidate_role_rejects_selector_or_route_drift(role, backbone) -> None:
@@ -101,7 +106,7 @@ def _artifact(backbone: str) -> dict:
     }
 
 
-@pytest.mark.parametrize("backbone", [INTERLAYER_MEMORY_BACKBONE, MEMORY_FILM_BACKBONE])
+@pytest.mark.parametrize("backbone", [INTERLAYER_MEMORY_BACKBONE, MEMORY_FILM_BACKBONE, CAUSAL_QKV_BACKBONE])
 def test_checkpoint_route_roundtrip_and_summary(backbone: str) -> None:
     payload = _artifact(backbone)
     validate_checkpoint_route(payload, backbone)
@@ -114,6 +119,8 @@ def test_candidates_cannot_be_relabelled_as_each_other_or_b() -> None:
     for payload, other in (
         (_artifact(INTERLAYER_MEMORY_BACKBONE), MEMORY_FILM_BACKBONE),
         (_artifact(MEMORY_FILM_BACKBONE), INTERLAYER_MEMORY_BACKBONE),
+        (_artifact(CAUSAL_QKV_BACKBONE), INTERLAYER_MEMORY_BACKBONE),
+        (_artifact(CAUSAL_QKV_BACKBONE), MEMORY_FILM_BACKBONE),
     ):
         with pytest.raises(ValueError):
             validate_checkpoint_route(payload, other)

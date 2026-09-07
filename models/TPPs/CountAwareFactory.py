@@ -49,6 +49,12 @@ from models.TPPs.CountAwareTitanMemoryFiLM import (
     memory_film_metadata,
     validate_memory_film_checkpoint,
 )
+from models.TPPs.CountAwareTitanCausalQKV import (
+    CountAwareTitanCausalQKVTPP,
+    CAUSAL_QKV_BACKBONE,
+    causal_qkv_metadata,
+    validate_causal_qkv_checkpoint,
+)
 from models.Titan.common.key_value_memory import (
     KEY_VALUE_BACKBONE,
     KEY_VALUE_CONTRACT,
@@ -166,6 +172,8 @@ def validate_key_value_checkpoint(payload: dict[str, Any], expected_backbone: st
 
 def validate_checkpoint_route(payload: dict[str, Any], expected_backbone: str) -> None:
     """Validate explicit candidate identity; compatible tensor shapes are not enough."""
+    if validate_causal_qkv_checkpoint(payload, expected_backbone):
+        return
     if validate_interlayer_memory_checkpoint(payload, expected_backbone):
         return
     if validate_memory_film_checkpoint(payload, expected_backbone):
@@ -297,6 +305,10 @@ def build_count_aware_model(
         "time_sigma_floor": time_sigma_floor,
     }
     intermediate_candidates = {
+        CAUSAL_QKV_BACKBONE: (
+            CountAwareTitanCausalQKVTPP,
+            causal_qkv_metadata,
+        ),
         INTERLAYER_MEMORY_BACKBONE: (
             CountAwareTitanInterLayerMemoryTPP,
             interlayer_memory_metadata,

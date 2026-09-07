@@ -52,6 +52,7 @@ from paper.scripts.count_aware_tpp_backbone.constants import (
     MODEL_ROLE_RAW_RMSE_BASELINE_ALIGNMENT,
     MODEL_ROLE_INTERLAYER_MEMORY,
     MODEL_ROLE_MEMORY_FILM,
+    MODEL_ROLE_CAUSAL_QKV,
     QUANTILE_ADAPTIVE_QUANTILES,
     QUANTILE_ADAPTIVE_RAW_WEIGHTS,
     QUANTILE_ADAPTIVE_VARIANT,
@@ -478,6 +479,7 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
     candidate_raw_rmse_roles = {
         MODEL_ROLE_INTERLAYER_MEMORY,
         MODEL_ROLE_MEMORY_FILM,
+        MODEL_ROLE_CAUSAL_QKV,
     }
     if args.model_role == MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT:
         if args.checkpoint_monitor != "validation_raw_quantity_rmse":
@@ -603,6 +605,7 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
                 MODEL_ROLE_HARD_LOCAL_TIME,
                 MODEL_ROLE_INTERLAYER_MEMORY,
                 MODEL_ROLE_MEMORY_FILM,
+                MODEL_ROLE_CAUSAL_QKV,
             }
             or args.model_role == KEY_VALUE_ROLE
             or args.model_role == ELAPSED_AGE_ROLE
@@ -644,6 +647,7 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
         MODEL_ROLE_RAW_RMSE_BASELINE_ALIGNMENT,
         MODEL_ROLE_INTERLAYER_MEMORY,
         MODEL_ROLE_MEMORY_FILM,
+        MODEL_ROLE_CAUSAL_QKV,
     }:
         _, validation_target_population = exact_target_population(
             frame,

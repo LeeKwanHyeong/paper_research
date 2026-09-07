@@ -16,6 +16,10 @@ from models.TPPs.CountAwareTitanMemoryFiLM import (
     MEMORY_FILM_BACKBONE,
     MEMORY_FILM_ROLE,
 )
+from models.TPPs.CountAwareTitanCausalQKV import (
+    CAUSAL_QKV_BACKBONE,
+    CAUSAL_QKV_ROLE,
+)
 
 from models.TPPs.CountAwareTPP import (
     LOG_MSE_VARIANT,
@@ -57,6 +61,7 @@ TITAN_MEMORY_BACKBONES = (
     ELAPSED_AGE_BACKBONE,
     INTERLAYER_MEMORY_BACKBONE,
     MEMORY_FILM_BACKBONE,
+    CAUSAL_QKV_BACKBONE,
 )
 SUPPORTED_BACKBONES = (*BACKBONES, *TITAN_MEMORY_BACKBONES, THP_STATIC_MEMORY_BACKBONE)
 VARIANT = LOG_MSE_VARIANT
@@ -73,6 +78,7 @@ MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT = "quantile_checkpoint_alignment"
 MODEL_ROLE_RAW_RMSE_BASELINE_ALIGNMENT = "raw_rmse_baseline_alignment"
 MODEL_ROLE_INTERLAYER_MEMORY = INTERLAYER_MEMORY_ROLE
 MODEL_ROLE_MEMORY_FILM = MEMORY_FILM_ROLE
+MODEL_ROLE_CAUSAL_QKV = CAUSAL_QKV_ROLE
 CHECKPOINT_MONITOR_JOINT = "validation_joint_objective"
 CHECKPOINT_MONITOR_RAW_QUANTITY_RMSE = "validation_raw_quantity_rmse"
 CHECKPOINT_HISTORY_RAW_QUANTITY_RMSE = "val_qty_rmse"
@@ -94,6 +100,7 @@ MODEL_ROLES = (
     MODEL_ROLE_RAW_RMSE_BASELINE_ALIGNMENT,
     MODEL_ROLE_INTERLAYER_MEMORY,
     MODEL_ROLE_MEMORY_FILM,
+    MODEL_ROLE_CAUSAL_QKV,
     THP_STATIC_MEMORY_ROLE,
 )
 T0_COMMON_BACKBONES = ("rmtpp", "thp", "nhp", "sahp", "titantpp")
@@ -140,6 +147,7 @@ BACKBONE_LABELS = {
     "titantpp_hard_memory_local_time": "Hard-LMM Quantity Memory / Local Time",
     INTERLAYER_MEMORY_BACKBONE: "Hard-LMM Inter-layer Shared-bank Read",
     MEMORY_FILM_BACKBONE: "Hard-LMM Shared-bank Feature Modulation",
+    CAUSAL_QKV_BACKBONE: "Hard-LMM Causal QKV Convolution",
 }
 
 
@@ -162,6 +170,7 @@ def validate_model_role_contract(
     candidate_roles = {
         MODEL_ROLE_INTERLAYER_MEMORY: INTERLAYER_MEMORY_BACKBONE,
         MODEL_ROLE_MEMORY_FILM: MEMORY_FILM_BACKBONE,
+        MODEL_ROLE_CAUSAL_QKV: CAUSAL_QKV_BACKBONE,
     }
     matched_candidate_roles = [
         role
