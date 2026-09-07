@@ -63,6 +63,7 @@ def build_manifest(revision: str) -> dict:
         "git_tree": git_output("rev-parse", f"{full_revision}^{{tree}}"),
         "file_count": len(files),
         "files": files,
+        "runtime_empty_directories": ["sample_data"],
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
 

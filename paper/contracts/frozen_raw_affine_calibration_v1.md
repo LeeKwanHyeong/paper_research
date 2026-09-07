@@ -135,6 +135,9 @@ inference와 2-parameter fit이며 e300 Backbone 재학습이 아니다.
 이 순서는 committed `paper/scripts/control_frozen_raw_affine_5080.py`가 한 번에 한
 process만 실행하며, 앞 gate가 실패하면 뒤 단계의 prediction을 materialize하기
 전에 종료한다.
+Git이 빈 디렉터리를 archive에 넣지 않으므로 source manifest는 root 탐색용
+`sample_data/`를 runtime empty directory로 고정한다. 실제 입력은 이 디렉터리가
+아니라 별도의 hash-pinned `--data-root`에서만 읽는다.
 
 ## 고정된 source와 데이터
 

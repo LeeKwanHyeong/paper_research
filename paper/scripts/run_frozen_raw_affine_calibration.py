@@ -118,6 +118,16 @@ def verify_source_manifest(path: Path, *, source_revision: str) -> dict[str, Any
     }
     require(required <= set(files), "Source manifest omits required execution files")
     root = PROJECT_ROOT.resolve()
+    runtime_empty_directories = payload.get("runtime_empty_directories")
+    require(
+        runtime_empty_directories == ["sample_data"],
+        "Runtime empty-directory contract drift",
+    )
+    for relative in runtime_empty_directories:
+        directory = (root / relative).resolve()
+        require(directory.is_relative_to(root), f"Runtime directory escapes snapshot: {relative}")
+        require(directory.is_dir(), f"Runtime directory is missing: {relative}")
+        require(not any(directory.iterdir()), f"Runtime directory must be empty: {relative}")
     for relative, expected in files.items():
         candidate = (root / str(relative)).resolve()
         require(candidate.is_relative_to(root), f"Source path escapes snapshot: {relative}")
@@ -130,6 +140,7 @@ def verify_source_manifest(path: Path, *, source_revision: str) -> dict[str, Any
         "git_tree": payload.get("git_tree"),
         "file_count": len(files),
         "all_file_hashes_verified": True,
+        "runtime_empty_directories_verified": runtime_empty_directories,
         "canonical_contract_sha256": files[
             "paper/contracts/frozen_raw_affine_calibration_v1.json"
         ],

@@ -16,6 +16,7 @@ from paper.scripts.run_frozen_raw_affine_calibration import (
     validate_contract,
     validate_prerequisite_decision,
     validate_train_result,
+    verify_source_manifest,
 )
 from paper.scripts.run_hard_lmm_time_head_refit import sha256_file
 
@@ -321,6 +322,54 @@ def test_B_validation_smoke_still_requires_the_B_train_performance_gate():
     )
     with pytest.raises(ValueError, match="required"):
         validate_prerequisite_decision(args)
+
+
+def test_source_manifest_requires_an_empty_sample_data_runtime_sentinel(
+    monkeypatch, tmp_path
+):
+    import paper.scripts.run_frozen_raw_affine_calibration as runner
+
+    required = {
+        "paper/contracts/frozen_raw_affine_calibration_v1.json",
+        "paper/scripts/frozen_raw_affine_calibration.py",
+        "paper/scripts/build_frozen_raw_affine_source_manifest.py",
+        "paper/scripts/control_frozen_raw_affine_5080.py",
+        "paper/scripts/run_frozen_raw_affine_calibration.py",
+        "paper/scripts/summarize_frozen_raw_affine_calibration.py",
+        "paper/scripts/count_aware_tpp_backbone/core.py",
+        "paper/scripts/run_hard_lmm_time_head_refit.py",
+        "paper/scripts/run_intermittent_log_backbone_control.py",
+        "models/TPPs/CountAwareTPP.py",
+        "models/TPPs/CountAwareFactory.py",
+        "data_loader/event_seq_data_module.py",
+        "simple_lab_test/search/common/runner.py",
+    }
+    files = {}
+    for relative in required:
+        path = tmp_path / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(relative, encoding="utf-8")
+        files[relative] = sha256_file(path)
+    manifest = {
+        "schema": "frozen_raw_affine_source_manifest_v1",
+        "source_revision": "f" * 40,
+        "git_tree": "e" * 40,
+        "file_count": len(files),
+        "files": files,
+        "runtime_empty_directories": ["sample_data"],
+    }
+    manifest_path = tmp_path / "source_manifest.json"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    monkeypatch.setattr(runner, "PROJECT_ROOT", tmp_path)
+
+    with pytest.raises(ValueError, match="missing"):
+        verify_source_manifest(manifest_path, source_revision="f" * 40)
+    (tmp_path / "sample_data").mkdir()
+    audit = verify_source_manifest(manifest_path, source_revision="f" * 40)
+    assert audit["runtime_empty_directories_verified"] == ["sample_data"]
+    (tmp_path / "sample_data/unexpected.txt").write_text("data", encoding="utf-8")
+    with pytest.raises(ValueError, match="must be empty"):
+        verify_source_manifest(manifest_path, source_revision="f" * 40)
 
 
 def test_smoke_fitted_state_round_trips_without_becoming_a_full_gate(tmp_path):
