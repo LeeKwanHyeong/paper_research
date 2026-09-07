@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "contract_id": "aligned_conditional_cdf_calibration_v1",
+  "contract_sha256": "86632f4f7ea22960c8f028cc8e2347986ae837bee29c9fee804fdf25b46c1a52",
+  "source_revision": "cf7faa58c5a58d0772d486a5748abcdbe02e1b60",
+  "runtime": "NVIDIA GeForce RTX 5080",
+  "remote_artifact_root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/aligned_cdf_cf7faa5_5080_20260907",
+  "evaluation_scope": "validation_only",
+  "held_out_test_evaluated": false,
+  "e1": {
+    "status": "passed_all_three_datasets",
+    "intermittent_frozen_5000": {
+      "train_count": 393824,
+      "validation_count": 86285,
+      "elapsed_seconds": 2.431142389999877,
+      "peak_memory_reserved_bytes": 48234496
+    },
+    "yellow_trip_hourly": {
+      "train_count": 38393,
+      "validation_count": 8268,
+      "elapsed_seconds": 0.8673149259993806,
+      "peak_memory_reserved_bytes": 75497472
+    },
+    "insta_market_basket": {
+      "train_count": 1991192,
+      "validation_count": 503733,
+      "elapsed_seconds": 13.786640594000346,
+      "peak_memory_reserved_bytes": 75497472
+    }
+  },
+  "taxi_seed42": {
+    "status": "failed_frozen_acceptance_contract",
+    "aligned_B_primary_nll": 0.695647425421554,
+    "candidate_primary_nll": 0.6889874164232066,
+    "aligned_A_primary_nll": 0.6506978539230401,
+    "global_control_primary_nll": 0.695647425421554,
+    "permuted_hidden_control_primary_nll": 0.6934882531973777,
+    "candidate_best_epoch": 99,
+    "candidate_completed_epochs": 100,
+    "candidate_primary_improvement_over_aligned_B": 0.0066600089983474,
+    "candidate_minus_aligned_A_primary_nll": 0.03828956250016646,
+    "candidate_primary_improvement_over_global_control": 0.0066600089983474,
+    "candidate_primary_improvement_over_permuted_hidden_control": 0.004500836774171124,
+    "candidate_continuous_reference_nll": 5.59020778179916,
+    "aligned_B_continuous_reference_nll": 6.536221052720451,
+    "aligned_B_time_median_mae": 1.1569396577808544,
+    "candidate_time_median_mae": 1.1879788571226115,
+    "time_median_mae_relative_change": 0.02682871067043724,
+    "aligned_B_time_median_rmse": 2.7134248681863693,
+    "candidate_time_median_rmse": 2.717291565455131,
+    "time_median_rmse_relative_change": 0.0014250246299785108,
+    "quantity_mae": 28.674022378382848,
+    "quantity_rmse": 88.1950014902932,
+    "quantity_prediction_bitwise_identical": true,
+    "runtime_quantity_before_sha256": "444e94066bd94d3dfe59410633b2faf3b01f69bbcbfd366b99511d4582d17791",
+    "runtime_quantity_after_sha256": "444e94066bd94d3dfe59410633b2faf3b01f69bbcbfd366b99511d4582d17791",
+    "source_model_state_unchanged": true,
+    "acceptance_gates": {
+      "candidate_improves_aligned_B_by_0_005": true,
+      "candidate_within_aligned_A_plus_0_01": false,
+      "candidate_beats_global_by_0_005": true,
+      "candidate_beats_permuted_by_0_005": false,
+      "continuous_reference_within_aligned_B_plus_0_01": true,
+      "time_median_mae_worsening_within_2_percent": false,
+      "time_median_rmse_worsening_within_2_percent": true,
+      "quantity_prediction_bitwise_identical": true,
+      "source_model_state_unchanged": true
+    }
+  },
+  "decision": {
+    "status": "rejected_at_taxi_gate",
+    "intermittent_and_instacart_full_fit_executed": false,
+    "additional_seeds_executed": false,
+    "reason": "Taxi passed the aligned-B and global-control NLL improvements but failed aligned-A proximity, permuted-hidden attribution margin, and time-median MAE guardrail."
+  }
+}
