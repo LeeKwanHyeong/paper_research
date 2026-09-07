@@ -224,6 +224,11 @@ def validate_contract(contract: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
     )
     acceptance = contract.get("acceptance")
     require(isinstance(acceptance, Mapping), "Acceptance contract is missing")
+    require(
+        acceptance.get("quantity_boundary_estimator")
+        == "numpy.quantile(method='nearest') over canonical train next-event targets",
+        "Quantity-boundary estimator drift",
+    )
     for name, expected in {
         "minimum_pooled_oof_rmse_improvement_fraction": 0.01,
         "maximum_overall_mae_regression_fraction": 0.02,
@@ -422,6 +427,21 @@ def make_dataset(
         split_col="chronological_split",
         target_splits={split},
     )
+
+
+def compute_train_quantity_boundaries(quantity: np.ndarray) -> dict[str, float]:
+    values = np.asarray(quantity, dtype=np.float64)
+    require(
+        values.ndim == 1 and values.size > 0,
+        "Train quantities must be a nonempty one-dimensional array",
+    )
+    require(bool(np.isfinite(values).all()), "Train quantities contain non-finite values")
+    return {
+        "p50": float(np.quantile(values, 0.50, method="nearest")),
+        "p90": float(np.quantile(values, 0.90, method="nearest")),
+        "p95": float(np.quantile(values, 0.95, method="nearest")),
+        "p99": float(np.quantile(values, 0.99, method="nearest")),
+    }
 
 
 def smoke_indices(dataset: RMTPPWeekLookbackDataset, per_fold: int) -> np.ndarray:
@@ -733,6 +753,22 @@ def extract_split(
         lookback=int(dataset_spec["lookback"]),
         max_seq_len=int(dataset_spec["max_sequence_length"]),
     )
+    if split == "train":
+        train_quantity = np.fromiter(
+            (
+                float(dataset.val_lists[part_index][context_end + 1])
+                for part_index, context_end in dataset.index
+            ),
+            dtype=np.float64,
+            count=len(dataset.index),
+        )
+        observed_boundaries = compute_train_quantity_boundaries(train_quantity)
+        require(
+            observed_boundaries == dataset_spec["train_quantity_boundaries"],
+            f"Train quantity boundary drift: {observed_boundaries}",
+        )
+        population = dict(population)
+        population["train_quantity_boundaries"] = observed_boundaries
     save_json(
         context["status_path"],
         {
@@ -789,12 +825,7 @@ def analyze_train(
     partial_smoke: bool = False,
 ) -> dict[str, Any]:
     calibration = contract["calibration"]
-    observed_boundaries = {
-        "p50": float(np.quantile(train["quantity"], 0.50, method="nearest")),
-        "p90": float(np.quantile(train["quantity"], 0.90, method="nearest")),
-        "p95": float(np.quantile(train["quantity"], 0.95, method="nearest")),
-        "p99": float(np.quantile(train["quantity"], 0.99, method="nearest")),
-    }
+    observed_boundaries = compute_train_quantity_boundaries(train["quantity"])
     if dataset_spec is not None and not partial_smoke:
         require(
             observed_boundaries == dataset_spec["train_quantity_boundaries"],

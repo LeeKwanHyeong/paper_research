@@ -13,6 +13,7 @@ from paper.scripts.frozen_raw_affine_calibration import FOLD_SALT
 from paper.scripts.run_frozen_raw_affine_calibration import (
     analyze_train,
     analyze_validation,
+    compute_train_quantity_boundaries,
     persist_calibration_state,
     reset_cuda_peak_memory,
     validate_contract,
@@ -93,6 +94,7 @@ def contract() -> dict:
             "maximum_overall_mae_regression_fraction": 0.02,
             "maximum_body_mae_regression_fraction": 0.02,
             "maximum_tail_mae_regression_fraction": 0.02,
+            "quantity_boundary_estimator": "numpy.quantile(method='nearest') over canonical train next-event targets",
         },
         "runtime": {
             "execution_server": "5080",
@@ -165,6 +167,16 @@ def test_train_fit_uses_series_oof_and_fixed_one_percent_gate():
     assert audit["two_fold_oof"]["overall_change"]["rmse_relative_improvement"] > 0.99
     assert audit["calibration_parameters"]["slope"] == pytest.approx(1.25)
     assert audit["calibration_parameters"]["intercept"] == pytest.approx(2.0)
+
+
+def test_train_quantity_boundaries_use_the_frozen_nearest_definition():
+    quantity = np.arange(1.0, 102.0)
+    assert compute_train_quantity_boundaries(quantity) == {
+        "p50": 51.0,
+        "p90": 91.0,
+        "p95": 96.0,
+        "p99": 100.0,
+    }
 
 
 def test_validation_preserves_time_and_applies_train_activated_map():

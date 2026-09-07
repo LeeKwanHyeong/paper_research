@@ -87,8 +87,11 @@ Intermittent, Taxi, Instacart 각각에서 다음 조건을 모두 충족해야 
 Raw RMSE는 dataset마다 단위와 규모가 다르므로 세 dataset의 squared error를
 하나로 합친 pooled RMSE를 판정에 사용하지 않는다. Dataset별 상대 변화와 그
 비가중 macro 평균만 보조 통계로 보고한다. Raw RMSE, 전체·body·`>p99` MAE,
-`log1p` MSE, signed raw bias와 다섯 quantity 구간을 모두 남긴다. 같은 series의
-event가 독립이라고 가정하지 않도록 series-clustered paired bootstrap 구간도
+`log1p` MSE, signed raw bias와 다섯 quantity 구간을 모두 남긴다.
+Train quantity 경계는 canonical train next-event target 전체에
+`numpy.quantile(method="nearest")`를 적용해 계산하며 GPU prediction 추출 전에
+계약값과 대조한다. 같은 series의 event가 독립이라고 가정하지 않도록
+series-clustered paired bootstrap 구간도
 보고하되, 고정 seed `20260907`로 series 500회 재표집하고 draw buffer는 최대
 8,192개로 제한한다. 이미 알려진 seed42 validation을 새로운 확증 표본으로
 표현하지 않는다.
