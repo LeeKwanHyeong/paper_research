@@ -1,5 +1,7 @@
 # Time NLL 개선 방법론 재검토
 
+> **후속 상태 (2026-09-07):** 여기서 제안한 objective-aligned K=1 causal scale adapter는 구현·계약 검증과 세 데이터셋 full-data e1을 통과했지만 Taxi seed42 full fit에서 epoch 0이 선택되어 기각됐다. 결과와 중단 근거는 [`aligned_causal_duration_scale_adapter_seed42_20260907`](../aligned_causal_duration_scale_adapter_seed42_20260907/README.md)에 기록했다.
+
 ## 현재 증적이 허용하는 결론
 
 Frozen-B causal scale adapter는 B의 encoder, memory, quantity path, log-normal location과 time median을 고정하고 관측 `log1p(delta_t)` prefix만 읽었다. Taxi에서 continuous-density NLL은 B의 `0.266558`에서 `0.264790`으로 `0.001769` 낮아졌지만, history-free global-scale control의 `0.264511`보다 높았고 matched A의 `-0.443556 + 0.01` 기준을 크게 넘었다. 이 가설은 기각하며 다른 dataset과 추가 seed는 실행하지 않는다.
