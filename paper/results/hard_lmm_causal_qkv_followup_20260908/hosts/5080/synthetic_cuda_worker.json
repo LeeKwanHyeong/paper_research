@@ -1,0 +1,137 @@
+{
+  "backbone": "titantpp_hard_memory_causal_qkv",
+  "batch_size": 128,
+  "cuda_version": "13.0",
+  "device_name": "NVIDIA GeForce RTX 5080",
+  "finite_model_optimizer": true,
+  "hidden_dim": 64,
+  "learning_path": {
+    "first_backward": {
+      "encoder.layers.0.attn.causal_k_kernel": {
+        "gradient_norm_by_current_lag1_lag2": [
+          0.0027064941823482513,
+          0.0023027239367365837,
+          0.002303457586094737
+        ]
+      },
+      "encoder.layers.0.attn.causal_q_kernel": {
+        "gradient_norm_by_current_lag1_lag2": [
+          0.0027013057842850685,
+          0.00268698506988585,
+          0.0026825221721082926
+        ]
+      },
+      "encoder.layers.0.attn.causal_v_kernel": {
+        "gradient_norm_by_current_lag1_lag2": [
+          0.17907218635082245,
+          0.17811723053455353,
+          0.17730355262756348
+        ]
+      }
+    },
+    "learned_weights": {
+      "encoder.layers.0.attn.causal_k_kernel": {
+        "weight_norm_by_current_lag1_lag2": [
+          0.06089751794934273,
+          0.06928646564483643,
+          0.06941402703523636
+        ]
+      },
+      "encoder.layers.0.attn.causal_q_kernel": {
+        "weight_norm_by_current_lag1_lag2": [
+          0.06084582582116127,
+          0.06118907034397125,
+          0.059671591967344284
+        ]
+      },
+      "encoder.layers.0.attn.causal_v_kernel": {
+        "weight_norm_by_current_lag1_lag2": [
+          0.06352028995752335,
+          0.06385360658168793,
+          0.06380302459001541
+        ]
+      }
+    },
+    "state_digest_restored": true,
+    "status": "passed",
+    "zero_kernel_counterfactual_final_state_max_abs_delta": 0.03961515426635742,
+    "zero_kernel_counterfactual_quantity_max_abs_delta": 0.020429611206054688
+  },
+  "measured_steps": 15,
+  "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+  "median_step_seconds": 0.0168164299975615,
+  "model_metadata": {
+    "additional_parameter_count": 576,
+    "backbone_contract_id": "hard_lmm_causal_qkv_v1",
+    "base_encoder": "CountAwareTitanTPP",
+    "candidate_name": "count_titan_hard_lmm_causal_qkv",
+    "causal_qkv_bias": false,
+    "causal_qkv_combination": "residual_addition",
+    "causal_qkv_groups": 64,
+    "causal_qkv_initialization": "all_zero_exact_identity",
+    "causal_qkv_kernel_size": 3,
+    "causal_qkv_lag_order": [
+      "current",
+      "lag1",
+      "lag2"
+    ],
+    "causal_qkv_layer": 0,
+    "causal_qkv_scope": "event_qkv_only",
+    "d_ff": 128,
+    "d_model": 64,
+    "final_memory_placement": "after_encoder_layer_2",
+    "lmm_mem_size": 64,
+    "lmm_topk": 4,
+    "memory_mode": "static_hard_lmm",
+    "model_role": "hard_lmm_causal_qkv_candidate",
+    "n_heads": 4,
+    "n_layers": 2,
+    "new_parameter_state_keys": [
+      "encoder.layers.0.attn.causal_q_kernel",
+      "encoder.layers.0.attn.causal_k_kernel",
+      "encoder.layers.0.attn.causal_v_kernel"
+    ],
+    "online_writes": false,
+    "persistent_key_value_adaptation": false,
+    "persistent_mem_size": 16,
+    "routing_contract_id": "hard_lmm_causal_qkv_v1",
+    "static_retrieval_aggregation": "arithmetic_mean",
+    "time_head": {
+      "jacobian_correction": false,
+      "mode": "legacy_clamped_rmtpp",
+      "time_intercept_limit": 300.0,
+      "time_scale": 3.0,
+      "time_w_max": 3.3333333333333335,
+      "wd_clamp": 10.0
+    }
+  },
+  "model_state_after_profile_sha256": "166ca96c2593163e3631bd206fdeaa04b74bf83deb0239c79af06a87aeb36457",
+  "observed_events": 255,
+  "parameter_count": 90371,
+  "peak_allocated_bytes": 1558838272,
+  "repeat": 0,
+  "seed": 42,
+  "sequence_length": 256,
+  "status": "passed",
+  "step_seconds": [
+    0.016842660996189807,
+    0.016840999000123702,
+    0.016851086998940445,
+    0.0168164299975615,
+    0.016818007999972906,
+    0.016824613994685933,
+    0.016825823004182894,
+    0.016816169998492114,
+    0.0168151950056199,
+    0.016815251001389697,
+    0.016805539999040775,
+    0.016818482996313833,
+    0.016814213995530736,
+    0.016810945002362132,
+    0.016802587000711355
+  ],
+  "target_events": 1,
+  "tf32_matmul": false,
+  "torch_version": "2.11.0+cu130",
+  "warmup_steps": 5
+}

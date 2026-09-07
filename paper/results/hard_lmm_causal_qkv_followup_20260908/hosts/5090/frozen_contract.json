@@ -1,0 +1,281 @@
+{
+  "B_validation_reference": {
+    "datasets": {
+      "insta_market_basket": {
+        "body_mae": 3.438601503150614,
+        "clamped_time_loss": 3.2155228955007256,
+        "gt_p99_mae": 21.91779476530588,
+        "overall_mae": 3.9937810783167014,
+        "raw_rmse": 5.872216930452246
+      },
+      "intermittent_frozen_5000": {
+        "body_mae": 0.4657896038725777,
+        "clamped_time_loss": -3.483793693042792,
+        "gt_p99_mae": 5.148108011792356,
+        "overall_mae": 0.6043404183562111,
+        "raw_rmse": 1.4995550721471171
+      },
+      "yellow_trip_hourly": {
+        "body_mae": 18.997478121185097,
+        "clamped_time_loss": 1.473390626529593,
+        "gt_p99_mae": 332.76974448674844,
+        "overall_mae": 28.67402025115017,
+        "raw_rmse": 88.19499665350457
+      }
+    },
+    "sha256": "17b1c432b58f0620d8e6eda1a291a92eb4c995af9c78d98be8d460be79079db3",
+    "source": "paper/results/hard_lmm_raw_rmse_checkpoint_alignment_seed42_20260906/a_vs_b_metrics.json"
+  },
+  "additional_seeds_authorized": false,
+  "authorization": "User approved remaining Taxi and Intermittent seed42 evaluation in parallel on 5080/5090.",
+  "candidate": {
+    "backbone": "titantpp_hard_memory_causal_qkv",
+    "model_role": "hard_lmm_causal_qkv_candidate"
+  },
+  "common_training": {
+    "batch_size": 128,
+    "checkpoint_monitor": "validation_raw_quantity_rmse",
+    "checkpoint_rule": "earliest_strict_finite_minimum",
+    "early_stopping_monitor": "validation_raw_quantity_rmse",
+    "gradient_clip": 1,
+    "hidden_dim": 64,
+    "lambda_log_quantity": 1,
+    "lambda_tail": 0,
+    "learning_rate": 0.001,
+    "optimizer": "AdamW",
+    "quantile_adaptive_strength": 0,
+    "quantity_loss": "unweighted_mse_on_log1p_quantity",
+    "quantity_variant": "count_only_log_regression",
+    "seed": 42,
+    "time_head": "legacy_clamped_rmtpp",
+    "time_intercept_limit": 300,
+    "time_scale": 3,
+    "time_w_max": 3.3333333333333335
+  },
+  "contract_id": "hard_lmm_causal_qkv_followup_v1",
+  "created_on": "2026-09-08",
+  "data_bindings": {
+    "insta_market_basket": {
+      "B_summary_sha256": "54bea72fefecb8b4d8637e39bd147048bb85b530becd7bf579a65d2197c67810",
+      "body_target_count": 477507,
+      "data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+      "quantity_boundaries": [
+        8,
+        20,
+        25,
+        35
+      ],
+      "split_manifest_sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d",
+      "stratum_counts": {
+        "gt_p99": 6036,
+        "le_p50": 247651,
+        "p50_p90": 202534,
+        "p90_p95": 27322,
+        "p95_p99": 20190
+      },
+      "validation_target_population": {
+        "identity_fields": [
+          "oper_part_no",
+          "target_position",
+          "target_seq"
+        ],
+        "loader": "RMTPPWeekLookbackDataset",
+        "lookback_weeks": 52,
+        "max_seq_len": 64,
+        "schema_version": 1,
+        "split": "validation",
+        "target_count": 503733,
+        "target_identity_sha256": "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8",
+        "target_quantity_sha256": "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184"
+      }
+    },
+    "intermittent_frozen_5000": {
+      "B_summary_sha256": "b89212ed4e4def031bd9ca7555b5fb9ad9f2943981dfe7d9b3ba16f2aae954d8",
+      "body_target_count": 81739,
+      "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+      "quantity_boundaries": [
+        2,
+        31,
+        46,
+        187
+      ],
+      "split_manifest_sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04",
+      "stratum_counts": {
+        "gt_p99": 1141,
+        "le_p50": 45036,
+        "p50_p90": 29579,
+        "p90_p95": 7124,
+        "p95_p99": 3405
+      },
+      "validation_target_population": {
+        "identity_fields": [
+          "oper_part_no",
+          "target_position",
+          "target_seq"
+        ],
+        "loader": "RMTPPWeekLookbackDataset",
+        "lookback_weeks": 520,
+        "max_seq_len": 256,
+        "schema_version": 1,
+        "split": "validation",
+        "target_count": 86285,
+        "target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+        "target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385"
+      }
+    },
+    "yellow_trip_hourly": {
+      "B_summary_sha256": "eb7f449f982cbb5132b05af78a5fa74fcfc0348d67128f67bf54b328ddd00eb3",
+      "body_target_count": 7888,
+      "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+      "quantity_boundaries": [
+        7,
+        686,
+        1562,
+        3449
+      ],
+      "split_manifest_sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85",
+      "stratum_counts": {
+        "gt_p99": 79,
+        "le_p50": 4364,
+        "p50_p90": 3138,
+        "p90_p95": 386,
+        "p95_p99": 301
+      },
+      "validation_target_population": {
+        "identity_fields": [
+          "oper_part_no",
+          "target_position",
+          "target_seq"
+        ],
+        "loader": "RMTPPWeekLookbackDataset",
+        "lookback_weeks": 168,
+        "max_seq_len": 256,
+        "schema_version": 1,
+        "split": "validation",
+        "target_count": 8268,
+        "target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+        "target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd"
+      }
+    }
+  },
+  "dataset_reporting_gate": {
+    "body_mae": "candidate_no_more_than_B_times_1.02",
+    "clamped_time_loss": "candidate_no_more_than_B_plus_0.01",
+    "gt_p99_mae": "candidate_no_more_than_B_times_1.02",
+    "overall_mae": "candidate_no_more_than_B_times_1.01",
+    "raw_rmse": "candidate_strictly_lower_than_B"
+  },
+  "e1_policy": "Reuse verified a779535 full-data e1; do not repeat full-data e1.",
+  "evaluation_scope": "validation_only",
+  "final_held_out_authorized": false,
+  "held_out_test_evaluated": false,
+  "host_assignments": {
+    "5080": {
+      "dataset": "yellow_trip_hourly",
+      "gpu_name_contains": "RTX 5080",
+      "python": "/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python",
+      "tmux": "/usr/bin/tmux"
+    },
+    "5090": {
+      "dataset": "intermittent_frozen_5000",
+      "gpu_name_contains": "RTX 5090",
+      "python": "/opt/miniconda3/envs/ai_env/bin/python",
+      "tmux": "/opt/miniconda3/envs/ai_env/bin/tmux"
+    }
+  },
+  "implementation_binding": {
+    "path": "paper/contracts/hard_lmm_causal_qkv_followup_source_v1.json",
+    "sha256": "cdad2c957a07300322050274feed99dc5be9372ebbb4ba602eb22e1c9157f865"
+  },
+  "original_contract": {
+    "implementation_source_revision": "a7795355920d4bdc5fb63dc40deccbfcbd4daec0",
+    "path": "paper/contracts/hard_lmm_causal_qkv_screening_v1.json",
+    "sha256": "f864a7721bdf8cfed9cef6ef16e3e5ed221370df92ddba6126d4303d7f1f883d"
+  },
+  "original_gate_verdict_must_remain": "not_adopted_seed42_raw_rmse_gate_failed",
+  "parallel_stop_policy": "Each host completes its one assigned dataset independently. A reported performance-gate failure does not interrupt the other already authorized exploratory run. Execution/audit failure stops the affected host; no automatic retries.",
+  "preserved_instacart_decision": {
+    "path": "paper/results/hard_lmm_causal_qkv_screening_20260907/final_decision.json",
+    "sha256": "438651270d2c4648d019f13ec5f16e3458ac2ea1af112d276079b1575bf5ea70"
+  },
+  "qualification": {
+    "required_actual_cuda_tests": [
+      "test_zero_initialization_preserves_rng_state_outputs_and_common_gradients[cuda]",
+      "test_all_kernel_rows_receive_finite_nonzero_gradient[cuda]",
+      "test_cuda_new_lags_train_and_change_selected_final_state"
+    ],
+    "synthetic_worker": {
+      "purpose": "Per-host CUDA finite/learning/memory smoke; not a new model-performance experiment or a 5080 relative-cost claim.",
+      "repeat": 0,
+      "sequence_length": 256
+    },
+    "tests": [
+      "simple_lab_test/search/tests/test_count_aware_titan_causal_qkv.py",
+      "simple_lab_test/search/tests/test_hard_lmm_causal_qkv_profile.py",
+      "simple_lab_test/search/tests/test_hard_lmm_causal_qkv_followup.py"
+    ]
+  },
+  "replication_review_gate": {
+    "all_dataset_max_body_mae_ratio": 1.02,
+    "all_dataset_max_gt_p99_mae_ratio": 1.02,
+    "all_dataset_max_overall_mae_ratio": 1.01,
+    "all_dataset_max_raw_rmse_ratio": 1.01,
+    "all_dataset_max_time_loss_increase": 0.01,
+    "at_least_one_new_dataset_max_raw_rmse_ratio": 0.99,
+    "datasets": [
+      "insta_market_basket",
+      "yellow_trip_hourly",
+      "intermittent_frozen_5000"
+    ],
+    "eligible_outcome": "eligible_for_replication_review_only",
+    "note": "Prospective resource-allocation criterion for this exploratory followup; not a retrospective pass of the original all-dataset strict-improvement gate, nor statistical noninferiority or final adoption.",
+    "otherwise": "stop_candidate_after_exploratory_followup"
+  },
+  "required_runtime": {
+    "cuda": "13.0",
+    "python": "3.12.13",
+    "torch": "2.11.0+cu130"
+  },
+  "reuse_evidence": {
+    "campaign": {
+      "path": "paper/results/hard_lmm_causal_qkv_screening_20260907/campaign_status.json",
+      "sha256": "57b616f3837871fc68d8ca58b7db27af36c1cef1e3caa271f6370f6b31911840"
+    },
+    "cost_profile": {
+      "path": "paper/results/hard_lmm_causal_qkv_screening_20260907/cuda_cost_profile.json",
+      "sha256": "6b85d4404a7be82a578c2321270664cf9e5b3367c1108fb184320015c4d1c9bc"
+    },
+    "datasets": {
+      "intermittent_frozen_5000": {
+        "job_id": "e1_intermittent_frozen_5000",
+        "launch": {
+          "path": "paper/results/hard_lmm_causal_qkv_screening_20260907/remote_jobs/e1_intermittent_frozen_5000/launch_contract.json",
+          "sha256": "d10339f17e621b4cf0103faed29b21eb396bba1ccd4464741393b051e0164291"
+        },
+        "summary": {
+          "path": "paper/results/hard_lmm_causal_qkv_screening_20260907/remote_jobs/e1_intermittent_frozen_5000/runs/titantpp_hard_memory_causal_qkv/count_only_log_regression/seed_42/summary.json",
+          "sha256": "d9701f92d816eb00d767dd74834a5627e121ec61edf3d0cd2fce51e817dd2652"
+        }
+      },
+      "yellow_trip_hourly": {
+        "job_id": "e1_yellow_trip_hourly",
+        "launch": {
+          "path": "paper/results/hard_lmm_causal_qkv_screening_20260907/remote_jobs/e1_yellow_trip_hourly/launch_contract.json",
+          "sha256": "f490b2123782a0577182f02f21d9a602640b8b8e41ba901d0e9ea85899b10a2c"
+        },
+        "summary": {
+          "path": "paper/results/hard_lmm_causal_qkv_screening_20260907/remote_jobs/e1_yellow_trip_hourly/runs/titantpp_hard_memory_causal_qkv/count_only_log_regression/seed_42/summary.json",
+          "sha256": "4b16f2044b408e7b1903992a3eab27e9e73873ee4c9acbab5ac29a660a6c5f26"
+        }
+      }
+    }
+  },
+  "schema_version": 1,
+  "scope": "exploratory_followup_after_instacart_primary_gate_failure",
+  "status": "frozen_before_followup_screening",
+  "training_phase": {
+    "epochs": 300,
+    "minimum_epochs": 40,
+    "patience": 40
+  }
+}
