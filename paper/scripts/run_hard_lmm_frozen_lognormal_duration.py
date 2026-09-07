@@ -79,6 +79,14 @@ DEFAULT_CONTRACT = (
 SOURCE_BACKBONE = "titantpp"
 SOURCE_VARIANT = LOG_MSE_VARIANT
 CANDIDATE_TIME_HEAD_MODE = TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION
+OBSERVATION_LIKELIHOOD_CONTINUOUS = "continuous_lognormal_density"
+OBSERVATION_LIKELIHOOD_POSITIVE_INTEGER = (
+    "positive_integer_round_clamp_lognormal"
+)
+OBSERVATION_LIKELIHOOD_MODES = {
+    OBSERVATION_LIKELIHOOD_CONTINUOUS,
+    OBSERVATION_LIKELIHOOD_POSITIVE_INTEGER,
+}
 LEGACY_TIME_HEAD_PARAMETER_NAMES = ("v_t.weight", "b_t", "w_raw")
 TIME_HEAD_PARAMETER_NAMES = (
     "v_t.weight",
@@ -94,6 +102,52 @@ LAST_CHECKPOINT_NAME = "last_epoch_state.pt"
 SUMMARY_NAME = "summary.json"
 INSTACART_DATASET = "insta_market_basket"
 INSTACART_RIGHT_CENSOR_THRESHOLD = 30.0
+
+
+def validate_observation_likelihood_contract(
+    contract: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Validate the likelihood identity stored in aligned checkpoints."""
+    normalized = dict(contract)
+    mode = normalized.get("mode")
+    require(
+        mode in OBSERVATION_LIKELIHOOD_MODES,
+        "Unsupported duration observation likelihood",
+    )
+    require(
+        isinstance(normalized.get("selection_formula"), str)
+        and bool(normalized["selection_formula"].strip()),
+        "Observation selection formula is missing",
+    )
+    require(
+        normalized.get("calculation_dtype") == "float64",
+        "Observation likelihood must be calculated in float64",
+    )
+    if mode == OBSERVATION_LIKELIHOOD_POSITIVE_INTEGER:
+        require(
+            normalized.get("first_bin") == "P(T <= 1.5)",
+            "Positive-integer first-bin contract drift",
+        )
+        require(
+            normalized.get("regular_bin")
+            == "P(d - 0.5 < T <= d + 0.5), d >= 2",
+            "Positive-integer regular-bin contract drift",
+        )
+        require(
+            normalized.get("top_code") in {None, "P(T > 29.5)"},
+            "Positive-integer top-code contract drift",
+        )
+    else:
+        require(
+            normalized.get("uncensored")
+            == "log-normal density in original time units",
+            "Continuous observation contract drift",
+        )
+        require(
+            normalized.get("top_code") in {None, "P(T > 30)"},
+            "Continuous top-code contract drift",
+        )
+    return normalized
 
 
 def _state_partition(
@@ -214,6 +268,7 @@ def proper_time_log_likelihood(
     target_dt: torch.Tensor,
     *,
     is_right_censored: torch.Tensor,
+    observation_likelihood_mode: str = OBSERVATION_LIKELIHOOD_CONTINUOUS,
 ) -> torch.Tensor:
     """Return the censor-aware log likelihood, calculated in float64.
 
@@ -249,6 +304,21 @@ def proper_time_log_likelihood(
         and bool((target_dt > 0.0).all()),
         "Duration targets must be finite and strictly positive",
     )
+    require(
+        observation_likelihood_mode in OBSERVATION_LIKELIHOOD_MODES,
+        "Unsupported duration observation likelihood",
+    )
+    if (
+        observation_likelihood_mode
+        == OBSERVATION_LIKELIHOOD_POSITIVE_INTEGER
+    ):
+        return positive_integer_time_log_likelihood(
+            model,
+            hidden,
+            target_dt,
+            is_right_censored=is_right_censored,
+        )
+
     log_density = model.log_f_dt(hidden, target_dt)
     require(
         log_density.dtype == torch.float64,
@@ -262,6 +332,163 @@ def proper_time_log_likelihood(
         "Proper duration survival must be calculated in float64",
     )
     return torch.where(is_right_censored, log_survival, log_density)
+
+
+def _stable_log_probability_difference(
+    log_larger: torch.Tensor,
+    log_smaller: torch.Tensor,
+) -> torch.Tensor:
+    """Return log(exp(log_larger) - exp(log_smaller)) in float64."""
+    require(
+        log_larger.shape == log_smaller.shape,
+        "Log-probability shapes differ",
+    )
+    require(
+        log_larger.dtype == torch.float64
+        and log_smaller.dtype == torch.float64,
+        "Stable log difference requires float64 inputs",
+    )
+    delta = log_smaller - log_larger
+    require(
+        bool((delta <= 1e-14).all()),
+        "Subtracted log probability exceeds the minuend",
+    )
+    delta = delta.clamp_max(0.0)
+    log_two = math.log(2.0)
+    complement = torch.where(
+        delta < -log_two,
+        torch.log1p(-torch.exp(delta)),
+        torch.log(-torch.expm1(delta)),
+    )
+    result = log_larger + complement
+    require(
+        bool(torch.isfinite(result).all()),
+        "Integer observation has zero probability at float64 resolution",
+    )
+    return result
+
+
+def positive_integer_time_log_likelihood(
+    model: SharedTimeCountModel,
+    hidden: torch.Tensor,
+    target_dt: torch.Tensor,
+    *,
+    is_right_censored: torch.Tensor,
+) -> torch.Tensor:
+    """Evaluate the normalized ``D=max(1, round(T))`` observation law.
+
+    The first observed code receives all latent mass below 1.5. Codes from
+    two onward receive their centered unit-width interval. A censored code,
+    such as Instacart 30, receives survival mass from its lower boundary.
+    """
+    require(
+        model.time_head_mode == CANDIDATE_TIME_HEAD_MODE,
+        "Expected the heteroscedastic log-normal duration head",
+    )
+    require(hidden.ndim == 2, "hidden must be rank two")
+    require(target_dt.ndim == 1, "target_dt must be rank one")
+    require(
+        hidden.shape[0] == target_dt.shape[0],
+        "Hidden and duration batch sizes differ",
+    )
+    require(
+        is_right_censored.shape == target_dt.shape
+        and is_right_censored.dtype == torch.bool,
+        "Censor mask shape or dtype mismatch",
+    )
+    target = target_dt.to(dtype=torch.float64)
+    require(
+        bool(torch.isfinite(target).all())
+        and bool((target >= 1.0).all()),
+        "Positive-integer durations must be finite and at least one",
+    )
+    require(
+        bool(
+            torch.isclose(
+                target,
+                torch.round(target),
+                atol=1e-8,
+                rtol=0.0,
+            ).all()
+        ),
+        "Duration targets are not on the declared integer grid",
+    )
+    require(
+        not bool((is_right_censored & (target < 2.0)).any()),
+        "A first-bin duration cannot be right censored",
+    )
+    if bool(is_right_censored.any()):
+        censored_codes = torch.unique(target[is_right_censored])
+        require(
+            censored_codes.numel() == 1,
+            "A batch cannot mix right-censor codes",
+        )
+        require(
+            bool((target <= censored_codes[0]).all()),
+            "A duration target exceeds the right-censor code",
+        )
+
+    upper = target + 0.5
+    lower = target - 0.5
+    location, sigma, log_upper = model._lognormal_time_terms(
+        hidden, upper
+    )
+    log_time_scale = math.log(model.time_scale)
+    upper_z = (log_upper - log_time_scale - location) / sigma
+    lower_z = (
+        torch.log(lower.clamp_min(0.5))
+        - log_time_scale
+        - location
+    ) / sigma
+
+    result = torch.special.log_ndtr(upper_z)
+    regular = (target >= 2.0) & ~is_right_censored
+    if bool(regular.any()):
+        regular_indices = torch.nonzero(regular, as_tuple=False).squeeze(-1)
+        regular_lower_z = lower_z[regular_indices]
+        regular_upper_z = upper_z[regular_indices]
+        regular_result = torch.zeros_like(regular_lower_z)
+        use_survival = regular_lower_z > 0.0
+        if bool(use_survival.any()):
+            indices = torch.nonzero(
+                use_survival, as_tuple=False
+            ).squeeze(-1)
+            values = _stable_log_probability_difference(
+                torch.special.log_ndtr(-regular_lower_z[indices]),
+                torch.special.log_ndtr(-regular_upper_z[indices]),
+            )
+            regular_result = regular_result.index_copy(0, indices, values)
+        use_cdf = ~use_survival
+        if bool(use_cdf.any()):
+            indices = torch.nonzero(use_cdf, as_tuple=False).squeeze(-1)
+            values = _stable_log_probability_difference(
+                torch.special.log_ndtr(regular_upper_z[indices]),
+                torch.special.log_ndtr(regular_lower_z[indices]),
+            )
+            regular_result = regular_result.index_copy(0, indices, values)
+        result = result.index_copy(0, regular_indices, regular_result)
+    if bool(is_right_censored.any()):
+        censored_indices = torch.nonzero(
+            is_right_censored, as_tuple=False
+        ).squeeze(-1)
+        result = result.index_copy(
+            0,
+            censored_indices,
+            torch.special.log_ndtr(-lower_z[censored_indices]),
+        )
+    require(
+        result.dtype == torch.float64,
+        "Integer likelihood must be calculated in float64",
+    )
+    require(
+        bool(torch.isfinite(result).all()),
+        "Non-finite positive-integer duration likelihood",
+    )
+    require(
+        bool((result <= 1e-14).all()),
+        "Positive-integer probability exceeds one",
+    )
+    return result
 
 
 def predict_time_median_float64(
@@ -614,6 +841,7 @@ def evaluate_cached_time_metrics(
     device: str | torch.device,
     batch_size: int,
     censor_threshold: float | None,
+    observation_likelihood_mode: str = OBSERVATION_LIKELIHOOD_CONTINUOUS,
 ) -> dict[str, Any]:
     cache.validate(require_quantity=False)
     full_censor_mask = censor_mask(
@@ -633,6 +861,7 @@ def evaluate_cached_time_metrics(
             hidden,
             target_dt,
             is_right_censored=batch_censor_mask,
+            observation_likelihood_mode=observation_likelihood_mode,
         )
         require(
             bool(torch.isfinite(log_likelihood).all()),
@@ -660,6 +889,7 @@ def evaluate_cached_time_metrics(
     )
     result = {
         "proper_time_nll": proper_nll,
+        "observation_likelihood_mode": observation_likelihood_mode,
         "count": count,
         "right_censored_count": int(full_censor_mask.sum().item()),
         "right_censor_threshold": censor_threshold,
@@ -709,6 +939,23 @@ def early_stopping_exhausted(
     )
 
 
+def first_early_stopping_epoch(
+    history: list[dict[str, Any]],
+    *,
+    min_epochs: int,
+    patience: int,
+) -> int | None:
+    """Return the first epoch at which the fixed patience is exhausted."""
+    require(bool(history), "Fit history is empty")
+    for end in range(1, len(history) + 1):
+        prefix = history[:end]
+        if early_stopping_exhausted(
+            prefix, min_epochs=min_epochs, patience=patience
+        ):
+            return int(prefix[-1]["epoch"])
+    return None
+
+
 def _finite_optimizer_state(
     optimizer: torch.optim.Optimizer,
 ) -> None:
@@ -729,6 +976,7 @@ def _train_cached_epoch(
     seed: int,
     epoch: int,
     censor_threshold: float | None,
+    observation_likelihood_mode: str = OBSERVATION_LIKELIHOOD_CONTINUOUS,
 ) -> dict[str, float]:
     require(
         not model.training,
@@ -753,6 +1001,7 @@ def _train_cached_epoch(
             hidden,
             target_dt,
             is_right_censored=batch_censor_mask,
+            observation_likelihood_mode=observation_likelihood_mode,
         )
         require(
             bool(torch.isfinite(losses).all()),
@@ -817,6 +1066,7 @@ def _resume_identity(
     model_role: str = "B",
     source_backbone: str = SOURCE_BACKBONE,
     source_variant: str = SOURCE_VARIANT,
+    observation_likelihood_contract: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     train_mask = censor_mask(
         train_cache.target_dt, threshold=censor_threshold
@@ -871,7 +1121,11 @@ def _resume_identity(
             TIME_HEAD_PARAMETER_NAMES
         ),
         "time_head_mode": CANDIDATE_TIME_HEAD_MODE,
-        "likelihood": "censor_aware_proper_lognormal_duration",
+        "likelihood": (
+            str(observation_likelihood_contract["mode"])
+            if observation_likelihood_contract is not None
+            else "censor_aware_proper_lognormal_duration"
+        ),
         "evaluation_scope": "validation_only",
         "held_out_test_evaluated": False,
         "legacy_nll_compared": False,
@@ -880,6 +1134,10 @@ def _resume_identity(
         identity["model_role"] = model_role
         identity["source_backbone"] = source_backbone
         identity["source_variant"] = source_variant
+    if observation_likelihood_contract is not None:
+        identity["observation_likelihood_contract"] = dict(
+            observation_likelihood_contract
+        )
     return identity
 
 
@@ -927,6 +1185,15 @@ def _validate_resume_payload(
     require(
         int(payload.get("epoch", -1)) == len(history) - 1,
         "Resume epoch drift",
+    )
+    first_stop = first_early_stopping_epoch(
+        history,
+        min_epochs=int(identity["minimum_epochs"]),
+        patience=int(identity["early_stopping_patience"]),
+    )
+    require(
+        first_stop is None or first_stop == int(payload["epoch"]),
+        "Resume history continued after early stopping",
     )
     selected = earliest_strict_minimum(history)
     require(
@@ -1079,6 +1346,7 @@ def fit_time_head_from_cache(
     model_role: str = "B",
     source_backbone: str = SOURCE_BACKBONE,
     source_variant: str = SOURCE_VARIANT,
+    observation_likelihood_contract: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Fit the isolated proper duration head with exact deterministic resume."""
     require(planned_epochs >= 0, "planned_epochs must be nonnegative")
@@ -1101,6 +1369,17 @@ def fit_time_head_from_cache(
     )
     require(min_epochs >= 0, "min_epochs must be nonnegative")
     require(patience > 0, "patience must be positive")
+    normalized_observation_contract: dict[str, Any] | None = None
+    observation_likelihood_mode = OBSERVATION_LIKELIHOOD_CONTINUOUS
+    if observation_likelihood_contract is not None:
+        normalized_observation_contract = (
+            validate_observation_likelihood_contract(
+                observation_likelihood_contract
+            )
+        )
+        observation_likelihood_mode = str(
+            normalized_observation_contract["mode"]
+        )
     require(
         len(calibration_source_revision) == 40,
         "Calibration source revision must be a full Git SHA",
@@ -1154,6 +1433,7 @@ def fit_time_head_from_cache(
         model_role=model_role,
         source_backbone=source_backbone,
         source_variant=source_variant,
+        observation_likelihood_contract=normalized_observation_contract,
     )
     optimizer = torch.optim.AdamW(
         parameters,
@@ -1167,6 +1447,10 @@ def fit_time_head_from_cache(
 
     if summary_path.exists():
         summary = json.loads(summary_path.read_text(encoding="utf-8"))
+        require(
+            summary.get("status") == "success",
+            "Cached summary is not a completed fit",
+        )
         require(
             summary.get("resume_identity") == identity,
             "Cached summary identity drift",
@@ -1196,8 +1480,91 @@ def fit_time_head_from_cache(
             selected_path, map_location="cpu"
         )
         require(
+            selected.get("checkpoint_type")
+            == "selected_frozen_lognormal_duration"
+            and selected.get("checkpoint_schema_version") == 1,
+            "Cached selected checkpoint type drift",
+        )
+        require(
             selected.get("resume_identity") == identity,
             "Cached selected checkpoint identity drift",
+        )
+        require(
+            selected.get("selection") == SELECTION_RULE,
+            "Cached selected checkpoint selector drift",
+        )
+        require(
+            selected.get("evaluation_scope") == "validation_only"
+            and selected.get("held_out_test_evaluated") is False
+            and selected.get("legacy_nll_compared") is False,
+            "Cached selected checkpoint evaluation scope drift",
+        )
+        history = summary.get("history")
+        require(
+            isinstance(history, list) and bool(history),
+            "Cached summary history is missing",
+        )
+        require(
+            [int(row["epoch"]) for row in history]
+            == list(range(len(history))),
+            "Cached summary history epochs are not contiguous",
+        )
+        require(
+            int(summary.get("completed_epochs", -1)) == len(history) - 1,
+            "Cached summary completed epoch drift",
+        )
+        completed_epoch = int(summary["completed_epochs"])
+        first_stop = first_early_stopping_epoch(
+            history, min_epochs=min_epochs, patience=patience
+        )
+        expected_stopped_early = first_stop is not None
+        require(
+            summary.get("stopped_early") is expected_stopped_early,
+            "Cached summary early-stopping status drift",
+        )
+        if first_stop is None:
+            require(
+                completed_epoch == planned_epochs,
+                "Cached fit ended before its epoch budget",
+            )
+        else:
+            require(
+                completed_epoch == first_stop,
+                "Cached fit continued after early stopping",
+            )
+        selected_row = earliest_strict_minimum(history)
+        require(
+            int(summary.get("best_epoch", -1))
+            == int(selected.get("best_epoch", -2))
+            == int(selected_row["epoch"]),
+            "Cached selected epoch drift",
+        )
+        selected_metric = float(selected_row["val_proper_time_nll"])
+        summary_metric = summary.get("best_validation_proper_time_nll")
+        checkpoint_metric = selected.get("selected_metric_value")
+        require(
+            isinstance(summary_metric, (int, float))
+            and not isinstance(summary_metric, bool)
+            and math.isfinite(float(summary_metric))
+            and isinstance(checkpoint_metric, (int, float))
+            and not isinstance(checkpoint_metric, bool)
+            and math.isfinite(float(checkpoint_metric)),
+            "Cached selected metric is invalid",
+        )
+        require(
+            math.isclose(
+                float(summary_metric),
+                selected_metric,
+                rel_tol=0.0,
+                abs_tol=1e-12,
+            )
+            and math.isclose(
+                float(checkpoint_metric),
+                selected_metric,
+                rel_tol=0.0,
+                abs_tol=1e-12,
+            ),
+            "Cached selected metric drift",
         )
         selected_state = selected.get("model_state_dict")
         require(
@@ -1206,8 +1573,12 @@ def fit_time_head_from_cache(
         )
         require(
             canonical_state_dict_sha256(selected_state)
+            == selected.get("model_state_sha256")
             == summary.get("selected_state_sha256"),
             "Cached selected state digest drift",
+        )
+        finite_tensor_mapping(
+            selected_state, label="Cached selected model state"
         )
         require(
             state_partition_sha256(
@@ -1215,6 +1586,50 @@ def fit_time_head_from_cache(
             )
             == source_non_time_state_sha256,
             "Cached selected checkpoint changed non-time state",
+        )
+        if normalized_observation_contract is not None:
+            require(
+                summary.get("observation_likelihood_contract")
+                == normalized_observation_contract
+                and selected.get("observation_likelihood_contract")
+                == normalized_observation_contract,
+                "Cached observation likelihood contract drift",
+            )
+        model.load_state_dict(selected_state, strict=True)
+        model.eval()
+        replay_metrics = evaluate_cached_time_metrics(
+            model=model,
+            cache=validation_cache,
+            device=device,
+            batch_size=batch_size,
+            censor_threshold=censor_threshold,
+            observation_likelihood_mode=observation_likelihood_mode,
+        )
+        require(
+            math.isclose(
+                float(replay_metrics["proper_time_nll"]),
+                selected_metric,
+                rel_tol=0.0,
+                abs_tol=1e-12,
+            ),
+            "Cached selected NLL replay drift",
+        )
+        replay_quantity = cached_quantity_predictions(
+            model=model,
+            cache=validation_cache,
+            device=device,
+            batch_size=quantity_replay_batch_size,
+        )
+        assert validation_cache.source_quantity_prediction is not None
+        require(
+            torch.equal(
+                replay_quantity,
+                validation_cache.source_quantity_prediction,
+            )
+            and tensor_sha256("quantity_prediction", replay_quantity)
+            == summary.get("selected_quantity_prediction_sha256")
+            == summary.get("source_quantity_prediction_sha256"),
+            "Cached selected quantity replay drift",
         )
         return summary
 
@@ -1245,6 +1660,7 @@ def fit_time_head_from_cache(
             device=device,
             batch_size=batch_size,
             censor_threshold=censor_threshold,
+            observation_likelihood_mode=observation_likelihood_mode,
         )
         history = [
             {
@@ -1292,6 +1708,7 @@ def fit_time_head_from_cache(
             seed=seed,
             epoch=epoch,
             censor_threshold=censor_threshold,
+            observation_likelihood_mode=observation_likelihood_mode,
         )
         require(
             not model.training,
@@ -1310,6 +1727,7 @@ def fit_time_head_from_cache(
             device=device,
             batch_size=batch_size,
             censor_threshold=censor_threshold,
+            observation_likelihood_mode=observation_likelihood_mode,
         )
         history.append(
             {
@@ -1402,6 +1820,7 @@ def fit_time_head_from_cache(
         device=device,
         batch_size=batch_size,
         censor_threshold=censor_threshold,
+        observation_likelihood_mode=observation_likelihood_mode,
     )
     require(
         math.isclose(
@@ -1458,8 +1877,12 @@ def fit_time_head_from_cache(
         "checkpoint_schema_version": 1,
         "selection": SELECTION_RULE,
         "selection_formula": (
-            "mean negative censor-aware normalized log-normal "
-            "duration log likelihood"
+            str(normalized_observation_contract["selection_formula"])
+            if normalized_observation_contract is not None
+            else (
+                "mean negative censor-aware normalized log-normal "
+                "duration log likelihood"
+            )
         ),
         "best_epoch": int(selected_row["epoch"]),
         "selected_metric_value": selected_nll,
@@ -1506,6 +1929,10 @@ def fit_time_head_from_cache(
         "held_out_test_evaluated": False,
         "legacy_nll_compared": False,
     }
+    if normalized_observation_contract is not None:
+        checkpoint["observation_likelihood_contract"] = dict(
+            normalized_observation_contract
+        )
     atomic_torch_save(checkpoint, selected_path)
     summary = {
         "schema_version": 1,
@@ -1545,6 +1972,7 @@ def fit_time_head_from_cache(
         "encoder_mode_during_refit": "eval",
         "hidden_state_gradient": "detached_cache",
         "calculation_dtype": "float64",
+        "observation_likelihood_mode": observation_likelihood_mode,
         "epoch_zero_initialization": (
             "train_only_log_moment_initialization_with_zero_"
             "conditional_weights"
@@ -1632,6 +2060,10 @@ def fit_time_head_from_cache(
         "held_out_test_evaluated": False,
         "legacy_nll_compared": False,
     }
+    if normalized_observation_contract is not None:
+        summary["observation_likelihood_contract"] = dict(
+            normalized_observation_contract
+        )
     save_json(summary_path, summary)
     return summary
 
