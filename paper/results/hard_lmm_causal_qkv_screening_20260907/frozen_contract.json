@@ -1,0 +1,234 @@
+{
+  "B_validation_reference": {
+    "datasets": {
+      "insta_market_basket": {
+        "body_mae": 3.438601503150614,
+        "clamped_time_loss": 3.2155228955007256,
+        "gt_p99_mae": 21.91779476530588,
+        "overall_mae": 3.9937810783167014,
+        "raw_rmse": 5.872216930452246
+      },
+      "intermittent_frozen_5000": {
+        "body_mae": 0.4657896038725777,
+        "clamped_time_loss": -3.483793693042792,
+        "gt_p99_mae": 5.148108011792356,
+        "overall_mae": 0.6043404183562111,
+        "raw_rmse": 1.4995550721471171
+      },
+      "yellow_trip_hourly": {
+        "body_mae": 18.997478121185097,
+        "clamped_time_loss": 1.473390626529593,
+        "gt_p99_mae": 332.76974448674844,
+        "overall_mae": 28.67402025115017,
+        "raw_rmse": 88.19499665350457
+      }
+    },
+    "sha256": "17b1c432b58f0620d8e6eda1a291a92eb4c995af9c78d98be8d460be79079db3",
+    "source": "paper/results/hard_lmm_raw_rmse_checkpoint_alignment_seed42_20260906/a_vs_b_metrics.json"
+  },
+  "additional_seeds_authorized": false,
+  "authorization": "User approved causal QKV implementation and learning on 5090 only.",
+  "body_strata": [
+    "le_p50",
+    "p50_p90",
+    "p90_p95"
+  ],
+  "candidate": {
+    "backbone": "titantpp_hard_memory_causal_qkv",
+    "gpu_name_contains": "RTX 5090",
+    "model_role": "hard_lmm_causal_qkv_candidate"
+  },
+  "common_training": {
+    "batch_size": 128,
+    "checkpoint_monitor": "validation_raw_quantity_rmse",
+    "checkpoint_rule": "earliest_strict_finite_minimum",
+    "early_stopping_monitor": "validation_raw_quantity_rmse",
+    "gradient_clip": 1,
+    "hidden_dim": 64,
+    "lambda_log_quantity": 1,
+    "lambda_tail": 0,
+    "learning_rate": 0.001,
+    "optimizer": "AdamW",
+    "quantile_adaptive_strength": 0,
+    "quantity_loss": "unweighted_mse_on_log1p_quantity",
+    "quantity_variant": "count_only_log_regression",
+    "seed": 42,
+    "time_head": "legacy_clamped_rmtpp",
+    "time_intercept_limit": 300,
+    "time_scale": 3,
+    "time_w_max": 3.3333333333333335
+  },
+  "contract_id": "hard_lmm_causal_qkv_screening_v1",
+  "cost_gate": {
+    "batch_size": 128,
+    "lengths": [
+      8,
+      64,
+      256
+    ],
+    "max_peak_allocated_ratio": 1.25,
+    "max_step_ratio": 1.5,
+    "measured_steps": 15,
+    "repeats": 3,
+    "warmup_steps": 5
+  },
+  "created_on": "2026-09-07",
+  "data_bindings": {
+    "insta_market_basket": {
+      "B_summary_sha256": "54bea72fefecb8b4d8637e39bd147048bb85b530becd7bf579a65d2197c67810",
+      "body_target_count": 477507,
+      "data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+      "quantity_boundaries": [
+        8,
+        20,
+        25,
+        35
+      ],
+      "split_manifest_sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d",
+      "stratum_counts": {
+        "gt_p99": 6036,
+        "le_p50": 247651,
+        "p50_p90": 202534,
+        "p90_p95": 27322,
+        "p95_p99": 20190
+      },
+      "validation_target_population": {
+        "identity_fields": [
+          "oper_part_no",
+          "target_position",
+          "target_seq"
+        ],
+        "loader": "RMTPPWeekLookbackDataset",
+        "lookback_weeks": 52,
+        "max_seq_len": 64,
+        "schema_version": 1,
+        "split": "validation",
+        "target_count": 503733,
+        "target_identity_sha256": "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8",
+        "target_quantity_sha256": "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184"
+      }
+    },
+    "intermittent_frozen_5000": {
+      "B_summary_sha256": "b89212ed4e4def031bd9ca7555b5fb9ad9f2943981dfe7d9b3ba16f2aae954d8",
+      "body_target_count": 81739,
+      "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+      "quantity_boundaries": [
+        2,
+        31,
+        46,
+        187
+      ],
+      "split_manifest_sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04",
+      "stratum_counts": {
+        "gt_p99": 1141,
+        "le_p50": 45036,
+        "p50_p90": 29579,
+        "p90_p95": 7124,
+        "p95_p99": 3405
+      },
+      "validation_target_population": {
+        "identity_fields": [
+          "oper_part_no",
+          "target_position",
+          "target_seq"
+        ],
+        "loader": "RMTPPWeekLookbackDataset",
+        "lookback_weeks": 520,
+        "max_seq_len": 256,
+        "schema_version": 1,
+        "split": "validation",
+        "target_count": 86285,
+        "target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+        "target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385"
+      }
+    },
+    "yellow_trip_hourly": {
+      "B_summary_sha256": "eb7f449f982cbb5132b05af78a5fa74fcfc0348d67128f67bf54b328ddd00eb3",
+      "body_target_count": 7888,
+      "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+      "quantity_boundaries": [
+        7,
+        686,
+        1562,
+        3449
+      ],
+      "split_manifest_sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85",
+      "stratum_counts": {
+        "gt_p99": 79,
+        "le_p50": 4364,
+        "p50_p90": 3138,
+        "p90_p95": 386,
+        "p95_p99": 301
+      },
+      "validation_target_population": {
+        "identity_fields": [
+          "oper_part_no",
+          "target_position",
+          "target_seq"
+        ],
+        "loader": "RMTPPWeekLookbackDataset",
+        "lookback_weeks": 168,
+        "max_seq_len": 256,
+        "schema_version": 1,
+        "split": "validation",
+        "target_count": 8268,
+        "target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+        "target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd"
+      }
+    }
+  },
+  "evaluation_scope": "validation_only",
+  "final_held_out_authorized": false,
+  "held_out_test_evaluated": false,
+  "host_role": "5090",
+  "mechanism_checks": {
+    "comparators": "existing_matched_B",
+    "e1": "finite_nonzero_trained_lag_weights_and_checkpoint_restore",
+    "temporal_claim": "event_index_local_mixing_not_physical_elapsed_time",
+    "trained_pointwise_control": "not_part_of_seed42_screening; required before attributing any gain specifically to past-event mixing versus capacity"
+  },
+  "model": {
+    "additional_parameters_hidden64": 576,
+    "bias": false,
+    "channelwise": true,
+    "initial_weights": "zero_no_extra_gate",
+    "kernel_size": 3,
+    "persistent_tokens_convolved": false,
+    "placement": "first_attention_block_event_qkv_only",
+    "static_top4_bank_unchanged": true
+  },
+  "phases": {
+    "e1": {
+      "completion": "all three full train and validation populations complete with finite metrics, selected checkpoint and CUDA memory evidence",
+      "datasets_in_order": [
+        "intermittent_frozen_5000",
+        "yellow_trip_hourly",
+        "insta_market_basket"
+      ],
+      "epochs": 1,
+      "minimum_epochs": 1,
+      "patience": 1
+    },
+    "seed42_screening": {
+      "datasets_in_order": [
+        "insta_market_basket",
+        "yellow_trip_hourly",
+        "intermittent_frozen_5000"
+      ],
+      "epochs": 300,
+      "minimum_epochs": 40,
+      "patience": 40,
+      "prerequisite": "all e1 jobs for the same candidate passed",
+      "stop_rule": "stop the candidate after the first dataset that fails any frozen gate"
+    }
+  },
+  "schema_version": 1,
+  "seed42_gate": {
+    "body_mae": "candidate_no_more_than_B_times_1.02",
+    "clamped_time_loss": "candidate_no_more_than_B_plus_0.01",
+    "gt_p99_mae": "candidate_no_more_than_B_times_1.02",
+    "overall_mae": "candidate_no_more_than_B_times_1.01",
+    "raw_rmse": "candidate_strictly_lower_than_B"
+  },
+  "status": "frozen_before_candidate_execution"
+}

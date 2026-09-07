@@ -1,0 +1,582 @@
+{
+  "candidate": {
+    "backbone": "titantpp_hard_memory_causal_qkv",
+    "gpu_name_contains": "RTX 5090",
+    "model_role": "hard_lmm_causal_qkv_candidate"
+  },
+  "contract_id": "hard_lmm_causal_qkv_screening_v1",
+  "contract_sha256": "f864a7721bdf8cfed9cef6ef16e3e5ed221370df92ddba6126d4303d7f1f883d",
+  "cost_profile": {
+    "cost_gate": {
+      "aggregation": "ratio_of_medians_over_three_independent_paired_repeats",
+      "lengths": [
+        {
+          "candidate_over_baseline_peak_allocated": 1.0542810110229002,
+          "candidate_over_baseline_step": 1.186644751802943,
+          "models": {
+            "titantpp": {
+              "peak_allocated_bytes": 49142784,
+              "step_seconds": 0.0032149208709597588
+            },
+            "titantpp_hard_memory_causal_qkv": {
+              "peak_allocated_bytes": 51810304,
+              "step_seconds": 0.003814968978986144
+            }
+          },
+          "peak_passed": true,
+          "sequence_length": 8,
+          "step_passed": true
+        },
+        {
+          "candidate_over_baseline_peak_allocated": 1.0665089281027125,
+          "candidate_over_baseline_step": 1.1809142393404786,
+          "models": {
+            "titantpp": {
+              "peak_allocated_bytes": 273086464,
+              "step_seconds": 0.003229911206290126
+            },
+            "titantpp_hard_memory_causal_qkv": {
+              "peak_allocated_bytes": 291249152,
+              "step_seconds": 0.0038142481353133917
+            }
+          },
+          "peak_passed": true,
+          "sequence_length": 64,
+          "step_passed": true
+        },
+        {
+          "candidate_over_baseline_peak_allocated": 1.0497207967463753,
+          "candidate_over_baseline_step": 1.0703677413841262,
+          "models": {
+            "titantpp": {
+              "peak_allocated_bytes": 1485002752,
+              "step_seconds": 0.009137723129242659
+            },
+            "titantpp_hard_memory_causal_qkv": {
+              "peak_allocated_bytes": 1558838272,
+              "step_seconds": 0.009780724067240953
+            }
+          },
+          "peak_passed": true,
+          "sequence_length": 256,
+          "step_passed": true
+        }
+      ],
+      "peak_limit": 1.25,
+      "status": "passed",
+      "step_limit": 1.5
+    },
+    "path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_causal_qkv_a7795355920d_5090_20260907/cuda_cost_profile.json",
+    "sha256": "6b85d4404a7be82a578c2321270664cf9e5b3367c1108fb184320015c4d1c9bc"
+  },
+  "current_job": "seed42_screening_insta_market_basket",
+  "evaluation_scope": "validation_only",
+  "gpu_preflight": {
+    "compute_processes": [],
+    "free_vram_mib": 32107,
+    "gpu_name": "NVIDIA GeForce RTX 5090",
+    "total_vram_mib": 32607,
+    "utilization_percent": 0
+  },
+  "held_out_test_evaluated": false,
+  "host_role": "5090",
+  "input_checksums": {
+    "insta_market_basket": {
+      "data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+      "split_manifest_sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d"
+    },
+    "intermittent_frozen_5000": {
+      "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+      "split_manifest_sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04"
+    },
+    "yellow_trip_hourly": {
+      "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+      "split_manifest_sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85"
+    }
+  },
+  "jobs": {
+    "e1_insta_market_basket": {
+      "best_epoch": 1,
+      "causal_qkv_audit": {
+        "best_artifact_route_verified": true,
+        "best_state_sha256": "ad9af6f00e2da78554429427235a7d303f43f9818fd380041e62fc0ee1e6354a",
+        "binding_verified": true,
+        "contract_id": "hard_lmm_causal_qkv_screening_v1",
+        "kernel_lag_evidence": {
+          "last_current": {
+            "encoder.layers.0.attn.causal_k_kernel": {
+              "lag1_l1": 8.626226425170898,
+              "lag2_l1": 5.4423956871032715
+            },
+            "encoder.layers.0.attn.causal_q_kernel": {
+              "lag1_l1": 13.714343070983887,
+              "lag2_l1": 12.571670532226562
+            },
+            "encoder.layers.0.attn.causal_v_kernel": {
+              "lag1_l1": 13.750185012817383,
+              "lag2_l1": 10.130001068115234
+            }
+          },
+          "selected": {
+            "encoder.layers.0.attn.causal_k_kernel": {
+              "lag1_l1": 8.626226425170898,
+              "lag2_l1": 5.4423956871032715
+            },
+            "encoder.layers.0.attn.causal_q_kernel": {
+              "lag1_l1": 13.714343070983887,
+              "lag2_l1": 12.571670532226562
+            },
+            "encoder.layers.0.attn.causal_v_kernel": {
+              "lag1_l1": 13.750185012817383,
+              "lag2_l1": 10.130001068115234
+            }
+          }
+        },
+        "last_artifact_route_verified": true,
+        "last_best_state_sha256": "ad9af6f00e2da78554429427235a7d303f43f9818fd380041e62fc0ee1e6354a",
+        "last_state_sha256": "ad9af6f00e2da78554429427235a7d303f43f9818fd380041e62fc0ee1e6354a",
+        "optimizer_restore": true,
+        "status": "passed",
+        "strict_best_restore": true,
+        "strict_last_restore": true,
+        "synthetic_target_outputs_roundtrip_equal": true
+      },
+      "checkpoint_sha256": "0a67ffac27dd6f571e967d1760609053248dc18995b9475f4a0a7e22e3c27e7c",
+      "command": [
+        "/opt/miniconda3/envs/ai_env/bin/python",
+        "-s",
+        "/home/leekwanhyeong/workspace/paper_research_causal_qkv_a7795355920d_5090/paper/scripts/run_count_aware_tpp_backbone_control.py",
+        "--data",
+        "/home/leekwanhyeong/workspace/paper_research_causal_qkv_a7795355920d_5090/sample_data/insta_market_basket/instacart_marked_target_with_split.parquet",
+        "--split-manifest",
+        "/home/leekwanhyeong/workspace/paper_research_causal_qkv_a7795355920d_5090/sample_data/insta_market_basket/instacart_marked_target_split_manifest.json",
+        "--output-dir",
+        "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_causal_qkv_a7795355920d_5090_20260907/jobs/e1_insta_market_basket",
+        "--source-revision",
+        "a7795355920d4bdc5fb63dc40deccbfcbd4daec0",
+        "--execution-role",
+        "hard_lmm_backbone_5090_titantpp_hard_memory_causal_qkv_insta_market_basket_1e",
+        "--dataset-contract",
+        "insta_market_basket",
+        "--model-role",
+        "hard_lmm_causal_qkv_candidate",
+        "--device",
+        "cuda",
+        "--epochs",
+        "1",
+        "--min-epochs",
+        "1",
+        "--early-stopping-patience",
+        "1",
+        "--batch-size",
+        "128",
+        "--lr",
+        "0.001",
+        "--lookback-weeks",
+        "52",
+        "--max-seq-len",
+        "64",
+        "--hidden-dim",
+        "64",
+        "--lambda-log-qty",
+        "1",
+        "--lambda-tail",
+        "0",
+        "--grad-clip",
+        "1",
+        "--backbones",
+        "titantpp_hard_memory_causal_qkv",
+        "--seeds",
+        "42",
+        "--quantity-variants",
+        "log_mse",
+        "--checkpoint-monitor",
+        "validation_raw_quantity_rmse",
+        "--quantile-adaptive-strength",
+        "0",
+        "--time-head-mode",
+        "legacy_clamped_rmtpp",
+        "--time-scale",
+        "3",
+        "--time-w-max",
+        "3.3333333333333335",
+        "--time-intercept-limit",
+        "300",
+        "--allow-partial-contract"
+      ],
+      "completed_at": "2026-09-07T11:15:51.668840+00:00",
+      "completed_epochs": 1,
+      "cuda_peak_memory_allocated_bytes": 392578560,
+      "held_out_test_evaluated": false,
+      "metrics": {
+        "body_mae": 3.4907865208151097,
+        "body_target_count": 477507,
+        "clamped_time_loss": 3.2101091329069598,
+        "gt_p99_mae": 24.583438643266067,
+        "overall_mae": 4.161030693920373,
+        "raw_rmse": 6.226662328740124,
+        "stratum_counts": {
+          "gt_p99": 6036,
+          "le_p50": 247651,
+          "p50_p90": 202534,
+          "p90_p95": 27322,
+          "p95_p99": 20190
+        },
+        "validation_target_count": 503733
+      },
+      "output": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_causal_qkv_a7795355920d_5090_20260907/jobs/e1_insta_market_basket",
+      "started_at": "2026-09-07T11:13:11.553993+00:00",
+      "status": "passed",
+      "summary": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_causal_qkv_a7795355920d_5090_20260907/jobs/e1_insta_market_basket/runs/titantpp_hard_memory_causal_qkv/count_only_log_regression/seed_42/summary.json",
+      "summary_sha256": "00ad3f8706196faba0305b104c663aded445f5459f6adc6a75d48cddfbf2d35d",
+      "validation_target_identity_sha256": "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8",
+      "validation_target_quantity_sha256": "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184"
+    },
+    "e1_intermittent_frozen_5000": {
+      "best_epoch": 1,
+      "causal_qkv_audit": {
+        "best_artifact_route_verified": true,
+        "best_state_sha256": "77f3f8a7634d438369af36fd63c10f2357d04460c79e3d27d37cc5bd6230f71e",
+        "binding_verified": true,
+        "contract_id": "hard_lmm_causal_qkv_screening_v1",
+        "kernel_lag_evidence": {
+          "last_current": {
+            "encoder.layers.0.attn.causal_k_kernel": {
+              "lag1_l1": 12.14568042755127,
+              "lag2_l1": 11.407124519348145
+            },
+            "encoder.layers.0.attn.causal_q_kernel": {
+              "lag1_l1": 11.078693389892578,
+              "lag2_l1": 13.056924819946289
+            },
+            "encoder.layers.0.attn.causal_v_kernel": {
+              "lag1_l1": 6.57403564453125,
+              "lag2_l1": 9.391937255859375
+            }
+          },
+          "selected": {
+            "encoder.layers.0.attn.causal_k_kernel": {
+              "lag1_l1": 12.14568042755127,
+              "lag2_l1": 11.407124519348145
+            },
+            "encoder.layers.0.attn.causal_q_kernel": {
+              "lag1_l1": 11.078693389892578,
+              "lag2_l1": 13.056924819946289
+            },
+            "encoder.layers.0.attn.causal_v_kernel": {
+              "lag1_l1": 6.57403564453125,
+              "lag2_l1": 9.391937255859375
+            }
+          }
+        },
+        "last_artifact_route_verified": true,
+        "last_best_state_sha256": "77f3f8a7634d438369af36fd63c10f2357d04460c79e3d27d37cc5bd6230f71e",
+        "last_state_sha256": "77f3f8a7634d438369af36fd63c10f2357d04460c79e3d27d37cc5bd6230f71e",
+        "optimizer_restore": true,
+        "status": "passed",
+        "strict_best_restore": true,
+        "strict_last_restore": true,
+        "synthetic_target_outputs_roundtrip_equal": true
+      },
+      "checkpoint_sha256": "891bf2b78ccd27cba799b61756294e38484669b21c09e1cb2888ae8bc8ede6ab",
+      "command": [
+        "/opt/miniconda3/envs/ai_env/bin/python",
+        "-s",
+        "/home/leekwanhyeong/workspace/paper_research_causal_qkv_a7795355920d_5090/paper/scripts/run_count_aware_tpp_backbone_control.py",
+        "--data",
+        "/home/leekwanhyeong/workspace/paper_research_causal_qkv_a7795355920d_5090/sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+        "--split-manifest",
+        "/home/leekwanhyeong/workspace/paper_research_causal_qkv_a7795355920d_5090/sample_data/intermittent_v2/intermittent_frozen_5000_split_manifest.json",
+        "--output-dir",
+        "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_causal_qkv_a7795355920d_5090_20260907/jobs/e1_intermittent_frozen_5000",
+        "--source-revision",
+        "a7795355920d4bdc5fb63dc40deccbfcbd4daec0",
+        "--execution-role",
+        "hard_lmm_backbone_5090_titantpp_hard_memory_causal_qkv_intermittent_frozen_5000_1e",
+        "--dataset-contract",
+        "intermittent_frozen_5000",
+        "--model-role",
+        "hard_lmm_causal_qkv_candidate",
+        "--device",
+        "cuda",
+        "--epochs",
+        "1",
+        "--min-epochs",
+        "1",
+        "--early-stopping-patience",
+        "1",
+        "--batch-size",
+        "128",
+        "--lr",
+        "0.001",
+        "--lookback-weeks",
+        "520",
+        "--max-seq-len",
+        "256",
+        "--hidden-dim",
+        "64",
+        "--lambda-log-qty",
+        "1",
+        "--lambda-tail",
+        "0",
+        "--grad-clip",
+        "1",
+        "--backbones",
+        "titantpp_hard_memory_causal_qkv",
+        "--seeds",
+        "42",
+        "--quantity-variants",
+        "log_mse",
+        "--checkpoint-monitor",
+        "validation_raw_quantity_rmse",
+        "--quantile-adaptive-strength",
+        "0",
+        "--time-head-mode",
+        "legacy_clamped_rmtpp",
+        "--time-scale",
+        "3",
+        "--time-w-max",
+        "3.3333333333333335",
+        "--time-intercept-limit",
+        "300",
+        "--allow-partial-contract"
+      ],
+      "completed_at": "2026-09-07T11:13:00.861566+00:00",
+      "completed_epochs": 1,
+      "cuda_peak_memory_allocated_bytes": 1964348416,
+      "held_out_test_evaluated": false,
+      "metrics": {
+        "body_mae": 0.6896410285081157,
+        "body_target_count": 81739,
+        "clamped_time_loss": 0.8185889448905147,
+        "gt_p99_mae": 9.35323545705008,
+        "overall_mae": 0.9381603920239386,
+        "raw_rmse": 2.25029962130383,
+        "stratum_counts": {
+          "gt_p99": 1141,
+          "le_p50": 45036,
+          "p50_p90": 29579,
+          "p90_p95": 7124,
+          "p95_p99": 3405
+        },
+        "validation_target_count": 86285
+      },
+      "output": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_causal_qkv_a7795355920d_5090_20260907/jobs/e1_intermittent_frozen_5000",
+      "started_at": "2026-09-07T11:11:46.489003+00:00",
+      "status": "passed",
+      "summary": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_causal_qkv_a7795355920d_5090_20260907/jobs/e1_intermittent_frozen_5000/runs/titantpp_hard_memory_causal_qkv/count_only_log_regression/seed_42/summary.json",
+      "summary_sha256": "d9701f92d816eb00d767dd74834a5627e121ec61edf3d0cd2fce51e817dd2652",
+      "validation_target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+      "validation_target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385"
+    },
+    "e1_yellow_trip_hourly": {
+      "best_epoch": 1,
+      "causal_qkv_audit": {
+        "best_artifact_route_verified": true,
+        "best_state_sha256": "4441a7b2c48b6fb19669b63369294bec6d062cfc7f4ab68a65962621ed513803",
+        "binding_verified": true,
+        "contract_id": "hard_lmm_causal_qkv_screening_v1",
+        "kernel_lag_evidence": {
+          "last_current": {
+            "encoder.layers.0.attn.causal_k_kernel": {
+              "lag1_l1": 1.7355375289916992,
+              "lag2_l1": 1.9273664951324463
+            },
+            "encoder.layers.0.attn.causal_q_kernel": {
+              "lag1_l1": 1.9235252141952515,
+              "lag2_l1": 1.806697130203247
+            },
+            "encoder.layers.0.attn.causal_v_kernel": {
+              "lag1_l1": 0.9038975238800049,
+              "lag2_l1": 0.8906625509262085
+            }
+          },
+          "selected": {
+            "encoder.layers.0.attn.causal_k_kernel": {
+              "lag1_l1": 1.7355375289916992,
+              "lag2_l1": 1.9273664951324463
+            },
+            "encoder.layers.0.attn.causal_q_kernel": {
+              "lag1_l1": 1.9235252141952515,
+              "lag2_l1": 1.806697130203247
+            },
+            "encoder.layers.0.attn.causal_v_kernel": {
+              "lag1_l1": 0.9038975238800049,
+              "lag2_l1": 0.8906625509262085
+            }
+          }
+        },
+        "last_artifact_route_verified": true,
+        "last_best_state_sha256": "4441a7b2c48b6fb19669b63369294bec6d062cfc7f4ab68a65962621ed513803",
+        "last_state_sha256": "4441a7b2c48b6fb19669b63369294bec6d062cfc7f4ab68a65962621ed513803",
+        "optimizer_restore": true,
+        "status": "passed",
+        "strict_best_restore": true,
+        "strict_last_restore": true,
+        "synthetic_target_outputs_roundtrip_equal": true
+      },
+      "checkpoint_sha256": "445a5ee6a53865c1b6333b0da72ebd202370a593d8f4ce3b57aec140aa7e11f3",
+      "command": [
+        "/opt/miniconda3/envs/ai_env/bin/python",
+        "-s",
+        "/home/leekwanhyeong/workspace/paper_research_causal_qkv_a7795355920d_5090/paper/scripts/run_count_aware_tpp_backbone_control.py",
+        "--data",
+        "/home/leekwanhyeong/workspace/paper_research_causal_qkv_a7795355920d_5090/sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+        "--split-manifest",
+        "/home/leekwanhyeong/workspace/paper_research_causal_qkv_a7795355920d_5090/sample_data/new_york_taxi/yellow_trip_hourly_split_manifest.json",
+        "--output-dir",
+        "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_causal_qkv_a7795355920d_5090_20260907/jobs/e1_yellow_trip_hourly",
+        "--source-revision",
+        "a7795355920d4bdc5fb63dc40deccbfcbd4daec0",
+        "--execution-role",
+        "hard_lmm_backbone_5090_titantpp_hard_memory_causal_qkv_yellow_trip_hourly_1e",
+        "--dataset-contract",
+        "yellow_trip_hourly",
+        "--model-role",
+        "hard_lmm_causal_qkv_candidate",
+        "--device",
+        "cuda",
+        "--epochs",
+        "1",
+        "--min-epochs",
+        "1",
+        "--early-stopping-patience",
+        "1",
+        "--batch-size",
+        "128",
+        "--lr",
+        "0.001",
+        "--lookback-weeks",
+        "168",
+        "--max-seq-len",
+        "256",
+        "--hidden-dim",
+        "64",
+        "--lambda-log-qty",
+        "1",
+        "--lambda-tail",
+        "0",
+        "--grad-clip",
+        "1",
+        "--backbones",
+        "titantpp_hard_memory_causal_qkv",
+        "--seeds",
+        "42",
+        "--quantity-variants",
+        "log_mse",
+        "--checkpoint-monitor",
+        "validation_raw_quantity_rmse",
+        "--quantile-adaptive-strength",
+        "0",
+        "--time-head-mode",
+        "legacy_clamped_rmtpp",
+        "--time-scale",
+        "3",
+        "--time-w-max",
+        "3.3333333333333335",
+        "--time-intercept-limit",
+        "300",
+        "--allow-partial-contract"
+      ],
+      "completed_at": "2026-09-07T11:13:11.553595+00:00",
+      "completed_epochs": 1,
+      "cuda_peak_memory_allocated_bytes": 1964348416,
+      "held_out_test_evaluated": false,
+      "metrics": {
+        "body_mae": 40.58699135582811,
+        "body_target_count": 7888,
+        "clamped_time_loss": 1.3693344648774257,
+        "gt_p99_mae": 655.3501223793513,
+        "overall_mae": 67.4413111328747,
+        "raw_rmse": 211.1597022032762,
+        "stratum_counts": {
+          "gt_p99": 79,
+          "le_p50": 4364,
+          "p50_p90": 3138,
+          "p90_p95": 386,
+          "p95_p99": 301
+        },
+        "validation_target_count": 8268
+      },
+      "output": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_causal_qkv_a7795355920d_5090_20260907/jobs/e1_yellow_trip_hourly",
+      "started_at": "2026-09-07T11:13:00.861915+00:00",
+      "status": "passed",
+      "summary": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_causal_qkv_a7795355920d_5090_20260907/jobs/e1_yellow_trip_hourly/runs/titantpp_hard_memory_causal_qkv/count_only_log_regression/seed_42/summary.json",
+      "summary_sha256": "4b16f2044b408e7b1903992a3eab27e9e73873ee4c9acbab5ac29a660a6c5f26",
+      "validation_target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+      "validation_target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd"
+    },
+    "seed42_screening_insta_market_basket": {
+      "command": [
+        "/opt/miniconda3/envs/ai_env/bin/python",
+        "-s",
+        "/home/leekwanhyeong/workspace/paper_research_causal_qkv_a7795355920d_5090/paper/scripts/run_count_aware_tpp_backbone_control.py",
+        "--data",
+        "/home/leekwanhyeong/workspace/paper_research_causal_qkv_a7795355920d_5090/sample_data/insta_market_basket/instacart_marked_target_with_split.parquet",
+        "--split-manifest",
+        "/home/leekwanhyeong/workspace/paper_research_causal_qkv_a7795355920d_5090/sample_data/insta_market_basket/instacart_marked_target_split_manifest.json",
+        "--output-dir",
+        "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_causal_qkv_a7795355920d_5090_20260907/jobs/seed42_screening_insta_market_basket",
+        "--source-revision",
+        "a7795355920d4bdc5fb63dc40deccbfcbd4daec0",
+        "--execution-role",
+        "hard_lmm_backbone_5090_titantpp_hard_memory_causal_qkv_insta_market_basket_300e",
+        "--dataset-contract",
+        "insta_market_basket",
+        "--model-role",
+        "hard_lmm_causal_qkv_candidate",
+        "--device",
+        "cuda",
+        "--epochs",
+        "300",
+        "--min-epochs",
+        "40",
+        "--early-stopping-patience",
+        "40",
+        "--batch-size",
+        "128",
+        "--lr",
+        "0.001",
+        "--lookback-weeks",
+        "52",
+        "--max-seq-len",
+        "64",
+        "--hidden-dim",
+        "64",
+        "--lambda-log-qty",
+        "1",
+        "--lambda-tail",
+        "0",
+        "--grad-clip",
+        "1",
+        "--backbones",
+        "titantpp_hard_memory_causal_qkv",
+        "--seeds",
+        "42",
+        "--quantity-variants",
+        "log_mse",
+        "--checkpoint-monitor",
+        "validation_raw_quantity_rmse",
+        "--quantile-adaptive-strength",
+        "0",
+        "--time-head-mode",
+        "legacy_clamped_rmtpp",
+        "--time-scale",
+        "3",
+        "--time-w-max",
+        "3.3333333333333335",
+        "--time-intercept-limit",
+        "300",
+        "--allow-partial-contract"
+      ],
+      "output": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_causal_qkv_a7795355920d_5090_20260907/jobs/seed42_screening_insta_market_basket",
+      "started_at": "2026-09-07T11:15:51.669284+00:00",
+      "status": "running"
+    }
+  },
+  "schema_version": 1,
+  "source_revision": "a7795355920d4bdc5fb63dc40deccbfcbd4daec0",
+  "started_at": "2026-09-07T11:11:02.080929+00:00",
+  "status": "running_seed42_screening",
+  "updated_at": "2026-09-07T11:15:51.669288+00:00"
+}
