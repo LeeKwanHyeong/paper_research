@@ -1,5 +1,11 @@
 # Causal QKV Hard-LMM — 5090 실행 기록
 
+**최종 상태:** 2026-09-07 23:33:49 KST에 Instacart seed42가 epoch80에서
+정상 조기 종료됐다. 선택 epoch40의 raw RMSE가 B보다 0.0858% 높아 사전 기준에
+미달했다. 후속 screening을 중단했고, 2026-09-08 최종 로컬 감사와 artifact
+보관 후 heartbeat를 삭제했다. 상세 판정은 `final_result.md`와
+`final_decision.json`에 기록했다. 아래 실행 중 상태는 당시의 역사적 기록이다.
+
 - 저장소/브랜치: `paper_research / codex/hard-lmm-causal-qkv`
 - 실행 소스: `a7795355920d4bdc5fb63dc40deccbfcbd4daec0`
 - 비교 집계 수정: `46bf2bc` (body를 B와 동일한 ≤train p95로 고정)
@@ -7,7 +13,7 @@
 - 소스 경로: `/home/leekwanhyeong/workspace/paper_research_causal_qkv_a7795355920d_5090`
 - 결과 경로: `/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_causal_qkv_a7795355920d_5090_20260907`
 - tmux: `hard_lmm_causal_qkv_a779535_5090`
-- 시간별 확인 heartbeat: `hard-lmm-causal-qkv-5090`
+- 시간별 확인 heartbeat: `hard-lmm-causal-qkv-5090` (최종 종료 후 삭제)
 
 ## 완료된 검증
 

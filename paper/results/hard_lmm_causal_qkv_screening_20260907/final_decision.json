@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "decision": "not_adopted_seed42_raw_rmse_gate_failed",
+  "dataset": "insta_market_basket",
+  "source_revision": "a7795355920d4bdc5fb63dc40deccbfcbd4daec0",
+  "completed_at_utc": "2026-09-07T14:33:49.059031+00:00",
+  "completed_epochs": 80,
+  "selected_epoch": 40,
+  "gate": {
+    "status": "failed",
+    "checks": {
+      "raw_rmse": false,
+      "overall_mae": true,
+      "body_mae": true,
+      "gt_p99_mae": true,
+      "clamped_time_loss": true
+    }
+  },
+  "comparison": {
+    "raw_rmse": {
+      "B": 5.872216930452246,
+      "candidate": 5.877257164156445,
+      "absolute_change": 0.0050402337041992595,
+      "relative_change_percent": 0.08583187174271423
+    },
+    "overall_mae": {
+      "B": 3.9937810783167014,
+      "candidate": 3.9956186424798843,
+      "absolute_change": 0.0018375641631829254,
+      "relative_change_percent": 0.0460106382184966
+    },
+    "body_mae": {
+      "B": 3.438601503150614,
+      "candidate": 3.4282963725829894,
+      "absolute_change": -0.010305130567624499,
+      "relative_change_percent": -0.29968958479725805
+    },
+    "gt_p99_mae": {
+      "B": 21.91779476530588,
+      "candidate": 22.190151582675078,
+      "absolute_change": 0.2723568173691966,
+      "relative_change_percent": 1.2426287420133963
+    },
+    "clamped_time_loss": {
+      "B": 3.2155228955007256,
+      "candidate": 3.215250581359681,
+      "absolute_change": -0.00027231414104456064,
+      "relative_change_percent": -0.00846873587575514
+    }
+  },
+  "local_audit": {
+    "status": "passed",
+    "summary": "/Users/igwanhyeong/PycharmProjects/paper_research/paper/results/hard_lmm_causal_qkv_screening_20260907/remote_jobs/seed42_screening_insta_market_basket/runs/titantpp_hard_memory_causal_qkv/count_only_log_regression/seed_42/summary.json",
+    "summary_sha256": "7141fe1ab05ccfc18e6708bd182489ac9803a32456296e44ac7ac1bab4d638cd",
+    "checkpoint_sha256": "b649b4f1c2f08de6e4eea42dfde0efd72bf13a7047370b61ed405ecf0e604802",
+    "best_epoch": 40,
+    "completed_epochs": 80,
+    "metrics": {
+      "raw_rmse": 5.877257164156445,
+      "overall_mae": 3.9956186424798843,
+      "body_mae": 3.4282963725829894,
+      "gt_p99_mae": 22.190151582675078,
+      "clamped_time_loss": 3.215250581359681,
+      "validation_target_count": 503733,
+      "body_target_count": 477507,
+      "stratum_counts": {
+        "le_p50": 247651,
+        "p50_p90": 202534,
+        "p90_p95": 27322,
+        "p95_p99": 20190,
+        "gt_p99": 6036
+      }
+    },
+    "cuda_peak_memory_allocated_bytes": 392578560,
+    "validation_target_identity_sha256": "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8",
+    "validation_target_quantity_sha256": "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184",
+    "held_out_test_evaluated": false,
+    "causal_qkv_audit": {
+      "status": "passed",
+      "contract_id": "hard_lmm_causal_qkv_screening_v1",
+      "binding_verified": true,
+      "best_artifact_route_verified": true,
+      "last_artifact_route_verified": true,
+      "best_state_sha256": "9e10cec294978d537ebb95bc4957bdc68d439e8deaffc5d404fb779ab0e6d242",
+      "last_state_sha256": "f2714f09cfe35f7ea64591c1173c4ea877ab98f82039eea8a304108f010a2a93",
+      "last_best_state_sha256": "9e10cec294978d537ebb95bc4957bdc68d439e8deaffc5d404fb779ab0e6d242",
+      "strict_best_restore": true,
+      "strict_last_restore": true,
+      "optimizer_restore": true,
+      "synthetic_target_outputs_roundtrip_equal": true,
+      "kernel_lag_evidence": {
+        "selected": {
+          "encoder.layers.0.attn.causal_q_kernel": {
+            "lag1_l1": 21.385337829589844,
+            "lag2_l1": 15.202430725097656
+          },
+          "encoder.layers.0.attn.causal_k_kernel": {
+            "lag1_l1": 25.439476013183594,
+            "lag2_l1": 18.710041046142578
+          },
+          "encoder.layers.0.attn.causal_v_kernel": {
+            "lag1_l1": 7.234908103942871,
+            "lag2_l1": 4.987461566925049
+          }
+        },
+        "last_current": {
+          "encoder.layers.0.attn.causal_q_kernel": {
+            "lag1_l1": 21.636613845825195,
+            "lag2_l1": 14.454237937927246
+          },
+          "encoder.layers.0.attn.causal_k_kernel": {
+            "lag1_l1": 23.32467269897461,
+            "lag2_l1": 18.46943473815918
+          },
+          "encoder.layers.0.attn.causal_v_kernel": {
+            "lag1_l1": 7.117892742156982,
+            "lag2_l1": 4.557934284210205
+          }
+        }
+      }
+    }
+  },
+  "held_out_test_evaluated": false,
+  "next_action": "Campaign terminated. Taxi and Intermittent screening, additional seeds and held-out evaluation remain unexecuted. Preserve the frozen contract and artifacts."
+}
