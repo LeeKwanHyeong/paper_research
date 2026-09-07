@@ -1,5 +1,10 @@
 # Conditional CDF calibration validation decision
 
+> Follow-up: the boundary-selected e100 candidate was rerun under a frozen
+> e300 budget extension. It reproduced epochs 0--100 exactly, kept epoch 99 as
+> the optimum, and stopped at epoch 119. See
+> `../aligned_conditional_cdf_calibration_e300_20260907/README.md`.
+
 The common conditional Kumaraswamy CDF calibration candidate was rejected at
 the frozen Taxi seed-42 gate. The result supports a small duration-distribution
 gain from the aligned-B hidden state, but it does not satisfy the predeclared
