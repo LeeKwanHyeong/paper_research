@@ -1,0 +1,125 @@
+{
+  "audit_status": "passed_with_scope_limitations",
+  "evidence_scope": "local B artifacts plus historical 5080-retained 5080/5090 receipts; no dataset or held-out inference",
+  "selector_replay_tolerance": {
+    "relative": 1e-10,
+    "absolute": 1e-08
+  },
+  "floating_point_note": "Remote strict summary equality is false; history RMSE differs by about 1e-14. Stratum-weighted MAE/RMSE replay within the existing audit tolerance. Rank decisions use full-precision receipt metrics.",
+  "B_checks": [
+    {
+      "dataset": "intermittent_frozen_5000",
+      "best_epoch": 77,
+      "completed_epochs": 117,
+      "metrics": {
+        "body_mae": 0.4657896038725777,
+        "body_target_count": 81739,
+        "gt_p99_mae": 5.148108011792356,
+        "gt_p99_target_count": 1141,
+        "overall_mae": 0.6043404183562111,
+        "raw_rmse": 1.4995550721471171,
+        "stratum_counts": {
+          "gt_p99": 1141,
+          "le_p50": 45036,
+          "p50_p90": 29579,
+          "p90_p95": 7124,
+          "p95_p99": 3405
+        },
+        "time_nll": -3.483793693042792,
+        "validation_target_count": 86285
+      },
+      "checks_passed": true
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "best_epoch": 45,
+      "completed_epochs": 85,
+      "metrics": {
+        "body_mae": 18.997478121185097,
+        "body_target_count": 7888,
+        "gt_p99_mae": 332.76974448674844,
+        "gt_p99_target_count": 79,
+        "overall_mae": 28.67402025115017,
+        "raw_rmse": 88.19499665350457,
+        "stratum_counts": {
+          "gt_p99": 79,
+          "le_p50": 4364,
+          "p50_p90": 3138,
+          "p90_p95": 386,
+          "p95_p99": 301
+        },
+        "time_nll": 1.473390626529593,
+        "validation_target_count": 8268
+      },
+      "checks_passed": true
+    },
+    {
+      "dataset": "insta_market_basket",
+      "best_epoch": 72,
+      "completed_epochs": 112,
+      "metrics": {
+        "body_mae": 3.438601503150614,
+        "body_target_count": 477507,
+        "gt_p99_mae": 21.91779476530588,
+        "gt_p99_target_count": 6036,
+        "overall_mae": 3.9937810783167014,
+        "raw_rmse": 5.872216930452246,
+        "stratum_counts": {
+          "gt_p99": 6036,
+          "le_p50": 247651,
+          "p50_p90": 202534,
+          "p90_p95": 27322,
+          "p95_p99": 20190
+        },
+        "time_nll": 3.2155228955007256,
+        "validation_target_count": 503733
+      },
+      "checks_passed": true
+    }
+  ],
+  "instacart_seed42_comparisons": [
+    {
+      "baseline": "rmtpp",
+      "baseline_mae": 3.9858414001441065,
+      "baseline_rmse": 5.83696080037417,
+      "B_mae": 3.9937810783167014,
+      "B_rmse": 5.872216930452246,
+      "B_mae_relative_change_percent": 0.19919704211783795,
+      "B_rmse_relative_change_percent": 0.6040151935886806,
+      "B_wins_both": false
+    },
+    {
+      "baseline": "thp",
+      "baseline_mae": 3.9910029830490985,
+      "baseline_rmse": 5.8523418409991885,
+      "B_mae": 3.9937810783167014,
+      "B_rmse": 5.872216930452246,
+      "B_mae_relative_change_percent": 0.06960894991565603,
+      "B_rmse_relative_change_percent": 0.33960916831310417,
+      "B_wins_both": false
+    }
+  ],
+  "completed": {
+    "B_seed42_full_fits": 3,
+    "baseline_e1": 6,
+    "baseline_seed42_full_fits": 2
+  },
+  "not_completed_in_frozen_campaign": {
+    "baseline_seed42_full_fits": 4,
+    "aligned_seeds_52_62_full_fits": 18,
+    "final_held_out_checkpoint_evaluations": 27
+  },
+  "remaining_counts_are_inventory_not_execution_authorization": true,
+  "quantity_focused_scope_can_be_defined": true,
+  "all_dataset_quantity_superiority_supported": false,
+  "final_paper_evidence_complete": false,
+  "K2_local_implementation_gate": "deferred_quantity_superiority_or_final_paper_evidence_not_established",
+  "training_executed_this_audit": false,
+  "held_out_test_evaluated": false,
+  "sources": {
+    "paper/contracts/raw_rmse_baseline_alignment_seed42_v1.json": "1a3bc9aca89c8d26c9e5d244a7be4d4bb7efc302fd20416428b4e59d7ec856a9",
+    "paper/results/hard_lmm_raw_rmse_checkpoint_alignment_seed42_20260906/a_vs_b_metrics.json": "17b1c432b58f0620d8e6eda1a291a92eb4c995af9c78d98be8d460be79079db3",
+    "paper/results/quantity_focused_feasibility_audit_20260907/remote_evidence.json": "5516b838f05e2b394fa13fad981a170e57ccfec2de6d14185a6a21bcdf673433",
+    "paper/results/quantity_focused_feasibility_audit_20260907/remote_independent_checks.json": "bde8f53099e5383751137a6ceaf038291b868852dc5eb3c81bec486b913eaf9a"
+  }
+}
