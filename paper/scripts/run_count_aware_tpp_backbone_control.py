@@ -50,6 +50,8 @@ from paper.scripts.count_aware_tpp_backbone.constants import (
     MODEL_ROLE_HARD_LOCAL_TIME,
     MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT,
     MODEL_ROLE_RAW_RMSE_BASELINE_ALIGNMENT,
+    MODEL_ROLE_INTERLAYER_MEMORY,
+    MODEL_ROLE_MEMORY_FILM,
     QUANTILE_ADAPTIVE_QUANTILES,
     QUANTILE_ADAPTIVE_RAW_WEIGHTS,
     QUANTILE_ADAPTIVE_VARIANT,
@@ -473,6 +475,10 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
         raise ValueError("The qualified Intermittent contract does not allow max_series")
     if args.lambda_log_qty != 1.0:
         raise ValueError("Frozen contract requires lambda_log_qty=1.0")
+    candidate_raw_rmse_roles = {
+        MODEL_ROLE_INTERLAYER_MEMORY,
+        MODEL_ROLE_MEMORY_FILM,
+    }
     if args.model_role == MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT:
         if args.checkpoint_monitor != "validation_raw_quantity_rmse":
             raise ValueError("Quantile alignment requires raw-RMSE checkpoint selection")
@@ -484,22 +490,22 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
             args.time_intercept_limit, 300.0, rel_tol=0.0, abs_tol=1e-12
         ):
             raise ValueError("Quantile alignment requires executed T0 legacy intercept cap=300")
-    elif args.model_role == MODEL_ROLE_RAW_RMSE_BASELINE_ALIGNMENT:
+    elif args.model_role == MODEL_ROLE_RAW_RMSE_BASELINE_ALIGNMENT or args.model_role in candidate_raw_rmse_roles:
         if args.checkpoint_monitor != "validation_raw_quantity_rmse":
             raise ValueError(
-                "Raw-RMSE baseline alignment requires raw-RMSE checkpoint selection"
+                "Raw-RMSE-aligned run requires raw-RMSE checkpoint selection"
             )
         if not math.isclose(
             args.quantile_adaptive_strength, 0.0, rel_tol=0.0, abs_tol=1e-15
         ):
             raise ValueError(
-                "Raw-RMSE baseline alignment requires quantile adaptive strength=0"
+                "Raw-RMSE-aligned run requires quantile adaptive strength=0"
             )
         if not math.isclose(
             args.time_intercept_limit, 300.0, rel_tol=0.0, abs_tol=1e-12
         ):
             raise ValueError(
-                "Raw-RMSE baseline alignment requires legacy intercept cap=300"
+                "Raw-RMSE-aligned run requires legacy intercept cap=300"
             )
     elif not math.isclose(
         args.quantile_adaptive_strength, 0.0, rel_tol=0.0, abs_tol=1e-15
@@ -592,7 +598,12 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
     # filesystem path.
     args.data_sha256 = data_sha256
     args.split_manifest_sha256 = manifest_sha256
-    if (args.model_role in {MODEL_ROLE_WEIGHTED_STATIC, MODEL_ROLE_HARD_LOCAL_TIME}
+    if (args.model_role in {
+                MODEL_ROLE_WEIGHTED_STATIC,
+                MODEL_ROLE_HARD_LOCAL_TIME,
+                MODEL_ROLE_INTERLAYER_MEMORY,
+                MODEL_ROLE_MEMORY_FILM,
+            }
             or args.model_role == KEY_VALUE_ROLE
             or args.model_role == ELAPSED_AGE_ROLE
             or args.model_role == THP_STATIC_MEMORY_ROLE
@@ -631,6 +642,8 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
     if args.model_role in {
         MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT,
         MODEL_ROLE_RAW_RMSE_BASELINE_ALIGNMENT,
+        MODEL_ROLE_INTERLAYER_MEMORY,
+        MODEL_ROLE_MEMORY_FILM,
     }:
         _, validation_target_population = exact_target_population(
             frame,

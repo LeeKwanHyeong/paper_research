@@ -37,6 +37,18 @@ from models.TPPs.CountAwareTHPStaticMemory import (
     static_memory_metadata,
     validate_static_memory_checkpoint,
 )
+from models.TPPs.CountAwareTitanInterLayerMemory import (
+    CountAwareTitanInterLayerMemoryTPP,
+    INTERLAYER_MEMORY_BACKBONE,
+    interlayer_memory_metadata,
+    validate_interlayer_memory_checkpoint,
+)
+from models.TPPs.CountAwareTitanMemoryFiLM import (
+    CountAwareTitanMemoryFiLM,
+    MEMORY_FILM_BACKBONE,
+    memory_film_metadata,
+    validate_memory_film_checkpoint,
+)
 from models.Titan.common.key_value_memory import (
     KEY_VALUE_BACKBONE,
     KEY_VALUE_CONTRACT,
@@ -154,6 +166,10 @@ def validate_key_value_checkpoint(payload: dict[str, Any], expected_backbone: st
 
 def validate_checkpoint_route(payload: dict[str, Any], expected_backbone: str) -> None:
     """Validate explicit candidate identity; compatible tensor shapes are not enough."""
+    if validate_interlayer_memory_checkpoint(payload, expected_backbone):
+        return
+    if validate_memory_film_checkpoint(payload, expected_backbone):
+        return
     if validate_elapsed_age_checkpoint(payload, expected_backbone):
         return
     validate_key_value_checkpoint(payload, expected_backbone)
@@ -280,6 +296,36 @@ def build_count_aware_model(
         "time_initial_scale": time_initial_scale,
         "time_sigma_floor": time_sigma_floor,
     }
+    intermediate_candidates = {
+        INTERLAYER_MEMORY_BACKBONE: (
+            CountAwareTitanInterLayerMemoryTPP,
+            interlayer_memory_metadata,
+        ),
+        MEMORY_FILM_BACKBONE: (
+            CountAwareTitanMemoryFiLM,
+            memory_film_metadata,
+        ),
+    }
+    if backbone in intermediate_candidates:
+        if (
+            quantity_variant != LOG_MSE_VARIANT
+            or time_head_mode != TIME_HEAD_MODE_LEGACY_CLAMPED
+            or not math.isclose(lambda_tail, 0.0, rel_tol=0.0, abs_tol=1e-15)
+        ):
+            raise ValueError(
+                "Intermediate-memory candidates require direct log-MSE, legacy time head and no tail loss"
+            )
+        model_type, metadata_factory = intermediate_candidates[backbone]
+        model = model_type(
+            hidden_dim=hidden_dim,
+            train_log_mean=train_log_mean,
+            max_seq_len=max_seq_len,
+            **quantity_kwargs,
+        )
+        return with_time_metadata(
+            model,
+            metadata_factory(hidden_dim),
+        )
     if backbone == "rmtpp":
         model = CountAwareRMTPP(hidden_dim, train_log_mean, **quantity_kwargs)
         return with_time_metadata(

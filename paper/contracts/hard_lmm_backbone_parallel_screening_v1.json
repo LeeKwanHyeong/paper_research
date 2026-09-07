@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "contract_id": "hard_lmm_backbone_parallel_screening_v1",
+  "created_on": "2026-09-07",
+  "status": "frozen_before_remote_execution",
+  "authorization": "The user explicitly assigned the inter-layer candidate to 5090 and the Memory-FiLM candidate to 5080 for simultaneous execution.",
+  "repository": "paper_research",
+  "source_binding": "one clean commit containing this contract, captured by the package manifest",
+  "evaluation_scope": "validation_only",
+  "held_out_test_evaluated": false,
+  "candidates": {
+    "5090": {
+      "backbone": "titantpp_hard_memory_interlayer",
+      "model_role": "hard_lmm_interlayer_memory_candidate",
+      "contract": "paper/contracts/hard_lmm_interlayer_memory_v1.md",
+      "gpu_name_contains": "RTX 5090"
+    },
+    "5080": {
+      "backbone": "titantpp_hard_memory_film",
+      "model_role": "hard_lmm_memory_film_candidate",
+      "contract": "paper/contracts/hard_lmm_memory_film_v1.md",
+      "gpu_name_contains": "RTX 5080"
+    }
+  },
+  "common_training": {
+    "seed": 42,
+    "quantity_variant": "count_only_log_regression",
+    "quantity_loss": "unweighted_mse_on_log1p_quantity",
+    "checkpoint_monitor": "validation_raw_quantity_rmse",
+    "checkpoint_rule": "earliest_strict_finite_minimum",
+    "early_stopping_monitor": "validation_raw_quantity_rmse",
+    "optimizer": "AdamW",
+    "learning_rate": 0.001,
+    "batch_size": 128,
+    "gradient_clip": 1.0,
+    "hidden_dim": 64,
+    "lambda_log_quantity": 1.0,
+    "lambda_tail": 0.0,
+    "quantile_adaptive_strength": 0.0,
+    "time_head": "legacy_clamped_rmtpp",
+    "time_scale": 3.0,
+    "time_w_max": 3.3333333333333335,
+    "time_intercept_limit": 300.0
+  },
+  "phases": {
+    "e1": {
+      "datasets_in_order": [
+        "intermittent_frozen_5000",
+        "yellow_trip_hourly",
+        "insta_market_basket"
+      ],
+      "epochs": 1,
+      "minimum_epochs": 1,
+      "patience": 1,
+      "completion": "all three full train and validation populations complete with finite metrics, selected checkpoint and CUDA memory evidence"
+    },
+    "seed42_screening": {
+      "datasets_in_order": [
+        "insta_market_basket",
+        "yellow_trip_hourly",
+        "intermittent_frozen_5000"
+      ],
+      "epochs": 300,
+      "minimum_epochs": 40,
+      "patience": 40,
+      "prerequisite": "all e1 jobs for the same candidate passed",
+      "stop_rule": "stop the candidate after the first dataset that fails any frozen gate"
+    }
+  },
+  "seed42_gate": {
+    "raw_rmse": "candidate_strictly_lower_than_B",
+    "overall_mae": "candidate_no_more_than_B_times_1.01",
+    "body_mae": "candidate_no_more_than_B_times_1.02",
+    "gt_p99_mae": "candidate_no_more_than_B_times_1.02",
+    "clamped_time_loss": "candidate_no_more_than_B_plus_0.01"
+  },
+  "B_validation_reference": {
+    "source": "paper/results/hard_lmm_raw_rmse_checkpoint_alignment_seed42_20260906/a_vs_b_metrics.json",
+    "sha256": "17b1c432b58f0620d8e6eda1a291a92eb4c995af9c78d98be8d460be79079db3",
+    "datasets": {
+      "intermittent_frozen_5000": {
+        "raw_rmse": 1.4995550721471171,
+        "overall_mae": 0.6043404183562111,
+        "body_mae": 0.4657896038725777,
+        "gt_p99_mae": 5.148108011792356,
+        "clamped_time_loss": -3.483793693042792
+      },
+      "yellow_trip_hourly": {
+        "raw_rmse": 88.19499665350457,
+        "overall_mae": 28.67402025115017,
+        "body_mae": 18.997478121185097,
+        "gt_p99_mae": 332.76974448674844,
+        "clamped_time_loss": 1.473390626529593
+      },
+      "insta_market_basket": {
+        "raw_rmse": 5.872216930452246,
+        "overall_mae": 3.9937810783167014,
+        "body_mae": 3.438601503150614,
+        "gt_p99_mae": 21.91779476530588,
+        "clamped_time_loss": 3.2155228955007256
+      }
+    }
+  },
+  "additional_seeds_authorized": false,
+  "final_held_out_authorized": false
+}
