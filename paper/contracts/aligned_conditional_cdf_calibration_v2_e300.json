@@ -1,0 +1,251 @@
+{
+  "schema_version": 1,
+  "contract_id": "aligned_conditional_cdf_calibration_v2_e300",
+  "status": "budget_extension_frozen_before_execution",
+  "purpose": "Resolve the e100 boundary-selected Taxi candidate by extending only the common optimization budget to e300 while preserving the complete v1 model, controls, selector, guardrails, and data scope.",
+  "candidate": {
+    "name": "aligned_B_conditional_kumaraswamy_cdf_calibrator",
+    "single_hypothesis": true,
+    "source_contract_id": "aligned_frozen_lognormal_duration_v1",
+    "source_contract_sha256": "677cc3af91d84dfea8e3b4e71b38697fb467059f680678f0b8370a50f2366f16",
+    "source_revision": "8213dbcdace2b62425236af15aa28f5b57f7b958",
+    "base_distribution": "the selected aligned-B K=1 log-normal duration distribution for the same row",
+    "architecture": "one zero-initialized Linear(64,2) map from detached aligned-B time_hidden to bounded positive Kumaraswamy CDF shape parameters",
+    "backbone_change": false,
+    "quantity_path_change": false,
+    "observation_specific_model_branch": false,
+    "dataset_specific_parameter": false
+  },
+  "scope": {
+    "datasets": [
+      "intermittent_frozen_5000",
+      "yellow_trip_hourly",
+      "insta_market_basket"
+    ],
+    "input_splits": [
+      "train",
+      "validation"
+    ],
+    "optimization_split": "train",
+    "selection_split": "validation",
+    "evaluation_scope": "validation_only",
+    "held_out_test": false,
+    "seed": 42,
+    "additional_seeds_in_current_scope": false,
+    "gpu_training_in_current_scope": true,
+    "quantity_predictions_may_change": false,
+    "time_point_predictions_may_change_after_epoch_zero": true
+  },
+  "frozen_source": {
+    "checkpoint_type": "selected_frozen_lognormal_duration",
+    "source_model_role": "B",
+    "model_mode": "eval",
+    "all_source_parameters_trainable": false,
+    "state_digest_must_remain_unchanged": true,
+    "feature_cache": "reuse the exact aligned-B train and validation FrozenFeatureCache",
+    "candidate_input": "FrozenFeatureCache.time_hidden at the last observed history position",
+    "candidate_input_dimension": 64,
+    "candidate_input_detached": true,
+    "target_quantity_masked_during_source_encoding": true,
+    "target_memory_write_masked_during_source_encoding": true,
+    "marks_or_dataset_identity_added_to_calibrator": false
+  },
+  "cdf_transform": {
+    "family": "conditional Kumaraswamy-generated distribution",
+    "base_cdf_symbol": "u=F_B(t|h)",
+    "cdf_formula": "F_C(t|h)=1-(1-u^a(h))^b(h)",
+    "survival_formula": "S_C(t|h)=(1-u^a(h))^b(h)",
+    "density_formula": "f_C(t|h)=a(h)b(h)u^(a(h)-1)(1-u^a(h))^(b(h)-1)f_B(t|h)",
+    "shape_head": "Linear(64,2) with bias",
+    "shape_head_weight_initialization": "exact zeros",
+    "shape_head_bias_initialization": "exact zeros",
+    "raw_shape_outputs": [
+      "raw_a",
+      "raw_b"
+    ],
+    "bounded_log_shape_formula": "log_shape=log(10)*tanh(raw_shape/log(10))",
+    "shape_formula": "shape=exp(bounded_log_shape)",
+    "minimum_shape": 0.1,
+    "maximum_shape": 10.0,
+    "expected_trainable_parameter_count": 130,
+    "same_parameterization_for_every_dataset": true
+  },
+  "identity_contract": {
+    "epoch_zero_shapes": "a(h)=b(h)=1 exactly for every finite hidden row",
+    "epoch_zero_cdf": "F_C(t|h)=F_B(t|h) bitwise in float64",
+    "epoch_zero_survival": "S_C(t|h)=S_B(t|h) bitwise in float64",
+    "epoch_zero_density": "log f_C(t|h)=log f_B(t|h) bitwise in float64",
+    "epoch_zero_positive_integer_mass": "all first-bin, regular-bin and top-code log probabilities equal aligned-B bitwise",
+    "epoch_zero_base_quantile_level": "the requested calibrated quantile maps to the same base quantile level",
+    "epoch_zero_quantity": "aligned-B quantity predictions replayed on the requested runtime device remain bitwise identical before and after calibrator fitting",
+    "cached_quantity_provenance": "a cache created on another GPU is checked against runtime replay with atol=1e-6 and rtol=1e-5; it is not the bitwise preservation gate",
+    "implementation": "add the difference between the transformed and numerically evaluated identity log probabilities to the caller-provided base log probability"
+  },
+  "observation_likelihood": {
+    "latent_distribution_shared": true,
+    "calibrator_shared": true,
+    "observation_operator_is_measurement_semantics_not_a_model_branch": true,
+    "continuous": {
+      "datasets": [
+        "intermittent_frozen_5000"
+      ],
+      "uncensored": "calibrated continuous density in original time units",
+      "right_censored": "calibrated survival at the censor boundary"
+    },
+    "positive_integer": {
+      "datasets": [
+        "yellow_trip_hourly",
+        "insta_market_basket"
+      ],
+      "first_bin": "F_C(1.5)",
+      "regular_bin": "F_C(d+0.5)-F_C(d-0.5), d>=2",
+      "instacart_top_code": "S_C(29.5) when observed code is 30"
+    },
+    "calculation_dtype": "float64",
+    "reduction": "arithmetic mean over admitted target events",
+    "cross_dataset_nll_aggregation": false
+  },
+  "numerical_stability": {
+    "probability_space_materialization_in_likelihood": false,
+    "base_inputs": [
+      "log F_B",
+      "log S_B",
+      "log f_B when a density is required"
+    ],
+    "log_one_minus_exp": "piecewise log1p/expm1",
+    "right_tail_rule": "when log S_B<-30, evaluate log(1-F_B^a) as log(a)+log(S_B) up to the declared float64 asymptotic accuracy",
+    "left_tail_rule": "when a*log(F_B)<-30, evaluate log F_C as log(b)+a*log(F_B) up to the declared float64 asymptotic accuracy",
+    "identity_anchoring": true,
+    "finite_forward_and_gradient_required": true,
+    "stress_base_standardized_time_range": [
+      -40.0,
+      40.0
+    ],
+    "cdf_survival_complement_absolute_tolerance": 1e-10,
+    "integrated_density_absolute_tolerance": 0.0001,
+    "positive_integer_total_mass_absolute_tolerance": 1e-10,
+    "maximum_identity_absolute_tolerance": 0.0
+  },
+  "controls": {
+    "history_free_global_shapes": {
+      "trainable_parameters": "two bounded scalar log-shape residuals",
+      "trainable_parameter_count": 2,
+      "initialization": "a=b=1",
+      "same_objective_optimizer_batch_order_and_selector": true
+    },
+    "same_capacity_permuted_hidden": {
+      "trainable_parameters": "the same Linear(64,2) candidate architecture",
+      "trainable_parameter_count": 130,
+      "initial_state_digest_equal_to_candidate": true,
+      "input": "time_hidden deterministically permuted within each split with an independent CPU torch.Generator reset to seed 42 before any result is inspected",
+      "permutation_formula": "torch.randperm(split_count, generator=torch.Generator(device='cpu').manual_seed(42))",
+      "base_distribution_row_pairing_unchanged": true,
+      "same_objective_optimizer_batch_order_and_selector": true
+    }
+  },
+  "future_optimization_contract": {
+    "shared_across_all_datasets": true,
+    "seed": 42,
+    "optimizer": "AdamW",
+    "learning_rate": 0.001,
+    "weight_decay": 0.0,
+    "batch_size": 8192,
+    "gradient_clip": 1.0,
+    "epochs": 300,
+    "minimum_epochs": 20,
+    "early_stopping_patience": 20,
+    "scheduler": null,
+    "dataset_specific_hyperparameters": false,
+    "result_dependent_retuning": false
+  },
+  "checkpoint_selection": {
+    "candidate_epochs": "0 through the last completed epoch",
+    "monitor": "validation primary proper observation NLL",
+    "rule": "earliest strict finite minimum",
+    "fallback": "epoch 0",
+    "other_metrics_in_selector": false,
+    "resume": "calibrator, AdamW, epoch permutation, history, best state, immutable source and cache identities restore exactly"
+  },
+  "future_acceptance": {
+    "minimum_candidate_improvement_over_aligned_B_primary_nll_each_dataset": 0.005,
+    "maximum_candidate_minus_aligned_A_primary_nll_each_dataset": 0.01,
+    "minimum_candidate_improvement_over_global_control_primary_nll_each_dataset": 0.005,
+    "minimum_candidate_improvement_over_permuted_hidden_control_primary_nll_each_dataset": 0.005,
+    "maximum_continuous_reference_nll_worsening_from_aligned_B_each_dataset": 0.01,
+    "maximum_time_median_mae_relative_worsening_from_aligned_B_each_dataset": 0.02,
+    "maximum_time_median_rmse_relative_worsening_from_aligned_B_each_dataset": 0.02,
+    "quantity_prediction_bitwise_identity_required": true,
+    "source_model_state_digest_identity_required": true,
+    "all_three_datasets_must_pass_before_additional_seeds": true,
+    "held_out_claim": false
+  },
+  "future_execution_policy": {
+    "order": [
+      "reuse the passed v1 full-data e1 evidence for the identical implementation",
+      "Taxi seed42 fresh e300 screening for candidate and both controls",
+      "only after Taxi passes: Intermittent and Instacart seed42 fresh e300 screening",
+      "only after all datasets pass: freeze additional-seed source identities before execution"
+    ],
+    "stop_after_taxi_failure": true,
+    "held_out_test_before_all_validation_gates": false
+  },
+  "source_artifacts": [
+    {
+      "dataset": "intermittent_frozen_5000",
+      "observation_mode": "continuous_lognormal_density",
+      "aligned_B_checkpoint_file_sha256": "4fda86906feaf2793d0038db86e3c2bd9d1cfa5ad6c89f2cf7b91221827cb63d",
+      "aligned_B_model_state_sha256": "0b5c65245a8bc7ac6672ee5fe9980e93491548b2c0d2ccabb1715f7962d413bd",
+      "aligned_B_train_feature_cache_sha256": "b02eadad429bfad0f283edde90be69fa814fa52ffa4d0f78001745aa7e8638d2",
+      "aligned_B_validation_feature_cache_sha256": "d883784a29662be3dd5da1aced9e38b0b991ecba119134b28a1c402977132452",
+      "aligned_B_quantity_prediction_sha256": "3ee22d7a99a200355b3644761b8ca9655529e5ef7f3393ea6e434fb8dfe3a117",
+      "aligned_A_validation_primary_nll": 0.9398979433178132,
+      "aligned_B_validation_primary_nll": 0.787364433804673,
+      "aligned_B_validation_continuous_nll": 0.787364433804673
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "observation_mode": "positive_integer_round_clamp_lognormal",
+      "aligned_B_checkpoint_file_sha256": "8024a070757598ec97110c76226459c5529f822e682a5c1e6b57125f2a91edd3",
+      "aligned_B_model_state_sha256": "2c2118afc151e6187e252edf40634c74fe4b0a4fce20cf3e1fe2f1eb807b1535",
+      "aligned_B_train_feature_cache_sha256": "7c7392f2060f583721eae37df7ea5ab516010cfa5618236204a801e3d740f5c0",
+      "aligned_B_validation_feature_cache_sha256": "bd2f0932388e668ff8769e74dc6ef7e6703b725720d08a9a58f4d6d69212f6c9",
+      "aligned_B_quantity_prediction_sha256": "98d3128c638ee53ec9c7fba8dfe8bfff1f11ea6074daa94dd08540a8ab9acc57",
+      "aligned_A_validation_primary_nll": 0.6506978539230401,
+      "aligned_B_validation_primary_nll": 0.695647425421554,
+      "aligned_B_validation_continuous_nll": 6.536221052720451
+    },
+    {
+      "dataset": "insta_market_basket",
+      "observation_mode": "positive_integer_round_clamp_lognormal",
+      "aligned_B_checkpoint_file_sha256": "441cc3541f77b53036cf3d66bf1ce62d428734806562ba152d1b36fd7ec51ef7",
+      "aligned_B_model_state_sha256": "f5114ed37557eb415720a07309def35b5fea6abb0af9dd2a771975ae8b80eb33",
+      "aligned_B_train_feature_cache_sha256": "d8a4aa618e4b082c650e3fa83d6918725384ab24b92939cea4d630cc0137d976",
+      "aligned_B_validation_feature_cache_sha256": "9200256d7dea87bc24ab6deb92201674965bb1d6b6918c83ddaf3dae92d9cc6f",
+      "aligned_B_quantity_prediction_sha256": "37aa6a1e0189b5717d9eee44f659bc47c0d30cdb7a62894db8961376e03c9c5e",
+      "aligned_A_validation_primary_nll": 2.810709159377374,
+      "aligned_B_validation_primary_nll": 2.8129205141060805,
+      "aligned_B_validation_continuous_nll": 2.8179688597880457
+    }
+  ],
+  "current_completion": {
+    "parent_e1_evidence_reused": true,
+    "taxi_e300_executed": false,
+    "intermittent_e300_executed": false,
+    "instacart_e300_executed": false,
+    "additional_seeds_executed": false,
+    "held_out_test_evaluated": false
+  },
+  "budget_extension": {
+    "parent_contract_id": "aligned_conditional_cdf_calibration_v1",
+    "parent_contract_sha256": "86632f4f7ea22960c8f028cc8e2347986ae837bee29c9fee804fdf25b46c1a52",
+    "mechanical_trigger": "Taxi candidate selected epoch 99 after completing epoch 100 without early stopping",
+    "allowed_change": "maximum epoch budget 100 to 300",
+    "same_initialization": true,
+    "same_optimizer_and_learning_rate": true,
+    "same_epoch_batch_order": true,
+    "same_early_stopping": true,
+    "same_selector_and_acceptance_gates": true,
+    "result_dependent_hyperparameter_change": false,
+    "fresh_replay_from_epoch_zero": true
+  }
+}

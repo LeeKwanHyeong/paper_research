@@ -63,7 +63,9 @@ from simple_lab_test.search.common.runner import (
 )
 
 
-CONTRACT_ID = "aligned_conditional_cdf_calibration_v1"
+CONTRACT_ID_V1 = "aligned_conditional_cdf_calibration_v1"
+CONTRACT_ID_V2 = "aligned_conditional_cdf_calibration_v2_e300"
+CONTRACT_IDS = (CONTRACT_ID_V1, CONTRACT_ID_V2)
 DEFAULT_CONTRACT = PROJECT_ROOT / "paper/contracts/aligned_conditional_cdf_calibration_v1.json"
 DEFAULT_ALIGNED_CONTRACT = PROJECT_ROOT / "paper/contracts/aligned_frozen_lognormal_duration_v1.json"
 SUMMARY_NAME = "summary.json"
@@ -99,7 +101,8 @@ def _is_sha256(value: Any) -> bool:
 
 def validate_contract(contract: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
     require(contract.get("schema_version") == 1, "Contract schema drift")
-    require(contract.get("contract_id") == CONTRACT_ID, "Contract ID drift")
+    contract_id = contract.get("contract_id")
+    require(contract_id in CONTRACT_IDS, "Contract ID drift")
     candidate = contract.get("candidate", {})
     require(candidate.get("single_hypothesis") is True, "Candidate count drift")
     require(candidate.get("source_contract_id") == "aligned_frozen_lognormal_duration_v1", "Source contract drift")
@@ -127,7 +130,7 @@ def validate_contract(contract: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
         "weight_decay": 0.0,
         "batch_size": 8192,
         "gradient_clip": 1.0,
-        "epochs": 100,
+        "epochs": 300 if contract_id == CONTRACT_ID_V2 else 100,
         "minimum_epochs": 20,
         "early_stopping_patience": 20,
         "scheduler": None,
@@ -530,7 +533,7 @@ def fit_module(
     if int(history[-1]["epoch"]) < planned_epochs and not stopped_early:
         return {
             "schema_version": 1,
-            "contract_id": CONTRACT_ID,
+            "contract_id": identity["contract_id"],
             "status": "paused",
             "role": role,
             "completed_epochs": int(history[-1]["epoch"]),
@@ -565,7 +568,7 @@ def fit_module(
     }, selected_path)
     summary = {
         "schema_version": 1,
-        "contract_id": CONTRACT_ID,
+        "contract_id": identity["contract_id"],
         "status": "success",
         "role": role,
         "best_epoch": int(selected_row["epoch"]),
@@ -695,6 +698,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     validation_permutation = deterministic_hidden_permutation(validation_count)
 
     identity = {
+        "contract_id": contract["contract_id"],
         "contract_sha256": sha256_file(args.contract),
         "aligned_contract_sha256": sha256_file(args.aligned_contract),
         "source_revision": args.source_revision,
@@ -800,7 +804,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     acceptance_status = "passed" if qualified_full_fit and all(value is True for value in performance_gates) else "failed" if qualified_full_fit else "not_evaluated_execution_check"
     summary = {
         "schema_version": 1,
-        "contract_id": CONTRACT_ID,
+        "contract_id": contract["contract_id"],
         "contract_sha256": sha256_file(args.contract),
         "source_revision": args.source_revision,
         "status": "success",

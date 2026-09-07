@@ -36,6 +36,7 @@ from paper.scripts.run_hard_lmm_frozen_lognormal_duration import (
 
 
 CONTRACT = ROOT / "paper/contracts/aligned_conditional_cdf_calibration_v1.json"
+CONTRACT_V2 = ROOT / "paper/contracts/aligned_conditional_cdf_calibration_v2_e300.json"
 
 
 def _normal_terms(z: torch.Tensor) -> tuple[torch.Tensor, ...]:
@@ -103,6 +104,23 @@ def test_contract_freezes_one_common_candidate_before_training() -> None:
             if name.endswith("sha256"):
                 assert len(value) == 64
                 assert set(value) <= set("0123456789abcdef")
+
+
+def test_e300_contract_changes_only_the_predeclared_budget() -> None:
+    parent = json.loads(CONTRACT.read_text(encoding="utf-8"))
+    extension = json.loads(CONTRACT_V2.read_text(encoding="utf-8"))
+    assert extension["contract_id"] == "aligned_conditional_cdf_calibration_v2_e300"
+    assert extension["future_optimization_contract"]["epochs"] == 300
+    assert extension["budget_extension"]["parent_contract_sha256"] == (
+        "86632f4f7ea22960c8f028cc8e2347986ae837bee29c9fee804fdf25b46c1a52"
+    )
+    assert extension["budget_extension"]["fresh_replay_from_epoch_zero"] is True
+    for name, value in parent["future_optimization_contract"].items():
+        if name != "epochs":
+            assert extension["future_optimization_contract"][name] == value
+    assert extension["future_acceptance"] == parent["future_acceptance"]
+    assert extension["controls"] == parent["controls"]
+    assert validate_contract(extension)
 
 
 def test_zero_initialization_is_bitwise_identity_across_extreme_tails() -> None:
@@ -396,7 +414,7 @@ def test_fit_runner_checkpoint_resume_and_selected_replay(tmp_path: Path) -> Non
         censor_threshold=None,
         observation_mode=OBSERVATION_LIKELIHOOD_CONTINUOUS,
         settings=settings,
-        identity={"synthetic": True},
+        identity={"synthetic": True, "contract_id": "synthetic_contract"},
     )
     paused = fit_module(
         module=ConditionalKumaraswamyCDFCalibrator(hidden_dim=64),
