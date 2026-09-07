@@ -7,12 +7,14 @@ from types import SimpleNamespace
 
 import numpy as np
 import pytest
+import torch
 
 from paper.scripts.frozen_raw_affine_calibration import FOLD_SALT
 from paper.scripts.run_frozen_raw_affine_calibration import (
     analyze_train,
     analyze_validation,
     persist_calibration_state,
+    reset_cuda_peak_memory,
     validate_contract,
     validate_prerequisite_decision,
     validate_train_result,
@@ -134,6 +136,21 @@ def test_contract_locks_5080_and_five_source_rows():
     wrong["runtime"]["execution_server"] = "5090"
     with pytest.raises(ValueError, match="5080"):
         validate_contract(wrong)
+
+
+def test_cuda_peak_reset_uses_integer_index_for_5080_runtime(monkeypatch):
+    observed = {}
+    monkeypatch.setattr(
+        "paper.scripts.run_frozen_raw_affine_calibration.torch.cuda.set_device",
+        lambda device: observed.setdefault("device", device),
+    )
+    monkeypatch.setattr(
+        "paper.scripts.run_frozen_raw_affine_calibration.torch.cuda.reset_peak_memory_stats",
+        lambda index: observed.setdefault("index", index),
+    )
+    assert reset_cuda_peak_memory(torch.device("cuda:0")) == 0
+    assert observed["index"] == 0
+    assert not isinstance(observed["index"], torch.device)
 
     wrong = contract()
     wrong["acceptance"]["minimum_pooled_oof_rmse_improvement_fraction"] = 0.0

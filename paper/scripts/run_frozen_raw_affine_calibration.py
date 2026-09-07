@@ -371,6 +371,15 @@ def deterministic_environment_audit(expected: Mapping[str, str]) -> dict[str, st
     return observed
 
 
+def reset_cuda_peak_memory(device: torch.device) -> int:
+    """Reset peak accounting with an integer index for 5080 Runtime compatibility."""
+    require(device.type == "cuda", "Peak CUDA reset requires a CUDA device")
+    torch.cuda.set_device(device)
+    device_index = device.index if device.index is not None else torch.cuda.current_device()
+    torch.cuda.reset_peak_memory_stats(device_index)
+    return int(device_index)
+
+
 def load_admitted_frame(path: Path) -> pl.DataFrame:
     frame = (
         pl.scan_parquet(path)
@@ -672,7 +681,7 @@ def prepare_execution(args: argparse.Namespace) -> dict[str, Any]:
         )
         runtime_audit = gpu_preflight(int(runtime["minimum_free_vram_mib"]))
         require(torch.cuda.is_available(), "CUDA is unavailable")
-        torch.cuda.reset_peak_memory_stats(device)
+        runtime_audit["cuda_device_index"] = reset_cuda_peak_memory(device)
     else:
         require(args.smoke, "CPU execution is allowed only for smoke tests")
         runtime_audit = {"gpu_name": None, "cpu_smoke": True}
