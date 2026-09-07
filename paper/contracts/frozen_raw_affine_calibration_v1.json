@@ -1,0 +1,428 @@
+{
+  "contract_id": "frozen_raw_affine_calibration_v1",
+  "scope": {
+    "status": "frozen_before_real_data_execution",
+    "created_on": "2026-09-07",
+    "repository": "paper_research",
+    "source_branch": "codex/raw-affine-calibration",
+    "implementation_start_revision": "9440609673cfdf7bcfec5c77d7f677affd04ae49",
+    "input_splits": [
+      "train",
+      "validation"
+    ],
+    "optimization_split": "train",
+    "evaluation_scope": "validation_only",
+    "held_out_test": false,
+    "seed": 42,
+    "research_question": "Can a train-only monotone affine correction of frozen raw-quantity predictions remove the remaining raw-scale bias without changing the Hard-LMM backbone, time path, or causal inputs?",
+    "candidate_classification": "output_interface_ablation",
+    "candidate_is_backbone_change": false,
+    "candidate_is_fresh_backbone_training": false,
+    "permitted_claims": [
+      "train-only raw-output calibration effect",
+      "raw-scale point-prediction alignment effect",
+      "calibrated end-to-end predictor comparison when every backbone receives the same fitting and activation rule"
+    ],
+    "forbidden_claims": [
+      "Hard-LMM backbone improvement caused by this calibrator",
+      "memory retrieval improvement caused by this calibrator",
+      "universal superiority from seed42 validation alone",
+      "held-out generalization before the held-out lock is separately opened"
+    ],
+    "prior_evidence": {
+      "frozen_logit_calibration": "paper/results/count_aware_hard_lmm_frozen_probe_20260903/README.md",
+      "constant_bias_diagnostic": "paper/results/hard_lmm_probe_mechanism_diagnostics_20260903/README.md",
+      "readout_factorial": "paper/results/hard_lmm_readout_factorial_20260903/README.md",
+      "distinction": "The prior candidates learned bounded or unbounded corrections in quantity-logit space from older joint-selected checkpoints and did not optimize raw MSE. This candidate fits two parameters directly in raw-quantity space from the later raw-RMSE-selected checkpoints. It revisits the same global-bias hypothesis and is not a new memory mechanism."
+    },
+    "evaluation_order": "validation is unavailable until B passes the train-only necessary condition on all three datasets",
+    "held_out_test_locked": true,
+    "additional_seeds_authorized": false
+  },
+  "calibration": {
+    "name": "frozen_monotone_affine_raw_quantity",
+    "base_prediction": "q_base is the frozen source checkpoint's nonnegative raw-quantity point prediction",
+    "formula": "max(0, a * q_base + b)",
+    "slope_constraint": "a > 0",
+    "fit": "positive-slope ordinary least squares",
+    "fit_definition": "Compute centered float64 ordinary least squares for the unclipped affine map, project a nonpositive slope to the fixed minimum slope, refit the unpenalized intercept at that slope, then apply the nonnegative projection only at prediction time.",
+    "fit_objective": "unclipped affine raw-scale SSE; this is not claimed to be the optimum of the subsequently clipped prediction SSE",
+    "numeric_dtype": "float64",
+    "minimum_slope": 1e-12,
+    "source_model_frozen": true,
+    "manual_dataset_hyperparameters": false,
+    "validation_used_for_fit_or_activation": false,
+    "automatic_retry_or_alternate_fit": false,
+    "fold_salt": "frozen_raw_affine_calibration_v1:20260907",
+    "fitted_parameters": [
+      "a",
+      "b"
+    ],
+    "identity": {
+      "a": 1.0,
+      "b": 0.0,
+      "require_exact_raw_quantity_output_identity": true,
+      "require_exact_time_output_identity": true
+    },
+    "inputs_at_inference": [
+      "frozen source raw-quantity prediction q_base"
+    ],
+    "forbidden_inputs": [
+      "validation target quantity",
+      "held-out target quantity",
+      "target delta-time",
+      "future event",
+      "padding position",
+      "dataset-specific manually tuned coefficient",
+      "backbone-specific manually tuned coefficient"
+    ],
+    "fit_population": "all canonical train next-event targets and their causally generated source predictions",
+    "event_weighting": "one equal weight per canonical next-event target, matching the official raw RMSE aggregation",
+    "fit_failure_policy": "record failure and stop; do not change the fit, minimum slope, folds, or activation rule",
+    "series_disjoint_two_fold": {
+      "role": "necessary_condition_for_calibrator_transfer_only",
+      "limitation": "The frozen source checkpoint was trained on the whole train split, so these folds do not constitute an independently trained backbone comparison.",
+      "assignment_unit": "canonical dataset series index derived from the sorted series identifier; every target from one series remains in one fold",
+      "assignment": "Normalize each canonical series identifier to a typed token, then fold = uint64(first eight bytes of SHA256(UTF8(fold_salt + ':' + token)), big-endian) mod 2",
+      "assignment_shared_across_sources": true,
+      "assignment_digest_required": true,
+      "directions": [
+        "fit_fold_0_evaluate_fold_1",
+        "fit_fold_1_evaluate_fold_0"
+      ],
+      "validation_must_not_be_loaded_before_B_passes": true,
+      "source_activation_rule": "activate calibration only when both held-out train-fold raw RMSE values are strictly lower than identity, combined cross-fitted raw RMSE improves by at least 1%, and combined cross-fitted body MAE and >p99 MAE regressions are each at most 2%; otherwise use identity",
+      "B_required_to_activate_on_every_dataset": true,
+      "failure_action_for_B": "stop before validation if B is inactive on any dataset",
+      "baseline_policy": "Instacart RMTPP and THP use the identical activation rule; identity fallback is an outcome of that common train-only rule, not a validation selection"
+    },
+    "final_fit": {
+      "condition": "run only after the source passes its train-only two-fold activation rule",
+      "population": "all canonical train next-event targets",
+      "selection": "one deterministic full-train OLS fit; no epoch selection and no validation-based identity fallback",
+      "saved_state": [
+        "a",
+        "b",
+        "unconstrained slope and slope-bound flag",
+        "unclipped affine SSE, clipped SSE, and clamp count",
+        "contract SHA256",
+        "source checkpoint file and state SHA256",
+        "data, split, train-target identity and train-target quantity SHA256",
+        "series-fold assignment SHA256"
+      ]
+    },
+    "unchanged_paths": [
+      "history encoder",
+      "Hard-LMM memory and top-4 retrieval",
+      "query, key, and value representations",
+      "quantity head parameters",
+      "time head parameters and outputs",
+      "base checkpoint selection",
+      "training data split and target population"
+    ],
+    "checkpoint_and_contract_tests": [
+      "identity a=1 b=0 reproduces every frozen raw-quantity prediction exactly",
+      "identity and fitted calibration leave every time output and per-event Time NLL exactly unchanged within the same 5080 replay",
+      "source state SHA256 is unchanged before and after extraction and fitting",
+      "the deterministic OLS fit creates no optimizer or source-model gradient path",
+      "target and padding permutation cannot change inference predictions when q_hat is held fixed",
+      "all fitted parameters, predictions, and losses are finite on observed and declared stress inputs",
+      "a is strictly positive and every q_cal is nonnegative without an undeclared upper cap",
+      "saved calibration state restores the exact parameters and prediction vector",
+      "corrupt, partial, wrong-source, wrong-dataset, or wrong-fold states are rejected",
+      "output directories are never overwritten and no automatic retry changes the prospective fit"
+    ]
+  },
+  "acceptance": {
+    "minimum_pooled_oof_rmse_improvement_fraction": 0.01,
+    "maximum_overall_mae_regression_fraction": 0.02,
+    "maximum_body_mae_regression_fraction": 0.02,
+    "maximum_tail_mae_regression_fraction": 0.02,
+    "decision_precision": "full_precision_without_metric_rounding",
+    "quantity_strata": "train-only p50, p90, p95, and p99 boundaries pinned per dataset below",
+    "no_cross_dataset_raw_scale_pooling": true,
+    "cross_dataset_summary": "report dataset-wise relative changes and their unweighted macro mean only; do not pool raw errors across datasets",
+    "train_only_necessary_condition": {
+      "B_fold_directions_required": 6,
+      "B_fold_directions_total": 6,
+      "required_per_direction": {
+        "calibrated_raw_rmse_vs_identity": "strictly_lower",
+        "finite_metrics": true,
+        "identical_target_ids_and_counts": true
+      },
+      "required_on_combined_cross_fitted_predictions_per_dataset": {
+        "raw_rmse_relative_improvement_minimum": 0.01,
+        "body_mae_relative_regression_maximum": 0.02,
+        "gt_p99_mae_relative_regression_maximum": 0.02
+      },
+      "failure_action": "stop before loading or evaluating validation predictions"
+    },
+    "B_three_dataset_validation_gate": {
+      "all_datasets_must_pass": true,
+      "required_on_each_dataset": {
+        "raw_rmse_vs_uncalibrated_B": "strictly_lower",
+        "overall_mae_relative_regression_vs_uncalibrated_B_maximum": 0.02,
+        "body_mae_relative_regression_vs_uncalibrated_B_maximum": 0.02,
+        "gt_p99_mae_relative_regression_vs_uncalibrated_B_maximum": 0.02,
+        "per_event_time_outputs_and_time_nll_vs_uncalibrated_B": "exactly_identical",
+        "validation_target_ids_and_counts": "exactly_identical",
+        "all_metrics": "finite"
+      },
+      "required_reporting": [
+        "raw RMSE",
+        "overall MAE",
+        "body <= train p95 MAE",
+        "> train p99 MAE",
+        "log1p MSE",
+        "mean signed raw error",
+        "all five train-quantity strata",
+        "series-clustered paired bootstrap interval for MAE and squared-error deltas"
+      ],
+      "failure_action": "reject the common calibration candidate and do not reinterpret a dataset-wise subset as a common improvement"
+    },
+    "instacart_fairness_gate": {
+      "prerequisite": "B passes the three-dataset validation gate",
+      "comparison_rows": [
+        "B with its prospectively fitted calibration pipeline",
+        "RMTPP with the identical calibration fitting and train-only activation pipeline",
+        "THP with the identical calibration fitting and train-only activation pipeline"
+      ],
+      "required": {
+        "B_raw_rmse_vs_RMTPP": "strictly_lower",
+        "B_overall_mae_vs_RMTPP": "strictly_lower",
+        "B_raw_rmse_vs_THP": "strictly_lower",
+        "B_overall_mae_vs_THP": "strictly_lower",
+        "identical_validation_target_ids_and_counts": true,
+        "all_metrics": "finite"
+      },
+      "interpretation": "A pass supports a calibrated-predictor comparison only. It does not attribute the gain to the Hard-LMM backbone because calibration is an output-interface ablation.",
+      "failure_action": "do not claim calibrated B superiority on Instacart and do not add seeds or open held-out test"
+    },
+    "seed42_limit": "Every gate in this contract is exploratory seed42 validation evidence. Additional seeds require a separately frozen extension contract.",
+    "held_out_test": "locked and unavailable for fitting, activation, selection, threshold changes, or evaluation"
+  },
+  "runtime": {
+    "execution_server": "5080",
+    "execution_host_role": "5080_only",
+    "required_gpu_name_contains": "RTX 5080",
+    "source_prediction_extraction_device": "cuda:0",
+    "calibration_fit_host": "same_5080_host",
+    "calibration_fit_device": "cpu_float64",
+    "other_gpu_hosts_allowed": false,
+    "fresh_backbone_training": false,
+    "maximum_base_epochs": 0,
+    "minimum_free_vram_mib": 12000,
+    "inference_batch_size": 128,
+    "smoke_targets_per_fold": 8,
+    "paired_bootstrap_seed": 20260907,
+    "paired_bootstrap_replicates": 500,
+    "paired_bootstrap_draw_chunk_size": 8192,
+    "require_no_existing_compute_process": true,
+    "display_process_is_not_a_compute_process": true,
+    "deterministic_environment": {
+      "CUDA_VISIBLE_DEVICES": "0",
+      "PYTHONHASHSEED": "42",
+      "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1"
+    },
+    "execution_order": [
+      "verify source, contract, data, split, target identities, and checkpoint file/state SHA256",
+      "run local unit and contract tests",
+      "run train-only 5080 CUDA extraction smoke and real-batch identity/finite checks for B on all three datasets",
+      "extract full train predictions for B on all three datasets",
+      "evaluate the B series-disjoint two-fold train-only necessary condition",
+      "if and only if all B train-only gates pass, run B validation CUDA smoke, fit B on full train, and evaluate the separate three-dataset validation gate",
+      "if and only if the B validation gate passes, extract and fit Instacart RMTPP and THP with the same pipeline and evaluate the fairness gate",
+      "write an independent artifact audit and stop"
+    ],
+    "source_transfer": "committed source and pinned checkpoint artifacts only, each verified by SHA256 in an isolated 5080 path",
+    "overwrite_existing_artifacts": false,
+    "automatic_retry": false,
+    "held_out_access": false
+  },
+  "datasets": [
+    {
+      "dataset": "intermittent_frozen_5000",
+      "data_path": "sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+      "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+      "split_manifest_path": "sample_data/intermittent_v2/intermittent_frozen_5000_split_manifest.json",
+      "split_manifest_sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04",
+      "lookback": 520,
+      "max_sequence_length": 256,
+      "expected_train_targets": 393824,
+      "expected_validation_targets": 86285,
+      "expected_train_target_identity_sha256": "fb8737489bc18e528adc322e2e55e26fcc5793aa6ff8021d93ceac98d7768aed",
+      "expected_train_target_quantity_sha256": "c4a9c3721d3861c190e81abe35156488f545b00c8ddbbed4022a9a82a4b3a215",
+      "expected_validation_target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+      "expected_validation_target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385",
+      "train_quantity_boundaries": {
+        "p50": 2.0,
+        "p90": 31.0,
+        "p95": 46.0,
+        "p99": 187.0
+      },
+      "sources": {
+        "B": {
+          "backbone": "titantpp",
+          "quantity_variant": "count_only_log_regression",
+          "seed": 42,
+          "checkpoint_selection": "best_validation_raw_quantity_rmse",
+          "training_source_revision": "f75243473adc25d622319dbca9bda7e076d8240f",
+          "training_source_revision_history": [
+            "f75243473adc25d622319dbca9bda7e076d8240f"
+          ],
+          "training_history_sha256": "a6ac84b7a9936f048a5b70976c82ae2145eef3d93ddf567830f2ec8b0bc9c332",
+          "checkpoint_file_sha256": "63d38ee4401c208dcfa24206682edaca56e2d2a5ca1037b09decdc2ffa567c08",
+          "checkpoint_state_sha256": "4b984d415d83a479fdacb49b12d964afa668adad136511590a54293df763c0d0",
+          "best_epoch": 77,
+          "completed_epochs": 117,
+          "validation_reference_metrics": {
+            "raw_rmse": 1.4995550721471171,
+            "overall_mae": 0.6043404183562111,
+            "body_mae": 0.4657896038725777,
+            "gt_p99_mae": 5.148108011792356,
+            "log1p_mse": 0.0062376342020249624,
+            "time_nll": -3.483793693042792
+          }
+        }
+      }
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "data_path": "sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+      "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+      "split_manifest_path": "sample_data/new_york_taxi/yellow_trip_hourly_split_manifest.json",
+      "split_manifest_sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85",
+      "lookback": 168,
+      "max_sequence_length": 256,
+      "expected_train_targets": 38393,
+      "expected_validation_targets": 8268,
+      "expected_train_target_identity_sha256": "fc6453af5a9a34c93dd3f299cd545c9ab946be11752ee001f38055e52cc9e637",
+      "expected_train_target_quantity_sha256": "bbabe4e040831f05bc96680afdb4c45a1856673e418bdd1db9495cda3f693680",
+      "expected_validation_target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+      "expected_validation_target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd",
+      "train_quantity_boundaries": {
+        "p50": 7.0,
+        "p90": 686.0,
+        "p95": 1562.0,
+        "p99": 3449.0
+      },
+      "sources": {
+        "B": {
+          "backbone": "titantpp",
+          "quantity_variant": "count_only_log_regression",
+          "seed": 42,
+          "checkpoint_selection": "best_validation_raw_quantity_rmse",
+          "training_source_revision": "f75243473adc25d622319dbca9bda7e076d8240f",
+          "training_source_revision_history": [
+            "f75243473adc25d622319dbca9bda7e076d8240f"
+          ],
+          "training_history_sha256": "4474a21ee9cd0da8827c98ed276fbe20450b4911c7a3524c8355ec184de9e23f",
+          "checkpoint_file_sha256": "46b456816dbc3c36e4f9c115c05b480fc030a8c2004646d179416d528bd897d5",
+          "checkpoint_state_sha256": "eddc8b4a11b233606bf74508f0ef721e05e55bbcb047d18edab4aa61f2f43c41",
+          "best_epoch": 45,
+          "completed_epochs": 85,
+          "validation_reference_metrics": {
+            "raw_rmse": 88.19499665350457,
+            "overall_mae": 28.67402025115017,
+            "body_mae": 18.997478121185097,
+            "gt_p99_mae": 332.76974448674844,
+            "log1p_mse": 0.3114161541706027,
+            "time_nll": 1.473390626529593
+          }
+        }
+      }
+    },
+    {
+      "dataset": "insta_market_basket",
+      "data_path": "sample_data/insta_market_basket/instacart_marked_target_with_split.parquet",
+      "data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+      "split_manifest_path": "sample_data/insta_market_basket/instacart_marked_target_split_manifest.json",
+      "split_manifest_sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d",
+      "lookback": 52,
+      "max_sequence_length": 64,
+      "expected_train_targets": 1991192,
+      "expected_validation_targets": 503733,
+      "expected_train_target_identity_sha256": "c361f5e9904c25f18c91007f6e1209518a02fb755799e81c8300ee759b2a1210",
+      "expected_train_target_quantity_sha256": "07e98693d5ac26caeaeb3c60d6d31fad21ab8f1e40ac649f231ac299963817d8",
+      "expected_validation_target_identity_sha256": "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8",
+      "expected_validation_target_quantity_sha256": "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184",
+      "train_quantity_boundaries": {
+        "p50": 8.0,
+        "p90": 20.0,
+        "p95": 25.0,
+        "p99": 35.0
+      },
+      "sources": {
+        "B": {
+          "backbone": "titantpp",
+          "quantity_variant": "count_only_log_regression",
+          "seed": 42,
+          "checkpoint_selection": "best_validation_raw_quantity_rmse",
+          "training_source_revision": "f75243473adc25d622319dbca9bda7e076d8240f",
+          "training_source_revision_history": [
+            "f75243473adc25d622319dbca9bda7e076d8240f"
+          ],
+          "training_history_sha256": "a54b5f0d5ccec68e9bc2a93e37dd825e54ed14c6c27c5c0ec752d4e84c833bb8",
+          "checkpoint_file_sha256": "e594f8df0dcd66249c3724063f44eee3de213bc83a780ca81fdf39a094bfed07",
+          "checkpoint_state_sha256": "a74e1f3055b03db5ac85adf2fdb63711890ea9d06449965e3ca749aefccc2f02",
+          "best_epoch": 72,
+          "completed_epochs": 112,
+          "validation_reference_metrics": {
+            "raw_rmse": 5.872216930452246,
+            "overall_mae": 3.9937810783167014,
+            "body_mae": 3.438601503150614,
+            "gt_p99_mae": 21.91779476530588,
+            "log1p_mse": 0.24459577057809248,
+            "time_nll": 3.2155228955007256
+          }
+        },
+        "rmtpp": {
+          "backbone": "rmtpp",
+          "quantity_variant": "count_only_log_regression",
+          "seed": 42,
+          "checkpoint_selection": "best_validation_raw_quantity_rmse",
+          "training_source_revision": "9440609673cfdf7bcfec5c77d7f677affd04ae49",
+          "training_source_revision_history": [
+            "9440609673cfdf7bcfec5c77d7f677affd04ae49"
+          ],
+          "training_history_sha256": "2cdf1e7968547931f1235d260586e44e99a323fb09b6a75e10c036a048972e13",
+          "checkpoint_file_sha256": "64ec26afba13d3117e0d3cf0cc1c554d2a6de10b5a4181834dd0096fd290aacc",
+          "checkpoint_state_sha256": "2af7eb20d81c802096963c6301fa8dfd46cdb7ba44502d978ad124a4cfb4fd38",
+          "best_epoch": 40,
+          "completed_epochs": 80,
+          "validation_reference_metrics": {
+            "raw_rmse": 5.83696080037417,
+            "overall_mae": 3.9858414001441065,
+            "body_mae": 3.4402351166546032,
+            "log1p_mse": 0.24521291886620125,
+            "time_nll": 3.2173605134536647
+          }
+        },
+        "thp": {
+          "backbone": "thp",
+          "quantity_variant": "count_only_log_regression",
+          "seed": 42,
+          "checkpoint_selection": "best_validation_raw_quantity_rmse",
+          "training_source_revision": "9440609673cfdf7bcfec5c77d7f677affd04ae49",
+          "training_source_revision_history": [
+            "9440609673cfdf7bcfec5c77d7f677affd04ae49"
+          ],
+          "training_history_sha256": "57b621c5f958d4d2e4b3b9ccd6bcb446457dfdb76b355451365b91214df36e40",
+          "checkpoint_file_sha256": "f52310f70e19bc2a9e7f7b63d256e684b9aee7daa8711e5505e4521f3582df37",
+          "checkpoint_state_sha256": "6c9a686c27a89e0ded3ccc8ee2cb920a137a526081aa14e87d516e7343b9883b",
+          "best_epoch": 50,
+          "completed_epochs": 90,
+          "validation_reference_metrics": {
+            "raw_rmse": 5.8523418409991885,
+            "overall_mae": 3.9910029830490985,
+            "body_mae": 3.4544411283986367,
+            "log1p_mse": 0.2460070880080656,
+            "time_nll": 3.2225564488230436
+          }
+        }
+      }
+    }
+  ]
+}
