@@ -15,6 +15,23 @@ sys.path.insert(0, str(ROOT))
 
 from models.TPPs.ConditionalCDFCalibrator import (
     ConditionalKumaraswamyCDFCalibrator,
+    GlobalKumaraswamyCDFCalibrator,
+)
+from paper.scripts.run_aligned_causal_duration_scale_adapter import (
+    primary_observation_log_likelihood,
+)
+from paper.scripts.run_aligned_conditional_cdf_calibration import (
+    calibrated_observation_log_likelihood,
+    calibrated_time_median,
+    deterministic_hidden_permutation,
+    fit_module,
+    validate_contract,
+)
+from paper.scripts.run_aligned_causal_duration_scale_adapter import FrozenBaseTimeCache
+from paper.scripts.run_hard_lmm_time_head_refit import FrozenFeatureCache
+from paper.scripts.run_hard_lmm_frozen_lognormal_duration import (
+    OBSERVATION_LIKELIHOOD_CONTINUOUS,
+    OBSERVATION_LIKELIHOOD_POSITIVE_INTEGER,
 )
 
 
@@ -73,8 +90,9 @@ def test_contract_freezes_one_common_candidate_before_training() -> None:
     assert contract["future_optimization_contract"]["dataset_specific_hyperparameters"] is False
     assert contract["future_optimization_contract"]["result_dependent_retuning"] is False
     assert contract["scope"]["held_out_test"] is False
-    assert contract["scope"]["gpu_training_in_current_scope"] is False
-    assert contract["current_completion"]["training_runner_implemented"] is False
+    assert contract["scope"]["gpu_training_in_current_scope"] is True
+    assert contract["current_completion"]["training_runner_implemented"] is True
+    assert validate_contract(contract)
     assert [row["dataset"] for row in contract["source_artifacts"]] == [
         "intermittent_frozen_5000",
         "yellow_trip_hourly",
@@ -236,3 +254,165 @@ def test_invalid_base_probability_contract_fails_closed() -> None:
             base_log_survival=torch.log(torch.tensor([0.5, 0.5])),
             hidden=hidden,
         )
+
+
+def test_global_control_has_two_parameters_and_exact_identity() -> None:
+    model = GlobalKumaraswamyCDFCalibrator(hidden_dim=64)
+    assert sum(parameter.numel() for parameter in model.parameters()) == 2
+    hidden = torch.randn(19, 64)
+    z = torch.linspace(-10.0, 10.0, hidden.shape[0], dtype=torch.float64)
+    base_log_cdf, base_log_survival, base_log_density = _normal_terms(z)
+    log_cdf, log_survival = model.transformed_log_cdf_survival(
+        base_log_cdf=base_log_cdf,
+        base_log_survival=base_log_survival,
+        hidden=hidden,
+    )
+    log_density = model.transformed_log_density(
+        base_log_density=base_log_density,
+        base_log_cdf=base_log_cdf,
+        base_log_survival=base_log_survival,
+        hidden=hidden,
+    )
+    assert torch.equal(log_cdf, base_log_cdf)
+    assert torch.equal(log_survival, base_log_survival)
+    assert torch.equal(log_density, base_log_density)
+
+
+@pytest.mark.parametrize(
+    ("mode", "targets", "censored"),
+    [
+        (
+            OBSERVATION_LIKELIHOOD_CONTINUOUS,
+            torch.tensor([0.25, 1.0, 7.5, 30.0], dtype=torch.float64),
+            torch.tensor([False, False, False, True]),
+        ),
+        (
+            OBSERVATION_LIKELIHOOD_POSITIVE_INTEGER,
+            torch.tensor([1.0, 2.0, 17.0, 30.0], dtype=torch.float64),
+            torch.tensor([False, False, False, True]),
+        ),
+    ],
+)
+def test_runner_epoch_zero_likelihood_matches_aligned_B_bitwise(
+    mode: str, targets: torch.Tensor, censored: torch.Tensor
+) -> None:
+    torch.manual_seed(11)
+    model = _model()
+    hidden = torch.randn(targets.numel(), 64)
+    location = torch.tensor([-0.3, 0.0, 0.7, 1.2], dtype=torch.float64)
+    sigma = torch.tensor([0.3, 0.6, 1.1, 1.8], dtype=torch.float64)
+    primary, _ = calibrated_observation_log_likelihood(
+        module=model,
+        hidden=hidden,
+        location=location,
+        sigma=sigma,
+        target_dt=targets,
+        time_scale=1.7,
+        is_right_censored=censored,
+        observation_mode=mode,
+    )
+    base = primary_observation_log_likelihood(
+        location=location,
+        sigma=sigma,
+        target_dt=targets,
+        time_scale=1.7,
+        is_right_censored=censored,
+        observation_likelihood_mode=mode,
+    )
+    assert torch.equal(primary, base)
+
+
+def test_runner_epoch_zero_median_matches_base_bitwise() -> None:
+    model = _model()
+    hidden = torch.randn(31, 64)
+    location = torch.linspace(-1.0, 1.0, 31, dtype=torch.float64)
+    sigma = torch.linspace(0.1, 2.0, 31, dtype=torch.float64)
+    observed = calibrated_time_median(
+        module=model,
+        hidden=hidden,
+        location=location,
+        sigma=sigma,
+        time_scale=3.0,
+    )
+    expected = 3.0 * torch.exp(location)
+    assert torch.equal(observed, expected)
+
+
+def test_permuted_hidden_control_is_split_local_and_reproducible() -> None:
+    first = deterministic_hidden_permutation(257)
+    second = deterministic_hidden_permutation(257)
+    validation = deterministic_hidden_permutation(31)
+    assert torch.equal(first, second)
+    assert torch.equal(torch.sort(first).values, torch.arange(257))
+    assert torch.equal(torch.sort(validation).values, torch.arange(31))
+    assert not torch.equal(first, torch.arange(257))
+
+
+def test_fit_runner_checkpoint_resume_and_selected_replay(tmp_path: Path) -> None:
+    torch.manual_seed(19)
+    train_count, validation_count = 43, 17
+
+    def build(count: int) -> tuple[FrozenFeatureCache, FrozenBaseTimeCache]:
+        hidden = torch.randn(count, 64)
+        location = 0.15 * hidden[:, 0].to(torch.float64)
+        sigma = torch.full((count,), 0.8, dtype=torch.float64)
+        target = torch.exp(location + 0.3 * hidden[:, 1].to(torch.float64)).clamp_min(0.05)
+        feature = FrozenFeatureCache(time_hidden=hidden, target_dt=target)
+        base = FrozenBaseTimeCache(
+            location=location,
+            sigma=sigma,
+            median=torch.exp(location),
+            target_dt=target,
+        )
+        feature.validate(require_quantity=False)
+        base.validate()
+        return feature, base
+
+    train_cache, train_base = build(train_count)
+    validation_cache, validation_base = build(validation_count)
+    settings = {
+        "seed": 42,
+        "learning_rate": 0.001,
+        "weight_decay": 0.0,
+        "batch_size": 16,
+        "gradient_clip": 1.0,
+        "epochs": 2,
+        "minimum_epochs": 20,
+        "early_stopping_patience": 20,
+    }
+    common = dict(
+        role="candidate",
+        output_dir=tmp_path / "candidate",
+        train_cache=train_cache,
+        validation_cache=validation_cache,
+        train_base_cache=train_base,
+        validation_base_cache=validation_base,
+        train_count=train_count,
+        validation_count=validation_count,
+        train_permutation=None,
+        validation_permutation=None,
+        device=torch.device("cpu"),
+        time_scale=1.0,
+        censor_threshold=None,
+        observation_mode=OBSERVATION_LIKELIHOOD_CONTINUOUS,
+        settings=settings,
+        identity={"synthetic": True},
+    )
+    paused = fit_module(
+        module=ConditionalKumaraswamyCDFCalibrator(hidden_dim=64),
+        run_epoch_limit=1,
+        **common,
+    )
+    assert paused["status"] == "paused"
+    assert paused["completed_epochs"] == 1
+    completed = fit_module(
+        module=ConditionalKumaraswamyCDFCalibrator(hidden_dim=64),
+        **common,
+    )
+    assert completed["status"] == "success"
+    assert completed["completed_epochs"] == 2
+    replay = fit_module(
+        module=ConditionalKumaraswamyCDFCalibrator(hidden_dim=64),
+        **common,
+    )
+    assert replay == completed

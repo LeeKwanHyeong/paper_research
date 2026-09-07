@@ -255,4 +255,37 @@ class ConditionalKumaraswamyCDFCalibrator(nn.Module):
         return level
 
 
-__all__ = ["ConditionalKumaraswamyCDFCalibrator"]
+class GlobalKumaraswamyCDFCalibrator(ConditionalKumaraswamyCDFCalibrator):
+    """History-free two-scalar control with the identical CDF transform."""
+
+    def __init__(
+        self,
+        *,
+        hidden_dim: int,
+        max_shape_ratio: float = ConditionalKumaraswamyCDFCalibrator.DEFAULT_MAX_SHAPE_RATIO,
+    ) -> None:
+        nn.Module.__init__(self)
+        if hidden_dim <= 0:
+            raise ValueError("hidden_dim must be positive")
+        if not math.isfinite(max_shape_ratio) or max_shape_ratio <= 1.0:
+            raise ValueError("max_shape_ratio must be finite and exceed one")
+        self.hidden_dim = int(hidden_dim)
+        self.max_shape_ratio = float(max_shape_ratio)
+        self.raw_log_shapes = nn.Parameter(torch.zeros(self.OUTPUT_SIZE))
+
+    def bounded_log_shapes(self, hidden: torch.Tensor) -> torch.Tensor:
+        self._validate_hidden(hidden)
+        limit = math.log(self.max_shape_ratio)
+        values = limit * torch.tanh(
+            self.raw_log_shapes.to(torch.float64) / limit
+        )
+        result = values.unsqueeze(0).expand(hidden.shape[0], -1)
+        if bool((~torch.isfinite(result)).any()):
+            raise FloatingPointError("non-finite bounded global log shape")
+        return result
+
+
+__all__ = [
+    "ConditionalKumaraswamyCDFCalibrator",
+    "GlobalKumaraswamyCDFCalibrator",
+]

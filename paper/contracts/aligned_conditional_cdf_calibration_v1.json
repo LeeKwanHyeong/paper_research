@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract_id": "aligned_conditional_cdf_calibration_v1",
-  "status": "local_contract_and_numerical_feasibility_only",
+  "status": "implementation_ready_validation_only",
   "purpose": "Test one dataset-agnostic conditional CDF calibration layer on immutable aligned-B duration distributions while preserving the complete quantity path.",
   "candidate": {
     "name": "aligned_B_conditional_kumaraswamy_cdf_calibrator",
@@ -32,7 +32,7 @@
     "held_out_test": false,
     "seed": 42,
     "additional_seeds_in_current_scope": false,
-    "gpu_training_in_current_scope": false,
+    "gpu_training_in_current_scope": true,
     "quantity_predictions_may_change": false,
     "time_point_predictions_may_change_after_epoch_zero": true
   },
@@ -136,7 +136,8 @@
       "trainable_parameters": "the same Linear(64,2) candidate architecture",
       "trainable_parameter_count": 130,
       "initial_state_digest_equal_to_candidate": true,
-      "input": "time_hidden deterministically permuted within each split with seed 42 before any result is inspected",
+      "input": "time_hidden deterministically permuted within each split with an independent CPU torch.Generator reset to seed 42 before any result is inspected",
+      "permutation_formula": "torch.randperm(split_count, generator=torch.Generator(device='cpu').manual_seed(42))",
       "base_distribution_row_pairing_unchanged": true,
       "same_objective_optimizer_batch_order_and_selector": true
     }
@@ -231,7 +232,7 @@
     "reference_module_implemented": true,
     "local_numerical_tests_required": true,
     "local_numerical_tests_passed": true,
-    "training_runner_implemented": false,
+    "training_runner_implemented": true,
     "cuda_e1_executed": false,
     "full_fit_executed": false,
     "held_out_test_evaluated": false
