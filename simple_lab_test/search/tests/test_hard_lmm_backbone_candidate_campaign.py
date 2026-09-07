@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import json
+
+from paper.scripts.count_aware_tpp_backbone.constants import MODEL_ROLES
 from paper.scripts.run_hard_lmm_backbone_candidate_campaign import (
+    CONTRACT_PATH,
     DATASETS,
     evaluate_gate,
     job_command,
@@ -15,8 +19,14 @@ def _candidate(host: str) -> dict[str, str]:
         }
     return {
         "backbone": "titantpp_hard_memory_film",
-        "model_role": "hard_lmm_memory_film_candidate",
+        "model_role": "hard_lmm_memory_film",
     }
+
+
+def test_frozen_candidate_roles_are_accepted_by_training_cli() -> None:
+    contract = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
+    for candidate in contract["candidates"].values():
+        assert candidate["model_role"] in MODEL_ROLES
 
 
 def test_job_command_fixes_candidate_selector_and_test_lock_inputs(tmp_path) -> None:
