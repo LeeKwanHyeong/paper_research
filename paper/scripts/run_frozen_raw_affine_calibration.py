@@ -1295,7 +1295,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "completed_at": utc_now(),
     }
     save_json(args.output_dir / "result.json", result)
-    save_json(status_path, {"status": "success", "result": "result.json", "completed_at": utc_now()})
+    save_json(
+        context["status_path"],
+        {"status": "success", "result": "result.json", "completed_at": utc_now()},
+    )
     return result
 
 

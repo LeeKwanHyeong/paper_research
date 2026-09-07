@@ -389,6 +389,71 @@ def test_source_manifest_requires_an_empty_sample_data_runtime_sentinel(
         verify_source_manifest(manifest_path, source_revision="f" * 40)
 
 
+def test_train_run_writes_success_status_to_the_prepared_context_path(
+    monkeypatch, tmp_path
+):
+    import paper.scripts.run_frozen_raw_affine_calibration as runner
+
+    class FrozenModel:
+        def cpu(self):
+            return self
+
+    output_dir = tmp_path / "output"
+    status_path = output_dir / "status.json"
+    contract_path = tmp_path / "contract.json"
+    contract_path.write_text("{}", encoding="utf-8")
+    args = SimpleNamespace(
+        phase="train",
+        train_result=None,
+        prerequisite_decision=None,
+        data=tmp_path / "data.parquet",
+        output_dir=output_dir,
+        contract=contract_path,
+        source_revision="f" * 40,
+        dataset="insta_market_basket",
+        model_role="B",
+        smoke=True,
+    )
+
+    def fake_prepare(_args):
+        output_dir.mkdir()
+        return {
+            "status_path": status_path,
+            "contract": {},
+            "dataset_spec": {},
+            "source_spec": {},
+            "checkpoint_file_sha": "1" * 64,
+            "state_before": "2" * 64,
+            "data_sha256": "3" * 64,
+            "split_manifest_sha256": "4" * 64,
+            "source_manifest_audit": {"file_sha256": "5" * 64},
+            "payload": {"backbone": "titantpp"},
+            "runtime_audit": {},
+            "device": torch.device("cpu"),
+            "model": FrozenModel(),
+        }
+
+    monkeypatch.setattr(runner, "validate_prerequisite_decision", lambda _args: None)
+    monkeypatch.setattr(runner, "prepare_execution", fake_prepare)
+    monkeypatch.setattr(runner, "load_train_only_frame", lambda _path: object())
+    monkeypatch.setattr(
+        runner,
+        "extract_split",
+        lambda _context, _args, split: ({}, {"target_count": 1}, {"target_count": 1}),
+    )
+    monkeypatch.setattr(
+        runner,
+        "analyze_train",
+        lambda *positional, **keyword: {"gate_passed": False},
+    )
+    monkeypatch.setattr(runner, "persist_calibration_state", lambda **keyword: {})
+    monkeypatch.setattr(runner, "audit_frozen_state", lambda _context: ("2" * 64, 0))
+
+    result = runner.run(args)
+    assert result["status"] == "success"
+    assert json.loads(status_path.read_text())["status"] == "success"
+
+
 def test_smoke_fitted_state_round_trips_without_becoming_a_full_gate(tmp_path):
     cache = synthetic_cache()
     train_audit = analyze_train(cache, contract(), partial_smoke=True)
