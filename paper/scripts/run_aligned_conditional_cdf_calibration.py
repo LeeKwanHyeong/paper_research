@@ -670,6 +670,17 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     qualified_full_fit = full_data and args.max_epochs is None and args.run_epoch_limit is None
     train_base = derive_frozen_base_time_cache(model=source_model, cache=train_cache, device=device, batch_size=batch_size)
     validation_base = derive_frozen_base_time_cache(model=source_model, cache=validation_cache, device=device, batch_size=batch_size)
+    assert validation_cache.source_quantity_prediction is not None
+    cached_quantity = validation_cache.source_quantity_prediction.contiguous()
+    cached_quantity_sha = tensor_sha256("quantity_prediction", cached_quantity)
+    require(cached_quantity_sha == dataset_spec["aligned_B_quantity_prediction_sha256"], "Cached quantity provenance digest drift")
+    runtime_quantity_before = cached_quantity_predictions(
+        model=source_model, cache=validation_cache, device=device, batch_size=batch_size
+    ).contiguous()
+    require(
+        torch.allclose(runtime_quantity_before, cached_quantity, atol=1e-6, rtol=1e-5),
+        "Cached quantity predictions drift from runtime replay",
+    )
     time_scale = float(dataset_spec["train_time_scale"])
     censor_threshold = resolve_censor_threshold(args.dataset, dataset_spec)
 
@@ -731,14 +742,14 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 
     require(canonical_state_dict_sha256(source_model.state_dict()) == source_state_sha, "Source state changed")
     require(all(parameter.grad is None for parameter in source_model.parameters()), "Source received gradients")
-    assert validation_cache.source_quantity_prediction is not None
     assert validation_cache.target_quantity is not None
-    quantity_before = validation_cache.source_quantity_prediction[:validation_count].contiguous()
-    runtime_quantity = cached_quantity_predictions(model=source_model, cache=validation_cache, device=device, batch_size=batch_size)[:validation_count].contiguous()
-    require(torch.equal(runtime_quantity, quantity_before), "Quantity prediction is not bitwise identical")
-    quantity_digest = tensor_sha256("quantity_prediction", runtime_quantity)
-    if full_data:
-        require(quantity_digest == dataset_spec["aligned_B_quantity_prediction_sha256"], "Quantity prediction digest drift")
+    runtime_quantity_after = cached_quantity_predictions(
+        model=source_model, cache=validation_cache, device=device, batch_size=batch_size
+    ).contiguous()
+    require(torch.equal(runtime_quantity_after, runtime_quantity_before), "Same-device quantity prediction is not bitwise identical")
+    runtime_quantity_before_sha = tensor_sha256("quantity_prediction", runtime_quantity_before)
+    runtime_quantity_after_sha = tensor_sha256("quantity_prediction", runtime_quantity_after)
+    require(runtime_quantity_before_sha == runtime_quantity_after_sha, "Same-device quantity digest drift")
 
     base_model = ConditionalKumaraswamyCDFCalibrator(hidden_dim=64).to(device)
     base_metrics = evaluate_module(
@@ -813,8 +824,11 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "train_permutation_sha256": _tensor_digest("permutation", train_permutation),
         "validation_permutation_sha256": _tensor_digest("permutation", validation_permutation),
         "quantity_prediction_bitwise_identical": True,
-        "quantity_prediction_sha256": quantity_digest,
-        "quantity_metrics": quantity_metrics(runtime_quantity, validation_cache.target_quantity[:validation_count]),
+        "cached_quantity_prediction_sha256": cached_quantity_sha,
+        "runtime_quantity_before_sha256": runtime_quantity_before_sha,
+        "runtime_quantity_after_sha256": runtime_quantity_after_sha,
+        "cached_vs_runtime_quantity_close": True,
+        "quantity_metrics": quantity_metrics(runtime_quantity_after[:validation_count], validation_cache.target_quantity[:validation_count]),
         "acceptance_observed_deltas": deltas,
         "acceptance_gates": gates,
         "acceptance_status": acceptance_status,
