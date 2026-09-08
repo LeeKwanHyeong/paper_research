@@ -1,0 +1,39 @@
+{
+  "status": "local_design_review_complete_not_model_implementation",
+  "baseline_commit": "f0cc1fd",
+  "python": "3.12.10",
+  "checks": {
+    "input_artifact_sha256_count": 20,
+    "existing_bin_and_total_mse_reconciled_tolerance": 1e-08,
+    "synthetic_fp32_fp64_output_and_gradient_identity": true,
+    "synthetic_per_head_residual_bound_and_finite": true,
+    "evidence_json_deterministic_rerun": true,
+    "python_source_compiles": true,
+    "local_evidence_links_resolve": true,
+    "independent_design_review_completed": true
+  },
+  "review_corrections": [
+    "Apply RMS separately to the four attention heads; rho fixed at1.",
+    "Preserve original FULL p+r dtype; do not blindly cast to p dtype. AMP remains unverified.",
+    "Mask convolution input projection biases; preserve original projection and output mask path."
+  ],
+  "not_executed": [
+    "model implementation",
+    "new dataset row access",
+    "model forward",
+    "new validation predictions",
+    "backbone training",
+    "duration-head fit",
+    "CUDA",
+    "performance/cost certification",
+    "held-out evaluation",
+    "push",
+    "master/develop merge"
+  ],
+  "files": {
+    "paper/contracts/hard_lmm_bounded_qk_causal_v_v1.md": "c2f4e931de69b0be0883aa5b8c022efedc44a243afd92c2861d35c23fe625319",
+    "paper/scripts/audit_hard_lmm_bounded_qk_design.py": "ae4b76c655cfdce146d37b03d1b39858e773fd1938663b4677d5c57124bd32e7",
+    "paper/results/hard_lmm_bounded_qk_design_20260908/README.md": "5d518cf349c5326e41d611bf9e722386901c5c88385b81ac5919a4310bcf8dfc",
+    "paper/results/hard_lmm_bounded_qk_design_20260908/evidence_audit.json": "d7a04b1ed5113065de30f21ebb847a568a8f5ae56861473c7c0bc4c51b71fc9a"
+  }
+}
