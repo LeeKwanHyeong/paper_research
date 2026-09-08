@@ -132,7 +132,10 @@ v'_t=v_t+\gamma_tu^v_t.
 ## 학습·선택 계약
 
 - 세 데이터셋에 하나의 동일한 구조와 `gamma`를 사용한다.
-- B state에서 상속 파라미터를 초기화하고 새 6d 파라미터만 0으로 추가한다.
+- 각 seed에서 B와 후보를 같은 RNG 상태로 새로 생성하고, 후보의 상속 파라미터는
+  그 fresh B 초기 state와 정확히 일치시키며 새 6d 파라미터만 0으로 추가한다.
+  학습이 끝난 B checkpoint를 후보에 주입하지 않는다. 두 모델의 학습 예산을 같게
+  유지해 추가 최적화와 Backbone 효과가 섞이지 않도록 한다.
 - 기존 train/validation split, log1p quantity MSE, legacy time objective, AdamW
   `lr=0.001`, batch128, clip1을 유지한다.
 - checkpoint는 validation raw quantity RMSE의 가장 이른 strict minimum으로 선택한다.
