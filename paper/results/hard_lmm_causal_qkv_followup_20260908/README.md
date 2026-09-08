@@ -1,8 +1,12 @@
 # Causal QKV Hard-LMM — Taxi·Intermittent 병렬 후속 평가
 
-**진행 중:** 2026-09-08 08:26 KST 확인 기준, 두 서버 모두 seed42 학습 중이다.
-이 디렉터리는 기존 Instacart 기준 미달 이후 사용자가 승인한 탐색적 후속
-평가의 새 증적이다. 기존 screening 결과를 덮어쓰지 않는다.
+**최종 완료:** Taxi는 2026-09-08 08:52:56 KST(epoch153, 선택113),
+Intermittent는 09:16:26 KST(epoch47, 선택7)에 정상 조기 종료했다.
+로컬·원격 감사는 통과했으나, 추가 seed 검토 기준은 미달했다. Taxi의 수량
+개선과 함께 두 데이터셋의 시간 loss 악화, Intermittent의 RMSE 악화를 확인했다.
+상세 결과는 [final_result.md](final_result.md)와 `final_decision.json`에 보관했다.
+기존 Instacart 기준 미달 결과는 보존하며, 시간별 확인은 PAUSED로 변경했다.
+아래의 08:26 표는 학습 시작 당시의 역사적 기록이다.
 
 ## 현재 기준선과 동결 계약 — 완료
 
@@ -31,14 +35,14 @@
 - `hosts/<host>/`에 보관한 JUnit·합성 학습·source receipt의 hash와 결과를
   로컬에서 재검증했다. `launch_receipt_verification.json` 참조.
 
-## 실제 학습 — 진행 중
+## 실제 학습 — 초기 확인 기록
 
 | 서버 | 데이터셋 | 본 학습 시작 KST | 08:26까지 완료 epoch | 현재 best epoch | 마지막 epoch train target |
 | --- | --- | --- | ---: | ---: | ---: |
 | RTX 5080 | Taxi | 08:22:41 | 17 | 11 | 38,393 |
 | RTX 5090 | Intermittent | 08:22:52 | 3 | 2 | 393,824 |
 
-두 tmux와 CUDA 학습 프로세스가 살아 있고 실행 오류가 없다.
+위 확인 시각에는 두 tmux와 CUDA 학습 프로세스가 살아 있고 실행 오류가 없었다.
 이 표는 초기 상태 기록이며, 성능이나 최종 checkpoint의 판정이 아니다.
 현재 상태와 확인 시각은 `monitor_latest.json`에 기록한다.
 
@@ -51,22 +55,15 @@ tmux는 `causal_qkv_followup_84668e2_<host>`이며, 시작 명령어와 정확�
 
 ## 남은 작업 순서
 
-**1. 진행 중 / 5080·5090 — 각 데이터셋 학습 완료**
-- 같은 구조·loss·selector와 기존 조기 종료 규칙으로 각 실험을 완료한다.
-- 한 데이터셋의 성능 미달은 다른 서버의 승인된 평가를 중단시키지 않는다.
-  실행·감사 오류는 해당 호스트에서 중단하고 자동 재시도하지 않는다.
+**1. 완료 / 5080·5090 — 두 데이터셋 학습과 감사**
+- 같은 구조·loss·selector와 기존 조기 종료 규칙으로 두 실험을 완료했다.
+- checkpoint·optimizer 복원, 전체 처리 건수·지표와 소스 무결성 감사를 통과했다.
 
-**2. 다음 작업 / 로컬 — 최종 결과 감사와 탐색적 판정**
-- 선택 checkpoint, 전체 처리 수, validation population/수량 구간,
-  모델·optimizer 복원과 finite 상태를 감사하고 B 대비 다섯 지표를 비교한다.
-- 기존 엄격한 데이터셋별 gate를 그대로 보고한다. 두 결과가 모두 감사되면
-  고정한 후속 검토 기준도 계산한다. 세 데이터셋의 raw RMSE/전체 MAE 악화 각각
-  1% 이하, body/>p99 MAE 각각2% 이하, legacy time loss 증가0.01 이하이며,
-  Taxi·Intermittent 중 하나 이상의 raw RMSE 개선이1% 이상이어야 검토 자격을 부여한다.
-- 이 기준은 추가 seed의 자원 사용을 검토하기 위한 것으로, 기존 Instacart 실패를
-  통과로 바꾸거나 최종 채택·통계적 비열등성을 의미하지 않는다.
+**2. 완료 / 로컬 — 최종 판정과 증적 보관**
+- 추가 seed 검토 기준에 미달하여 이 후보의 탐색을 종료했다.
+- 기존 Instacart 실패를 보존하고, 새 결과와 독립 검산·복원 감사 증적을 기록했다.
 
-**3. 진행 중 / 이 작업 — 시간별 확인**
-- Heartbeat `causal-qkv-taxi-intermittent`를 1시간 간격으로 설정했다.
-- 완료·오류·필요 조치가 있을 때 알리고, 두 실험 종료 후 중지한다.
-- 추가 seed·held-out 평가는 이번 실행 범위에 포함하지 않는다.
+**3. 다음 작업 / 로컬 — 코드·증적 통합 범위 검토**
+- 결과는 `paper_research/codex/hard-lmm-causal-qkv`에 보존한다.
+  `master` 병합과 기본 모델 전환은 수행하지 않았다.
+- 추가 seed·held-out 평가를 실행하지 않았고, heartbeat는 종료 후 PAUSED로 변경했다.

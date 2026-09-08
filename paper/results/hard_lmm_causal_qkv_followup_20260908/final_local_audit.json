@@ -1,0 +1,161 @@
+{
+  "status": "passed",
+  "audit_source_root": "/private/tmp/causal_qkv_84668e2_final_audit_283y9zjf",
+  "source_revision": "84668e207d5121f211a6a93af12ca2f96068a25e",
+  "torch_runtime": "2.14.0",
+  "source_selection_reason": "Audit uses the committed source archive; unrelated local working-tree model edits are preserved and excluded.",
+  "hosts": {
+    "5080": {
+      "dataset": "yellow_trip_hourly",
+      "frozen_source_verified_count": 405,
+      "audit": {
+        "status": "passed",
+        "summary": "/Users/igwanhyeong/PycharmProjects/paper_research/paper/results/hard_lmm_causal_qkv_followup_20260908/hosts/5080/jobs/seed42_yellow_trip_hourly/runs/titantpp_hard_memory_causal_qkv/count_only_log_regression/seed_42/summary.json",
+        "summary_sha256": "35484dfb1e3c0d7a8217f70a3fbaa1e56d29858b091ec7d1d6ed7640afe6f773",
+        "checkpoint_sha256": "a6de503f33492e2254d61d62318c901ab36c62e2506a013bbe67d47474695f32",
+        "best_epoch": 113,
+        "completed_epochs": 153,
+        "metrics": {
+          "raw_rmse": 85.8369116454053,
+          "overall_mae": 27.023365415917482,
+          "body_mae": 16.42847138751321,
+          "gt_p99_mae": 324.619619635087,
+          "clamped_time_loss": 25.40721823635543,
+          "validation_target_count": 8268,
+          "body_target_count": 7888,
+          "stratum_counts": {
+            "le_p50": 4364,
+            "p50_p90": 3138,
+            "p90_p95": 386,
+            "p95_p99": 301,
+            "gt_p99": 79
+          }
+        },
+        "cuda_peak_memory_allocated_bytes": 1964348416,
+        "validation_target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+        "validation_target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd",
+        "held_out_test_evaluated": false,
+        "causal_qkv_audit": {
+          "status": "passed",
+          "contract_id": "hard_lmm_causal_qkv_screening_v1",
+          "binding_verified": true,
+          "best_artifact_route_verified": true,
+          "last_artifact_route_verified": true,
+          "best_state_sha256": "b9758452a8523e3871bb382babf0ec8a0815ffd728578fbe7bdc49796bdff861",
+          "last_state_sha256": "dc10bd03c37418d5b9a98f2b82efb3d9a9d9e20a05acb7cadb76ef4a6af1b54e",
+          "last_best_state_sha256": "b9758452a8523e3871bb382babf0ec8a0815ffd728578fbe7bdc49796bdff861",
+          "strict_best_restore": true,
+          "strict_last_restore": true,
+          "optimizer_restore": true,
+          "synthetic_target_outputs_roundtrip_equal": true,
+          "kernel_lag_evidence": {
+            "selected": {
+              "encoder.layers.0.attn.causal_q_kernel": {
+                "lag1_l1": 16.51181411743164,
+                "lag2_l1": 18.670988082885742
+              },
+              "encoder.layers.0.attn.causal_k_kernel": {
+                "lag1_l1": 20.50077247619629,
+                "lag2_l1": 15.628494262695312
+              },
+              "encoder.layers.0.attn.causal_v_kernel": {
+                "lag1_l1": 15.789230346679688,
+                "lag2_l1": 14.259194374084473
+              }
+            },
+            "last_current": {
+              "encoder.layers.0.attn.causal_q_kernel": {
+                "lag1_l1": 17.241933822631836,
+                "lag2_l1": 19.987411499023438
+              },
+              "encoder.layers.0.attn.causal_k_kernel": {
+                "lag1_l1": 21.424514770507812,
+                "lag2_l1": 16.69579315185547
+              },
+              "encoder.layers.0.attn.causal_v_kernel": {
+                "lag1_l1": 14.807815551757812,
+                "lag2_l1": 13.23975658416748
+              }
+            }
+          }
+        }
+      }
+    },
+    "5090": {
+      "dataset": "intermittent_frozen_5000",
+      "frozen_source_verified_count": 405,
+      "audit": {
+        "status": "passed",
+        "summary": "/Users/igwanhyeong/PycharmProjects/paper_research/paper/results/hard_lmm_causal_qkv_followup_20260908/hosts/5090/jobs/seed42_intermittent_frozen_5000/runs/titantpp_hard_memory_causal_qkv/count_only_log_regression/seed_42/summary.json",
+        "summary_sha256": "cfd66dddba55a56ec00d66cff8be1f47f47deeebd32bbb1734e33e6118a33a4b",
+        "checkpoint_sha256": "d244edce867fe74b9f1ddbf8cbab4b18f6216a0a1d6d87033443185070c8865c",
+        "best_epoch": 7,
+        "completed_epochs": 47,
+        "metrics": {
+          "raw_rmse": 1.5483919419914824,
+          "overall_mae": 0.5871172443950149,
+          "body_mae": 0.43262950678448886,
+          "gt_p99_mae": 5.228543053375431,
+          "clamped_time_loss": -1.6022083723027674,
+          "validation_target_count": 86285,
+          "body_target_count": 81739,
+          "stratum_counts": {
+            "le_p50": 45036,
+            "p50_p90": 29579,
+            "p90_p95": 7124,
+            "p95_p99": 3405,
+            "gt_p99": 1141
+          }
+        },
+        "cuda_peak_memory_allocated_bytes": 1964348416,
+        "validation_target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+        "validation_target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385",
+        "held_out_test_evaluated": false,
+        "causal_qkv_audit": {
+          "status": "passed",
+          "contract_id": "hard_lmm_causal_qkv_screening_v1",
+          "binding_verified": true,
+          "best_artifact_route_verified": true,
+          "last_artifact_route_verified": true,
+          "best_state_sha256": "ea1632eba0d70ae453e5423d1e7cbb6618794c5295b964af58038216d57e4d26",
+          "last_state_sha256": "9cfff3a476e3382fabf47bd20e36ca0eccdcc77204c4928288ba36599a13caa3",
+          "last_best_state_sha256": "ea1632eba0d70ae453e5423d1e7cbb6618794c5295b964af58038216d57e4d26",
+          "strict_best_restore": true,
+          "strict_last_restore": true,
+          "optimizer_restore": true,
+          "synthetic_target_outputs_roundtrip_equal": true,
+          "kernel_lag_evidence": {
+            "selected": {
+              "encoder.layers.0.attn.causal_q_kernel": {
+                "lag1_l1": 19.407655715942383,
+                "lag2_l1": 15.632153511047363
+              },
+              "encoder.layers.0.attn.causal_k_kernel": {
+                "lag1_l1": 18.028127670288086,
+                "lag2_l1": 18.951641082763672
+              },
+              "encoder.layers.0.attn.causal_v_kernel": {
+                "lag1_l1": 14.945114135742188,
+                "lag2_l1": 17.41626739501953
+              }
+            },
+            "last_current": {
+              "encoder.layers.0.attn.causal_q_kernel": {
+                "lag1_l1": 21.104270935058594,
+                "lag2_l1": 19.60834312438965
+              },
+              "encoder.layers.0.attn.causal_k_kernel": {
+                "lag1_l1": 24.174524307250977,
+                "lag2_l1": 24.565677642822266
+              },
+              "encoder.layers.0.attn.causal_v_kernel": {
+                "lag1_l1": 15.220697402954102,
+                "lag2_l1": 13.563087463378906
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

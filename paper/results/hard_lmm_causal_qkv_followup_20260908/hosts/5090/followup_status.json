@@ -5,6 +5,7 @@
     "backbone": "titantpp_hard_memory_causal_qkv",
     "model_role": "hard_lmm_causal_qkv_candidate"
   },
+  "completed_at": "2026-09-08T00:16:26.179134+00:00",
   "contract_id": "hard_lmm_causal_qkv_followup_v1",
   "contract_sha256": "99b63674f12abe992e77ffc1fb4fc99eb972e02fd89679efaab23b0d5ba17434",
   "cuda_qualification": {
@@ -32,7 +33,9 @@
     "skipped": 0,
     "test_count": 45
   },
+  "dataset_reporting_gate_status": "failed",
   "evaluation_scope": "validation_only",
+  "execution_completed": true,
   "gpu_preflight": {
     "compute_processes": [],
     "free_vram_mib": 32107,
@@ -83,6 +86,52 @@
     "split_manifest_sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04"
   },
   "job": {
+    "best_epoch": 7,
+    "causal_qkv_audit": {
+      "best_artifact_route_verified": true,
+      "best_state_sha256": "ea1632eba0d70ae453e5423d1e7cbb6618794c5295b964af58038216d57e4d26",
+      "binding_verified": true,
+      "contract_id": "hard_lmm_causal_qkv_screening_v1",
+      "kernel_lag_evidence": {
+        "last_current": {
+          "encoder.layers.0.attn.causal_k_kernel": {
+            "lag1_l1": 24.174524307250977,
+            "lag2_l1": 24.565675735473633
+          },
+          "encoder.layers.0.attn.causal_q_kernel": {
+            "lag1_l1": 21.104270935058594,
+            "lag2_l1": 19.60834312438965
+          },
+          "encoder.layers.0.attn.causal_v_kernel": {
+            "lag1_l1": 15.220699310302734,
+            "lag2_l1": 13.563088417053223
+          }
+        },
+        "selected": {
+          "encoder.layers.0.attn.causal_k_kernel": {
+            "lag1_l1": 18.028127670288086,
+            "lag2_l1": 18.951641082763672
+          },
+          "encoder.layers.0.attn.causal_q_kernel": {
+            "lag1_l1": 19.407655715942383,
+            "lag2_l1": 15.63215446472168
+          },
+          "encoder.layers.0.attn.causal_v_kernel": {
+            "lag1_l1": 14.945114135742188,
+            "lag2_l1": 17.41626739501953
+          }
+        }
+      },
+      "last_artifact_route_verified": true,
+      "last_best_state_sha256": "ea1632eba0d70ae453e5423d1e7cbb6618794c5295b964af58038216d57e4d26",
+      "last_state_sha256": "9cfff3a476e3382fabf47bd20e36ca0eccdcc77204c4928288ba36599a13caa3",
+      "optimizer_restore": true,
+      "status": "passed",
+      "strict_best_restore": true,
+      "strict_last_restore": true,
+      "synthetic_target_outputs_roundtrip_equal": true
+    },
+    "checkpoint_sha256": "d244edce867fe74b9f1ddbf8cbab4b18f6216a0a1d6d87033443185070c8865c",
     "command": [
       "/opt/miniconda3/envs/ai_env/bin/python",
       "-s",
@@ -145,10 +194,47 @@
       "300",
       "--allow-partial-contract"
     ],
+    "completed_at": "2026-09-08T00:16:26.179084+00:00",
+    "completed_epochs": 47,
+    "cuda_peak_memory_allocated_bytes": 1964348416,
+    "dataset_reporting_gate": {
+      "checks": {
+        "body_mae": true,
+        "clamped_time_loss": false,
+        "gt_p99_mae": true,
+        "overall_mae": true,
+        "raw_rmse": false
+      },
+      "status": "failed"
+    },
+    "held_out_test_evaluated": false,
+    "log": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_causal_qkv_followup_84668e207d51_5090_20260908/jobs/seed42_intermittent_frozen_5000/followup_runner.log",
+    "log_sha256": "ad54afccf7b7be0474b68fc87fdc6647fb16d366c582771103d1956aba4788d2",
+    "metrics": {
+      "body_mae": 0.43262950678448886,
+      "body_target_count": 81739,
+      "clamped_time_loss": -1.6022083723027674,
+      "gt_p99_mae": 5.228543053375431,
+      "overall_mae": 0.5871172443950149,
+      "raw_rmse": 1.5483919419914824,
+      "stratum_counts": {
+        "gt_p99": 1141,
+        "le_p50": 45036,
+        "p50_p90": 29579,
+        "p90_p95": 7124,
+        "p95_p99": 3405
+      },
+      "validation_target_count": 86285
+    },
     "output": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_causal_qkv_followup_84668e207d51_5090_20260908/jobs/seed42_intermittent_frozen_5000",
     "started_at": "2026-09-07T23:22:52.982100+00:00",
-    "status": "running"
+    "status": "passed",
+    "summary": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_causal_qkv_followup_84668e207d51_5090_20260908/jobs/seed42_intermittent_frozen_5000/runs/titantpp_hard_memory_causal_qkv/count_only_log_regression/seed_42/summary.json",
+    "summary_sha256": "cfd66dddba55a56ec00d66cff8be1f47f47deeebd32bbb1734e33e6118a33a4b",
+    "validation_target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+    "validation_target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385"
   },
+  "replication_review_status": "pending_parallel_result_merge",
   "runtime": {
     "cuda": "13.0",
     "cuda_available": true,
@@ -159,7 +245,7 @@
   "schema_version": 1,
   "source_revision": "84668e207d5121f211a6a93af12ca2f96068a25e",
   "started_at": "2026-09-07T23:22:46.138628+00:00",
-  "status": "running_seed42",
+  "status": "completed_execution_and_audit",
   "synthetic_worker": {
     "command": [
       "/opt/miniconda3/envs/ai_env/bin/python",
@@ -239,5 +325,5 @@
     "sha256": "ddcbc3a6475e39848c0cf707308f62040ef7385f50cb8ed98cbf43af550bad75",
     "status": "passed"
   },
-  "updated_at": "2026-09-07T23:22:52.982117+00:00"
+  "updated_at": "2026-09-08T00:16:26.179138+00:00"
 }

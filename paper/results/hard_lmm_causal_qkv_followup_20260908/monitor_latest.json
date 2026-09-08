@@ -1,53 +1,111 @@
 {
   "observations": {
     "5080": {
-      "checked_at_utc": "2026-09-07T23:26:14.640843+00:00",
-      "status": "running_seed42",
-      "error": null,
-      "tmux_alive": true,
+      "checked_at_utc": "2026-09-08T00:25:31.785881+00:00",
+      "host_role": "5080",
+      "status": "completed_execution_and_audit",
+      "source_revision": "84668e207d5121f211a6a93af12ca2f96068a25e",
+      "dataset": "yellow_trip_hourly",
+      "tmux_alive": false,
       "job_started_at": "2026-09-07T23:22:41.554748+00:00",
+      "completed_at": "2026-09-07T23:52:56.092057+00:00",
+      "error": null,
       "progress": {
-        "history_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_causal_qkv_followup_84668e207d51_5080_20260908/jobs/seed42_yellow_trip_hourly/runs/titantpp_hard_memory_causal_qkv/count_only_log_regression/seed_42/history.json",
-        "completed_epochs": 17,
-        "last_epoch": 17,
-        "best_epoch": 11,
-        "train_event_count": 38393,
-        "history_mtime": 1788823563.7086806
+        "completed_epochs": 153,
+        "last_epoch": 153,
+        "best_epoch": 113,
+        "last_train_event_count": 38393,
+        "all_train_event_counts": [
+          38393
+        ],
+        "latest_history_mtime": 1788825174.863147
       },
-      "gpu": "NVIDIA GeForce RTX 5080, 2512, 77",
-      "compute_apps": "6993, /home/leekwanhyeong/miniconda3/envs/ai_env/bin/python, 2400 MiB",
-      "cuda_tests_passed": 45,
-      "synthetic_worker_status": "passed",
-      "host_role": "5080"
+      "metrics": {
+        "body_mae": 16.42847138751321,
+        "body_target_count": 7888,
+        "clamped_time_loss": 25.40721823635543,
+        "gt_p99_mae": 324.619619635087,
+        "overall_mae": 27.023365415917482,
+        "raw_rmse": 85.8369116454053,
+        "stratum_counts": {
+          "gt_p99": 79,
+          "le_p50": 4364,
+          "p50_p90": 3138,
+          "p90_p95": 386,
+          "p95_p99": 301
+        },
+        "validation_target_count": 8268
+      },
+      "dataset_reporting_gate": {
+        "checks": {
+          "body_mae": true,
+          "clamped_time_loss": false,
+          "gt_p99_mae": true,
+          "overall_mae": true,
+          "raw_rmse": true
+        },
+        "status": "failed"
+      },
+      "gpu": "NVIDIA GeForce RTX 5080, 104, 0",
+      "compute_apps": ""
     },
     "5090": {
-      "checked_at_utc": "2026-09-07T23:26:22.310549+00:00",
-      "status": "running_seed42",
-      "error": null,
-      "tmux_alive": true,
+      "checked_at_utc": "2026-09-08T00:25:34.625270+00:00",
+      "host_role": "5090",
+      "status": "completed_execution_and_audit",
+      "source_revision": "84668e207d5121f211a6a93af12ca2f96068a25e",
+      "dataset": "intermittent_frozen_5000",
+      "tmux_alive": false,
       "job_started_at": "2026-09-07T23:22:52.982100+00:00",
+      "completed_at": "2026-09-08T00:16:26.179134+00:00",
+      "error": null,
       "progress": {
-        "history_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_causal_qkv_followup_84668e207d51_5090_20260908/jobs/seed42_intermittent_frozen_5000/runs/titantpp_hard_memory_causal_qkv/count_only_log_regression/seed_42/history.json",
-        "completed_epochs": 3,
-        "last_epoch": 3,
-        "best_epoch": 2,
-        "train_event_count": 393824,
-        "history_mtime": 1788823577.478018
+        "completed_epochs": 47,
+        "last_epoch": 47,
+        "best_epoch": 7,
+        "last_train_event_count": 393824,
+        "all_train_event_counts": [
+          393824
+        ],
+        "latest_history_mtime": 1788826581.3941462
       },
-      "gpu": "NVIDIA GeForce RTX 5090, 2714, 76",
-      "compute_apps": "1024500, /opt/miniconda3/envs/ai_env/bin/python, 2704 MiB",
-      "cuda_tests_passed": 45,
-      "synthetic_worker_status": "passed",
-      "host_role": "5090"
+      "metrics": {
+        "body_mae": 0.43262950678448886,
+        "body_target_count": 81739,
+        "clamped_time_loss": -1.6022083723027674,
+        "gt_p99_mae": 5.228543053375431,
+        "overall_mae": 0.5871172443950149,
+        "raw_rmse": 1.5483919419914824,
+        "stratum_counts": {
+          "gt_p99": 1141,
+          "le_p50": 45036,
+          "p50_p90": 29579,
+          "p90_p95": 7124,
+          "p95_p99": 3405
+        },
+        "validation_target_count": 86285
+      },
+      "dataset_reporting_gate": {
+        "checks": {
+          "body_mae": true,
+          "clamped_time_loss": false,
+          "gt_p99_mae": true,
+          "overall_mae": true,
+          "raw_rmse": false
+        },
+        "status": "failed"
+      },
+      "gpu": "NVIDIA GeForce RTX 5090, 2, 0",
+      "compute_apps": ""
     }
   },
   "monitor": {
     "automation_id": "causal-qkv-taxi-intermittent",
-    "status": "ACTIVE",
-    "interval_hours": 1
+    "status": "PAUSED",
+    "reason": "Both assigned runs completed and local final audits passed; exploratory replication criterion failed."
   },
   "scope": "exploratory_followup_validation_only",
   "source_revision": "84668e207d5121f211a6a93af12ca2f96068a25e",
   "original_instacart_gate": "failed_preserved",
-  "performance_decision": "pending_completed_training_and_audits"
+  "performance_decision": "stop_candidate_after_exploratory_followup"
 }
