@@ -25,6 +25,11 @@ from models.TPPs.CountAwareTitanCausalQKV import (
 from models.TPPs.CountAwareTitanBoundedQK import (
     BOUNDED_QK_BACKBONE, BOUNDED_QK_ROLE, CountAwareTitanBoundedQKTPP,
 )
+from models.TPPs.CountAwareTitanLevelHistoryQKV import (
+    LEVEL_HISTORY_QKV_BACKBONE,
+    LEVEL_HISTORY_QKV_ROLE,
+    CountAwareTitanLevelHistoryQKVTPP,
+)
 from paper.scripts.count_aware_tpp_backbone.constants import (
     MODEL_ROLE_INTERLAYER_MEMORY,
     MODEL_ROLE_MEMORY_FILM,
@@ -53,6 +58,12 @@ def _build(backbone: str):
         (MEMORY_FILM_BACKBONE, CountAwareTitanMemoryFiLM, MEMORY_FILM_ROLE, 128),
         (CAUSAL_QKV_BACKBONE, CountAwareTitanCausalQKVTPP, CAUSAL_QKV_ROLE, 576),
         (BOUNDED_QK_BACKBONE, CountAwareTitanBoundedQKTPP, BOUNDED_QK_ROLE, 576),
+        (
+            LEVEL_HISTORY_QKV_BACKBONE,
+            CountAwareTitanLevelHistoryQKVTPP,
+            LEVEL_HISTORY_QKV_ROLE,
+            384,
+        ),
     ],
 )
 def test_factory_and_role_bind_each_candidate(backbone, model_type, role, added) -> None:
@@ -78,6 +89,7 @@ def test_factory_and_role_bind_each_candidate(backbone, model_type, role, added)
         (MODEL_ROLE_MEMORY_FILM, MEMORY_FILM_BACKBONE),
         (CAUSAL_QKV_ROLE, CAUSAL_QKV_BACKBONE),
         (BOUNDED_QK_ROLE, BOUNDED_QK_BACKBONE),
+        (LEVEL_HISTORY_QKV_ROLE, LEVEL_HISTORY_QKV_BACKBONE),
     ],
 )
 def test_candidate_role_rejects_selector_or_route_drift(role, backbone) -> None:
@@ -111,7 +123,13 @@ def _artifact(backbone: str) -> dict:
     }
 
 
-@pytest.mark.parametrize("backbone", [INTERLAYER_MEMORY_BACKBONE, MEMORY_FILM_BACKBONE, CAUSAL_QKV_BACKBONE, BOUNDED_QK_BACKBONE])
+@pytest.mark.parametrize("backbone", [
+    INTERLAYER_MEMORY_BACKBONE,
+    MEMORY_FILM_BACKBONE,
+    CAUSAL_QKV_BACKBONE,
+    BOUNDED_QK_BACKBONE,
+    LEVEL_HISTORY_QKV_BACKBONE,
+])
 def test_checkpoint_route_roundtrip_and_summary(backbone: str) -> None:
     payload = _artifact(backbone)
     validate_checkpoint_route(payload, backbone)
@@ -128,6 +146,8 @@ def test_candidates_cannot_be_relabelled_as_each_other_or_b() -> None:
         (_artifact(CAUSAL_QKV_BACKBONE), MEMORY_FILM_BACKBONE),
         (_artifact(CAUSAL_QKV_BACKBONE), BOUNDED_QK_BACKBONE),
         (_artifact(BOUNDED_QK_BACKBONE), CAUSAL_QKV_BACKBONE),
+        (_artifact(LEVEL_HISTORY_QKV_BACKBONE), BOUNDED_QK_BACKBONE),
+        (_artifact(BOUNDED_QK_BACKBONE), LEVEL_HISTORY_QKV_BACKBONE),
     ):
         with pytest.raises(ValueError):
             validate_checkpoint_route(payload, other)
@@ -155,6 +175,7 @@ def test_bounded_checkpoint_cannot_be_relabelled_by_removing_metadata() -> None:
 @pytest.mark.parametrize("backbone,role", [
     (CAUSAL_QKV_BACKBONE, CAUSAL_QKV_ROLE),
     (BOUNDED_QK_BACKBONE, BOUNDED_QK_ROLE),
+    (LEVEL_HISTORY_QKV_BACKBONE, LEVEL_HISTORY_QKV_ROLE),
 ])
 def test_frozen_duration_rebuild_does_not_allow_joint_head_change(backbone, role) -> None:
     model, metadata = build_count_aware_model(

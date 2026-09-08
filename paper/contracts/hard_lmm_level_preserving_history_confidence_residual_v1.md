@@ -1,6 +1,6 @@
 # Level-preserving history-confidence residual Hard-LMM — 설계 계약 v1
 
-상태: **train-only 필요조건 통과, 단일 후보 선정 완료, 구현 전**.
+상태: **train-only 필요조건 통과, 로컬 구현·계약 검증 완료, CUDA 검증 전**.
 
 2026-09-08, `paper_research / codex/hard-lmm-causal-qkv`.
 
@@ -168,8 +168,8 @@ guardrail이다. BOUNDED-QK와의 비교는 centered 신호 보존을 설명하�
 
 ## 다음 실행 순서
 
-1. 전용 모델 route와 위 계약 테스트를 로컬에서 구현한다.
-2. 독립 source commit을 만든 뒤 5090에서 CUDA·비용·세 데이터셋 full-data e1을 확인한다.
+1. 완료: 전용 모델 route와 위 계약 테스트를 로컬에서 구현한다.
+2. 다음: 독립 source commit을 만든 뒤 5090에서 CUDA·비용·세 데이터셋 full-data e1을 확인한다.
 3. Instacart seed42를 먼저 screening하고, 통과할 때만 Taxi·Intermittent를 실행한다.
 4. 세 데이터셋 모두 통과할 때만 seeds52·62와 최종 held-out 평가 범위를 확정한다.
 

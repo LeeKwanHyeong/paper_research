@@ -62,6 +62,12 @@ from models.TPPs.CountAwareTitanBoundedQK import (
     bounded_qk_metadata,
     validate_bounded_qk_checkpoint,
 )
+from models.TPPs.CountAwareTitanLevelHistoryQKV import (
+    CountAwareTitanLevelHistoryQKVTPP,
+    LEVEL_HISTORY_QKV_BACKBONE,
+    level_history_qkv_metadata,
+    validate_level_history_qkv_checkpoint,
+)
 from models.Titan.common.key_value_memory import (
     KEY_VALUE_BACKBONE,
     KEY_VALUE_CONTRACT,
@@ -179,6 +185,8 @@ def validate_key_value_checkpoint(payload: dict[str, Any], expected_backbone: st
 
 def validate_checkpoint_route(payload: dict[str, Any], expected_backbone: str) -> None:
     """Validate explicit candidate identity; compatible tensor shapes are not enough."""
+    if validate_level_history_qkv_checkpoint(payload, expected_backbone):
+        return
     if validate_bounded_qk_checkpoint(payload, expected_backbone):
         return
     if validate_causal_qkv_checkpoint(payload, expected_backbone):
@@ -314,6 +322,10 @@ def build_count_aware_model(
         "time_sigma_floor": time_sigma_floor,
     }
     intermediate_candidates = {
+        LEVEL_HISTORY_QKV_BACKBONE: (
+            CountAwareTitanLevelHistoryQKVTPP,
+            level_history_qkv_metadata,
+        ),
         BOUNDED_QK_BACKBONE: (
             CountAwareTitanBoundedQKTPP,
             bounded_qk_metadata,
@@ -336,7 +348,11 @@ def build_count_aware_model(
         # frozen K=1 duration head. The joint trainer still enforces legacy
         # time loss for these dedicated backbone roles.
         allowed_time_heads = {TIME_HEAD_MODE_LEGACY_CLAMPED}
-        if backbone in (CAUSAL_QKV_BACKBONE, BOUNDED_QK_BACKBONE):
+        if backbone in (
+            CAUSAL_QKV_BACKBONE,
+            BOUNDED_QK_BACKBONE,
+            LEVEL_HISTORY_QKV_BACKBONE,
+        ):
             allowed_time_heads.add(TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION)
         if (
             quantity_variant != LOG_MSE_VARIANT
@@ -354,7 +370,11 @@ def build_count_aware_model(
             **quantity_kwargs,
         )
         encoder_metadata = metadata_factory(hidden_dim)
-        if backbone in (CAUSAL_QKV_BACKBONE, BOUNDED_QK_BACKBONE):
+        if backbone in (
+            CAUSAL_QKV_BACKBONE,
+            BOUNDED_QK_BACKBONE,
+            LEVEL_HISTORY_QKV_BACKBONE,
+        ):
             # Frozen-duration checkpoints must reconstruct the learned
             # positional embedding at its original length before strict load.
             encoder_metadata["max_len"] = max_seq_len

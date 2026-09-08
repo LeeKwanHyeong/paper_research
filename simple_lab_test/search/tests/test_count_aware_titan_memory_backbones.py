@@ -169,6 +169,8 @@ def test_memory_variants_are_opt_in_supported_backbones() -> None:
         "titantpp_hard_memory_interlayer",
         "titantpp_hard_memory_film",
         "titantpp_hard_memory_causal_qkv",
+        "titantpp_hard_memory_bounded_qk",
+        "titantpp_hard_memory_level_history_qkv",
     )
     assert all(name not in BACKBONES for name in TITAN_MEMORY_BACKBONES)
     assert SUPPORTED_BACKBONES == (*BACKBONES, *TITAN_MEMORY_BACKBONES, "thp_static_hard_memory")
