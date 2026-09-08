@@ -108,8 +108,8 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         help="Optional external directory for high-cardinality per-series rows.",
     )
-    parser.add_argument("--contract", type=Path)
-    parser.add_argument("--run-audit", type=Path)
+    parser.add_argument("--contract", type=Path, required=True)
+    parser.add_argument("--run-audit", type=Path, required=True)
     parser.add_argument("--series-column")
     parser.add_argument("--target-column")
     parser.add_argument("--b-column")
@@ -1269,6 +1269,10 @@ def main() -> None:
         analysis["contract_audit"] = validate_against_contract(
             canonical, analysis, contract
         )
+    analysis["analyzer"] = {
+        "path": str(Path(__file__).resolve()),
+        "sha256": sha256_file(Path(__file__).resolve()),
+    }
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     output_manifest: dict[str, Any] = {}
