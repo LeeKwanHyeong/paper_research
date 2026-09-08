@@ -11,6 +11,7 @@ import torch
 from models.TPPs.CountAwareTPP import (
     LOG_MSE_VARIANT,
     TIME_HEAD_MODE_LEGACY_CLAMPED,
+    TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION,
     CountAwareRMTPP,
     CountAwareTHP,
     CountAwareTitanTPP,
@@ -54,6 +55,12 @@ from models.TPPs.CountAwareTitanCausalQKV import (
     CAUSAL_QKV_BACKBONE,
     causal_qkv_metadata,
     validate_causal_qkv_checkpoint,
+)
+from models.TPPs.CountAwareTitanBoundedQK import (
+    CountAwareTitanBoundedQKTPP,
+    BOUNDED_QK_BACKBONE,
+    bounded_qk_metadata,
+    validate_bounded_qk_checkpoint,
 )
 from models.Titan.common.key_value_memory import (
     KEY_VALUE_BACKBONE,
@@ -172,6 +179,8 @@ def validate_key_value_checkpoint(payload: dict[str, Any], expected_backbone: st
 
 def validate_checkpoint_route(payload: dict[str, Any], expected_backbone: str) -> None:
     """Validate explicit candidate identity; compatible tensor shapes are not enough."""
+    if validate_bounded_qk_checkpoint(payload, expected_backbone):
+        return
     if validate_causal_qkv_checkpoint(payload, expected_backbone):
         return
     if validate_interlayer_memory_checkpoint(payload, expected_backbone):
@@ -305,6 +314,10 @@ def build_count_aware_model(
         "time_sigma_floor": time_sigma_floor,
     }
     intermediate_candidates = {
+        BOUNDED_QK_BACKBONE: (
+            CountAwareTitanBoundedQKTPP,
+            bounded_qk_metadata,
+        ),
         CAUSAL_QKV_BACKBONE: (
             CountAwareTitanCausalQKVTPP,
             causal_qkv_metadata,
@@ -319,13 +332,19 @@ def build_count_aware_model(
         ),
     }
     if backbone in intermediate_candidates:
+        # Post-hoc evaluation rebuilds the identical encoder with the common
+        # frozen K=1 duration head. The joint trainer still enforces legacy
+        # time loss for these dedicated backbone roles.
+        allowed_time_heads = {TIME_HEAD_MODE_LEGACY_CLAMPED}
+        if backbone in (CAUSAL_QKV_BACKBONE, BOUNDED_QK_BACKBONE):
+            allowed_time_heads.add(TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION)
         if (
             quantity_variant != LOG_MSE_VARIANT
-            or time_head_mode != TIME_HEAD_MODE_LEGACY_CLAMPED
+            or time_head_mode not in allowed_time_heads
             or not math.isclose(lambda_tail, 0.0, rel_tol=0.0, abs_tol=1e-15)
         ):
             raise ValueError(
-                "Intermediate-memory candidates require direct log-MSE, legacy time head and no tail loss"
+                "Intermediate-memory candidates require direct log-MSE, an allowed time head and no tail loss"
             )
         model_type, metadata_factory = intermediate_candidates[backbone]
         model = model_type(
@@ -334,10 +353,12 @@ def build_count_aware_model(
             max_seq_len=max_seq_len,
             **quantity_kwargs,
         )
-        return with_time_metadata(
-            model,
-            metadata_factory(hidden_dim),
-        )
+        encoder_metadata = metadata_factory(hidden_dim)
+        if backbone in (CAUSAL_QKV_BACKBONE, BOUNDED_QK_BACKBONE):
+            # Frozen-duration checkpoints must reconstruct the learned
+            # positional embedding at its original length before strict load.
+            encoder_metadata["max_len"] = max_seq_len
+        return with_time_metadata(model, encoder_metadata)
     if backbone == "rmtpp":
         model = CountAwareRMTPP(hidden_dim, train_log_mean, **quantity_kwargs)
         return with_time_metadata(

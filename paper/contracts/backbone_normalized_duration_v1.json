@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "contract_id": "backbone_normalized_duration_v1",
+  "status": "frozen_before_backbone_normalized_duration_outputs",
+  "purpose": "Apply one identical isolated K=1 normalized duration head to frozen B, FULL, and BOUNDED Hard-LMM representations.",
+  "aligned_contract": {
+    "path": "paper/contracts/aligned_frozen_lognormal_duration_v1.json",
+    "sha256": "677cc3af91d84dfea8e3b4e71b38697fb467059f680678f0b8370a50f2366f16",
+    "calibration_source_revision": "8213dbcdace2b62425236af15aa28f5b57f7b958"
+  },
+  "backbone_design_contract": {
+    "path": "paper/contracts/hard_lmm_bounded_qk_causal_v_v1.md",
+    "sha256": "c2f4e931de69b0be0883aa5b8c022efedc44a243afd92c2861d35c23fe625319",
+    "contract_id": "hard_lmm_bounded_qk_causal_v_v1"
+  },
+    "scope": {
+    "roles": ["B", "FULL", "BOUNDED"],
+    "datasets": ["intermittent_frozen_5000", "yellow_trip_hourly", "insta_market_basket"],
+    "input_splits": ["train", "validation"],
+    "optimization_split": "train",
+    "selection_split": "validation",
+    "evaluation_scope": "validation_only",
+    "held_out_test": false,
+    "seed": 42,
+    "quantity_predictions_may_change": false,
+    "fit_roles": ["FULL", "BOUNDED"],
+    "reference_only_roles": ["B"]
+  },
+  "roles": {
+    "B": {
+      "backbone": "titantpp",
+      "model_role": null,
+      "routing_contract_id": "B0",
+      "source_checkpoint_selection": "best_validation_raw_quantity_rmse",
+      "normalized_duration_action": "reuse_previously_verified_aligned_B"
+    },
+    "FULL": {
+      "backbone": "titantpp_hard_memory_causal_qkv",
+      "model_role": "hard_lmm_causal_qkv_candidate",
+      "routing_contract_id": "hard_lmm_causal_qkv_v1",
+      "source_checkpoint_selection": "best_validation_raw_quantity_rmse",
+      "normalized_duration_action": "fit_isolated_K1_head"
+    },
+    "BOUNDED": {
+      "backbone": "titantpp_hard_memory_bounded_qk",
+      "model_role": "hard_lmm_bounded_qk_candidate",
+      "routing_contract_id": "hard_lmm_bounded_qk_causal_v_v1",
+      "source_checkpoint_selection": "best_validation_raw_quantity_rmse",
+      "normalized_duration_action": "fit_isolated_K1_head"
+    }
+  },
+  "source_job_manifest": {
+    "schema_version": 1,
+    "status": "frozen_before_normalized_duration_outputs",
+    "unresolved_source_fields_fail_closed": true,
+    "checkpoint_and_summary_file_sha256_required": true,
+    "source_history_file_sha256_required": true,
+    "source_history_selector_replay_required": true,
+    "checkpoint_canonical_state_sha256_required": true,
+    "source_revision_history_required": true,
+    "evaluation_source_revision_required": true
+  },
+  "cache_policy": {
+    "one_cache_pair_per_dataset_role_source_checkpoint": true,
+    "cross_role_cache_reuse": false,
+    "identity_includes_job_manifest_sha256": true,
+    "held_out_materialization": false
+  },
+  "duration_fit": {
+    "reuse_aligned_k1_builder_likelihood_cache_and_fit_primitives": true,
+    "trainable_parameter_names": ["v_t.weight", "b_t", "w_raw", "time_scale_weight.weight"],
+    "expected_trainable_parameter_count": 130,
+    "calculation_dtype": "float64",
+    "probability_clamp": null,
+    "loss_cap": null,
+    "seed": 42,
+    "epochs": 100,
+    "minimum_epochs": 20,
+    "early_stopping_patience": 20,
+    "optimizer": "AdamW",
+    "learning_rate": 0.001,
+    "weight_decay": 0.0,
+    "encoder_batch_size": 128,
+    "cached_state_batch_size": 8192,
+    "gradient_clip": 1.0,
+    "checkpoint_selection": "earliest_strict_finite_minimum_validation_proper_time_nll",
+    "epoch_zero_is_candidate": true,
+    "resume_identity_required": true
+  }
+}

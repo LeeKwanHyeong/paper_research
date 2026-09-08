@@ -208,6 +208,36 @@ class CausalQKVMemoryAttention(MemoryAttention):
         lag2 = F.pad(values, (0, 0, 2, 0))[:, :length]
         return values * kernel[0] + lag1 * kernel[1] + lag2 * kernel[2]
 
+    def _adapt_event_projections(
+        self,
+        q: torch.Tensor,
+        k: torch.Tensor,
+        v: torch.Tensor,
+        mask: Optional[torch.Tensor],
+        *,
+        input_dtype: Optional[torch.dtype] = None,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Adapt event projections before persistent K/V are concatenated."""
+        batch_size, length, _ = q.shape
+        if mask is not None:
+            if mask.shape != (batch_size, length):
+                raise ValueError(
+                    f"Expected attention mask {(batch_size, length)}, "
+                    f"got {tuple(mask.shape)}"
+                )
+            event_valid = mask.to(
+                device=q.device, dtype=input_dtype or q.dtype
+            ).unsqueeze(-1)
+            causal_q = q * event_valid
+            causal_k = k * event_valid
+            causal_v = v * event_valid
+        else:
+            causal_q, causal_k, causal_v = q, k, v
+        q = q + self.causal_depthwise_residual(causal_q, self.causal_q_kernel)
+        k = k + self.causal_depthwise_residual(causal_k, self.causal_k_kernel)
+        v = v + self.causal_depthwise_residual(causal_v, self.causal_v_kernel)
+        return q, k, v
+
     def forward(
         self,
         x: torch.Tensor,
@@ -217,23 +247,9 @@ class CausalQKVMemoryAttention(MemoryAttention):
     ) -> torch.Tensor:
         batch_size, length, _ = x.shape
         qkv = self.qkv(x)
-        q, k, v = torch.chunk(qkv, 3, dim=-1)
-
-        if mask is not None:
-            if mask.shape != (batch_size, length):
-                raise ValueError(
-                    f"Expected attention mask {(batch_size, length)}, "
-                    f"got {tuple(mask.shape)}"
-                )
-            event_valid = mask.to(device=x.device, dtype=x.dtype).unsqueeze(-1)
-            causal_q = q * event_valid
-            causal_k = k * event_valid
-            causal_v = v * event_valid
-        else:
-            causal_q, causal_k, causal_v = q, k, v
-        q = q + self.causal_depthwise_residual(causal_q, self.causal_q_kernel)
-        k = k + self.causal_depthwise_residual(causal_k, self.causal_k_kernel)
-        v = v + self.causal_depthwise_residual(causal_v, self.causal_v_kernel)
+        q, k, v = self._adapt_event_projections(
+            *torch.chunk(qkv, 3, dim=-1), mask, input_dtype=x.dtype
+        )
 
         memory_parts = []
         if self._ctx_mem is not None and self._ctx_mem.numel() > 0:
