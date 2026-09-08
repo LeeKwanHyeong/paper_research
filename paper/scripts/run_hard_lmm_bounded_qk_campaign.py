@@ -403,6 +403,11 @@ def main(argv: list[str] | None = None) -> None:
                   "recorded_at": utc_now()})
         persist()
     except BaseException as error:
+        current_job = status.get("current_job")
+        if current_job in status["jobs"]:
+            status["jobs"][current_job].update(
+                status="failed", error=repr(error), completed_at=utc_now()
+            )
         status.update(status="failed_execution", error=repr(error), completed_at=utc_now())
         persist()
         raise

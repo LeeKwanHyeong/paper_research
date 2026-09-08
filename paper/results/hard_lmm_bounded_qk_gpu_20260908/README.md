@@ -60,6 +60,13 @@ Time median MAE/RMSE도 함께 기록한다. Legacy time score는 보조 보고�
 
 ## GPU 실행 상태와 증적
 
+첫 source `a18614b`는 13:40 KST에 시작했고 CUDA 66개 통과 후 optimizer
+상태를 서로 다른 장치에서 비교하는 테스트 오류 1개로 중단됐다. 복원 후 모델
+파라미터는 bitwise 일치했으며, 비교 대상의 AdamW step scalar만 CPU/CUDA 위치가
+달랐다. 정확한 값 비교를 CPU에서 수행하도록 테스트를 수정했다. 모델·loss·selector
+및 비용 기준은 유지했다. 이 시도에서는 비용 측정과 실제 데이터 학습을 시작하지
+않았다. 실패 증적은 `attempt_a18614b/diagnosis.json` 및 원격 첫 실행 경로에 보존한다.
+
 이 문서를 처음 커밋한 시점에는 GPU 실행 전이다. 실제 source commit·별도 경로·
 archive SHA·시작 명령과 사전 manifest는 `deployment_manifest.json`, `launch.json`에
 기록한다. 진행/완료 상태는 원격 `campaign_status.json`과 회수한 상태 snapshot을

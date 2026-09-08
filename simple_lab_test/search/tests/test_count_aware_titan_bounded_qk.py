@@ -428,4 +428,7 @@ def test_operating_extremes_finite_and_optimizer_roundtrip_next_step(device):
     for parameter_id, state in original_state["state"].items():
         for name, value in state.items():
             actual = restored_state["state"][parameter_id][name]
-            assert torch.equal(value, actual) if isinstance(value, torch.Tensor) else value == actual
+            # AdamW may retain a CPU step counter while map_location="cuda"
+            # restores its serialized counterpart on CUDA. Compare exact
+            # optimizer values independently of that scalar's storage device.
+            assert torch.equal(value.cpu(), actual.cpu()) if isinstance(value, torch.Tensor) else value == actual
