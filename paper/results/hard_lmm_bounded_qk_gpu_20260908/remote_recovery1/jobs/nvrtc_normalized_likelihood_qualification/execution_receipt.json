@@ -1,0 +1,22 @@
+{
+  "command": [
+    "/opt/miniconda3/envs/ai_env/bin/python",
+    "-s",
+    "-c",
+    "import json,torch; x=torch.tensor([-9.,-1.,0.,2.],device='cuda',dtype=torch.float64,requires_grad=True); loss=-torch.special.log_ndtr(x).mean(); loss.backward(); assert bool(torch.isfinite(loss)) and x.grad is not None and bool(torch.isfinite(x.grad).all()); print(json.dumps({'status':'passed','dtype':str(x.dtype),'device':str(x.device),'loss':float(loss),'gradient_norm':float(x.grad.norm())}))"
+  ],
+  "controller_source_revision": "91c00899e61572bf84884e048a4165fda0c98a26",
+  "gpu_preflight": {
+    "compute_processes": [],
+    "free_vram_mib": 32107,
+    "gpu_name": "NVIDIA GeForce RTX 5090",
+    "total_vram_mib": 32607,
+    "utilization_percent": 0
+  },
+  "output": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_bounded_qk_89cd700c28dd_5090_20260908_nvrtc_recovery1/jobs/nvrtc_normalized_likelihood_qualification",
+  "recovery_manifest_sha256": "17395095838bf7c3beca76bdd818b238d903497e8657504cd52c721c159d50b7",
+  "started_at": "2026-09-08T05:29:49.984641+00:00",
+  "status": "running",
+  "subprocess_ld_library_path": "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib",
+  "training_source_revision": "89cd700c28dd169cd59bfccbd694ef8967bac823"
+}

@@ -60,8 +60,28 @@ Time median MAE/RMSE도 함께 기록한다. Legacy time score는 보조 보고�
 
 ## GPU 실행 상태와 증적
 
-현재 실행 source는 **`89cd700c28dd169cd59bfccbd694ef8967bac823`**이며
-13:46:47 KST에 별도 경로에서 시작했다. CUDA **67/67**과 비용 **27 worker**가
+**진행 중 / 5090**: 14:31:39 KST부터 Instacart seed42 screening을 실행 중이다.
+후보 Backbone과 FULL 정상화 시간 head의 full-data e1은 각각 세 데이터셋 모두
+통과했다. 아직 seed42 결과에 대한 성능 판정을 하지 않았다.
+
+14:34 KST에 첫 epoch 완료를 확인했다. Train 1,991,192건을 처리했고 모든 학습
+값이 유한했으며 첫 history row는 원본 e1과 정확히 일치했다
+(`seed42_initial_progress.json`). 이 기록은 실행 정상성 확인이며 성능 채택
+판정에 사용하지 않는다.
+
+학습 source는 **`89cd700c28dd169cd59bfccbd694ef8967bac823`**이며, 복구 실행기는
+**`91c00899e61572bf84884e048a4165fda0c98a26`**이다. 후자는 실행 재개와 감사만
+담당한다. 새 실행은 14:29:46 KST에 시작했고 `launch.json`, `recovery_manifest.json`,
+`recovery_deployment_receipt.json`에 별도 경로·SHA·명령을 기록했다. 완료된 CUDA·
+비용·후보 e1을 재감사해 재사용하고, 실패한 시간 head의 cache는 재사용하지 않았다.
+학습은 `max300/min40/patience40`이며 Instacart → Taxi → Intermittent 순서를 유지한다.
+
+`normalized_e1_recovery_audit.json`과 `remote_recovery1/`에는 완료한 NVRTC 확인 및
+FULL 정상화 e1 세 건의 소형 증적을 회수했다. 원격·로컬 SHA 18/18이 일치하며,
+세 데이터셋의 전체 처리 건수, 학습 가능한 시간 head 130개 파라미터, 수량 예측
+bitwise identity, selected restore 감사와 held-out 미사용을 확인했다.
+
+원본 source89 실행은 13:46:47 KST에 별도 경로에서 시작했다. CUDA **67/67**과 비용 **27 worker**가
 통과했다. 로컬에서도 비용 비율을 원 측정값으로 재계산했다
 (`cuda_cost_local_audit.json`).
 
@@ -97,7 +117,7 @@ B 89,795개, FULL과 후보 각각 90,371개다.
 `attempt_89cd700_nvrtc/`에 원본 manifest·status·launch와 원본 오류 로그 archive를
 보존한다. 설치된 CUDA 13 라이브러리 경로를 해당 프로세스에만 지정한 합성
 float64 `log_ndtr`와 gradient 검증은 통과했다. 모델·loss·selector·패키지 변경
-없이, 완료 증적을 재검증하여 재사용하는 별도 복구 실행을 준비 중이다.
+없이, 완료 증적을 재검증하여 재사용하는 별도 복구 실행을 시작했다.
 
 `nvrtc_runtime_recovery_probe.json`은 실제 5090에서 연속·정수·상한 관측의
 float64 likelihood와 gradient가 유한함을 확인했다. CPU/CUDA 출력 차이는 최대
@@ -124,9 +144,13 @@ archive SHA·시작 명령과 사전 manifest는 `deployment_manifest.json`, `la
 
 ## 실행 후 남는 작업
 
-- CUDA·비용·e1이 통과하면 승인된 queue가 seed42를 자동으로 이어서 실행한다.
-- 시간별 확인은 상태·GPU/tmux 생존·현재 history를 읽고, 의미 있는 변화나 완료,
+- **진행 중 / 5090**: Instacart seed42 screening. 기존 B/FULL 수량 gate를 통과하면
+  동일 K=1 조건의 정상화 시간 평가를 이어간다.
+- **다음 작업 / 5090**: Instacart의 공통 수량·시간 기준이 모두 통과할 때만 Taxi,
+  이어서 Intermittent를 같은 순서와 기준으로 진행한다. 실패하면 뒤의 학습을 중단한다.
+- **진행 중 / 시간별 Scheduler**: 상태·GPU/tmux 생존·현재 history를 읽고, 의미 있는 변화나 완료,
   오류가 있을 때 알린다. 실행 오류나 성능 기준 미달 뒤 자동 재시도는 하지 않는다.
-- 완료 artifact를 회수해 동일 source/data/selector/quantity identity를 재감사한다.
+  `monitor.json`에 갱신된 자동화와 후속 처리 범위를 기록했다.
+- **다음 작업 / 로컬**: 완료 artifact를 회수해 동일 source/data/selector/quantity identity를 재감사한다.
   세 데이터셋 seed42 통과는 추가 검토 근거이며 최종 채택이나 전 모델 대비 우위를
   뜻하지 않는다. 추가 seed와 held-out은 이번 queue에 포함하지 않는다.
