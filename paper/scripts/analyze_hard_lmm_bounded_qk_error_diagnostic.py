@@ -103,6 +103,11 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input-parquet", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument(
+        "--detail-output-dir",
+        type=Path,
+        help="Optional external directory for high-cardinality per-series rows.",
+    )
     parser.add_argument("--contract", type=Path)
     parser.add_argument("--run-audit", type=Path)
     parser.add_argument("--series-column")
@@ -1268,11 +1273,14 @@ def main() -> None:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     output_manifest: dict[str, Any] = {}
     for name, table in tables.items():
-        path = args.output_dir / name
+        external_detail = name == "series_contributions.csv" and args.detail_output_dir is not None
+        path = (args.detail_output_dir if external_detail else args.output_dir) / name
         write_csv_atomic(path, table)
         output_manifest[name] = {
             "rows": len(table),
             "sha256": sha256_file(path),
+            "storage": "external_diagnostic_detail" if external_detail else "result_directory",
+            "path": str(path.resolve()),
         }
     analysis["outputs"] = output_manifest
     analysis_path = args.output_dir / "analysis.json"
