@@ -1,0 +1,251 @@
+{
+  "contract_id": "hard_lmm_level_history_qkv_component_diagnostic_v1",
+  "status": "frozen_before_component_inference",
+  "frozen_at_utc": "2026-09-08T23:03:06Z",
+  "purpose": "Determine which frozen LPHC event-Q/K/V residual paths conditionally reproduce the Instacart short-history degradation and long-history improvement before deciding whether one more conservative common backbone candidate is justified.",
+  "scope": {
+    "dataset": "insta_market_basket",
+    "seed": 42,
+    "target_split": "train",
+    "input_splits_materialized": [
+      "train"
+    ],
+    "validation_targets": false,
+    "held_out_test": false,
+    "training": false,
+    "checkpoint_selection": false,
+    "parameter_updates": false,
+    "optimizer_use": false,
+    "calibration_fit": false,
+    "allowed_claim": "train-internal conditional Q/K/V path sufficiency and interaction evidence for architecture selection",
+    "forbidden_claims": [
+      "unique causal attribution",
+      "out-of-sample replication",
+      "generalization improvement",
+      "held-out performance",
+      "candidate performance acceptance"
+    ],
+    "interpretation_limit": "The LPHC checkpoint was trained on the full train split and selected on validation raw quantity RMSE. Residual-off and masked variants retain co-adapted inherited weights and therefore are conditional interventions in the selected LPHC state, not independently trained models or a reconstruction of Frozen B."
+  },
+  "dataset": {
+    "data_path": "sample_data/insta_market_basket/instacart_marked_target_with_split.parquet",
+    "data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+    "split_manifest_path": "sample_data/insta_market_basket/instacart_marked_target_split_manifest.json",
+    "split_manifest_sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d",
+    "loader": "RMTPPWeekLookbackDataset",
+    "lookback_weeks": 52,
+    "max_sequence_length": 64,
+    "expected_train_rows": 2197401,
+    "expected_train_series": 206209,
+    "expected_train_target_series": 205934,
+    "expected_train_targets": 1991192,
+    "expected_train_identity_sha256": "c361f5e9904c25f18c91007f6e1209518a02fb755799e81c8300ee759b2a1210",
+    "expected_train_quantity_sha256": "07e98693d5ac26caeaeb3c60d6d31fad21ab8f1e40ac649f231ac299963817d8",
+    "expected_history_length_min": 1,
+    "expected_history_length_max": 45
+  },
+  "source": {
+    "frozen_model_revision": "667f9810d3c183b0217d0d511f8031a7d2b7451f",
+    "deployment_manifest_path": "paper/results/hard_lmm_level_history_qkv_gpu_20260908/remote/deployment_manifest.json",
+    "deployment_manifest_sha256": "a0227fbe9df32932b6e2618b2f571bf67b701a5c1f935333854f62fc3fce0a13",
+    "require_separate_frozen_source_root": true,
+    "reject_project_imports_outside_frozen_source_root": true,
+    "required_source_file_sha256": {
+      "data_loader/event_seq_data_module.py": "7c11d9ace6c4e4d3bb03861aae92393aa946a38452d702dc7625210b339897ca",
+      "models/TPPs/CountAwareFactory.py": "d47c3fbfce17e087e83b0f581b9d65497372541a5119f8f3628fd7000f6f155b",
+      "models/TPPs/CountAwareTPP.py": "eaa5cb7557c31e45f846911ef5ff91a7f9983d7b9bb7cf4f7a0960b23586d4a9",
+      "models/TPPs/CountAwareTitanLevelHistoryQKV.py": "f4398a442c7872b158039f2346bc18ce5df5b89de97ec4c1c4a0f9291ad136e0",
+      "models/TPPs/TitanTPP.py": "5381faad10d7782af40abf028aa0b79894e224d61c82af9680a0d9bac410c37c",
+      "paper/scripts/count_aware_tpp_backbone/core.py": "025dfbe75a5a4e235466807f31873aa085f8ddffe680485fb4b9f4f7ef60c598",
+      "paper/scripts/run_count_aware_tpp_backbone_control.py": "b281050bd40b481997e69fab32acf618845205a7123dc18d7bfe20b534fbe641",
+      "paper/scripts/run_matched_frozen_lognormal_duration.py": "edc060e778cca8ad2788e7fda18ec1119535b80d50779abf62feb1c0a02f2519",
+      "paper/scripts/run_taxi_quantity_interface_ablation.py": "32630140f939b1e8e2287893b7705b1d3ec6e9f67644c5f9477c0ef979890801",
+      "simple_lab_test/search/common/runner.py": "a1fc687455b768ed454878cda55cf2d1b43cdb13817880a4cf3fbca9c7db8739"
+    }
+  },
+  "models": {
+    "B": {
+      "role": "external_frozen_reference",
+      "backbone": "titantpp",
+      "checkpoint_selection": "best_validation_raw_quantity_rmse",
+      "checkpoint_file_sha256": "e594f8df0dcd66249c3724063f44eee3de213bc83a780ca81fdf39a094bfed07",
+      "checkpoint_state_sha256": "a74e1f3055b03db5ac85adf2fdb63711890ea9d06449965e3ca749aefccc2f02",
+      "best_epoch": 72,
+      "train_cache_path": "search_artifacts/frozen_raw_affine_calibration_v1_1ba9a43_5080/full/train/insta_market_basket_B/train_predictions.npz",
+      "train_cache_file_sha256": "bbe3cd5fe995ec15afc681c236c2ff0fc9b900197dff309c399ad3cb0f390d7d",
+      "train_result_path": "search_artifacts/frozen_raw_affine_calibration_v1_1ba9a43_5080/full/train/insta_market_basket_B/result.json",
+      "train_result_file_sha256": "dc5f677b1c4d76b9cc040d6eb76c51bc09df886e92086783f8eea3809852b3dc"
+    },
+    "LPHC": {
+      "role": "selected_frozen_component_source",
+      "backbone": "titantpp_hard_memory_level_history_qkv",
+      "checkpoint_selection": "best_validation_raw_quantity_rmse",
+      "checkpoint_file_sha256": "2e09abf9b71f53eff5b4d571c47486086fc690da761748aabda31891e8d4ddb9",
+      "checkpoint_state_sha256": "0bf08165a87967afc70344750dd347e4f7b9b2de3544a806e7f9b83d903983b8",
+      "best_epoch": 40,
+      "completed_epochs": 80,
+      "summary_path": "paper/results/hard_lmm_level_history_qkv_gpu_20260908/remote/jobs/seed42_screening_insta_market_basket/runs/titantpp_hard_memory_level_history_qkv/count_only_log_regression/seed_42/summary.json",
+      "summary_file_sha256": "4372143ec8f751fd0a3a303658041c35d76ae77c81a2465f61ba19d680a6b80d",
+      "kernel_state_keys": {
+        "Q": "encoder.layers.0.attn.level_history_q_kernel",
+        "K": "encoder.layers.0.attn.level_history_k_kernel",
+        "V": "encoder.layers.0.attn.level_history_v_kernel"
+      },
+      "kernel_shape": [
+        2,
+        64
+      ]
+    }
+  },
+  "execution": {
+    "device_preference": [
+      "mps",
+      "cpu"
+    ],
+    "batch_size": 512,
+    "shuffle": false,
+    "numeric_export_dtype": "float64",
+    "fresh_strict_restore_per_variant": true,
+    "require_inference_mode": true,
+    "require_state_unchanged": true,
+    "require_gradients_absent": true,
+    "require_checkpoint_file_unchanged": true,
+    "require_non_kernel_state_bitwise_equal": true,
+    "prediction_cache_git_tracked": false
+  },
+  "variants": {
+    "residual_off": [
+      0,
+      0,
+      0
+    ],
+    "q_only": [
+      1,
+      0,
+      0
+    ],
+    "k_only": [
+      0,
+      1,
+      0
+    ],
+    "v_only": [
+      0,
+      0,
+      1
+    ],
+    "qk": [
+      1,
+      1,
+      0
+    ],
+    "qv": [
+      1,
+      0,
+      1
+    ],
+    "kv": [
+      0,
+      1,
+      1
+    ],
+    "full_qkv": [
+      1,
+      1,
+      1
+    ]
+  },
+  "analysis": {
+    "fold_count": 2,
+    "fold_assignment": "sha256_typed_series_id_first_uint64_big_endian_modulo_2",
+    "fold_salt": "hard_lmm_bounded_qk_train_condition_v1:20260908",
+    "expected_fold_target_counts": {
+      "0": 996690,
+      "1": 994502
+    },
+    "expected_fold_series_counts": {
+      "0": 102983,
+      "1": 102951
+    },
+    "history_bins": [
+      "1",
+      "2-3",
+      "4-7",
+      "8-15",
+      "16-31",
+      "32-63"
+    ],
+    "primary_metrics": [
+      "mae",
+      "mse",
+      "rmse",
+      "bias",
+      "centered_mse",
+      "mean_prediction_shift"
+    ],
+    "primary_slices": [
+      "overall",
+      "history_2_3",
+      "history_8_15"
+    ],
+    "component_effect_reference": "residual_off_from_same_selected_LPHC_state",
+    "external_compatibility_reference": "B_train_prediction_cache",
+    "full_pattern_replication": {
+      "decision_scope": "each fold independently",
+      "required_conditions": {
+        "full_qkv_history_2_3_mse_worse_than_B": "MSE_2_3(full_qkv) - MSE_2_3(B) > 0",
+        "full_qkv_history_8_15_mse_better_than_B": "MSE_8_15(full_qkv) - MSE_8_15(B) < 0"
+      },
+      "acceptance": "both conditions must pass in both fixed folds"
+    },
+    "single_path_attribution": {
+      "eligible_variants": [
+        "q_only",
+        "k_only",
+        "v_only"
+      ],
+      "descriptive_flags": {
+        "consistent_short_history_harm": "delta MSE versus residual_off is greater than zero at history 2-3 in both folds",
+        "consistent_long_history_benefit": "delta MSE versus residual_off is less than zero at history 8-15 in both folds",
+        "consistent_negative_level_shift": "mean prediction shift versus residual_off is less than zero in both folds"
+      },
+      "interpretation": "Singleton variants establish conditional sufficiency only. Pair variants are interaction controls and do not turn this frozen intervention into unique causal attribution."
+    },
+    "next_candidate_gate": {
+      "decision_scope": "each fold independently",
+      "eligible_variants": [
+        "q_only",
+        "k_only",
+        "v_only"
+      ],
+      "required_conditions_vs_residual_off": {
+        "overall_raw_mse_not_worse": "delta MSE <= 0",
+        "overall_mae_not_worse": "delta MAE <= 0",
+        "overall_centered_mse_not_worse": "delta centered MSE <= 0",
+        "history_2_3_mse_not_worse": "delta MSE at history 2-3 <= 0",
+        "history_8_15_mse_improves": "delta MSE at history 8-15 < 0",
+        "level_shift_bounded": "absolute mean prediction shift <= 0.01 * fold B RMSE"
+      },
+      "required_conditions_vs_B": {
+        "overall_raw_mse_not_worse": "delta MSE <= 0",
+        "overall_mae_not_worse": "delta MAE <= 0",
+        "overall_centered_mse_not_worse": "delta centered MSE <= 0",
+        "history_2_3_mse_not_worse": "delta MSE at history 2-3 <= 0",
+        "history_8_15_mse_improves": "delta MSE at history 8-15 < 0"
+      },
+      "acceptance": "one singleton variant must satisfy every required condition against both references in both fixed folds",
+      "selection_if_multiple_pass": "lowest pooled raw MSE, then lowest pooled history_8_15 MSE, then q_only, k_only, v_only",
+      "pass_action": "freeze exactly one smaller common-confidence backbone candidate before implementation",
+      "failure_action": "stop the LPHC-QKV family and move to a different integration family"
+    },
+    "pair_variants_role": "secondary interaction controls excluded from candidate selection",
+    "target_quantity_strata_role": "excluded from the primary decision",
+    "decision_output": [
+      "full_pattern_replicated",
+      "conditional_path_flags",
+      "eligible_single_paths",
+      "selected_path_or_null",
+      "continue_or_stop_LPHC_family"
+    ]
+  }
+}
