@@ -17,6 +17,7 @@ import math
 import os
 from pathlib import Path
 import subprocess
+import sys
 import time
 from typing import Any, Callable, Mapping
 
@@ -434,6 +435,9 @@ def verify_deployment_source(
 
 def import_runtime() -> dict[str, Any]:
     """Import project code only after the deployment source has been verified."""
+    root_string = str(ROOT)
+    if root_string not in sys.path:
+        sys.path.insert(0, root_string)
     from models.TPPs.CountAwareFactory import validate_checkpoint_route
     from paper.scripts.count_aware_tpp_backbone.core import (
         load_train_validation_frame,

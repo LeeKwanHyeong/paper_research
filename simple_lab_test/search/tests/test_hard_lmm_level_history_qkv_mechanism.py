@@ -4,6 +4,8 @@ import copy
 import hashlib
 import json
 from pathlib import Path
+import subprocess
+import sys
 from typing import Any, Mapping
 
 import numpy as np
@@ -12,6 +14,37 @@ import pytest
 import torch
 
 from paper.scripts import audit_hard_lmm_level_history_qkv_mechanism as mechanism
+
+
+def test_direct_script_runtime_import_bootstraps_project_root(tmp_path: Path) -> None:
+    script = Path(mechanism.__file__).resolve()
+    root = script.parents[2]
+    probe = tmp_path / "probe.py"
+    probe.write_text(
+        "\n".join(
+            [
+                "import importlib.util",
+                "import sys",
+                f"root = {str(root)!r}",
+                "sys.path = [entry for entry in sys.path if entry != root]",
+                f"spec = importlib.util.spec_from_file_location('mechanism_probe', {str(script)!r})",
+                "module = importlib.util.module_from_spec(spec)",
+                "spec.loader.exec_module(module)",
+                "runtime = module.import_runtime()",
+                "assert 'validate_checkpoint_route' in runtime",
+                "assert sys.path[0] == root",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    subprocess.run(
+        [sys.executable, "-s", str(probe)],
+        cwd=tmp_path,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
 
 
 def _paired_frames() -> tuple[pl.DataFrame, pl.DataFrame]:
