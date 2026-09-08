@@ -43,6 +43,13 @@ def test_contract_is_train_only_and_fails_closed() -> None:
     with pytest.raises(ValueError, match="Fold salt drift"):
         validate_contract(changed_salt)
 
+    changed_criterion = copy.deepcopy(payload)
+    changed_criterion["analysis"]["required_conditions"][
+        "overall_mse_worsens"
+    ] = "MSE(BOUNDED_QK) - MSE(B) < 0"
+    with pytest.raises(ValueError, match="Required-condition drift"):
+        validate_contract(changed_criterion)
+
 
 def _small_cache() -> dict[str, np.ndarray]:
     return {

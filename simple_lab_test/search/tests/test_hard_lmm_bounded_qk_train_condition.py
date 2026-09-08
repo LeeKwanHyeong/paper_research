@@ -93,6 +93,13 @@ def test_fixed_contract_and_analyzer_have_identical_gate_ids() -> None:
     with pytest.raises(ValueError, match="required-condition IDs"):
         validate_contract(drifted)
 
+    reversed_criterion = copy.deepcopy(contract)
+    reversed_criterion["analysis"]["required_conditions"][
+        "centered_mse_improves"
+    ] = "centered_MSE(BOUNDED_QK) - centered_MSE(B) > 0"
+    with pytest.raises(ValueError, match="criteria"):
+        validate_contract(reversed_criterion)
+
 
 def test_typed_sha_folds_are_deterministic_and_series_disjoint() -> None:
     series = np.asarray(["1", 1, True, "repeat", "repeat"], dtype=object)

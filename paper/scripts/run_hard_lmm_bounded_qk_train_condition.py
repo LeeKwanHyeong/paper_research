@@ -39,19 +39,19 @@ B_CACHE_KEYS = {
     "target_index",
     "context_end",
 }
-REQUIRED_CONDITION_IDS = (
-    "mean_prediction_shift_negative",
-    "mean_prediction_shift_material",
-    "median_series_mean_prediction_shift_negative",
-    "centered_mse_improves",
-    "overall_mse_worsens",
-    "bias_squared_penalty_increases",
-    "bias_penalty_overturns_centered_gain",
-    "mae_not_worse",
-    "history_2_3_mse_materially_worse",
-    "history_2_3_shift_more_negative_than_8_15",
-    "history_8_15_mse_improves",
-)
+EXPECTED_REQUIRED_CONDITIONS = {
+    "mean_prediction_shift_negative": "mean(BOUNDED_QK - B) < 0",
+    "mean_prediction_shift_material": "abs(mean(BOUNDED_QK - B)) / RMSE(B) >= 0.01",
+    "median_series_mean_prediction_shift_negative": "median_s(mean_i_in_s(BOUNDED_QK - B)) < 0",
+    "centered_mse_improves": "centered_MSE(BOUNDED_QK) - centered_MSE(B) < 0",
+    "overall_mse_worsens": "MSE(BOUNDED_QK) - MSE(B) > 0",
+    "bias_squared_penalty_increases": "bias(BOUNDED_QK)^2 - bias(B)^2 > 0",
+    "bias_penalty_overturns_centered_gain": "delta bias squared > -delta centered MSE",
+    "mae_not_worse": "MAE(BOUNDED_QK) - MAE(B) <= 0",
+    "history_2_3_mse_materially_worse": "(MSE_2_3(BOUNDED_QK) - MSE_2_3(B)) / MSE_2_3(B) >= 0.01",
+    "history_2_3_shift_more_negative_than_8_15": "mean_shift_2_3 < mean_shift_8_15",
+    "history_8_15_mse_improves": "MSE_8_15(BOUNDED_QK) - MSE_8_15(B) < 0",
+}
 
 
 def require(condition: bool, message: str) -> None:
@@ -154,7 +154,7 @@ def validate_contract(contract: Mapping[str, Any]) -> None:
     conditions = analysis.get("required_conditions")
     require(
         isinstance(conditions, Mapping)
-        and tuple(conditions) == REQUIRED_CONDITION_IDS,
+        and dict(conditions) == EXPECTED_REQUIRED_CONDITIONS,
         "Required-condition drift",
     )
     require(
