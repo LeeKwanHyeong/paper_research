@@ -60,9 +60,10 @@ Time median MAE/RMSE도 함께 기록한다. Legacy time score는 보조 보고�
 
 ## GPU 실행 상태와 증적
 
-**진행 중 / 5090**: 14:31:39 KST부터 Instacart seed42 screening을 실행 중이다.
+**완료 / 5090**: Instacart seed42 screening은 61 epoch에서 조기 종료됐으며,
+사전 고정한 수량 gate에 따라 후보를 채택하지 않고 전체 queue를 중단했다.
 후보 Backbone과 FULL 정상화 시간 head의 full-data e1은 각각 세 데이터셋 모두
-통과했다. 아직 seed42 결과에 대한 성능 판정을 하지 않았다.
+통과했지만, e1 결과는 성능 판정에 사용하지 않았다.
 
 14:34 KST에 첫 epoch 완료를 확인했다. Train 1,991,192건을 처리했고 모든 학습
 값이 유한했으며 첫 history row는 원본 e1과 정확히 일치했다
@@ -74,7 +75,24 @@ Time median MAE/RMSE도 함께 기록한다. Legacy time score는 보조 보고�
 담당한다. 새 실행은 14:29:46 KST에 시작했고 `launch.json`, `recovery_manifest.json`,
 `recovery_deployment_receipt.json`에 별도 경로·SHA·명령을 기록했다. 완료된 CUDA·
 비용·후보 e1을 재감사해 재사용하고, 실패한 시간 head의 cache는 재사용하지 않았다.
-학습은 `max300/min40/patience40`이며 Instacart → Taxi → Intermittent 순서를 유지한다.
+학습은 `max300/min40/patience40`을 유지했다. 최적 epoch는 21이었고 이후 40 epoch
+동안 raw RMSE가 갱신되지 않아 epoch 61에서 정상적으로 조기 종료됐다. 실행 시간은
+9,391.85초였으며 전체 train 1,991,192건과 validation 503,733건을 사용했다.
+
+| Instacart validation | 후보 | B | FULL | B 대비 후보 |
+|---|---:|---:|---:|---:|
+| Raw RMSE | 5.886228 | 5.872217 | 5.877257 | **+0.2386%** |
+| 전체 MAE | 3.988698 | 3.993781 | 3.995619 | -0.1273% |
+| Body MAE | 3.430495 | 3.438602 | 3.428296 | -0.2357% |
+| `>p99` MAE | 21.900897 | 21.917795 | 22.190152 | -0.0771% |
+
+B 대비 전체·body·tail MAE와 FULL 대비 허용 기준은 모두 통과했다. 그러나 공통
+채택의 필수 조건인 **B 대비 raw RMSE strict improvement**를 충족하지 못했다
+(비율 1.002386). 따라서 기준을 완화하지 않고 `stopped_quantity_gate_failed`로
+종료했다. 후보의 정상화 시간 full fit, Taxi·Intermittent seed42, 추가 seed와
+held-out 평가는 시작하지 않았다. GPU는 종료 후 idle이고 tmux도 정상 종료됐다.
+종료 결과와 checkpoint·optimizer·selector·kernel·data lineage의 독립 재감사는
+`final_gpu_audit.json`에 기록했다.
 
 `normalized_e1_recovery_audit.json`과 `remote_recovery1/`에는 완료한 NVRTC 확인 및
 FULL 정상화 e1 세 건의 소형 증적을 회수했다. 원격·로컬 SHA 18/18이 일치하며,
@@ -144,13 +162,10 @@ archive SHA·시작 명령과 사전 manifest는 `deployment_manifest.json`, `la
 
 ## 실행 후 남는 작업
 
-- **진행 중 / 5090**: Instacart seed42 screening. 기존 B/FULL 수량 gate를 통과하면
-  동일 K=1 조건의 정상화 시간 평가를 이어간다.
-- **다음 작업 / 5090**: Instacart의 공통 수량·시간 기준이 모두 통과할 때만 Taxi,
-  이어서 Intermittent를 같은 순서와 기준으로 진행한다. 실패하면 뒤의 학습을 중단한다.
-- **진행 중 / 시간별 Scheduler**: 상태·GPU/tmux 생존·현재 history를 읽고, 의미 있는 변화나 완료,
-  오류가 있을 때 알린다. 실행 오류나 성능 기준 미달 뒤 자동 재시도는 하지 않는다.
-  `monitor.json`에 갱신된 자동화와 후속 처리 범위를 기록했다.
-- **다음 작업 / 로컬**: 완료 artifact를 회수해 동일 source/data/selector/quantity identity를 재감사한다.
-  세 데이터셋 seed42 통과는 추가 검토 근거이며 최종 채택이나 전 모델 대비 우위를
-  뜻하지 않는다. 추가 seed와 held-out은 이번 queue에 포함하지 않는다.
+- **완료 / 로컬**: 종료 artifact를 회수해 source/data/selector/optimizer 복원,
+  전체 처리 건수와 고정 quantity gate를 독립 재감사했다.
+- **완료 / 시간별 Scheduler**: terminal 상태를 확인했으므로 중복 확인을 막기 위해
+  `causal-qkv-taxi-intermittent` heartbeat를 일시 중지했다.
+- **다음 작업 / 로컬**: B 대비 표본별 제곱오차 증가가 어느 series·수량 구간·이력
+  조건에 집중되는지 기존 validation 예측으로 진단한다. 이 근거 없이 Q/K 제한을
+  수정하거나 사전 기준을 완화하지 않는다.
