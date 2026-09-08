@@ -339,10 +339,17 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     require(sha256_file(args.data) == dataset_spec["data_sha256"], "Dataset digest drift")
     require(sha256_file(args.split_manifest) == dataset_spec["split_manifest_sha256"], "Split-manifest digest drift")
     device = torch.device(args.device)
+    cuda_device_index: int | None = None
     if device.type == "cuda":
         require(torch.cuda.is_available(), "CUDA was requested but is unavailable")
-        torch.cuda.set_device(device)
-        torch.cuda.reset_peak_memory_stats(device)
+        cuda_device_index = (
+            int(device.index)
+            if device.index is not None
+            else int(torch.cuda.current_device())
+        )
+        device = torch.device("cuda", cuda_device_index)
+        torch.cuda.set_device(cuda_device_index)
+        torch.cuda.reset_peak_memory_stats(cuda_device_index)
     frame = runtime["load_train_validation_frame"](args.data)
     admitted_splits = set(frame["chronological_split"].unique().to_list())
     require(admitted_splits == {"train", "validation"}, "Unexpected admitted split set")
@@ -510,6 +517,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "sha256": contract_sha,
             "id": CONTRACT_ID,
         },
+        "runner": {
+            "path": str(Path(__file__).resolve()),
+            "sha256": sha256_file(Path(__file__).resolve()),
+        },
         "scope": contract["scope"],
         "held_out_test_evaluated": False,
         "training_performed": False,
@@ -543,7 +554,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "torch_version": torch.__version__,
             "elapsed_seconds": time.perf_counter() - started,
             "inference_elapsed_seconds": time.perf_counter() - inference_started,
-            "peak_cuda_allocated_bytes": int(torch.cuda.max_memory_allocated(device)) if device.type == "cuda" else 0,
+            "peak_cuda_allocated_bytes": int(torch.cuda.max_memory_allocated(cuda_device_index)) if device.type == "cuda" else 0,
             "pid": os.getpid(),
         },
     }
