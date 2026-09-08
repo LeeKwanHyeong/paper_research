@@ -453,6 +453,14 @@ def parameter_groups(model: Any) -> dict[str, list[tuple[str, torch.nn.Parameter
     return groups
 
 
+def head_state_sha256(model: Any) -> str:
+    names = ("quantity_head.weight", "quantity_head.bias", "v_t.weight", "b_t", "w_raw")
+    state = model.state_dict()
+    selected = {name: state[name] for name in names if name in state}
+    require(len(selected) == len(names), "Legacy quantity/time head state is incomplete")
+    return canonical_state_sha256(selected)
+
+
 def gradient_records(model: Any, batches_by_fold: Mapping[int, list[tuple]], *, variant: str,
                      frozen: FrozenModules) -> list[dict[str, Any]]:
     model.eval().requires_grad_(True)
@@ -665,6 +673,8 @@ def extract_dataset(repo_root: Path, frozen_root: Path, contract_path: Path,
             "B": canonical_state_sha256(B_model.state_dict()),
             "candidate": canonical_state_sha256(candidate_model.state_dict()),
         }
+        head_state_before = {"B": head_state_sha256(B_model),
+                             "candidate": head_state_sha256(candidate_model)}
         candidate_common_state = {
             name: value for name, value in candidate_model.state_dict().items()
             if name not in set(KERNEL_KEYS.values())
@@ -784,7 +794,10 @@ def extract_dataset(repo_root: Path, frozen_root: Path, contract_path: Path,
             "B": canonical_state_sha256(B_model.state_dict()),
             "candidate": canonical_state_sha256(candidate_model.state_dict()),
         }
+        head_state_after = {"B": head_state_sha256(B_model),
+                            "candidate": head_state_sha256(candidate_model)}
         require(model_state_after == model_state_before, "Model state changed across interventions")
+        require(head_state_after == head_state_before, "Quantity/time head parameters changed")
         require(all(parameter.grad is None for model in (B_model, candidate_model)
                     for parameter in model.parameters()), "Parameter gradients were not cleaned")
         checkpoint_hashes_after = {
@@ -801,6 +814,7 @@ def extract_dataset(repo_root: Path, frozen_root: Path, contract_path: Path,
         checks.update(
             status="passed", completed_at=utc_now(), train_rows=frame.height,
             train_targets=len(dataset), sample_targets=n,
+            quantity_boundaries=list(row["quantity_boundaries"]),
             duration_train_quartile_boundaries=quartiles,
             sample_ids_path=str(ids_path), sample_ids_sha256=ids_hash_before,
             npz_path=str(npz_path), npz_sha256=sha256_file(npz_path),
@@ -808,6 +822,8 @@ def extract_dataset(repo_root: Path, frozen_root: Path, contract_path: Path,
             checkpoint_file_hashes_before=checkpoint_hashes_before,
             checkpoint_file_hashes_after=checkpoint_hashes_after,
             model_state_hashes_before=model_state_before, model_state_hashes_after=model_state_after,
+            head_parameter_hashes_before=head_state_before,
+            head_parameter_hashes_after=head_state_after,
             official_target_outputs_first_fixed_batch=parity,
             target_duration_quantity_padding_invariance=leakage,
             variant_kernel_mask_checks=mask_checks,
