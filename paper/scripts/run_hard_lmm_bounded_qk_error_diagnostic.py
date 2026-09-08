@@ -16,6 +16,7 @@ import json
 import math
 import os
 from pathlib import Path
+import subprocess
 import sys
 import time
 from typing import Any, Mapping
@@ -95,6 +96,26 @@ def validate_contract(contract: Mapping[str, Any]) -> None:
 def verify_frozen_source(root: Path, contract: Mapping[str, Any]) -> dict[str, Any]:
     root = root.resolve()
     require(root.is_dir(), "Frozen source root is missing")
+    expected_revision = contract["execution"]["frozen_source_revision"]
+    try:
+        observed_revision = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=20,
+        ).stdout.strip()
+        status = subprocess.run(
+            ["git", "-C", str(root), "status", "--porcelain", "--untracked-files=all"],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=20,
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
+        raise ValueError("Frozen source root must be a readable Git checkout") from exc
+    require(observed_revision == expected_revision, "Frozen source Git HEAD drift")
+    require(not status, "Frozen source Git checkout is not clean")
     expected = contract["execution"]["source_file_sha256"]
     observed: dict[str, str] = {}
     for relative, digest in expected.items():
@@ -105,7 +126,9 @@ def verify_frozen_source(root: Path, contract: Mapping[str, Any]) -> dict[str, A
         require(observed[relative] == digest, f"Frozen source file drift: {relative}")
     return {
         "root": str(root),
-        "revision": contract["execution"]["frozen_source_revision"],
+        "revision": observed_revision,
+        "git_head_verified": True,
+        "git_worktree_clean": True,
         "files": observed,
         "all_file_hashes_verified": True,
     }
@@ -332,6 +355,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     started = time.perf_counter()
     contract = json.loads(args.contract.read_text(encoding="utf-8"))
     validate_contract(contract)
+    require(
+        int(args.batch_size) == int(contract["execution"]["inference_batch_size"]),
+        "Inference batch size differs from the frozen contract",
+    )
     contract_sha = sha256_file(args.contract)
     source_audit = verify_frozen_source(args.frozen_source_root, contract)
     runtime = import_frozen_runtime(args.frozen_source_root)
@@ -479,7 +506,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     }
     require(before_states == after_states, "A source model changed during inference")
     require(all(parameter.grad is None for model in models.values() for parameter in model.parameters()), "A frozen model accumulated gradients")
-    output_columns: dict[str, Any] = dict(metadata)
+    output_columns: dict[str, Any] = {
+        "split": np.full(len(dataset), "validation", dtype=object),
+        **metadata,
+    }
     true_qty = metadata["true_qty"]
     for role in MODEL_ROLES:
         key = role.lower()
@@ -551,6 +581,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         },
         "runtime": {
             "device": str(device),
+            "inference_batch_size": int(args.batch_size),
             "torch_version": torch.__version__,
             "elapsed_seconds": time.perf_counter() - started,
             "inference_elapsed_seconds": time.perf_counter() - inference_started,
