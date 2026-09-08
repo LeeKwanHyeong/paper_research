@@ -1,0 +1,134 @@
+{
+  "contract_id": "hard_lmm_bounded_qk_train_condition_v1",
+  "status": "frozen_before_bounded_qk_train_inference",
+  "frozen_at_utc": "2026-09-08T10:33:25Z",
+  "purpose": "Test whether the validation-localized BOUNDED-QK downward level shift, short-history bottleneck, and centered-error gain recur in two series-disjoint partitions of the canonical Instacart train targets.",
+  "scope": {
+    "dataset": "insta_market_basket",
+    "seed": 42,
+    "target_split": "train",
+    "input_splits_materialized": [
+      "train"
+    ],
+    "held_out_test": false,
+    "validation_targets": false,
+    "training": false,
+    "checkpoint_selection": false,
+    "parameter_updates": false,
+    "calibration_fit": false,
+    "primary_contrast": "BOUNDED_QK_minus_B",
+    "allowed_claim": "train-internal structural consistency needed to justify one subsequent architecture candidate",
+    "forbidden_claims": [
+      "out-of-sample replication",
+      "generalization improvement",
+      "held-out performance",
+      "candidate performance acceptance"
+    ],
+    "interpretation_limit": "Both frozen checkpoints were fitted on the full train split and selected on validation. The two series-disjoint folds are analysis partitions, not independently trained or out-of-fold model estimates."
+  },
+  "dataset": {
+    "data_path": "sample_data/insta_market_basket/instacart_marked_target_with_split.parquet",
+    "data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+    "split_manifest_path": "sample_data/insta_market_basket/instacart_marked_target_split_manifest.json",
+    "split_manifest_sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d",
+    "loader": "RMTPPWeekLookbackDataset",
+    "lookback_weeks": 52,
+    "max_sequence_length": 64,
+    "expected_train_rows": 2197401,
+    "expected_train_series": 206209,
+    "expected_train_target_series": 205934,
+    "expected_train_targets": 1991192,
+    "expected_train_identity_sha256": "c361f5e9904c25f18c91007f6e1209518a02fb755799e81c8300ee759b2a1210",
+    "expected_train_quantity_sha256": "07e98693d5ac26caeaeb3c60d6d31fad21ab8f1e40ac649f231ac299963817d8",
+    "train_quantity_boundaries": {
+      "p50": 8.0,
+      "p90": 20.0,
+      "p95": 25.0,
+      "p99": 35.0
+    }
+  },
+  "execution": {
+    "frozen_source_revision": "89cd700c28dd169cd59bfccbd694ef8967bac823",
+    "inference_batch_size": 512,
+    "shuffle": false,
+    "numeric_export_dtype": "float64",
+    "strict_checkpoint_state_restore": true,
+    "require_state_unchanged": true,
+    "require_gradients_absent": true,
+    "source_file_sha256": {
+      "data_loader/event_seq_data_module.py": "7c11d9ace6c4e4d3bb03861aae92393aa946a38452d702dc7625210b339897ca",
+      "models/TPPs/CountAwareFactory.py": "90bcc08d76defe4751210be73bb836b12601dab2cbc66cbc79fc9ce176a0adaa",
+      "models/TPPs/CountAwareTPP.py": "eaa5cb7557c31e45f846911ef5ff91a7f9983d7b9bb7cf4f7a0960b23586d4a9",
+      "models/TPPs/CountAwareTitanBoundedQK.py": "b0139d409801c4bf184954f393f15d2f3d06f725009621c3e5b95b5ef2aed2a0",
+      "models/TPPs/TitanTPP.py": "5381faad10d7782af40abf028aa0b79894e224d61c82af9680a0d9bac410c37c",
+      "paper/scripts/count_aware_tpp_backbone/core.py": "025dfbe75a5a4e235466807f31873aa085f8ddffe680485fb4b9f4f7ef60c598",
+      "paper/scripts/run_taxi_quantity_interface_ablation.py": "32630140f939b1e8e2287893b7705b1d3ec6e9f67644c5f9477c0ef979890801",
+      "paper/scripts/run_count_aware_tpp_backbone_control.py": "67321a90a6d8bf659a6b7d0fb95fe7f4d745ba9a2e9e69248575e9d7f8164f15",
+      "paper/scripts/run_matched_frozen_lognormal_duration.py": "edc060e778cca8ad2788e7fda18ec1119535b80d50779abf62feb1c0a02f2519",
+      "simple_lab_test/search/common/runner.py": "a1fc687455b768ed454878cda55cf2d1b43cdb13817880a4cf3fbca9c7db8739"
+    }
+  },
+  "models": {
+    "B": {
+      "backbone": "titantpp",
+      "checkpoint_selection": "best_validation_raw_quantity_rmse",
+      "checkpoint_file_sha256": "e594f8df0dcd66249c3724063f44eee3de213bc83a780ca81fdf39a094bfed07",
+      "checkpoint_state_sha256": "a74e1f3055b03db5ac85adf2fdb63711890ea9d06449965e3ca749aefccc2f02",
+      "best_epoch": 72,
+      "train_cache_path": "search_artifacts/frozen_raw_affine_calibration_v1_1ba9a43_5080/full/train/insta_market_basket_B/train_predictions.npz",
+      "train_cache_file_sha256": "bbe3cd5fe995ec15afc681c236c2ff0fc9b900197dff309c399ad3cb0f390d7d",
+      "train_result_path": "search_artifacts/frozen_raw_affine_calibration_v1_1ba9a43_5080/full/train/insta_market_basket_B/result.json",
+      "train_result_file_sha256": "dc5f677b1c4d76b9cc040d6eb76c51bc09df886e92086783f8eea3809852b3dc",
+      "train_cache_array_sha256": {
+        "context_end": "e9a3a109b56be6b1ebd54dc2c46c75ceb2cadb6a61fff5931b94ee729174f425",
+        "history_length": "3c7189bdaf2c24fd9e20c9f12f999d06b2ee82d8cb356423a843bfbc8e886d67",
+        "prediction": "0d68fb727d659391f06139a839ae82a8e9962f4842a64b3cf824cd03a5f8a6df",
+        "quantity": "178b28209e6817984ca622c31054050464e71ff5d0ed672bca719529144fc7c3",
+        "series_index": "713bf0cf78d5d0befe79d5d635ee2c7c47e4ec146f896b48dbedb5c4c698e322",
+        "target_index": "c77554c3d8c3ec03cfd9eb40b827bcfe75eaf16a7c813b3ee592122b18e65458",
+        "time_nll": "1a62ca8a5c86e03ef31d5c92fccbaa3365e9d3fb5b4fc61f94bfd6695c2e21bb"
+      }
+    },
+    "BOUNDED_QK": {
+      "backbone": "titantpp_hard_memory_bounded_qk",
+      "checkpoint_selection": "best_validation_raw_quantity_rmse",
+      "checkpoint_file_sha256": "823352e962356274824f095e60abe5285d8885a81cb0c9f2cf469ee725f76e74",
+      "checkpoint_state_sha256": "41213ef4cabcf9788017266d7732b19e1e0180fa4f708357050dc688d0e4e9a5",
+      "training_source_revision": "89cd700c28dd169cd59bfccbd694ef8967bac823",
+      "best_epoch": 21,
+      "summary_file_sha256": "75291473e04284cc71402d0adbd9ea397c69da59170aeaa2b3358d350c62aee0"
+    }
+  },
+  "analysis": {
+    "fold_count": 2,
+    "fold_assignment": "sha256_typed_series_id_first_uint64_big_endian_modulo_2",
+    "fold_salt": "hard_lmm_bounded_qk_train_condition_v1:20260908",
+    "history_bins": [
+      "1",
+      "2-3",
+      "4-7",
+      "8-15",
+      "16-31",
+      "32-63"
+    ],
+    "candidate_name_if_passed": "level-preserving history-confidence residual",
+    "decision_scope": "each fold independently",
+    "required_conditions": {
+      "mean_prediction_shift_negative": "mean(BOUNDED_QK - B) < 0",
+      "mean_prediction_shift_material": "abs(mean(BOUNDED_QK - B)) / RMSE(B) >= 0.01",
+      "median_series_mean_prediction_shift_negative": "median_s(mean_i_in_s(BOUNDED_QK - B)) < 0",
+      "centered_mse_improves": "centered_MSE(BOUNDED_QK) - centered_MSE(B) < 0",
+      "overall_mse_worsens": "MSE(BOUNDED_QK) - MSE(B) > 0",
+      "bias_squared_penalty_increases": "bias(BOUNDED_QK)^2 - bias(B)^2 > 0",
+      "bias_penalty_overturns_centered_gain": "delta bias squared > -delta centered MSE",
+      "mae_not_worse": "MAE(BOUNDED_QK) - MAE(B) <= 0",
+      "history_2_3_mse_materially_worse": "(MSE_2_3(BOUNDED_QK) - MSE_2_3(B)) / MSE_2_3(B) >= 0.01",
+      "history_2_3_shift_more_negative_than_8_15": "mean_shift_2_3 < mean_shift_8_15",
+      "history_8_15_mse_improves": "MSE_8_15(BOUNDED_QK) - MSE_8_15(B) < 0"
+    },
+    "acceptance": "all required conditions must pass in both fixed folds",
+    "failure_action": "stop_bounded_qk_family",
+    "pass_action": "freeze one common level-preserving history-confidence residual architecture contract before implementation",
+    "target_quantity_strata_role": "descriptive_only_and_excluded_from_decision"
+  }
+}
