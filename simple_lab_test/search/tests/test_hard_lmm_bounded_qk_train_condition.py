@@ -276,6 +276,10 @@ def test_cli_verifies_cache_alignment_audit_hashes_and_writes_atomic_outputs(
             "id": contract["contract_id"],
             "sha256": sha256_file(contract_path),
         },
+        "runner": {
+            "sha256": "6" * 64,
+            "diagnostic_source_revision": "7" * 40,
+        },
         "scope": contract["scope"],
         "training_performed": False,
         "checkpoint_selection_performed": False,

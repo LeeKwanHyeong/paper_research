@@ -761,6 +761,13 @@ def validate_contract(contract: Mapping[str, Any]) -> None:
     if analysis.get("failure_action") != "stop_bounded_qk_family":
         raise ValueError("contract failure action drifted")
     if (
+        analysis.get("candidate_name_if_passed")
+        != "level-preserving history-confidence residual"
+    ):
+        raise ValueError("contract candidate name drifted")
+    if analysis.get("decision_scope") != "each fold independently":
+        raise ValueError("contract decision scope drifted")
+    if (
         analysis.get("target_quantity_strata_role")
         != "descriptive_only_and_excluded_from_decision"
     ):
@@ -794,6 +801,17 @@ def validate_run_audit(
         raise ValueError("run-audit contract ID drifted")
     if audit_contract.get("sha256") != contract_sha256:
         raise ValueError("run-audit contract hash drifted")
+    runner = audit.get("runner")
+    if not isinstance(runner, Mapping):
+        raise ValueError("run-audit runner evidence is missing")
+    source_revision = str(runner.get("diagnostic_source_revision", ""))
+    if len(source_revision) != 40 or not set(source_revision) <= set(
+        "0123456789abcdef"
+    ):
+        raise ValueError("run-audit diagnostic source revision is invalid")
+    runner_sha = str(runner.get("sha256", ""))
+    if len(runner_sha) != 64 or not set(runner_sha) <= set("0123456789abcdef"):
+        raise ValueError("run-audit runner hash is invalid")
     if audit.get("scope") != contract["scope"]:
         raise ValueError("run-audit scope differs from the frozen contract")
 
@@ -1001,6 +1019,10 @@ def load_verified_inputs(
         "all_bounded_qk_array_hashes_verified": True,
         "paired_row_alignment_verified": True,
         "series_id_reconstruction": "bounded.series_parts[B.series_index]",
+        "diagnostic_source_revision": audit["runner"][
+            "diagnostic_source_revision"
+        ],
+        "runner_sha256": audit["runner"]["sha256"],
     }
     return inputs, evidence
 

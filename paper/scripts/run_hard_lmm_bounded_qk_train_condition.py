@@ -163,6 +163,12 @@ def validate_contract(contract: Mapping[str, Any]) -> None:
     )
     require(analysis.get("failure_action") == "stop_bounded_qk_family", "Failure action drift")
     require(
+        analysis.get("candidate_name_if_passed")
+        == "level-preserving history-confidence residual",
+        "Candidate name drift",
+    )
+    require(analysis.get("decision_scope") == "each fold independently", "Decision scope drift")
+    require(
         analysis.get("pass_action")
         == "freeze one common level-preserving history-confidence residual architecture contract before implementation",
         "Pass action drift",
@@ -337,6 +343,11 @@ def restore_bounded_model(
 
 def run(args: argparse.Namespace) -> dict[str, Any]:
     started = time.perf_counter()
+    require(
+        len(args.diagnostic_source_revision) == 40
+        and set(args.diagnostic_source_revision) <= set("0123456789abcdef"),
+        "A full diagnostic source revision is required",
+    )
     contract = json.loads(args.contract.read_text(encoding="utf-8"))
     validate_contract(contract)
     require(int(args.batch_size) == int(contract["execution"]["inference_batch_size"]), "Batch-size drift")
@@ -471,6 +482,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "runner": {
             "path": str(Path(__file__).resolve()),
             "sha256": sha256_file(Path(__file__).resolve()),
+            "diagnostic_source_revision": args.diagnostic_source_revision,
         },
         "scope": contract["scope"],
         "training_performed": False,
@@ -529,6 +541,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--batch-size", type=int, default=512)
+    parser.add_argument("--diagnostic-source-revision", required=True)
     args = parser.parse_args()
     require(args.batch_size > 0, "Batch size must be positive")
     return args
