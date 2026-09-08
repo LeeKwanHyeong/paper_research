@@ -1,0 +1,183 @@
+{
+  "amp_enabled": false,
+  "backbone": "titantpp_hard_memory_level_history_qkv",
+  "batch_size": 128,
+  "cuda_version": "13.0",
+  "device_name": "NVIDIA GeForce RTX 5090",
+  "finite_model_optimizer": true,
+  "gradient_audit": {
+    "kernel_gradient_norm_by_row": {
+      "encoder.layers.0.attn.level_history_k_kernel": [
+        0.0008792770677246153,
+        3.0985785997472703e-05
+      ],
+      "encoder.layers.0.attn.level_history_q_kernel": [
+        5.955142842140049e-05,
+        8.429360605077818e-05
+      ],
+      "encoder.layers.0.attn.level_history_v_kernel": [
+        0.0011470838217064738,
+        8.560331480111927e-05
+      ]
+    },
+    "shared_gradient_norms": {
+      "encoder.layers.0.attn.qkv.weight": 2.2217354774475098,
+      "encoder.layers.1.attn.qkv.weight": 2.10562801361084,
+      "lmm.mem": 0.19227902591228485,
+      "quantity_head.weight": 13.2431058883667,
+      "v_t.weight": 64.17431640625
+    },
+    "status": "passed"
+  },
+  "hidden_dim": 64,
+  "learning_path": {
+    "initial_backbone_counterfactual": {
+      "final_state_max_abs_delta": 3.487804889678955,
+      "quantity_prediction_max_abs_delta": 0.947270393371582,
+      "state_digest_restored": true,
+      "status": "passed"
+    },
+    "learned_kernel_norm_by_row": {
+      "encoder.layers.0.attn.level_history_k_kernel": [
+        0.06459648162126541,
+        0.021460605785250664
+      ],
+      "encoder.layers.0.attn.level_history_q_kernel": [
+        0.06877391785383224,
+        0.06826333701610565
+      ],
+      "encoder.layers.0.attn.level_history_v_kernel": [
+        0.05371494218707085,
+        0.03334146738052368
+      ]
+    },
+    "status": "passed",
+    "transition_mechanism": {
+      "confidence_contract": "valid_adjacent_pairs_over_valid_events",
+      "constant_level_translation_invariant": true,
+      "constant_projection_dc_null": true,
+      "qkv": {
+        "k": {
+          "added_rms_over_confidence_transition_rms_max": 0.015051333233714104,
+          "confidence_final": 0.99609375,
+          "confidence_max": 0.99609375,
+          "confidence_min": 0.0,
+          "fraction_valid_gain_below_one": 1.0,
+          "gain_max": 1.0,
+          "gain_mean": 0.9999627470970154,
+          "gain_min": 0.999886691570282,
+          "lag1_available_fraction": 0.99609375,
+          "lag2_available_fraction": 0.9921875
+        },
+        "q": {
+          "added_rms_over_confidence_transition_rms_max": 0.025498606264591217,
+          "confidence_final": 0.99609375,
+          "confidence_max": 0.99609375,
+          "confidence_min": 0.0,
+          "fraction_valid_gain_below_one": 1.0,
+          "gain_max": 1.0,
+          "gain_mean": 0.9999358654022217,
+          "gain_min": 0.9996748566627502,
+          "lag1_available_fraction": 0.99609375,
+          "lag2_available_fraction": 0.9921875
+        },
+        "v": {
+          "confidence_final": 0.99609375,
+          "confidence_max": 0.99609375,
+          "confidence_min": 0.0,
+          "lag1_available_fraction": 0.99609375,
+          "lag2_available_fraction": 0.9921875
+        }
+      },
+      "status": "passed",
+      "v_operation_bitwise_identical": true
+    },
+    "zero_kernel_counterfactual": {
+      "final_state_max_abs_delta": 0.00039768218994140625,
+      "quantity_prediction_max_abs_delta": 0.0001735687255859375,
+      "state_digest_restored": true,
+      "status": "passed"
+    }
+  },
+  "measured_steps": 15,
+  "measurement_dtype": "float32",
+  "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+  "median_step_seconds": 0.010950110154226422,
+  "model_metadata": {
+    "additional_parameter_count": 384,
+    "backbone_contract_id": "hard_lmm_level_preserving_history_confidence_residual_v1",
+    "base_encoder": "CountAwareTitanTPP",
+    "candidate_name": "count_titan_hard_lmm_level_history_qkv",
+    "d_ff": 128,
+    "d_model": 64,
+    "final_memory_placement": "after_encoder_layer_2",
+    "level_history_confidence": "cumulative_valid_adjacent_pairs_over_cumulative_valid_events",
+    "level_history_confidence_trainable": false,
+    "level_history_initialization": "all_zero_exact_identity",
+    "level_history_layer": 0,
+    "level_history_parameterization": "channelwise_diagonal",
+    "level_history_qk_bound": "headwise_transition_rms_saturation",
+    "level_history_qk_epsilon": 1e-08,
+    "level_history_scope": "event_qkv_only",
+    "level_history_transition_order": [
+      "current_minus_lag1",
+      "lag1_minus_lag2"
+    ],
+    "level_history_v_operation": "unbounded_transition_residual",
+    "lmm_mem_size": 64,
+    "lmm_topk": 4,
+    "max_len": 256,
+    "memory_mode": "static_hard_lmm",
+    "model_role": "hard_lmm_level_history_qkv_candidate",
+    "n_heads": 4,
+    "n_layers": 2,
+    "new_parameter_state_keys": [
+      "encoder.layers.0.attn.level_history_q_kernel",
+      "encoder.layers.0.attn.level_history_k_kernel",
+      "encoder.layers.0.attn.level_history_v_kernel"
+    ],
+    "online_writes": false,
+    "persistent_key_value_adaptation": false,
+    "persistent_mem_size": 16,
+    "routing_contract_id": "hard_lmm_level_preserving_history_confidence_residual_v1",
+    "static_retrieval_aggregation": "arithmetic_mean",
+    "time_head": {
+      "jacobian_correction": false,
+      "mode": "legacy_clamped_rmtpp",
+      "time_intercept_limit": 300.0,
+      "time_scale": 3.0,
+      "time_w_max": 3.3333333333333335,
+      "wd_clamp": 10.0
+    }
+  },
+  "model_state_after_profile_sha256": "693b9c399df23f5e94b47cf5bb48aef306b4dcdb386c7e80ad99626436383caf",
+  "observed_events": 255,
+  "parameter_count": 90179,
+  "peak_allocated_bytes": 1570433536,
+  "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+  "repeat": 2,
+  "seed": 44,
+  "sequence_length": 256,
+  "status": "passed",
+  "step_seconds": [
+    0.010971565032377839,
+    0.010971629992127419,
+    0.010944564128294587,
+    0.010961262043565512,
+    0.010950110154226422,
+    0.010956081096082926,
+    0.01094962889328599,
+    0.010950627038255334,
+    0.010958696948364377,
+    0.010943625122308731,
+    0.010960169835016131,
+    0.010945811169221997,
+    0.010949170216917992,
+    0.010948057053610682,
+    0.010949894087389112
+  ],
+  "target_events": 1,
+  "tf32_matmul": false,
+  "torch_version": "2.11.0+cu130",
+  "warmup_steps": 5
+}

@@ -1,0 +1,4123 @@
+{
+  "cost_gate": {
+    "aggregation": "ratio_of_medians_over_three_independent_balanced_repeats",
+    "full_ratios_are_reported_not_separately_gated": true,
+    "gate_reference": "titantpp",
+    "lengths": [
+      {
+        "candidate_over_baseline_peak_allocated": 1.055666687503907,
+        "candidate_over_baseline_step": 1.4231163081686162,
+        "candidate_over_full_peak_allocated": 1.0013143331488654,
+        "candidate_over_full_step": 1.2202072590382411,
+        "full_over_baseline_peak_allocated": 1.0542810110229002,
+        "full_over_baseline_step": 1.166290642534209,
+        "models": {
+          "titantpp": {
+            "peak_allocated_bytes": 49142784,
+            "step_seconds": 0.003312567016109824
+          },
+          "titantpp_hard_memory_causal_qkv": {
+            "peak_allocated_bytes": 51810304,
+            "step_seconds": 0.003863415913656354
+          },
+          "titantpp_hard_memory_level_history_qkv": {
+            "peak_allocated_bytes": 51878400,
+            "step_seconds": 0.004714168142527342
+          }
+        },
+        "parameter_counts": {
+          "titantpp": 89795,
+          "titantpp_hard_memory_causal_qkv": 90371,
+          "titantpp_hard_memory_level_history_qkv": 90179
+        },
+        "peak_passed": true,
+        "sequence_length": 8,
+        "step_passed": true
+      },
+      {
+        "candidate_over_baseline_peak_allocated": 1.0737815258393766,
+        "candidate_over_baseline_step": 1.4545437811756337,
+        "candidate_over_full_peak_allocated": 1.0068190687813574,
+        "candidate_over_full_step": 1.1947694893992158,
+        "full_over_baseline_peak_allocated": 1.0665089281027125,
+        "full_over_baseline_step": 1.2174262852217999,
+        "models": {
+          "titantpp": {
+            "peak_allocated_bytes": 273086464,
+            "step_seconds": 0.003263436956331134
+          },
+          "titantpp_hard_memory_causal_qkv": {
+            "peak_allocated_bytes": 291249152,
+            "step_seconds": 0.003972993930801749
+          },
+          "titantpp_hard_memory_level_history_qkv": {
+            "peak_allocated_bytes": 293235200,
+            "step_seconds": 0.004746811930090189
+          }
+        },
+        "parameter_counts": {
+          "titantpp": 89795,
+          "titantpp_hard_memory_causal_qkv": 90371,
+          "titantpp_hard_memory_level_history_qkv": 90179
+        },
+        "peak_passed": true,
+        "sequence_length": 64,
+        "step_passed": true
+      },
+      {
+        "candidate_over_baseline_peak_allocated": 1.0575290408620064,
+        "candidate_over_baseline_step": 1.1637169378404448,
+        "candidate_over_full_peak_allocated": 1.0074384008965365,
+        "candidate_over_full_step": 1.0883137627175181,
+        "full_over_baseline_peak_allocated": 1.0497207967463753,
+        "full_over_baseline_step": 1.0692844083260007,
+        "models": {
+          "titantpp": {
+            "peak_allocated_bytes": 1485002752,
+            "step_seconds": 0.009420864982530475
+          },
+          "titantpp_hard_memory_causal_qkv": {
+            "peak_allocated_bytes": 1558838272,
+            "step_seconds": 0.010073584038764238
+          },
+          "titantpp_hard_memory_level_history_qkv": {
+            "peak_allocated_bytes": 1570433536,
+            "step_seconds": 0.01096322014927864
+          }
+        },
+        "parameter_counts": {
+          "titantpp": 89795,
+          "titantpp_hard_memory_causal_qkv": 90371,
+          "titantpp_hard_memory_level_history_qkv": 90179
+        },
+        "peak_passed": true,
+        "sequence_length": 256,
+        "step_passed": true
+      }
+    ],
+    "peak_limit": 1.25,
+    "status": "passed",
+    "step_limit": 1.5
+  },
+  "data_scope": "synthetic_only_no_dataset_or_checkpoint_loaded",
+  "measurement_orders": [
+    [
+      "titantpp",
+      "titantpp_hard_memory_causal_qkv",
+      "titantpp_hard_memory_level_history_qkv"
+    ],
+    [
+      "titantpp_hard_memory_causal_qkv",
+      "titantpp_hard_memory_level_history_qkv",
+      "titantpp"
+    ],
+    [
+      "titantpp_hard_memory_level_history_qkv",
+      "titantpp",
+      "titantpp_hard_memory_causal_qkv"
+    ]
+  ],
+  "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+  "reused_profile_file_sha256": "61374a90a79fdd340265672b775a1876fa9fc8c74da085584c85f52206987f79",
+  "rows": [
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {},
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 0.778114378452301,
+          "encoder.layers.1.attn.qkv.weight": 0.6539791226387024,
+          "lmm.mem": 0.2095915824174881,
+          "quantity_head.weight": 15.538361549377441,
+          "v_t.weight": 69.81550598144531
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.178553819656372,
+          "quantity_prediction_max_abs_delta": 1.0832939147949219,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "status": "passed"
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.0034137768670916557,
+      "model_metadata": {
+        "backbone_contract_id": "B0",
+        "candidate_name": "count_titan_small_lmm",
+        "d_ff": 128,
+        "d_model": 64,
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "memory_residual_gate_init": null,
+        "n_heads": 4,
+        "n_layers": 2,
+        "persistent_mem_size": 16,
+        "persistent_memory_update_scope": null,
+        "quantity_memory_gradient_mode": "shared_state",
+        "quantity_memory_route": "shared_memory_state",
+        "soft_memory_size": 0,
+        "soft_memory_temperature": null,
+        "surprise_chunk_size": 0,
+        "surprise_memory_rank": 0,
+        "surprise_momentum_init": null,
+        "surprise_retention_init": null,
+        "surprise_scan_backend": null,
+        "surprise_state_scope": null,
+        "surprise_update_rate_init": null,
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        },
+        "time_memory_route": "hard_local_memory_matcher",
+        "titans_event_order": null,
+        "titans_mac_segment_size": 0,
+        "titans_memory_gradient_clip": null,
+        "titans_neural_memory_depth": 0,
+        "titans_neural_memory_hidden_expansion": 0,
+        "titans_online_update": null,
+        "titans_scan_backend": null,
+        "tpp_gated_confidence": null,
+        "tpp_gated_memory_size": 0,
+        "tpp_gated_retrieval": null,
+        "tpp_gated_scan_backend": null,
+        "tpp_gated_state_scope": null,
+        "tpp_gated_temperature": null,
+        "tpp_gated_topk": 0,
+        "tpp_gated_write_policy": null
+      },
+      "model_state_after_profile_sha256": "6f85df9af58bc2e28fd5dc427006c15a69aaebaf4f7b599ae577cab929f4f9ed",
+      "observed_events": 7,
+      "parameter_count": 89795,
+      "peak_allocated_bytes": 49142784,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 0,
+      "seed": 42,
+      "sequence_length": 8,
+      "status": "passed",
+      "step_seconds": [
+        0.0034727039746940136,
+        0.0033949899952858686,
+        0.003413321916013956,
+        0.003439032007008791,
+        0.003322186879813671,
+        0.003419104963541031,
+        0.0034958580508828163,
+        0.0034355539828538895,
+        0.003404082963243127,
+        0.0034137768670916557,
+        0.003327480051666498,
+        0.003386401804164052,
+        0.0034724900033324957,
+        0.003374628024175763,
+        0.0034430131781846285
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp_hard_memory_causal_qkv",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {
+          "encoder.layers.0.attn.causal_k_kernel": [
+            0.011043369770050049,
+            0.009334499016404152,
+            0.0077469306997954845
+          ],
+          "encoder.layers.0.attn.causal_q_kernel": [
+            0.010997788980603218,
+            0.010903946124017239,
+            0.010763336904346943
+          ],
+          "encoder.layers.0.attn.causal_v_kernel": [
+            0.062263116240501404,
+            0.05309562757611275,
+            0.04399114474654198
+          ]
+        },
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 0.778114378452301,
+          "encoder.layers.1.attn.qkv.weight": 0.6539791226387024,
+          "lmm.mem": 0.2095915824174881,
+          "quantity_head.weight": 15.538361549377441,
+          "v_t.weight": 69.81550598144531
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.207646369934082,
+          "quantity_prediction_max_abs_delta": 1.048935890197754,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "learned_kernel_norm_by_row": {
+          "encoder.layers.0.attn.causal_k_kernel": [
+            0.0616280697286129,
+            0.06239544227719307,
+            0.062489643692970276
+          ],
+          "encoder.layers.0.attn.causal_q_kernel": [
+            0.06167345121502876,
+            0.061650075018405914,
+            0.062017034739255905
+          ],
+          "encoder.layers.0.attn.causal_v_kernel": [
+            0.06825026869773865,
+            0.06771120429039001,
+            0.06708131730556488
+          ]
+        },
+        "status": "passed",
+        "zero_kernel_counterfactual": {
+          "final_state_max_abs_delta": 0.04887747764587402,
+          "quantity_prediction_max_abs_delta": 0.042491912841796875,
+          "state_digest_restored": true,
+          "status": "passed"
+        }
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.003863415913656354,
+      "model_metadata": {
+        "additional_parameter_count": 576,
+        "backbone_contract_id": "hard_lmm_causal_qkv_v1",
+        "base_encoder": "CountAwareTitanTPP",
+        "candidate_name": "count_titan_hard_lmm_causal_qkv",
+        "causal_qkv_bias": false,
+        "causal_qkv_combination": "residual_addition",
+        "causal_qkv_groups": 64,
+        "causal_qkv_initialization": "all_zero_exact_identity",
+        "causal_qkv_kernel_size": 3,
+        "causal_qkv_lag_order": [
+          "current",
+          "lag1",
+          "lag2"
+        ],
+        "causal_qkv_layer": 0,
+        "causal_qkv_scope": "event_qkv_only",
+        "d_ff": 128,
+        "d_model": 64,
+        "final_memory_placement": "after_encoder_layer_2",
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "model_role": "hard_lmm_causal_qkv_candidate",
+        "n_heads": 4,
+        "n_layers": 2,
+        "new_parameter_state_keys": [
+          "encoder.layers.0.attn.causal_q_kernel",
+          "encoder.layers.0.attn.causal_k_kernel",
+          "encoder.layers.0.attn.causal_v_kernel"
+        ],
+        "online_writes": false,
+        "persistent_key_value_adaptation": false,
+        "persistent_mem_size": 16,
+        "routing_contract_id": "hard_lmm_causal_qkv_v1",
+        "static_retrieval_aggregation": "arithmetic_mean",
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        }
+      },
+      "model_state_after_profile_sha256": "16cdca618138b124a8270e416ba08d228649522a89565151adee6f7f4490a5f7",
+      "observed_events": 7,
+      "parameter_count": 90371,
+      "peak_allocated_bytes": 51810304,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 0,
+      "seed": 42,
+      "sequence_length": 8,
+      "status": "passed",
+      "step_seconds": [
+        0.003908301005139947,
+        0.0038640890270471573,
+        0.00387621414847672,
+        0.00384890497662127,
+        0.003896198933944106,
+        0.0038435340393334627,
+        0.003863415913656354,
+        0.003936460008844733,
+        0.003865150036290288,
+        0.003785382956266403,
+        0.004038664977997541,
+        0.003821555059403181,
+        0.003841130994260311,
+        0.003831049893051386,
+        0.0038167869206517935
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp_hard_memory_level_history_qkv",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {
+          "encoder.layers.0.attn.level_history_k_kernel": [
+            0.00023526429140474647,
+            5.070919360150583e-05
+          ],
+          "encoder.layers.0.attn.level_history_q_kernel": [
+            0.00022047355014365166,
+            0.00028977039619348943
+          ],
+          "encoder.layers.0.attn.level_history_v_kernel": [
+            0.000651165668386966,
+            0.0002175531699322164
+          ]
+        },
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 0.778114378452301,
+          "encoder.layers.1.attn.qkv.weight": 0.6539791226387024,
+          "lmm.mem": 0.2095915824174881,
+          "quantity_head.weight": 15.538361549377441,
+          "v_t.weight": 69.81550598144531
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.178917646408081,
+          "quantity_prediction_max_abs_delta": 1.0837411880493164,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "learned_kernel_norm_by_row": {
+          "encoder.layers.0.attn.level_history_k_kernel": [
+            0.06592563539743423,
+            0.06706646084785461
+          ],
+          "encoder.layers.0.attn.level_history_q_kernel": [
+            0.10753367096185684,
+            0.07439850270748138
+          ],
+          "encoder.layers.0.attn.level_history_v_kernel": [
+            0.06996310502290726,
+            0.0960264801979065
+          ]
+        },
+        "status": "passed",
+        "transition_mechanism": {
+          "confidence_contract": "valid_adjacent_pairs_over_valid_events",
+          "constant_level_translation_invariant": true,
+          "constant_projection_dc_null": true,
+          "qkv": {
+            "k": {
+              "added_rms_over_confidence_transition_rms_max": 0.018869739025831223,
+              "confidence_final": 0.875,
+              "confidence_max": 0.875,
+              "confidence_min": 0.0,
+              "fraction_valid_gain_below_one": 1.0,
+              "gain_max": 1.0,
+              "gain_mean": 0.9999485611915588,
+              "gain_min": 0.9998219609260559,
+              "lag1_available_fraction": 0.875,
+              "lag2_available_fraction": 0.75
+            },
+            "q": {
+              "added_rms_over_confidence_transition_rms_max": 0.02547326311469078,
+              "confidence_final": 0.875,
+              "confidence_max": 0.875,
+              "confidence_min": 0.0,
+              "fraction_valid_gain_below_one": 1.0,
+              "gain_max": 1.0,
+              "gain_mean": 0.9998584985733032,
+              "gain_min": 0.9996755123138428,
+              "lag1_available_fraction": 0.875,
+              "lag2_available_fraction": 0.75
+            },
+            "v": {
+              "confidence_final": 0.875,
+              "confidence_max": 0.875,
+              "confidence_min": 0.0,
+              "lag1_available_fraction": 0.875,
+              "lag2_available_fraction": 0.75
+            }
+          },
+          "status": "passed",
+          "v_operation_bitwise_identical": true
+        },
+        "zero_kernel_counterfactual": {
+          "final_state_max_abs_delta": 0.004986166954040527,
+          "quantity_prediction_max_abs_delta": 0.001827239990234375,
+          "state_digest_restored": true,
+          "status": "passed"
+        }
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.004927381174638867,
+      "model_metadata": {
+        "additional_parameter_count": 384,
+        "backbone_contract_id": "hard_lmm_level_preserving_history_confidence_residual_v1",
+        "base_encoder": "CountAwareTitanTPP",
+        "candidate_name": "count_titan_hard_lmm_level_history_qkv",
+        "d_ff": 128,
+        "d_model": 64,
+        "final_memory_placement": "after_encoder_layer_2",
+        "level_history_confidence": "cumulative_valid_adjacent_pairs_over_cumulative_valid_events",
+        "level_history_confidence_trainable": false,
+        "level_history_initialization": "all_zero_exact_identity",
+        "level_history_layer": 0,
+        "level_history_parameterization": "channelwise_diagonal",
+        "level_history_qk_bound": "headwise_transition_rms_saturation",
+        "level_history_qk_epsilon": 1e-08,
+        "level_history_scope": "event_qkv_only",
+        "level_history_transition_order": [
+          "current_minus_lag1",
+          "lag1_minus_lag2"
+        ],
+        "level_history_v_operation": "unbounded_transition_residual",
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "model_role": "hard_lmm_level_history_qkv_candidate",
+        "n_heads": 4,
+        "n_layers": 2,
+        "new_parameter_state_keys": [
+          "encoder.layers.0.attn.level_history_q_kernel",
+          "encoder.layers.0.attn.level_history_k_kernel",
+          "encoder.layers.0.attn.level_history_v_kernel"
+        ],
+        "online_writes": false,
+        "persistent_key_value_adaptation": false,
+        "persistent_mem_size": 16,
+        "routing_contract_id": "hard_lmm_level_preserving_history_confidence_residual_v1",
+        "static_retrieval_aggregation": "arithmetic_mean",
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        }
+      },
+      "model_state_after_profile_sha256": "ba89d7361e5659cd13f4e95c254ff111fca43c3df4267d4090acb4fc64fb2c82",
+      "observed_events": 7,
+      "parameter_count": 90179,
+      "peak_allocated_bytes": 51878400,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 0,
+      "seed": 42,
+      "sequence_length": 8,
+      "status": "passed",
+      "step_seconds": [
+        0.0049311500042676926,
+        0.004949613939970732,
+        0.004934033844619989,
+        0.0048989830538630486,
+        0.004813187988474965,
+        0.004930190974846482,
+        0.0049649851862341166,
+        0.004927381174638867,
+        0.004973317962139845,
+        0.004917441168799996,
+        0.004914222052320838,
+        0.004905340960249305,
+        0.004942195024341345,
+        0.004878385923802853,
+        0.004881981061771512
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp_hard_memory_causal_qkv",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {
+          "encoder.layers.0.attn.causal_k_kernel": [
+            0.010748852044343948,
+            0.00926313828676939,
+            0.007662637159228325
+          ],
+          "encoder.layers.0.attn.causal_q_kernel": [
+            0.010737381875514984,
+            0.010745779611170292,
+            0.010747012682259083
+          ],
+          "encoder.layers.0.attn.causal_v_kernel": [
+            0.04699143394827843,
+            0.040153685957193375,
+            0.03362281993031502
+          ]
+        },
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 0.7453432083129883,
+          "encoder.layers.1.attn.qkv.weight": 0.47651731967926025,
+          "lmm.mem": 0.19399258494377136,
+          "quantity_head.weight": 14.944942474365234,
+          "v_t.weight": 70.9103012084961
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.124589443206787,
+          "quantity_prediction_max_abs_delta": 1.0770063400268555,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "learned_kernel_norm_by_row": {
+          "encoder.layers.0.attn.causal_k_kernel": [
+            0.06561602652072906,
+            0.06478400528430939,
+            0.06356275826692581
+          ],
+          "encoder.layers.0.attn.causal_q_kernel": [
+            0.0655381828546524,
+            0.06421520560979843,
+            0.06639274209737778
+          ],
+          "encoder.layers.0.attn.causal_v_kernel": [
+            0.0700777918100357,
+            0.0699053704738617,
+            0.06902547925710678
+          ]
+        },
+        "status": "passed",
+        "zero_kernel_counterfactual": {
+          "final_state_max_abs_delta": 0.035189539194107056,
+          "quantity_prediction_max_abs_delta": 0.03006744384765625,
+          "state_digest_restored": true,
+          "status": "passed"
+        }
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.0039167688228189945,
+      "model_metadata": {
+        "additional_parameter_count": 576,
+        "backbone_contract_id": "hard_lmm_causal_qkv_v1",
+        "base_encoder": "CountAwareTitanTPP",
+        "candidate_name": "count_titan_hard_lmm_causal_qkv",
+        "causal_qkv_bias": false,
+        "causal_qkv_combination": "residual_addition",
+        "causal_qkv_groups": 64,
+        "causal_qkv_initialization": "all_zero_exact_identity",
+        "causal_qkv_kernel_size": 3,
+        "causal_qkv_lag_order": [
+          "current",
+          "lag1",
+          "lag2"
+        ],
+        "causal_qkv_layer": 0,
+        "causal_qkv_scope": "event_qkv_only",
+        "d_ff": 128,
+        "d_model": 64,
+        "final_memory_placement": "after_encoder_layer_2",
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "model_role": "hard_lmm_causal_qkv_candidate",
+        "n_heads": 4,
+        "n_layers": 2,
+        "new_parameter_state_keys": [
+          "encoder.layers.0.attn.causal_q_kernel",
+          "encoder.layers.0.attn.causal_k_kernel",
+          "encoder.layers.0.attn.causal_v_kernel"
+        ],
+        "online_writes": false,
+        "persistent_key_value_adaptation": false,
+        "persistent_mem_size": 16,
+        "routing_contract_id": "hard_lmm_causal_qkv_v1",
+        "static_retrieval_aggregation": "arithmetic_mean",
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        }
+      },
+      "model_state_after_profile_sha256": "e26f1eaba74394685fd763b3f82fdeb0d4402d1633a7fc12754bc6f29c8824e3",
+      "observed_events": 7,
+      "parameter_count": 90371,
+      "peak_allocated_bytes": 51810304,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 1,
+      "seed": 43,
+      "sequence_length": 8,
+      "status": "passed",
+      "step_seconds": [
+        0.003916287096217275,
+        0.0038493911270052195,
+        0.003950317157432437,
+        0.003914332017302513,
+        0.003784904954954982,
+        0.003940158057957888,
+        0.003868189873173833,
+        0.003986801952123642,
+        0.0038264321628957987,
+        0.0039167688228189945,
+        0.004042437998577952,
+        0.003936744062229991,
+        0.003926919074729085,
+        0.0038785829674452543,
+        0.003942819777876139
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp_hard_memory_level_history_qkv",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {
+          "encoder.layers.0.attn.level_history_k_kernel": [
+            0.00034512142883613706,
+            5.298883843352087e-05
+          ],
+          "encoder.layers.0.attn.level_history_q_kernel": [
+            0.00017135436064563692,
+            0.0003721014072652906
+          ],
+          "encoder.layers.0.attn.level_history_v_kernel": [
+            0.00040373977390117943,
+            0.0004089598369318992
+          ]
+        },
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 0.7453432083129883,
+          "encoder.layers.1.attn.qkv.weight": 0.47651731967926025,
+          "lmm.mem": 0.19399258494377136,
+          "quantity_head.weight": 14.944942474365234,
+          "v_t.weight": 70.9103012084961
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.116860866546631,
+          "quantity_prediction_max_abs_delta": 1.0861330032348633,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "learned_kernel_norm_by_row": {
+          "encoder.layers.0.attn.level_history_k_kernel": [
+            0.06743693351745605,
+            0.07241931557655334
+          ],
+          "encoder.layers.0.attn.level_history_q_kernel": [
+            0.09770499169826508,
+            0.08362030237913132
+          ],
+          "encoder.layers.0.attn.level_history_v_kernel": [
+            0.08122879266738892,
+            0.08712368458509445
+          ]
+        },
+        "status": "passed",
+        "transition_mechanism": {
+          "confidence_contract": "valid_adjacent_pairs_over_valid_events",
+          "constant_level_translation_invariant": true,
+          "constant_projection_dc_null": true,
+          "qkv": {
+            "k": {
+              "added_rms_over_confidence_transition_rms_max": 0.019461441785097122,
+              "confidence_final": 0.875,
+              "confidence_max": 0.875,
+              "confidence_min": 0.0,
+              "fraction_valid_gain_below_one": 1.0,
+              "gain_max": 1.0,
+              "gain_mean": 0.999941349029541,
+              "gain_min": 0.9998106360435486,
+              "lag1_available_fraction": 0.875,
+              "lag2_available_fraction": 0.75
+            },
+            "q": {
+              "added_rms_over_confidence_transition_rms_max": 0.02842271514236927,
+              "confidence_final": 0.875,
+              "confidence_max": 0.875,
+              "confidence_min": 0.0,
+              "fraction_valid_gain_below_one": 1.0,
+              "gain_max": 1.0,
+              "gain_mean": 0.9998794794082642,
+              "gain_min": 0.9995959997177124,
+              "lag1_available_fraction": 0.875,
+              "lag2_available_fraction": 0.75
+            },
+            "v": {
+              "confidence_final": 0.875,
+              "confidence_max": 0.875,
+              "confidence_min": 0.0,
+              "lag1_available_fraction": 0.875,
+              "lag2_available_fraction": 0.75
+            }
+          },
+          "status": "passed",
+          "v_operation_bitwise_identical": true
+        },
+        "zero_kernel_counterfactual": {
+          "final_state_max_abs_delta": 0.0028766393661499023,
+          "quantity_prediction_max_abs_delta": 0.0018978118896484375,
+          "state_digest_restored": true,
+          "status": "passed"
+        }
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.004705902189016342,
+      "model_metadata": {
+        "additional_parameter_count": 384,
+        "backbone_contract_id": "hard_lmm_level_preserving_history_confidence_residual_v1",
+        "base_encoder": "CountAwareTitanTPP",
+        "candidate_name": "count_titan_hard_lmm_level_history_qkv",
+        "d_ff": 128,
+        "d_model": 64,
+        "final_memory_placement": "after_encoder_layer_2",
+        "level_history_confidence": "cumulative_valid_adjacent_pairs_over_cumulative_valid_events",
+        "level_history_confidence_trainable": false,
+        "level_history_initialization": "all_zero_exact_identity",
+        "level_history_layer": 0,
+        "level_history_parameterization": "channelwise_diagonal",
+        "level_history_qk_bound": "headwise_transition_rms_saturation",
+        "level_history_qk_epsilon": 1e-08,
+        "level_history_scope": "event_qkv_only",
+        "level_history_transition_order": [
+          "current_minus_lag1",
+          "lag1_minus_lag2"
+        ],
+        "level_history_v_operation": "unbounded_transition_residual",
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "model_role": "hard_lmm_level_history_qkv_candidate",
+        "n_heads": 4,
+        "n_layers": 2,
+        "new_parameter_state_keys": [
+          "encoder.layers.0.attn.level_history_q_kernel",
+          "encoder.layers.0.attn.level_history_k_kernel",
+          "encoder.layers.0.attn.level_history_v_kernel"
+        ],
+        "online_writes": false,
+        "persistent_key_value_adaptation": false,
+        "persistent_mem_size": 16,
+        "routing_contract_id": "hard_lmm_level_preserving_history_confidence_residual_v1",
+        "static_retrieval_aggregation": "arithmetic_mean",
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        }
+      },
+      "model_state_after_profile_sha256": "3afc1cc6389dd6831a5c60572f699634282d52ba084836c4a17c9a9b7d0d20cf",
+      "observed_events": 7,
+      "parameter_count": 90179,
+      "peak_allocated_bytes": 51878400,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 1,
+      "seed": 43,
+      "sequence_length": 8,
+      "status": "passed",
+      "step_seconds": [
+        0.004823348019272089,
+        0.004827834898605943,
+        0.004648643080145121,
+        0.004688466899096966,
+        0.004676582058891654,
+        0.00471521494910121,
+        0.004713854985311627,
+        0.00472140614874661,
+        0.004665943793952465,
+        0.0046819900162518024,
+        0.004804912954568863,
+        0.004658011021092534,
+        0.004710115026682615,
+        0.004686504136770964,
+        0.004705902189016342
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {},
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 0.7453432083129883,
+          "encoder.layers.1.attn.qkv.weight": 0.47651731967926025,
+          "lmm.mem": 0.19399258494377136,
+          "quantity_head.weight": 14.944942474365234,
+          "v_t.weight": 70.9103012084961
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.1166107654571533,
+          "quantity_prediction_max_abs_delta": 1.085550308227539,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "status": "passed"
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.0032255949918180704,
+      "model_metadata": {
+        "backbone_contract_id": "B0",
+        "candidate_name": "count_titan_small_lmm",
+        "d_ff": 128,
+        "d_model": 64,
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "memory_residual_gate_init": null,
+        "n_heads": 4,
+        "n_layers": 2,
+        "persistent_mem_size": 16,
+        "persistent_memory_update_scope": null,
+        "quantity_memory_gradient_mode": "shared_state",
+        "quantity_memory_route": "shared_memory_state",
+        "soft_memory_size": 0,
+        "soft_memory_temperature": null,
+        "surprise_chunk_size": 0,
+        "surprise_memory_rank": 0,
+        "surprise_momentum_init": null,
+        "surprise_retention_init": null,
+        "surprise_scan_backend": null,
+        "surprise_state_scope": null,
+        "surprise_update_rate_init": null,
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        },
+        "time_memory_route": "hard_local_memory_matcher",
+        "titans_event_order": null,
+        "titans_mac_segment_size": 0,
+        "titans_memory_gradient_clip": null,
+        "titans_neural_memory_depth": 0,
+        "titans_neural_memory_hidden_expansion": 0,
+        "titans_online_update": null,
+        "titans_scan_backend": null,
+        "tpp_gated_confidence": null,
+        "tpp_gated_memory_size": 0,
+        "tpp_gated_retrieval": null,
+        "tpp_gated_scan_backend": null,
+        "tpp_gated_state_scope": null,
+        "tpp_gated_temperature": null,
+        "tpp_gated_topk": 0,
+        "tpp_gated_write_policy": null
+      },
+      "model_state_after_profile_sha256": "77d430ee69c031fd7d72c2fe24897559b40374fd7779eda989106a799f9c3fcc",
+      "observed_events": 7,
+      "parameter_count": 89795,
+      "peak_allocated_bytes": 49142784,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 1,
+      "seed": 43,
+      "sequence_length": 8,
+      "status": "passed",
+      "step_seconds": [
+        0.003320729825645685,
+        0.0031867309007793665,
+        0.003184448927640915,
+        0.0032425010576844215,
+        0.003204907989129424,
+        0.0032136840745806694,
+        0.0032255949918180704,
+        0.0033083679154515266,
+        0.0032863218802958727,
+        0.0032266890630126,
+        0.00311817298643291,
+        0.00320967985317111,
+        0.003287313971668482,
+        0.0032465870026499033,
+        0.0031822349410504103
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp_hard_memory_level_history_qkv",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {
+          "encoder.layers.0.attn.level_history_k_kernel": [
+            0.00027735051116906106,
+            6.048976138117723e-05
+          ],
+          "encoder.layers.0.attn.level_history_q_kernel": [
+            0.0003688937867991626,
+            0.0002487277379259467
+          ],
+          "encoder.layers.0.attn.level_history_v_kernel": [
+            0.00039016405935399234,
+            0.00019307233742438257
+          ]
+        },
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 0.8834325075149536,
+          "encoder.layers.1.attn.qkv.weight": 0.7696952819824219,
+          "lmm.mem": 0.1851026564836502,
+          "quantity_head.weight": 12.948862075805664,
+          "v_t.weight": 60.4028434753418
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.152430534362793,
+          "quantity_prediction_max_abs_delta": 0.33412933349609375,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "learned_kernel_norm_by_row": {
+          "encoder.layers.0.attn.level_history_k_kernel": [
+            0.07508335262537003,
+            0.0505724772810936
+          ],
+          "encoder.layers.0.attn.level_history_q_kernel": [
+            0.09792033582925797,
+            0.06667036563158035
+          ],
+          "encoder.layers.0.attn.level_history_v_kernel": [
+            0.09037018567323685,
+            0.08336571604013443
+          ]
+        },
+        "status": "passed",
+        "transition_mechanism": {
+          "confidence_contract": "valid_adjacent_pairs_over_valid_events",
+          "constant_level_translation_invariant": true,
+          "constant_projection_dc_null": true,
+          "qkv": {
+            "k": {
+              "added_rms_over_confidence_transition_rms_max": 0.01834563910961151,
+              "confidence_final": 0.875,
+              "confidence_max": 0.875,
+              "confidence_min": 0.0,
+              "fraction_valid_gain_below_one": 1.0,
+              "gain_max": 1.0,
+              "gain_mean": 0.9999439120292664,
+              "gain_min": 0.9998317360877991,
+              "lag1_available_fraction": 0.875,
+              "lag2_available_fraction": 0.75
+            },
+            "q": {
+              "added_rms_over_confidence_transition_rms_max": 0.025660211220383644,
+              "confidence_final": 0.875,
+              "confidence_max": 0.875,
+              "confidence_min": 0.0,
+              "fraction_valid_gain_below_one": 1.0,
+              "gain_max": 1.0,
+              "gain_mean": 0.9998891353607178,
+              "gain_min": 0.9996707439422607,
+              "lag1_available_fraction": 0.875,
+              "lag2_available_fraction": 0.75
+            },
+            "v": {
+              "confidence_final": 0.875,
+              "confidence_max": 0.875,
+              "confidence_min": 0.0,
+              "lag1_available_fraction": 0.875,
+              "lag2_available_fraction": 0.75
+            }
+          },
+          "status": "passed",
+          "v_operation_bitwise_identical": true
+        },
+        "zero_kernel_counterfactual": {
+          "final_state_max_abs_delta": 0.0037862062454223633,
+          "quantity_prediction_max_abs_delta": 0.001129150390625,
+          "state_digest_restored": true,
+          "status": "passed"
+        }
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.004714168142527342,
+      "model_metadata": {
+        "additional_parameter_count": 384,
+        "backbone_contract_id": "hard_lmm_level_preserving_history_confidence_residual_v1",
+        "base_encoder": "CountAwareTitanTPP",
+        "candidate_name": "count_titan_hard_lmm_level_history_qkv",
+        "d_ff": 128,
+        "d_model": 64,
+        "final_memory_placement": "after_encoder_layer_2",
+        "level_history_confidence": "cumulative_valid_adjacent_pairs_over_cumulative_valid_events",
+        "level_history_confidence_trainable": false,
+        "level_history_initialization": "all_zero_exact_identity",
+        "level_history_layer": 0,
+        "level_history_parameterization": "channelwise_diagonal",
+        "level_history_qk_bound": "headwise_transition_rms_saturation",
+        "level_history_qk_epsilon": 1e-08,
+        "level_history_scope": "event_qkv_only",
+        "level_history_transition_order": [
+          "current_minus_lag1",
+          "lag1_minus_lag2"
+        ],
+        "level_history_v_operation": "unbounded_transition_residual",
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "model_role": "hard_lmm_level_history_qkv_candidate",
+        "n_heads": 4,
+        "n_layers": 2,
+        "new_parameter_state_keys": [
+          "encoder.layers.0.attn.level_history_q_kernel",
+          "encoder.layers.0.attn.level_history_k_kernel",
+          "encoder.layers.0.attn.level_history_v_kernel"
+        ],
+        "online_writes": false,
+        "persistent_key_value_adaptation": false,
+        "persistent_mem_size": 16,
+        "routing_contract_id": "hard_lmm_level_preserving_history_confidence_residual_v1",
+        "static_retrieval_aggregation": "arithmetic_mean",
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        }
+      },
+      "model_state_after_profile_sha256": "439ff8674af8e7a7145d279bde46e55bc4ad059c667694b6663f42a889189656",
+      "observed_events": 7,
+      "parameter_count": 90179,
+      "peak_allocated_bytes": 51878400,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 2,
+      "seed": 44,
+      "sequence_length": 8,
+      "status": "passed",
+      "step_seconds": [
+        0.004703282145783305,
+        0.004762483993545175,
+        0.004776976071298122,
+        0.004758320981636643,
+        0.004667404107749462,
+        0.004687679931521416,
+        0.004714168142527342,
+        0.004697168944403529,
+        0.0047243209555745125,
+        0.004629092989489436,
+        0.0047207491006702185,
+        0.004747455008327961,
+        0.004785293946042657,
+        0.004675491945818067,
+        0.004653129959478974
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {},
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 0.8834325075149536,
+          "encoder.layers.1.attn.qkv.weight": 0.7696952819824219,
+          "lmm.mem": 0.1851026564836502,
+          "quantity_head.weight": 12.948862075805664,
+          "v_t.weight": 60.4028434753418
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.152348518371582,
+          "quantity_prediction_max_abs_delta": 0.33445262908935547,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "status": "passed"
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.003312567016109824,
+      "model_metadata": {
+        "backbone_contract_id": "B0",
+        "candidate_name": "count_titan_small_lmm",
+        "d_ff": 128,
+        "d_model": 64,
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "memory_residual_gate_init": null,
+        "n_heads": 4,
+        "n_layers": 2,
+        "persistent_mem_size": 16,
+        "persistent_memory_update_scope": null,
+        "quantity_memory_gradient_mode": "shared_state",
+        "quantity_memory_route": "shared_memory_state",
+        "soft_memory_size": 0,
+        "soft_memory_temperature": null,
+        "surprise_chunk_size": 0,
+        "surprise_memory_rank": 0,
+        "surprise_momentum_init": null,
+        "surprise_retention_init": null,
+        "surprise_scan_backend": null,
+        "surprise_state_scope": null,
+        "surprise_update_rate_init": null,
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        },
+        "time_memory_route": "hard_local_memory_matcher",
+        "titans_event_order": null,
+        "titans_mac_segment_size": 0,
+        "titans_memory_gradient_clip": null,
+        "titans_neural_memory_depth": 0,
+        "titans_neural_memory_hidden_expansion": 0,
+        "titans_online_update": null,
+        "titans_scan_backend": null,
+        "tpp_gated_confidence": null,
+        "tpp_gated_memory_size": 0,
+        "tpp_gated_retrieval": null,
+        "tpp_gated_scan_backend": null,
+        "tpp_gated_state_scope": null,
+        "tpp_gated_temperature": null,
+        "tpp_gated_topk": 0,
+        "tpp_gated_write_policy": null
+      },
+      "model_state_after_profile_sha256": "2d4a45c2e7fa206e06020f78ea6a5a6e13dcecc60d14a308e2501bd3a9958b31",
+      "observed_events": 7,
+      "parameter_count": 89795,
+      "peak_allocated_bytes": 49142784,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 2,
+      "seed": 44,
+      "sequence_length": 8,
+      "status": "passed",
+      "step_seconds": [
+        0.0033659879118204117,
+        0.0033187828958034515,
+        0.0033153179101645947,
+        0.003312567016109824,
+        0.0033109220676124096,
+        0.0033308251295238733,
+        0.0032896159682422876,
+        0.003370818914845586,
+        0.003264978062361479,
+        0.003349594073370099,
+        0.003304168116301298,
+        0.003320474876090884,
+        0.0032952472101897,
+        0.003295046975836158,
+        0.003282264107838273
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp_hard_memory_causal_qkv",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {
+          "encoder.layers.0.attn.causal_k_kernel": [
+            0.006791339255869389,
+            0.005801397375762463,
+            0.004871575627475977
+          ],
+          "encoder.layers.0.attn.causal_q_kernel": [
+            0.006810296326875687,
+            0.0070625958032906055,
+            0.006967347580939531
+          ],
+          "encoder.layers.0.attn.causal_v_kernel": [
+            0.05511541664600372,
+            0.0472726970911026,
+            0.03921554982662201
+          ]
+        },
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 0.8834325075149536,
+          "encoder.layers.1.attn.qkv.weight": 0.7696952819824219,
+          "lmm.mem": 0.1851026564836502,
+          "quantity_head.weight": 12.948862075805664,
+          "v_t.weight": 60.4028434753418
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.1586904525756836,
+          "quantity_prediction_max_abs_delta": 0.35721683502197266,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "learned_kernel_norm_by_row": {
+          "encoder.layers.0.attn.causal_k_kernel": [
+            0.06141938641667366,
+            0.05979708582162857,
+            0.059921927750110626
+          ],
+          "encoder.layers.0.attn.causal_q_kernel": [
+            0.06137511879205704,
+            0.0637088194489479,
+            0.06287766247987747
+          ],
+          "encoder.layers.0.attn.causal_v_kernel": [
+            0.07057542353868484,
+            0.07031872868537903,
+            0.07013741880655289
+          ]
+        },
+        "status": "passed",
+        "zero_kernel_counterfactual": {
+          "final_state_max_abs_delta": 0.041200876235961914,
+          "quantity_prediction_max_abs_delta": 0.02875995635986328,
+          "state_digest_restored": true,
+          "status": "passed"
+        }
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.003816927084699273,
+      "model_metadata": {
+        "additional_parameter_count": 576,
+        "backbone_contract_id": "hard_lmm_causal_qkv_v1",
+        "base_encoder": "CountAwareTitanTPP",
+        "candidate_name": "count_titan_hard_lmm_causal_qkv",
+        "causal_qkv_bias": false,
+        "causal_qkv_combination": "residual_addition",
+        "causal_qkv_groups": 64,
+        "causal_qkv_initialization": "all_zero_exact_identity",
+        "causal_qkv_kernel_size": 3,
+        "causal_qkv_lag_order": [
+          "current",
+          "lag1",
+          "lag2"
+        ],
+        "causal_qkv_layer": 0,
+        "causal_qkv_scope": "event_qkv_only",
+        "d_ff": 128,
+        "d_model": 64,
+        "final_memory_placement": "after_encoder_layer_2",
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "model_role": "hard_lmm_causal_qkv_candidate",
+        "n_heads": 4,
+        "n_layers": 2,
+        "new_parameter_state_keys": [
+          "encoder.layers.0.attn.causal_q_kernel",
+          "encoder.layers.0.attn.causal_k_kernel",
+          "encoder.layers.0.attn.causal_v_kernel"
+        ],
+        "online_writes": false,
+        "persistent_key_value_adaptation": false,
+        "persistent_mem_size": 16,
+        "routing_contract_id": "hard_lmm_causal_qkv_v1",
+        "static_retrieval_aggregation": "arithmetic_mean",
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        }
+      },
+      "model_state_after_profile_sha256": "61fffc507a777659d3d613fb0d78d02a2980f822605256e50e3771ff83b71583",
+      "observed_events": 7,
+      "parameter_count": 90371,
+      "peak_allocated_bytes": 51810304,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 2,
+      "seed": 44,
+      "sequence_length": 8,
+      "status": "passed",
+      "step_seconds": [
+        0.0038307730574160814,
+        0.003816927084699273,
+        0.003802673891186714,
+        0.003921305062249303,
+        0.003832874121144414,
+        0.0038155540823936462,
+        0.00376587500795722,
+        0.003801430109888315,
+        0.0038361239712685347,
+        0.003852871945127845,
+        0.003942722920328379,
+        0.0038363130297511816,
+        0.0037876940332353115,
+        0.0037210898008197546,
+        0.00380356190726161
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {},
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 1.893882393836975,
+          "encoder.layers.1.attn.qkv.weight": 1.704137921333313,
+          "lmm.mem": 0.19849297404289246,
+          "quantity_head.weight": 15.723819732666016,
+          "v_t.weight": 70.1827621459961
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.327671527862549,
+          "quantity_prediction_max_abs_delta": 1.2378807067871094,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "status": "passed"
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.003263436956331134,
+      "model_metadata": {
+        "backbone_contract_id": "B0",
+        "candidate_name": "count_titan_small_lmm",
+        "d_ff": 128,
+        "d_model": 64,
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "memory_residual_gate_init": null,
+        "n_heads": 4,
+        "n_layers": 2,
+        "persistent_mem_size": 16,
+        "persistent_memory_update_scope": null,
+        "quantity_memory_gradient_mode": "shared_state",
+        "quantity_memory_route": "shared_memory_state",
+        "soft_memory_size": 0,
+        "soft_memory_temperature": null,
+        "surprise_chunk_size": 0,
+        "surprise_memory_rank": 0,
+        "surprise_momentum_init": null,
+        "surprise_retention_init": null,
+        "surprise_scan_backend": null,
+        "surprise_state_scope": null,
+        "surprise_update_rate_init": null,
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        },
+        "time_memory_route": "hard_local_memory_matcher",
+        "titans_event_order": null,
+        "titans_mac_segment_size": 0,
+        "titans_memory_gradient_clip": null,
+        "titans_neural_memory_depth": 0,
+        "titans_neural_memory_hidden_expansion": 0,
+        "titans_online_update": null,
+        "titans_scan_backend": null,
+        "tpp_gated_confidence": null,
+        "tpp_gated_memory_size": 0,
+        "tpp_gated_retrieval": null,
+        "tpp_gated_scan_backend": null,
+        "tpp_gated_state_scope": null,
+        "tpp_gated_temperature": null,
+        "tpp_gated_topk": 0,
+        "tpp_gated_write_policy": null
+      },
+      "model_state_after_profile_sha256": "3abe0abf92c291b467db85098280121e9e79f9cfd80114ce97298a1d6b2ac342",
+      "observed_events": 63,
+      "parameter_count": 89795,
+      "peak_allocated_bytes": 273086464,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 0,
+      "seed": 42,
+      "sequence_length": 64,
+      "status": "passed",
+      "step_seconds": [
+        0.0032829390838742256,
+        0.003311784937977791,
+        0.003254240844398737,
+        0.003217423800379038,
+        0.0032279998995363712,
+        0.0032142798881977797,
+        0.003263436956331134,
+        0.0032553088385611773,
+        0.0032159150578081608,
+        0.0032639550045132637,
+        0.0032820850610733032,
+        0.003357505891472101,
+        0.0033067320473492146,
+        0.003276505973190069,
+        0.0032233160454779863
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp_hard_memory_causal_qkv",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {
+          "encoder.layers.0.attn.causal_k_kernel": [
+            0.006407501641660929,
+            0.006239668000489473,
+            0.006106208078563213
+          ],
+          "encoder.layers.0.attn.causal_q_kernel": [
+            0.006382661871612072,
+            0.00635429285466671,
+            0.0064220973290503025
+          ],
+          "encoder.layers.0.attn.causal_v_kernel": [
+            0.15799063444137573,
+            0.15517057478427887,
+            0.15246345102787018
+          ]
+        },
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 1.893882393836975,
+          "encoder.layers.1.attn.qkv.weight": 1.704137921333313,
+          "lmm.mem": 0.19849297404289246,
+          "quantity_head.weight": 15.723819732666016,
+          "v_t.weight": 70.1827621459961
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.3613643646240234,
+          "quantity_prediction_max_abs_delta": 1.2675914764404297,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "learned_kernel_norm_by_row": {
+          "encoder.layers.0.attn.causal_k_kernel": [
+            0.06491926312446594,
+            0.06799688190221786,
+            0.0675242468714714
+          ],
+          "encoder.layers.0.attn.causal_q_kernel": [
+            0.06492611020803452,
+            0.06522120535373688,
+            0.06333474069833755
+          ],
+          "encoder.layers.0.attn.causal_v_kernel": [
+            0.06532177329063416,
+            0.0654066652059555,
+            0.06518949568271637
+          ]
+        },
+        "status": "passed",
+        "zero_kernel_counterfactual": {
+          "final_state_max_abs_delta": 0.04104304313659668,
+          "quantity_prediction_max_abs_delta": 0.029466629028320312,
+          "state_digest_restored": true,
+          "status": "passed"
+        }
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.003972993930801749,
+      "model_metadata": {
+        "additional_parameter_count": 576,
+        "backbone_contract_id": "hard_lmm_causal_qkv_v1",
+        "base_encoder": "CountAwareTitanTPP",
+        "candidate_name": "count_titan_hard_lmm_causal_qkv",
+        "causal_qkv_bias": false,
+        "causal_qkv_combination": "residual_addition",
+        "causal_qkv_groups": 64,
+        "causal_qkv_initialization": "all_zero_exact_identity",
+        "causal_qkv_kernel_size": 3,
+        "causal_qkv_lag_order": [
+          "current",
+          "lag1",
+          "lag2"
+        ],
+        "causal_qkv_layer": 0,
+        "causal_qkv_scope": "event_qkv_only",
+        "d_ff": 128,
+        "d_model": 64,
+        "final_memory_placement": "after_encoder_layer_2",
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "model_role": "hard_lmm_causal_qkv_candidate",
+        "n_heads": 4,
+        "n_layers": 2,
+        "new_parameter_state_keys": [
+          "encoder.layers.0.attn.causal_q_kernel",
+          "encoder.layers.0.attn.causal_k_kernel",
+          "encoder.layers.0.attn.causal_v_kernel"
+        ],
+        "online_writes": false,
+        "persistent_key_value_adaptation": false,
+        "persistent_mem_size": 16,
+        "routing_contract_id": "hard_lmm_causal_qkv_v1",
+        "static_retrieval_aggregation": "arithmetic_mean",
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        }
+      },
+      "model_state_after_profile_sha256": "0009c9b1b2c53e4ce3fca046777f93d737f5ed1026ccf3009eb01079f1619dbf",
+      "observed_events": 63,
+      "parameter_count": 90371,
+      "peak_allocated_bytes": 291249152,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 0,
+      "seed": 42,
+      "sequence_length": 64,
+      "status": "passed",
+      "step_seconds": [
+        0.003936749882996082,
+        0.003940635127946734,
+        0.004019517917186022,
+        0.003974876133725047,
+        0.003972993930801749,
+        0.004069786984473467,
+        0.003999040927737951,
+        0.00400609290227294,
+        0.0039569849614053965,
+        0.003946606069803238,
+        0.0039246780797839165,
+        0.0039099520072340965,
+        0.004009450087323785,
+        0.00397639605216682,
+        0.0039011710323393345
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp_hard_memory_level_history_qkv",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {
+          "encoder.layers.0.attn.level_history_k_kernel": [
+            0.0010419223690405488,
+            2.1939245925750583e-05
+          ],
+          "encoder.layers.0.attn.level_history_q_kernel": [
+            0.00018413210636936128,
+            0.00015978177543729544
+          ],
+          "encoder.layers.0.attn.level_history_v_kernel": [
+            0.0025752298533916473,
+            0.00022030943364370614
+          ]
+        },
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 1.893882393836975,
+          "encoder.layers.1.attn.qkv.weight": 1.704137921333313,
+          "lmm.mem": 0.19849297404289246,
+          "quantity_head.weight": 15.723819732666016,
+          "v_t.weight": 70.1827621459961
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.3274548053741455,
+          "quantity_prediction_max_abs_delta": 1.2378120422363281,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "learned_kernel_norm_by_row": {
+          "encoder.layers.0.attn.level_history_k_kernel": [
+            0.06141262128949165,
+            0.044493887573480606
+          ],
+          "encoder.layers.0.attn.level_history_q_kernel": [
+            0.08101844787597656,
+            0.06495510786771774
+          ],
+          "encoder.layers.0.attn.level_history_v_kernel": [
+            0.06513926386833191,
+            0.057455141097307205
+          ]
+        },
+        "status": "passed",
+        "transition_mechanism": {
+          "confidence_contract": "valid_adjacent_pairs_over_valid_events",
+          "constant_level_translation_invariant": true,
+          "constant_projection_dc_null": true,
+          "qkv": {
+            "k": {
+              "added_rms_over_confidence_transition_rms_max": 0.01571078598499298,
+              "confidence_final": 0.984375,
+              "confidence_max": 0.984375,
+              "confidence_min": 0.0,
+              "fraction_valid_gain_below_one": 1.0,
+              "gain_max": 1.0,
+              "gain_mean": 0.9999595880508423,
+              "gain_min": 0.9998765587806702,
+              "lag1_available_fraction": 0.984375,
+              "lag2_available_fraction": 0.96875
+            },
+            "q": {
+              "added_rms_over_confidence_transition_rms_max": 0.02127217687666416,
+              "confidence_final": 0.984375,
+              "confidence_max": 0.984375,
+              "confidence_min": 0.0,
+              "fraction_valid_gain_below_one": 1.0,
+              "gain_max": 1.0,
+              "gain_mean": 0.9999167323112488,
+              "gain_min": 0.9997737407684326,
+              "lag1_available_fraction": 0.984375,
+              "lag2_available_fraction": 0.96875
+            },
+            "v": {
+              "confidence_final": 0.984375,
+              "confidence_max": 0.984375,
+              "confidence_min": 0.0,
+              "lag1_available_fraction": 0.984375,
+              "lag2_available_fraction": 0.96875
+            }
+          },
+          "status": "passed",
+          "v_operation_bitwise_identical": true
+        },
+        "zero_kernel_counterfactual": {
+          "final_state_max_abs_delta": 0.0007123947143554688,
+          "quantity_prediction_max_abs_delta": 0.00038909912109375,
+          "state_digest_restored": true,
+          "status": "passed"
+        }
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.004729816922917962,
+      "model_metadata": {
+        "additional_parameter_count": 384,
+        "backbone_contract_id": "hard_lmm_level_preserving_history_confidence_residual_v1",
+        "base_encoder": "CountAwareTitanTPP",
+        "candidate_name": "count_titan_hard_lmm_level_history_qkv",
+        "d_ff": 128,
+        "d_model": 64,
+        "final_memory_placement": "after_encoder_layer_2",
+        "level_history_confidence": "cumulative_valid_adjacent_pairs_over_cumulative_valid_events",
+        "level_history_confidence_trainable": false,
+        "level_history_initialization": "all_zero_exact_identity",
+        "level_history_layer": 0,
+        "level_history_parameterization": "channelwise_diagonal",
+        "level_history_qk_bound": "headwise_transition_rms_saturation",
+        "level_history_qk_epsilon": 1e-08,
+        "level_history_scope": "event_qkv_only",
+        "level_history_transition_order": [
+          "current_minus_lag1",
+          "lag1_minus_lag2"
+        ],
+        "level_history_v_operation": "unbounded_transition_residual",
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "model_role": "hard_lmm_level_history_qkv_candidate",
+        "n_heads": 4,
+        "n_layers": 2,
+        "new_parameter_state_keys": [
+          "encoder.layers.0.attn.level_history_q_kernel",
+          "encoder.layers.0.attn.level_history_k_kernel",
+          "encoder.layers.0.attn.level_history_v_kernel"
+        ],
+        "online_writes": false,
+        "persistent_key_value_adaptation": false,
+        "persistent_mem_size": 16,
+        "routing_contract_id": "hard_lmm_level_preserving_history_confidence_residual_v1",
+        "static_retrieval_aggregation": "arithmetic_mean",
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        }
+      },
+      "model_state_after_profile_sha256": "cbd6bae0b9a8b7b79ea78675ba5c55a5c022c75cdc2693d85acb1830f5a05cfd",
+      "observed_events": 63,
+      "parameter_count": 90179,
+      "peak_allocated_bytes": 293235200,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 0,
+      "seed": 42,
+      "sequence_length": 64,
+      "status": "passed",
+      "step_seconds": [
+        0.004727412946522236,
+        0.004778203088790178,
+        0.004729816922917962,
+        0.004680954851210117,
+        0.004713091999292374,
+        0.004715519957244396,
+        0.004755610832944512,
+        0.004762028809636831,
+        0.004732344998046756,
+        0.004693159135058522,
+        0.004785677883774042,
+        0.0047008011024445295,
+        0.004788595950230956,
+        0.004773457068949938,
+        0.004729721928015351
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp_hard_memory_causal_qkv",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {
+          "encoder.layers.0.attn.causal_k_kernel": [
+            0.012049342505633831,
+            0.011851809918880463,
+            0.01169633213430643
+          ],
+          "encoder.layers.0.attn.causal_q_kernel": [
+            0.012051497586071491,
+            0.011830056086182594,
+            0.01202357467263937
+          ],
+          "encoder.layers.0.attn.causal_v_kernel": [
+            0.12369690835475922,
+            0.12227677553892136,
+            0.12043922394514084
+          ]
+        },
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 1.883808970451355,
+          "encoder.layers.1.attn.qkv.weight": 1.291897177696228,
+          "lmm.mem": 0.19901025295257568,
+          "quantity_head.weight": 14.830805778503418,
+          "v_t.weight": 72.59414672851562
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.6938974857330322,
+          "quantity_prediction_max_abs_delta": 1.0407733917236328,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "learned_kernel_norm_by_row": {
+          "encoder.layers.0.attn.causal_k_kernel": [
+            0.06409404426813126,
+            0.06237851083278656,
+            0.061610374599695206
+          ],
+          "encoder.layers.0.attn.causal_q_kernel": [
+            0.06403835862874985,
+            0.06485580652952194,
+            0.06654836982488632
+          ],
+          "encoder.layers.0.attn.causal_v_kernel": [
+            0.06968900561332703,
+            0.07003787159919739,
+            0.06991115212440491
+          ]
+        },
+        "status": "passed",
+        "zero_kernel_counterfactual": {
+          "final_state_max_abs_delta": 0.04456162452697754,
+          "quantity_prediction_max_abs_delta": 0.02193450927734375,
+          "state_digest_restored": true,
+          "status": "passed"
+        }
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.003986057126894593,
+      "model_metadata": {
+        "additional_parameter_count": 576,
+        "backbone_contract_id": "hard_lmm_causal_qkv_v1",
+        "base_encoder": "CountAwareTitanTPP",
+        "candidate_name": "count_titan_hard_lmm_causal_qkv",
+        "causal_qkv_bias": false,
+        "causal_qkv_combination": "residual_addition",
+        "causal_qkv_groups": 64,
+        "causal_qkv_initialization": "all_zero_exact_identity",
+        "causal_qkv_kernel_size": 3,
+        "causal_qkv_lag_order": [
+          "current",
+          "lag1",
+          "lag2"
+        ],
+        "causal_qkv_layer": 0,
+        "causal_qkv_scope": "event_qkv_only",
+        "d_ff": 128,
+        "d_model": 64,
+        "final_memory_placement": "after_encoder_layer_2",
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "model_role": "hard_lmm_causal_qkv_candidate",
+        "n_heads": 4,
+        "n_layers": 2,
+        "new_parameter_state_keys": [
+          "encoder.layers.0.attn.causal_q_kernel",
+          "encoder.layers.0.attn.causal_k_kernel",
+          "encoder.layers.0.attn.causal_v_kernel"
+        ],
+        "online_writes": false,
+        "persistent_key_value_adaptation": false,
+        "persistent_mem_size": 16,
+        "routing_contract_id": "hard_lmm_causal_qkv_v1",
+        "static_retrieval_aggregation": "arithmetic_mean",
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        }
+      },
+      "model_state_after_profile_sha256": "a7fdd396c51cecdc4f53b834904764554da38cbd3d483e77b755a6de8162f11e",
+      "observed_events": 63,
+      "parameter_count": 90371,
+      "peak_allocated_bytes": 291249152,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 1,
+      "seed": 43,
+      "sequence_length": 64,
+      "status": "passed",
+      "step_seconds": [
+        0.004002914996817708,
+        0.003978043096140027,
+        0.003963576164096594,
+        0.0040151700377464294,
+        0.003988659009337425,
+        0.004049402894452214,
+        0.004001838155090809,
+        0.004004043061286211,
+        0.003963937982916832,
+        0.004016924882307649,
+        0.003967930097132921,
+        0.003941120812669396,
+        0.003986057126894593,
+        0.003949014935642481,
+        0.003952154889702797
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp_hard_memory_level_history_qkv",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {
+          "encoder.layers.0.attn.level_history_k_kernel": [
+            0.0014646400231868029,
+            4.7020956117194146e-05
+          ],
+          "encoder.layers.0.attn.level_history_q_kernel": [
+            0.00033263114164583385,
+            0.00035869391285814345
+          ],
+          "encoder.layers.0.attn.level_history_v_kernel": [
+            0.0018364220159128308,
+            0.00019552298181224614
+          ]
+        },
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 1.883808970451355,
+          "encoder.layers.1.attn.qkv.weight": 1.291897177696228,
+          "lmm.mem": 0.19901025295257568,
+          "quantity_head.weight": 14.830805778503418,
+          "v_t.weight": 72.59414672851562
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.694190502166748,
+          "quantity_prediction_max_abs_delta": 0.9780974388122559,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "learned_kernel_norm_by_row": {
+          "encoder.layers.0.attn.level_history_k_kernel": [
+            0.06326139718294144,
+            0.039774972945451736
+          ],
+          "encoder.layers.0.attn.level_history_q_kernel": [
+            0.07090812921524048,
+            0.0749516710639
+          ],
+          "encoder.layers.0.attn.level_history_v_kernel": [
+            0.0793382003903389,
+            0.05552442744374275
+          ]
+        },
+        "status": "passed",
+        "transition_mechanism": {
+          "confidence_contract": "valid_adjacent_pairs_over_valid_events",
+          "constant_level_translation_invariant": true,
+          "constant_projection_dc_null": true,
+          "qkv": {
+            "k": {
+              "added_rms_over_confidence_transition_rms_max": 0.017137326300144196,
+              "confidence_final": 0.984375,
+              "confidence_max": 0.984375,
+              "confidence_min": 0.0,
+              "fraction_valid_gain_below_one": 1.0,
+              "gain_max": 1.0,
+              "gain_mean": 0.9999569654464722,
+              "gain_min": 0.9998531341552734,
+              "lag1_available_fraction": 0.984375,
+              "lag2_available_fraction": 0.96875
+            },
+            "q": {
+              "added_rms_over_confidence_transition_rms_max": 0.026531722396612167,
+              "confidence_final": 0.984375,
+              "confidence_max": 0.984375,
+              "confidence_min": 0.0,
+              "fraction_valid_gain_below_one": 1.0,
+              "gain_max": 1.0,
+              "gain_mean": 0.9999271631240845,
+              "gain_min": 0.9996479749679565,
+              "lag1_available_fraction": 0.984375,
+              "lag2_available_fraction": 0.96875
+            },
+            "v": {
+              "confidence_final": 0.984375,
+              "confidence_max": 0.984375,
+              "confidence_min": 0.0,
+              "lag1_available_fraction": 0.984375,
+              "lag2_available_fraction": 0.96875
+            }
+          },
+          "status": "passed",
+          "v_operation_bitwise_identical": true
+        },
+        "zero_kernel_counterfactual": {
+          "final_state_max_abs_delta": 0.0013576745986938477,
+          "quantity_prediction_max_abs_delta": 0.0008578300476074219,
+          "state_digest_restored": true,
+          "status": "passed"
+        }
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.004746811930090189,
+      "model_metadata": {
+        "additional_parameter_count": 384,
+        "backbone_contract_id": "hard_lmm_level_preserving_history_confidence_residual_v1",
+        "base_encoder": "CountAwareTitanTPP",
+        "candidate_name": "count_titan_hard_lmm_level_history_qkv",
+        "d_ff": 128,
+        "d_model": 64,
+        "final_memory_placement": "after_encoder_layer_2",
+        "level_history_confidence": "cumulative_valid_adjacent_pairs_over_cumulative_valid_events",
+        "level_history_confidence_trainable": false,
+        "level_history_initialization": "all_zero_exact_identity",
+        "level_history_layer": 0,
+        "level_history_parameterization": "channelwise_diagonal",
+        "level_history_qk_bound": "headwise_transition_rms_saturation",
+        "level_history_qk_epsilon": 1e-08,
+        "level_history_scope": "event_qkv_only",
+        "level_history_transition_order": [
+          "current_minus_lag1",
+          "lag1_minus_lag2"
+        ],
+        "level_history_v_operation": "unbounded_transition_residual",
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "model_role": "hard_lmm_level_history_qkv_candidate",
+        "n_heads": 4,
+        "n_layers": 2,
+        "new_parameter_state_keys": [
+          "encoder.layers.0.attn.level_history_q_kernel",
+          "encoder.layers.0.attn.level_history_k_kernel",
+          "encoder.layers.0.attn.level_history_v_kernel"
+        ],
+        "online_writes": false,
+        "persistent_key_value_adaptation": false,
+        "persistent_mem_size": 16,
+        "routing_contract_id": "hard_lmm_level_preserving_history_confidence_residual_v1",
+        "static_retrieval_aggregation": "arithmetic_mean",
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        }
+      },
+      "model_state_after_profile_sha256": "2dd84593f4415be3d26b6d3da3c47f9d882f9be8cdc411cef3bf31e750d79e1b",
+      "observed_events": 63,
+      "parameter_count": 90179,
+      "peak_allocated_bytes": 293235200,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 1,
+      "seed": 43,
+      "sequence_length": 64,
+      "status": "passed",
+      "step_seconds": [
+        0.00488899415358901,
+        0.004762043012306094,
+        0.004746811930090189,
+        0.004702437901869416,
+        0.004743308061733842,
+        0.004735768074169755,
+        0.004795923130586743,
+        0.004694144008681178,
+        0.00473870406858623,
+        0.0047730079386383295,
+        0.004785672994330525,
+        0.004837298998609185,
+        0.004724506987258792,
+        0.004678582074120641,
+        0.0047731599770486355
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {},
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 1.883808970451355,
+          "encoder.layers.1.attn.qkv.weight": 1.291897177696228,
+          "lmm.mem": 0.19901025295257568,
+          "quantity_head.weight": 14.830805778503418,
+          "v_t.weight": 72.59414672851562
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.6940860748291016,
+          "quantity_prediction_max_abs_delta": 0.9782562255859375,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "status": "passed"
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.003297768998891115,
+      "model_metadata": {
+        "backbone_contract_id": "B0",
+        "candidate_name": "count_titan_small_lmm",
+        "d_ff": 128,
+        "d_model": 64,
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "memory_residual_gate_init": null,
+        "n_heads": 4,
+        "n_layers": 2,
+        "persistent_mem_size": 16,
+        "persistent_memory_update_scope": null,
+        "quantity_memory_gradient_mode": "shared_state",
+        "quantity_memory_route": "shared_memory_state",
+        "soft_memory_size": 0,
+        "soft_memory_temperature": null,
+        "surprise_chunk_size": 0,
+        "surprise_memory_rank": 0,
+        "surprise_momentum_init": null,
+        "surprise_retention_init": null,
+        "surprise_scan_backend": null,
+        "surprise_state_scope": null,
+        "surprise_update_rate_init": null,
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        },
+        "time_memory_route": "hard_local_memory_matcher",
+        "titans_event_order": null,
+        "titans_mac_segment_size": 0,
+        "titans_memory_gradient_clip": null,
+        "titans_neural_memory_depth": 0,
+        "titans_neural_memory_hidden_expansion": 0,
+        "titans_online_update": null,
+        "titans_scan_backend": null,
+        "tpp_gated_confidence": null,
+        "tpp_gated_memory_size": 0,
+        "tpp_gated_retrieval": null,
+        "tpp_gated_scan_backend": null,
+        "tpp_gated_state_scope": null,
+        "tpp_gated_temperature": null,
+        "tpp_gated_topk": 0,
+        "tpp_gated_write_policy": null
+      },
+      "model_state_after_profile_sha256": "ae4cee3f69fff249e3592806b74696398141ef16fbb9bf893d999cc9a0218957",
+      "observed_events": 63,
+      "parameter_count": 89795,
+      "peak_allocated_bytes": 273086464,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 1,
+      "seed": 43,
+      "sequence_length": 64,
+      "status": "passed",
+      "step_seconds": [
+        0.003297768998891115,
+        0.003274718066677451,
+        0.0033451970666646957,
+        0.0032025030814111233,
+        0.003289575921371579,
+        0.003350161947309971,
+        0.0033682589419186115,
+        0.003266843967139721,
+        0.0033250381238758564,
+        0.00335692404769361,
+        0.003258066950365901,
+        0.003322612028568983,
+        0.0032857609912753105,
+        0.003269375069066882,
+        0.0033098850399255753
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp_hard_memory_level_history_qkv",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {
+          "encoder.layers.0.attn.level_history_k_kernel": [
+            0.0007959073409438133,
+            6.744316488038749e-05
+          ],
+          "encoder.layers.0.attn.level_history_q_kernel": [
+            0.00022537318000104278,
+            0.00013610087626148015
+          ],
+          "encoder.layers.0.attn.level_history_v_kernel": [
+            0.0010923948138952255,
+            0.0002043815329670906
+          ]
+        },
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 1.9665887355804443,
+          "encoder.layers.1.attn.qkv.weight": 1.8091442584991455,
+          "lmm.mem": 0.19539986550807953,
+          "quantity_head.weight": 13.424409866333008,
+          "v_t.weight": 64.54991149902344
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.4649147987365723,
+          "quantity_prediction_max_abs_delta": 0.7969131469726562,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "learned_kernel_norm_by_row": {
+          "encoder.layers.0.attn.level_history_k_kernel": [
+            0.06738657504320145,
+            0.03221902251243591
+          ],
+          "encoder.layers.0.attn.level_history_q_kernel": [
+            0.0706019327044487,
+            0.06721918284893036
+          ],
+          "encoder.layers.0.attn.level_history_v_kernel": [
+            0.05785965919494629,
+            0.06058748438954353
+          ]
+        },
+        "status": "passed",
+        "transition_mechanism": {
+          "confidence_contract": "valid_adjacent_pairs_over_valid_events",
+          "constant_level_translation_invariant": true,
+          "constant_projection_dc_null": true,
+          "qkv": {
+            "k": {
+              "added_rms_over_confidence_transition_rms_max": 0.01585010252892971,
+              "confidence_final": 0.984375,
+              "confidence_max": 0.984375,
+              "confidence_min": 0.0,
+              "fraction_valid_gain_below_one": 1.0,
+              "gain_max": 1.0,
+              "gain_mean": 0.9999529123306274,
+              "gain_min": 0.9998743534088135,
+              "lag1_available_fraction": 0.984375,
+              "lag2_available_fraction": 0.96875
+            },
+            "q": {
+              "added_rms_over_confidence_transition_rms_max": 0.020969025790691376,
+              "confidence_final": 0.984375,
+              "confidence_max": 0.984375,
+              "confidence_min": 0.0,
+              "fraction_valid_gain_below_one": 1.0,
+              "gain_max": 1.0,
+              "gain_mean": 0.9999197721481323,
+              "gain_min": 0.9997801184654236,
+              "lag1_available_fraction": 0.984375,
+              "lag2_available_fraction": 0.96875
+            },
+            "v": {
+              "confidence_final": 0.984375,
+              "confidence_max": 0.984375,
+              "confidence_min": 0.0,
+              "lag1_available_fraction": 0.984375,
+              "lag2_available_fraction": 0.96875
+            }
+          },
+          "status": "passed",
+          "v_operation_bitwise_identical": true
+        },
+        "zero_kernel_counterfactual": {
+          "final_state_max_abs_delta": 0.0012903213500976562,
+          "quantity_prediction_max_abs_delta": 0.000179290771484375,
+          "state_digest_restored": true,
+          "status": "passed"
+        }
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.004789937986060977,
+      "model_metadata": {
+        "additional_parameter_count": 384,
+        "backbone_contract_id": "hard_lmm_level_preserving_history_confidence_residual_v1",
+        "base_encoder": "CountAwareTitanTPP",
+        "candidate_name": "count_titan_hard_lmm_level_history_qkv",
+        "d_ff": 128,
+        "d_model": 64,
+        "final_memory_placement": "after_encoder_layer_2",
+        "level_history_confidence": "cumulative_valid_adjacent_pairs_over_cumulative_valid_events",
+        "level_history_confidence_trainable": false,
+        "level_history_initialization": "all_zero_exact_identity",
+        "level_history_layer": 0,
+        "level_history_parameterization": "channelwise_diagonal",
+        "level_history_qk_bound": "headwise_transition_rms_saturation",
+        "level_history_qk_epsilon": 1e-08,
+        "level_history_scope": "event_qkv_only",
+        "level_history_transition_order": [
+          "current_minus_lag1",
+          "lag1_minus_lag2"
+        ],
+        "level_history_v_operation": "unbounded_transition_residual",
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "model_role": "hard_lmm_level_history_qkv_candidate",
+        "n_heads": 4,
+        "n_layers": 2,
+        "new_parameter_state_keys": [
+          "encoder.layers.0.attn.level_history_q_kernel",
+          "encoder.layers.0.attn.level_history_k_kernel",
+          "encoder.layers.0.attn.level_history_v_kernel"
+        ],
+        "online_writes": false,
+        "persistent_key_value_adaptation": false,
+        "persistent_mem_size": 16,
+        "routing_contract_id": "hard_lmm_level_preserving_history_confidence_residual_v1",
+        "static_retrieval_aggregation": "arithmetic_mean",
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        }
+      },
+      "model_state_after_profile_sha256": "2f527f42c8f7a7a7de7dfe4ed49ab77a3eb04e6c01ff910f743a657e951a7884",
+      "observed_events": 63,
+      "parameter_count": 90179,
+      "peak_allocated_bytes": 293235200,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 2,
+      "seed": 44,
+      "sequence_length": 64,
+      "status": "passed",
+      "step_seconds": [
+        0.004789937986060977,
+        0.004861229099333286,
+        0.004742694785818458,
+        0.004756184993311763,
+        0.00483379908837378,
+        0.004703067941591144,
+        0.004803917137905955,
+        0.004768241895362735,
+        0.00483850808814168,
+        0.004695909097790718,
+        0.004823942203074694,
+        0.004807752789929509,
+        0.004702657926827669,
+        0.0047112079337239265,
+        0.004850932164117694
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {},
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 1.9665887355804443,
+          "encoder.layers.1.attn.qkv.weight": 1.8091442584991455,
+          "lmm.mem": 0.19539986550807953,
+          "quantity_head.weight": 13.424409866333008,
+          "v_t.weight": 64.54991149902344
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.4649605751037598,
+          "quantity_prediction_max_abs_delta": 0.7966680526733398,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "status": "passed"
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.0032614090014249086,
+      "model_metadata": {
+        "backbone_contract_id": "B0",
+        "candidate_name": "count_titan_small_lmm",
+        "d_ff": 128,
+        "d_model": 64,
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "memory_residual_gate_init": null,
+        "n_heads": 4,
+        "n_layers": 2,
+        "persistent_mem_size": 16,
+        "persistent_memory_update_scope": null,
+        "quantity_memory_gradient_mode": "shared_state",
+        "quantity_memory_route": "shared_memory_state",
+        "soft_memory_size": 0,
+        "soft_memory_temperature": null,
+        "surprise_chunk_size": 0,
+        "surprise_memory_rank": 0,
+        "surprise_momentum_init": null,
+        "surprise_retention_init": null,
+        "surprise_scan_backend": null,
+        "surprise_state_scope": null,
+        "surprise_update_rate_init": null,
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        },
+        "time_memory_route": "hard_local_memory_matcher",
+        "titans_event_order": null,
+        "titans_mac_segment_size": 0,
+        "titans_memory_gradient_clip": null,
+        "titans_neural_memory_depth": 0,
+        "titans_neural_memory_hidden_expansion": 0,
+        "titans_online_update": null,
+        "titans_scan_backend": null,
+        "tpp_gated_confidence": null,
+        "tpp_gated_memory_size": 0,
+        "tpp_gated_retrieval": null,
+        "tpp_gated_scan_backend": null,
+        "tpp_gated_state_scope": null,
+        "tpp_gated_temperature": null,
+        "tpp_gated_topk": 0,
+        "tpp_gated_write_policy": null
+      },
+      "model_state_after_profile_sha256": "2b4aa614bc1e55836f3eb40069d34455c6b788c74bd795ff3599f90d0f51657a",
+      "observed_events": 63,
+      "parameter_count": 89795,
+      "peak_allocated_bytes": 273086464,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 2,
+      "seed": 44,
+      "sequence_length": 64,
+      "status": "passed",
+      "step_seconds": [
+        0.0031855260021984577,
+        0.003274777205660939,
+        0.003223203821107745,
+        0.0032716679852455854,
+        0.0031845399644225836,
+        0.0032421289943158627,
+        0.0032685459591448307,
+        0.0032516669016331434,
+        0.0032972150947898626,
+        0.0032790680415928364,
+        0.0032135110814124346,
+        0.0032614090014249086,
+        0.0032363899517804384,
+        0.003265150124207139,
+        0.0032886259723454714
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp_hard_memory_causal_qkv",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {
+          "encoder.layers.0.attn.causal_k_kernel": [
+            0.003839718410745263,
+            0.003605229314416647,
+            0.0035474144387990236
+          ],
+          "encoder.layers.0.attn.causal_q_kernel": [
+            0.003849982051178813,
+            0.0038846330717206,
+            0.0038881145883351564
+          ],
+          "encoder.layers.0.attn.causal_v_kernel": [
+            0.12748122215270996,
+            0.1253633350133896,
+            0.12332318723201752
+          ]
+        },
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 1.9665887355804443,
+          "encoder.layers.1.attn.qkv.weight": 1.8091442584991455,
+          "lmm.mem": 0.19539986550807953,
+          "quantity_head.weight": 13.424409866333008,
+          "v_t.weight": 64.54991149902344
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.472529649734497,
+          "quantity_prediction_max_abs_delta": 0.8242959976196289,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "learned_kernel_norm_by_row": {
+          "encoder.layers.0.attn.causal_k_kernel": [
+            0.06630678474903107,
+            0.06297890841960907,
+            0.06286215782165527
+          ],
+          "encoder.layers.0.attn.causal_q_kernel": [
+            0.0663382038474083,
+            0.06714602559804916,
+            0.06687091290950775
+          ],
+          "encoder.layers.0.attn.causal_v_kernel": [
+            0.07031726092100143,
+            0.07015947252511978,
+            0.07004449516534805
+          ]
+        },
+        "status": "passed",
+        "zero_kernel_counterfactual": {
+          "final_state_max_abs_delta": 0.03636336326599121,
+          "quantity_prediction_max_abs_delta": 0.014873981475830078,
+          "state_digest_restored": true,
+          "status": "passed"
+        }
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.0038962760008871555,
+      "model_metadata": {
+        "additional_parameter_count": 576,
+        "backbone_contract_id": "hard_lmm_causal_qkv_v1",
+        "base_encoder": "CountAwareTitanTPP",
+        "candidate_name": "count_titan_hard_lmm_causal_qkv",
+        "causal_qkv_bias": false,
+        "causal_qkv_combination": "residual_addition",
+        "causal_qkv_groups": 64,
+        "causal_qkv_initialization": "all_zero_exact_identity",
+        "causal_qkv_kernel_size": 3,
+        "causal_qkv_lag_order": [
+          "current",
+          "lag1",
+          "lag2"
+        ],
+        "causal_qkv_layer": 0,
+        "causal_qkv_scope": "event_qkv_only",
+        "d_ff": 128,
+        "d_model": 64,
+        "final_memory_placement": "after_encoder_layer_2",
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "model_role": "hard_lmm_causal_qkv_candidate",
+        "n_heads": 4,
+        "n_layers": 2,
+        "new_parameter_state_keys": [
+          "encoder.layers.0.attn.causal_q_kernel",
+          "encoder.layers.0.attn.causal_k_kernel",
+          "encoder.layers.0.attn.causal_v_kernel"
+        ],
+        "online_writes": false,
+        "persistent_key_value_adaptation": false,
+        "persistent_mem_size": 16,
+        "routing_contract_id": "hard_lmm_causal_qkv_v1",
+        "static_retrieval_aggregation": "arithmetic_mean",
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        }
+      },
+      "model_state_after_profile_sha256": "058e898f961a1d2824a2d569b75e67b931d450b5959d0f46673359964d73e892",
+      "observed_events": 63,
+      "parameter_count": 90371,
+      "peak_allocated_bytes": 291249152,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 2,
+      "seed": 44,
+      "sequence_length": 64,
+      "status": "passed",
+      "step_seconds": [
+        0.003924472024664283,
+        0.0038805429358035326,
+        0.0038825550582259893,
+        0.003805927000939846,
+        0.0038990150205790997,
+        0.0038962760008871555,
+        0.003980459878221154,
+        0.0038694201502949,
+        0.003919403068721294,
+        0.003883813042193651,
+        0.003862295998260379,
+        0.003915830049663782,
+        0.003856387920677662,
+        0.003957048989832401,
+        0.0039058648981153965
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {},
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 2.120914936065674,
+          "encoder.layers.1.attn.qkv.weight": 1.9555354118347168,
+          "lmm.mem": 0.1874707192182541,
+          "quantity_head.weight": 15.48277759552002,
+          "v_t.weight": 67.99870300292969
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.2509474754333496,
+          "quantity_prediction_max_abs_delta": 0.9886875152587891,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "status": "passed"
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.009417092893272638,
+      "model_metadata": {
+        "backbone_contract_id": "B0",
+        "candidate_name": "count_titan_small_lmm",
+        "d_ff": 128,
+        "d_model": 64,
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "memory_residual_gate_init": null,
+        "n_heads": 4,
+        "n_layers": 2,
+        "persistent_mem_size": 16,
+        "persistent_memory_update_scope": null,
+        "quantity_memory_gradient_mode": "shared_state",
+        "quantity_memory_route": "shared_memory_state",
+        "soft_memory_size": 0,
+        "soft_memory_temperature": null,
+        "surprise_chunk_size": 0,
+        "surprise_memory_rank": 0,
+        "surprise_momentum_init": null,
+        "surprise_retention_init": null,
+        "surprise_scan_backend": null,
+        "surprise_state_scope": null,
+        "surprise_update_rate_init": null,
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        },
+        "time_memory_route": "hard_local_memory_matcher",
+        "titans_event_order": null,
+        "titans_mac_segment_size": 0,
+        "titans_memory_gradient_clip": null,
+        "titans_neural_memory_depth": 0,
+        "titans_neural_memory_hidden_expansion": 0,
+        "titans_online_update": null,
+        "titans_scan_backend": null,
+        "tpp_gated_confidence": null,
+        "tpp_gated_memory_size": 0,
+        "tpp_gated_retrieval": null,
+        "tpp_gated_scan_backend": null,
+        "tpp_gated_state_scope": null,
+        "tpp_gated_temperature": null,
+        "tpp_gated_topk": 0,
+        "tpp_gated_write_policy": null
+      },
+      "model_state_after_profile_sha256": "69a9d91b2faf726b02d090d8f5e993005f46c639dd700f7e22f0dc35113dba46",
+      "observed_events": 255,
+      "parameter_count": 89795,
+      "peak_allocated_bytes": 1485002752,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 0,
+      "seed": 42,
+      "sequence_length": 256,
+      "status": "passed",
+      "step_seconds": [
+        0.009437416912987828,
+        0.009410779224708676,
+        0.00941558787599206,
+        0.009415541077032685,
+        0.009424880146980286,
+        0.009413024876266718,
+        0.009417092893272638,
+        0.009411183884367347,
+        0.009427489945665002,
+        0.009424119954928756,
+        0.009420620976015925,
+        0.00941019388847053,
+        0.009422321105375886,
+        0.009410937083885074,
+        0.009419198846444488
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp_hard_memory_causal_qkv",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {
+          "encoder.layers.0.attn.causal_k_kernel": [
+            0.0027523403987288475,
+            0.0023584698792546988,
+            0.0023543345741927624
+          ],
+          "encoder.layers.0.attn.causal_q_kernel": [
+            0.002746855840086937,
+            0.0027344021946191788,
+            0.002730496460571885
+          ],
+          "encoder.layers.0.attn.causal_v_kernel": [
+            0.178268164396286,
+            0.17738468945026398,
+            0.17656639218330383
+          ]
+        },
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 2.120914936065674,
+          "encoder.layers.1.attn.qkv.weight": 1.9555354118347168,
+          "lmm.mem": 0.1874707192182541,
+          "quantity_head.weight": 15.48277759552002,
+          "v_t.weight": 67.99870300292969
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.277358055114746,
+          "quantity_prediction_max_abs_delta": 1.03326416015625,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "learned_kernel_norm_by_row": {
+          "encoder.layers.0.attn.causal_k_kernel": [
+            0.06084921583533287,
+            0.07008381932973862,
+            0.07092892378568649
+          ],
+          "encoder.layers.0.attn.causal_q_kernel": [
+            0.060762155801057816,
+            0.06060514599084854,
+            0.059616632759571075
+          ],
+          "encoder.layers.0.attn.causal_v_kernel": [
+            0.06248941272497177,
+            0.06277649849653244,
+            0.06273404508829117
+          ]
+        },
+        "status": "passed",
+        "zero_kernel_counterfactual": {
+          "final_state_max_abs_delta": 0.03983569145202637,
+          "quantity_prediction_max_abs_delta": 0.021900177001953125,
+          "state_digest_restored": true,
+          "status": "passed"
+        }
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.010067539056763053,
+      "model_metadata": {
+        "additional_parameter_count": 576,
+        "backbone_contract_id": "hard_lmm_causal_qkv_v1",
+        "base_encoder": "CountAwareTitanTPP",
+        "candidate_name": "count_titan_hard_lmm_causal_qkv",
+        "causal_qkv_bias": false,
+        "causal_qkv_combination": "residual_addition",
+        "causal_qkv_groups": 64,
+        "causal_qkv_initialization": "all_zero_exact_identity",
+        "causal_qkv_kernel_size": 3,
+        "causal_qkv_lag_order": [
+          "current",
+          "lag1",
+          "lag2"
+        ],
+        "causal_qkv_layer": 0,
+        "causal_qkv_scope": "event_qkv_only",
+        "d_ff": 128,
+        "d_model": 64,
+        "final_memory_placement": "after_encoder_layer_2",
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "model_role": "hard_lmm_causal_qkv_candidate",
+        "n_heads": 4,
+        "n_layers": 2,
+        "new_parameter_state_keys": [
+          "encoder.layers.0.attn.causal_q_kernel",
+          "encoder.layers.0.attn.causal_k_kernel",
+          "encoder.layers.0.attn.causal_v_kernel"
+        ],
+        "online_writes": false,
+        "persistent_key_value_adaptation": false,
+        "persistent_mem_size": 16,
+        "routing_contract_id": "hard_lmm_causal_qkv_v1",
+        "static_retrieval_aggregation": "arithmetic_mean",
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        }
+      },
+      "model_state_after_profile_sha256": "853244c573e564321d85fd27680d4179ffca77cef50171f364fa159e54155d81",
+      "observed_events": 255,
+      "parameter_count": 90371,
+      "peak_allocated_bytes": 1558838272,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 0,
+      "seed": 42,
+      "sequence_length": 256,
+      "status": "passed",
+      "step_seconds": [
+        0.010071665048599243,
+        0.010066023096442223,
+        0.010065244045108557,
+        0.010060202097520232,
+        0.010058393934741616,
+        0.010056945960968733,
+        0.010067539056763053,
+        0.010068001924082637,
+        0.010078617138788104,
+        0.010053406935185194,
+        0.010061736917123199,
+        0.010093685938045382,
+        0.010072470176964998,
+        0.010069842915982008,
+        0.010079491883516312
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp_hard_memory_level_history_qkv",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {
+          "encoder.layers.0.attn.level_history_k_kernel": [
+            0.0013359185541048646,
+            5.8041670854436234e-05
+          ],
+          "encoder.layers.0.attn.level_history_q_kernel": [
+            7.733044913038611e-05,
+            6.537143053719774e-05
+          ],
+          "encoder.layers.0.attn.level_history_v_kernel": [
+            0.0032659550197422504,
+            0.00019744547898881137
+          ]
+        },
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 2.120914936065674,
+          "encoder.layers.1.attn.qkv.weight": 1.9555354118347168,
+          "lmm.mem": 0.1874707192182541,
+          "quantity_head.weight": 15.48277759552002,
+          "v_t.weight": 67.99870300292969
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.250887393951416,
+          "quantity_prediction_max_abs_delta": 0.9890460968017578,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "learned_kernel_norm_by_row": {
+          "encoder.layers.0.attn.level_history_k_kernel": [
+            0.06334583461284637,
+            0.037354934960603714
+          ],
+          "encoder.layers.0.attn.level_history_q_kernel": [
+            0.0699576586484909,
+            0.07867808640003204
+          ],
+          "encoder.layers.0.attn.level_history_v_kernel": [
+            0.06242155283689499,
+            0.04364390671253204
+          ]
+        },
+        "status": "passed",
+        "transition_mechanism": {
+          "confidence_contract": "valid_adjacent_pairs_over_valid_events",
+          "constant_level_translation_invariant": true,
+          "constant_projection_dc_null": true,
+          "qkv": {
+            "k": {
+              "added_rms_over_confidence_transition_rms_max": 0.016527224332094193,
+              "confidence_final": 0.99609375,
+              "confidence_max": 0.99609375,
+              "confidence_min": 0.0,
+              "fraction_valid_gain_below_one": 1.0,
+              "gain_max": 1.0,
+              "gain_mean": 0.9999547004699707,
+              "gain_min": 0.9998633861541748,
+              "lag1_available_fraction": 0.99609375,
+              "lag2_available_fraction": 0.9921875
+            },
+            "q": {
+              "added_rms_over_confidence_transition_rms_max": 0.026851147413253784,
+              "confidence_final": 0.99609375,
+              "confidence_max": 0.99609375,
+              "confidence_min": 0.0,
+              "fraction_valid_gain_below_one": 1.0,
+              "gain_max": 1.0,
+              "gain_mean": 0.9999107122421265,
+              "gain_min": 0.9996394515037537,
+              "lag1_available_fraction": 0.99609375,
+              "lag2_available_fraction": 0.9921875
+            },
+            "v": {
+              "confidence_final": 0.99609375,
+              "confidence_max": 0.99609375,
+              "confidence_min": 0.0,
+              "lag1_available_fraction": 0.99609375,
+              "lag2_available_fraction": 0.9921875
+            }
+          },
+          "status": "passed",
+          "v_operation_bitwise_identical": true
+        },
+        "zero_kernel_counterfactual": {
+          "final_state_max_abs_delta": 0.0006010532379150391,
+          "quantity_prediction_max_abs_delta": 0.0004482269287109375,
+          "state_digest_restored": true,
+          "status": "passed"
+        }
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.01096322014927864,
+      "model_metadata": {
+        "additional_parameter_count": 384,
+        "backbone_contract_id": "hard_lmm_level_preserving_history_confidence_residual_v1",
+        "base_encoder": "CountAwareTitanTPP",
+        "candidate_name": "count_titan_hard_lmm_level_history_qkv",
+        "d_ff": 128,
+        "d_model": 64,
+        "final_memory_placement": "after_encoder_layer_2",
+        "level_history_confidence": "cumulative_valid_adjacent_pairs_over_cumulative_valid_events",
+        "level_history_confidence_trainable": false,
+        "level_history_initialization": "all_zero_exact_identity",
+        "level_history_layer": 0,
+        "level_history_parameterization": "channelwise_diagonal",
+        "level_history_qk_bound": "headwise_transition_rms_saturation",
+        "level_history_qk_epsilon": 1e-08,
+        "level_history_scope": "event_qkv_only",
+        "level_history_transition_order": [
+          "current_minus_lag1",
+          "lag1_minus_lag2"
+        ],
+        "level_history_v_operation": "unbounded_transition_residual",
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "model_role": "hard_lmm_level_history_qkv_candidate",
+        "n_heads": 4,
+        "n_layers": 2,
+        "new_parameter_state_keys": [
+          "encoder.layers.0.attn.level_history_q_kernel",
+          "encoder.layers.0.attn.level_history_k_kernel",
+          "encoder.layers.0.attn.level_history_v_kernel"
+        ],
+        "online_writes": false,
+        "persistent_key_value_adaptation": false,
+        "persistent_mem_size": 16,
+        "routing_contract_id": "hard_lmm_level_preserving_history_confidence_residual_v1",
+        "static_retrieval_aggregation": "arithmetic_mean",
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        }
+      },
+      "model_state_after_profile_sha256": "0055c508ef03826e9565b8b2e090cb0c210dad8de79387036a250612ccaed620",
+      "observed_events": 255,
+      "parameter_count": 90179,
+      "peak_allocated_bytes": 1570433536,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 0,
+      "seed": 42,
+      "sequence_length": 256,
+      "status": "passed",
+      "step_seconds": [
+        0.01096322014927864,
+        0.010951698059216142,
+        0.010948858922347426,
+        0.010977121070027351,
+        0.010964166838675737,
+        0.010964262997731566,
+        0.01096884603612125,
+        0.010964747052639723,
+        0.010966116795316339,
+        0.01095267990604043,
+        0.010961655061692,
+        0.010948941810056567,
+        0.010950800031423569,
+        0.010988709051162004,
+        0.010945782996714115
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp_hard_memory_causal_qkv",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {
+          "encoder.layers.0.attn.causal_k_kernel": [
+            0.005064515862613916,
+            0.004703048150986433,
+            0.004681983031332493
+          ],
+          "encoder.layers.0.attn.causal_q_kernel": [
+            0.005065232049673796,
+            0.005052790977060795,
+            0.005043783225119114
+          ],
+          "encoder.layers.0.attn.causal_v_kernel": [
+            0.14143523573875427,
+            0.1415531039237976,
+            0.14101405441761017
+          ]
+        },
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 2.1341378688812256,
+          "encoder.layers.1.attn.qkv.weight": 1.533789873123169,
+          "lmm.mem": 0.19154930114746094,
+          "quantity_head.weight": 14.511630058288574,
+          "v_t.weight": 71.1983413696289
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.7978572845458984,
+          "quantity_prediction_max_abs_delta": 1.6084766387939453,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "learned_kernel_norm_by_row": {
+          "encoder.layers.0.attn.causal_k_kernel": [
+            0.06309103220701218,
+            0.057887669652700424,
+            0.058495666831731796
+          ],
+          "encoder.layers.0.attn.causal_q_kernel": [
+            0.06320542842149734,
+            0.06353329867124557,
+            0.06298007071018219
+          ],
+          "encoder.layers.0.attn.causal_v_kernel": [
+            0.06958364695310593,
+            0.07002808898687363,
+            0.0700104758143425
+          ]
+        },
+        "status": "passed",
+        "zero_kernel_counterfactual": {
+          "final_state_max_abs_delta": 0.046934954822063446,
+          "quantity_prediction_max_abs_delta": 0.026006698608398438,
+          "state_digest_restored": true,
+          "status": "passed"
+        }
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.010096709011122584,
+      "model_metadata": {
+        "additional_parameter_count": 576,
+        "backbone_contract_id": "hard_lmm_causal_qkv_v1",
+        "base_encoder": "CountAwareTitanTPP",
+        "candidate_name": "count_titan_hard_lmm_causal_qkv",
+        "causal_qkv_bias": false,
+        "causal_qkv_combination": "residual_addition",
+        "causal_qkv_groups": 64,
+        "causal_qkv_initialization": "all_zero_exact_identity",
+        "causal_qkv_kernel_size": 3,
+        "causal_qkv_lag_order": [
+          "current",
+          "lag1",
+          "lag2"
+        ],
+        "causal_qkv_layer": 0,
+        "causal_qkv_scope": "event_qkv_only",
+        "d_ff": 128,
+        "d_model": 64,
+        "final_memory_placement": "after_encoder_layer_2",
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "model_role": "hard_lmm_causal_qkv_candidate",
+        "n_heads": 4,
+        "n_layers": 2,
+        "new_parameter_state_keys": [
+          "encoder.layers.0.attn.causal_q_kernel",
+          "encoder.layers.0.attn.causal_k_kernel",
+          "encoder.layers.0.attn.causal_v_kernel"
+        ],
+        "online_writes": false,
+        "persistent_key_value_adaptation": false,
+        "persistent_mem_size": 16,
+        "routing_contract_id": "hard_lmm_causal_qkv_v1",
+        "static_retrieval_aggregation": "arithmetic_mean",
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        }
+      },
+      "model_state_after_profile_sha256": "1a67c8be46ab70fce7cb15b8b4555ce4f446fa2074fa43e4e8402f1187545010",
+      "observed_events": 255,
+      "parameter_count": 90371,
+      "peak_allocated_bytes": 1558838272,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 1,
+      "seed": 43,
+      "sequence_length": 256,
+      "status": "passed",
+      "step_seconds": [
+        0.010090798838064075,
+        0.010107130045071244,
+        0.010089877992868423,
+        0.01010673982091248,
+        0.010116210905835032,
+        0.010126458015292883,
+        0.01011661090888083,
+        0.010088299168273807,
+        0.01010291394777596,
+        0.010094051016494632,
+        0.010084904031828046,
+        0.010096709011122584,
+        0.01009510806761682,
+        0.010103479959070683,
+        0.010094922035932541
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp_hard_memory_level_history_qkv",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {
+          "encoder.layers.0.attn.level_history_k_kernel": [
+            0.0018385848961770535,
+            3.501816536299884e-05
+          ],
+          "encoder.layers.0.attn.level_history_q_kernel": [
+            9.274019976146519e-05,
+            0.00015661949873901904
+          ],
+          "encoder.layers.0.attn.level_history_v_kernel": [
+            0.002172597451135516,
+            9.045953629538417e-05
+          ]
+        },
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 2.1341378688812256,
+          "encoder.layers.1.attn.qkv.weight": 1.533789873123169,
+          "lmm.mem": 0.19154930114746094,
+          "quantity_head.weight": 14.511630058288574,
+          "v_t.weight": 71.1983413696289
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.7890796661376953,
+          "quantity_prediction_max_abs_delta": 1.5378952026367188,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "learned_kernel_norm_by_row": {
+          "encoder.layers.0.attn.level_history_k_kernel": [
+            0.06735148280858994,
+            0.04044124111533165
+          ],
+          "encoder.layers.0.attn.level_history_q_kernel": [
+            0.0609423890709877,
+            0.06717077642679214
+          ],
+          "encoder.layers.0.attn.level_history_v_kernel": [
+            0.06910724192857742,
+            0.04844459891319275
+          ]
+        },
+        "status": "passed",
+        "transition_mechanism": {
+          "confidence_contract": "valid_adjacent_pairs_over_valid_events",
+          "constant_level_translation_invariant": true,
+          "constant_projection_dc_null": true,
+          "qkv": {
+            "k": {
+              "added_rms_over_confidence_transition_rms_max": 0.017414109781384468,
+              "confidence_final": 0.99609375,
+              "confidence_max": 0.99609375,
+              "confidence_min": 0.0,
+              "fraction_valid_gain_below_one": 1.0,
+              "gain_max": 1.0,
+              "gain_mean": 0.9999532699584961,
+              "gain_min": 0.9998483657836914,
+              "lag1_available_fraction": 0.99609375,
+              "lag2_available_fraction": 0.9921875
+            },
+            "q": {
+              "added_rms_over_confidence_transition_rms_max": 0.023241009563207626,
+              "confidence_final": 0.99609375,
+              "confidence_max": 0.99609375,
+              "confidence_min": 0.0,
+              "fraction_valid_gain_below_one": 1.0,
+              "gain_max": 1.0,
+              "gain_mean": 0.9999457597732544,
+              "gain_min": 0.9997298717498779,
+              "lag1_available_fraction": 0.99609375,
+              "lag2_available_fraction": 0.9921875
+            },
+            "v": {
+              "confidence_final": 0.99609375,
+              "confidence_max": 0.99609375,
+              "confidence_min": 0.0,
+              "lag1_available_fraction": 0.99609375,
+              "lag2_available_fraction": 0.9921875
+            }
+          },
+          "status": "passed",
+          "v_operation_bitwise_identical": true
+        },
+        "zero_kernel_counterfactual": {
+          "final_state_max_abs_delta": 0.0006742477416992188,
+          "quantity_prediction_max_abs_delta": 0.0008182525634765625,
+          "state_digest_restored": true,
+          "status": "passed"
+        }
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.011025124927982688,
+      "model_metadata": {
+        "additional_parameter_count": 384,
+        "backbone_contract_id": "hard_lmm_level_preserving_history_confidence_residual_v1",
+        "base_encoder": "CountAwareTitanTPP",
+        "candidate_name": "count_titan_hard_lmm_level_history_qkv",
+        "d_ff": 128,
+        "d_model": 64,
+        "final_memory_placement": "after_encoder_layer_2",
+        "level_history_confidence": "cumulative_valid_adjacent_pairs_over_cumulative_valid_events",
+        "level_history_confidence_trainable": false,
+        "level_history_initialization": "all_zero_exact_identity",
+        "level_history_layer": 0,
+        "level_history_parameterization": "channelwise_diagonal",
+        "level_history_qk_bound": "headwise_transition_rms_saturation",
+        "level_history_qk_epsilon": 1e-08,
+        "level_history_scope": "event_qkv_only",
+        "level_history_transition_order": [
+          "current_minus_lag1",
+          "lag1_minus_lag2"
+        ],
+        "level_history_v_operation": "unbounded_transition_residual",
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "model_role": "hard_lmm_level_history_qkv_candidate",
+        "n_heads": 4,
+        "n_layers": 2,
+        "new_parameter_state_keys": [
+          "encoder.layers.0.attn.level_history_q_kernel",
+          "encoder.layers.0.attn.level_history_k_kernel",
+          "encoder.layers.0.attn.level_history_v_kernel"
+        ],
+        "online_writes": false,
+        "persistent_key_value_adaptation": false,
+        "persistent_mem_size": 16,
+        "routing_contract_id": "hard_lmm_level_preserving_history_confidence_residual_v1",
+        "static_retrieval_aggregation": "arithmetic_mean",
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        }
+      },
+      "model_state_after_profile_sha256": "3f17d18099ff37d851423ca470d5554f68868da647e4a2618e0bc841f42d5d72",
+      "observed_events": 255,
+      "parameter_count": 90179,
+      "peak_allocated_bytes": 1570433536,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 1,
+      "seed": 43,
+      "sequence_length": 256,
+      "status": "passed",
+      "step_seconds": [
+        0.011025124927982688,
+        0.011027127970010042,
+        0.011019039899110794,
+        0.011037381133064628,
+        0.011030797846615314,
+        0.011017559096217155,
+        0.011033212067559361,
+        0.011023737955838442,
+        0.01103150099515915,
+        0.011026452062651515,
+        0.011010627960786223,
+        0.01101859682239592,
+        0.011019808007404208,
+        0.011028134962543845,
+        0.011014088056981564
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {},
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 2.1341378688812256,
+          "encoder.layers.1.attn.qkv.weight": 1.533789873123169,
+          "lmm.mem": 0.19154930114746094,
+          "quantity_head.weight": 14.511630058288574,
+          "v_t.weight": 71.1983413696289
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.7888989448547363,
+          "quantity_prediction_max_abs_delta": 1.5369224548339844,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "status": "passed"
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.00944122695364058,
+      "model_metadata": {
+        "backbone_contract_id": "B0",
+        "candidate_name": "count_titan_small_lmm",
+        "d_ff": 128,
+        "d_model": 64,
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "memory_residual_gate_init": null,
+        "n_heads": 4,
+        "n_layers": 2,
+        "persistent_mem_size": 16,
+        "persistent_memory_update_scope": null,
+        "quantity_memory_gradient_mode": "shared_state",
+        "quantity_memory_route": "shared_memory_state",
+        "soft_memory_size": 0,
+        "soft_memory_temperature": null,
+        "surprise_chunk_size": 0,
+        "surprise_memory_rank": 0,
+        "surprise_momentum_init": null,
+        "surprise_retention_init": null,
+        "surprise_scan_backend": null,
+        "surprise_state_scope": null,
+        "surprise_update_rate_init": null,
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        },
+        "time_memory_route": "hard_local_memory_matcher",
+        "titans_event_order": null,
+        "titans_mac_segment_size": 0,
+        "titans_memory_gradient_clip": null,
+        "titans_neural_memory_depth": 0,
+        "titans_neural_memory_hidden_expansion": 0,
+        "titans_online_update": null,
+        "titans_scan_backend": null,
+        "tpp_gated_confidence": null,
+        "tpp_gated_memory_size": 0,
+        "tpp_gated_retrieval": null,
+        "tpp_gated_scan_backend": null,
+        "tpp_gated_state_scope": null,
+        "tpp_gated_temperature": null,
+        "tpp_gated_topk": 0,
+        "tpp_gated_write_policy": null
+      },
+      "model_state_after_profile_sha256": "a4991b1fe86363f40ee61dd081d585b21a4c302dc9e429c8a3a03ea0040d5f4f",
+      "observed_events": 255,
+      "parameter_count": 89795,
+      "peak_allocated_bytes": 1485002752,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 1,
+      "seed": 43,
+      "sequence_length": 256,
+      "status": "passed",
+      "step_seconds": [
+        0.009440898895263672,
+        0.009437117027118802,
+        0.00943582016043365,
+        0.009443135000765324,
+        0.009458319982513785,
+        0.00944122695364058,
+        0.009444233030080795,
+        0.009438450913876295,
+        0.00944370194338262,
+        0.009435768937692046,
+        0.009459775872528553,
+        0.0094476870726794,
+        0.009445213014259934,
+        0.009440456051379442,
+        0.009434157982468605
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp_hard_memory_level_history_qkv",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {
+          "encoder.layers.0.attn.level_history_k_kernel": [
+            0.0008792770677246153,
+            3.0985785997472703e-05
+          ],
+          "encoder.layers.0.attn.level_history_q_kernel": [
+            5.955142842140049e-05,
+            8.429360605077818e-05
+          ],
+          "encoder.layers.0.attn.level_history_v_kernel": [
+            0.0011470838217064738,
+            8.560331480111927e-05
+          ]
+        },
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 2.2217354774475098,
+          "encoder.layers.1.attn.qkv.weight": 2.10562801361084,
+          "lmm.mem": 0.19227902591228485,
+          "quantity_head.weight": 13.2431058883667,
+          "v_t.weight": 64.17431640625
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.487804889678955,
+          "quantity_prediction_max_abs_delta": 0.947270393371582,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "learned_kernel_norm_by_row": {
+          "encoder.layers.0.attn.level_history_k_kernel": [
+            0.06459648162126541,
+            0.021460605785250664
+          ],
+          "encoder.layers.0.attn.level_history_q_kernel": [
+            0.06877391785383224,
+            0.06826333701610565
+          ],
+          "encoder.layers.0.attn.level_history_v_kernel": [
+            0.05371494218707085,
+            0.03334146738052368
+          ]
+        },
+        "status": "passed",
+        "transition_mechanism": {
+          "confidence_contract": "valid_adjacent_pairs_over_valid_events",
+          "constant_level_translation_invariant": true,
+          "constant_projection_dc_null": true,
+          "qkv": {
+            "k": {
+              "added_rms_over_confidence_transition_rms_max": 0.015051333233714104,
+              "confidence_final": 0.99609375,
+              "confidence_max": 0.99609375,
+              "confidence_min": 0.0,
+              "fraction_valid_gain_below_one": 1.0,
+              "gain_max": 1.0,
+              "gain_mean": 0.9999627470970154,
+              "gain_min": 0.999886691570282,
+              "lag1_available_fraction": 0.99609375,
+              "lag2_available_fraction": 0.9921875
+            },
+            "q": {
+              "added_rms_over_confidence_transition_rms_max": 0.025498606264591217,
+              "confidence_final": 0.99609375,
+              "confidence_max": 0.99609375,
+              "confidence_min": 0.0,
+              "fraction_valid_gain_below_one": 1.0,
+              "gain_max": 1.0,
+              "gain_mean": 0.9999358654022217,
+              "gain_min": 0.9996748566627502,
+              "lag1_available_fraction": 0.99609375,
+              "lag2_available_fraction": 0.9921875
+            },
+            "v": {
+              "confidence_final": 0.99609375,
+              "confidence_max": 0.99609375,
+              "confidence_min": 0.0,
+              "lag1_available_fraction": 0.99609375,
+              "lag2_available_fraction": 0.9921875
+            }
+          },
+          "status": "passed",
+          "v_operation_bitwise_identical": true
+        },
+        "zero_kernel_counterfactual": {
+          "final_state_max_abs_delta": 0.00039768218994140625,
+          "quantity_prediction_max_abs_delta": 0.0001735687255859375,
+          "state_digest_restored": true,
+          "status": "passed"
+        }
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.010950110154226422,
+      "model_metadata": {
+        "additional_parameter_count": 384,
+        "backbone_contract_id": "hard_lmm_level_preserving_history_confidence_residual_v1",
+        "base_encoder": "CountAwareTitanTPP",
+        "candidate_name": "count_titan_hard_lmm_level_history_qkv",
+        "d_ff": 128,
+        "d_model": 64,
+        "final_memory_placement": "after_encoder_layer_2",
+        "level_history_confidence": "cumulative_valid_adjacent_pairs_over_cumulative_valid_events",
+        "level_history_confidence_trainable": false,
+        "level_history_initialization": "all_zero_exact_identity",
+        "level_history_layer": 0,
+        "level_history_parameterization": "channelwise_diagonal",
+        "level_history_qk_bound": "headwise_transition_rms_saturation",
+        "level_history_qk_epsilon": 1e-08,
+        "level_history_scope": "event_qkv_only",
+        "level_history_transition_order": [
+          "current_minus_lag1",
+          "lag1_minus_lag2"
+        ],
+        "level_history_v_operation": "unbounded_transition_residual",
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "model_role": "hard_lmm_level_history_qkv_candidate",
+        "n_heads": 4,
+        "n_layers": 2,
+        "new_parameter_state_keys": [
+          "encoder.layers.0.attn.level_history_q_kernel",
+          "encoder.layers.0.attn.level_history_k_kernel",
+          "encoder.layers.0.attn.level_history_v_kernel"
+        ],
+        "online_writes": false,
+        "persistent_key_value_adaptation": false,
+        "persistent_mem_size": 16,
+        "routing_contract_id": "hard_lmm_level_preserving_history_confidence_residual_v1",
+        "static_retrieval_aggregation": "arithmetic_mean",
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        }
+      },
+      "model_state_after_profile_sha256": "693b9c399df23f5e94b47cf5bb48aef306b4dcdb386c7e80ad99626436383caf",
+      "observed_events": 255,
+      "parameter_count": 90179,
+      "peak_allocated_bytes": 1570433536,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 2,
+      "seed": 44,
+      "sequence_length": 256,
+      "status": "passed",
+      "step_seconds": [
+        0.010971565032377839,
+        0.010971629992127419,
+        0.010944564128294587,
+        0.010961262043565512,
+        0.010950110154226422,
+        0.010956081096082926,
+        0.01094962889328599,
+        0.010950627038255334,
+        0.010958696948364377,
+        0.010943625122308731,
+        0.010960169835016131,
+        0.010945811169221997,
+        0.010949170216917992,
+        0.010948057053610682,
+        0.010949894087389112
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {},
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 2.2217354774475098,
+          "encoder.layers.1.attn.qkv.weight": 2.10562801361084,
+          "lmm.mem": 0.19227902591228485,
+          "quantity_head.weight": 13.2431058883667,
+          "v_t.weight": 64.17431640625
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.487858772277832,
+          "quantity_prediction_max_abs_delta": 0.9470071792602539,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "status": "passed"
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.009420864982530475,
+      "model_metadata": {
+        "backbone_contract_id": "B0",
+        "candidate_name": "count_titan_small_lmm",
+        "d_ff": 128,
+        "d_model": 64,
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "memory_residual_gate_init": null,
+        "n_heads": 4,
+        "n_layers": 2,
+        "persistent_mem_size": 16,
+        "persistent_memory_update_scope": null,
+        "quantity_memory_gradient_mode": "shared_state",
+        "quantity_memory_route": "shared_memory_state",
+        "soft_memory_size": 0,
+        "soft_memory_temperature": null,
+        "surprise_chunk_size": 0,
+        "surprise_memory_rank": 0,
+        "surprise_momentum_init": null,
+        "surprise_retention_init": null,
+        "surprise_scan_backend": null,
+        "surprise_state_scope": null,
+        "surprise_update_rate_init": null,
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        },
+        "time_memory_route": "hard_local_memory_matcher",
+        "titans_event_order": null,
+        "titans_mac_segment_size": 0,
+        "titans_memory_gradient_clip": null,
+        "titans_neural_memory_depth": 0,
+        "titans_neural_memory_hidden_expansion": 0,
+        "titans_online_update": null,
+        "titans_scan_backend": null,
+        "tpp_gated_confidence": null,
+        "tpp_gated_memory_size": 0,
+        "tpp_gated_retrieval": null,
+        "tpp_gated_scan_backend": null,
+        "tpp_gated_state_scope": null,
+        "tpp_gated_temperature": null,
+        "tpp_gated_topk": 0,
+        "tpp_gated_write_policy": null
+      },
+      "model_state_after_profile_sha256": "3af201dbf0e81d2a19c27f91478c1a2665840bdd057cdaa8f70eed05432dbc30",
+      "observed_events": 255,
+      "parameter_count": 89795,
+      "peak_allocated_bytes": 1485002752,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 2,
+      "seed": 44,
+      "sequence_length": 256,
+      "status": "passed",
+      "step_seconds": [
+        0.009428299963474274,
+        0.009417121997103095,
+        0.009402489056810737,
+        0.009435523999854922,
+        0.00942630902864039,
+        0.0094166100025177,
+        0.009423178154975176,
+        0.009417476831004024,
+        0.009420864982530475,
+        0.009420712012797594,
+        0.00942002097144723,
+        0.009426554897800088,
+        0.009423552080988884,
+        0.00942101702094078,
+        0.009411250008270144
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    },
+    {
+      "amp_enabled": false,
+      "backbone": "titantpp_hard_memory_causal_qkv",
+      "batch_size": 128,
+      "cuda_version": "13.0",
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "finite_model_optimizer": true,
+      "gradient_audit": {
+        "kernel_gradient_norm_by_row": {
+          "encoder.layers.0.attn.causal_k_kernel": [
+            0.0017619236605241895,
+            0.0014057852094992995,
+            0.0013970970176160336
+          ],
+          "encoder.layers.0.attn.causal_q_kernel": [
+            0.0017642599996179342,
+            0.0017571719363331795,
+            0.001761769992299378
+          ],
+          "encoder.layers.0.attn.causal_v_kernel": [
+            0.1427990049123764,
+            0.14219257235527039,
+            0.14166057109832764
+          ]
+        },
+        "shared_gradient_norms": {
+          "encoder.layers.0.attn.qkv.weight": 2.2217354774475098,
+          "encoder.layers.1.attn.qkv.weight": 2.10562801361084,
+          "lmm.mem": 0.19227902591228485,
+          "quantity_head.weight": 13.2431058883667,
+          "v_t.weight": 64.17431640625
+        },
+        "status": "passed"
+      },
+      "hidden_dim": 64,
+      "learning_path": {
+        "initial_backbone_counterfactual": {
+          "final_state_max_abs_delta": 3.493173122406006,
+          "quantity_prediction_max_abs_delta": 0.9959287643432617,
+          "state_digest_restored": true,
+          "status": "passed"
+        },
+        "learned_kernel_norm_by_row": {
+          "encoder.layers.0.attn.causal_k_kernel": [
+            0.07021984457969666,
+            0.06229305639863014,
+            0.06235586106777191
+          ],
+          "encoder.layers.0.attn.causal_q_kernel": [
+            0.07033109664916992,
+            0.06963314861059189,
+            0.06983151286840439
+          ],
+          "encoder.layers.0.attn.causal_v_kernel": [
+            0.06835254281759262,
+            0.06833942234516144,
+            0.06832306832075119
+          ]
+        },
+        "status": "passed",
+        "zero_kernel_counterfactual": {
+          "final_state_max_abs_delta": 0.037912726402282715,
+          "quantity_prediction_max_abs_delta": 0.01554107666015625,
+          "state_digest_restored": true,
+          "status": "passed"
+        }
+      },
+      "measured_steps": 15,
+      "measurement_dtype": "float32",
+      "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+      "median_step_seconds": 0.010073584038764238,
+      "model_metadata": {
+        "additional_parameter_count": 576,
+        "backbone_contract_id": "hard_lmm_causal_qkv_v1",
+        "base_encoder": "CountAwareTitanTPP",
+        "candidate_name": "count_titan_hard_lmm_causal_qkv",
+        "causal_qkv_bias": false,
+        "causal_qkv_combination": "residual_addition",
+        "causal_qkv_groups": 64,
+        "causal_qkv_initialization": "all_zero_exact_identity",
+        "causal_qkv_kernel_size": 3,
+        "causal_qkv_lag_order": [
+          "current",
+          "lag1",
+          "lag2"
+        ],
+        "causal_qkv_layer": 0,
+        "causal_qkv_scope": "event_qkv_only",
+        "d_ff": 128,
+        "d_model": 64,
+        "final_memory_placement": "after_encoder_layer_2",
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "max_len": 256,
+        "memory_mode": "static_hard_lmm",
+        "model_role": "hard_lmm_causal_qkv_candidate",
+        "n_heads": 4,
+        "n_layers": 2,
+        "new_parameter_state_keys": [
+          "encoder.layers.0.attn.causal_q_kernel",
+          "encoder.layers.0.attn.causal_k_kernel",
+          "encoder.layers.0.attn.causal_v_kernel"
+        ],
+        "online_writes": false,
+        "persistent_key_value_adaptation": false,
+        "persistent_mem_size": 16,
+        "routing_contract_id": "hard_lmm_causal_qkv_v1",
+        "static_retrieval_aggregation": "arithmetic_mean",
+        "time_head": {
+          "jacobian_correction": false,
+          "mode": "legacy_clamped_rmtpp",
+          "time_intercept_limit": 300.0,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_clamp": 10.0
+        }
+      },
+      "model_state_after_profile_sha256": "a7214dfffc4ffc682cc53ac7dab09d7b4a9da76cfb0b131c98cd4903f6d6d31f",
+      "observed_events": 255,
+      "parameter_count": 90371,
+      "peak_allocated_bytes": 1558838272,
+      "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+      "repeat": 2,
+      "seed": 44,
+      "sequence_length": 256,
+      "status": "passed",
+      "step_seconds": [
+        0.010085434885695577,
+        0.010071057127788663,
+        0.01006719097495079,
+        0.010093046817928553,
+        0.010067390045151114,
+        0.010080686071887612,
+        0.010073584038764238,
+        0.01008521392941475,
+        0.010084909852594137,
+        0.010063824011012912,
+        0.010068760020658374,
+        0.010055545018985868,
+        0.010072458069771528,
+        0.010093692922964692,
+        0.010086179943755269
+      ],
+      "target_events": 1,
+      "tf32_matmul": false,
+      "torch_version": "2.11.0+cu130",
+      "warmup_steps": 5
+    }
+  ],
+  "source_file_sha256": "099c84a228a87fd55990d733c40a32b0b6d440fc2ddfccb26f40b35cb43519b0",
+  "status": "passed",
+  "worker_process_isolation": true
+}

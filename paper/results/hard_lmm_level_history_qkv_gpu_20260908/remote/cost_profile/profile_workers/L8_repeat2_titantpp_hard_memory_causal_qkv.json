@@ -1,0 +1,148 @@
+{
+  "amp_enabled": false,
+  "backbone": "titantpp_hard_memory_causal_qkv",
+  "batch_size": 128,
+  "cuda_version": "13.0",
+  "device_name": "NVIDIA GeForce RTX 5090",
+  "finite_model_optimizer": true,
+  "gradient_audit": {
+    "kernel_gradient_norm_by_row": {
+      "encoder.layers.0.attn.causal_k_kernel": [
+        0.006791339255869389,
+        0.005801397375762463,
+        0.004871575627475977
+      ],
+      "encoder.layers.0.attn.causal_q_kernel": [
+        0.006810296326875687,
+        0.0070625958032906055,
+        0.006967347580939531
+      ],
+      "encoder.layers.0.attn.causal_v_kernel": [
+        0.05511541664600372,
+        0.0472726970911026,
+        0.03921554982662201
+      ]
+    },
+    "shared_gradient_norms": {
+      "encoder.layers.0.attn.qkv.weight": 0.8834325075149536,
+      "encoder.layers.1.attn.qkv.weight": 0.7696952819824219,
+      "lmm.mem": 0.1851026564836502,
+      "quantity_head.weight": 12.948862075805664,
+      "v_t.weight": 60.4028434753418
+    },
+    "status": "passed"
+  },
+  "hidden_dim": 64,
+  "learning_path": {
+    "initial_backbone_counterfactual": {
+      "final_state_max_abs_delta": 3.1586904525756836,
+      "quantity_prediction_max_abs_delta": 0.35721683502197266,
+      "state_digest_restored": true,
+      "status": "passed"
+    },
+    "learned_kernel_norm_by_row": {
+      "encoder.layers.0.attn.causal_k_kernel": [
+        0.06141938641667366,
+        0.05979708582162857,
+        0.059921927750110626
+      ],
+      "encoder.layers.0.attn.causal_q_kernel": [
+        0.06137511879205704,
+        0.0637088194489479,
+        0.06287766247987747
+      ],
+      "encoder.layers.0.attn.causal_v_kernel": [
+        0.07057542353868484,
+        0.07031872868537903,
+        0.07013741880655289
+      ]
+    },
+    "status": "passed",
+    "zero_kernel_counterfactual": {
+      "final_state_max_abs_delta": 0.041200876235961914,
+      "quantity_prediction_max_abs_delta": 0.02875995635986328,
+      "state_digest_restored": true,
+      "status": "passed"
+    }
+  },
+  "measured_steps": 15,
+  "measurement_dtype": "float32",
+  "measurement_scope": "train_forward_backward_clip_AdamW_synchronized_wall_time",
+  "median_step_seconds": 0.003816927084699273,
+  "model_metadata": {
+    "additional_parameter_count": 576,
+    "backbone_contract_id": "hard_lmm_causal_qkv_v1",
+    "base_encoder": "CountAwareTitanTPP",
+    "candidate_name": "count_titan_hard_lmm_causal_qkv",
+    "causal_qkv_bias": false,
+    "causal_qkv_combination": "residual_addition",
+    "causal_qkv_groups": 64,
+    "causal_qkv_initialization": "all_zero_exact_identity",
+    "causal_qkv_kernel_size": 3,
+    "causal_qkv_lag_order": [
+      "current",
+      "lag1",
+      "lag2"
+    ],
+    "causal_qkv_layer": 0,
+    "causal_qkv_scope": "event_qkv_only",
+    "d_ff": 128,
+    "d_model": 64,
+    "final_memory_placement": "after_encoder_layer_2",
+    "lmm_mem_size": 64,
+    "lmm_topk": 4,
+    "max_len": 256,
+    "memory_mode": "static_hard_lmm",
+    "model_role": "hard_lmm_causal_qkv_candidate",
+    "n_heads": 4,
+    "n_layers": 2,
+    "new_parameter_state_keys": [
+      "encoder.layers.0.attn.causal_q_kernel",
+      "encoder.layers.0.attn.causal_k_kernel",
+      "encoder.layers.0.attn.causal_v_kernel"
+    ],
+    "online_writes": false,
+    "persistent_key_value_adaptation": false,
+    "persistent_mem_size": 16,
+    "routing_contract_id": "hard_lmm_causal_qkv_v1",
+    "static_retrieval_aggregation": "arithmetic_mean",
+    "time_head": {
+      "jacobian_correction": false,
+      "mode": "legacy_clamped_rmtpp",
+      "time_intercept_limit": 300.0,
+      "time_scale": 3.0,
+      "time_w_max": 3.3333333333333335,
+      "wd_clamp": 10.0
+    }
+  },
+  "model_state_after_profile_sha256": "61fffc507a777659d3d613fb0d78d02a2980f822605256e50e3771ff83b71583",
+  "observed_events": 7,
+  "parameter_count": 90371,
+  "peak_allocated_bytes": 51810304,
+  "profile_contract": "hard_lmm_level_history_qkv_cuda_profile_v1",
+  "repeat": 2,
+  "seed": 44,
+  "sequence_length": 8,
+  "status": "passed",
+  "step_seconds": [
+    0.0038307730574160814,
+    0.003816927084699273,
+    0.003802673891186714,
+    0.003921305062249303,
+    0.003832874121144414,
+    0.0038155540823936462,
+    0.00376587500795722,
+    0.003801430109888315,
+    0.0038361239712685347,
+    0.003852871945127845,
+    0.003942722920328379,
+    0.0038363130297511816,
+    0.0037876940332353115,
+    0.0037210898008197546,
+    0.00380356190726161
+  ],
+  "target_events": 1,
+  "tf32_matmul": false,
+  "torch_version": "2.11.0+cu130",
+  "warmup_steps": 5
+}
