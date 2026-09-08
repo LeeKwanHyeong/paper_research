@@ -1,0 +1,304 @@
+{
+  "schema_version": 1,
+  "contract_id": "hard_lmm_qkv_path_diagnostic_v1",
+  "status": "frozen_before_train_counterfactual_outputs",
+  "created_on": "2026-09-08",
+  "objective": "Separate fixed-checkpoint event Q/K/V contributions to quantity error and legacy time-loss sensitivity; diagnose, not train/adopt a model.",
+  "source": {
+    "frozen_implementation_commit": "84668e207d5121f211a6a93af12ca2f96068a25e",
+    "archive_sha256": "d6e2b6af891f04104ab161d35d8eca0902ec5c5a7b454031b33e3dce7cf66ebc",
+    "pinned_manifest_path": "paper/contracts/hard_lmm_causal_qkv_followup_source_v1.json",
+    "pinned_manifest_sha256": "cdad2c957a07300322050274feed99dc5be9372ebbb4ba602eb22e1c9157f865",
+    "pinned_python_count": 405,
+    "reject_model_imports_outside_frozen_root": true
+  },
+  "datasets": [
+    {
+      "dataset": "yellow_trip_hourly",
+      "data_path": "sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+      "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+      "lookback_weeks": 168,
+      "max_seq_len": 256,
+      "expected_train_targets": 38393,
+      "quantity_boundaries": [
+        7,
+        686,
+        1562,
+        3449
+      ],
+      "B": {
+        "checkpoint_path": "search_artifacts/hard_lmm_raw_rmse_checkpoint_alignment_seed42_5090_20260906_f752434/seed42_e300/yellow_trip_hourly/quantile_checkpoint_alignment/runs/titantpp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+        "checkpoint_file_sha256": "46b456816dbc3c36e4f9c115c05b480fc030a8c2004646d179416d528bd897d5",
+        "checkpoint_state_sha256": "eddc8b4a11b233606bf74508f0ef721e05e55bbcb047d18edab4aa61f2f43c41",
+        "summary_path": "search_artifacts/hard_lmm_raw_rmse_checkpoint_alignment_seed42_5090_20260906_f752434/seed42_e300/yellow_trip_hourly/quantile_checkpoint_alignment/runs/titantpp/count_only_log_regression/seed_42/summary.json",
+        "summary_sha256": "eb7f449f982cbb5132b05af78a5fa74fcfc0348d67128f67bf54b328ddd00eb3",
+        "backbone": "titantpp"
+      },
+      "candidate": {
+        "checkpoint_path": "paper/results/hard_lmm_causal_qkv_followup_20260908/hosts/5080/jobs/seed42_yellow_trip_hourly/runs/titantpp_hard_memory_causal_qkv/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+        "checkpoint_file_sha256": "a6de503f33492e2254d61d62318c901ab36c62e2506a013bbe67d47474695f32",
+        "summary_path": "paper/results/hard_lmm_causal_qkv_followup_20260908/hosts/5080/jobs/seed42_yellow_trip_hourly/runs/titantpp_hard_memory_causal_qkv/count_only_log_regression/seed_42/summary.json",
+        "summary_sha256": "35484dfb1e3c0d7a8217f70a3fbaa1e56d29858b091ec7d1d6ed7640afe6f773",
+        "backbone": "titantpp_hard_memory_causal_qkv"
+      }
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "data_path": "sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+      "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+      "lookback_weeks": 520,
+      "max_seq_len": 256,
+      "expected_train_targets": 393824,
+      "quantity_boundaries": [
+        2,
+        31,
+        46,
+        187
+      ],
+      "B": {
+        "checkpoint_path": "search_artifacts/hard_lmm_raw_rmse_checkpoint_alignment_seed42_5090_20260906_f752434/seed42_e300/intermittent_frozen_5000/quantile_checkpoint_alignment/runs/titantpp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+        "checkpoint_file_sha256": "63d38ee4401c208dcfa24206682edaca56e2d2a5ca1037b09decdc2ffa567c08",
+        "checkpoint_state_sha256": "4b984d415d83a479fdacb49b12d964afa668adad136511590a54293df763c0d0",
+        "summary_path": "search_artifacts/hard_lmm_raw_rmse_checkpoint_alignment_seed42_5090_20260906_f752434/seed42_e300/intermittent_frozen_5000/quantile_checkpoint_alignment/runs/titantpp/count_only_log_regression/seed_42/summary.json",
+        "summary_sha256": "b89212ed4e4def031bd9ca7555b5fb9ad9f2943981dfe7d9b3ba16f2aae954d8",
+        "backbone": "titantpp"
+      },
+      "candidate": {
+        "checkpoint_path": "paper/results/hard_lmm_causal_qkv_followup_20260908/hosts/5090/jobs/seed42_intermittent_frozen_5000/runs/titantpp_hard_memory_causal_qkv/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+        "checkpoint_file_sha256": "d244edce867fe74b9f1ddbf8cbab4b18f6216a0a1d6d87033443185070c8865c",
+        "summary_path": "paper/results/hard_lmm_causal_qkv_followup_20260908/hosts/5090/jobs/seed42_intermittent_frozen_5000/runs/titantpp_hard_memory_causal_qkv/count_only_log_regression/seed_42/summary.json",
+        "summary_sha256": "cfd66dddba55a56ec00d66cff8be1f47f47deeebd32bbb1734e33e6118a33a4b",
+        "backbone": "titantpp_hard_memory_causal_qkv"
+      }
+    },
+    {
+      "dataset": "insta_market_basket",
+      "data_path": "sample_data/insta_market_basket/instacart_marked_target_with_split.parquet",
+      "data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+      "lookback_weeks": 52,
+      "max_seq_len": 64,
+      "expected_train_targets": 1991192,
+      "quantity_boundaries": [
+        8,
+        20,
+        25,
+        35
+      ],
+      "B": {
+        "checkpoint_path": "search_artifacts/hard_lmm_raw_rmse_checkpoint_alignment_seed42_5090_20260906_f752434/seed42_e300/insta_market_basket/quantile_checkpoint_alignment/runs/titantpp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+        "checkpoint_file_sha256": "e594f8df0dcd66249c3724063f44eee3de213bc83a780ca81fdf39a094bfed07",
+        "checkpoint_state_sha256": "a74e1f3055b03db5ac85adf2fdb63711890ea9d06449965e3ca749aefccc2f02",
+        "summary_path": "search_artifacts/hard_lmm_raw_rmse_checkpoint_alignment_seed42_5090_20260906_f752434/seed42_e300/insta_market_basket/quantile_checkpoint_alignment/runs/titantpp/count_only_log_regression/seed_42/summary.json",
+        "summary_sha256": "54bea72fefecb8b4d8637e39bd147048bb85b530becd7bf579a65d2197c67810",
+        "backbone": "titantpp"
+      },
+      "candidate": {
+        "checkpoint_path": "paper/results/hard_lmm_causal_qkv_screening_20260907/remote_jobs/seed42_screening_insta_market_basket/runs/titantpp_hard_memory_causal_qkv/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+        "checkpoint_file_sha256": "b649b4f1c2f08de6e4eea42dfde0efd72bf13a7047370b61ed405ecf0e604802",
+        "summary_path": "paper/results/hard_lmm_causal_qkv_screening_20260907/remote_jobs/seed42_screening_insta_market_basket/runs/titantpp_hard_memory_causal_qkv/count_only_log_regression/seed_42/summary.json",
+        "summary_sha256": "7141fe1ab05ccfc18e6708bd182489ac9803a32456296e44ac7ac1bab4d638cd",
+        "backbone": "titantpp_hard_memory_causal_qkv"
+      }
+    }
+  ],
+  "scope": {
+    "split": "train",
+    "lazy_filter_before_collect": true,
+    "validation_materialized": false,
+    "held_out_materialized": false,
+    "model_or_optimizer_updates": false,
+    "head_refit": false,
+    "remote_access": false,
+    "device": "cpu",
+    "torch_threads": 4,
+    "batch_size": 16
+  },
+  "sampling": {
+    "seed": 20260908,
+    "targets_per_dataset": 4096,
+    "targets_per_fold": 2048,
+    "fold_count": 2,
+    "minimum_unique_series_per_fold": 30,
+    "fold_rule": "sha256('qkv-path-v1:'+canonical_series_id)_first8_big_endian_mod2",
+    "selection_rule": "Seeded permutation of all train target indices; retain first2048 eligible indices per fold. Freeze identities before model outputs.",
+    "tail_min_targets_per_fold_for_decision": 10,
+    "tail_min_unique_series_per_fold_for_decision": 5
+  },
+  "variants": {
+    "B": "independent frozen B checkpoint, unchanged",
+    "FULL": [
+      1,
+      1,
+      1
+    ],
+    "QK": [
+      1,
+      1,
+      0
+    ],
+    "QV": [
+      1,
+      0,
+      1
+    ],
+    "KV": [
+      0,
+      1,
+      1
+    ],
+    "Q": [
+      1,
+      0,
+      0
+    ],
+    "K": [
+      0,
+      1,
+      0
+    ],
+    "V": [
+      0,
+      0,
+      1
+    ],
+    "ZERO": [
+      0,
+      0,
+      0
+    ]
+  },
+  "variant_order": [
+    "B",
+    "FULL",
+    "QK",
+    "QV",
+    "KV",
+    "Q",
+    "K",
+    "V",
+    "ZERO"
+  ],
+  "measurements": {
+    "per_target": [
+      "prediction",
+      "true_quantity",
+      "true_duration",
+      "log_mse",
+      "absolute_error",
+      "squared_error",
+      "legacy_time_loss",
+      "time_intercept_raw",
+      "time_intercept_clamped",
+      "exp_intercept",
+      "w",
+      "wd_raw",
+      "wd_clamped",
+      "integral_term",
+      "wd_saturated",
+      "intercept_saturated",
+      "H1",
+      "H2",
+      "fused_state",
+      "memory_residual",
+      "top4_indices"
+    ],
+    "aggregate_splits": [
+      "pooled",
+      "fold0",
+      "fold1",
+      "body_le_train_p95",
+      "tail_gt_train_p99",
+      "duration_train_quartiles",
+      "wd_saturated",
+      "wd_unsaturated"
+    ],
+    "decompositions": [
+      "same_checkpoint_remove_Q_remove_K_remove_V",
+      "QK_vs_FULL",
+      "QK_vs_ZERO",
+      "QK_vs_B",
+      "QK_V_interaction_FULL_minus_QK_minus_V_plus_ZERO"
+    ],
+    "time_computation": "Exact existing legacy float32 loss for comparisons; float64 algebra for telemetry only. Nonfinite values fail, never silently filter."
+  },
+  "implementation_checks": {
+    "full_parity": "official target_outputs on first fixed batch within rtol1e-5 atol1e-6",
+    "restore": "canonical model state hash unchanged before/after all interventions and parameter .grad cleanup",
+    "leakage": "Change target quantity, target duration and padding; selected history states, prediction, top4 and head parameters must remain unchanged; target-dependent losses may change.",
+    "all_variants": "Each switch zeros all3 rows of only requested added kernel; original common weights/buffers stay byte equal.",
+    "checkpoint_files": "Hashes unchanged before and after the diagnostic."
+  },
+  "prospective_QK_gate": {
+    "purpose": "Eligibility to draft a QK-only training contract; a prospective research-cost filter, not adoption or a necessary condition for successful retraining.",
+    "every_dataset_and_fold": {
+      "QK_raw_rmse_max_ratio_FULL": 1.01,
+      "QK_mae_max_ratio_FULL": 1.01,
+      "QK_body_mae_max_ratio_FULL": 1.02,
+      "QK_tail_mae_max_ratio_FULL": 1.02,
+      "QK_legacy_time_max_increase_FULL": 0.01,
+      "QK_raw_rmse_max_ratio_ZERO": 1.01,
+      "QK_body_mae_max_ratio_ZERO": 1.02,
+      "QK_tail_mae_max_ratio_ZERO": 1.02,
+      "QK_legacy_time_max_increase_ZERO": 0.01
+    },
+    "time_recovery_when_FULL_minus_B_exceeds": {
+      "trigger": 0.01,
+      "minimum_absolute_improvement_FULL_to_QK": 0.005,
+      "minimum_fraction_of_positive_excess_removed": 0.2,
+      "no_triggered_fold": "inconclusive_time_problem_not_reproduced_in_train_sample"
+    },
+    "quantity_contribution": {
+      "minimum_datasets_with_both_folds_QK_raw_rmse_improved_over_ZERO": 1,
+      "minimum_fraction_improvement": 0.01
+    },
+    "B_comparison": "Report all metrics, Taxi quantity-gain retention and remaining time gap separately; frozen B gap is not a necessary condition for successful QK-only retraining.",
+    "missing_tail_support": "inconclusive_no_automatic_candidate_selection",
+    "otherwise": "current_counterfactual_does_not_support_QK_candidate_selection",
+    "decision_order": "Invalid extraction: error. Any adequately measured numerical criterion fails: unsupported, also list support limitations. Otherwise insufficient support or no time trigger: inconclusive. Otherwise: supports_drafting_QK_training_contract."
+  },
+  "gradient_diagnostic": {
+    "enabled": true,
+    "variants": [
+      "B",
+      "FULL"
+    ],
+    "batches_per_fold": 4,
+    "batch_selection": "first4 canonical extraction batches restricted to each fold, before result inspection",
+    "quantities": "time and log-quantity loss gradients evaluated separately in eval mode without optimizer steps",
+    "parameter_groups": [
+      "encoder_layer1",
+      "encoder_layer2",
+      "hard_lmm_bank",
+      "new_Q",
+      "new_K",
+      "new_V"
+    ],
+    "record": [
+      "dot_product",
+      "cosine",
+      "time_norm",
+      "quantity_norm",
+      "unused_or_zero_gradient"
+    ],
+    "interpretation": "descriptive only; no automatic task-specific architecture selection from gradient sign alone"
+  },
+  "interpretation": {
+    "ZERO_is_B": false,
+    "counterfactual_is_retrained_model": false,
+    "coadaptation_off_manifold_limit": true,
+    "trained_on_same_train_series": true,
+    "generalization_claim": false,
+    "new_candidate_training_authorized": false,
+    "failed_counterfactual_does_not_prove_QK_training_impossible": true
+  },
+  "primary_comparison": "QK (110) vs FULL (111), fixed before outputs; other switches are descriptive, not alternate-candidate selection.",
+  "pre_output_review": {
+    "timing": "Amended after independent design review, before any new target sampling or diagnostic model output.",
+    "changes": [
+      "Increase targets2048 to4096 for tail support; require tail >=10 targets and >=5 series per fold.",
+      "QK110 remains only primary comparison; add ZERO to distinguish residual QK contribution from weakening FULL.",
+      "Replace hard frozen-B recovery/adoption-like requirements with within-checkpoint contribution and time-recovery gates. Report frozen B gaps descriptively because coadaptation prevents treating them as retraining necessity."
+    ],
+    "gradient_provenance": "Do not reuse 20260820 T1 tail-shared gradient evidence for current B or causalQKV."
+  }
+}
