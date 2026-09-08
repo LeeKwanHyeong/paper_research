@@ -1,0 +1,39 @@
+{
+  "B": {
+    "w": 89.50768280029297,
+    "saturated_legacy_loss_floor": -3.494369863901078,
+    "optimal_intercept": -5.5056301360989215,
+    "existing_validation_legacy_loss": -3.483793693042792,
+    "excess_above_floor": 0.010576170858286105,
+    "checkpoint_path": "search_artifacts/hard_lmm_raw_rmse_checkpoint_alignment_seed42_5090_20260906_f752434/seed42_e300/intermittent_frozen_5000/quantile_checkpoint_alignment/runs/titantpp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+    "checkpoint_file_sha256": "63d38ee4401c208dcfa24206682edaca56e2d2a5ca1037b09decdc2ffa567c08",
+    "summary_path": "search_artifacts/hard_lmm_raw_rmse_checkpoint_alignment_seed42_5090_20260906_f752434/seed42_e300/intermittent_frozen_5000/quantile_checkpoint_alignment/runs/titantpp/count_only_log_regression/seed_42/summary.json",
+    "summary_sha256": "b89212ed4e4def031bd9ca7555b5fb9ad9f2943981dfe7d9b3ba16f2aae954d8"
+  },
+  "candidate": {
+    "w": 13.503832817077637,
+    "saturated_legacy_loss_floor": -1.6030189584853838,
+    "optimal_intercept": -7.396981041514616,
+    "existing_validation_legacy_loss": -1.6022083723027674,
+    "excess_above_floor": 0.000810586182616424,
+    "checkpoint_path": "paper/results/hard_lmm_causal_qkv_followup_20260908/hosts/5090/jobs/seed42_intermittent_frozen_5000/runs/titantpp_hard_memory_causal_qkv/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+    "checkpoint_file_sha256": "d244edce867fe74b9f1ddbf8cbab4b18f6216a0a1d6d87033443185070c8865c",
+    "summary_path": "paper/results/hard_lmm_causal_qkv_followup_20260908/hosts/5090/jobs/seed42_intermittent_frozen_5000/runs/titantpp_hard_memory_causal_qkv/count_only_log_regression/seed_42/summary.json",
+    "summary_sha256": "cfd66dddba55a56ec00d66cff8be1f47f47deeebd32bbb1734e33e6118a33a4b"
+  },
+  "decomposition": {
+    "observed_gap": 1.8815853207400246,
+    "floor_gap": 1.8913509054156943,
+    "excess_gap": -0.00976558467566968
+  },
+  "schema_version": 1,
+  "dataset": "intermittent_frozen_5000",
+  "source_commit": "84668e207d5121f211a6a93af12ca2f96068a25e",
+  "contract_sha256": "a4ae310d254ed124fc8be4c340a10d22c462a33fb08d669afd38504cf978ddea",
+  "evidence_scope": "Existing frozen checkpoint parameters and existing validation summary only; no new validation/test rows or model predictions.",
+  "minimum_duration_guarantee": "RMTPPWeekLookbackDataset clip_dt_min1=True before split filtering; all model target durations >=1",
+  "formula": "L(I)=-I-10+exp(I)/w*expm1(10); min_I L=1-log(w)+log(1-exp(-10))",
+  "calculus_and_numeric_check": "passed; independent source/calculus review also agrees",
+  "interpretation": "Observed numerical legacy score increase is real. Its almost entire cross-checkpoint gap follows different slope-dependent floors and does not establish worse time forecasting or encoder representation. Within-checkpoint switches share w, so their paired score changes remain interpretable as sensitivity.",
+  "frozen_gate_handling": "Preserve all preregistered numerical flags. Disclose that the cross-B time-recovery criterion is not a valid representation-quality criterion in this fully saturated regime. Do not change thresholds or adopt any model on this audit."
+}
