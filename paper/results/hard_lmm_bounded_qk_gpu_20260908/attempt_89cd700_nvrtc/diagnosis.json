@@ -1,0 +1,39 @@
+{
+  "status": "execution_failure_diagnosed_recovery_preparation",
+  "source_revision": "89cd700c28dd169cd59bfccbd694ef8967bac823",
+  "failure_job": "normalized_e1_FULL_yellow_trip_hourly",
+  "failure": "nvrtc failed to open libnvrtc-builtins.so.13.0",
+  "failure_phase": "initial epoch-zero normalized K1 evaluation on CUDA",
+  "failed_at_utc": "2026-09-08T04:52:22+00:00",
+  "successful_prior_jobs": [
+    "cuda_qualification",
+    "cost_profile",
+    "e1_yellow_trip_hourly",
+    "e1_intermittent_frozen_5000",
+    "e1_insta_market_basket"
+  ],
+  "seed42_screening_started": false,
+  "held_out_test_evaluated": false,
+  "root_cause": "CUDA 13 NVRTC builtins installed but unavailable to JIT dynamic loader in campaign process environment",
+  "minimal_fix": "Set LD_LIBRARY_PATH to the already installed nvidia/cu13/lib for this process and its child jobs only; preserve source89 and all previous artifacts",
+  "shared_runtime_packages_changed": false,
+  "synthetic_initial_probe": {
+    "dtype": "float64",
+    "operation": "torch.special.log_ndtr on CUDA with backward",
+    "x_range": [
+      -60,
+      20
+    ],
+    "points": 161,
+    "finite_output_and_gradient": true
+  },
+  "files": {
+    "campaign_status.json": "48dbb5d8b85d9594134cfccf24ad8e965bbc8b1a48c6e5398ee2454b7f433b2c",
+    "deployment_manifest.json": "dc0a0e861efab8cd884a16c31be0ea408b91bbc9ee9b7a90d84c84927f35e4ea",
+    "raw_failure.tar.gz": "5071d1135f8e153991e52135e9f2cfdd8b00cb86ef6f1876e7f739cff0d3836d",
+    "deployment_receipt.json": "8f87c3ae73c901814ae8166ef1e441c29fb3a8719a1c6acf83f67f46a67e688b",
+    "launch.json": "bc0e4cd2e93cfe526af0fefe13c4b515396185c2cfe2186c3aa03192bfa2f77f"
+  },
+  "completed_jobs_policy": "Verify previous CUDA/cost/e1 artifact hashes and rerun audits before reusing; failed normalized cache is not reused",
+  "performance_policy": "Original screening contract and normalized duration contract unchanged; no automatic retry of future failures"
+}

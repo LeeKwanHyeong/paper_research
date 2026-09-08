@@ -60,6 +60,54 @@ Time median MAE/RMSE도 함께 기록한다. Legacy time score는 보조 보고�
 
 ## GPU 실행 상태와 증적
 
+현재 실행 source는 **`89cd700c28dd169cd59bfccbd694ef8967bac823`**이며
+13:46:47 KST에 별도 경로에서 시작했다. CUDA **67/67**과 비용 **27 worker**가
+통과했다. 로컬에서도 비용 비율을 원 측정값으로 재계산했다
+(`cuda_cost_local_audit.json`).
+
+후보 Backbone의 Taxi·Intermittent·Instacart full-data e1도 세 건 모두 통과했다.
+회수한 selected/last checkpoint, history, receipt를 동일 source의 CPU 감사로
+재검증했다. `e1_local_audit.json`의 독립 검사 9/9가 통과했다. e1은 실행·복원
+계약의 증적이며 성능 채택 판단에 사용하지 않는다.
+
+| e1 데이터셋 | train 처리 수 | validation 처리 수 | peak allocated bytes | 전체 e1 실행 초 |
+|---|---:|---:|---:|---:|
+| Taxi | 38,393 | 8,268 | 2,009,344,512 | 8.86 |
+| Intermittent | 393,824 | 86,285 | 2,009,344,512 | 73.32 |
+| Instacart | 1,991,192 | 503,733 | 404,801,024 | 159.88 |
+
+실행 초는 각 summary의 `elapsed_seconds`이며 초기화와 결과 저장을 포함한다.
+장기 학습 종료 시간은 seed42의 실제 epoch 진행 속도와 조기 종료 시점을 함께
+확인해야 한다. 재사용 대상 46개 파일은 원격·로컬 SHA가 모두 일치한다
+(`reuse_artifact_audit.json`).
+
+| 사건 길이 | 후보/B step | 후보/B peak allocated | 후보/FULL step |
+|---:|---:|---:|---:|
+| 8 | 1.292 | 1.083 | 1.100 |
+| 64 | 1.291 | 1.105 | 1.102 |
+| 256 | 1.103 | 1.081 | 1.032 |
+
+위 값은 합성 입력의 실행 비용이며 예측 성능이 아니다. 세 길이 모두 시간≤1.5,
+메모리≤1.25의 기존 B 대비 한도를 충족한다. 실제 모델 파라미터 수는
+B 89,795개, FULL과 후보 각각 90,371개다.
+
+13:52:22 KST에 첫 `normalized_e1_FULL_yellow_trip_hourly`가 CUDA JIT의
+`libnvrtc-builtins.so.13.0` 로딩 오류로 중단됐다. 시간 head의 epoch 0 평가
+도중 발생한 실행 오류이며 seed42 학습이나 성능 gate 실패가 아니다.
+`attempt_89cd700_nvrtc/`에 원본 manifest·status·launch와 원본 오류 로그 archive를
+보존한다. 설치된 CUDA 13 라이브러리 경로를 해당 프로세스에만 지정한 합성
+float64 `log_ndtr`와 gradient 검증은 통과했다. 모델·loss·selector·패키지 변경
+없이, 완료 증적을 재검증하여 재사용하는 별도 복구 실행을 준비 중이다.
+
+`nvrtc_runtime_recovery_probe.json`은 실제 5090에서 연속·정수·상한 관측의
+float64 likelihood와 gradient가 유한함을 확인했다. CPU/CUDA 출력 차이는 최대
+5.15e-14, gradient 차이는 0이었다. 정수 PMF와 나머지 survival의 합은 1.0이며
+Taxi 첫 구간과 Instacart 30일 survival 정의도 통과했다. 같은 source89의 합성
+B/FULL/BOUNDED 실행을 경로 지정 전후의 독립 프로세스에서 비교한 결과 출력·
+전체 parameter gradient SHA가 모두 bitwise 일치했다. Backbone의 실제 NVIDIA
+라이브러리 로딩 경로 목록도 같았다. 이 검증은 기존 CUDA·비용·e1 증적의 재사용을
+뒷받침하며, 장기 학습의 성능 개선을 뜻하지 않는다.
+
 첫 source `a18614b`는 13:40 KST에 시작했고 CUDA 66개 통과 후 optimizer
 상태를 서로 다른 장치에서 비교하는 테스트 오류 1개로 중단됐다. 복원 후 모델
 파라미터는 bitwise 일치했으며, 비교 대상의 AdamW step scalar만 CPU/CUDA 위치가

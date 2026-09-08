@@ -1,0 +1,794 @@
+{
+  "completed_at": "2026-09-08T04:52:22.161654+00:00",
+  "contract_id": "hard_lmm_bounded_qk_screening_v1",
+  "current_job": "normalized_e1_FULL_yellow_trip_hourly",
+  "decisions": {},
+  "deployment_manifest_sha256": "dc0a0e861efab8cd884a16c31be0ea408b91bbc9ee9b7a90d84c84927f35e4ea",
+  "error": "CalledProcessError(1, ['/opt/miniconda3/envs/ai_env/bin/python', '-s', '/home/leekwanhyeong/workspace/paper_research_bounded_qk_89cd700c28dd_5090/paper/scripts/run_backbone_normalized_duration.py', '--job-manifest', '/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_bounded_qk_89cd700c28dd_5090_20260908/duration_manifests/FULL_yellow_trip_hourly.json', '--expected-job-manifest-sha256', '079f7f6ec10d4672f64d6ef366717aab2ca6947c284eb11ec3355589b9f5d112', '--output-dir', '/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_bounded_qk_89cd700c28dd_5090_20260908/jobs/normalized_e1_FULL_yellow_trip_hourly', '--device', 'cuda', '--source-revision', '89cd700c28dd169cd59bfccbd694ef8967bac823', '--allow-partial-contract', '--max-epochs', '1'])",
+  "gpu_preflight": {
+    "compute_processes": [],
+    "free_vram_mib": 32107,
+    "gpu_name": "NVIDIA GeForce RTX 5090",
+    "total_vram_mib": 32607,
+    "utilization_percent": 0
+  },
+  "held_out_test_evaluated": false,
+  "host_role": "5090",
+  "input_verification": {
+    "insta_market_basket": {
+      "aligned_B_reused": true,
+      "data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+      "raw_sources_verified": [
+        "B",
+        "FULL"
+      ]
+    },
+    "intermittent_frozen_5000": {
+      "aligned_B_reused": true,
+      "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+      "raw_sources_verified": [
+        "B",
+        "FULL"
+      ]
+    },
+    "yellow_trip_hourly": {
+      "aligned_B_reused": true,
+      "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+      "raw_sources_verified": [
+        "B",
+        "FULL"
+      ]
+    }
+  },
+  "jobs": {
+    "cost_profile": {
+      "command": [
+        "/opt/miniconda3/envs/ai_env/bin/python",
+        "-s",
+        "/home/leekwanhyeong/workspace/paper_research_bounded_qk_89cd700c28dd_5090/paper/scripts/profile_hard_lmm_bounded_qk.py",
+        "--output",
+        "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_bounded_qk_89cd700c28dd_5090_20260908/cost_profile/profile.json"
+      ],
+      "completed_at": "2026-09-08T04:48:02.402012+00:00",
+      "cost_gate": {
+        "aggregation": "ratio_of_medians_over_three_independent_balanced_repeats",
+        "full_ratios_are_reported_not_separately_gated": true,
+        "gate_reference": "titantpp",
+        "lengths": [
+          {
+            "candidate_over_baseline_peak_allocated": 1.0829530536975682,
+            "candidate_over_baseline_step": 1.2917245525080951,
+            "candidate_over_full_peak_allocated": 1.0271958257569769,
+            "candidate_over_full_step": 1.1000651134801214,
+            "full_over_baseline_peak_allocated": 1.0542810110229002,
+            "full_over_baseline_step": 1.1742255405424573,
+            "models": {
+              "titantpp": {
+                "peak_allocated_bytes": 49142784,
+                "step_seconds": 0.0032337119337171316
+              },
+              "titantpp_hard_memory_bounded_qk": {
+                "peak_allocated_bytes": 53219328,
+                "step_seconds": 0.004177065100520849
+              },
+              "titantpp_hard_memory_causal_qkv": {
+                "peak_allocated_bytes": 51810304,
+                "step_seconds": 0.003797107143327594
+              }
+            },
+            "parameter_counts": {
+              "titantpp": 89795,
+              "titantpp_hard_memory_bounded_qk": 90371,
+              "titantpp_hard_memory_causal_qkv": 90371
+            },
+            "peak_passed": true,
+            "sequence_length": 8,
+            "step_passed": true
+          },
+          {
+            "candidate_over_baseline_peak_allocated": 1.1050261356051687,
+            "candidate_over_baseline_step": 1.2908125515834439,
+            "candidate_over_full_peak_allocated": 1.036115222749215,
+            "candidate_over_full_step": 1.1018570827152139,
+            "full_over_baseline_peak_allocated": 1.0665089281027125,
+            "full_over_baseline_step": 1.1714881828436432,
+            "models": {
+              "titantpp": {
+                "peak_allocated_bytes": 273086464,
+                "step_seconds": 0.0032862338703125715
+              },
+              "titantpp_hard_memory_bounded_qk": {
+                "peak_allocated_bytes": 301767680,
+                "step_seconds": 0.004241911927238107
+              },
+              "titantpp_hard_memory_causal_qkv": {
+                "peak_allocated_bytes": 291249152,
+                "step_seconds": 0.003849784145131707
+              }
+            },
+            "parameter_counts": {
+              "titantpp": 89795,
+              "titantpp_hard_memory_bounded_qk": 90371,
+              "titantpp_hard_memory_causal_qkv": 90371
+            },
+            "peak_passed": true,
+            "sequence_length": 64,
+            "step_passed": true
+          },
+          {
+            "candidate_over_baseline_peak_allocated": 1.080877921497616,
+            "candidate_over_baseline_step": 1.103135719123125,
+            "candidate_over_full_peak_allocated": 1.0296813446468935,
+            "candidate_over_full_step": 1.0317467569465364,
+            "full_over_baseline_peak_allocated": 1.0497207967463753,
+            "full_over_baseline_step": 1.0691923300906367,
+            "models": {
+              "titantpp": {
+                "peak_allocated_bytes": 1485002752,
+                "step_seconds": 0.009423068026080728
+              },
+              "titantpp_hard_memory_bounded_qk": {
+                "peak_allocated_bytes": 1605106688,
+                "step_seconds": 0.01039492292329669
+              },
+              "titantpp_hard_memory_causal_qkv": {
+                "peak_allocated_bytes": 1558838272,
+                "step_seconds": 0.01007507205940783
+              }
+            },
+            "parameter_counts": {
+              "titantpp": 89795,
+              "titantpp_hard_memory_bounded_qk": 90371,
+              "titantpp_hard_memory_causal_qkv": 90371
+            },
+            "peak_passed": true,
+            "sequence_length": 256,
+            "step_passed": true
+          }
+        ],
+        "peak_limit": 1.25,
+        "status": "passed",
+        "step_limit": 1.5
+      },
+      "gpu_preflight": {
+        "compute_processes": [],
+        "free_vram_mib": 32107,
+        "gpu_name": "NVIDIA GeForce RTX 5090",
+        "total_vram_mib": 32607,
+        "utilization_percent": 0
+      },
+      "output": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_bounded_qk_89cd700c28dd_5090_20260908/cost_profile",
+      "profile_sha256": "143c8be7519014c1db8e3c3ef82762c9636a3f68423b5163a5b4cd66b98f87fa",
+      "started_at": "2026-09-08T04:46:55.276976+00:00",
+      "status": "passed"
+    },
+    "cuda_qualification": {
+      "command": [
+        "/opt/miniconda3/envs/ai_env/bin/python",
+        "-s",
+        "-m",
+        "pytest",
+        "-q",
+        "/home/leekwanhyeong/workspace/paper_research_bounded_qk_89cd700c28dd_5090/simple_lab_test/search/tests/test_count_aware_titan_bounded_qk.py",
+        "/home/leekwanhyeong/workspace/paper_research_bounded_qk_89cd700c28dd_5090/simple_lab_test/search/tests/test_count_aware_titan_causal_qkv.py",
+        "/home/leekwanhyeong/workspace/paper_research_bounded_qk_89cd700c28dd_5090/simple_lab_test/search/tests/test_hard_lmm_bounded_qk_profile.py",
+        "/home/leekwanhyeong/workspace/paper_research_bounded_qk_89cd700c28dd_5090/simple_lab_test/search/tests/test_backbone_normalized_duration.py",
+        "/home/leekwanhyeong/workspace/paper_research_bounded_qk_89cd700c28dd_5090/simple_lab_test/search/tests/test_backbone_normalized_duration_integration.py",
+        "--junitxml=/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_bounded_qk_89cd700c28dd_5090_20260908/cuda_qualification/results.xml"
+      ],
+      "completed_at": "2026-09-08T04:46:55.183455+00:00",
+      "gpu_preflight": {
+        "compute_processes": [],
+        "free_vram_mib": 32107,
+        "gpu_name": "NVIDIA GeForce RTX 5090",
+        "total_vram_mib": 32607,
+        "utilization_percent": 0
+      },
+      "junit_sha256": "b21bd0e2cca462f2884ed97a2a79885d121e9613a10c4e6046ae866c4c110069",
+      "output": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_bounded_qk_89cd700c28dd_5090_20260908/cuda_qualification",
+      "required_actual_cuda_tests": [
+        "test_operating_extremes_finite_and_optimizer_roundtrip_next_step[cuda]",
+        "test_zero_initialization_preserves_b_full_outputs_common_and_kernel_gradients[64-cuda]"
+      ],
+      "started_at": "2026-09-08T04:46:51.326034+00:00",
+      "status": "passed",
+      "test_count": 67
+    },
+    "e1_insta_market_basket": {
+      "best_epoch": 1,
+      "bounded_qk_audit": {
+        "best_checkpoint_file_sha256": "51415b582ca9b864deae59c5c67d907a2cab27a5b3dc1aa9ba1398bfe4a5490c",
+        "best_state_sha256": "1db770f87b6339ff521b1821b62a23886a305ea61a454744eb7c576b6ca130d9",
+        "binding_verified": true,
+        "contract_id": "hard_lmm_bounded_qk_causal_v_v1",
+        "data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+        "evaluation_scope": "validation_only",
+        "full_train_population_per_epoch": 1991192,
+        "held_out_test_evaluated": false,
+        "history_file_sha256": "04471c8cac3bd052e3ce578d825c497419fc50920dc0fe5b594a92d29d4498d5",
+        "kernel_lag_evidence": {
+          "last_current": {
+            "encoder.layers.0.attn.bounded_k_kernel": {
+              "lag0_l1": 17.891437530517578,
+              "lag1_l1": 8.510550498962402,
+              "lag2_l1": 5.403609275817871
+            },
+            "encoder.layers.0.attn.bounded_q_kernel": {
+              "lag0_l1": 20.148128509521484,
+              "lag1_l1": 14.30237102508545,
+              "lag2_l1": 12.973617553710938
+            },
+            "encoder.layers.0.attn.bounded_v_kernel": {
+              "lag0_l1": 30.862014770507812,
+              "lag1_l1": 13.871713638305664,
+              "lag2_l1": 10.183248519897461
+            }
+          },
+          "selected": {
+            "encoder.layers.0.attn.bounded_k_kernel": {
+              "lag0_l1": 17.891437530517578,
+              "lag1_l1": 8.510550498962402,
+              "lag2_l1": 5.403609275817871
+            },
+            "encoder.layers.0.attn.bounded_q_kernel": {
+              "lag0_l1": 20.148128509521484,
+              "lag1_l1": 14.30237102508545,
+              "lag2_l1": 12.973617553710938
+            },
+            "encoder.layers.0.attn.bounded_v_kernel": {
+              "lag0_l1": 30.862014770507812,
+              "lag1_l1": 13.871713638305664,
+              "lag2_l1": 10.183248519897461
+            }
+          }
+        },
+        "last_best_state_sha256": "1db770f87b6339ff521b1821b62a23886a305ea61a454744eb7c576b6ca130d9",
+        "last_checkpoint_file_sha256": "31ef03688ed2ab705b71be43cf1da3c5374a3da376dfe6cd9cd09abc58c3dd77",
+        "last_state_sha256": "1db770f87b6339ff521b1821b62a23886a305ea61a454744eb7c576b6ca130d9",
+        "optimizer_restore": true,
+        "screening_contract_sha256": "09464ee99907b7a3f0c3e35637c5bd36e5bb105111f1898d07843a6ca3b72997",
+        "selector": {
+          "completed_epochs": 1,
+          "history_length": 1,
+          "selected_epoch": 1,
+          "selected_val_qty_rmse": 6.225324171550994,
+          "stopped_early": false
+        },
+        "split_manifest_sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d",
+        "status": "passed",
+        "strict_best_restore": true,
+        "strict_last_restore": true,
+        "synthetic_target_outputs_roundtrip_equal": true,
+        "train_quantity_boundaries": [
+          8,
+          20,
+          25,
+          35
+        ],
+        "validation_target_population": {
+          "identity_fields": [
+            "oper_part_no",
+            "target_position",
+            "target_seq"
+          ],
+          "loader": "RMTPPWeekLookbackDataset",
+          "lookback_weeks": 52,
+          "max_seq_len": 64,
+          "schema_version": 1,
+          "split": "validation",
+          "target_count": 503733,
+          "target_identity_sha256": "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8",
+          "target_quantity_sha256": "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184"
+        }
+      },
+      "checkpoint_sha256": "51415b582ca9b864deae59c5c67d907a2cab27a5b3dc1aa9ba1398bfe4a5490c",
+      "command": [
+        "/opt/miniconda3/envs/ai_env/bin/python",
+        "-s",
+        "/home/leekwanhyeong/workspace/paper_research_bounded_qk_89cd700c28dd_5090/paper/scripts/run_count_aware_tpp_backbone_control.py",
+        "--data",
+        "/home/leekwanhyeong/workspace/paper_research_bounded_qk_89cd700c28dd_5090/sample_data/insta_market_basket/instacart_marked_target_with_split.parquet",
+        "--split-manifest",
+        "/home/leekwanhyeong/workspace/paper_research_bounded_qk_89cd700c28dd_5090/sample_data/insta_market_basket/instacart_marked_target_split_manifest.json",
+        "--output-dir",
+        "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_bounded_qk_89cd700c28dd_5090_20260908/jobs/e1_insta_market_basket",
+        "--source-revision",
+        "89cd700c28dd169cd59bfccbd694ef8967bac823",
+        "--execution-role",
+        "hard_lmm_backbone_5090_titantpp_hard_memory_bounded_qk_insta_market_basket_1e",
+        "--dataset-contract",
+        "insta_market_basket",
+        "--model-role",
+        "hard_lmm_bounded_qk_candidate",
+        "--device",
+        "cuda",
+        "--epochs",
+        "1",
+        "--min-epochs",
+        "1",
+        "--early-stopping-patience",
+        "40",
+        "--batch-size",
+        "128",
+        "--lr",
+        "0.001",
+        "--lookback-weeks",
+        "52",
+        "--max-seq-len",
+        "64",
+        "--hidden-dim",
+        "64",
+        "--lambda-log-qty",
+        "1",
+        "--lambda-tail",
+        "0",
+        "--grad-clip",
+        "1",
+        "--backbones",
+        "titantpp_hard_memory_bounded_qk",
+        "--seeds",
+        "42",
+        "--quantity-variants",
+        "log_mse",
+        "--checkpoint-monitor",
+        "validation_raw_quantity_rmse",
+        "--quantile-adaptive-strength",
+        "0",
+        "--time-head-mode",
+        "legacy_clamped_rmtpp",
+        "--time-scale",
+        "3",
+        "--time-w-max",
+        "3.3333333333333335",
+        "--time-intercept-limit",
+        "300",
+        "--allow-partial-contract"
+      ],
+      "completed_at": "2026-09-08T04:52:15.887657+00:00",
+      "completed_epochs": 1,
+      "cuda_peak_memory_allocated_bytes": 404801024,
+      "gpu_preflight": {
+        "compute_processes": [],
+        "free_vram_mib": 32107,
+        "gpu_name": "NVIDIA GeForce RTX 5090",
+        "total_vram_mib": 32607,
+        "utilization_percent": 0
+      },
+      "held_out_test_evaluated": false,
+      "metrics": {
+        "body_mae": 3.49197384262672,
+        "body_target_count": 477507,
+        "clamped_time_loss": 3.2104678114705143,
+        "gt_p99_mae": 24.540139416695588,
+        "overall_mae": 4.1603412895066105,
+        "raw_rmse": 6.225324171550994,
+        "stratum_counts": {
+          "gt_p99": 6036,
+          "le_p50": 247651,
+          "p50_p90": 202534,
+          "p90_p95": 27322,
+          "p95_p99": 20190
+        },
+        "validation_target_count": 503733
+      },
+      "output": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_bounded_qk_89cd700c28dd_5090_20260908/jobs/e1_insta_market_basket",
+      "started_at": "2026-09-08T04:49:29.351417+00:00",
+      "status": "passed",
+      "summary": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_bounded_qk_89cd700c28dd_5090_20260908/jobs/e1_insta_market_basket/runs/titantpp_hard_memory_bounded_qk/count_only_log_regression/seed_42/summary.json",
+      "summary_sha256": "e4ac3d2c57e5a1fb6578f272632ad19e4f488b4fbb13ee180b079ee82812f899",
+      "validation_target_identity_sha256": "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8",
+      "validation_target_quantity_sha256": "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184"
+    },
+    "e1_intermittent_frozen_5000": {
+      "best_epoch": 1,
+      "bounded_qk_audit": {
+        "best_checkpoint_file_sha256": "cfe7cab9015d25eeb07da348f8f82f0f41f7a77f69c6c938a619f468a3d8e8f6",
+        "best_state_sha256": "b9c6d3e81272a35382d484adeb799028de9b2956b50e6734ca4ce348036b726b",
+        "binding_verified": true,
+        "contract_id": "hard_lmm_bounded_qk_causal_v_v1",
+        "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+        "evaluation_scope": "validation_only",
+        "full_train_population_per_epoch": 393824,
+        "held_out_test_evaluated": false,
+        "history_file_sha256": "a76e0ad19e24decbd3d8be23e92c589f272b5b84aff4f9f7b34347bf2235fa35",
+        "kernel_lag_evidence": {
+          "last_current": {
+            "encoder.layers.0.attn.bounded_k_kernel": {
+              "lag0_l1": 6.0606160163879395,
+              "lag1_l1": 11.8372163772583,
+              "lag2_l1": 11.416170120239258
+            },
+            "encoder.layers.0.attn.bounded_q_kernel": {
+              "lag0_l1": 4.757484436035156,
+              "lag1_l1": 10.140483856201172,
+              "lag2_l1": 13.2828369140625
+            },
+            "encoder.layers.0.attn.bounded_v_kernel": {
+              "lag0_l1": 6.9247965812683105,
+              "lag1_l1": 6.29848051071167,
+              "lag2_l1": 8.362837791442871
+            }
+          },
+          "selected": {
+            "encoder.layers.0.attn.bounded_k_kernel": {
+              "lag0_l1": 6.0606160163879395,
+              "lag1_l1": 11.8372163772583,
+              "lag2_l1": 11.416170120239258
+            },
+            "encoder.layers.0.attn.bounded_q_kernel": {
+              "lag0_l1": 4.757484436035156,
+              "lag1_l1": 10.140483856201172,
+              "lag2_l1": 13.2828369140625
+            },
+            "encoder.layers.0.attn.bounded_v_kernel": {
+              "lag0_l1": 6.9247965812683105,
+              "lag1_l1": 6.29848051071167,
+              "lag2_l1": 8.362837791442871
+            }
+          }
+        },
+        "last_best_state_sha256": "b9c6d3e81272a35382d484adeb799028de9b2956b50e6734ca4ce348036b726b",
+        "last_checkpoint_file_sha256": "61f0b6b08667f2a953cd516b5b11b560388c4fc1beb4305935816db120acfcd0",
+        "last_state_sha256": "b9c6d3e81272a35382d484adeb799028de9b2956b50e6734ca4ce348036b726b",
+        "optimizer_restore": true,
+        "screening_contract_sha256": "09464ee99907b7a3f0c3e35637c5bd36e5bb105111f1898d07843a6ca3b72997",
+        "selector": {
+          "completed_epochs": 1,
+          "history_length": 1,
+          "selected_epoch": 1,
+          "selected_val_qty_rmse": 1.961518205908745,
+          "stopped_early": false
+        },
+        "split_manifest_sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04",
+        "status": "passed",
+        "strict_best_restore": true,
+        "strict_last_restore": true,
+        "synthetic_target_outputs_roundtrip_equal": true,
+        "train_quantity_boundaries": [
+          2,
+          31,
+          46,
+          187
+        ],
+        "validation_target_population": {
+          "identity_fields": [
+            "oper_part_no",
+            "target_position",
+            "target_seq"
+          ],
+          "loader": "RMTPPWeekLookbackDataset",
+          "lookback_weeks": 520,
+          "max_seq_len": 256,
+          "schema_version": 1,
+          "split": "validation",
+          "target_count": 86285,
+          "target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+          "target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385"
+        }
+      },
+      "checkpoint_sha256": "cfe7cab9015d25eeb07da348f8f82f0f41f7a77f69c6c938a619f468a3d8e8f6",
+      "command": [
+        "/opt/miniconda3/envs/ai_env/bin/python",
+        "-s",
+        "/home/leekwanhyeong/workspace/paper_research_bounded_qk_89cd700c28dd_5090/paper/scripts/run_count_aware_tpp_backbone_control.py",
+        "--data",
+        "/home/leekwanhyeong/workspace/paper_research_bounded_qk_89cd700c28dd_5090/sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+        "--split-manifest",
+        "/home/leekwanhyeong/workspace/paper_research_bounded_qk_89cd700c28dd_5090/sample_data/intermittent_v2/intermittent_frozen_5000_split_manifest.json",
+        "--output-dir",
+        "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_bounded_qk_89cd700c28dd_5090_20260908/jobs/e1_intermittent_frozen_5000",
+        "--source-revision",
+        "89cd700c28dd169cd59bfccbd694ef8967bac823",
+        "--execution-role",
+        "hard_lmm_backbone_5090_titantpp_hard_memory_bounded_qk_intermittent_frozen_5000_1e",
+        "--dataset-contract",
+        "intermittent_frozen_5000",
+        "--model-role",
+        "hard_lmm_bounded_qk_candidate",
+        "--device",
+        "cuda",
+        "--epochs",
+        "1",
+        "--min-epochs",
+        "1",
+        "--early-stopping-patience",
+        "40",
+        "--batch-size",
+        "128",
+        "--lr",
+        "0.001",
+        "--lookback-weeks",
+        "520",
+        "--max-seq-len",
+        "256",
+        "--hidden-dim",
+        "64",
+        "--lambda-log-qty",
+        "1",
+        "--lambda-tail",
+        "0",
+        "--grad-clip",
+        "1",
+        "--backbones",
+        "titantpp_hard_memory_bounded_qk",
+        "--seeds",
+        "42",
+        "--quantity-variants",
+        "log_mse",
+        "--checkpoint-monitor",
+        "validation_raw_quantity_rmse",
+        "--quantile-adaptive-strength",
+        "0",
+        "--time-head-mode",
+        "legacy_clamped_rmtpp",
+        "--time-scale",
+        "3",
+        "--time-w-max",
+        "3.3333333333333335",
+        "--time-intercept-limit",
+        "300",
+        "--allow-partial-contract"
+      ],
+      "completed_at": "2026-09-08T04:49:29.260516+00:00",
+      "completed_epochs": 1,
+      "cuda_peak_memory_allocated_bytes": 2009344512,
+      "gpu_preflight": {
+        "compute_processes": [],
+        "free_vram_mib": 32107,
+        "gpu_name": "NVIDIA GeForce RTX 5090",
+        "total_vram_mib": 32607,
+        "utilization_percent": 12
+      },
+      "held_out_test_evaluated": false,
+      "metrics": {
+        "body_mae": 0.7422319025289459,
+        "body_target_count": 81739,
+        "clamped_time_loss": 0.8216644275310716,
+        "gt_p99_mae": 6.229579153236436,
+        "overall_mae": 0.920068176398377,
+        "raw_rmse": 1.961518205908745,
+        "stratum_counts": {
+          "gt_p99": 1141,
+          "le_p50": 45036,
+          "p50_p90": 29579,
+          "p90_p95": 7124,
+          "p95_p99": 3405
+        },
+        "validation_target_count": 86285
+      },
+      "output": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_bounded_qk_89cd700c28dd_5090_20260908/jobs/e1_intermittent_frozen_5000",
+      "started_at": "2026-09-08T04:48:13.435182+00:00",
+      "status": "passed",
+      "summary": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_bounded_qk_89cd700c28dd_5090_20260908/jobs/e1_intermittent_frozen_5000/runs/titantpp_hard_memory_bounded_qk/count_only_log_regression/seed_42/summary.json",
+      "summary_sha256": "32ea46ed8f0408d3726cedba484fcdc73b4317370ec79d726de4657c7908fd78",
+      "validation_target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+      "validation_target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385"
+    },
+    "e1_yellow_trip_hourly": {
+      "best_epoch": 1,
+      "bounded_qk_audit": {
+        "best_checkpoint_file_sha256": "86a47390203025ac8d6543acf2be0dda38ffbc4657f121ab18c756c9649979c1",
+        "best_state_sha256": "6a5042e46eb9e71927d04b0508c47051f4543da2716021f27d7149227d386335",
+        "binding_verified": true,
+        "contract_id": "hard_lmm_bounded_qk_causal_v_v1",
+        "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+        "evaluation_scope": "validation_only",
+        "full_train_population_per_epoch": 38393,
+        "held_out_test_evaluated": false,
+        "history_file_sha256": "155f813166b99314485f41721a341de44d4e5dd3ec96b3970a10a6dce2a92915",
+        "kernel_lag_evidence": {
+          "last_current": {
+            "encoder.layers.0.attn.bounded_k_kernel": {
+              "lag0_l1": 1.2551902532577515,
+              "lag1_l1": 1.7346056699752808,
+              "lag2_l1": 1.9271559715270996
+            },
+            "encoder.layers.0.attn.bounded_q_kernel": {
+              "lag0_l1": 1.2264506816864014,
+              "lag1_l1": 1.9210329055786133,
+              "lag2_l1": 1.803481101989746
+            },
+            "encoder.layers.0.attn.bounded_v_kernel": {
+              "lag0_l1": 0.8857337832450867,
+              "lag1_l1": 0.904381275177002,
+              "lag2_l1": 0.8909893035888672
+            }
+          },
+          "selected": {
+            "encoder.layers.0.attn.bounded_k_kernel": {
+              "lag0_l1": 1.2551902532577515,
+              "lag1_l1": 1.7346056699752808,
+              "lag2_l1": 1.9271559715270996
+            },
+            "encoder.layers.0.attn.bounded_q_kernel": {
+              "lag0_l1": 1.2264506816864014,
+              "lag1_l1": 1.9210329055786133,
+              "lag2_l1": 1.803481101989746
+            },
+            "encoder.layers.0.attn.bounded_v_kernel": {
+              "lag0_l1": 0.8857337832450867,
+              "lag1_l1": 0.904381275177002,
+              "lag2_l1": 0.8909893035888672
+            }
+          }
+        },
+        "last_best_state_sha256": "6a5042e46eb9e71927d04b0508c47051f4543da2716021f27d7149227d386335",
+        "last_checkpoint_file_sha256": "06f2d2b08d8e44c667111fe690f06dc2a70fde814d0f95732ee77d678db76c30",
+        "last_state_sha256": "6a5042e46eb9e71927d04b0508c47051f4543da2716021f27d7149227d386335",
+        "optimizer_restore": true,
+        "screening_contract_sha256": "09464ee99907b7a3f0c3e35637c5bd36e5bb105111f1898d07843a6ca3b72997",
+        "selector": {
+          "completed_epochs": 1,
+          "history_length": 1,
+          "selected_epoch": 1,
+          "selected_val_qty_rmse": 209.55346466885672,
+          "stopped_early": false
+        },
+        "split_manifest_sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85",
+        "status": "passed",
+        "strict_best_restore": true,
+        "strict_last_restore": true,
+        "synthetic_target_outputs_roundtrip_equal": true,
+        "train_quantity_boundaries": [
+          7,
+          686,
+          1562,
+          3449
+        ],
+        "validation_target_population": {
+          "identity_fields": [
+            "oper_part_no",
+            "target_position",
+            "target_seq"
+          ],
+          "loader": "RMTPPWeekLookbackDataset",
+          "lookback_weeks": 168,
+          "max_seq_len": 256,
+          "schema_version": 1,
+          "split": "validation",
+          "target_count": 8268,
+          "target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+          "target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd"
+        }
+      },
+      "checkpoint_sha256": "86a47390203025ac8d6543acf2be0dda38ffbc4657f121ab18c756c9649979c1",
+      "command": [
+        "/opt/miniconda3/envs/ai_env/bin/python",
+        "-s",
+        "/home/leekwanhyeong/workspace/paper_research_bounded_qk_89cd700c28dd_5090/paper/scripts/run_count_aware_tpp_backbone_control.py",
+        "--data",
+        "/home/leekwanhyeong/workspace/paper_research_bounded_qk_89cd700c28dd_5090/sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+        "--split-manifest",
+        "/home/leekwanhyeong/workspace/paper_research_bounded_qk_89cd700c28dd_5090/sample_data/new_york_taxi/yellow_trip_hourly_split_manifest.json",
+        "--output-dir",
+        "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_bounded_qk_89cd700c28dd_5090_20260908/jobs/e1_yellow_trip_hourly",
+        "--source-revision",
+        "89cd700c28dd169cd59bfccbd694ef8967bac823",
+        "--execution-role",
+        "hard_lmm_backbone_5090_titantpp_hard_memory_bounded_qk_yellow_trip_hourly_1e",
+        "--dataset-contract",
+        "yellow_trip_hourly",
+        "--model-role",
+        "hard_lmm_bounded_qk_candidate",
+        "--device",
+        "cuda",
+        "--epochs",
+        "1",
+        "--min-epochs",
+        "1",
+        "--early-stopping-patience",
+        "40",
+        "--batch-size",
+        "128",
+        "--lr",
+        "0.001",
+        "--lookback-weeks",
+        "168",
+        "--max-seq-len",
+        "256",
+        "--hidden-dim",
+        "64",
+        "--lambda-log-qty",
+        "1",
+        "--lambda-tail",
+        "0",
+        "--grad-clip",
+        "1",
+        "--backbones",
+        "titantpp_hard_memory_bounded_qk",
+        "--seeds",
+        "42",
+        "--quantity-variants",
+        "log_mse",
+        "--checkpoint-monitor",
+        "validation_raw_quantity_rmse",
+        "--quantile-adaptive-strength",
+        "0",
+        "--time-head-mode",
+        "legacy_clamped_rmtpp",
+        "--time-scale",
+        "3",
+        "--time-w-max",
+        "3.3333333333333335",
+        "--time-intercept-limit",
+        "300",
+        "--allow-partial-contract"
+      ],
+      "completed_at": "2026-09-08T04:48:13.345428+00:00",
+      "completed_epochs": 1,
+      "cuda_peak_memory_allocated_bytes": 2009344512,
+      "gpu_preflight": {
+        "compute_processes": [],
+        "free_vram_mib": 32107,
+        "gpu_name": "NVIDIA GeForce RTX 5090",
+        "total_vram_mib": 32607,
+        "utilization_percent": 0
+      },
+      "held_out_test_evaluated": false,
+      "metrics": {
+        "body_mae": 40.391632102769904,
+        "body_target_count": 7888,
+        "clamped_time_loss": 1.3694677619496924,
+        "gt_p99_mae": 645.1291442098496,
+        "overall_mae": 66.95018151486819,
+        "raw_rmse": 209.55346466885672,
+        "stratum_counts": {
+          "gt_p99": 79,
+          "le_p50": 4364,
+          "p50_p90": 3138,
+          "p90_p95": 386,
+          "p95_p99": 301
+        },
+        "validation_target_count": 8268
+      },
+      "output": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_bounded_qk_89cd700c28dd_5090_20260908/jobs/e1_yellow_trip_hourly",
+      "started_at": "2026-09-08T04:48:02.500720+00:00",
+      "status": "passed",
+      "summary": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_bounded_qk_89cd700c28dd_5090_20260908/jobs/e1_yellow_trip_hourly/runs/titantpp_hard_memory_bounded_qk/count_only_log_regression/seed_42/summary.json",
+      "summary_sha256": "ea71ef285ae89b0854b6a9cb53224c73c25d1875ea66c6bfc7110729d1326be1",
+      "validation_target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+      "validation_target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd"
+    },
+    "normalized_e1_FULL_yellow_trip_hourly": {
+      "command": [
+        "/opt/miniconda3/envs/ai_env/bin/python",
+        "-s",
+        "/home/leekwanhyeong/workspace/paper_research_bounded_qk_89cd700c28dd_5090/paper/scripts/run_backbone_normalized_duration.py",
+        "--job-manifest",
+        "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_bounded_qk_89cd700c28dd_5090_20260908/duration_manifests/FULL_yellow_trip_hourly.json",
+        "--expected-job-manifest-sha256",
+        "079f7f6ec10d4672f64d6ef366717aab2ca6947c284eb11ec3355589b9f5d112",
+        "--output-dir",
+        "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_bounded_qk_89cd700c28dd_5090_20260908/jobs/normalized_e1_FULL_yellow_trip_hourly",
+        "--device",
+        "cuda",
+        "--source-revision",
+        "89cd700c28dd169cd59bfccbd694ef8967bac823",
+        "--allow-partial-contract",
+        "--max-epochs",
+        "1"
+      ],
+      "completed_at": "2026-09-08T04:52:22.161631+00:00",
+      "error": "CalledProcessError(1, ['/opt/miniconda3/envs/ai_env/bin/python', '-s', '/home/leekwanhyeong/workspace/paper_research_bounded_qk_89cd700c28dd_5090/paper/scripts/run_backbone_normalized_duration.py', '--job-manifest', '/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_bounded_qk_89cd700c28dd_5090_20260908/duration_manifests/FULL_yellow_trip_hourly.json', '--expected-job-manifest-sha256', '079f7f6ec10d4672f64d6ef366717aab2ca6947c284eb11ec3355589b9f5d112', '--output-dir', '/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_bounded_qk_89cd700c28dd_5090_20260908/jobs/normalized_e1_FULL_yellow_trip_hourly', '--device', 'cuda', '--source-revision', '89cd700c28dd169cd59bfccbd694ef8967bac823', '--allow-partial-contract', '--max-epochs', '1'])",
+      "gpu_preflight": {
+        "compute_processes": [],
+        "free_vram_mib": 32107,
+        "gpu_name": "NVIDIA GeForce RTX 5090",
+        "total_vram_mib": 32607,
+        "utilization_percent": 0
+      },
+      "output": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_bounded_qk_89cd700c28dd_5090_20260908/jobs/normalized_e1_FULL_yellow_trip_hourly",
+      "started_at": "2026-09-08T04:52:15.977798+00:00",
+      "status": "failed"
+    }
+  },
+  "schema_version": 1,
+  "source_revision": "89cd700c28dd169cd59bfccbd694ef8967bac823",
+  "source_verification": {
+    "source_revision": "89cd700c28dd169cd59bfccbd694ef8967bac823",
+    "verified_files": 1836
+  },
+  "started_at": "2026-09-08T04:46:47.837635+00:00",
+  "status": "failed_execution",
+  "updated_at": "2026-09-08T04:52:22.161658+00:00"
+}

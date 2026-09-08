@@ -1,0 +1,422 @@
+{
+  "audit": "hard_lmm_bounded_qk_source89_nvrtc_runtime_recovery",
+  "checks": {
+    "all_role_output_and_gradient_hashes_equal": true,
+    "cu13_nvrtc_and_builtins_actually_loaded": true,
+    "existing_environment_probe_passed": true,
+    "float64_continuous_integer_censored_forward_backward_finite": true,
+    "likelihood_probe_passed": true,
+    "likelihood_semantics_and_mass_passed": true,
+    "nvidia_loaded_library_paths_exactly_equal": true,
+    "patched_environment_probe_passed": true,
+    "source89_exact": true
+  },
+  "conclusion": "The process-local CUDA 13 NVRTC path enables source-89 float64 normalized likelihood forward/backward on RTX 5090. Under the same synthetic seed, B, FULL, and BOUNDED outputs and parameter gradients have identical canonical hashes with and without the added path, and the NVIDIA library paths mapped by those model probes are exactly equal.",
+  "created_at_utc": "2026-09-08T05:17:24.734143+00:00",
+  "environment_parity": {
+    "comparison": {
+      "existing_loaded_paths": [
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libcublas.so.13",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libcublasLt.so.13",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libcudart.so.13",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libcufft.so.12",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libcupti.so.13",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cublas/lib/libcublas.so.12",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cublas/lib/libcublasLt.so.12",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cuda_cupti/lib/libcupti.so.12",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cuda_nvrtc/lib/libnvrtc-builtins.so.12.8",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cuda_nvrtc/lib/libnvrtc.so.12",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cuda_runtime/lib/libcudart.so.12",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cudnn/lib/libcudnn.so.9",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cufft/lib/libcufft.so.11",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cufile/lib/libcufile.so.0",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/curand/lib/libcurand.so.10",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cusolver/lib/libcusolver.so.11",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cusparse/lib/libcusparse.so.12",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cusparselt/lib/libcusparseLt.so.0",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/nccl/lib/libnccl.so.2",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/nvjitlink/lib/libnvJitLink.so.12",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/nvshmem/lib/libnvshmem_host.so.3",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/nvtx/lib/libnvToolsExt.so.1"
+      ],
+      "nvidia_loaded_library_paths_exactly_equal": true,
+      "patched_loaded_paths": [
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libcublas.so.13",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libcublasLt.so.13",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libcudart.so.13",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libcufft.so.12",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libcupti.so.13",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cublas/lib/libcublas.so.12",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cublas/lib/libcublasLt.so.12",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cuda_cupti/lib/libcupti.so.12",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cuda_nvrtc/lib/libnvrtc-builtins.so.12.8",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cuda_nvrtc/lib/libnvrtc.so.12",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cuda_runtime/lib/libcudart.so.12",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cudnn/lib/libcudnn.so.9",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cufft/lib/libcufft.so.11",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cufile/lib/libcufile.so.0",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/curand/lib/libcurand.so.10",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cusolver/lib/libcusolver.so.11",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cusparse/lib/libcusparse.so.12",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cusparselt/lib/libcusparseLt.so.0",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/nccl/lib/libnccl.so.2",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/nvjitlink/lib/libnvJitLink.so.12",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/nvshmem/lib/libnvshmem_host.so.3",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/nvtx/lib/libnvToolsExt.so.1"
+      ],
+      "roles": {
+        "B": {
+          "joint_loss_bitwise_equal": true,
+          "output_canonical_sha256_equal": true,
+          "parameter_gradient_canonical_sha256_equal": true,
+          "quantity_train_loss_bitwise_equal": true,
+          "time_loss_bitwise_equal": true
+        },
+        "BOUNDED": {
+          "joint_loss_bitwise_equal": true,
+          "output_canonical_sha256_equal": true,
+          "parameter_gradient_canonical_sha256_equal": true,
+          "quantity_train_loss_bitwise_equal": true,
+          "time_loss_bitwise_equal": true
+        },
+        "FULL": {
+          "joint_loss_bitwise_equal": true,
+          "output_canonical_sha256_equal": true,
+          "parameter_gradient_canonical_sha256_equal": true,
+          "quantity_train_loss_bitwise_equal": true,
+          "time_loss_bitwise_equal": true
+        }
+      }
+    },
+    "existing": {
+      "checks": {
+        "all_role_gradients_finite": true,
+        "all_role_outputs_finite": true,
+        "cuda_available": true,
+        "source_revision_exact": true
+      },
+      "environment_label": "existing",
+      "probe": "source89_cuda_environment_parity",
+      "roles": {
+        "B": {
+          "all_gradients_finite": true,
+          "all_outputs_finite": true,
+          "gradient_tensor_count": 35,
+          "joint_loss_sum": 19.94036102294922,
+          "output_canonical_sha256": "c033faccb8b7f515f3b80ef58da07ee9680d0f0841a15cfeaa7411b138ffd638",
+          "output_tensor_count": 12,
+          "parameter_gradient_canonical_sha256": "d30f8a15538ccb64235c87c6e091c5d2397d8738af6c489e78ddc3dafb824c97",
+          "quantity_train_loss_sum": 4.916965961456299,
+          "time_loss_sum": 15.023394584655762
+        },
+        "BOUNDED": {
+          "all_gradients_finite": true,
+          "all_outputs_finite": true,
+          "gradient_tensor_count": 38,
+          "joint_loss_sum": 19.94036102294922,
+          "output_canonical_sha256": "c033faccb8b7f515f3b80ef58da07ee9680d0f0841a15cfeaa7411b138ffd638",
+          "output_tensor_count": 12,
+          "parameter_gradient_canonical_sha256": "d97e2f25b30c16c2ab97fd96798bfb9accca564d69ac8461d1d745ecfc1d7b08",
+          "quantity_train_loss_sum": 4.916965961456299,
+          "time_loss_sum": 15.023394584655762
+        },
+        "FULL": {
+          "all_gradients_finite": true,
+          "all_outputs_finite": true,
+          "gradient_tensor_count": 38,
+          "joint_loss_sum": 19.94036102294922,
+          "output_canonical_sha256": "c033faccb8b7f515f3b80ef58da07ee9680d0f0841a15cfeaa7411b138ffd638",
+          "output_tensor_count": 12,
+          "parameter_gradient_canonical_sha256": "5d833629d7f0efe1611f33e92f0de771ca29e9580be156153b9d0016881d68c3",
+          "quantity_train_loss_sum": 4.916965961456299,
+          "time_loss_sum": 15.023394584655762
+        }
+      },
+      "runtime": {
+        "cuda_device": "NVIDIA GeForce RTX 5090",
+        "ld_library_path": null,
+        "nvidia_loaded_paths_from_proc_maps": [
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libcublas.so.13",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libcublasLt.so.13",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libcudart.so.13",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libcufft.so.12",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libcupti.so.13",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cublas/lib/libcublas.so.12",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cublas/lib/libcublasLt.so.12",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cuda_cupti/lib/libcupti.so.12",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cuda_nvrtc/lib/libnvrtc-builtins.so.12.8",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cuda_nvrtc/lib/libnvrtc.so.12",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cuda_runtime/lib/libcudart.so.12",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cudnn/lib/libcudnn.so.9",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cufft/lib/libcufft.so.11",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cufile/lib/libcufile.so.0",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/curand/lib/libcurand.so.10",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cusolver/lib/libcusolver.so.11",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cusparse/lib/libcusparse.so.12",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cusparselt/lib/libcusparseLt.so.0",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/nccl/lib/libnccl.so.2",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/nvjitlink/lib/libnvJitLink.so.12",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/nvshmem/lib/libnvshmem_host.so.3",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/nvtx/lib/libnvToolsExt.so.1"
+        ],
+        "python": "/opt/miniconda3/envs/ai_env/bin/python",
+        "torch": "2.11.0+cu130",
+        "torch_cuda": "13.0"
+      },
+      "schema_version": 1,
+      "script_sha256": "8eb6662d4c191dc24bb9c48a663d315f944db40de3a973c562b57b1172e9d58a",
+      "source_revision": "89cd700c28dd169cd59bfccbd694ef8967bac823",
+      "status": "pass"
+    },
+    "patched_cu13_ld": {
+      "checks": {
+        "all_role_gradients_finite": true,
+        "all_role_outputs_finite": true,
+        "cuda_available": true,
+        "source_revision_exact": true
+      },
+      "environment_label": "patched_cu13_ld",
+      "probe": "source89_cuda_environment_parity",
+      "roles": {
+        "B": {
+          "all_gradients_finite": true,
+          "all_outputs_finite": true,
+          "gradient_tensor_count": 35,
+          "joint_loss_sum": 19.94036102294922,
+          "output_canonical_sha256": "c033faccb8b7f515f3b80ef58da07ee9680d0f0841a15cfeaa7411b138ffd638",
+          "output_tensor_count": 12,
+          "parameter_gradient_canonical_sha256": "d30f8a15538ccb64235c87c6e091c5d2397d8738af6c489e78ddc3dafb824c97",
+          "quantity_train_loss_sum": 4.916965961456299,
+          "time_loss_sum": 15.023394584655762
+        },
+        "BOUNDED": {
+          "all_gradients_finite": true,
+          "all_outputs_finite": true,
+          "gradient_tensor_count": 38,
+          "joint_loss_sum": 19.94036102294922,
+          "output_canonical_sha256": "c033faccb8b7f515f3b80ef58da07ee9680d0f0841a15cfeaa7411b138ffd638",
+          "output_tensor_count": 12,
+          "parameter_gradient_canonical_sha256": "d97e2f25b30c16c2ab97fd96798bfb9accca564d69ac8461d1d745ecfc1d7b08",
+          "quantity_train_loss_sum": 4.916965961456299,
+          "time_loss_sum": 15.023394584655762
+        },
+        "FULL": {
+          "all_gradients_finite": true,
+          "all_outputs_finite": true,
+          "gradient_tensor_count": 38,
+          "joint_loss_sum": 19.94036102294922,
+          "output_canonical_sha256": "c033faccb8b7f515f3b80ef58da07ee9680d0f0841a15cfeaa7411b138ffd638",
+          "output_tensor_count": 12,
+          "parameter_gradient_canonical_sha256": "5d833629d7f0efe1611f33e92f0de771ca29e9580be156153b9d0016881d68c3",
+          "quantity_train_loss_sum": 4.916965961456299,
+          "time_loss_sum": 15.023394584655762
+        }
+      },
+      "runtime": {
+        "cuda_device": "NVIDIA GeForce RTX 5090",
+        "ld_library_path": "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib",
+        "nvidia_loaded_paths_from_proc_maps": [
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libcublas.so.13",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libcublasLt.so.13",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libcudart.so.13",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libcufft.so.12",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libcupti.so.13",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cublas/lib/libcublas.so.12",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cublas/lib/libcublasLt.so.12",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cuda_cupti/lib/libcupti.so.12",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cuda_nvrtc/lib/libnvrtc-builtins.so.12.8",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cuda_nvrtc/lib/libnvrtc.so.12",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cuda_runtime/lib/libcudart.so.12",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cudnn/lib/libcudnn.so.9",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cufft/lib/libcufft.so.11",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cufile/lib/libcufile.so.0",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/curand/lib/libcurand.so.10",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cusolver/lib/libcusolver.so.11",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cusparse/lib/libcusparse.so.12",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cusparselt/lib/libcusparseLt.so.0",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/nccl/lib/libnccl.so.2",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/nvjitlink/lib/libnvJitLink.so.12",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/nvshmem/lib/libnvshmem_host.so.3",
+          "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/nvtx/lib/libnvToolsExt.so.1"
+        ],
+        "python": "/opt/miniconda3/envs/ai_env/bin/python",
+        "torch": "2.11.0+cu130",
+        "torch_cuda": "13.0"
+      },
+      "schema_version": 1,
+      "script_sha256": "8eb6662d4c191dc24bb9c48a663d315f944db40de3a973c562b57b1172e9d58a",
+      "source_revision": "89cd700c28dd169cd59bfccbd694ef8967bac823",
+      "status": "pass"
+    }
+  },
+  "gpu_idle_preflight": {
+    "before_environment_parity_probes": {
+      "index": 0,
+      "memory_free_mib": 32110,
+      "memory_used_mib": 2,
+      "temperature_c": 31,
+      "utilization_percent": 0
+    },
+    "before_likelihood_probe": {
+      "index": 0,
+      "memory_free_mib": 32110,
+      "memory_used_mib": 2,
+      "temperature_c": 32,
+      "utilization_percent": 0
+    }
+  },
+  "likelihood_probe": {
+    "checks": {
+      "all_gradient_groups_nonzero": true,
+      "all_gradients_finite": true,
+      "all_outputs_finite": true,
+      "all_outputs_float64": true,
+      "continuous_manual_max_abs_le_1e_10": true,
+      "cpu_cuda_gradient_max_abs_le_5e_6": true,
+      "cpu_cuda_loss_abs_le_1e_10": true,
+      "cpu_cuda_output_max_abs_le_1e_10": true,
+      "cuda_available": true,
+      "instacart_30_survival_manual_abs_le_1e_10": true,
+      "integer_mass_abs_error_le_1e_12": true,
+      "manual_integer_mass_abs_error_le_1e_12": true,
+      "nvrtc_and_builtins_loaded": true,
+      "source_revision_exact": true,
+      "taxi_first_bin_manual_abs_le_1e_10": true
+    },
+    "numerics": {
+      "continuous_manual_max_abs": 3.552713678800501e-15,
+      "cpu_cuda_gradient_max_abs_by_group": {
+        "b_t": 0.0,
+        "hidden": 0.0,
+        "time_scale_weight.weight": 0.0,
+        "v_t.weight": 0.0,
+        "w_raw": 0.0
+      },
+      "cpu_cuda_gradient_worst_max_abs": 0.0,
+      "cpu_cuda_loss_abs": 8.881784197001252e-16,
+      "cpu_cuda_output_max_abs_by_path": {
+        "continuous": 3.552713678800501e-15,
+        "integer": 1.7763568394002505e-15,
+        "mass": 5.1514348342607263e-14
+      },
+      "cpu_cuda_output_worst_max_abs": 5.1514348342607263e-14,
+      "cpu_loss": 7.133511982038779,
+      "cuda_gradient_nonzero_by_group": {
+        "b_t": true,
+        "hidden": true,
+        "time_scale_weight.weight": true,
+        "v_t.weight": true,
+        "w_raw": true
+      },
+      "cuda_loss": 7.133511982038778,
+      "instacart_code_30_log_survival": -7.878856305487222,
+      "instacart_code_30_manual_abs": 8.881784197001252e-16,
+      "instacart_code_30_manual_log_survival": -7.878856305487221,
+      "integer_probability_mass_abs_error": 0.0,
+      "integer_probability_mass_codes_1_to_60_plus_survival_60_5": 1.0,
+      "location": 0.17149999929964543,
+      "manual_integer_probability_mass": 1.0,
+      "manual_integer_probability_mass_abs_error": 0.0,
+      "sigma": 0.7481564650105316,
+      "taxi_first_bin_log_probability": -1.3104828278268312,
+      "taxi_first_bin_manual_abs": 4.440892098500626e-16,
+      "taxi_first_bin_manual_log_probability": -1.3104828278268308,
+      "time_scale": 2.0
+    },
+    "probe": "source89_normalized_duration_cuda_nvrtc_recovery",
+    "runtime": {
+      "cuda_capability": [
+        12,
+        0
+      ],
+      "cuda_device": "NVIDIA GeForce RTX 5090",
+      "environment": {
+        "LD_LIBRARY_PATH": "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib",
+        "MKL_NUM_THREADS": "4",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "POLARS_MAX_THREADS": "4",
+        "PYTHONNOUSERSITE": "1",
+        "PYTORCH_KERNEL_CACHE_PATH": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/bounded_qk_nvrtc_probe_20260908/torch_kernel_cache",
+        "TORCH_KERNEL_CACHE_PATH": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/bounded_qk_nvrtc_probe_20260908/torch_kernel_cache"
+      },
+      "loaded_nvrtc_paths_from_proc_maps": [
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libnvrtc-builtins.so.13.0",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libnvrtc.so.13",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cuda_nvrtc/lib/libnvrtc-builtins.so.12.8",
+        "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cuda_nvrtc/lib/libnvrtc.so.12"
+      ],
+      "python": "/opt/miniconda3/envs/ai_env/bin/python",
+      "selected_nvrtc_libraries": [
+        {
+          "bytes": 109338064,
+          "path": "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libnvrtc.so.13",
+          "resolved_path": "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libnvrtc.so.13",
+          "sha256": "a49e67e8e74590f1e98de55c39c6287efd3f59e3c3797464d7bbe0fe01349b11"
+        },
+        {
+          "bytes": 4380616,
+          "path": "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libnvrtc-builtins.so.13.0",
+          "resolved_path": "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libnvrtc-builtins.so.13.0",
+          "sha256": "91dcd944d01da9c0f08fff5d779db136a47f6d62bdb63bae900d2f481e92c3a2"
+        }
+      ],
+      "torch": "2.11.0+cu130",
+      "torch_cuda": "13.0"
+    },
+    "schema_version": 1,
+    "source": {
+      "likelihood_module": "/home/leekwanhyeong/workspace/paper_research_bounded_qk_89cd700c28dd_5090/paper/scripts/run_hard_lmm_frozen_lognormal_duration.py",
+      "likelihood_module_sha256": "c3bb9a6afb87dfa21c9b49af50a7a4b38b640871ec0bd8ba28ef1f098cf984e6",
+      "revision": "89cd700c28dd169cd59bfccbd694ef8967bac823",
+      "root": "/home/leekwanhyeong/workspace/paper_research_bounded_qk_89cd700c28dd_5090"
+    },
+    "status": "pass"
+  },
+  "reproducibility_artifacts": {
+    "environment_parity_probe.py": {
+      "bytes": 4831,
+      "remote_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/bounded_qk_nvrtc_probe_20260908/environment_parity_probe.py",
+      "sha256": "8eb6662d4c191dc24bb9c48a663d315f944db40de3a973c562b57b1172e9d58a"
+    },
+    "nvrtc_parity_commands.json": {
+      "bytes": 2206,
+      "remote_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/bounded_qk_nvrtc_probe_20260908/nvrtc_parity_commands.json",
+      "sha256": "33758f5adf427b4b174f371fc4c5b410b6a6730434d8200f006ab5e24a218f59"
+    },
+    "nvrtc_probe_command.json": {
+      "bytes": 1329,
+      "remote_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/bounded_qk_nvrtc_probe_20260908/nvrtc_probe_command.json",
+      "sha256": "252c0d2746bb1af8c016774d6dec5b40d3e71d0e668172301d08eb1700e74bfe"
+    },
+    "parity_existing.json": {
+      "bytes": 4474,
+      "remote_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/bounded_qk_nvrtc_probe_20260908/parity_existing.json",
+      "sha256": "94fbd168d6a9edf26e4eadc9b21b4db04b95ab115881b43243d5514561125484"
+    },
+    "parity_patched.json": {
+      "bytes": 4551,
+      "remote_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/bounded_qk_nvrtc_probe_20260908/parity_patched.json",
+      "sha256": "3a3fa667e6179f042ba2df4bd6abc847c5392a5bcaea9daa9d672b412c6af841"
+    },
+    "probe.py": {
+      "bytes": 14099,
+      "remote_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/bounded_qk_nvrtc_probe_20260908/probe.py",
+      "sha256": "de80035b47582ab087e4a17642bc6421625a8b28fae793510e3c831b5e9da7ec"
+    },
+    "result.json": {
+      "bytes": 4720,
+      "remote_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/bounded_qk_nvrtc_probe_20260908/result.json",
+      "sha256": "19a5d7183e04ed63076aad24af2f9d1b36374c1cab455baab61266f4e1503684"
+    }
+  },
+  "schema_version": 1,
+  "scope": {
+    "device": "NVIDIA GeForce RTX 5090",
+    "host": "5090",
+    "runtime_change": "process-local LD_LIBRARY_PATH and isolated kernel cache only",
+    "source_revision": "89cd700c28dd169cd59bfccbd694ef8967bac823",
+    "workload": "small synthetic forward/backward only; no dataset load and no fit"
+  },
+  "status": "pass"
+}
