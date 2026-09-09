@@ -1,0 +1,123 @@
+{
+  "amendments": [
+    {
+      "amended_on": "2026-09-09",
+      "classification": "numerical-clarification and artifact-completeness amendment after independent QA",
+      "prior_complete_analysis_sha256": "171a924aff06e217af10bf2ead34bd5d74e63afdd82a3e0b317342b9b0e3559f",
+      "prior_complete_decision_sha256": "439200bad8bc2bdc0476fba9ac28d8ea11fb6aaba67f2820bb53473ef4be6efc",
+      "prior_contract_sha256": "022bfda5644961b22fda597985849e3ed62d2c21d06989050fb51af6fc8afbf0",
+      "reason": "name the already-used uncancelled parity denominator explicitly and retain the already-computed prototype-by-quantity-stratum and per-prototype conflict evidence in auditable exports",
+      "unchanged": "candidate formula, candidate shift 0, all 63 controls, metrics, folds, scopes, epsilon, prospective gate, and failure action"
+    }
+  ],
+  "authorization": {
+    "candidate_implementation": false,
+    "gpu_execution": false,
+    "held_out_test": false,
+    "local_train_only_diagnostic": true,
+    "model_parameter_updates": false,
+    "validation_rows": false
+  },
+  "baseline": {
+    "important_boundary": "B has no online or test-time write; this probe concerns only outer-optimizer updates to selected prototype rows",
+    "memory": "one tied static key/value bank with 64 rows and hard cosine top-4 arithmetic-mean retrieval",
+    "name": "B: Hard-LMM selected by earliest validation raw quantity RMSE",
+    "optimizer": "one-group AdamW followed by global gradient L2 clipping at 1.0",
+    "source_revision": "f75243473adc25d622319dbca9bda7e076d8240f"
+  },
+  "contract_id": "hard_lmm_value_update_probe_v1",
+  "controls": {
+    "cyclic_row_shuffles": "all 63 non-identity circular shifts of T across prototype row ids; preserve the row-update multiset and Frobenius norm",
+    "hard_b": "unchanged B joint update",
+    "shuffle_comparison": "candidate log and raw incremental dot products must exceed the 95th percentile of the 63 shuffled controls"
+  },
+  "created_on": "2026-09-09",
+  "diagnostic_scope": {
+    "allowed_split": "train_only",
+    "batch_size": 128,
+    "datasets": [
+      "intermittent_v2",
+      "yellow_trip_hourly",
+      "insta_market_basket"
+    ],
+    "fold_role": "directional stability between two whole-series-disjoint train cohorts; not out-of-sample performance",
+    "maximum_targets_per_dataset": 4096,
+    "minimum_targets_per_fold": 2048,
+    "sample_seed": 20260908,
+    "series_fold_rule": "reuse the exact two folds and stored order from hard_lmm_qkv_path_diagnostic_v1",
+    "target_sampling": "reuse the exact 4096 train target identities without resampling",
+    "torch_threads": 4
+  },
+  "evidence_reuse": {
+    "aggregate_gradient_analysis_path": "paper/results/hard_lmm_credit_assignment_probe_20260909/analysis.json",
+    "aggregate_gradient_analysis_sha256": "975b2f3ab67cf81a102140fe7436013e328aca3e1d10e8a216ac065ba484fb89",
+    "aggregate_gradient_decision_path": "paper/results/hard_lmm_credit_assignment_probe_20260909/evidence_decision.json",
+    "aggregate_gradient_decision_sha256": "c063b22d9119d310a9da59183d9426f8d1e7fc367c76d2fe957e53b9a11e65f5",
+    "aggregate_gradient_manifest_path": "paper/results/hard_lmm_credit_assignment_probe_20260909/execution_manifest.json",
+    "aggregate_gradient_manifest_sha256": "274e4a42ccea0673566bf984a6dc725f04a9a65f3b2c0dc21b38bdef4161d37e",
+    "dataset_and_checkpoint_contract_path": "paper/contracts/hard_lmm_credit_assignment_probe_v1.json",
+    "dataset_and_checkpoint_contract_sha256": "f4818d1629123eca86871619e74daa7feba59da6b3991b7772e6b74e863dab5f"
+  },
+  "integrity": {
+    "artifact_exports": "retain one row for every dataset/fold/prototype and every dataset/fold/quantity-stratum/prototype; pairwise metric conflicts must retain eligible and conflicting prototype ids plus per-prototype cosine",
+    "checkpoint_and_cache_hashes": "reuse and reverify every hash in hard_lmm_credit_assignment_probe_v1",
+    "model_state": "frozen checkpoint state hash must match before and after; optimizer step is forbidden",
+    "output_reuse": "cached B prediction, target, hidden, residual, and top-4 parity must remain within the preceding probe tolerances",
+    "padding": "padding positions contribute neither retrieval support nor gradient",
+    "target_use": "target quantity and duration may construct diagnostic losses only; neither may change the query, top-4 membership, or history input"
+  },
+  "interpretation_limits": [
+    "This is a one-checkpoint first-order local diagnostic and does not predict finite-step e300 performance.",
+    "It does not reproduce AdamW moments, dropout, future top-4 membership changes, or weight decay effects.",
+    "When native row contributions nearly cancel, the conventional error divided by the final native norm can exceed 2e-6 from floating-point scatter accumulation order; this cancellation-amplified value is recorded but is not the parity denominator.",
+    "A passing result would justify implementing a prototype training rule, not claiming a new inference-time Backbone structure.",
+    "A failing common gate rules out only this fixed usage-normalized support-confidence rule."
+  ],
+  "prospective_gate": {
+    "common_decision": "implement a candidate only if every requirement passes for all three datasets, both fold directions, and both scopes",
+    "directions": [
+      "fold0_to_fold1",
+      "fold1_to_fold0"
+    ],
+    "epsilon": "1e-12 * ||held_metric_gradient||_2 * ||candidate_update - hard_b_update||_2",
+    "failure_action": "do not implement or GPU train this update rule; retain the diagnostic as evidence that the update boundary lacks a common necessary direction",
+    "requirements_in_every_dataset_direction_and_scope": {
+      "absolute_log_and_raw": "dot(held_metric_gradient, candidate_update) > epsilon",
+      "body_and_time_guardrail": "dot(held_metric_gradient, candidate_update - hard_b_update) >= -epsilon",
+      "incremental_log_and_raw": "dot(held_metric_gradient, candidate_update - hard_b_update) > epsilon",
+      "preserve_positive_hard_direction": "when dot(held_metric_gradient, hard_b_update) > epsilon, the candidate absolute dot must remain > epsilon",
+      "shuffle_specificity": "candidate incremental log and raw dot must be strictly above the 95th percentile across all 63 cyclic row shifts"
+    },
+    "scopes": [
+      "preclip_selected_value_bank",
+      "postclip_full_model_update"
+    ]
+  },
+  "selected_value_gradient": {
+    "definition": "G[f,j,a] = mean_i(1[j in top4_i] * d(loss_i_a)/d(z_i) / 4)",
+    "key_addressing_gradient": "excluded because discrete hard top-4 membership has zero derivative",
+    "metrics": [
+      "log_quantity_mse",
+      "raw_quantity_squared_error",
+      "body_quantity_mae_at_or_below_train_p95",
+      "legacy_time_nll"
+    ],
+    "quantity_strata": "the five train-only quantity intervals already frozen in each launch contract: <=p50, p50-p90, p90-p95, p95-p99, >p99",
+    "required_parity": "analytic per-event aggregation must match native frozen-B lmm.mem gradients within 2e-6 relative to max(native norm, analytic norm, mean uncancelled per-event selected-credit norm, 1e-30); also record the cancellation-amplified relative error against the final native norm as an audit-only diagnostic"
+  },
+  "single_mechanistic_probe": {
+    "batch_formula": {
+      "mean_support": "nbar[b] = 4 * batch_target_count / 64",
+      "norm_match": "T[b] = ||G_log[b]||_F * Traw[b] / ||Traw[b]||_F",
+      "raw_transform": "Traw[b,j] = c[b,j] * mean_selected_i(d(log_mse_i)/d(z_i) / 4) = sum_selected_i(d(log_mse_i)/d(z_i) / 4) / (n[b,j] + nbar[b])",
+      "support_confidence": "c[b,j] = n[b,j] / (n[b,j] + nbar[b])",
+      "support_count": "n[b,j] = sum_i 1[j in top4_i]",
+      "zero_rule": "if either norm is zero, keep the original G_log batch gradient and mark the batch as having no candidate signal"
+    },
+    "classification": "training-rule probe for the static Hard-LMM prototype bank; not an online memory write and not yet a Backbone architecture candidate",
+    "forward_change": "none",
+    "joint_update": "replace only lmm.mem's log-quantity component G_log with T; preserve time gradient, every other parameter gradient, loss weights, batch size, and global clip 1.0",
+    "name": "usage-normalized support-confidence prototype update",
+    "uniform_usage_identity": "when every row has equal support, norm matching must reproduce the B log-quantity memory gradient"
+  }
+}

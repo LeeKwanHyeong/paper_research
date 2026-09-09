@@ -101,3 +101,11 @@ def test_descriptor_records_exact_selection_and_metric_conflict() -> None:
     ]
     assert summary["quantity_strata"][0]["target_count"] == 1
     assert summary["quantity_strata"][2]["target_count"] == 1
+
+
+def test_csv_export_uses_repository_lf_line_endings(tmp_path: Path) -> None:
+    output = tmp_path / "rows.csv"
+    runner.write_per_slot(output, [{"name": "a", "value": 1}])
+    payload = output.read_bytes()
+    assert b"\r\n" not in payload
+    assert payload == b"name,value\na,1\n"

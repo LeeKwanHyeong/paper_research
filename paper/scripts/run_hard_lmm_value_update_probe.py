@@ -881,7 +881,9 @@ def analyze_dataset(
 def write_per_slot(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
     require(bool(rows), "No per-slot rows")
     with path.open("w", encoding="utf-8", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=list(rows[0].keys()))
+        writer = csv.DictWriter(
+            stream, fieldnames=list(rows[0].keys()), lineterminator="\n"
+        )
         writer.writeheader()
         writer.writerows(rows)
 
