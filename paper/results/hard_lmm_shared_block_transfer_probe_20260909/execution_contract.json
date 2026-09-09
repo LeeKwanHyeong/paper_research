@@ -1,0 +1,152 @@
+{
+  "authorization": {
+    "backbone_or_quantity_parameter_updates": false,
+    "candidate_implementation": false,
+    "gpu_execution": false,
+    "held_out_test": false,
+    "local_train_only_diagnostic": true,
+    "source_fold_time_head_calibration": true,
+    "validation_rows": false
+  },
+  "contract_id": "hard_lmm_shared_block_transfer_probe_v1",
+  "created_on": "2026-09-09",
+  "diagnostic_scope": {
+    "allowed_split": "train_only",
+    "batch_size": 128,
+    "checkpoint_selection_history": "B was selected by earliest validation raw quantity RMSE before this diagnostic; the fixed B checkpoint is a measurement baseline and no validation row is materialized here",
+    "cohort_reuse": "reuse the exact 4096 target identities and series-disjoint folds frozen before model outputs by hard_lmm_qkv_path_diagnostic_v1",
+    "device": "cpu",
+    "fold_directions": [
+      "fold0_to_fold1",
+      "fold1_to_fold0"
+    ],
+    "fold_role": "for each direction the normalized time head is fitted only on the source fold; the disjoint fold measures directional series-stability only because frozen B was previously trained on the entire train split, so this is not model generalization or held-out performance",
+    "maximum_targets_per_dataset": 4096,
+    "minimum_targets_per_fold": 2048,
+    "minimum_unique_series_per_fold": 30,
+    "model_or_quantity_parameter_updates": false,
+    "sample_seed": 20260908,
+    "target_sampling": "reuse exact hard_lmm_qkv_path_diagnostic_v1 sample_ids rows in their frozen order",
+    "torch_threads": 4,
+    "validation_rows_materialized": false
+  },
+  "evidence_reuse": {
+    "dataset_and_checkpoint_contract_path": "paper/contracts/hard_lmm_credit_assignment_probe_v1.json",
+    "dataset_and_checkpoint_contract_sha256": "f4818d1629123eca86871619e74daa7feba59da6b3991b7772e6b74e863dab5f",
+    "prior_value_update_analysis_path": "paper/results/hard_lmm_value_update_probe_20260909/analysis.json",
+    "prior_value_update_analysis_sha256": "ddbe17b211fb1b3938ff584d43418d62596abc37255dbd95caf9d9ea99c6f76a",
+    "prior_value_update_decision_path": "paper/results/hard_lmm_value_update_probe_20260909/evidence_decision.json",
+    "prior_value_update_decision_sha256": "439200bad8bc2bdc0476fba9ac28d8ea11fb6aaba67f2820bb53473ef4be6efc",
+    "qkv_path_result_path": "paper/results/hard_lmm_qkv_path_diagnostic_20260908/final_result.md",
+    "qkv_path_result_sha256": "f18ade40aee9fff3a5f49e2404608c2e693b8c139b3a00ec7136b84b24230280"
+  },
+  "frozen_reference": {
+    "backbone": "titantpp_hard_memory",
+    "checkpoint": "B_raw_rmse_seed42",
+    "quantity_loss": "direct_log1p_mse",
+    "quantity_selector": "earliest_validation_raw_quantity_rmse",
+    "seed": 42,
+    "source_revision": "f75243473adc25d622319dbca9bda7e076d8240f",
+    "state_policy": "encoder, static Hard-LMM bank and quantity head remain bitwise unchanged before and after the diagnostic"
+  },
+  "normalized_time_measurement": {
+    "calculation_dtype": "float64 from the affine maps through the observation likelihood",
+    "dataset_settings": {
+      "insta_market_basket": {
+        "censor_threshold": 30.0,
+        "observation_mode": "positive_integer_round_clamp_lognormal"
+      },
+      "intermittent_v2": {
+        "censor_threshold": null,
+        "observation_mode": "continuous_lognormal_density"
+      },
+      "yellow_trip_hourly": {
+        "censor_threshold": null,
+        "observation_mode": "positive_integer_round_clamp_lognormal"
+      }
+    },
+    "fit": {
+      "adamw_amsgrad": false,
+      "adamw_betas": [
+        0.9,
+        0.999
+      ],
+      "adamw_eps": 1e-08,
+      "cached_state_batch_size": 8192,
+      "epoch_semantics": "one full source-fold batch and one optimizer step per epoch because 2048 targets are below cached_state_batch_size",
+      "epochs": 100,
+      "gradient_clip": 1.0,
+      "learning_rate": 0.001,
+      "optimizer": "AdamW",
+      "scheduler": null,
+      "seed": 20260909,
+      "selection": "the state after exactly epoch 100; no early stopping or best-epoch selection",
+      "source": "only detached B fused states and durations from the direction's source train fold",
+      "source_fold_restart": "initialize a new head from source-fold statistics independently for each direction",
+      "weight_decay": 0.0
+    },
+    "head": {
+      "initialization": "zero feature weights; location bias is the source-fold mean of log(duration/source-fold median); scale bias is inverse-softplus(source-fold population standard deviation minus 0.001); every duration is positive and the population standard deviation must exceed 0.001",
+      "location": "mu(h)=W_mu h+b_mu",
+      "parameter_count": 130,
+      "scale": "sigma(h)=0.001+softplus(W_sigma h+b_sigma)",
+      "statistics": "time_scale is the exact source-fold median duration; mean and population standard deviation use log(duration/time_scale) from only the direction's source-fold targets"
+    },
+    "likelihood_numerics": "continuous density includes the original-unit -log(time_scale) Jacobian; integer and censored probability uses float64 log_ndtr and stable log probability differences",
+    "observation_likelihoods": {
+      "insta_market_basket": "positive-integer round-and-clamp log-normal PMF; code 30 is right-censored survival S(29.5)",
+      "intermittent_v2": "continuous log-normal density in original duration units",
+      "yellow_trip_hourly": "positive-integer round-and-clamp log-normal PMF: p(D=1)=F(1.5), p(D=d)=F(d+0.5)-F(d-0.5) for d>=2"
+    },
+    "validity_gate": "final source-fold proper Time NLL must be finite and strictly below epoch 0 by more than 1e-8; held-fold NLL and hidden gradient must be finite and the hidden-gradient norm must exceed 1e-12"
+  },
+  "probe": {
+    "body_metric": "raw quantity MAE for target quantity at or below the dataset train p95 frozen in the reused contract",
+    "boundaries": {
+      "H1": "full valid-sequence output after encoder.layers[0]",
+      "H2": "full valid-sequence output after encoder.layers[1] and immediately before Hard-LMM retrieval",
+      "fused": "full valid-sequence H2 plus the current static Hard-LMM top-4 value residual"
+    },
+    "candidate_eligible_boundaries": [
+      "H2",
+      "H1"
+    ],
+    "fused_boundary_role": "report-only overlap control because a post-LMM linear readout has already been evaluated",
+    "metrics": {
+      "body": "mean raw absolute quantity error over body targets",
+      "log": "mean squared error in log1p quantity space and the source quantity-training objective",
+      "raw": "mean raw quantity squared error; its descent direction is the raw RMSE descent direction",
+      "time": "mean negative normalized K=1 observation log likelihood"
+    },
+    "top4_locality_audit": "at H1/H2, autograd holds the current hard top-4 membership locally fixed; calculate the fourth-minus-fifth cosine-similarity margin on every valid H2 token, require no exact tie, and do not infer finite-step behavior",
+    "virtual_adapter": "at each boundary, z'=mask*(z+z A^T) with A=0 and no bias; its 64x64 gradient is calculated from the entire valid sequence without changing the forward pass",
+    "virtual_adapter_parameter_count": 4096
+  },
+  "prospective_gate": {
+    "body_no_conflict": "the separated quantity-arm dot with held-fold body-MAE gradient is at least negative epsilon, using the same scale-aware tolerance as the primary metrics",
+    "candidate_order_if_multiple_pass": [
+      "H2",
+      "H1"
+    ],
+    "controls": {
+      "aligned_equal_weight_shared": "one adapter updated by the unit-normalized sum of source log-quantity and normalized K=1 time gradients; this is a counterfactual aligned objective and not B's historical legacy joint update",
+      "aligned_norm_balanced_shared": "one adapter updated by the unit-normalized sum of the individually unit-normalized source log-quantity and normalized K=1 time gradients",
+      "permuted_separated": "63 cyclic shifts of the selected source arm over the adapter output rows; each preserves values and Frobenius norm and is a deterministic alignment-specificity control rather than an exchangeable statistical null"
+    },
+    "directional_interpretation": "for source update direction g and held-fold loss gradient h, dot(g,h)>0 means an infinitesimal update -g lowers the held-fold loss to first order",
+    "failure_action": "do_not_implement_or_gpu_train_the_zero_init_task_specific_linear_residual_branch",
+    "gradient_validity": "source log and time gradients, their equal-weight sum, their normalized sum, and every held metric gradient must be finite and have nonzero Frobenius norm; exact cancellation fails the boundary",
+    "mathematical_gate": "q=source log gradient, t=source normalized-time gradient, q_hat=q/||q||, t_hat=t/||t||, u_eq=(q+t)/||q+t||, u_bal=(q_hat+t_hat)/||q_hat+t_hat||, u_q=q_hat/sqrt(2), u_t=t_hat/sqrt(2). For held metric gradient h use u_q for log/raw/body and u_t for time. Let c=<u_arm,h>, s_eq=<u_eq,h>, s_bal=<u_bal,h>, and p_k=<roll_output_rows(u_arm,k),h> for k=1..63. Set epsilon=1e-12*max(1,|c|,|s_eq|,|s_bal|,|nearest_rank_higher_p95(p_k)|,||u_arm||*||h||). For log/raw/time require c>max(epsilon,s_eq+epsilon,s_bal+epsilon,nearest_rank_higher_p95(p_k)+epsilon).",
+    "metric_gate": "log, raw and time use mathematical_gate; body requires c >= -epsilon",
+    "multiple_comparison_policy": "every named check must pass; no aggregate average, dataset weighting or boundary selected after seeing results is allowed",
+    "null_percentile": "nearest-rank higher 95th percentile over all 63 non-identity cyclic shifts; it is a deterministic control threshold and is not a p-value or statistical significance test",
+    "relative_direction_tolerance": 1e-12,
+    "shared_vs_separated_norm": "shared adapters have unit Frobenius update norm; the concatenated quantity and time updates of the separated two-adapter upper bound have total Frobenius norm one",
+    "success_action": "freeze one implementation contract for two task-specific zero-init 64x64 linear residual adapters at the first candidate-eligible boundary; H1 or H2 then routes quantity and time through separate downstream forward paths",
+    "success_requirement": "one identical candidate-eligible boundary and rule passes both fold directions on all three datasets",
+    "upper_bound_semantics": "the separated result is an adapter-specific first-order two-branch oracle for the counterfactual normalized K=1 objective; it does not diagnose existing block parameters, B's historical legacy joint update, trained validation improvement or finite-step top-4 changes"
+  },
+  "research_context": "This diagnostic follows earlier QKV, readout, value-update and time-head analyses, so cyclic controls are engineering specificity checks within a sequential exploratory program and must not be presented as confirmatory statistical inference.",
+  "research_question": "At one shared B Backbone boundary, does separating the quantity and normalized-time objective updates provide a stable train-only first-order advantage that also preserves the raw-RMSE and body-MAE directions across all three datasets?",
+  "schema_version": 1
+}
