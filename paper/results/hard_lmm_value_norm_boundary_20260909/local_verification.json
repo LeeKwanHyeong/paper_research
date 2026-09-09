@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "verification_id": "hard_lmm_value_norm_local_contract_v1",
+  "date": "2026-09-09",
+  "status": "passed",
+  "scope": {
+    "repository": "paper_research",
+    "branch": "codex/hard-lmm-causal-qkv",
+    "base_commit": "54d3106",
+    "local_only": true,
+    "cuda_executed": false,
+    "training_executed": false,
+    "validation_predictions_generated": false,
+    "held_out_test_evaluated": false
+  },
+  "runtime": {
+    "python": "3.12.10",
+    "torch": "2.7.1",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "python_executable": "/usr/local/bin/python3"
+  },
+  "checks": [
+    {
+      "name": "candidate_runner_factory_memory_and_role_contracts",
+      "command": "/usr/local/bin/python3 -m pytest -q simple_lab_test/search/tests/test_hard_lmm_value_norm.py simple_lab_test/search/tests/test_hard_lmm_value_norm_runner.py simple_lab_test/search/tests/test_hard_lmm_backbone_candidate_integration.py simple_lab_test/search/tests/test_count_aware_titan_memory_backbones.py simple_lab_test/search/tests/test_count_aware_model_role_contract.py",
+      "exit_code": 0,
+      "result": "72 passed, 1 skipped"
+    },
+    {
+      "name": "checkpoint_and_preceding_candidate_audit_regressions",
+      "command": "/usr/local/bin/python3 -m pytest -q simple_lab_test/search/tests/test_count_aware_checkpoint_selection.py simple_lab_test/search/tests/test_hard_lmm_causal_qkv_audit.py simple_lab_test/search/tests/test_hard_lmm_bounded_qk_audit.py simple_lab_test/search/tests/test_hard_lmm_level_history_qkv_audit.py",
+      "exit_code": 0,
+      "result": "28 passed"
+    },
+    {
+      "name": "checkpoint_only_bank_geometry",
+      "command": "env MPLCONFIGDIR=/tmp/paper_research_value_norm_mpl XDG_CACHE_HOME=/tmp/paper_research_value_norm_cache /usr/local/bin/python3 -s paper/scripts/audit_hard_lmm_value_norm_boundary.py",
+      "exit_code": 0,
+      "result": "3 datasets, implementation gate passed"
+    },
+    {
+      "name": "python_compile",
+      "exit_code": 0,
+      "result": "passed"
+    },
+    {
+      "name": "contract_json_parse",
+      "exit_code": 0,
+      "result": "passed"
+    },
+    {
+      "name": "git_diff_check",
+      "exit_code": 0,
+      "result": "passed"
+    }
+  ],
+  "artifact_sha256": {
+    "models/TPPs/CountAwareTitanValueNorm.py": "1de961d90d771737ce7e5d1e81bfa7e1487b7540a90ee2af1bfc2109e946844a",
+    "models/TPPs/CountAwareFactory.py": "657a3b87f7d39990eec61939cf80717dff7c09c2e47b44e978c3c74492d02127",
+    "paper/scripts/count_aware_tpp_backbone/constants.py": "570f0d30045e365f7360bb8a91db1c93770fe01ca08821e203c501ba2826d708",
+    "paper/scripts/run_count_aware_tpp_backbone_control.py": "9e1113d64016adb0052fd95a97354db9d10bb35a77a612641fd2cc59adfc06e3",
+    "paper/scripts/audit_hard_lmm_value_norm_boundary.py": "eafb725049cb7c25435f94d3942d64790ea9ca47f848728f828c9bb80a384a32",
+    "paper/contracts/hard_lmm_value_norm_consistent_v1.json": "1c6c3328d711fb2dd9ffa9844dab1dbd696e9110fd3e3f73dd08b4d0e3a8b94b",
+    "paper/contracts/hard_lmm_value_norm_consistent_v1.md": "7b70e94007f058aad157bc8c824fbc7ec46e6b5e9e5e37141b1d8a8138d9b8bf",
+    ".agents/results/architecture/architecture-recommendation-hard-lmm-value-norm-boundary.md": "d7405dc66100c5fda4f90079aaa84b655739504f35d3f45865a045264210fef7",
+    "paper/results/hard_lmm_value_norm_boundary_20260909/analysis.json": "69d9a53b0d7d48f41796286dbbac51530090c855a352a2c70c9ab8f4c695b55e",
+    "paper/results/hard_lmm_value_norm_boundary_20260909/README.md": "6ba3ffa89810c1369104cd85b86fac1bbef277313967c924b53d43bf3081561d",
+    "simple_lab_test/search/tests/test_hard_lmm_value_norm.py": "8c8e22b922f2210820d4cdedc90a00654f781d5b4185977f7d710a80e02ea4a8",
+    "simple_lab_test/search/tests/test_hard_lmm_value_norm_runner.py": "507a48a1707c598523936722d0405d936d04363b999f33c1413881d184a54296",
+    "simple_lab_test/search/tests/test_count_aware_titan_memory_backbones.py": "ac8d949d66f9cb1e29ab7fdc2dc152aa15b99abd170c7c6f2fb47ddef85f35d6"
+  },
+  "decision": {
+    "local_contract_passed": true,
+    "gpu_gate_open_for_separate_approval": true,
+    "performance_improvement_known": false,
+    "automatic_gpu_launch": false,
+    "automatic_seed_expansion": false,
+    "held_out_lock_active": true
+  }
+}

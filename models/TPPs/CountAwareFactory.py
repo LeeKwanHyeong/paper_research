@@ -68,6 +68,12 @@ from models.TPPs.CountAwareTitanLevelHistoryQKV import (
     level_history_qkv_metadata,
     validate_level_history_qkv_checkpoint,
 )
+from models.TPPs.CountAwareTitanValueNorm import (
+    CountAwareTitanValueNormTPP,
+    VALUE_NORM_BACKBONE,
+    validate_value_norm_checkpoint,
+    value_norm_metadata,
+)
 from models.Titan.common.key_value_memory import (
     KEY_VALUE_BACKBONE,
     KEY_VALUE_CONTRACT,
@@ -185,6 +191,8 @@ def validate_key_value_checkpoint(payload: dict[str, Any], expected_backbone: st
 
 def validate_checkpoint_route(payload: dict[str, Any], expected_backbone: str) -> None:
     """Validate explicit candidate identity; compatible tensor shapes are not enough."""
+    if validate_value_norm_checkpoint(payload, expected_backbone):
+        return
     if validate_level_history_qkv_checkpoint(payload, expected_backbone):
         return
     if validate_bounded_qk_checkpoint(payload, expected_backbone):
@@ -322,6 +330,10 @@ def build_count_aware_model(
         "time_sigma_floor": time_sigma_floor,
     }
     intermediate_candidates = {
+        VALUE_NORM_BACKBONE: (
+            CountAwareTitanValueNormTPP,
+            value_norm_metadata,
+        ),
         LEVEL_HISTORY_QKV_BACKBONE: (
             CountAwareTitanLevelHistoryQKVTPP,
             level_history_qkv_metadata,

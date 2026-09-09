@@ -1,0 +1,252 @@
+{
+  "schema_version": 1,
+  "contract_id": "hard_lmm_value_norm_consistent_v1",
+  "created_on": "2026-09-09",
+  "status": "frozen_before_gpu_execution",
+  "repository": "paper_research",
+  "branch": "codex/hard-lmm-causal-qkv",
+  "research_question": "Does removing prototype row-norm as an implicit value weight improve the shared Hard-LMM backbone while preserving B as an exact nested state?",
+  "candidate": {
+    "name": "VNC-Hard-LMM",
+    "backbone": "titantpp_hard_memory_value_norm",
+    "model_role": "hard_lmm_value_norm_candidate",
+    "routing_contract_id": "hard_lmm_value_norm_consistent_v1",
+    "base_backbone": "titantpp",
+    "base_contract_id": "B0",
+    "additional_parameter_count": 1,
+    "new_parameter_state_keys": [
+      "lmm.alpha_raw"
+    ],
+    "formula": {
+      "bank_reference_norm": "s=mean_i(||m_i||_2), i=1..64",
+      "equalized_selected_value": "m_tilde_j=where(||m_j||_2>1e-8, s*m_j/max(||m_j||_2,1e-8), 0)",
+      "base_residual": "r_B=mean_{j in cosine_top4(h)}(m_j)",
+      "normalized_residual": "r_N=mean_{j in cosine_top4(h)}(m_tilde_j)",
+      "combination": "r=r_B+tanh(alpha_raw)*(r_N-r_B)",
+      "shared_output_state": "z=h+r"
+    },
+    "epsilon": 1e-8,
+    "alpha_raw_initial_value": 0.0,
+    "alpha_range": "open_interval_negative_one_to_one",
+    "alpha_semantics": "signed_value_norm_contrast_not_convex_interpolation",
+    "bank_reference_norm_gradient": "detached",
+    "selected_row_norm_gradient": "enabled_above_epsilon",
+    "zero_or_tiny_row_policy": "zero_normalized_output_and_zero_normalization_gradient",
+    "norm_accumulator_dtype": {
+      "float16": "float32",
+      "bfloat16": "float32",
+      "float32": "float32",
+      "float64": "float64"
+    },
+    "fixed_retrieval": {
+      "bank_shape": [
+        1,
+        64,
+        64
+      ],
+      "keys_and_values_tied": true,
+      "similarity": "cosine",
+      "topk": 4,
+      "base_aggregation": "arithmetic_mean",
+      "search_indices_changed_for_fixed_state": false,
+      "search_similarities_changed_for_fixed_state": false,
+      "second_search": false,
+      "online_writes": false
+    }
+  },
+  "overlap_decision": {
+    "scalar_post_retrieval_gate": "rejected_exact_readout_shrinkage_duplicate",
+    "online_write_update_confidence": "deferred_overlap_with_B1_B2_and_surprise_routes",
+    "aggregate_residual_normalization": "deferred_weak_mechanism_separation_from_shrinkage",
+    "similarity_weighted_static": "same_top4_aggregation_boundary_but_distinct_cosine_score_weight_rule",
+    "selected_candidate": "prototype_row_norm_equalization_with_signed_identity_blend",
+    "claim_limit": "distinct_rule_at_an_adjacent_existing_boundary_not_a_new_online_memory_system"
+  },
+  "unchanged_model_contract": {
+    "hidden_dim": 64,
+    "encoder_layers": 2,
+    "attention_heads": 4,
+    "feed_forward_dim": 128,
+    "persistent_memory_size": 16,
+    "quantity_variant": "count_only_log_regression",
+    "quantity_loss": "unweighted_mse_on_log1p_quantity",
+    "lambda_quantity": 1.0,
+    "lambda_tail": 0.0,
+    "time_head": "legacy_clamped_rmtpp",
+    "shared_time_and_quantity_state": true,
+    "dataset_specific_model_branch": false
+  },
+  "training_contract": {
+    "seed": 42,
+    "optimizer": "AdamW",
+    "learning_rate": 0.001,
+    "batch_size": 128,
+    "gradient_clip": 1.0,
+    "maximum_epochs": 300,
+    "minimum_epochs": 40,
+    "patience": 40,
+    "checkpoint_monitor": "validation_raw_quantity_rmse",
+    "checkpoint_rule": "earliest_strict_finite_minimum",
+    "early_stopping_monitor": "validation_raw_quantity_rmse",
+    "initialization": "fresh_same_seed_B_common_state_and_rng_plus_zero_alpha",
+    "resume_from_trained_B": false,
+    "change_after_results": false
+  },
+  "local_contract_gates": [
+    "dedicated_backbone_role_metadata_and_checkpoint_route",
+    "same_seed_common_state_and_rng_exactly_equal_to_B",
+    "alpha_zero_output_loss_and_common_gradient_bitwise_equal_to_B",
+    "alpha_zero_gate_gradient_finite_and_nonzero_on_noncollinear_case",
+    "strict_B_state_load_requires_exact_keys_shapes_dtypes_and_finite_values",
+    "failed_B_state_load_is_atomic",
+    "top4_indices_and_cosine_similarities_exactly_equal_to_B",
+    "opened_gate_changes_residual_direction_shared_state_and_head_outputs",
+    "unselected_bank_rows_receive_zero_normalization_branch_gradient",
+    "norm_at_or_below_epsilon_has_zero_normalized_output_and_gradient",
+    "prefix_causality_padding_target_mask_and_batch_isolation",
+    "finite_supported_dtype_output_loss_and_gradients",
+    "strict_model_optimizer_selector_and_rng_resume",
+    "additional_parameter_count_equals_one"
+  ],
+  "cost_contract": {
+    "additional_asymptotic_work": "O(B*L*k*D+M*D)",
+    "encoder_attention_complexity": "O(L^2)",
+    "sequence_lengths": [
+      8,
+      64,
+      256
+    ],
+    "batch_size": 128,
+    "warmup_steps": 5,
+    "measured_steps": 15,
+    "repeats": 3,
+    "candidate_over_B_median_training_step_ratio_max": 1.25,
+    "candidate_over_B_peak_allocated_memory_ratio_max": 1.1,
+    "amp": false
+  },
+  "evidence_bindings": {
+    "baseline_registry": {
+      "path": "paper/contracts/raw_rmse_baseline_alignment_seed42_v1.json",
+      "sha256": "1a3bc9aca89c8d26c9e5d244a7be4d4bb7efc302fd20416428b4e59d7ec856a9"
+    },
+    "data_and_metric_registry": {
+      "path": "paper/contracts/hard_lmm_bounded_qk_screening_v1.json",
+      "sha256": "09464ee99907b7a3f0c3e35637c5bd36e5bb105111f1898d07843a6ca3b72997"
+    },
+    "normalized_duration_contract": {
+      "path": "paper/contracts/backbone_normalized_duration_v1.json",
+      "sha256": "ada204083f1389671b4df6285a130079ee76c45132a0f8cdfa65319a2ae447af"
+    },
+    "readout_factorial_result": {
+      "path": "paper/results/hard_lmm_readout_factorial_20260903/README.md",
+      "sha256": "18bd37099d171616160a0c38850a40517ef31ef51a02119558ea56938511c789"
+    },
+    "smooth_shrinkage_result": {
+      "path": "paper/results/hard_lmm_smooth_shrinkage_20260903/README.md",
+      "sha256": "439b3972b4c352c9cf7473d8699c891ef5d604a8e44c76322a0d932a88c88a73"
+    },
+    "weighted_static_result": {
+      "path": "paper/results/hard_lmm_weighted_static_20260903/README.md",
+      "sha256": "dc14e726c45408fd91383e064e03eb5e58516af4d63055b157e0f9da4ce87644"
+    }
+  },
+  "datasets": [
+    {
+      "dataset": "intermittent_frozen_5000",
+      "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+      "split_manifest_sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04",
+      "train_target_count": 393824,
+      "validation_target_count": 86285,
+      "validation_target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+      "validation_target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385",
+      "B_checkpoint_file_sha256": "63d38ee4401c208dcfa24206682edaca56e2d2a5ca1037b09decdc2ffa567c08",
+      "B_checkpoint_state_sha256": "4b984d415d83a479fdacb49b12d964afa668adad136511590a54293df763c0d0"
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+      "split_manifest_sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85",
+      "train_target_count": 38393,
+      "validation_target_count": 8268,
+      "validation_target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+      "validation_target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd",
+      "B_checkpoint_file_sha256": "46b456816dbc3c36e4f9c115c05b480fc030a8c2004646d179416d528bd897d5",
+      "B_checkpoint_state_sha256": "eddc8b4a11b233606bf74508f0ef721e05e55bbcb047d18edab4aa61f2f43c41"
+    },
+    {
+      "dataset": "insta_market_basket",
+      "data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+      "split_manifest_sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d",
+      "train_target_count": 1991192,
+      "validation_target_count": 503733,
+      "validation_target_identity_sha256": "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8",
+      "validation_target_quantity_sha256": "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184",
+      "B_checkpoint_file_sha256": "e594f8df0dcd66249c3724063f44eee3de213bc83a780ca81fdf39a094bfed07",
+      "B_checkpoint_state_sha256": "a74e1f3055b03db5ac85adf2fdb63711890ea9d06449965e3ca749aefccc2f02"
+    }
+  ],
+  "phases": {
+    "local": {
+      "performance_data_access": false,
+      "required_before_gpu": true
+    },
+    "cuda_and_full_data_e1": {
+      "host_role": "5090",
+      "epochs": 1,
+      "minimum_epochs": 1,
+      "patience": 40,
+      "datasets_in_order": [
+        "insta_market_basket",
+        "yellow_trip_hourly",
+        "intermittent_frozen_5000"
+      ],
+      "performance_gate": false,
+      "requires_separate_user_approval": true
+    },
+    "instacart_seed42_screening": {
+      "host_role": "5090",
+      "epochs": 300,
+      "minimum_epochs": 40,
+      "patience": 40,
+      "prerequisite": "all_cuda_and_e1_contract_gates_pass",
+      "requires_separate_user_approval": true
+    }
+  },
+  "instacart_seed42_gate": {
+    "raw_rmse_ratio_strictly_less_than": 1.0,
+    "overall_mae_ratio_max": 1.01,
+    "body_mae_ratio_max": 1.02,
+    "gt_p99_mae_ratio_max": 1.02,
+    "legacy_clamped_time_loss_delta_max": 0.01,
+    "normalized_proper_time_nll_delta_vs_aligned_B_max": 0.01,
+    "normalized_time_fit_runs_only_after_quantity_gate": true,
+    "failure_action": "stop_without_taxi_intermittent_or_additional_seeds"
+  },
+  "common_followup_gate": {
+    "datasets": [
+      "insta_market_basket",
+      "yellow_trip_hourly",
+      "intermittent_frozen_5000"
+    ],
+    "raw_rmse_strict_improvement_required_on_every_dataset": true,
+    "same_quantity_and_time_guardrails": true,
+    "automatic_launch": false,
+    "additional_seeds_authorized": false,
+    "held_out_test_authorized": false
+  },
+  "held_out_lock": {
+    "selection_and_reporting_split": "validation",
+    "train_targets_split": "train",
+    "test_target_loader_allowed": false,
+    "test_metrics_allowed": false,
+    "test_artifacts_allowed": false,
+    "held_out_decision_use_allowed": false
+  },
+  "execution": {
+    "local_implementation_and_tests_authorized": true,
+    "gpu_execution_authorized_by_this_contract": false,
+    "overwrite": false,
+    "automatic_retry": false,
+    "automatic_additional_seed_launch": false
+  }
+}
