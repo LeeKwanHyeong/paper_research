@@ -1,0 +1,224 @@
+{
+  "schema": "hard_lmm_level_history_qkv_component_evidence_manifest_v1",
+  "status": "complete",
+  "created_at_utc": "2026-09-09T00:28:14.012371+00:00",
+  "scope": {
+    "dataset": "insta_market_basket",
+    "split": "train",
+    "target_count": 1991192,
+    "validation_targets_evaluated": false,
+    "held_out_test_evaluated": false,
+    "training_performed": false
+  },
+  "decision": {
+    "conditional_path_flags": {
+      "k_only": {
+        "absent_pair_control": "qv",
+        "consistent_full_leaveout_long_history_benefit_contribution": false,
+        "consistent_full_leaveout_short_history_harm_contribution": true,
+        "consistent_singleton_long_history_benefit": true,
+        "consistent_singleton_negative_level_shift": true,
+        "consistent_singleton_short_history_harm": false
+      },
+      "q_only": {
+        "absent_pair_control": "kv",
+        "consistent_full_leaveout_long_history_benefit_contribution": true,
+        "consistent_full_leaveout_short_history_harm_contribution": false,
+        "consistent_singleton_long_history_benefit": true,
+        "consistent_singleton_negative_level_shift": true,
+        "consistent_singleton_short_history_harm": false
+      },
+      "v_only": {
+        "absent_pair_control": "qk",
+        "consistent_full_leaveout_long_history_benefit_contribution": true,
+        "consistent_full_leaveout_short_history_harm_contribution": false,
+        "consistent_singleton_long_history_benefit": true,
+        "consistent_singleton_negative_level_shift": true,
+        "consistent_singleton_short_history_harm": false
+      }
+    },
+    "continue_or_stop_LPHC_family": "stop_LPHC_QKV_family",
+    "eligible_single_paths": [],
+    "full_pattern_fold_gates": {
+      "0": {
+        "conditions": {
+          "full_qkv_history_2_3_mse_worse_than_B": true,
+          "full_qkv_history_8_15_mse_better_than_B": true
+        },
+        "delta_history_2_3_mse_vs_B": 0.46878130231614534,
+        "delta_history_8_15_mse_vs_B": -0.27379496974115725,
+        "passed": true
+      },
+      "1": {
+        "conditions": {
+          "full_qkv_history_2_3_mse_worse_than_B": true,
+          "full_qkv_history_8_15_mse_better_than_B": true
+        },
+        "delta_history_2_3_mse_vs_B": 0.48269295795315514,
+        "delta_history_8_15_mse_vs_B": -0.3087786940217008,
+        "passed": true
+      }
+    },
+    "full_pattern_replicated": true,
+    "selected_path_or_null": null,
+    "singleton_candidate_gates": {
+      "k_only": {
+        "folds": {
+          "0": {
+            "passed": false,
+            "vs_B": {
+              "history_2_3_mse_not_worse": false,
+              "history_8_15_mse_improves": false,
+              "overall_centered_mse_not_worse": false,
+              "overall_mae_not_worse": false,
+              "overall_raw_mse_not_worse": false
+            },
+            "vs_residual_off": {
+              "history_2_3_mse_not_worse": true,
+              "history_8_15_mse_improves": true,
+              "level_shift_bounded": false,
+              "overall_centered_mse_not_worse": true,
+              "overall_mae_not_worse": true,
+              "overall_raw_mse_not_worse": true
+            }
+          },
+          "1": {
+            "passed": false,
+            "vs_B": {
+              "history_2_3_mse_not_worse": false,
+              "history_8_15_mse_improves": false,
+              "overall_centered_mse_not_worse": false,
+              "overall_mae_not_worse": false,
+              "overall_raw_mse_not_worse": false
+            },
+            "vs_residual_off": {
+              "history_2_3_mse_not_worse": true,
+              "history_8_15_mse_improves": true,
+              "level_shift_bounded": false,
+              "overall_centered_mse_not_worse": true,
+              "overall_mae_not_worse": true,
+              "overall_raw_mse_not_worse": true
+            }
+          }
+        },
+        "passed": false
+      },
+      "q_only": {
+        "folds": {
+          "0": {
+            "passed": false,
+            "vs_B": {
+              "history_2_3_mse_not_worse": false,
+              "history_8_15_mse_improves": true,
+              "overall_centered_mse_not_worse": false,
+              "overall_mae_not_worse": false,
+              "overall_raw_mse_not_worse": false
+            },
+            "vs_residual_off": {
+              "history_2_3_mse_not_worse": true,
+              "history_8_15_mse_improves": true,
+              "level_shift_bounded": true,
+              "overall_centered_mse_not_worse": true,
+              "overall_mae_not_worse": true,
+              "overall_raw_mse_not_worse": true
+            }
+          },
+          "1": {
+            "passed": false,
+            "vs_B": {
+              "history_2_3_mse_not_worse": false,
+              "history_8_15_mse_improves": true,
+              "overall_centered_mse_not_worse": false,
+              "overall_mae_not_worse": false,
+              "overall_raw_mse_not_worse": false
+            },
+            "vs_residual_off": {
+              "history_2_3_mse_not_worse": true,
+              "history_8_15_mse_improves": true,
+              "level_shift_bounded": true,
+              "overall_centered_mse_not_worse": true,
+              "overall_mae_not_worse": true,
+              "overall_raw_mse_not_worse": true
+            }
+          }
+        },
+        "passed": false
+      },
+      "v_only": {
+        "folds": {
+          "0": {
+            "passed": false,
+            "vs_B": {
+              "history_2_3_mse_not_worse": false,
+              "history_8_15_mse_improves": false,
+              "overall_centered_mse_not_worse": false,
+              "overall_mae_not_worse": false,
+              "overall_raw_mse_not_worse": false
+            },
+            "vs_residual_off": {
+              "history_2_3_mse_not_worse": true,
+              "history_8_15_mse_improves": true,
+              "level_shift_bounded": false,
+              "overall_centered_mse_not_worse": true,
+              "overall_mae_not_worse": true,
+              "overall_raw_mse_not_worse": true
+            }
+          },
+          "1": {
+            "passed": false,
+            "vs_B": {
+              "history_2_3_mse_not_worse": false,
+              "history_8_15_mse_improves": false,
+              "overall_centered_mse_not_worse": false,
+              "overall_mae_not_worse": false,
+              "overall_raw_mse_not_worse": false
+            },
+            "vs_residual_off": {
+              "history_2_3_mse_not_worse": true,
+              "history_8_15_mse_improves": true,
+              "level_shift_bounded": false,
+              "overall_centered_mse_not_worse": true,
+              "overall_mae_not_worse": true,
+              "overall_raw_mse_not_worse": true
+            }
+          }
+        },
+        "passed": false
+      }
+    }
+  },
+  "provenance": {
+    "contract_commit": "74123e57a38373a80636109a964bb80d696e28be",
+    "runner_commit": "3f5bff7cb1a71c49dfb213a9b6bf9eaf2f2b0f43",
+    "frozen_model_revision": "667f9810d3c183b0217d0d511f8031a7d2b7451f"
+  },
+  "large_untracked_prediction_cache": {
+    "path": "search_artifacts/hard_lmm_level_history_qkv_component_diagnostic_20260909/component_train_predictions.npz",
+    "sha256": "05952b2a651587989bc5da3c12ccb838158f0e877168475e4ed0247fb26608b9",
+    "git_tracked": false
+  },
+  "result_files": {
+    "analysis.json": "8fcd71c433a20d33ce831f4238c0c6d710f51d0fc0e7fd2a5e6aaeb95aef9fe7",
+    "run_audit.json": "d8a4c235c12c14af3daaf4cb9a1faa84b0fff5c78482ee40f3aa813c5dd7337b",
+    "independent_result_audit.json": "cc215fcebb626df8bfe8a7c7a6b6bb3c2729cabd2d5ff9ceb9628853df9a44da",
+    "fold_metrics.csv": "feded1ebff3d0880d92da71c41216a35a9c0b23e3adf55159cf5f499030769d1",
+    "history_metrics.csv": "4c75be173447483713f887378ef3870a28680bf2e0fa05b141f0b30fe8df326e",
+    "component_metrics.sql": "e4ced4fb99a25f4ace304a7804967b2d1e72d23772b80195637f2dc0d1eb5532",
+    "component_metrics.csv": "9e349ac23c42312ecee0424c789a6da3632b2aa08e1be6a1812430a85b874f18",
+    "component_metrics.json": "a8d45da3312379de5448027cc3a529bf7de22cad0f58a3c6bcbb19341e234b3f",
+    "artifact.json": "1b071f3a2b9e155dc5856926e084b470fe91ad6cb96bcc40d1c88b0b3503d8f3",
+    "report.html": "cbe7daba108b34cabededaa6adef982d9185421118d76a4263cd5bb803e1e9a1",
+    "report_delivery_receipt.json": "ad29633f2568dffcdad83009126ceb8d15d6a72a0943c7b4807c5ff89330852a",
+    "report_qa.json": "bd1459ad2a5677e2821da05a9dd810a9cbac32af1f02cb5bbfbc6303b442cb47"
+  },
+  "verification": {
+    "focused_and_relevant_tests": "56 passed",
+    "portable_report_validation": "passed",
+    "portable_report_package": "passed",
+    "portable_report_verification": "structural_only"
+  },
+  "known_limitations": [
+    "The component cache omits target_index and context_end, so duplicate quantity/history rows within one series cannot be cryptographically distinguished from the cache alone.",
+    "No installed Chromium headless-shell was available for enhanced-reader viewport and source-dialog QA."
+  ]
+}

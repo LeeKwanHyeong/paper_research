@@ -1,0 +1,633 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "LPHC Q/K/V 구성요소 진단: 단일 경로 후보 없음",
+    "description": "Instacart train 내부 frozen intervention으로 LPHC Q/K/V 경로를 분리하고 후속 Backbone 후보의 필요조건을 판정한 기술 보고서입니다.",
+    "generatedAt": "2026-09-09T00:16:49.234749+00:00",
+    "cards": [],
+    "charts": [
+      {
+        "id": "component_delta",
+        "title": "Q/K/V 경로별 수량 MSE 변화",
+        "subtitle": "Instacart train의 series-disjoint 두 fold; Frozen B 대비 음수는 개선, 양수는 악화",
+        "type": "bar",
+        "dataset": "component_deltas",
+        "sourceId": "component_metrics_sql",
+        "valueFormat": "number",
+        "encodings": {
+          "x": {
+            "field": "variant_fold",
+            "type": "nominal",
+            "label": "경로 · fold"
+          },
+          "y": {
+            "field": "delta_mse_vs_B",
+            "type": "quantitative",
+            "label": "Frozen B 대비 ΔMSE"
+          },
+          "color": {
+            "field": "history_slice",
+            "type": "nominal",
+            "label": "이력 길이"
+          },
+          "tooltip": [
+            {
+              "field": "variant",
+              "type": "nominal",
+              "label": "경로"
+            },
+            {
+              "field": "fold",
+              "type": "nominal",
+              "label": "Fold"
+            },
+            {
+              "field": "target_count",
+              "type": "quantitative",
+              "label": "Target 수"
+            },
+            {
+              "field": "mse",
+              "type": "quantitative",
+              "label": "MSE"
+            },
+            {
+              "field": "mae",
+              "type": "quantitative",
+              "label": "MAE"
+            }
+          ]
+        },
+        "settings": {
+          "groupMode": "grouped",
+          "showValues": true,
+          "sort": "none",
+          "categoryLabelPolicy": "rotate"
+        },
+        "labels": {
+          "values": "all"
+        },
+        "legend": {
+          "position": "bottom",
+          "title": "이력 길이"
+        },
+        "palette": {
+          "kind": "categorical"
+        },
+        "referenceLines": [
+          {
+            "axis": "y",
+            "value": 0,
+            "label": "Frozen B",
+            "color": "neutral",
+            "lineStyle": "solid"
+          }
+        ],
+        "layout": "full"
+      }
+    ],
+    "tables": [
+      {
+        "id": "component_exact",
+        "title": "Fold·이력 구간별 정확한 오차",
+        "subtitle": "Frozen B 대비 ΔMSE와 각 frozen 경로의 원시 오차",
+        "dataset": "component_deltas",
+        "sourceId": "component_metrics_sql",
+        "defaultSort": {
+          "field": "variant_fold",
+          "direction": "asc"
+        },
+        "columns": [
+          {
+            "field": "variant_fold",
+            "label": "경로 · fold",
+            "type": "text"
+          },
+          {
+            "field": "history_slice",
+            "label": "이력 길이",
+            "type": "text"
+          },
+          {
+            "field": "target_count",
+            "label": "Target 수",
+            "format": "number"
+          },
+          {
+            "field": "delta_mse_vs_B",
+            "label": "ΔMSE vs B",
+            "format": "number",
+            "semantic": "movement"
+          },
+          {
+            "field": "mse",
+            "label": "MSE",
+            "format": "number"
+          },
+          {
+            "field": "mae",
+            "label": "MAE",
+            "format": "number"
+          },
+          {
+            "field": "centered_mse",
+            "label": "Centered MSE",
+            "format": "number"
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "id": "component_metrics_sql",
+        "label": "LPHC 구성요소 fold·history 지표 추출",
+        "path": "paper/results/hard_lmm_level_history_qkv_component_diagnostic_20260909/component_metrics.sql",
+        "query": {
+          "engine": "sqlite",
+          "language": "sql",
+          "sql": "SELECT\n  model || ' · F' || substr(scope, 6, 1) AS variant_fold,\n  model AS variant,\n  CAST(substr(scope, 6, 1) AS INTEGER) AS fold,\n  CASE history WHEN '2-3' THEN 'H2–3' WHEN '8-15' THEN 'H8–15' END AS history_slice,\n  CASE history WHEN '2-3' THEN 0 ELSE 1 END AS history_order,\n  CAST(count AS INTEGER) AS target_count,\n  CAST(mae AS REAL) AS mae,\n  CAST(mse AS REAL) AS mse,\n  CAST(rmse AS REAL) AS rmse,\n  CAST(bias AS REAL) AS bias,\n  CAST(centered_mse AS REAL) AS centered_mse,\n  CAST(delta_mse_vs_B AS REAL) AS delta_mse_vs_B,\n  CAST(delta_mse_vs_residual_off AS REAL) AS delta_mse_vs_residual_off\nFROM history_metrics\nWHERE model IN ('residual_off', 'q_only', 'k_only', 'v_only', 'full_qkv')\n  AND scope IN ('fold_0', 'fold_1')\n  AND history IN ('2-3', '8-15')\nORDER BY\n  CASE model\n    WHEN 'residual_off' THEN 0\n    WHEN 'q_only' THEN 1\n    WHEN 'k_only' THEN 2\n    WHEN 'v_only' THEN 3\n    ELSE 4\n  END,\n  fold,\n  history_order;",
+          "description": "검토된 history_metrics.csv에서 두 fold의 H2–3 및 H8–15 비교 행을 추출합니다.",
+          "tables_used": [
+            "history_metrics"
+          ],
+          "filters": {
+            "models": [
+              "residual_off",
+              "q_only",
+              "k_only",
+              "v_only",
+              "full_qkv"
+            ],
+            "folds": [
+              0,
+              1
+            ],
+            "history_slices": [
+              "2-3",
+              "8-15"
+            ]
+          },
+          "executed_at": "2026-09-09T00:16:49.234749+00:00"
+        }
+      },
+      {
+        "id": "component_analysis",
+        "label": "사전 계약에 따른 구성요소 분석 결과",
+        "path": "paper/results/hard_lmm_level_history_qkv_component_diagnostic_20260909/analysis.json"
+      },
+      {
+        "id": "component_contract",
+        "label": "사전 동결된 LPHC 구성요소 진단 계약",
+        "path": "paper/contracts/hard_lmm_level_history_qkv_component_diagnostic_v1.json"
+      },
+      {
+        "id": "component_run_audit",
+        "label": "Frozen 구성요소 추론 실행 감사",
+        "path": "paper/results/hard_lmm_level_history_qkv_component_diagnostic_20260909/run_audit.json"
+      },
+      {
+        "id": "component_independent_audit",
+        "label": "독립 provenance·행 정렬·판정 재현 감사",
+        "path": "paper/results/hard_lmm_level_history_qkv_component_diagnostic_20260909/independent_result_audit.json"
+      }
+    ],
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "body": "# LPHC Q/K/V 구성요소 진단: 단일 경로 후보 없음"
+      },
+      {
+        "id": "summary",
+        "type": "markdown",
+        "sourceId": "component_analysis",
+        "body": "## 결론: LPHC-QKV 계열을 여기서 중단합니다\n\nFULL-QKV는 두 fold 모두에서 짧은 이력(H2–3)의 MSE를 높이고 긴 이력(H8–15)의 MSE를 낮추는 원래 패턴을 재현했습니다. 그러나 Q·K·V 어느 단일 경로도 사전에 고정한 전체 오차·짧은 이력·긴 이력 기준을 Frozen B와 residual-off 양쪽에 대해 모두 만족하지 못했습니다. 적격 경로는 0개이며 `selected_path`는 없습니다. 따라서 이 계열의 Taxi·Intermittent 평가와 추가 seed는 실행하지 않습니다."
+      },
+      {
+        "id": "finding",
+        "type": "markdown",
+        "sourceId": "component_analysis",
+        "body": "## 긴 이력의 이득은 확인됐지만 짧은 이력 손실과 분리되지 않았습니다\n\nFULL-QKV의 Frozen B 대비 H2–3 ΔMSE는 fold 0에서 **+0.4688**, fold 1에서 **+0.4827**이었고, H8–15 ΔMSE는 각각 **−0.2738**, **−0.3088**이었습니다. Q-only도 H8–15에서는 **−0.1743 / −0.2103**으로 개선했지만 H2–3에서 **+0.5243 / +0.5269**로 악화했고, pooled raw RMSE도 **5.6582**로 B의 **5.6376**보다 높았습니다. K-only와 V-only는 H8–15조차 B를 이기지 못했습니다. 이는 유용한 긴 이력 신호가 한 경로에 독립적으로 담긴 것이 아니라 Q/K/V의 결합과 공유 가중치에 분산되어 있음을 시사합니다."
+      },
+      {
+        "id": "chart_note",
+        "type": "markdown",
+        "sourceId": "component_metrics_sql",
+        "body": "## 두 fold가 같은 방향을 보여 우연한 한쪽 분할로 설명되지 않습니다\n\n아래 막대는 같은 경로와 이력 구간에서 Frozen B 대비 MSE 차이를 보여 줍니다. 0 아래는 개선입니다. Q-only와 FULL-QKV의 긴 이력 막대만 두 fold 모두 0 아래이지만, 같은 경로의 짧은 이력 막대가 0 위에 남습니다. 따라서 긴 이력 이득만 보존하는 단일 Q/K/V 축소 후보는 없습니다."
+      },
+      {
+        "id": "chart",
+        "type": "chart",
+        "chartId": "component_delta"
+      },
+      {
+        "id": "table_note",
+        "type": "markdown",
+        "body": "## 정확한 값은 경로 선택 실패의 크기를 보여 줍니다\n\n표는 시각화에 사용한 20개 행을 그대로 제시합니다. pair interaction control(QK·QV·KV)의 전체 값은 함께 보존된 `history_metrics.csv`와 `analysis.json`에서 확인할 수 있습니다."
+      },
+      {
+        "id": "table",
+        "type": "table",
+        "tableId": "component_exact"
+      },
+      {
+        "id": "definitions",
+        "type": "markdown",
+        "sourceId": "component_contract",
+        "body": "## 평가 범위와 판정 기준\n\n대상은 Instacart **train target 1,991,192개**이며 실제 series ID를 해시해 서로 겹치지 않는 두 fold로 나눴습니다. H2–3과 H8–15는 예측 시점 이전에 관측된 사건 수가 각각 2–3개, 8–15개인 표본입니다. MSE와 MAE는 원시 수량 단위에서 계산했고 centered MSE는 각 경로의 평균 오차를 제거한 뒤의 제곱오차입니다. 후보가 되려면 Q-only, K-only, V-only 중 하나가 두 fold 모두에서 B와 residual-off 대비 전체 MSE·MAE·centered MSE를 악화시키지 않고, H2–3을 보존하면서 H8–15를 개선해야 했습니다."
+      },
+      {
+        "id": "method",
+        "type": "markdown",
+        "sourceId": "component_run_audit",
+        "body": "## Frozen 개입으로 Q·K·V의 조건부 기여만 분리했습니다\n\n선택된 LPHC checkpoint에서 비활성화할 Q/K/V kernel만 정확히 0으로 만들고 나머지 state는 그대로 유지했습니다. 각 8개 경로를 fresh strict restore로 생성했으며 학습·optimizer·checkpoint 재선택·calibration은 수행하지 않았습니다. 첫 batch에서 미래 target과 padding 값을 바꿔도 예측이 같았고, 모든 모델 state와 gradient가 추론 전후 동일했습니다."
+      },
+      {
+        "id": "robustness",
+        "type": "markdown",
+        "sourceId": "component_independent_audit",
+        "body": "## 독립 감사가 코드·데이터·fold·판정을 다시 연결했습니다\n\n후속 감사는 실행 runner를 commit `3f5bff7`의 SHA-256과 대조하고, frozen source에서 로드된 **60개 프로젝트 Python module**을 배포 manifest와 모두 비교했습니다. B cache의 target index, series index, context 위치를 canonical loader와 정확히 맞췄고, 기존 committed fold 함수로 fold 배열을 재계산했습니다. 마지막으로 8개 prediction에서 metrics·gate·decision과 두 CSV를 다시 생성해 byte 단위로 일치함을 확인했습니다."
+      },
+      {
+        "id": "limitations",
+        "type": "markdown",
+        "body": "## 이 결과는 train 내부의 구조 선택 증거입니다\n\n두 fold는 이미 전체 train으로 학습되고 validation으로 선택된 checkpoint의 분석 분할이며 out-of-fold 성능 추정이 아닙니다. Residual-off와 마스킹 경로도 LPHC에서 함께 적응된 공유 가중치를 유지하므로 독립 학습 모델이나 고유한 인과 효과로 해석할 수 없습니다. 또한 component cache에는 target index와 context 위치가 직접 저장되지 않아, 같은 series 안에서 수량과 이력 길이가 같은 중복 행 사이의 순서를 캐시만으로 암호학적으로 구분하는 데 한계가 있습니다. Canonical loader 정렬, B 행 식별자, pinned runner의 순차 추론, 전체 metric 재현을 함께 사용해 이 위험을 줄였습니다. Validation과 held-out test는 이번 진단에 사용하지 않았습니다."
+      },
+      {
+        "id": "next",
+        "type": "markdown",
+        "body": "## 다음 Backbone 탐색은 결합 위치를 바꿔야 합니다\n\nLPHC의 추가 seed나 다른 데이터셋 확장은 중단합니다. 다음 후보는 Q/K/V 자체를 직접 이동시키기보다 Frozen B 경로를 정확한 기준점으로 남기고, retrieval 출력에 0 초기화된 bounded gate를 두어 긴 이력 신호의 크기만 제한하는 별도 integration family로 좁히는 것이 타당합니다. 먼저 train-only frozen 진단으로 이 gate가 H8–15의 centered-error 이득을 유지하면서 H2–3의 level shift를 제거할 수 있는지 확인한 뒤에만 구현과 GPU 학습으로 넘어가야 합니다."
+      },
+      {
+        "id": "questions",
+        "type": "markdown",
+        "body": "## 남은 연구 질문\n\n- Post-retrieval bounded gate가 B의 짧은 이력 출력을 초기 상태와 학습 후에도 보존할 수 있는가?\n- 긴 이력 이득이 수량 수준 보정과 독립적인 centered-error 감소로 남는가?\n- 같은 공통 gate 계약이 Instacart에서 통과한 뒤 Taxi와 Intermittent에서도 데이터셋별 분기 없이 유지되는가?"
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-09-09T00:16:49.234749+00:00",
+    "status": "ready",
+    "datasets": {
+      "component_deltas": [
+        {
+          "variant_fold": "residual_off · F0",
+          "variant": "residual_off",
+          "fold": 0,
+          "history_slice": "H2–3",
+          "history_order": 0,
+          "target_count": 248115,
+          "mae": 4.006782915439263,
+          "mse": 33.579182202546406,
+          "rmse": 5.7947547146144505,
+          "bias": -0.6265940643050176,
+          "centered_mse": 33.18656208112413,
+          "delta_mse_vs_B": 1.1152173764638889,
+          "delta_mse_vs_residual_off": 0.0
+        },
+        {
+          "variant_fold": "residual_off · F0",
+          "variant": "residual_off",
+          "fold": 0,
+          "history_slice": "H8–15",
+          "history_order": 1,
+          "target_count": 240360,
+          "mae": 3.8994715634524515,
+          "mse": 32.0302021846619,
+          "rmse": 5.659523141101369,
+          "bias": -0.07358440655572063,
+          "centered_mse": 32.02478751977374,
+          "delta_mse_vs_B": 0.592716011605873,
+          "delta_mse_vs_residual_off": 0.0
+        },
+        {
+          "variant_fold": "residual_off · F1",
+          "variant": "residual_off",
+          "fold": 1,
+          "history_slice": "H2–3",
+          "history_order": 0,
+          "target_count": 248685,
+          "mae": 4.0128802471560485,
+          "mse": 33.60896786576471,
+          "rmse": 5.797324198780392,
+          "bias": -0.6183567248670251,
+          "centered_mse": 33.22660282657644,
+          "delta_mse_vs_B": 1.1250802917292901,
+          "delta_mse_vs_residual_off": 0.0
+        },
+        {
+          "variant_fold": "residual_off · F1",
+          "variant": "residual_off",
+          "fold": 1,
+          "history_slice": "H8–15",
+          "history_order": 1,
+          "target_count": 238997,
+          "mae": 3.893006153566414,
+          "mse": 31.657457713146474,
+          "rmse": 5.62649604222259,
+          "bias": -0.07089709384061588,
+          "centered_mse": 31.652431315231425,
+          "delta_mse_vs_B": 0.5762306367310117,
+          "delta_mse_vs_residual_off": 0.0
+        },
+        {
+          "variant_fold": "q_only · F0",
+          "variant": "q_only",
+          "fold": 0,
+          "history_slice": "H2–3",
+          "history_order": 0,
+          "target_count": 248115,
+          "mae": 3.9764152563774,
+          "mse": 32.98830523378629,
+          "rmse": 5.743544657594845,
+          "bias": -0.5972477739206996,
+          "centered_mse": 32.63160033033306,
+          "delta_mse_vs_B": 0.5243404077037752,
+          "delta_mse_vs_residual_off": -0.5908769687601136
+        },
+        {
+          "variant_fold": "q_only · F0",
+          "variant": "q_only",
+          "fold": 0,
+          "history_slice": "H8–15",
+          "history_order": 1,
+          "target_count": 240360,
+          "mae": 3.847994487910327,
+          "mse": 31.263155763051103,
+          "rmse": 5.591346507152915,
+          "bias": -0.138019563093779,
+          "centered_mse": 31.24410636325451,
+          "delta_mse_vs_B": -0.17433041000492722,
+          "delta_mse_vs_residual_off": -0.7670464216108002
+        },
+        {
+          "variant_fold": "q_only · F1",
+          "variant": "q_only",
+          "fold": 1,
+          "history_slice": "H2–3",
+          "history_order": 0,
+          "target_count": 248685,
+          "mae": 3.981777453795008,
+          "mse": 33.01080488848982,
+          "rmse": 5.745503014400899,
+          "bias": -0.5897139956978609,
+          "centered_mse": 32.66304229176789,
+          "delta_mse_vs_B": 0.5269173144544013,
+          "delta_mse_vs_residual_off": -0.5981629772748889
+        },
+        {
+          "variant_fold": "q_only · F1",
+          "variant": "q_only",
+          "fold": 1,
+          "history_slice": "H8–15",
+          "history_order": 1,
+          "target_count": 238997,
+          "mae": 3.841749285920086,
+          "mse": 30.870881461943064,
+          "rmse": 5.5561570767881525,
+          "bias": -0.1343429770563019,
+          "centered_mse": 30.852833426458716,
+          "delta_mse_vs_B": -0.21034561447239852,
+          "delta_mse_vs_residual_off": -0.7865762512034102
+        },
+        {
+          "variant_fold": "k_only · F0",
+          "variant": "k_only",
+          "fold": 0,
+          "history_slice": "H2–3",
+          "history_order": 0,
+          "target_count": 248115,
+          "mae": 3.9889198955946545,
+          "mse": 33.45768498256348,
+          "rmse": 5.784261835581398,
+          "bias": -0.7068061357214929,
+          "centered_mse": 32.958110069069924,
+          "delta_mse_vs_B": 0.9937201564809612,
+          "delta_mse_vs_residual_off": -0.12149721998292762
+        },
+        {
+          "variant_fold": "k_only · F0",
+          "variant": "k_only",
+          "fold": 0,
+          "history_slice": "H8–15",
+          "history_order": 1,
+          "target_count": 240360,
+          "mae": 3.861781096008598,
+          "mse": 31.88304669036872,
+          "rmse": 5.646507477225964,
+          "bias": -0.3227426962157934,
+          "centered_mse": 31.77888384240808,
+          "delta_mse_vs_B": 0.4455605173126891,
+          "delta_mse_vs_residual_off": -0.14715549429318386
+        },
+        {
+          "variant_fold": "k_only · F1",
+          "variant": "k_only",
+          "fold": 1,
+          "history_slice": "H2–3",
+          "history_order": 0,
+          "target_count": 248685,
+          "mae": 3.995485135802703,
+          "mse": 33.49530485956535,
+          "rmse": 5.787512838825099,
+          "bias": -0.6984943760302543,
+          "centered_mse": 33.00741046621946,
+          "delta_mse_vs_B": 1.0114172855299302,
+          "delta_mse_vs_residual_off": -0.11366300619935998
+        },
+        {
+          "variant_fold": "k_only · F1",
+          "variant": "k_only",
+          "fold": 1,
+          "history_slice": "H8–15",
+          "history_order": 1,
+          "target_count": 238997,
+          "mae": 3.857213800079465,
+          "mse": 31.5222892517498,
+          "rmse": 5.614471413387889,
+          "bias": -0.31930886547720594,
+          "centered_mse": 31.42033110017746,
+          "delta_mse_vs_B": 0.4410621753343378,
+          "delta_mse_vs_residual_off": -0.13516846139667393
+        },
+        {
+          "variant_fold": "v_only · F0",
+          "variant": "v_only",
+          "fold": 0,
+          "history_slice": "H2–3",
+          "history_order": 0,
+          "target_count": 248115,
+          "mae": 3.988232206279704,
+          "mse": 33.34437035798893,
+          "rmse": 5.774458447160992,
+          "bias": -0.6832669527891063,
+          "centered_mse": 32.877516629215215,
+          "delta_mse_vs_B": 0.8804055319064119,
+          "delta_mse_vs_residual_off": -0.23481184455747695
+        },
+        {
+          "variant_fold": "v_only · F0",
+          "variant": "v_only",
+          "fold": 0,
+          "history_slice": "H8–15",
+          "history_order": 1,
+          "target_count": 240360,
+          "mae": 3.858572434551269,
+          "mse": 31.571494974311985,
+          "rmse": 5.618851748739416,
+          "bias": -0.2165933918245701,
+          "centered_mse": 31.52458227692992,
+          "delta_mse_vs_B": 0.1340088012559555,
+          "delta_mse_vs_residual_off": -0.45870721034991746
+        },
+        {
+          "variant_fold": "v_only · F1",
+          "variant": "v_only",
+          "fold": 1,
+          "history_slice": "H2–3",
+          "history_order": 0,
+          "target_count": 248685,
+          "mae": 3.9941228707573906,
+          "mse": 33.380154987654024,
+          "rmse": 5.777556143184938,
+          "bias": -0.6752075360058458,
+          "centered_mse": 32.92424977097494,
+          "delta_mse_vs_B": 0.8962674136186024,
+          "delta_mse_vs_residual_off": -0.22881287811068773
+        },
+        {
+          "variant_fold": "v_only · F1",
+          "variant": "v_only",
+          "fold": 1,
+          "history_slice": "H8–15",
+          "history_order": 1,
+          "target_count": 238997,
+          "mae": 3.8526358432797547,
+          "mse": 31.199123220844903,
+          "rmse": 5.585617532631902,
+          "bias": -0.21260198561923382,
+          "centered_mse": 31.153923616555666,
+          "delta_mse_vs_B": 0.11789614442944085,
+          "delta_mse_vs_residual_off": -0.45833449230157086
+        },
+        {
+          "variant_fold": "full_qkv · F0",
+          "variant": "full_qkv",
+          "fold": 0,
+          "history_slice": "H2–3",
+          "history_order": 0,
+          "target_count": 248115,
+          "mae": 3.9629649617681912,
+          "mse": 32.93274612839866,
+          "rmse": 5.738705962880365,
+          "bias": -0.6949078469404903,
+          "centered_mse": 32.449849212659196,
+          "delta_mse_vs_B": 0.46878130231614534,
+          "delta_mse_vs_residual_off": -0.6464360741477435
+        },
+        {
+          "variant_fold": "full_qkv · F0",
+          "variant": "full_qkv",
+          "fold": 0,
+          "history_slice": "H8–15",
+          "history_order": 1,
+          "target_count": 240360,
+          "mae": 3.8199479138995986,
+          "mse": 31.163691203314873,
+          "rmse": 5.5824449126986355,
+          "bias": -0.35768020987054394,
+          "centered_mse": 31.035756070781837,
+          "delta_mse_vs_B": -0.27379496974115725,
+          "delta_mse_vs_residual_off": -0.8665109813470302
+        },
+        {
+          "variant_fold": "full_qkv · F1",
+          "variant": "full_qkv",
+          "fold": 1,
+          "history_slice": "H2–3",
+          "history_order": 0,
+          "target_count": 248685,
+          "mae": 3.968365554592229,
+          "mse": 32.966580531988576,
+          "rmse": 5.741653118396179,
+          "bias": -0.6878846083110748,
+          "centered_mse": 32.49339529763729,
+          "delta_mse_vs_B": 0.48269295795315514,
+          "delta_mse_vs_residual_off": -0.642387333776135
+        },
+        {
+          "variant_fold": "full_qkv · F1",
+          "variant": "full_qkv",
+          "fold": 1,
+          "history_slice": "H8–15",
+          "history_order": 1,
+          "target_count": 238997,
+          "mae": 3.8143621835052133,
+          "mse": 30.772448382393762,
+          "rmse": 5.547291986401452,
+          "bias": -0.3530633778661007,
+          "centered_mse": 30.647794633603542,
+          "delta_mse_vs_B": -0.3087786940217008,
+          "delta_mse_vs_residual_off": -0.8850093307527125
+        }
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "component_metrics_sql",
+      "label": "LPHC 구성요소 fold·history 지표 추출",
+      "path": "paper/results/hard_lmm_level_history_qkv_component_diagnostic_20260909/component_metrics.sql",
+      "query": {
+        "engine": "sqlite",
+        "language": "sql",
+        "sql": "SELECT\n  model || ' · F' || substr(scope, 6, 1) AS variant_fold,\n  model AS variant,\n  CAST(substr(scope, 6, 1) AS INTEGER) AS fold,\n  CASE history WHEN '2-3' THEN 'H2–3' WHEN '8-15' THEN 'H8–15' END AS history_slice,\n  CASE history WHEN '2-3' THEN 0 ELSE 1 END AS history_order,\n  CAST(count AS INTEGER) AS target_count,\n  CAST(mae AS REAL) AS mae,\n  CAST(mse AS REAL) AS mse,\n  CAST(rmse AS REAL) AS rmse,\n  CAST(bias AS REAL) AS bias,\n  CAST(centered_mse AS REAL) AS centered_mse,\n  CAST(delta_mse_vs_B AS REAL) AS delta_mse_vs_B,\n  CAST(delta_mse_vs_residual_off AS REAL) AS delta_mse_vs_residual_off\nFROM history_metrics\nWHERE model IN ('residual_off', 'q_only', 'k_only', 'v_only', 'full_qkv')\n  AND scope IN ('fold_0', 'fold_1')\n  AND history IN ('2-3', '8-15')\nORDER BY\n  CASE model\n    WHEN 'residual_off' THEN 0\n    WHEN 'q_only' THEN 1\n    WHEN 'k_only' THEN 2\n    WHEN 'v_only' THEN 3\n    ELSE 4\n  END,\n  fold,\n  history_order;",
+        "description": "검토된 history_metrics.csv에서 두 fold의 H2–3 및 H8–15 비교 행을 추출합니다.",
+        "tables_used": [
+          "history_metrics"
+        ],
+        "filters": {
+          "models": [
+            "residual_off",
+            "q_only",
+            "k_only",
+            "v_only",
+            "full_qkv"
+          ],
+          "folds": [
+            0,
+            1
+          ],
+          "history_slices": [
+            "2-3",
+            "8-15"
+          ]
+        },
+        "executed_at": "2026-09-09T00:16:49.234749+00:00"
+      }
+    },
+    {
+      "id": "component_analysis",
+      "label": "사전 계약에 따른 구성요소 분석 결과",
+      "path": "paper/results/hard_lmm_level_history_qkv_component_diagnostic_20260909/analysis.json"
+    },
+    {
+      "id": "component_contract",
+      "label": "사전 동결된 LPHC 구성요소 진단 계약",
+      "path": "paper/contracts/hard_lmm_level_history_qkv_component_diagnostic_v1.json"
+    },
+    {
+      "id": "component_run_audit",
+      "label": "Frozen 구성요소 추론 실행 감사",
+      "path": "paper/results/hard_lmm_level_history_qkv_component_diagnostic_20260909/run_audit.json"
+    },
+    {
+      "id": "component_independent_audit",
+      "label": "독립 provenance·행 정렬·판정 재현 감사",
+      "path": "paper/results/hard_lmm_level_history_qkv_component_diagnostic_20260909/independent_result_audit.json"
+    }
+  ]
+}
