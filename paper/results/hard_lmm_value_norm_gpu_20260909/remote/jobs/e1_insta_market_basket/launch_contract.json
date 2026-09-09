@@ -1,0 +1,229 @@
+{
+  "backbones": [
+    "titantpp_hard_memory_value_norm"
+  ],
+  "batch_size": 128,
+  "completed_run_count": 1,
+  "data_path": "/home/leekwanhyeong/workspace/paper_research/sample_data/insta_market_basket/instacart_marked_target_with_split.parquet",
+  "data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+  "dataset": "insta_market_basket",
+  "dataset_time_unit": "day",
+  "early_stopping": {
+    "comparison": "earliest_strict_finite_minimum",
+    "formula_by_variant": {
+      "count_only_log_mse_tail_head_only": "time_nll + lambda_log_qty * (log1p_quantity_mse + lambda_tail * tail_raw_huber)",
+      "count_only_log_mse_tail_shared": "time_nll + lambda_log_qty * (log1p_quantity_mse + lambda_tail * tail_raw_huber)",
+      "count_only_log_regression": "raw_quantity_rmse",
+      "count_only_lognormal_k1": "time_nll + lambda_log_qty * (gaussian_nll_on_log1p_quantity + lambda_location_huber * location_huber)",
+      "count_only_quantile_adaptive_log_regression": "raw_quantity_rmse"
+    },
+    "min_epochs": 1,
+    "monitor": "validation_raw_quantity_rmse",
+    "patience": 40,
+    "restore": "best_validation_raw_quantity_rmse"
+  },
+  "epochs": 1,
+  "evaluation_scope": "validation_only",
+  "execution_host": "RTX5090-server",
+  "execution_role": "hard_lmm_backbone_5090_titantpp_hard_memory_value_norm_insta_market_basket_1e",
+  "expected_run_count": 1,
+  "experiment": "mark_free_count_aware_quantity_screening",
+  "grad_clip": 1.0,
+  "held_out_test_evaluated": false,
+  "hidden_dim": 64,
+  "history_length_contract": {
+    "boundaries": [
+      64,
+      128
+    ],
+    "definition": "number of observed events before the validation target",
+    "strata": [
+      {
+        "stratum": "history_le_64",
+        "stratum_label": "History <= 64",
+        "stratum_order": 0
+      },
+      {
+        "stratum": "history_65_128",
+        "stratum_label": "History 65-128",
+        "stratum_order": 1
+      },
+      {
+        "stratum": "history_gt_128",
+        "stratum_label": "History > 128",
+        "stratum_order": 2
+      }
+    ]
+  },
+  "interfaces": {
+    "count_only_log_regression": {
+      "fitted_on": "train",
+      "history_features": [
+        "log1p_delta_t",
+        "log1p_raw_quantity"
+      ],
+      "mode": "mark_free_count_aware_log_regression",
+      "point_prediction": "distribution_median_expm1_location",
+      "point_prediction_shared_by_mae_and_rmse": true,
+      "product_type_used": false,
+      "quantity_inverse_transform": "expm1",
+      "quantity_loss": "mse_on_log1p_quantity",
+      "quantity_mark_used": false,
+      "quantity_output_activation": "softplus",
+      "quantity_residual_used": false,
+      "target": "log1p_raw_quantity",
+      "target_quantity_masked_from_history": true,
+      "time_head": {
+        "mode": "legacy_clamped_rmtpp",
+        "statistics_source_split": "train",
+        "time_head_lr_multiplier": 1.0,
+        "time_initial_intercept": 0.0,
+        "time_initial_location": null,
+        "time_initial_scale": null,
+        "time_intercept_limit": 300.0,
+        "time_intercept_transform": "legacy_upper_clamp",
+        "time_scale": 3.0,
+        "time_sigma_floor": 0.001,
+        "time_w_max": 3.3333333333333335,
+        "time_wd_safety_limit": 40.0,
+        "train_time_statistics": {
+          "statistics_source_split": "train",
+          "target_count": 1991192,
+          "target_dt_max": 30.0,
+          "target_dt_mean": 10.66411928131491,
+          "target_dt_min": 1.0,
+          "target_dt_p50": 7.0,
+          "target_dt_p99": 30.0,
+          "target_log_scaled_mean": 0.07012359239272001,
+          "target_log_scaled_std": 0.8853193725635781,
+          "time_initial_intercept": -0.42097461917816575,
+          "time_scale": 7.0,
+          "time_w_max": 9.333333333333334,
+          "wd_safety_limit": 40.0
+        }
+      },
+      "train_target_mean": 2.185918026533729,
+      "train_target_std": 0.6878440815807482
+    }
+  },
+  "lambda_log_qty": 1.0,
+  "lambda_tail": 0.0,
+  "lookback_weeks": 52,
+  "lr": 0.001,
+  "max_seq_len": 64,
+  "max_series": null,
+  "model_role": "hard_lmm_value_norm_candidate",
+  "partial_smoke": false,
+  "quantile_adaptive_contract": null,
+  "quantile_adaptive_strength": 0.0,
+  "quantity_contract": {
+    "boundaries": [
+      8.0,
+      20.0,
+      25.0,
+      35.0
+    ],
+    "quantiles": [
+      0.5,
+      0.9,
+      0.95,
+      0.99
+    ],
+    "strata": [
+      {
+        "stratum": "le_p50",
+        "stratum_label": "<= 8",
+        "stratum_order": 0
+      },
+      {
+        "stratum": "p50_p90",
+        "stratum_label": "(8, 20]",
+        "stratum_order": 1
+      },
+      {
+        "stratum": "p90_p95",
+        "stratum_label": "(20, 25]",
+        "stratum_order": 2
+      },
+      {
+        "stratum": "p95_p99",
+        "stratum_label": "(25, 35]",
+        "stratum_order": 3
+      },
+      {
+        "stratum": "gt_p99",
+        "stratum_label": "> 35",
+        "stratum_order": 4
+      }
+    ]
+  },
+  "quantity_variants": [
+    "count_only_log_regression"
+  ],
+  "schema_version": 1,
+  "seeds": [
+    42
+  ],
+  "source_revision": "956603f16ca3540e2012a461a494ea1ec905102d",
+  "split_manifest_path": "/home/leekwanhyeong/workspace/paper_research/sample_data/insta_market_basket/instacart_marked_target_split_manifest.json",
+  "split_manifest_sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d",
+  "split_rows": {
+    "train": 2197401,
+    "validation": 503733
+  },
+  "status": "complete",
+  "tail_contract": {
+    "clip_cap": 187.0,
+    "huber_delta": 1.0,
+    "normalization_scale": 46.0,
+    "statistics_source_split": "train",
+    "threshold": 46.0
+  },
+  "time_head": {
+    "density_unit": "legacy_delta_t_clamped_objective",
+    "mode": "legacy_clamped_rmtpp",
+    "statistics_source_split": "train",
+    "time_head_lr_multiplier": 1.0,
+    "time_initial_intercept": 0.0,
+    "time_initial_location": null,
+    "time_initial_scale": null,
+    "time_intercept_limit": 300.0,
+    "time_intercept_transform": "legacy_upper_clamp",
+    "time_scale": 3.0,
+    "time_sigma_floor": 0.001,
+    "time_w_max": 3.3333333333333335,
+    "time_wd_safety_limit": 40.0,
+    "train_time_statistics": {
+      "statistics_source_split": "train",
+      "target_count": 1991192,
+      "target_dt_max": 30.0,
+      "target_dt_mean": 10.66411928131491,
+      "target_dt_min": 1.0,
+      "target_dt_p50": 7.0,
+      "target_dt_p99": 30.0,
+      "target_log_scaled_mean": 0.07012359239272001,
+      "target_log_scaled_std": 0.8853193725635781,
+      "time_initial_intercept": -0.42097461917816575,
+      "time_scale": 7.0,
+      "time_w_max": 9.333333333333334,
+      "wd_safety_limit": 40.0
+    },
+    "wd_clamp": 10.0
+  },
+  "titans_memory_gradient_clip": null,
+  "validation_target_population": {
+    "identity_fields": [
+      "oper_part_no",
+      "target_position",
+      "target_seq"
+    ],
+    "loader": "RMTPPWeekLookbackDataset",
+    "lookback_weeks": 52,
+    "max_seq_len": 64,
+    "schema_version": 1,
+    "split": "validation",
+    "target_count": 503733,
+    "target_identity_sha256": "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8",
+    "target_quantity_sha256": "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184"
+  }
+}

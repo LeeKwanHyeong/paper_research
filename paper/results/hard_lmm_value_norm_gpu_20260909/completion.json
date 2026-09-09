@@ -1,0 +1,152 @@
+{
+  "candidate": "VNC-Hard-LMM",
+  "contract_id": "hard_lmm_value_norm_consistent_v1",
+  "cost_gate": {
+    "aggregation": "ratio_of_medians_over_three_independent_paired_repeats",
+    "lengths": [
+      {
+        "candidate_over_B_peak_allocated": 1.0060427996916088,
+        "candidate_over_B_step": 1.1030267295625755,
+        "models": {
+          "titantpp": {
+            "peak_allocated_bytes": 49142784,
+            "step_seconds": 0.003237235127016902
+          },
+          "titantpp_hard_memory_value_norm": {
+            "peak_allocated_bytes": 49439744,
+            "step_seconds": 0.0035707568749785423
+          }
+        },
+        "peak_passed": true,
+        "sequence_length": 8,
+        "step_passed": true
+      },
+      {
+        "candidate_over_B_peak_allocated": 1.0076869426966546,
+        "candidate_over_B_step": 1.131148862207351,
+        "models": {
+          "titantpp": {
+            "peak_allocated_bytes": 273086464,
+            "step_seconds": 0.003290467895567417
+          },
+          "titantpp_hard_memory_value_norm": {
+            "peak_allocated_bytes": 275185664,
+            "step_seconds": 0.0037220090162009
+          }
+        },
+        "peak_passed": true,
+        "sequence_length": 64,
+        "step_passed": true
+      },
+      {
+        "candidate_over_B_peak_allocated": 1.0049441524536649,
+        "candidate_over_B_step": 1.1370104175817062,
+        "models": {
+          "titantpp": {
+            "peak_allocated_bytes": 1485002752,
+            "step_seconds": 0.009422554867342114
+          },
+          "titantpp_hard_memory_value_norm": {
+            "peak_allocated_bytes": 1492344832,
+            "step_seconds": 0.010713543044403195
+          }
+        },
+        "peak_passed": true,
+        "sequence_length": 256,
+        "step_passed": true
+      }
+    ],
+    "peak_limit": 1.1,
+    "status": "passed",
+    "step_limit": 1.25
+  },
+  "cuda_qualification": {
+    "cuda_cases": [
+      "test_same_seed_common_state_rng_and_zero_gate_output_identity[16-cuda]",
+      "test_same_seed_common_state_rng_and_zero_gate_output_identity[64-cuda]",
+      "test_extreme_finite_values_and_checkpoint_optimizer_roundtrip[cuda]",
+      "test_compiled_surprise_scan_matches_cuda_eager_gradients"
+    ],
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "status": "passed",
+    "test_count": 71,
+    "xml_sha256": "8c323646f7f38671f4f21dbd100308d57012a1ce2bf7f0089589434b5d8b4a33"
+  },
+  "e1_audit_version": 4,
+  "e1_jobs": {
+    "insta_market_basket": {
+      "checkpoint_route_verified": true,
+      "cuda_peak_memory_allocated_bytes": 376108032,
+      "elapsed_seconds": 167.65219855308533,
+      "learned_alpha_raw": 0.12737052142620087,
+      "optimizer_rng_loader_restore_verified": true,
+      "rng_next_draw_determinism_verified": true,
+      "rng_state_exact_restore_verified": true,
+      "status": "passed",
+      "strict_model_restore_verified": true,
+      "train_gradient_clip_fraction": 0.7857556084077907,
+      "train_loader_next_order_determinism_verified": true,
+      "train_pre_clip_grad_norm_mean": 1.797556457283059,
+      "train_target_count": 1991192,
+      "validation_target_count": 503733,
+      "validation_target_identity_sha256": "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8",
+      "validation_target_quantity_sha256": "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184"
+    },
+    "intermittent_frozen_5000": {
+      "checkpoint_route_verified": true,
+      "cuda_peak_memory_allocated_bytes": 1898155520,
+      "elapsed_seconds": 87.6299729347229,
+      "learned_alpha_raw": -0.004615145269781351,
+      "optimizer_rng_loader_restore_verified": true,
+      "rng_next_draw_determinism_verified": true,
+      "rng_state_exact_restore_verified": true,
+      "status": "passed",
+      "strict_model_restore_verified": true,
+      "train_gradient_clip_fraction": 0.24894377640558987,
+      "train_loader_next_order_determinism_verified": true,
+      "train_pre_clip_grad_norm_mean": 1.231888506521565,
+      "train_target_count": 393824,
+      "validation_target_count": 86285,
+      "validation_target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+      "validation_target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385"
+    },
+    "yellow_trip_hourly": {
+      "checkpoint_route_verified": true,
+      "cuda_peak_memory_allocated_bytes": 1898155520,
+      "elapsed_seconds": 10.256062984466553,
+      "learned_alpha_raw": 0.014946306124329567,
+      "optimizer_rng_loader_restore_verified": true,
+      "rng_next_draw_determinism_verified": true,
+      "rng_state_exact_restore_verified": true,
+      "status": "passed",
+      "strict_model_restore_verified": true,
+      "train_gradient_clip_fraction": 0.9666666666666667,
+      "train_loader_next_order_determinism_verified": true,
+      "train_pre_clip_grad_norm_mean": 4.602325343290965,
+      "train_target_count": 38393,
+      "validation_target_count": 8268,
+      "validation_target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+      "validation_target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd"
+    }
+  },
+  "held_out_test_evaluated": false,
+  "performance_adoption_decision_made": false,
+  "runtime": {
+    "cuda": "13.0",
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "host_role": "5090",
+    "polars": "1.39.3",
+    "python": "3.12.13",
+    "torch": "2.11.0+cu130"
+  },
+  "schema_version": 1,
+  "scope": "5090_cuda_cost_and_three_full_data_e1_only",
+  "seed42_screening_launched": false,
+  "source_archive_sha256": "effaa12f18b7e6ef126218c8b2e6cbeee91a8a1c2159df677955ccc8e6ee404d",
+  "source_file_count": 2130,
+  "source_manifest_sha256": "177286e0e405e21885214ee0c6acb0fada158465a1715743f399facfd5a9af9f",
+  "source_revision": "956603f16ca3540e2012a461a494ea1ec905102d",
+  "status": "passed"
+}

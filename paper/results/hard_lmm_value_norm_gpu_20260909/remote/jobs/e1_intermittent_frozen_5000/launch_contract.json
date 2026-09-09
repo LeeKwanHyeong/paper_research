@@ -1,0 +1,229 @@
+{
+  "backbones": [
+    "titantpp_hard_memory_value_norm"
+  ],
+  "batch_size": 128,
+  "completed_run_count": 1,
+  "data_path": "/home/leekwanhyeong/workspace/paper_research/sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+  "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+  "dataset": "intermittent_frozen_5000",
+  "dataset_time_unit": "week",
+  "early_stopping": {
+    "comparison": "earliest_strict_finite_minimum",
+    "formula_by_variant": {
+      "count_only_log_mse_tail_head_only": "time_nll + lambda_log_qty * (log1p_quantity_mse + lambda_tail * tail_raw_huber)",
+      "count_only_log_mse_tail_shared": "time_nll + lambda_log_qty * (log1p_quantity_mse + lambda_tail * tail_raw_huber)",
+      "count_only_log_regression": "raw_quantity_rmse",
+      "count_only_lognormal_k1": "time_nll + lambda_log_qty * (gaussian_nll_on_log1p_quantity + lambda_location_huber * location_huber)",
+      "count_only_quantile_adaptive_log_regression": "raw_quantity_rmse"
+    },
+    "min_epochs": 1,
+    "monitor": "validation_raw_quantity_rmse",
+    "patience": 40,
+    "restore": "best_validation_raw_quantity_rmse"
+  },
+  "epochs": 1,
+  "evaluation_scope": "validation_only",
+  "execution_host": "RTX5090-server",
+  "execution_role": "hard_lmm_backbone_5090_titantpp_hard_memory_value_norm_intermittent_frozen_5000_1e",
+  "expected_run_count": 1,
+  "experiment": "mark_free_count_aware_quantity_screening",
+  "grad_clip": 1.0,
+  "held_out_test_evaluated": false,
+  "hidden_dim": 64,
+  "history_length_contract": {
+    "boundaries": [
+      64,
+      128
+    ],
+    "definition": "number of observed events before the validation target",
+    "strata": [
+      {
+        "stratum": "history_le_64",
+        "stratum_label": "History <= 64",
+        "stratum_order": 0
+      },
+      {
+        "stratum": "history_65_128",
+        "stratum_label": "History 65-128",
+        "stratum_order": 1
+      },
+      {
+        "stratum": "history_gt_128",
+        "stratum_label": "History > 128",
+        "stratum_order": 2
+      }
+    ]
+  },
+  "interfaces": {
+    "count_only_log_regression": {
+      "fitted_on": "train",
+      "history_features": [
+        "log1p_delta_t",
+        "log1p_raw_quantity"
+      ],
+      "mode": "mark_free_count_aware_log_regression",
+      "point_prediction": "distribution_median_expm1_location",
+      "point_prediction_shared_by_mae_and_rmse": true,
+      "product_type_used": false,
+      "quantity_inverse_transform": "expm1",
+      "quantity_loss": "mse_on_log1p_quantity",
+      "quantity_mark_used": false,
+      "quantity_output_activation": "softplus",
+      "quantity_residual_used": false,
+      "target": "log1p_raw_quantity",
+      "target_quantity_masked_from_history": true,
+      "time_head": {
+        "mode": "legacy_clamped_rmtpp",
+        "statistics_source_split": "train",
+        "time_head_lr_multiplier": 1.0,
+        "time_initial_intercept": 0.0,
+        "time_initial_location": null,
+        "time_initial_scale": null,
+        "time_intercept_limit": 300.0,
+        "time_intercept_transform": "legacy_upper_clamp",
+        "time_scale": 3.0,
+        "time_sigma_floor": 0.001,
+        "time_w_max": 3.3333333333333335,
+        "time_wd_safety_limit": 40.0,
+        "train_time_statistics": {
+          "statistics_source_split": "train",
+          "target_count": 393824,
+          "target_dt_max": 36.0,
+          "target_dt_mean": 2.996902169497034,
+          "target_dt_min": 1.0,
+          "target_dt_p50": 3.0,
+          "target_dt_p99": 7.0,
+          "target_log_scaled_mean": -0.2138903622011054,
+          "target_log_scaled_std": 0.6816420108412236,
+          "time_initial_intercept": 0.001033143676837481,
+          "time_scale": 3.0,
+          "time_w_max": 3.3333333333333335,
+          "wd_safety_limit": 40.0
+        }
+      },
+      "train_target_mean": 1.821123902075507,
+      "train_target_std": 1.2853917394914367
+    }
+  },
+  "lambda_log_qty": 1.0,
+  "lambda_tail": 0.0,
+  "lookback_weeks": 520,
+  "lr": 0.001,
+  "max_seq_len": 256,
+  "max_series": null,
+  "model_role": "hard_lmm_value_norm_candidate",
+  "partial_smoke": false,
+  "quantile_adaptive_contract": null,
+  "quantile_adaptive_strength": 0.0,
+  "quantity_contract": {
+    "boundaries": [
+      2.0,
+      31.0,
+      46.0,
+      187.0
+    ],
+    "quantiles": [
+      0.5,
+      0.9,
+      0.95,
+      0.99
+    ],
+    "strata": [
+      {
+        "stratum": "le_p50",
+        "stratum_label": "<= 2",
+        "stratum_order": 0
+      },
+      {
+        "stratum": "p50_p90",
+        "stratum_label": "(2, 31]",
+        "stratum_order": 1
+      },
+      {
+        "stratum": "p90_p95",
+        "stratum_label": "(31, 46]",
+        "stratum_order": 2
+      },
+      {
+        "stratum": "p95_p99",
+        "stratum_label": "(46, 187]",
+        "stratum_order": 3
+      },
+      {
+        "stratum": "gt_p99",
+        "stratum_label": "> 187",
+        "stratum_order": 4
+      }
+    ]
+  },
+  "quantity_variants": [
+    "count_only_log_regression"
+  ],
+  "schema_version": 1,
+  "seeds": [
+    42
+  ],
+  "source_revision": "956603f16ca3540e2012a461a494ea1ec905102d",
+  "split_manifest_path": "/home/leekwanhyeong/workspace/paper_research/sample_data/intermittent_v2/intermittent_frozen_5000_split_manifest.json",
+  "split_manifest_sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04",
+  "split_rows": {
+    "train": 398824,
+    "validation": 86285
+  },
+  "status": "complete",
+  "tail_contract": {
+    "clip_cap": 187.0,
+    "huber_delta": 1.0,
+    "normalization_scale": 46.0,
+    "statistics_source_split": "train",
+    "threshold": 46.0
+  },
+  "time_head": {
+    "density_unit": "legacy_delta_t_clamped_objective",
+    "mode": "legacy_clamped_rmtpp",
+    "statistics_source_split": "train",
+    "time_head_lr_multiplier": 1.0,
+    "time_initial_intercept": 0.0,
+    "time_initial_location": null,
+    "time_initial_scale": null,
+    "time_intercept_limit": 300.0,
+    "time_intercept_transform": "legacy_upper_clamp",
+    "time_scale": 3.0,
+    "time_sigma_floor": 0.001,
+    "time_w_max": 3.3333333333333335,
+    "time_wd_safety_limit": 40.0,
+    "train_time_statistics": {
+      "statistics_source_split": "train",
+      "target_count": 393824,
+      "target_dt_max": 36.0,
+      "target_dt_mean": 2.996902169497034,
+      "target_dt_min": 1.0,
+      "target_dt_p50": 3.0,
+      "target_dt_p99": 7.0,
+      "target_log_scaled_mean": -0.2138903622011054,
+      "target_log_scaled_std": 0.6816420108412236,
+      "time_initial_intercept": 0.001033143676837481,
+      "time_scale": 3.0,
+      "time_w_max": 3.3333333333333335,
+      "wd_safety_limit": 40.0
+    },
+    "wd_clamp": 10.0
+  },
+  "titans_memory_gradient_clip": null,
+  "validation_target_population": {
+    "identity_fields": [
+      "oper_part_no",
+      "target_position",
+      "target_seq"
+    ],
+    "loader": "RMTPPWeekLookbackDataset",
+    "lookback_weeks": 520,
+    "max_seq_len": 256,
+    "schema_version": 1,
+    "split": "validation",
+    "target_count": 86285,
+    "target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+    "target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385"
+  }
+}

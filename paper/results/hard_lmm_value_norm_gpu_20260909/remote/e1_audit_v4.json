@@ -1,0 +1,226 @@
+{
+  "audit_version": 4,
+  "contract_id": "hard_lmm_value_norm_consistent_v1",
+  "cost_profile": {
+    "gate": {
+      "aggregation": "ratio_of_medians_over_three_independent_paired_repeats",
+      "lengths": [
+        {
+          "candidate_over_B_peak_allocated": 1.0060427996916088,
+          "candidate_over_B_step": 1.1030267295625755,
+          "models": {
+            "titantpp": {
+              "peak_allocated_bytes": 49142784,
+              "step_seconds": 0.003237235127016902
+            },
+            "titantpp_hard_memory_value_norm": {
+              "peak_allocated_bytes": 49439744,
+              "step_seconds": 0.0035707568749785423
+            }
+          },
+          "peak_passed": true,
+          "sequence_length": 8,
+          "step_passed": true
+        },
+        {
+          "candidate_over_B_peak_allocated": 1.0076869426966546,
+          "candidate_over_B_step": 1.131148862207351,
+          "models": {
+            "titantpp": {
+              "peak_allocated_bytes": 273086464,
+              "step_seconds": 0.003290467895567417
+            },
+            "titantpp_hard_memory_value_norm": {
+              "peak_allocated_bytes": 275185664,
+              "step_seconds": 0.0037220090162009
+            }
+          },
+          "peak_passed": true,
+          "sequence_length": 64,
+          "step_passed": true
+        },
+        {
+          "candidate_over_B_peak_allocated": 1.0049441524536649,
+          "candidate_over_B_step": 1.1370104175817062,
+          "models": {
+            "titantpp": {
+              "peak_allocated_bytes": 1485002752,
+              "step_seconds": 0.009422554867342114
+            },
+            "titantpp_hard_memory_value_norm": {
+              "peak_allocated_bytes": 1492344832,
+              "step_seconds": 0.010713543044403195
+            }
+          },
+          "peak_passed": true,
+          "sequence_length": 256,
+          "step_passed": true
+        }
+      ],
+      "peak_limit": 1.1,
+      "status": "passed",
+      "step_limit": 1.25
+    },
+    "profile_sha256": "d2571e4bc6883079012197d61627ce15e85797c572483d08fd034ec8d13325c0",
+    "status": "passed"
+  },
+  "cuda_qualification": {
+    "cuda_cases": [
+      "test_same_seed_common_state_rng_and_zero_gate_output_identity[16-cuda]",
+      "test_same_seed_common_state_rng_and_zero_gate_output_identity[64-cuda]",
+      "test_extreme_finite_values_and_checkpoint_optimizer_roundtrip[cuda]",
+      "test_compiled_surprise_scan_matches_cuda_eager_gradients"
+    ],
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "status": "passed",
+    "test_count": 71,
+    "xml_sha256": "8c323646f7f38671f4f21dbd100308d57012a1ce2bf7f0089589434b5d8b4a33"
+  },
+  "data": {
+    "insta_market_basket": {
+      "data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+      "split_manifest_sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d"
+    },
+    "intermittent_frozen_5000": {
+      "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+      "split_manifest_sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04"
+    },
+    "yellow_trip_hourly": {
+      "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+      "split_manifest_sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85"
+    }
+  },
+  "held_out_test_evaluated": false,
+  "jobs": {
+    "insta_market_basket": {
+      "alpha_optimizer_state_verified": true,
+      "alpha_raw": 0.12737052142620087,
+      "best_checkpoint_file_sha256": "0e22358ae9f0911ad028973ed7e193ce23d60c9a3dac5e983008211154b578c1",
+      "best_epoch": 1,
+      "checkpoint_route_verified": true,
+      "checkpoint_sha256": "0e22358ae9f0911ad028973ed7e193ce23d60c9a3dac5e983008211154b578c1",
+      "completed_epochs": 1,
+      "cuda_peak_memory_allocated_bytes": 376108032,
+      "elapsed_seconds": 167.65219855308533,
+      "held_out_test_evaluated": false,
+      "last_checkpoint_file_sha256": "c5b0ee9cfadbab34e183b9e9281144a1741bb0757c8d4413a873687af3ce85ce",
+      "metrics": {
+        "body_mae": 3.492293376316304,
+        "body_target_count": 477507,
+        "clamped_time_loss": 3.210295511151146,
+        "gt_p99_mae": 24.535456102008137,
+        "overall_mae": 4.158874196246247,
+        "raw_rmse": 6.217880584565066,
+        "stratum_counts": {
+          "gt_p99": 6036,
+          "le_p50": 247651,
+          "p50_p90": 202534,
+          "p90_p95": 27322,
+          "p95_p99": 20190
+        },
+        "validation_target_count": 503733
+      },
+      "optimizer_rng_loader_restore_verified": true,
+      "rng_next_draw_determinism_verified": true,
+      "rng_state_exact_restore_verified": true,
+      "status": "passed",
+      "strict_model_restore_verified": true,
+      "summary": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_value_norm_956603f_5090_20260909/jobs/e1_insta_market_basket/runs/titantpp_hard_memory_value_norm/count_only_log_regression/seed_42/summary.json",
+      "summary_sha256": "6eeedf78115bbfd19ca74888b4b7c1748d31ab4713e675fa5d3492984c56c32c",
+      "train_gradient_clip_fraction": 0.7857556084077907,
+      "train_loader_next_order_determinism_verified": true,
+      "train_pre_clip_grad_norm_mean": 1.797556457283059,
+      "validation_target_identity_sha256": "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8",
+      "validation_target_quantity_sha256": "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184"
+    },
+    "intermittent_frozen_5000": {
+      "alpha_optimizer_state_verified": true,
+      "alpha_raw": -0.004615145269781351,
+      "best_checkpoint_file_sha256": "433c0d06395d9a532776fca68bed247806eb06beab48265192a4afdfe6ba8ec2",
+      "best_epoch": 1,
+      "checkpoint_route_verified": true,
+      "checkpoint_sha256": "433c0d06395d9a532776fca68bed247806eb06beab48265192a4afdfe6ba8ec2",
+      "completed_epochs": 1,
+      "cuda_peak_memory_allocated_bytes": 1898155520,
+      "elapsed_seconds": 87.6299729347229,
+      "held_out_test_evaluated": false,
+      "last_checkpoint_file_sha256": "fe126ea293962d09bbebcee05d2d15df952c0718f3b4a1963c5852c11a98c21d",
+      "metrics": {
+        "body_mae": 0.5405204608263668,
+        "body_target_count": 81739,
+        "clamped_time_loss": 0.818003539405748,
+        "gt_p99_mae": 8.070108599249048,
+        "overall_mae": 0.7663064232132019,
+        "raw_rmse": 2.00309016426744,
+        "stratum_counts": {
+          "gt_p99": 1141,
+          "le_p50": 45036,
+          "p50_p90": 29579,
+          "p90_p95": 7124,
+          "p95_p99": 3405
+        },
+        "validation_target_count": 86285
+      },
+      "optimizer_rng_loader_restore_verified": true,
+      "rng_next_draw_determinism_verified": true,
+      "rng_state_exact_restore_verified": true,
+      "status": "passed",
+      "strict_model_restore_verified": true,
+      "summary": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_value_norm_956603f_5090_20260909/jobs/e1_intermittent_frozen_5000/runs/titantpp_hard_memory_value_norm/count_only_log_regression/seed_42/summary.json",
+      "summary_sha256": "166df8a01cbbed6aa56d5d81cfcfdb081ceb53a8411b0416006c8d2ab58fbbcc",
+      "train_gradient_clip_fraction": 0.24894377640558987,
+      "train_loader_next_order_determinism_verified": true,
+      "train_pre_clip_grad_norm_mean": 1.231888506521565,
+      "validation_target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+      "validation_target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385"
+    },
+    "yellow_trip_hourly": {
+      "alpha_optimizer_state_verified": true,
+      "alpha_raw": 0.014946306124329567,
+      "best_checkpoint_file_sha256": "30a87f68644468db754281ce3a724c4f5b8116b1e59f73f9429a318716de61af",
+      "best_epoch": 1,
+      "checkpoint_route_verified": true,
+      "checkpoint_sha256": "30a87f68644468db754281ce3a724c4f5b8116b1e59f73f9429a318716de61af",
+      "completed_epochs": 1,
+      "cuda_peak_memory_allocated_bytes": 1898155520,
+      "elapsed_seconds": 10.256062984466553,
+      "held_out_test_evaluated": false,
+      "last_checkpoint_file_sha256": "bc5341d1f4decb80604f8743e3700e3f8ebd21a33823233627804069beeb9e83",
+      "metrics": {
+        "body_mae": 42.65503198089754,
+        "body_target_count": 7888,
+        "clamped_time_loss": 1.3706225875889442,
+        "gt_p99_mae": 765.0748924545095,
+        "overall_mae": 72.53285828430293,
+        "raw_rmse": 227.56781710549402,
+        "stratum_counts": {
+          "gt_p99": 79,
+          "le_p50": 4364,
+          "p50_p90": 3138,
+          "p90_p95": 386,
+          "p95_p99": 301
+        },
+        "validation_target_count": 8268
+      },
+      "optimizer_rng_loader_restore_verified": true,
+      "rng_next_draw_determinism_verified": true,
+      "rng_state_exact_restore_verified": true,
+      "status": "passed",
+      "strict_model_restore_verified": true,
+      "summary": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/hard_lmm_value_norm_956603f_5090_20260909/jobs/e1_yellow_trip_hourly/runs/titantpp_hard_memory_value_norm/count_only_log_regression/seed_42/summary.json",
+      "summary_sha256": "400e2f48ac4013aefabe0d444fe0ebd12bb9d2fd85b58fdc68b2cac9c4ade4f1",
+      "train_gradient_clip_fraction": 0.9666666666666667,
+      "train_loader_next_order_determinism_verified": true,
+      "train_pre_clip_grad_norm_mean": 4.602325343290965,
+      "validation_target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+      "validation_target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd"
+    }
+  },
+  "source_archive_sha256": "effaa12f18b7e6ef126218c8b2e6cbeee91a8a1c2159df677955ccc8e6ee404d",
+  "source_file_count": 2130,
+  "source_manifest_sha256": "177286e0e405e21885214ee0c6acb0fada158465a1715743f399facfd5a9af9f",
+  "source_revision": "956603f16ca3540e2012a461a494ea1ec905102d",
+  "status": "passed"
+}
