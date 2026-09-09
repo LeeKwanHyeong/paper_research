@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import sys
+import types
+from pathlib import Path
+
 import pytest
 
 from paper.scripts import audit_hard_lmm_value_norm_screening as audit
@@ -111,4 +115,19 @@ def test_checkpoint_reevaluation_tolerance_matches_training_runner() -> None:
             5.0 + 2e-8,
             5.0,
             label="outside runner tolerance",
+        )
+
+
+def test_project_import_provenance_rejects_cached_module_outside_source(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    outside = types.ModuleType("paper.outside_audit_probe")
+    outside.__file__ = str(tmp_path / "outside_audit_probe.py")
+    monkeypatch.setitem(sys.modules, outside.__name__, outside)
+
+    with pytest.raises(ValueError, match="outside pinned source root"):
+        audit._validate_project_import_provenance(
+            audit.ROOT,
+            phase="unit_test",
         )

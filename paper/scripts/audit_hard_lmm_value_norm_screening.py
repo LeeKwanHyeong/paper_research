@@ -68,11 +68,59 @@ REEVALUATION_REL_TOL = 1e-10
 REEVALUATION_ABS_TOL = 1e-8
 CPU_REPLAY_REL_TOL = 1e-8
 CPU_REPLAY_ABS_TOL = 1e-5
+PROJECT_IMPORT_ROOTS = frozenset({"models", "paper", "simple_lab_test"})
 
 
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise ValueError(message)
+
+
+def _is_within(path: Path, root: Path) -> bool:
+    try:
+        path.resolve().relative_to(root.resolve())
+    except ValueError:
+        return False
+    return True
+
+
+def _validate_project_import_provenance(
+    source_root: Path,
+    *,
+    phase: str,
+) -> dict[str, Any]:
+    """Reject cached project modules that did not come from the pinned source."""
+    source_root = source_root.resolve()
+    observed: dict[str, list[str]] = {}
+    for module_name in sorted(sys.modules):
+        if module_name.partition(".")[0] not in PROJECT_IMPORT_ROOTS:
+            continue
+        module = sys.modules[module_name]
+        require(module is not None, f"{phase}: cached project module is null: {module_name}")
+        locations: set[str] = set()
+        module_file = getattr(module, "__file__", None)
+        if isinstance(module_file, str):
+            locations.add(str(Path(module_file).resolve()))
+        module_paths = getattr(module, "__path__", None)
+        if module_paths is not None:
+            for module_path in module_paths:
+                locations.add(str(Path(module_path).resolve()))
+        require(locations, f"{phase}: project module has no auditable path: {module_name}")
+        for location in locations:
+            require(
+                _is_within(Path(location), source_root),
+                (
+                    f"{phase}: project module resolved outside pinned source root: "
+                    f"{module_name} -> {location}"
+                ),
+            )
+        observed[module_name] = sorted(locations)
+    return {
+        "phase": phase,
+        "source_root": str(source_root),
+        "module_count": len(observed),
+        "modules": observed,
+    }
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -1863,6 +1911,10 @@ def audit_screening_job(
         "Final e300 audit requires --replay-device cuda",
     )
     source_root = source_root.resolve()
+    preexisting_imports = _validate_project_import_provenance(
+        source_root,
+        phase="before_source_activation",
+    )
     if str(source_root) not in sys.path:
         sys.path.insert(0, str(source_root))
     artifact_root = artifact_root.resolve()
@@ -2021,6 +2073,10 @@ def audit_screening_job(
             "observation_likelihood_mode"
         ],
     }
+    loaded_imports = _validate_project_import_provenance(
+        source_root,
+        phase="after_validation_replay",
+    )
     return {
         "schema_version": 1,
         "audit_id": "hard_lmm_value_norm_screening_strict_v1",
@@ -2034,6 +2090,10 @@ def audit_screening_job(
         "artifact_root": str(artifact_root),
         "job": str(job),
         "contract_digests": contracts["digests"],
+        "project_import_provenance": {
+            "before_source_activation": preexisting_imports,
+            "after_validation_replay": loaded_imports,
+        },
         "provenance": provenance,
         "host_preflight": host_preflight,
         "route": route,
@@ -2122,6 +2182,10 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    require(
+        __package__ in (None, "") and __spec__ is None,
+        "Strict auditor CLI must be invoked by its direct file path, not with -m",
+    )
     args = parse_args()
     result = audit_screening_job(
         artifact_root=args.artifact_root,
