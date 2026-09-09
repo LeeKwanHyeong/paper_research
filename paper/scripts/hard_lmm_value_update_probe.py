@@ -8,7 +8,6 @@ the arithmetic mean of ``k`` distinct selected rows.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
 import math
 from typing import Any
 
@@ -377,59 +376,12 @@ def directional_dot_cosine(
     }
 
 
-def prospective_alignment_gate(
-    candidate: Mapping[str, Any],
-    controls: Sequence[Mapping[str, Any]] = (),
-    *,
-    require_positive: bool,
-    tolerance: float = DIRECTION_TOLERANCE,
-) -> dict[str, Any]:
-    """Apply result-independent direction and control-margin primitives.
-
-    Quantity log-MSE and raw squared-error checks normally set
-    ``require_positive=True``.  Body-MAE and time-NLL guardrails can instead
-    require only a non-conflicting direction.  Every supplied control must be
-    beaten in cosine by more than ``tolerance``.
-    """
-    if not math.isfinite(float(tolerance)) or tolerance < 0.0:
-        raise ValueError("tolerance must be finite and non-negative")
-    for label, row in (("candidate", candidate), *(
-        (f"control[{index}]", control) for index, control in enumerate(controls)
-    )):
-        for key in ("dot", "cosine", "source_norm", "held_norm"):
-            value = row.get(key)
-            if isinstance(value, bool) or not isinstance(value, (int, float)):
-                raise ValueError(f"{label}.{key} must be numeric")
-            if not math.isfinite(float(value)):
-                raise ValueError(f"{label}.{key} must be finite")
-    informative = (
-        float(candidate["source_norm"]) > tolerance
-        and float(candidate["held_norm"]) > tolerance
-    )
-    dot = float(candidate["dot"])
-    direction_pass = dot > tolerance if require_positive else dot >= -tolerance
-    control_cosines = [float(control["cosine"]) for control in controls]
-    control_pass = all(
-        float(candidate["cosine"]) > cosine + tolerance
-        for cosine in control_cosines
-    )
-    return {
-        "informative": informative,
-        "direction_pass": direction_pass,
-        "control_margin_pass": control_pass,
-        "maximum_control_cosine": max(control_cosines) if control_cosines else None,
-        "passed": informative and direction_pass and control_pass,
-        "tolerance": float(tolerance),
-    }
-
-
 __all__ = [
     "DIRECTION_TOLERANCE",
     "NORM_TOLERANCE",
     "aggregate_selected_value_gradient",
     "cyclic_row_shifts",
     "directional_dot_cosine",
-    "prospective_alignment_gate",
     "reconstruct_hidden_credits",
     "usage_normalized_support_confidence",
 ]

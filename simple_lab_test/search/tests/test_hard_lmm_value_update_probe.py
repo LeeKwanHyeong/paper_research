@@ -200,30 +200,13 @@ def test_all_63_cyclic_shifts_preserve_rows_and_frobenius_norm() -> None:
         assert not torch.equal(shift, rows)
 
 
-def test_direction_and_prospective_gate_use_fixed_tolerance() -> None:
+def test_direction_measurement_uses_fixed_tolerance() -> None:
     candidate = probe.directional_dot_cosine(
         torch.tensor([2.0, -1.0]), torch.tensor([3.0, -4.0])
-    )
-    control = probe.directional_dot_cosine(
-        torch.tensor([1.0, 0.0]), torch.tensor([3.0, -4.0])
     )
     assert candidate["dot"] == 10.0
     assert candidate["positive_direction"] is True
     assert candidate["non_conflicting_direction"] is True
-    assert probe.prospective_alignment_gate(
-        candidate, [control], require_positive=True
-    )["passed"] is True
-
-    tiny_conflict = {
-        **candidate,
-        "dot": -0.5 * probe.DIRECTION_TOLERANCE,
-    }
-    assert probe.prospective_alignment_gate(
-        tiny_conflict, require_positive=False
-    )["passed"] is True
-    assert probe.prospective_alignment_gate(
-        tiny_conflict, require_positive=True
-    )["passed"] is False
 
 
 @pytest.mark.parametrize(

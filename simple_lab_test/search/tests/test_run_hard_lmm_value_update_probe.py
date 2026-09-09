@@ -87,5 +87,17 @@ def test_descriptor_records_exact_selection_and_metric_conflict() -> None:
     assert summary["selection_counts"] == [2.0, 1.0, 1.0, 0.0]
     assert summary["active_rows"] == 3
     assert summary["metric_conflicts"]["log_vs_raw"]["conflicting_rows"] == 3
+    assert summary["metric_conflicts"]["log_vs_raw"][
+        "conflicting_slot_ids"
+    ] == [0, 1, 2]
+    assert summary["metric_conflicts"]["log_vs_raw"][
+        "eligible_slot_ids"
+    ] == [0, 1, 2]
+    assert summary["metric_conflicts"]["log_vs_raw"]["slot_cosines"] == [
+        -1.0,
+        -1.0,
+        -1.0,
+        None,
+    ]
     assert summary["quantity_strata"][0]["target_count"] == 1
     assert summary["quantity_strata"][2]["target_count"] == 1

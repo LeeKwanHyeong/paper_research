@@ -643,13 +643,24 @@ def summarize_descriptor(descriptor: Mapping[str, Any]) -> dict[str, Any]:
         left_values = descriptor["gradient_sums"][left]
         right_values = descriptor["gradient_sums"][right]
         dots = (left_values * right_values).sum(dim=1)
-        eligible = (torch.linalg.vector_norm(left_values, dim=1) > 0) & (torch.linalg.vector_norm(right_values, dim=1) > 0)
+        left_norms = torch.linalg.vector_norm(left_values, dim=1)
+        right_norms = torch.linalg.vector_norm(right_values, dim=1)
+        denominators = left_norms * right_norms
+        eligible = denominators > 0
         conflict = eligible & (dots < 0)
+        slot_cosines = torch.zeros_like(dots)
+        slot_cosines[eligible] = dots[eligible] / denominators[eligible]
         conflicts[f"{left}_vs_{right}"] = {
             "eligible_rows": int(eligible.sum()),
+            "eligible_slot_ids": torch.nonzero(eligible, as_tuple=False).flatten().tolist(),
             "conflicting_rows": int(conflict.sum()),
+            "conflicting_slot_ids": torch.nonzero(conflict, as_tuple=False).flatten().tolist(),
             "conflicting_selection_mass": float(mass[conflict].sum()),
             "global_cosine": safe_cosine(left_values, right_values),
+            "slot_cosines": [
+                float(slot_cosines[index]) if bool(eligible[index]) else None
+                for index in range(counts.numel())
+            ],
         }
     stratum_counts = descriptor["stratum_target_counts"]
     strata: list[dict[str, Any]] = []
@@ -699,7 +710,7 @@ def analyze_dataset(
     previous: Mapping[str, Any],
     frozen: Any,
     contract: Mapping[str, Any],
-) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
     name = str(row["dataset"])
     for key, hash_key in (
         ("data_path", "data_sha256"),
@@ -778,6 +789,7 @@ def analyze_dataset(
     decision_passed = all(direction["passed"] for direction in cross_fold.values())
     summaries = {str(fold): summarize_descriptor(fold_results[fold]["descriptor"]) for fold in (0, 1)}
     per_slot: list[dict[str, Any]] = []
+    per_slot_stratum: list[dict[str, Any]] = []
     for fold in (0, 1):
         summary = summaries[str(fold)]
         descriptor = fold_results[fold]["descriptor"]
@@ -793,6 +805,45 @@ def analyze_dataset(
                 record[f"{metric}_gradient_norm"] = float(torch.linalg.vector_norm(descriptor["gradient_sums"][metric][slot]))
                 record[f"{metric}_coherence"] = summary["coherence"][metric][slot]
             per_slot.append(record)
+        total_selections = float(descriptor["selection_counts"].sum())
+        for stratum in range(5):
+            stratum_counts = descriptor["stratum_selection_counts"][stratum]
+            stratum_selections = float(stratum_counts.sum())
+            lower = None if stratum == 0 else boundaries[stratum - 1]
+            upper = boundaries[stratum] if stratum < 4 else None
+            if lower is None:
+                label = f"<= {upper:g}"
+            elif upper is None:
+                label = f"> {lower:g}"
+            else:
+                label = f"({lower:g}, {upper:g}]"
+            for slot in range(64):
+                record = {
+                    "dataset": name,
+                    "fold": fold,
+                    "stratum": stratum,
+                    "stratum_label": label,
+                    "slot": slot,
+                    "stratum_target_count": int(
+                        descriptor["stratum_target_counts"][stratum]
+                    ),
+                    "selection_count": int(stratum_counts[slot]),
+                    "selection_mass_all": (
+                        float(stratum_counts[slot]) / total_selections
+                    ),
+                    "selection_mass_within_stratum": (
+                        float(stratum_counts[slot]) / stratum_selections
+                        if stratum_selections > 0
+                        else 0.0
+                    ),
+                }
+                for metric in ("log", "raw", "body", "time"):
+                    record[f"{metric}_gradient_norm"] = float(
+                        torch.linalg.vector_norm(
+                            descriptor["stratum_gradient_sums"][metric][stratum][slot]
+                        )
+                    )
+                per_slot_stratum.append(record)
     compact_folds = {
         str(fold): {
             "counts": fold_results[fold]["counts"],
@@ -824,7 +875,7 @@ def analyze_dataset(
         "folds": compact_folds,
         "cross_fold": cross_fold,
         "passed": decision_passed,
-    }, per_slot
+    }, per_slot, per_slot_stratum
 
 
 def write_per_slot(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
@@ -887,14 +938,17 @@ def main() -> None:
     try:
         results: dict[str, Any] = {}
         per_slot: list[dict[str, Any]] = []
+        per_slot_stratum: list[dict[str, Any]] = []
         for row in base_contract["datasets"]:
-            result, slot_rows = analyze_dataset(
+            result, slot_rows, slot_stratum_rows = analyze_dataset(
                 row, previous_analysis[str(row["dataset"])], frozen, contract
             )
             results[str(row["dataset"])] = result
             per_slot.extend(slot_rows)
+            per_slot_stratum.extend(slot_stratum_rows)
         save_json(RESULT / "analysis.json", results)
         write_per_slot(RESULT / "per_slot.csv", per_slot)
+        write_per_slot(RESULT / "per_slot_stratum.csv", per_slot_stratum)
         passed = bool(results) and all(row["passed"] for row in results.values())
         decision = {
             "contract_id": contract["contract_id"],
@@ -914,6 +968,9 @@ def main() -> None:
             completed_at=utc_now(),
             analysis_sha256=sha256_file(RESULT / "analysis.json"),
             per_slot_sha256=sha256_file(RESULT / "per_slot.csv"),
+            per_slot_stratum_sha256=sha256_file(
+                RESULT / "per_slot_stratum.csv"
+            ),
             decision_sha256=sha256_file(RESULT / "evidence_decision.json"),
             common_gate_passed=passed,
         )
