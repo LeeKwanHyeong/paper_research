@@ -29,15 +29,22 @@ value는 bounded tanh 투영으로 구성한다. 관측 변화로 계산한 학�
 정적 final Hard-LMM bank는 전역 학습 prior로 유지된다.
 
 각 경로는 `S=sum(weight*key*value^T)`, `z=sum(weight*key)`를 축적하고
-현재 query로 `query*S/(query*z)`를 읽는다. support가 없는 경로는 정확히 0이다.
-두 경로의 support와 현재 관측 변화에 기반한 같은 confidence 함수가 경로를 결합한다.
+현재 query로 `query*S/(query*z)`를 읽는다. query와의 가중 support mass가
+`1e-8` 이하인 경로는 정확히 0이며 fusion에서 제외한다. sigmoid underflow로
+관측 횟수는 양수이지만 실제 write mass가 0인 경우도 여기에 포함된다.
+각 normalized read에 `-expm1(-rank*mass)`를 곱해 절대 support가 적은 경로를 억제한다.
+전이 하나에서도 write confidence가 read 크기에서 상쇄되지 않는다. 데이터셋별 계수 없이
+동일한 rank 8과 같은 함수를 사용한다. 그 뒤 두 경로의 support와 현재 관측 변화에
+기반한 같은 confidence 함수가 경로를 결합한다.
 `h1 + tanh(alpha)*bounded_read`를 두 번째 encoder 층에 입력한다.
 time/quantity가 같은 최종 상태를 사용하며 head와 loss는 기존 B와 같다.
 
 현재 관측 사건까지는 write할 수 있고 다음 target은 write할 수 없다. padding,
 미관측 query token, 비연속 mask를 검증한다. 상태는 forward마다 각 표본의 prefix에서
 다시 만들며 batch·series·train/validation 사이에 mutable state를 공유하지 않는다.
-훈련은 누적합으로 계산하여 memory 부가 계산이 이력 길이에 선형이다. 전체 encoder의
+훈련의 충분통계는 누적합으로 계산한다. 최근 전이 경계의 `searchsorted`까지 포함한
+추가 비용은 `O(T*d² + T*r*d + T*log(T))`이며 rank 8은
+검색 key/query의 차원이다. 전체 encoder의
 attention까지 선형이라고 주장하지 않는다. 내부 gradient optimizer는 없다.
 
 `alpha=0`에서 같은 seed의 B와 공유 parameter·RNG·출력·공유 gradient가 일치한다.
@@ -49,7 +56,11 @@ attention까지 선형이라고 주장하지 않는다. 내부 gradient optimize
 
 기존 inter-layer 후보는 동일 static bank의 read 한 번을 추가했고, FiLM은 readout을
 변경했다. 이번 후보는 관측된 전이를 기록하는 동적 메모리를 encoder 내부에서 구성한다.
-기존 surprise/MAC와 달리 내부 optimizer를 실행하지 않는다. 새 Backbone 실험 경로라는
+MAC와 달리 내부 gradient optimizer를 실행하지 않는다. 기존 SurpriseGatedMemory도
+관측 이력을 쓰는 fast-weight update와 학습 가능한 Q/K/V가 있으므로 부분적으로 겹친다.
+이번 후보의 구체적인 차이는 상태 차이를 value로 쓰는 전이 저장, 현재 관측까지의 write,
+최근 8개와 오래된 prefix의 겹치지 않는 분리, event loop를 대신한 누적합,
+encoder 층 사이의 배치다. 새 Backbone 실험 경로라는
 사실과 학술적으로 독창적인 방법이라는 주장은 구분한다.
 
 양수 kernel의 누적 충분통계는 [Linear Transformers](https://proceedings.mlr.press/v119/katharopoulos20a.html)

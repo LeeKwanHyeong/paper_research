@@ -30,7 +30,11 @@
     "state_scope": "per_sample_observed_prefix_rebuilt_each_forward",
     "cross_batch_or_series_state": false,
     "inner_optimizer": false,
-    "same_model_and_hyperparameters_all_datasets": true
+    "same_model_and_hyperparameters_all_datasets": true,
+    "supported_mass_min_exclusive": 1e-08,
+    "additional_compute_complexity": "O(T*d*d + T*r*d + T*log(T))",
+    "prior_overlap": "Related to existing SurpriseGatedMemory and linear attention; differences are transition values, inclusive observed writes, disjoint recent/older stores, cumsum implementation and interlayer placement.",
+    "absolute_support_gate": "-expm1(-rank*query_weighted_mass) applied to each normalized read before fusion"
   },
   "common_training": {
     "seed": 42,
@@ -199,7 +203,8 @@
     "batch_order_and_no_cross_forward_state",
     "finite_extremes",
     "checkpoint_and_optimizer_exact_resume",
-    "held_out_not_materialized"
+    "held_out_not_materialized",
+    "short_history_absolute_support_monotonic_bounded"
   ],
   "evaluation_scope": "validation_only",
   "held_out_test_evaluated": false,

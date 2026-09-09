@@ -71,6 +71,61 @@ def checked_cuda_xml(path):
     return {'tests': len(cases), 'executed_cuda_cases': len(cuda), 'xml_sha256': sha256(path)}
 
 
+
+def restore_checkpoint(payload, c, dataset, *, optimizer_required):
+    """Strictly restore the actual artifact, including AdamW tensors, on CPU."""
+    import torch
+    from models.TPPs.CountAwareFactory import build_count_aware_model
+    from paper.scripts.count_aware_tpp_backbone.training import build_optimizer
+    from paper.scripts.count_aware_tpp_backbone.core import target_outputs
+    from paper.scripts.profile_hard_lmm_causal_qkv import tensor_tree_finite
+    from simple_lab_test.search.common.runner import canonical_state_dict_sha256
+    spec = next(x for x in c['data_bindings'] if x['dataset'] == dataset)
+    meta = payload['interface_meta']
+    with torch.random.fork_rng(devices=[]):
+        model, _ = build_count_aware_model(
+            BACKBONE, hidden_dim=64, train_log_mean=float(meta['train_target_mean']),
+            train_log_std=float(meta['train_target_std']), max_seq_len=spec['max_sequence_length'],
+            time_intercept_limit=300.)
+    model.load_state_dict(payload['model_state_dict'], strict=True)
+    require(canonical_state_dict_sha256(model.state_dict()) == payload['model_state_sha256'],
+            'Restored model differs from artifact')
+    require(tensor_tree_finite(model.state_dict()), 'Nonfinite restored model')
+    restored_parameters = 0
+    if optimizer_required:
+        optimizer = build_optimizer(model, lr=c['common_training']['learning_rate'])
+        source = payload['optimizer_state_dict']
+        optimizer.load_state_dict(source)
+        restored = optimizer.state_dict()
+        require(restored['param_groups'] == source['param_groups'], 'Optimizer group restore drift')
+        require(restored['state'].keys() == source['state'].keys(), 'Optimizer state restore drift')
+        require(tensor_tree_finite(restored), 'Nonfinite restored optimizer')
+        for group, saved_group in zip(optimizer.param_groups, source['param_groups']):
+            for parameter, key in zip(group['params'], saved_group['params']):
+                if key not in source['state']:
+                    continue
+                state = optimizer.state[parameter]
+                for name, value in source['state'][key].items():
+                    actual = state[name]
+                    if isinstance(value, torch.Tensor):
+                        require(torch.equal(actual.cpu(), value.cpu()), 'Optimizer tensor restore drift')
+                        if name in ('exp_avg', 'exp_avg_sq', 'max_exp_avg_sq'):
+                            require(actual.shape == parameter.shape, 'Optimizer moment shape mismatch')
+                    else:
+                        require(actual == value, 'Optimizer scalar restore drift')
+                restored_parameters += 1
+        require(restored_parameters > 0, 'Empty restored optimizer')
+    model.eval()
+    with torch.no_grad():
+        dt = torch.tensor([[1., 2., 3., 1.], [2., 1., 2., 3.]])
+        quantity = torch.tensor([[2., 4., 3., 5.], [3., 1., 4., 2.]])
+        outputs = target_outputs(model, dt, torch.ones_like(dt, dtype=torch.bool), quantity,
+                                 lambda_log_qty=1.)
+        require(tensor_tree_finite(outputs), 'Nonfinite restored forward')
+    return {'strict_model_restore': True, 'finite_forward': True,
+            'optimizer_restore': optimizer_required, 'optimizer_parameters_restored': restored_parameters}
+
+
 def full_audit(output, c, dataset, revision, phase):
     import torch
     from models.TPPs.CountAwareFactory import validate_checkpoint_route
@@ -105,12 +160,13 @@ def full_audit(output, c, dataset, revision, phase):
     require(last['best_state_sha256'] == selected['model_state_sha256'] == summary['checkpoint_state_sha256'], 'Best/last state mismatch')
     require(last['optimizer_state_dict']['state'] and last['rng_state'], 'Missing resume state')
     require(last['checkpoint_monitor'] == 'validation_raw_quantity_rmse', 'Resume selector drift')
+    result['selected_restore'] = restore_checkpoint(selected, c, dataset, optimizer_required=False)
+    result['last_restore'] = restore_checkpoint(last, c, dataset, optimizer_required=True)
     result.update(checkpoint_state_sha256=selected['model_state_sha256'],
                   last_checkpoint_sha256=sha256(folder/'last_epoch_state.pt'),
                   elapsed_seconds=summary['elapsed_seconds'],
                   early_stopping=early, source_revision=revision)
-    # The model route tests prove exact load/next-step restoration. Bind the
-    # actual selected model's schema and learned memory gain here as well.
+    # Record whether the selected checkpoint actually activates the memory path.
     gains = {name: float(value) for name, value in selected['model_state_dict'].items()
              if 'alpha' in name and value.numel() == 1}
     require(gains and all(math.isfinite(v) for v in gains.values()), 'Missing memory gain')
@@ -123,6 +179,7 @@ def full_audit(output, c, dataset, revision, phase):
 def run(args):
     import platform
     import torch
+    torch.set_num_threads(1)
     c = verify_manifest(args.manifest, args.source_revision)
     out = args.output_root.resolve()
     require(ROOT != out and ROOT not in out.parents and out not in ROOT.parents, 'Source/output must be disjoint')

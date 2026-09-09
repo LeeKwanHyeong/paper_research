@@ -57,3 +57,32 @@ def test_deployment_rejects_wrong_host_or_contract_before_dataset_access(tmp_pat
     with pytest.raises(ValueError,match='Host'):verify_manifest(path,'a'*40)
     value['host_role']='5090';path.write_text(json.dumps(value))
     with pytest.raises(ValueError,match='Contract'):verify_manifest(path,'a'*40)
+
+
+def test_actual_artifact_restore_rejects_incompatible_optimizer_moments():
+    import torch
+    from models.TPPs.CountAwareFactory import build_count_aware_model
+    from paper.scripts.count_aware_tpp_backbone.training import build_optimizer
+    from paper.scripts.run_dual_timescale_campaign import restore_checkpoint
+    from simple_lab_test.search.common.runner import canonical_state_dict_sha256
+    previous = torch.get_num_threads()
+    torch.set_num_threads(1)
+    try:
+        model, _ = build_count_aware_model(BACKBONE, hidden_dim=64, train_log_mean=2.,
+                                          max_seq_len=64, time_intercept_limit=300.)
+        optimizer = build_optimizer(model, lr=.001)
+        sum(p.square().sum() for p in model.parameters()).backward()
+        optimizer.step()
+        payload = {'model_state_dict': model.state_dict(),
+                   'model_state_sha256': canonical_state_dict_sha256(model.state_dict()),
+                   'interface_meta': {'train_target_mean':2.,'train_target_std':1.},
+                   'optimizer_state_dict':optimizer.state_dict()}
+        receipt = restore_checkpoint(payload, read_json(CONTRACT), 'insta_market_basket', optimizer_required=True)
+        assert receipt['strict_model_restore'] and receipt['optimizer_parameters_restored'] > 0
+        broken = copy.deepcopy(payload)
+        first = next(iter(broken['optimizer_state_dict']['state'].values()))
+        first['exp_avg'] = torch.zeros(123)
+        with pytest.raises(ValueError, match='moment shape'):
+            restore_checkpoint(broken, read_json(CONTRACT), 'insta_market_basket', optimizer_required=True)
+    finally:
+        torch.set_num_threads(previous)

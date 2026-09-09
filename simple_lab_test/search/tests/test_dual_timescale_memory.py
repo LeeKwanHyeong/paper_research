@@ -12,6 +12,7 @@ from models.TPPs.CountAwareTPP import CountAwareTitanTPP
 from models.TPPs.CountAwareTitanDualTimescale import (
     CountAwareTitanDualTimescaleTPP, DualTimescaleTransitionMemory,
     DUAL_TIMESCALE_BACKBONE, DUAL_TIMESCALE_ROLE, DUAL_TIMESCALE_CONTRACT_ID,
+    DUAL_TIMESCALE_EPSILON, DUAL_TIMESCALE_RANK,
     dual_timescale_metadata,
 )
 from paper.scripts.count_aware_tpp_backbone.core import target_outputs
@@ -121,7 +122,9 @@ def slow_reference(parts):
                     weights = (q[b, t] * k[b, chosen]).sum(-1) * trust[b, chosen, 0]
                     mass = weights.sum()
                     result[scope + "_mass"][b, t] = mass
-                    result[scope + "_read"][b, t] = (weights[:, None] * v[b, chosen]).sum(0) / mass.clamp_min(1e-8)
+                    if mass > DUAL_TIMESCALE_EPSILON:
+                        normalized = (weights[:, None] * v[b, chosen]).sum(0) / mass
+                        result[scope + "_read"][b, t] = normalized * (-torch.expm1(-DUAL_TIMESCALE_RANK * mass))
     return result
 
 
@@ -275,3 +278,100 @@ def test_checkpoint_route_rejects_relabelling_foreign_and_malformed_state():
     stripped["encoder_config"] = {}
     with pytest.raises(ValueError, match="relabelled"):
         validate_checkpoint_route(stripped, "titantpp")
+
+
+@pytest.mark.parametrize("device", DEVICES)
+@pytest.mark.parametrize("support", ["local_only", "global_only", "none", "below_epsilon"])
+def test_write_underflow_uses_actual_mass_and_preserves_sole_supported_path(device, support):
+    torch.manual_seed(43)
+    memory = DualTimescaleTransitionMemory(16).to(device).eval()
+    # 17 admitted transitions: last eight local, first nine global.
+    small = torch.arange(18, device=device, dtype=torch.float32) * .25
+    large = torch.where(torch.arange(18, device=device) % 2 == 0, 10000., -10000.)
+    if support == "local_only":
+        levels = large.clone()
+        levels[10:] = levels[9] + torch.arange(1, 9, device=device) * .25
+        # Force fusion toward the missing global path as well.
+        memory.mix.bias.data.fill_(-1000.)
+    elif support == "global_only":
+        levels = large.clone()
+        levels[:10] = small[:10]
+        memory.mix.bias.data.fill_(1000.)
+    elif support == "none":
+        levels = large
+    else:
+        levels = small
+        memory.write.weight.data.zero_()
+        memory.write.bias.data.fill_(-30.)
+    hidden = levels[None, :, None].expand(1, -1, 16).clone()
+    mask = torch.ones(1, 18, device=device, dtype=torch.bool)
+    parts = memory.residual_components(hidden, mask)
+    assert parts["write_count"][0, -1] == 17
+    assert parts["global_count"][0, -1] == 9
+    if support in ("local_only", "global_only"):
+        available = support.split("_")[0]
+        absent = "global" if available == "local" else "local"
+        assert parts[available + "_mass"][0, -1] > DUAL_TIMESCALE_EPSILON
+        assert parts[absent + "_mass"][0, -1] <= DUAL_TIMESCALE_EPSILON
+        assert parts[available + "_weight"][0, -1] == 1
+        assert parts[absent + "_weight"][0, -1] == 0
+        assert parts[available + "_read"][0, -1].abs().sum() > 0
+        assert torch.equal(parts["residual"][0, -1], parts[available + "_read"][0, -1])
+        assert torch.count_nonzero(parts[absent + "_read"][0, -1]) == 0
+    else:
+        for scope in ("local", "global"):
+            mass = parts[scope + "_mass"][0, -1]
+            assert mass <= DUAL_TIMESCALE_EPSILON
+            if support == "below_epsilon":
+                assert mass > 0
+            assert parts[scope + "_weight"][0, -1] == 0
+            assert torch.count_nonzero(parts[scope + "_read"][0, -1]) == 0
+        assert torch.count_nonzero(parts["residual"][0, -1]) == 0
+
+
+@pytest.mark.parametrize("device", DEVICES)
+def test_single_transition_absolute_confidence_controls_residual_and_has_gradient(device):
+    torch.manual_seed(73)
+    memory = DualTimescaleTransitionMemory(16).to(device).eval()
+    hidden = torch.randn(1, 2, 16, device=device)
+    mask = torch.ones(1, 2, device=device, dtype=torch.bool)
+    memory.write.weight.data.zero_()
+    residual_norms = []
+    for bias in (-10., -3., 0., 3., 10.):
+        memory.write.bias.data.fill_(bias)
+        parts = memory.residual_components(hidden, mask)
+        mass = parts["local_mass"][0, 1]
+        support = -torch.expm1(-DUAL_TIMESCALE_RANK * mass)
+        assert parts["local_weight"][0, 1] == 1
+        assert parts["global_weight"][0, 1] == 0
+        torch.testing.assert_close(parts["residual"][0, 1], parts["values"][0, 1] * support,
+                                   atol=1e-7, rtol=1e-6)
+        assert 0 < support < 1
+        residual_norms.append(parts["residual"][0, 1].norm().item())
+    assert all(earlier < later for earlier, later in zip(residual_norms, residual_norms[1:]))
+    memory.write.bias.data.zero_()
+    parts = memory.residual_components(hidden, mask)
+    parts["residual"].square().sum().backward()
+    # Absolute trust can now train even with exactly one observed transition.
+    assert memory.write.bias.grad is not None and memory.write.bias.grad.abs().sum() > 0
+    assert memory.write.weight.grad is not None and memory.write.weight.grad.abs().sum() > 0
+    assert torch.isfinite(memory.write.bias.grad).all()
+
+
+@pytest.mark.parametrize("device", DEVICES)
+def test_support_grows_with_repeated_evidence_and_is_bounded(device):
+    torch.manual_seed(104)
+    memory = DualTimescaleTransitionMemory(16).to(device).eval()
+    hidden = torch.randn(1, 1, 16, device=device).expand(1, 24, 16).clone()
+    mask = torch.ones(1, 24, device=device, dtype=torch.bool)
+    parts = memory.residual_components(hidden, mask)
+    for scope in ("local", "global"):
+        mass, support = parts[scope + "_mass"], parts[scope + "_support"]
+        expected = torch.where(mass > DUAL_TIMESCALE_EPSILON,
+                               -torch.expm1(-DUAL_TIMESCALE_RANK * mass), torch.zeros_like(mass))
+        torch.testing.assert_close(support, expected, atol=0, rtol=0)
+        assert ((support >= 0) & (support <= 1)).all()
+        assert (support[:, 1:] >= support[:, :-1] - 1e-6).all()
+        assert (parts[scope + "_read"].abs() <= support + 1e-6).all()
+    assert parts["local_support"][0, 8] > parts["local_support"][0, 1] > 0
+    assert parts["global_support"][0, -1] > parts["global_support"][0, 9] > 0

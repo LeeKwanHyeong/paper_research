@@ -63,9 +63,11 @@ def dual_timescale_metadata(hidden_dim: int) -> dict[str, Any]:
         "write_confidence": "sigmoid_linear_mean_absolute_observed_hidden_innovation",
         "write_admission": "both_adjacent_positions_valid_and_observed",
         "read_timing": "inclusive_observed_prefix_for_next_event_prediction",
-        "read": "normalized_nonnegative_associative_sufficient_statistics",
+        "read": "normalized_nonnegative_associative_read_times_absolute_support_gate",
+        "absolute_support_gate": "-expm1(-transition_rank*query_weighted_mass)",
+        "absolute_support_gate_placement": "per_path_before_fusion",
         "fusion": "sigmoid_linear_log1p_local_mass_log1p_global_mass_innovation",
-        "missing_path_policy": "mask_and_renormalize_available_path",
+        "missing_path_policy": "mass_gt_epsilon_mask_and_renormalize_available_path",
         "residual": "tanh_zero_initialized_scalar_times_bounded_fused_read",
         "read_value_bound": 1.0, "projection_input_bound": DUAL_TIMESCALE_INPUT_BOUND,
         "epsilon": DUAL_TIMESCALE_EPSILON,
@@ -205,24 +207,34 @@ class DualTimescaleTransitionMemory(nn.Module):
             mass = (queries * key_sum).sum(-1, keepdim=True).clamp_min(0)
             numerator = (queries.unsqueeze(-1) * value_sum).sum(-2)
             result = (numerator / mass.clamp_min(DUAL_TIMESCALE_EPSILON)).clamp(-1., 1.)
-            return torch.where(mass > 0, result, torch.zeros_like(result)), mass
+            # Normalization alone cancels absolute trust for a single stored
+            # transition. Retain a common, bounded measure of absolute support.
+            support = -torch.expm1(-DUAL_TIMESCALE_RANK * mass)
+            supported = mass > DUAL_TIMESCALE_EPSILON
+            support = torch.where(supported, support, torch.zeros_like(support))
+            result = torch.where(supported, result * support, torch.zeros_like(result))
+            return result, mass, support
 
-        local, local_mass = read(local_keys, local_values)
-        global_read, global_mass = read(global_keys, global_values)
+        local, local_mass, local_support = read(local_keys, local_values)
+        global_read, global_mass, global_support = read(global_keys, global_values)
         mix_features = torch.cat((local_mass.log1p(), global_mass.log1p(), innovation_norm.to(dtype)), -1)
         learned_mix = self.mix(mix_features.to(hidden.dtype)).sigmoid().to(dtype)
-        local_available = (write_count > 0).unsqueeze(-1)
-        global_available = (old_count > 0).unsqueeze(-1)
-        local_weight = learned_mix * local_available
-        global_weight = (1 - learned_mix) * global_available
-        denominator = (local_weight + global_weight).clamp_min(DUAL_TIMESCALE_EPSILON)
-        local_weight, global_weight = local_weight / denominator, global_weight / denominator
+        # An admitted transition can carry numerically zero trust. Availability
+        # is determined by actual query-weighted support, not by write counts.
+        local_available = local_mass > DUAL_TIMESCALE_EPSILON
+        global_available = global_mass > DUAL_TIMESCALE_EPSILON
+        both_available = local_available & global_available
+        # A sole supported path receives weight one, even if the learned sigmoid
+        # saturates toward the absent path; fully unsupported reads stay zero.
+        local_weight = torch.where(both_available, learned_mix, local_available.to(dtype))
+        global_weight = torch.where(both_available, 1 - learned_mix, global_available.to(dtype))
         residual = (local_weight * local + global_weight * global_read).clamp(-1., 1.)
         residual = torch.where(valid.unsqueeze(-1), residual, torch.zeros_like(residual))
         return {
             "residual": residual.to(hidden.dtype), "local_read": local,
             "global_read": global_read, "local_mass": local_mass,
-            "global_mass": global_mass, "local_weight": local_weight,
+            "global_mass": global_mass, "local_support": local_support,
+            "global_support": global_support, "local_weight": local_weight,
             "global_weight": global_weight, "admitted": admitted,
             "write_count": write_count, "global_count": old_count,
             "queries": queries, "keys": keys, "values": values, "trust": trust,
