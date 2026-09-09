@@ -155,13 +155,12 @@ def hidden_credits(
     target_duration: torch.Tensor,
     body_threshold: float,
 ) -> dict[str, torch.Tensor]:
-    detached = hidden.detach().clone().requires_grad_(True)
-    location, prediction = model.predict_quantity(detached)
+    location, prediction = model.predict_quantity(hidden)
     log_losses = (location - torch.log1p(target_quantity.clamp_min(0.0))).square()
     raw_losses = (prediction - target_quantity).square()
     body_mask = target_quantity <= float(body_threshold)
     body_losses = (prediction - target_quantity).abs() * body_mask.to(prediction.dtype)
-    time_losses = -model.log_f_dt(detached, target_duration)
+    time_losses = -model.log_f_dt(hidden, target_duration)
     outputs: dict[str, torch.Tensor] = {}
     for name, losses in (
         ("log", log_losses),
@@ -169,9 +168,10 @@ def hidden_credits(
         ("body", body_losses),
         ("time", time_losses),
     ):
-        outputs[name] = torch.autograd.grad(losses.sum(), detached, retain_graph=True)[0].detach()
-    outputs["prediction"] = prediction.detach()
-    outputs["location"] = location.detach()
+        outputs[name] = torch.autograd.grad(losses.sum(), hidden, retain_graph=True)[0].detach()
+        outputs[f"{name}_losses"] = losses
+    outputs["prediction"] = prediction
+    outputs["location"] = location
     outputs["body_mask"] = body_mask
     return outputs
 
@@ -344,14 +344,10 @@ def fold_probe(
         batch_count = int(target_quantity.numel())
         body_count = int(body_mask.sum())
         require(batch_count > 0 and body_count > 0, "Empty diagnostic batch")
-        log_loss = (
-            model.predict_quantity(hidden)[0]
-            - torch.log1p(target_quantity.clamp_min(0.0))
-        ).square().mean()
-        prediction = model.predict_quantity(hidden)[1]
-        raw_loss = (prediction - target_quantity).square().mean()
-        body_loss = (prediction[body_mask] - target_quantity[body_mask]).abs().mean()
-        time_loss = (-model.log_f_dt(hidden, target_duration)).mean()
+        log_loss = credits["log_losses"].mean()
+        raw_loss = credits["raw_losses"].mean()
+        body_loss = credits["body_losses"].sum() / body_count
+        time_loss = credits["time_losses"].mean()
         native: dict[str, list[torch.Tensor]] = {}
         for position, (metric, loss) in enumerate(
             (("log", log_loss), ("raw", raw_loss), ("body", body_loss), ("time", time_loss))
