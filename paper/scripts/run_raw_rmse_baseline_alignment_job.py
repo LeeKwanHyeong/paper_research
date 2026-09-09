@@ -684,6 +684,23 @@ def command_output(command: Sequence[str], *, allowed: tuple[int, ...] = (0,)) -
     return result.stdout.strip()
 
 
+def active_gdm_is_authorized(
+    policy: Mapping[str, Any],
+    *,
+    host_role: str,
+    backbone: str,
+) -> bool:
+    """Keep the legacy RMTPP exception unless a narrow contract expands it."""
+    permitted = policy.get("active_gdm_permitted_backbones", ["rmtpp"])
+    require(
+        isinstance(permitted, list)
+        and permitted
+        and all(value in BACKBONES for value in permitted),
+        "Active-GDM permitted-backbone policy is invalid",
+    )
+    return host_role == "5080" and backbone in permitted
+
+
 def gpu_preflight(
     contract: Mapping[str, Any],
     host_role: str,
@@ -712,7 +729,14 @@ def gpu_preflight(
     else:
         require(gdm in {"active", "inactive"}, f"Unexpected GDM state: {gdm!r}")
         if gdm == "active":
-            require(host_role == "5080" and backbone == "rmtpp", "Active GDM exception broadened")
+            require(
+                active_gdm_is_authorized(
+                    policy,
+                    host_role=host_role,
+                    backbone=backbone,
+                ),
+                "Active GDM exception broadened",
+            )
     return {
         "gpu_name": name,
         "free_vram_mib": free_mib,
@@ -822,7 +846,14 @@ def validate_runtime_fingerprint(
     else:
         require(gdm in {"active", "inactive"}, "Launch-time GDM evidence is invalid")
         if gdm == "active":
-            require(host_role == "5080" and job["backbone"] == "rmtpp", "GDM exception broadened")
+            require(
+                active_gdm_is_authorized(
+                    policy,
+                    host_role=host_role,
+                    backbone=str(job["backbone"]),
+                ),
+                "GDM exception broadened",
+            )
     return dict(payload)
 
 
