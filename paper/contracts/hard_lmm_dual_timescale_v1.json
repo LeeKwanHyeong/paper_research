@@ -1,0 +1,215 @@
+{
+  "schema_version": 1,
+  "contract_id": "hard_lmm_dual_timescale_v1",
+  "created_on": "2026-09-09",
+  "status": "frozen_before_new_candidate_outputs",
+  "repository": "paper_research",
+  "branch": "codex/hard-lmm-dual-timescale",
+  "host_role": "5090",
+  "authorization": "User approved one final common Backbone redesign and testing on 5090; all four remaining benchmark fits belong to 5080. On candidate failure retain TitanTPP(B).",
+  "candidate": {
+    "backbone": "titantpp_dual_timescale_memory",
+    "model_role": "hard_lmm_dual_timescale_candidate",
+    "gpu_name_contains": "RTX 5090"
+  },
+  "architecture": {
+    "placement": "between_encoder_layer_1_and_2",
+    "base": "fresh_same_seed_original_B",
+    "global_static_prior": "original_final_Hard_LMM_64_prototypes_top4_arithmetic_mean",
+    "dynamic_memory": "disjoint_recent_and_older_observed_transition_associative_statistics",
+    "rank": 8,
+    "recent_transitions": 8,
+    "key": "softmax(Wk normalized_h_previous)",
+    "value": "tanh(Wv observed_hidden_innovation)",
+    "query": "softmax(Wq normalized_h_current)",
+    "write": "bounded_sigmoid_confidence_on_observed_innovation_magnitude",
+    "read": "normalized_positive_kernel_associative_read",
+    "fusion": "availability_masked_learned_confidence_from_local_and_global_support_and_current_innovation",
+    "injection": "h1+tanh(alpha)*bounded_projected_dynamic_read",
+    "alpha_initial": 0.0,
+    "state_scope": "per_sample_observed_prefix_rebuilt_each_forward",
+    "cross_batch_or_series_state": false,
+    "inner_optimizer": false,
+    "same_model_and_hyperparameters_all_datasets": true
+  },
+  "common_training": {
+    "seed": 42,
+    "quantity_variant": "count_only_log_regression",
+    "quantity_loss": "unweighted_mse_on_log1p_quantity",
+    "checkpoint_monitor": "validation_raw_quantity_rmse",
+    "checkpoint_rule": "earliest_strict_finite_minimum",
+    "early_stopping_monitor": "validation_raw_quantity_rmse",
+    "optimizer": "AdamW",
+    "learning_rate": 0.001,
+    "batch_size": 128,
+    "gradient_clip": 1.0,
+    "hidden_dim": 64,
+    "lambda_log_quantity": 1.0,
+    "lambda_tail": 0.0,
+    "quantile_adaptive_strength": 0.0,
+    "time_head": "legacy_clamped_rmtpp",
+    "time_scale": 3.0,
+    "time_w_max": 3.3333333333333335,
+    "time_intercept_limit": 300.0
+  },
+  "initialization": "fresh_same_seed_B_shared_state_and_RNG_exact_not_finetuning_a_trained_B",
+  "phases": {
+    "e1": {
+      "datasets_in_order": [
+        "yellow_trip_hourly",
+        "intermittent_frozen_5000",
+        "insta_market_basket"
+      ],
+      "epochs": 1,
+      "minimum_epochs": 1,
+      "patience": 1,
+      "performance_gate": false
+    },
+    "seed42_screening": {
+      "datasets_in_order": [
+        "insta_market_basket",
+        "yellow_trip_hourly",
+        "intermittent_frozen_5000"
+      ],
+      "epochs": 300,
+      "minimum_epochs": 40,
+      "patience": 40,
+      "stop_on_first_failed_frozen_gate": true
+    }
+  },
+  "seed42_gate": {
+    "raw_rmse": "candidate_strictly_lower_than_B",
+    "overall_mae": "candidate_no_more_than_B_times_1.01",
+    "body_mae": "candidate_no_more_than_B_times_1.02",
+    "gt_p99_mae": "candidate_no_more_than_B_times_1.02",
+    "clamped_time_loss": "candidate_no_more_than_B_plus_0.01"
+  },
+  "B_validation_reference": {
+    "source": "paper/results/hard_lmm_raw_rmse_checkpoint_alignment_seed42_20260906/a_vs_b_metrics.json",
+    "sha256": "17b1c432b58f0620d8e6eda1a291a92eb4c995af9c78d98be8d460be79079db3",
+    "datasets": {
+      "intermittent_frozen_5000": {
+        "raw_rmse": 1.4995550721471171,
+        "overall_mae": 0.6043404183562111,
+        "body_mae": 0.4657896038725777,
+        "gt_p99_mae": 5.148108011792356,
+        "clamped_time_loss": -3.483793693042792
+      },
+      "yellow_trip_hourly": {
+        "raw_rmse": 88.19499665350457,
+        "overall_mae": 28.67402025115017,
+        "body_mae": 18.997478121185097,
+        "gt_p99_mae": 332.76974448674844,
+        "clamped_time_loss": 1.473390626529593
+      },
+      "insta_market_basket": {
+        "raw_rmse": 5.872216930452246,
+        "overall_mae": 3.9937810783167014,
+        "body_mae": 3.438601503150614,
+        "gt_p99_mae": 21.91779476530588,
+        "clamped_time_loss": 3.2155228955007256
+      }
+    }
+  },
+  "data_bindings": [
+    {
+      "dataset": "intermittent_frozen_5000",
+      "data_path": "sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+      "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+      "split_manifest_path": "sample_data/intermittent_v2/intermittent_frozen_5000_split_manifest.json",
+      "split_manifest_sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04",
+      "lookback": 520,
+      "max_sequence_length": 256,
+      "expected_train_targets": 393824,
+      "expected_validation_targets": 86285,
+      "expected_train_target_identity_sha256": "fb8737489bc18e528adc322e2e55e26fcc5793aa6ff8021d93ceac98d7768aed",
+      "expected_train_target_quantity_sha256": "c4a9c3721d3861c190e81abe35156488f545b00c8ddbbed4022a9a82a4b3a215",
+      "expected_validation_target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+      "expected_validation_target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385",
+      "B_t0_raw_rmse_validation_metrics": {
+        "raw_rmse": 1.4995550721471171,
+        "overall_mae": 0.6043404183562111
+      },
+      "B_t0_raw_rmse_checkpoint_file_sha256": "63d38ee4401c208dcfa24206682edaca56e2d2a5ca1037b09decdc2ffa567c08",
+      "B_t0_raw_rmse_checkpoint_state_sha256": "4b984d415d83a479fdacb49b12d964afa668adad136511590a54293df763c0d0"
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "data_path": "sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+      "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+      "split_manifest_path": "sample_data/new_york_taxi/yellow_trip_hourly_split_manifest.json",
+      "split_manifest_sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85",
+      "lookback": 168,
+      "max_sequence_length": 256,
+      "expected_train_targets": 38393,
+      "expected_validation_targets": 8268,
+      "expected_train_target_identity_sha256": "fc6453af5a9a34c93dd3f299cd545c9ab946be11752ee001f38055e52cc9e637",
+      "expected_train_target_quantity_sha256": "bbabe4e040831f05bc96680afdb4c45a1856673e418bdd1db9495cda3f693680",
+      "expected_validation_target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+      "expected_validation_target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd",
+      "B_t0_raw_rmse_validation_metrics": {
+        "raw_rmse": 88.19499665350457,
+        "overall_mae": 28.67402025115017
+      },
+      "B_t0_raw_rmse_checkpoint_file_sha256": "46b456816dbc3c36e4f9c115c05b480fc030a8c2004646d179416d528bd897d5",
+      "B_t0_raw_rmse_checkpoint_state_sha256": "eddc8b4a11b233606bf74508f0ef721e05e55bbcb047d18edab4aa61f2f43c41"
+    },
+    {
+      "dataset": "insta_market_basket",
+      "data_path": "sample_data/insta_market_basket/instacart_marked_target_with_split.parquet",
+      "data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+      "split_manifest_path": "sample_data/insta_market_basket/instacart_marked_target_split_manifest.json",
+      "split_manifest_sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d",
+      "lookback": 52,
+      "max_sequence_length": 64,
+      "expected_train_targets": 1991192,
+      "expected_validation_targets": 503733,
+      "expected_train_target_identity_sha256": "c361f5e9904c25f18c91007f6e1209518a02fb755799e81c8300ee759b2a1210",
+      "expected_train_target_quantity_sha256": "07e98693d5ac26caeaeb3c60d6d31fad21ab8f1e40ac649f231ac299963817d8",
+      "expected_validation_target_identity_sha256": "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8",
+      "expected_validation_target_quantity_sha256": "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184",
+      "B_t0_raw_rmse_validation_metrics": {
+        "raw_rmse": 5.872216930452246,
+        "overall_mae": 3.9937810783167014
+      },
+      "B_t0_raw_rmse_checkpoint_file_sha256": "e594f8df0dcd66249c3724063f44eee3de213bc83a780ca81fdf39a094bfed07",
+      "B_t0_raw_rmse_checkpoint_state_sha256": "a74e1f3055b03db5ac85adf2fdb63711890ea9d06449965e3ca749aefccc2f02"
+    }
+  ],
+  "cost_gate": {
+    "synthetic_batch_size": 128,
+    "sequence_lengths": [
+      64,
+      256
+    ],
+    "warmup_steps": 3,
+    "measured_steps": 7,
+    "repeats": 3,
+    "training_step_ratio_max": 2.0,
+    "peak_allocated_memory_ratio_max": 3.0,
+    "parameter_ratio_max": 1.25,
+    "measurement": "same_device_same_shapes_median_forward_backward_AdamW_step_alternating_model_order"
+  },
+  "local_contracts": [
+    "same_seed_B_initial_outputs_shared_gradients_RNG",
+    "active_query_key_value_write_confidence_gradients",
+    "local_global_disjoint_and_reference_replay",
+    "causal_prefix_no_future_or_target_write",
+    "padding_and_write_mask",
+    "batch_order_and_no_cross_forward_state",
+    "finite_extremes",
+    "checkpoint_and_optimizer_exact_resume",
+    "held_out_not_materialized"
+  ],
+  "evaluation_scope": "validation_only",
+  "held_out_test_evaluated": false,
+  "additional_seeds_authorized": false,
+  "decision": {
+    "technical_failure": "stop_and_report_no_performance_conclusion",
+    "screening_failure": "stop_candidate_keep_B_no_new_backbone_search",
+    "all_seed42_pass": "promising_candidate_requires_separate_multiseed_and_held_out_validation_before_adoption",
+    "normalized_time_nll": "not_claimed_from_legacy_score",
+    "original_body_MAE_5_percent": "separate_secondary_claim_not_a_substitute_for_common_raw_RMSE_gate",
+    "post_result_hyperparameter_changes": false
+  }
+}
