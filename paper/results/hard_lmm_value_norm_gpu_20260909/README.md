@@ -1,8 +1,14 @@
-# VNC-Hard-LMM 5090 CUDA·full-data e1
+# VNC-Hard-LMM 5090 검증
 
-상태: **통과**. 커밋 `956603f16ca3540e2012a461a494ea1ec905102d`의 VNC-Hard-LMM 후보가 RTX 5090에서 CUDA·gradient·비용·세 데이터셋 full-data e1·저장/복원 계약을 모두 충족했다.
+최종 상태: **실행 계약 통과, 성능 후보 탈락**. 커밋 `956603f16ca3540e2012a461a494ea1ec905102d`의 VNC-Hard-LMM 후보는 RTX 5090에서 CUDA·gradient·비용·세 데이터셋 full-data e1·저장/복원 계약을 충족했다. 후속 Instacart seed42 screening에서는 raw RMSE 기준을 충족하지 못해 확장을 중단했다.
 
-이번 단계는 실행 계약 검증이다. e1 validation 수치로 성능 채택을 판단하지 않았고, seed42 e300 screening과 held-out test는 실행하지 않았다.
+e1 validation 수치로 성능 채택을 판단하지 않았다. 성능 판정은 후속 seed42 screening에서 수행했으며 held-out test는 실행하지 않았다.
+
+## Seed42 성능 판정
+
+Instacart 학습은 epoch 112에서 조기 종료됐고 epoch 72가 선택됐다. VNC의 validation raw RMSE는 `5.8743577925`, B는 `5.8722169305`로 VNC가 약 `0.0365%` 높았다. 다른 네 guardrail은 통과했지만 raw RMSE를 엄격히 개선해야 한다는 사전 기준을 충족하지 못했다.
+
+따라서 VNC용 normalized-duration fit, Taxi·Intermittent seed42 및 추가 seed는 실행하지 않는다. 상세 결과와 CUDA 재감사는 [seed42 screening 기록](seed42_screening_5090/README.md)에 있다.
 
 ## Source·데이터 무결성
 
@@ -43,8 +49,8 @@ CUDA qualification은 `71 passed`, failure/error/skip `0`이었다. VNC 전용 C
 
 커밋 `956603f`에는 VNC 전용 GPU 비용·통합 감사기가 없어서, source snapshot과 분리한 감사 도구를 SHA-256으로 고정해 artifact에 보존했다. 비용 감사 v1은 첫 warmup 전 인자 순서 오류로 중단됐고 v2가 새 경로에서 통과했다. e1 감사 v1/v2는 checkpoint 검사 전 archive stream 처리 때문에 중단됐고 v3는 model·optimizer 복원까지 통과했다. 독립 검토에서 v3의 RNG·loader 검사가 payload 존재 확인에 그친 점을 발견해, 실제 복원과 결정적 다음 상태를 확인한 v4를 최종 판정으로 고정했다. 학습 job은 재실행하지 않았다.
 
-최종 machine-readable 판정은 [completion.json](completion.json)과 [remote/e1_audit_v4.json](remote/e1_audit_v4.json)에 있다. 대용량 `.pt` checkpoint는 5090 원격 artifact에 보존하고 로컬 Git 증적에서는 제외했다.
+e1의 machine-readable 판정은 [completion.json](completion.json)과 [remote/e1_audit_v4.json](remote/e1_audit_v4.json)에 있다. 이 두 파일은 seed42 screening 전의 e1 완료 시점 기록이다. 성능 판정은 [seed42_screening_5090/decision.json](seed42_screening_5090/decision.json)을 따른다. 대용량 `.pt` checkpoint는 5090 원격 artifact에 보존하고 로컬 Git 증적에서는 제외했다.
 
 ## 남은 작업
 
-다음 단계는 별도 승인 후 Instacart seed42 e300 screening이다. 그 단계에서 처음으로 VNC-Hard-LMM의 성능 기준을 판정한다. 현재 결과만으로 Backbone 개선 채택을 주장할 수 없다.
+이 VNC 후보의 조건부 실험은 종료됐다. 다음 Backbone 후보를 정한다면 이번 결과에서 확인된 “평균 절대오차와 tail은 보존되지만 제곱오차가 소폭 증가하는 현상”을 새 가설의 근거로 사용하되, VNC의 탈락 기준이나 결과를 소급 변경하지 않는다.

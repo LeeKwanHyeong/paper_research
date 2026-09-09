@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "decision_id": "vnc_hard_lmm_instacart_seed42_screening_5090",
+  "candidate": "VNC-Hard-LMM",
+  "dataset": "insta_market_basket",
+  "seed": 42,
+  "epoch_budget": 300,
+  "completed_epochs": 112,
+  "stopped_early": true,
+  "selected_epoch": 72,
+  "checkpoint_selector": "earliest_strict_minimum_validation_raw_rmse",
+  "source_revision": "956603f16ca3540e2012a461a494ea1ec905102d",
+  "audit_commit": "22727ad591d383b5a7d07189b0e6d0e94b98f65d",
+  "audit_sha256": "d4c22a616caf0114bc264df2fe8bce1c7967357f95b74b5e1a0d6787ed883989",
+  "audit_status": "passed",
+  "screening_gate_status": "failed",
+  "metrics": {
+    "VNC": {
+      "raw_rmse": 5.874357792474674,
+      "overall_mae": 3.9933433509044938,
+      "body_mae": 3.440589781725026,
+      "gt_p99_mae": 21.81707657189303,
+      "legacy_time_nll": 3.2153963532981993
+    },
+    "B": {
+      "raw_rmse": 5.872216930452246,
+      "overall_mae": 3.9937810783167014,
+      "body_mae": 3.438601503150614,
+      "gt_p99_mae": 21.91779476530588,
+      "legacy_time_nll": 3.2155228955007256
+    },
+    "VNC_minus_B": {
+      "raw_rmse": 0.002140862022428358,
+      "overall_mae": -0.00043772741220760025,
+      "body_mae": 0.0019882785744123055,
+      "gt_p99_mae": -0.10071819341285249,
+      "legacy_time_nll": -0.0001265422025262808
+    }
+  },
+  "gate_checks": {
+    "raw_rmse_strictly_better_than_B": false,
+    "overall_mae_within_B_plus_1_percent": true,
+    "body_mae_within_B_plus_2_percent": true,
+    "gt_p99_mae_within_B_plus_2_percent": true,
+    "legacy_time_nll_within_B_plus_0_01": true
+  },
+  "decision": "reject_vnc_hard_lmm_candidate",
+  "stop_reason": "validation_raw_rmse_did_not_strictly_improve_over_B",
+  "normalized_duration_fit_authorized": false,
+  "taxi_intermittent_seed42_authorized": false,
+  "additional_seeds_authorized": false,
+  "held_out_test_evaluated": false,
+  "validation_target_count": 503733,
+  "validation_target_identity_sha256": "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8",
+  "validation_target_quantity_sha256": "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184"
+}

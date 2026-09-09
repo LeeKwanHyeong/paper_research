@@ -1,0 +1,85 @@
+{
+  "amendment_id": "hard_lmm_value_norm_screening_5090_v1_amendment1",
+  "amends_contract_id": "hard_lmm_value_norm_screening_5090_v1",
+  "amends_contract_path": "paper/contracts/hard_lmm_value_norm_screening_5090_v1.json",
+  "amends_contract_sha256": "515412b7750f8e864872ea37c7a50d4af57a78407a8794604b1e12301b26bc9c",
+  "created_on": "2026-09-09",
+  "freeze_timing": {
+    "candidate_final_summary_available": false,
+    "candidate_normalized_duration_fit_started": false,
+    "candidate_screening_state": "Instacart seed42 training in progress",
+    "reason": "Correct the aligned-B reference to the already completed observation-likelihood-aligned fit before the candidate normalized-duration stage."
+  },
+  "scope": {
+    "changed_fields_only": "B_seed42_validation_references.*.normalized_proper_time_nll and their exact gate bounds",
+    "quantity_gate_changed": false,
+    "legacy_time_gate_changed": false,
+    "normalized_time_margin_changed": false,
+    "training_changed": false,
+    "execution_order_changed": false,
+    "held_out_lock_changed": false
+  },
+  "superseded_reference": {
+    "path": "paper/results/matched_frozen_lognormal_duration_seed42_20260906/metrics.csv",
+    "sha256": "38b4a78710a27c4f40cce2a1f1301c5186366398dfa0dd7523950ef3f5872c92",
+    "reason": "Its Taxi and Instacart values came from continuous-density-selected heads and are not the primary positive-integer observation likelihood required by the aligned contract."
+  },
+  "replacement_reference": {
+    "contract_id": "aligned_frozen_lognormal_duration_v1",
+    "contract_path": "paper/contracts/aligned_frozen_lognormal_duration_v1.json",
+    "contract_sha256": "677cc3af91d84dfea8e3b4e71b38697fb467059f680678f0b8370a50f2366f16",
+    "calibration_source_revision": "8213dbcdace2b62425236af15aa28f5b57f7b958",
+    "decision_path": "search_artifacts/aligned_k1_8213dbc_5080_20260907/decision.json",
+    "decision_sha256": "240b26e0129e1a284983e674bc65b02d73c241d8118abf707883491880e8d39d",
+    "held_out_test_evaluated": false,
+    "quantity_prediction_bitwise_identical": true,
+    "selection": "earliest_strict_finite_minimum_validation_proper_time_nll"
+  },
+  "gate_comparison": "candidate_primary_nll - aligned_B_primary_nll <= 0.01",
+  "normalized_time_references": {
+    "intermittent_frozen_5000": {
+      "observation_likelihood_mode": "continuous_lognormal_density",
+      "aligned_B_primary_nll": 0.787364433804673,
+      "candidate_gate_max_aligned_B_plus_0_01": 0.797364433804673,
+      "best_epoch": 30,
+      "completed_epochs": 50,
+      "selected_checkpoint_path": "search_artifacts/aligned_k1_8213dbc_5080_20260907/full/intermittent_frozen_5000/B/best_validation_proper_time_nll_model.pt",
+      "selected_checkpoint_file_sha256": "4fda86906feaf2793d0038db86e3c2bd9d1cfa5ad6c89f2cf7b91221827cb63d",
+      "selected_checkpoint_state_sha256": "0b5c65245a8bc7ac6672ee5fe9980e93491548b2c0d2ccabb1715f7962d413bd",
+      "source_non_time_state_sha256": "1b695440154dfc6f66545b5468409435b3ec08e16e54f20d724ad21f1789a18f",
+      "summary_path": "search_artifacts/aligned_k1_8213dbc_5080_20260907/full/intermittent_frozen_5000/B/summary.json",
+      "summary_sha256": "71f86b3977672b65046cdaf93eadaa7915b7fb4de9828a796ba7dded83147d95"
+    },
+    "yellow_trip_hourly": {
+      "observation_likelihood_mode": "positive_integer_round_clamp_lognormal",
+      "aligned_B_primary_nll": 0.695647425421554,
+      "candidate_gate_max_aligned_B_plus_0_01": 0.705647425421554,
+      "best_epoch": 100,
+      "completed_epochs": 100,
+      "selected_checkpoint_path": "search_artifacts/aligned_k1_8213dbc_5080_20260907/full/yellow_trip_hourly/B/best_validation_proper_time_nll_model.pt",
+      "selected_checkpoint_file_sha256": "8024a070757598ec97110c76226459c5529f822e682a5c1e6b57125f2a91edd3",
+      "selected_checkpoint_state_sha256": "2c2118afc151e6187e252edf40634c74fe4b0a4fce20cf3e1fe2f1eb807b1535",
+      "source_non_time_state_sha256": "99607c805d7581f2f898bb01bb8725af25a3b9ed26e910c1b9913354d294bcf6",
+      "summary_path": "search_artifacts/aligned_k1_8213dbc_5080_20260907/full/yellow_trip_hourly/B/summary.json",
+      "summary_sha256": "3f0183be0163a3a921e39dc2973687d7859c29d86a6ba61717de287be13f0635"
+    },
+    "insta_market_basket": {
+      "observation_likelihood_mode": "positive_integer_round_clamp_lognormal",
+      "right_censor_threshold": 30.0,
+      "top_code": "P(T > 29.5)",
+      "aligned_B_primary_nll": 2.8129205141060805,
+      "candidate_gate_max_aligned_B_plus_0_01": 2.8229205141060802,
+      "best_epoch": 47,
+      "completed_epochs": 67,
+      "selected_checkpoint_path": "search_artifacts/aligned_k1_8213dbc_5080_20260907/full/insta_market_basket/B/best_validation_proper_time_nll_model.pt",
+      "selected_checkpoint_file_sha256": "441cc3541f77b53036cf3d66bf1ce62d428734806562ba152d1b36fd7ec51ef7",
+      "selected_checkpoint_state_sha256": "f5114ed37557eb415720a07309def35b5fea6abb0af9dd2a771975ae8b80eb33",
+      "source_non_time_state_sha256": "0e3dc70fc3dd9e9bc4eba8cfb945a94be6014a4a1778a54ce4796b6a24509542",
+      "summary_path": "search_artifacts/aligned_k1_8213dbc_5080_20260907/full/insta_market_basket/B/summary.json",
+      "summary_sha256": "6c4dd67d428b9d495001df2e3e951719a956f0182ae2b2e3c347fe910690b285"
+    }
+  },
+  "precedence": "For normalized proper Time NLL only, this amendment supersedes the three normalized_proper_time_nll values in the base screening contract. Every other field in the base contract remains binding.",
+  "schema_version": 1,
+  "status": "frozen_before_candidate_final_summary_and_normalized_duration_outputs"
+}

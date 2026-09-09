@@ -1,0 +1,140 @@
+{
+  "B_seed42_validation_references": {
+    "insta_market_basket": {
+      "body_mae": 3.438601503150614,
+      "checkpoint_file_sha256": "e594f8df0dcd66249c3724063f44eee3de213bc83a780ca81fdf39a094bfed07",
+      "checkpoint_state_sha256": "a74e1f3055b03db5ac85adf2fdb63711890ea9d06449965e3ca749aefccc2f02",
+      "gt_p99_mae": 21.91779476530588,
+      "legacy_time_nll": 3.2155228955007256,
+      "normalized_proper_time_nll": 2.8168307983567824,
+      "overall_mae": 3.9937810783167014,
+      "raw_rmse": 5.872216930452246
+    },
+    "intermittent_frozen_5000": {
+      "body_mae": 0.4657896038725777,
+      "checkpoint_file_sha256": "63d38ee4401c208dcfa24206682edaca56e2d2a5ca1037b09decdc2ffa567c08",
+      "checkpoint_state_sha256": "4b984d415d83a479fdacb49b12d964afa668adad136511590a54293df763c0d0",
+      "gt_p99_mae": 5.148108011792356,
+      "legacy_time_nll": -3.483793693042792,
+      "normalized_proper_time_nll": 0.7873644338139643,
+      "overall_mae": 0.6043404183562111,
+      "raw_rmse": 1.4995550721471171
+    },
+    "yellow_trip_hourly": {
+      "body_mae": 18.997478121185097,
+      "checkpoint_file_sha256": "46b456816dbc3c36e4f9c115c05b480fc030a8c2004646d179416d528bd897d5",
+      "checkpoint_state_sha256": "eddc8b4a11b233606bf74508f0ef721e05e55bbcb047d18edab4aa61f2f43c41",
+      "gt_p99_mae": 332.76974448674844,
+      "legacy_time_nll": 1.473390626529593,
+      "normalized_proper_time_nll": 0.26655814398886946,
+      "overall_mae": 28.67402025115017,
+      "raw_rmse": 88.19499665350457
+    }
+  },
+  "additional_seed_reference_rule": "Before stage 4, audit existing paired B seed52/62 checkpoints and freeze exact full-precision references; do not retrain B when valid checkpoints exist.",
+  "authorization": {
+    "held_out_test_authorized": false,
+    "host_role": "5090",
+    "scope": "Instacart seed42 e300; only on pass extend to Taxi and Intermittent seed42; only when all three pass extend to additional seeds",
+    "source": "user_message_2026-09-09"
+  },
+  "baseline_evidence": {
+    "normalized_time_metrics": {
+      "path": "paper/results/matched_frozen_lognormal_duration_seed42_20260906/metrics.csv",
+      "sha256": "38b4a78710a27c4f40cce2a1f1301c5186366398dfa0dd7523950ef3f5872c92"
+    },
+    "quantity_metrics": {
+      "path": "paper/results/hard_lmm_raw_rmse_checkpoint_alignment_seed42_20260906/a_vs_b_metrics.json",
+      "sha256": "17b1c432b58f0620d8e6eda1a291a92eb4c995af9c78d98be8d460be79079db3"
+    },
+    "registry": {
+      "path": "paper/contracts/raw_rmse_baseline_alignment_seed42_v1.json",
+      "sha256": "1a3bc9aca89c8d26c9e5d244a7be4d4bb7efc302fd20416428b4e59d7ec856a9"
+    }
+  },
+  "branch": "codex/hard-lmm-causal-qkv",
+  "contract_id": "hard_lmm_value_norm_screening_5090_v1",
+  "created_on": "2026-09-09",
+  "execution_order": [
+    {
+      "action_on_failure": "stop_all_followups",
+      "job": "insta_market_basket_seed42_e300",
+      "stage": 1
+    },
+    {
+      "action_on_failure": "stop_all_followups",
+      "job": "insta_market_basket_frozen_normalized_time_fit",
+      "prerequisite": "stage_1_quantity_and_legacy_time_gate_passed",
+      "stage": 2
+    },
+    {
+      "action_on_any_failure": "stop_additional_seeds",
+      "jobs": [
+        "yellow_trip_hourly_seed42_e300",
+        "intermittent_frozen_5000_seed42_e300"
+      ],
+      "prerequisite": "full_instacart_gate_passed",
+      "stage": 3
+    },
+    {
+      "jobs": "candidate seeds52_and62 on all three datasets with paired B references frozen before launch",
+      "prerequisite": "all_three_seed42_full_gates_passed",
+      "stage": 4
+    }
+  ],
+  "gate": {
+    "body_mae": "candidate <= B * 1.02",
+    "gt_p99_mae": "candidate <= B * 1.02",
+    "legacy_time_nll": "candidate <= B + 0.01",
+    "normalized_proper_time_nll": "candidate <= aligned_B + 0.01",
+    "normalized_time_fit_prerequisite": "raw_rmse and all MAE and legacy_time_nll checks pass",
+    "overall_mae": "candidate <= B * 1.01",
+    "precision": "full_precision_no_rounding_tolerance",
+    "raw_rmse": "candidate < B"
+  },
+  "held_out_lock": {
+    "evaluation_scope": "validation_only",
+    "test_artifacts_allowed": false,
+    "test_decision_use_allowed": false,
+    "test_loader_allowed": false,
+    "test_metrics_allowed": false
+  },
+  "repository": "paper_research",
+  "schema_version": 1,
+  "source": {
+    "candidate_backbone": "titantpp_hard_memory_value_norm",
+    "candidate_contract": {
+      "path": "paper/contracts/hard_lmm_value_norm_consistent_v1.json",
+      "sha256": "1c6c3328d711fb2dd9ffa9844dab1dbd696e9110fd3e3f73dd08b4d0e3a8b94b"
+    },
+    "candidate_model_role": "hard_lmm_value_norm_candidate",
+    "candidate_revision": "956603f16ca3540e2012a461a494ea1ec905102d",
+    "e1_audit": {
+      "path": "paper/results/hard_lmm_value_norm_gpu_20260909/remote/e1_audit_v4.json",
+      "sha256": "e954ac79150f7e066dce6c5634128973b02ced933b9af1fd89268fda1206e16c",
+      "status": "passed"
+    },
+    "e1_evidence_commit": "f05df57"
+  },
+  "status": "frozen_before_seed42_screening_outputs",
+  "training": {
+    "batch_size": 128,
+    "change_after_results": false,
+    "checkpoint_monitor": "validation_raw_quantity_rmse",
+    "checkpoint_rule": "earliest_strict_finite_minimum",
+    "gradient_clip": 1.0,
+    "initialization": "fresh_same_seed_B_common_state_and_rng_plus_zero_alpha",
+    "lambda_quantity": 1.0,
+    "lambda_tail": 0.0,
+    "learning_rate": 0.001,
+    "maximum_epochs": 300,
+    "minimum_epochs": 40,
+    "optimizer": "AdamW",
+    "patience": 40,
+    "quantity_loss": "unweighted_mse_on_log1p_quantity",
+    "quantity_variant": "count_only_log_regression",
+    "resume_from_trained_B": false,
+    "time_head": "legacy_clamped_rmtpp",
+    "time_intercept_limit": 300.0
+  }
+}
