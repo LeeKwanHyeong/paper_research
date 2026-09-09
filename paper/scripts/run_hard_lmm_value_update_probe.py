@@ -327,6 +327,7 @@ def fold_probe(
         "top4_indices_bitwise_equal": True,
         "cache_hidden_credit_max_relative": {metric: 0.0 for metric in ("log", "raw", "body", "time")},
         "selected_gradient_max_relative": {metric: 0.0 for metric in ("log", "raw", "body", "time")},
+        "selected_gradient_cancellation_amplified_relative": {metric: 0.0 for metric in ("log", "raw", "body", "time")},
     }
     batch_audits: list[dict[str, Any]] = []
     started = time.monotonic()
@@ -373,9 +374,25 @@ def fold_probe(
                 )
             observed = native[metric][memory_index].squeeze(0)
             difference = float(torch.linalg.vector_norm(observed.double() - analytic))
-            scale = max(1e-30, float(torch.linalg.vector_norm(observed)))
+            selected_credit = credits[metric][body_mask] if metric == "body" else credits[metric]
+            denominator = body_count if metric == "body" else batch_count
+            uncancelled_scale = float(
+                torch.linalg.vector_norm(selected_credit.detach().double(), dim=1).sum()
+                / float(denominator)
+            )
+            final_scale = max(1e-30, float(torch.linalg.vector_norm(observed)))
+            scale = max(
+                final_scale,
+                float(torch.linalg.vector_norm(analytic)),
+                uncancelled_scale,
+                1e-30,
+            )
             parity["selected_gradient_max_relative"][metric] = max(
                 parity["selected_gradient_max_relative"][metric], difference / scale
+            )
+            parity["selected_gradient_cancellation_amplified_relative"][metric] = max(
+                parity["selected_gradient_cancellation_amplified_relative"][metric],
+                difference / final_scale,
             )
         hard_joint = [left + right for left, right in zip(native["log"], native["time"])]
         hard_flat = flatten(hard_joint)
