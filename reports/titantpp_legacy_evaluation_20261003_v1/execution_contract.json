@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-02T22:30:51.010621+00:00",
+  "route": "retrospective_locked_test_reevaluation",
+  "approval": {
+    "test_inference_authorized": true,
+    "retraining_authorized": false,
+    "allowed_splits": [
+      "validation",
+      "test"
+    ],
+    "datasets": [
+      "yellow_trip_hourly",
+      "intermittent_frozen_5000",
+      "insta_market_basket",
+      "raf_spare_parts"
+    ],
+    "models": [
+      "titantpp_history_mlp",
+      "rmtpp",
+      "thp",
+      "nhp",
+      "sahp",
+      "s2p2_matched_head",
+      "attnhp_matched_head",
+      "titantpp_all_available_history_mlp",
+      "titantpp_current_only_param_matched"
+    ],
+    "seeds": [
+      42,
+      52,
+      62
+    ],
+    "user_text": "진행하자. 승인할게",
+    "scope": "Three-step legacy split freeze, full execution qualification, frozen evaluation and manuscript update explicitly approved after plan was quoted.",
+    "additional_paid_resources_authorized": false
+  },
+  "registry_path": "reports/titantpp_final_eval_checkpoint_binding_20261003_v1/evaluation_registry.json",
+  "registry_sha256": "8b715bd360d895bb2ab433072333f9603cb7de2be5de081c0bf0243f0e86fe2b",
+  "dataset_manifest_sha256": "db9e448be65215044cfdc88851c1dbc41f979b656ea3c3dd72003262a634d9a2",
+  "dataset_sha256": {
+    "yellow_trip_hourly": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+    "intermittent_frozen_5000": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+    "insta_market_basket": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+    "raf_spare_parts": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d"
+  },
+  "parent_protocol": "reports/titantpp_final_eval_runner_validation_20261003_v1/effective_protocol.json",
+  "parent_protocol_sha256": "19e6a423f4ed3c57e2a69ebe36ed628de34532f8d314f197e9709c3fb2426f48",
+  "supersedes": "Earlier preparation-only prohibition on legacy test inference; no change to frozen scientific models or selection.",
+  "comparison_scope": {
+    "claim": "numerical-history common-head TPP encoder comparison plus the two simple quantity references and two structural controls",
+    "deep_renewal": "excluded from manuscript comparison at user request after its validation results existed; preserve all runs and research records; this scope is not evidence of dominance over native distributional demand predictors",
+    "selection_transparency": "Do not invent a pre-result exclusion rationale or describe native methods as invalid because they outperform TitanTPP. Method-family scope limits the claim and does not erase retrospective comparator-selection concerns.",
+    "A100": "cross-product and recent-four-mean remain separately reported single-seed exploration; neither replaces the representative"
+  },
+  "prediction_protocol": {
+    "mode": "chronological_one_step_next_observed_event",
+    "same_target_ids_across_models_and_seeds": true,
+    "earlier_test_event_as_history": "only_after_that_event_is_predicted_and_observed",
+    "parameter_updates": false,
+    "target_or_future_in_input": false,
+    "refit_train_validation": false,
+    "test_fitted_preprocessing": false,
+    "missing_or_nonfinite_output": "retain_failure_and_stop_affected_comparison_no_favorable_intersection"
+  },
+  "aggregation": {
+    "within_seed": "micro_event_weighted",
+    "across_seeds": "arithmetic_mean_of_seed_metrics",
+    "seed_dispersion": "sample_standard_deviation_ddof1",
+    "cross_dataset_raw_pooling": false,
+    "ensemble": false,
+    "difference": "TitanTPP_minus_comparator",
+    "relative_improvement": "100*(comparator_mean_RMSE-TitanTPP_mean_RMSE)/comparator_mean_RMSE",
+    "zero_denominator": "undefined_report_absolute_difference"
+  },
+  "resampling": {
+    "draws": 10000,
+    "rng": "numpy_PCG64",
+    "seed_base": 20261001,
+    "dataset_seed_rule": "seed_base_plus_index_in_datasets",
+    "sort": "primary_cluster_key_string_ascending_or_calendar_hour_ascending",
+    "quantile": "linear",
+    "pointwise_interval_quantiles": [
+      0.025,
+      0.975
+    ],
+    "fixed_four_RMSE_anchor_interval_quantiles": [
+      0.00625,
+      0.99375
+    ],
+    "paired_across_all_models_and_seeds": true,
+    "seed_resampling": false,
+    "uncertainty_scope": "evaluation_sampling_conditional_on_three_fixed_trained_models",
+    "joint_losses": "multiplicity_weighted_error_sums_and_counts_then_seed_metrics_then_seed_mean_difference",
+    "units": {
+      "yellow_trip_hourly": "shared_calendar_hour_circular_blocks_across_all_spatial_cells",
+      "intermittent_frozen_5000": "whole_site_cd_cluster",
+      "insta_market_basket": "whole_user_oper_part_no_cluster",
+      "raf_spare_parts": "whole_part_oper_part_no_cluster"
+    },
+    "taxi_block_hours": 168,
+    "taxi_sensitivity_block_hours": [
+      24,
+      336
+    ],
+    "taxi_grid": "all hours between first and last eligible evaluation target time, including empty hours without imputed targets",
+    "taxi_algorithm": "sample_uniform_starts_concatenate_circular_L_hour_blocks_trim_to_T_hours_use_hour_multiplicity_for_existing_eligible_targets",
+    "minimum_cluster_count_to_compute": 2,
+    "minimum_taxi_grid_hours_to_compute": "2L",
+    "small_sample_reporting_threshold": 20,
+    "threshold_semantics": "reporting_guard_not_validity_guarantee",
+    "unavailable_timestamp": "no_target_order_fallback",
+    "invalid_draws": "report_count_and_reason_no_silent_redraw_or_interval_finalization",
+    "multiplicity_scope": "four_prespecified_anchor_RMSE_pairs_only_other_intervals_descriptive",
+    "pvalues": false,
+    "implementation_and_real_data_CIs_status": "31 tests and 108-condition validation sample pipeline verified (84 reused, 24 new); no benchmark-wide or held-out CIs",
+    "primary_unit": "Whole declared entity/site clusters; Intermittent whole sites preserve within-site series dependence; Taxi shared calendar blocks preserve cross-cell temporal shocks.",
+    "paired_entity_cluster_sensitivity_for_taxi": "10,000 complete-cell cluster draws, reported as a sensitivity conditional on cells; cannot substitute for shared-time primary uncertainty",
+    "upper_level_dependency_gate": "If site or system clustering violates the declared unit, freeze a metadata-justified higher-level plan before outcome release or limit inference; never select a favorable unit from CIs.",
+    "intermittent_sensitivity_unit": "whole_oper_part_no_cluster",
+    "analysis_runtime": {
+      "python": "3.12.10",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "packages": {
+        "torch": "2.14.0",
+        "numpy": "2.3.1",
+        "polars": "1.31.0",
+        "pytest": "9.0.3"
+      },
+      "device": "cpu",
+      "threads_per_inference_process": 2,
+      "inter_op_threads": 1,
+      "parallel_inference_processes": 1
+    }
+  },
+  "fixed_validation_selected_anchors": {
+    "yellow_trip_hourly": "rmtpp",
+    "intermittent_frozen_5000": "rmtpp",
+    "insta_market_basket": "s2p2_matched_head",
+    "raf_spare_parts": "s2p2_matched_head"
+  },
+  "resources": {
+    "host": "5080",
+    "root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_legacy_evaluation_20261003_v1",
+    "python": "/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python3.12",
+    "gpu_uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+    "concurrent_workers": 1,
+    "gpu_memory_limit_gib": 12,
+    "rss_limit_gib": 32,
+    "output_limit_gib": 15,
+    "condition_timeout_seconds": 10800,
+    "campaign_timeout_seconds": 86400,
+    "new_rental_cost_usd": 0,
+    "shared_runtime_changes": false
+  },
+  "release": {
+    "before_test": "Local unit tests, full data-loader enumeration, CUDA validation qualification and source/contract seals must pass.",
+    "reporting": "All 108 conditions and two deterministic references per dataset, including failures. No model selection using these results.",
+    "failure_policy": "Preserve attempt and diagnose; no automatic scientific changes or favorable target intersections."
+  }
+}
