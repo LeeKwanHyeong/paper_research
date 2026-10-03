@@ -1,0 +1,270 @@
+% Requires booktabs and graphicx. Preserve existing validation and legacy-test tables.
+% Source analysis JSON SHA-256: e72c6b0dab8e998bbe4b086d3efd69818e9794728018db43442fa47ecf9f4a55
+
+\begin{table}[p]
+\centering\small
+\caption{Exploratory addition after viewing legacy test results; not an untouched independent evaluation. The frozen MLP representative is not replaced. All eight learned models across three datasets. Entries are mean $\pm$ sample standard deviation over seeds 42, 52, and 62; they are not prediction ensembles.}
+\label{tab:b-test-exploratory-models}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llrrr}
+\toprule
+Dataset & Model & MAE & RMSE & Time NLL \\
+\midrule
+Taxi & B (TitanTPP) & $53.0800 \pm 8.9201$ & $183.7313 \pm 36.1293$ & $0.71604 \pm 0.02494$ \\
+Taxi & MLP representative & $37.2005 \pm 4.9741$ & $118.6237 \pm 19.5696$ & $1.02918 \pm 0.27266$ \\
+Taxi & RMTPP & $65.2770 \pm 16.1035$ & $246.6473 \pm 82.5064$ & $0.91558 \pm 0.16043$ \\
+Taxi & THP & $58.3486 \pm 11.0759$ & $202.1740 \pm 36.2182$ & $0.68914 \pm 0.00908$ \\
+Taxi & NHP & $116.3324 \pm 9.7128$ & $381.0762 \pm 26.2349$ & $0.68360 \pm 0.00183$ \\
+Taxi & SAHP & $40.9008 \pm 4.9240$ & $148.2495 \pm 30.2157$ & $0.70619 \pm 0.01889$ \\
+Taxi & S2P2 & $36.8359 \pm 2.3815$ & $115.5415 \pm 6.4023$ & $0.69002 \pm 0.01153$ \\
+Taxi & AttNHP & $38.7528 \pm 1.0565$ & $131.3198 \pm 2.4279$ & $0.70222 \pm 0.00849$ \\
+Intermittent & B (TitanTPP) & $1.1062 \pm 0.0271$ & $2.6364 \pm 0.0991$ & $29.39305 \pm 18.32057$ \\
+Intermittent & MLP representative & $1.1335 \pm 0.0195$ & $2.7612 \pm 0.0793$ & $15.37780 \pm 1.73309$ \\
+Intermittent & RMTPP & $1.6923 \pm 0.1808$ & $4.2115 \pm 0.2126$ & $24.13268 \pm 11.99469$ \\
+Intermittent & THP & $1.3123 \pm 0.0270$ & $3.4839 \pm 0.1232$ & $8.32634 \pm 1.22974$ \\
+Intermittent & NHP & $2.3278 \pm 0.1593$ & $5.9065 \pm 0.8507$ & $18.58278 \pm 15.76365$ \\
+Intermittent & SAHP & $3.6770 \pm 0.6892$ & $12.2524 \pm 1.5182$ & $14.91141 \pm 2.72586$ \\
+Intermittent & S2P2 & $1.3197 \pm 0.0264$ & $3.2154 \pm 0.2743$ & $13.67378 \pm 4.59219$ \\
+Intermittent & AttNHP & $4.3493 \pm 0.7011$ & $12.2891 \pm 2.6891$ & $19.48669 \pm 2.04683$ \\
+Instacart & B (TitanTPP) & $4.0641 \pm 0.0032$ & $5.9744 \pm 0.0151$ & $2.82900 \pm 0.01110$ \\
+Instacart & MLP representative & $4.0637 \pm 0.0030$ & $5.9802 \pm 0.0047$ & $2.83139 \pm 0.01045$ \\
+Instacart & RMTPP & $4.0541 \pm 0.0059$ & $5.9691 \pm 0.0227$ & $2.83283 \pm 0.00882$ \\
+Instacart & THP & $4.0754 \pm 0.0083$ & $5.9550 \pm 0.0141$ & $2.82265 \pm 0.00552$ \\
+Instacart & NHP & $4.5898 \pm 0.0360$ & $6.8962 \pm 0.0630$ & $2.84646 \pm 0.01090$ \\
+Instacart & SAHP & $4.0712 \pm 0.0065$ & $5.9742 \pm 0.0118$ & $2.82411 \pm 0.00572$ \\
+Instacart & S2P2 & $4.0746 \pm 0.0096$ & $5.9465 \pm 0.0113$ & $2.81544 \pm 0.00210$ \\
+Instacart & AttNHP & $4.0635 \pm 0.0020$ & $5.9514 \pm 0.0235$ & $2.83139 \pm 0.00564$ \\
+\bottomrule
+\end{tabular}}
+\end{table}
+\begin{table}[p]
+\centering\small
+\caption{Exploratory addition after viewing legacy test results; not an untouched independent evaluation. The frozen MLP representative is not replaced. Taxi: Shared 168-hour blocks. Primary resampling unit. Differences are B minus comparator. Intervals are pointwise 95\% and conditional on fixed trained seeds, without multiplicity adjustment. Status: Not estimable. Dashes denote an unavailable interval. The 168-hour primary interval is unavailable because the calendar span is too short.}
+\label{tab:b-test-yellow-trip-hourly-primary-168-hour}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llrr}
+\toprule
+Comparator & Metric & $\Delta$ (B minus comparator) & Pointwise 95\% CI \\
+\midrule
+MLP representative & MAE & +15.879492 & --- \\
+MLP representative & RMSE & +65.107583 & --- \\
+MLP representative & Time NLL & -0.313138 & --- \\
+RMTPP & MAE & -12.197010 & --- \\
+RMTPP & RMSE & -62.915985 & --- \\
+RMTPP & Time NLL & -0.199541 & --- \\
+THP & MAE & -5.268661 & --- \\
+THP & RMSE & -18.442708 & --- \\
+THP & Time NLL & +0.026899 & --- \\
+NHP & MAE & -63.252409 & --- \\
+NHP & RMSE & -197.344951 & --- \\
+NHP & Time NLL & +0.032444 & --- \\
+SAHP & MAE & +12.179186 & --- \\
+SAHP & RMSE & +35.481811 & --- \\
+SAHP & Time NLL & +0.009853 & --- \\
+S2P2 & MAE & +16.244123 & --- \\
+S2P2 & RMSE & +68.189780 & --- \\
+S2P2 & Time NLL & +0.026017 & --- \\
+AttNHP & MAE & +14.327203 & --- \\
+AttNHP & RMSE & +52.411485 & --- \\
+AttNHP & Time NLL & +0.013821 & --- \\
+\bottomrule
+\end{tabular}}
+\end{table}
+\begin{table}[p]
+\centering\small
+\caption{Exploratory addition after viewing legacy test results; not an untouched independent evaluation. The frozen MLP representative is not replaced. Intermittent: Whole sites. Primary resampling unit. Differences are B minus comparator. Intervals are pointwise 95\% and conditional on fixed trained seeds, without multiplicity adjustment. Status: Computed conditional. Dashes denote an unavailable interval.}
+\label{tab:b-test-intermittent-frozen-5000-primary-site}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llrr}
+\toprule
+Comparator & Metric & $\Delta$ (B minus comparator) & Pointwise 95\% CI \\
+\midrule
+MLP representative & MAE & -0.027330 & [-0.038352, -0.015434] \\
+MLP representative & RMSE & -0.124860 & [-0.166222, -0.080147] \\
+MLP representative & Time NLL & +14.015255 & [10.507622, 17.953639] \\
+RMTPP & MAE & -0.586126 & [-0.705013, -0.482161] \\
+RMTPP & RMSE & -1.575113 & [-1.906471, -1.243570] \\
+RMTPP & Time NLL & +5.260379 & [0.879191, 9.967296] \\
+THP & MAE & -0.206087 & [-0.295174, -0.132375] \\
+THP & RMSE & -0.847586 & [-1.148668, -0.523697] \\
+THP & Time NLL & +21.066715 & [17.229248, 25.518123] \\
+NHP & MAE & -1.221557 & [-1.566684, -0.909406] \\
+NHP & RMSE & -3.270099 & [-3.898063, -2.601729] \\
+NHP & Time NLL & +10.810270 & [6.788758, 15.356717] \\
+SAHP & MAE & -2.570786 & [-3.179189, -2.023643] \\
+SAHP & RMSE & -9.616083 & [-11.740968, -7.344875] \\
+SAHP & Time NLL & +14.481642 & [10.464570, 19.101561] \\
+S2P2 & MAE & -0.213496 & [-0.274956, -0.159599] \\
+S2P2 & RMSE & -0.578997 & [-0.726134, -0.423313] \\
+S2P2 & Time NLL & +15.719277 & [11.482122, 20.408813] \\
+AttNHP & MAE & -3.243090 & [-3.892209, -2.654336] \\
+AttNHP & RMSE & -9.652740 & [-11.401621, -7.862661] \\
+AttNHP & Time NLL & +9.906367 & [6.364405, 13.944316] \\
+\bottomrule
+\end{tabular}}
+\end{table}
+\begin{table}[p]
+\centering\small
+\caption{Exploratory addition after viewing legacy test results; not an untouched independent evaluation. The frozen MLP representative is not replaced. Instacart: Whole users. Primary resampling unit. Differences are B minus comparator. Intervals are pointwise 95\% and conditional on fixed trained seeds, without multiplicity adjustment. Status: Computed conditional. Dashes denote an unavailable interval.}
+\label{tab:b-test-insta-market-basket-primary-entity}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llrr}
+\toprule
+Comparator & Metric & $\Delta$ (B minus comparator) & Pointwise 95\% CI \\
+\midrule
+MLP representative & MAE & +0.000387 & [-0.000503, 0.001256] \\
+MLP representative & RMSE & -0.005755 & [-0.007447, -0.004121] \\
+MLP representative & Time NLL & -0.002398 & [-0.002535, -0.002263] \\
+RMTPP & MAE & +0.009987 & [0.009031, 0.010939] \\
+RMTPP & RMSE & +0.005343 & [0.003044, 0.007485] \\
+RMTPP & Time NLL & -0.003833 & [-0.004089, -0.003587] \\
+THP & MAE & -0.011268 & [-0.012814, -0.009759] \\
+THP & RMSE & +0.019382 & [0.011289, 0.025829] \\
+THP & Time NLL & +0.006350 & [0.006085, 0.006609] \\
+NHP & MAE & -0.525722 & [-0.533321, -0.518043] \\
+NHP & RMSE & -0.921751 & [-0.932065, -0.911206] \\
+NHP & Time NLL & -0.017461 & [-0.017800, -0.017128] \\
+SAHP & MAE & -0.007063 & [-0.008985, -0.005181] \\
+SAHP & RMSE & +0.000182 & [-0.009675, 0.008605] \\
+SAHP & Time NLL & +0.004887 & [0.004518, 0.005251] \\
+S2P2 & MAE & -0.010499 & [-0.012677, -0.008391] \\
+S2P2 & RMSE & +0.027864 & [0.023410, 0.032025] \\
+S2P2 & Time NLL & +0.013559 & [0.013207, 0.013903] \\
+AttNHP & MAE & +0.000611 & [-0.000826, 0.002023] \\
+AttNHP & RMSE & +0.022994 & [0.018805, 0.026617] \\
+AttNHP & Time NLL & -0.002393 & [-0.002784, -0.002007] \\
+\bottomrule
+\end{tabular}}
+\end{table}
+\begin{table}[p]
+\centering\small
+\caption{Exploratory addition after viewing legacy test results; not an untouched independent evaluation. The frozen MLP representative is not replaced. Taxi: Shared 24-hour blocks. Descriptive sensitivity only; never a substitute for the primary interval. Differences are B minus comparator. Intervals are pointwise 95\% and conditional on fixed trained seeds, without multiplicity adjustment. Status: Descriptive only. Dashes denote an unavailable interval. The 168-hour primary interval is unavailable because the calendar span is too short.}
+\label{tab:b-test-yellow-trip-hourly-sensitivity-24-hour}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llrr}
+\toprule
+Comparator & Metric & $\Delta$ (B minus comparator) & Pointwise 95\% CI \\
+\midrule
+MLP representative & MAE & +15.879492 & [7.730184, 24.344808] \\
+MLP representative & RMSE & +65.107583 & [31.022312, 97.674688] \\
+MLP representative & Time NLL & -0.313138 & [-0.625639, -0.178478] \\
+RMTPP & MAE & -12.197010 & [-22.225801, -0.557500] \\
+RMTPP & RMSE & -62.915985 & [-95.695164, -30.206033] \\
+RMTPP & Time NLL & -0.199541 & [-0.708035, 0.002466] \\
+THP & MAE & -5.268661 & [-12.213634, 2.274807] \\
+THP & RMSE & -18.442708 & [-43.642064, 4.712931] \\
+THP & Time NLL & +0.026899 & [0.009779, 0.066832] \\
+NHP & MAE & -63.252409 & [-79.975545, -37.744263] \\
+NHP & RMSE & -197.344951 & [-239.764893, -142.382756] \\
+NHP & Time NLL & +0.032444 & [0.004701, 0.102472] \\
+SAHP & MAE & +12.179186 & [0.886818, 21.535644] \\
+SAHP & RMSE & +35.481811 & [-2.184057, 62.406144] \\
+SAHP & Time NLL & +0.009853 & [-0.010034, 0.020470] \\
+S2P2 & MAE & +16.244123 & [7.733889, 24.952888] \\
+S2P2 & RMSE & +68.189780 & [33.953827, 100.468055] \\
+S2P2 & Time NLL & +0.026017 & [0.005233, 0.077401] \\
+AttNHP & MAE & +14.327203 & [-2.396293, 27.696844] \\
+AttNHP & RMSE & +52.411485 & [-8.297388, 100.555391] \\
+AttNHP & Time NLL & +0.013821 & [0.004408, 0.029683] \\
+\bottomrule
+\end{tabular}}
+\end{table}
+\begin{table}[p]
+\centering\small
+\caption{Exploratory addition after viewing legacy test results; not an untouched independent evaluation. The frozen MLP representative is not replaced. Taxi: Shared 336-hour blocks. Descriptive sensitivity only; never a substitute for the primary interval. Differences are B minus comparator. Intervals are pointwise 95\% and conditional on fixed trained seeds, without multiplicity adjustment. Status: Not estimable. Dashes denote an unavailable interval. The 168-hour primary interval is unavailable because the calendar span is too short.}
+\label{tab:b-test-yellow-trip-hourly-sensitivity-336-hour}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llrr}
+\toprule
+Comparator & Metric & $\Delta$ (B minus comparator) & Pointwise 95\% CI \\
+\midrule
+MLP representative & MAE & +15.879492 & --- \\
+MLP representative & RMSE & +65.107583 & --- \\
+MLP representative & Time NLL & -0.313138 & --- \\
+RMTPP & MAE & -12.197010 & --- \\
+RMTPP & RMSE & -62.915985 & --- \\
+RMTPP & Time NLL & -0.199541 & --- \\
+THP & MAE & -5.268661 & --- \\
+THP & RMSE & -18.442708 & --- \\
+THP & Time NLL & +0.026899 & --- \\
+NHP & MAE & -63.252409 & --- \\
+NHP & RMSE & -197.344951 & --- \\
+NHP & Time NLL & +0.032444 & --- \\
+SAHP & MAE & +12.179186 & --- \\
+SAHP & RMSE & +35.481811 & --- \\
+SAHP & Time NLL & +0.009853 & --- \\
+S2P2 & MAE & +16.244123 & --- \\
+S2P2 & RMSE & +68.189780 & --- \\
+S2P2 & Time NLL & +0.026017 & --- \\
+AttNHP & MAE & +14.327203 & --- \\
+AttNHP & RMSE & +52.411485 & --- \\
+AttNHP & Time NLL & +0.013821 & --- \\
+\bottomrule
+\end{tabular}}
+\end{table}
+\begin{table}[p]
+\centering\small
+\caption{Exploratory addition after viewing legacy test results; not an untouched independent evaluation. The frozen MLP representative is not replaced. Taxi: Whole spatial cells. Descriptive sensitivity only; never a substitute for the primary interval. Differences are B minus comparator. Intervals are pointwise 95\% and conditional on fixed trained seeds, without multiplicity adjustment. Status: Computed conditional. Dashes denote an unavailable interval. The 168-hour primary interval is unavailable because the calendar span is too short.}
+\label{tab:b-test-yellow-trip-hourly-sensitivity-whole-cell}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llrr}
+\toprule
+Comparator & Metric & $\Delta$ (B minus comparator) & Pointwise 95\% CI \\
+\midrule
+MLP representative & MAE & +15.879492 & [6.480495, 27.783794] \\
+MLP representative & RMSE & +65.107583 & [33.383233, 94.499908] \\
+MLP representative & Time NLL & -0.313138 & [-0.377998, -0.251299] \\
+RMTPP & MAE & -12.197010 & [-27.347677, -0.829619] \\
+RMTPP & RMSE & -62.915985 & [-102.843847, -9.398739] \\
+RMTPP & Time NLL & -0.199541 & [-0.346363, -0.079377] \\
+THP & MAE & -5.268661 & [-12.349528, 0.338849] \\
+THP & RMSE & -18.442708 & [-41.600135, 2.603670] \\
+THP & Time NLL & +0.026899 & [0.016181, 0.038975] \\
+NHP & MAE & -63.252409 & [-103.188124, -29.345806] \\
+NHP & RMSE & -197.344951 & [-273.838117, -107.453599] \\
+NHP & Time NLL & +0.032444 & [0.019398, 0.047349] \\
+SAHP & MAE & +12.179186 & [5.628614, 19.824047] \\
+SAHP & RMSE & +35.481811 & [12.649923, 54.443940] \\
+SAHP & Time NLL & +0.009853 & [-0.000577, 0.020445] \\
+S2P2 & MAE & +16.244123 & [6.481196, 28.885638] \\
+S2P2 & RMSE & +68.189780 & [33.348312, 102.329050] \\
+S2P2 & Time NLL & +0.026017 & [0.014828, 0.039007] \\
+AttNHP & MAE & +14.327203 & [5.513362, 25.753989] \\
+AttNHP & RMSE & +52.411485 & [22.309894, 82.046389] \\
+AttNHP & Time NLL & +0.013821 & [0.006328, 0.022624] \\
+\bottomrule
+\end{tabular}}
+\end{table}
+\begin{table}[p]
+\centering\small
+\caption{Exploratory addition after viewing legacy test results; not an untouched independent evaluation. The frozen MLP representative is not replaced. Intermittent: Whole series. Descriptive sensitivity only; never a substitute for the primary interval. Differences are B minus comparator. Intervals are pointwise 95\% and conditional on fixed trained seeds, without multiplicity adjustment. Status: Computed conditional. Dashes denote an unavailable interval.}
+\label{tab:b-test-intermittent-frozen-5000-sensitivity-series}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llrr}
+\toprule
+Comparator & Metric & $\Delta$ (B minus comparator) & Pointwise 95\% CI \\
+\midrule
+MLP representative & MAE & -0.027330 & [-0.033974, -0.020542] \\
+MLP representative & RMSE & -0.124860 & [-0.144058, -0.104875] \\
+MLP representative & Time NLL & +14.015255 & [11.523252, 16.660013] \\
+RMTPP & MAE & -0.586126 & [-0.630898, -0.543920] \\
+RMTPP & RMSE & -1.575113 & [-1.744347, -1.406168] \\
+RMTPP & Time NLL & +5.260379 & [2.407895, 8.149120] \\
+THP & MAE & -0.206087 & [-0.239544, -0.174308] \\
+THP & RMSE & -0.847586 & [-0.998019, -0.695760] \\
+THP & Time NLL & +21.066715 & [18.345805, 23.912057] \\
+NHP & MAE & -1.221557 & [-1.311516, -1.136801] \\
+NHP & RMSE & -3.270099 & [-3.545119, -2.988666] \\
+NHP & Time NLL & +10.810270 & [8.176820, 13.558831] \\
+SAHP & MAE & -2.570786 & [-2.807334, -2.345468] \\
+SAHP & RMSE & -9.616083 & [-10.514398, -8.686516] \\
+SAHP & Time NLL & +14.481642 & [11.779113, 17.344121] \\
+S2P2 & MAE & -0.213496 & [-0.235077, -0.192823] \\
+S2P2 & RMSE & -0.578997 & [-0.650860, -0.508138] \\
+S2P2 & Time NLL & +15.719277 & [12.953577, 18.584525] \\
+AttNHP & MAE & -3.243090 & [-3.479965, -3.014984] \\
+AttNHP & RMSE & -9.652740 & [-10.417121, -8.880585] \\
+AttNHP & Time NLL & +9.906367 & [7.533279, 12.435594] \\
+\bottomrule
+\end{tabular}}
+\end{table}
