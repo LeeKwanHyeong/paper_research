@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-03T00:07:09.733661+00:00",
+  "route": "exploratory_B_test_comparison_after_MLP_test_results",
+  "approval": {
+    "test_inference_authorized": true,
+    "retraining_authorized": false,
+    "allowed_splits": [
+      "validation",
+      "test"
+    ],
+    "datasets": [
+      "yellow_trip_hourly",
+      "intermittent_frozen_5000",
+      "insta_market_basket"
+    ],
+    "models": [
+      "titantpp"
+    ],
+    "seeds": [
+      42,
+      52,
+      62
+    ],
+    "user_text": "오케이 B 관련해 Test 진행해보자",
+    "scope": "Existing B selected checkpoints on the same Test populations; original nine conditions, no retraining or paid rental.",
+    "additional_paid_resources_authorized": false
+  },
+  "registry_path": "reports/titantpp_b_test_evaluation_20261003_v1/evaluation_registry.json",
+  "registry_sha256": "ebca5ff27193805e28d3b6ca6646d11408799cbe5ce0caec58731c8b3bce7148",
+  "dataset_manifest_sha256": "d99681f4607ddd901b57d0fa5a4d46bcb71cdddb54e3fd5375c49075e1bc477b",
+  "dataset_sha256": {
+    "yellow_trip_hourly": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+    "intermittent_frozen_5000": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+    "insta_market_basket": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2"
+  },
+  "parent_protocol": "reports/titantpp_final_eval_runner_validation_20261003_v1/effective_protocol.json",
+  "parent_protocol_sha256": "19e6a423f4ed3c57e2a69ebe36ed628de34532f8d314f197e9709c3fb2426f48",
+  "supersedes": "Separate user-approved B evaluation; preserves the completed 108-condition campaign.",
+  "comparison_scope": {
+    "claim": "Exploratory B versus MLP and the six previously evaluated external encoders",
+    "comparison_models": [
+      "titantpp_history_mlp",
+      "rmtpp",
+      "thp",
+      "nhp",
+      "sahp",
+      "s2p2_matched_head",
+      "attnhp_matched_head"
+    ],
+    "legacy_analysis_path": "reports/titantpp_legacy_evaluation_20261003_v1/analysis.json",
+    "legacy_analysis_sha256": "5041fa56d0bb7f40a721d4d78465682b8e651c5e422e8227cee7857e7d5d2488",
+    "legacy_test_run_manifest_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/run_manifest.json",
+    "legacy_test_run_manifest_sha256": "9b7b72b06d6a1bf3ade9eabd6a3a8c14444284fa8bcc03208591d265a8c8373c",
+    "post_test_addition": true,
+    "representative_reselection": false,
+    "RAF": "No comparable observed-time B fit; older RAF joint-objective/legacy-head fit not pooled.",
+    "Deep_Renewal": "Existing research records preserved; outside this already defined common-head panel."
+  },
+  "prediction_protocol": {
+    "mode": "chronological_one_step_next_observed_event",
+    "same_target_ids_across_models_and_seeds": true,
+    "earlier_test_event_as_history": "only_after_that_event_is_predicted_and_observed",
+    "parameter_updates": false,
+    "target_or_future_in_input": false,
+    "refit_train_validation": false,
+    "test_fitted_preprocessing": false,
+    "missing_or_nonfinite_output": "retain_failure_and_stop_affected_comparison_no_favorable_intersection"
+  },
+  "aggregation": {
+    "within_seed": "micro_event_weighted",
+    "across_seeds": "arithmetic_mean_of_seed_metrics",
+    "seed_dispersion": "sample_standard_deviation_ddof1",
+    "cross_dataset_raw_pooling": false,
+    "ensemble": false,
+    "difference": "B_minus_comparator",
+    "relative_improvement": "100*(comparator_mean_RMSE-B_mean_RMSE)/comparator_mean_RMSE",
+    "zero_denominator": "undefined_report_absolute_difference"
+  },
+  "resampling": {
+    "draws": 10000,
+    "rng": "numpy_PCG64",
+    "seed_base": 20261001,
+    "dataset_seed_rule": "seed_base_plus_index_in_datasets",
+    "sort": "primary_cluster_key_string_ascending_or_calendar_hour_ascending",
+    "quantile": "linear",
+    "pointwise_interval_quantiles": [
+      0.025,
+      0.975
+    ],
+    "paired_across_all_models_and_seeds": true,
+    "seed_resampling": false,
+    "uncertainty_scope": "evaluation_sampling_conditional_on_three_fixed_trained_models",
+    "joint_losses": "multiplicity_weighted_error_sums_and_counts_then_seed_metrics_then_seed_mean_difference",
+    "units": {
+      "yellow_trip_hourly": "shared_calendar_hour_circular_blocks_across_all_spatial_cells",
+      "intermittent_frozen_5000": "whole_site_cd_cluster",
+      "insta_market_basket": "whole_user_oper_part_no_cluster"
+    },
+    "taxi_block_hours": 168,
+    "taxi_sensitivity_block_hours": [
+      24,
+      336
+    ],
+    "taxi_grid": "all hours between first and last eligible evaluation target time, including empty hours without imputed targets",
+    "taxi_algorithm": "sample_uniform_starts_concatenate_circular_L_hour_blocks_trim_to_T_hours_use_hour_multiplicity_for_existing_eligible_targets",
+    "minimum_cluster_count_to_compute": 2,
+    "minimum_taxi_grid_hours_to_compute": "2L",
+    "small_sample_reporting_threshold": 20,
+    "threshold_semantics": "reporting_guard_not_validity_guarantee",
+    "unavailable_timestamp": "no_target_order_fallback",
+    "invalid_draws": "report_count_and_reason_no_silent_redraw_or_interval_finalization",
+    "multiplicity_scope": "exploratory pointwise intervals only; no confirmatory family-wise coverage claim",
+    "pvalues": false,
+    "implementation_and_real_data_CIs_status": "Reuse the validated existing-test bootstrap algorithm; new B code tests and real B comparisons recorded separately.",
+    "primary_unit": "Whole declared entity/site clusters; Intermittent whole sites preserve within-site series dependence; Taxi shared calendar blocks preserve cross-cell temporal shocks.",
+    "paired_entity_cluster_sensitivity_for_taxi": "10,000 complete-cell cluster draws, reported as a sensitivity conditional on cells; cannot substitute for shared-time primary uncertainty",
+    "upper_level_dependency_gate": "If site or system clustering violates the declared unit, freeze a metadata-justified higher-level plan before outcome release or limit inference; never select a favorable unit from CIs.",
+    "intermittent_sensitivity_unit": "whole_oper_part_no_cluster",
+    "analysis_runtime": {
+      "python": "3.12.10",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "packages": {
+        "torch": "2.14.0",
+        "numpy": "2.3.1",
+        "polars": "1.31.0",
+        "pytest": "9.0.3"
+      },
+      "device": "cpu",
+      "threads_per_inference_process": 2,
+      "inter_op_threads": 1,
+      "parallel_inference_processes": 1
+    },
+    "inference_scope": "exploratory pointwise 95% intervals conditional on fixed trained seeds; no confirmatory anchor correction"
+  },
+  "resources": {
+    "host": "5080",
+    "root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_legacy_evaluation_20261003_v1",
+    "python": "/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python3.12",
+    "gpu_uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+    "concurrent_workers": 1,
+    "gpu_memory_limit_gib": 12,
+    "rss_limit_gib": 32,
+    "output_limit_gib": 15,
+    "condition_timeout_seconds": 10800,
+    "campaign_timeout_seconds": 86400,
+    "new_rental_cost_usd": 0,
+    "shared_runtime_changes": false
+  },
+  "release": {
+    "before_test": "Local unit tests, full data-loader enumeration, CUDA validation qualification and source/contract seals must pass.",
+    "reporting": "All nine B conditions, including failures/unstarted, alongside retained legacy MLP and six external comparators. Previous 108-condition evidence preserved; no representative reselection.",
+    "failure_policy": "Preserve attempt and diagnose; no automatic scientific changes or favorable target intersections."
+  },
+  "qualification": {
+    "cpu": "all nine conditions, first validation batch",
+    "cuda": "all nine conditions, first four validation batches",
+    "full_validation": "all nine original selected validation metrics must reproduce"
+  }
+}
