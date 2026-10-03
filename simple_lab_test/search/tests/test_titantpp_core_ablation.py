@@ -12,7 +12,8 @@ from simple_lab_test.search.tests.test_multilag_detail_execution import admitted
 
 
 def draft():
-    return json.loads(Path('search_artifacts/titantpp_core_ablation_20260928_v1/draft_contract.json').read_text())
+    fixture = Path(__file__).resolve().parent / 'fixtures' / 'titantpp_core_ablation_draft_contract_v1.json'
+    return json.loads(fixture.read_text())
 
 
 def test_scope_and_budget():
