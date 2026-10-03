@@ -1,0 +1,20 @@
+# History MLP width16: seed52/62 replication
+
+2026-10-03 user authorized the two remaining seeds on existing5080/5090 servers. This separate bundle preserves the ongoing seed42 campaign and reuses its model, losses, data populations, initialization policy and endpoint selection.
+
+| Server | Queue after its own seed42 campaign completes |
+|---|---|
+|5080|Taxi52 → Taxi62 → RAF52 → RAF62 → Intermittent52 → Intermittent62|
+|5090|Instacart52 → Instacart62|
+
+- Eight fresh fits; no width4 retraining, warm start, CNN/GRU, cloud rental, or Test evaluation. Earlier seed42 Taxi/RAF Test access remains recorded development history.
+- Width16: eight bias-free128→16→64 branches,24,576 correction parameters, original branch availability/fixed divisor8/GELU/zero output initialization.
+- Original full training epochs; min40/max300/patience40. First strict finite minimum full validation raw quantity RMSE selects the checkpoint. Overall RMSE, MAE and recorded Time NLL use that same epoch. Selected/last validation replays include train-fixed tail RMSE/MAE/count and time score. Original weighted train diagnostic is retained.
+- Existing width4 checkpoint, initialization and exposure are bound separately for each dataset and seed. No seed42 reference substitutes for seed52/62.
+-112 of113 parent source files remain byte-identical. Only the isolated campaign runner changes for seed-aware qualification and host-local permission. Shared project files and runtimes are untouched.
+- Each server owns a CPU-only tmux waiting controller. It waits for the predecessor's successful terminal state, all original manifest file SHAs, selected/last validation replays, predecessor exit and an idle owned GPU. Then it runs native qualification as a separate process; after that CUDA context exits, it dispatches one worker at a time. Each host proceeds independently. Mac connectivity is not needed.
+- Each fit retains36h and this new campaign retains168h including queue wait. Native qualification is limited to5400s. These bounds are not ETAs. First2epoch measured300epoch cost gate remains unchanged. No automatic retry/resume or unrelated process termination.
+- Read `launch_confirmation.json` for actual queue activation state. Prepared/queued does not mean qualification or training complete. Checkpoint original retrieval and CPU audit remain separate from scientific completion.
+- Current validation-only status can be observed with `control/observe_once.py`, one read-only SSH per host on request. No new recurring automation is created by this bundle.
+
+Status 2026-10-03 17:13 KST: both native queues active and waiting for their own seed42 predecessors. Additional8 fits are queued,0 started; see [activation report](launch_report.md).

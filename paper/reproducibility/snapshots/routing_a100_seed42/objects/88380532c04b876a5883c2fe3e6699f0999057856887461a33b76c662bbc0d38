@@ -1,0 +1,54 @@
+import json,subprocess,time,hashlib
+from pathlib import Path
+root=Path('/workspace/titantpp_routing_placement_a100_20261003_v1');contract=json.loads((root/'execution_contract.json').read_text())
+out={'host':'a100','observed_unix':time.time(),'root':str(root),'files':{},'file_sha256':{},'runs':[]}
+def read(p,optional=True):
+ if not p.exists():
+  if optional:return None
+  raise FileNotFoundError(str(p))
+ raw=p.read_bytes();assert len(raw)<20*1024*1024
+ out['file_sha256'][str(p.relative_to(root))]=hashlib.sha256(raw).hexdigest()
+ return json.loads(raw)
+for name in ('status.json','failure.json','start_permit.json','pipeline_failure.json','qualification/receipt.json','resume/contract.json','resume/status.json','resume/failure.json'):
+ out['files'][name]=read(root/name)
+reservation=out['files'].get('handoff/reservation.json')
+transferred={x['job_id'] for x in reservation['reserved']} if reservation else set()
+raf=out['files'].get('handoff/raf_status.json')
+if raf and raf.get('status') in ('running','complete','failed'):
+ out['original_status']=out['files']['status.json'];out['files']['status.json']=raf
+for job in contract['jobs']:
+ if job['host']!='a100' or job['id'] in transferred:continue
+ p=root/'run'/job['id'];row={'job':job,'status':read(p/'status.json'),'two_epoch_cost':read(p/'two_epoch_cost_receipt.json')}
+ variant=contract['quantity_variants'][job['arm']];run=p/'runs'/job['arm']/variant/('seed_'+str(job['seed']))
+ for key,name in [('history','history.json'),('timing','epoch_timing.json'),('endpoints','endpoint_replays.json')]:row[key]=read(run/name)
+ row['checkpoint_receipt']=read(run/'server_checkpoint_receipt.json')
+ row['last_checkpoint_bytes']=(run/'last_epoch_state.pt').stat().st_size if (run/'last_epoch_state.pt').exists() else None
+ manifest=read(p/'terminal_manifest.json');row['terminal_manifest']=manifest
+ if manifest:
+  checks={}
+  for name,digest in manifest['files'].items():
+   if name.endswith('.json'):
+    f=p/name;checks[name]=f.is_file() and hashlib.sha256(f.read_bytes()).hexdigest()==digest
+  row['small_record_SHA_passed']=all(checks.values()) and bool(checks)
+  row['small_record_checks']=checks
+ out['runs'].append(row)
+out['resume_runs']=[]
+for job in contract['jobs']:
+ p=root/'resume/run'/job['id']
+ if not p.exists():continue
+ row={'job':job,'status':read(p/'status.json'),'failure':read(p/'failure.json'),'lineage':read(p/'resume_lineage.json')}
+ run=p/'runs'/job['arm']/contract['quantity_variants'][job['arm']]/('seed_'+str(job['seed']))
+ for key,name in [('history','history.json'),('timing','epoch_timing.json'),('endpoints','endpoint_replays.json')]:row[key]=read(run/name)
+ manifest=read(p/'terminal_manifest.json');row['terminal_manifest']=manifest
+ if manifest:
+  checks={n:(p/n).is_file() and hashlib.sha256((p/n).read_bytes()).hexdigest()==d for n,d in manifest['files'].items() if n.endswith('.json')}
+  row['small_record_SHA_passed']=bool(checks) and all(checks.values())
+  row['small_record_checks']=checks
+ out['resume_runs'].append(row)
+for key,cmd in [('compute',['nvidia-smi','--query-compute-apps=pid,used_memory','--format=csv,noheader']),('gpu',['nvidia-smi','--query-gpu=uuid,utilization.gpu,memory.used','--format=csv,noheader'])]:
+ p=subprocess.run(cmd,capture_output=True,text=True);out[key]={'returncode':p.returncode,'stdout':p.stdout,'stderr':p.stderr}
+p=subprocess.run(['ps','-eo','pid,ppid,pgid,etimes,args'],capture_output=True,text=True)
+out['owned_processes']=[x for x in p.stdout.splitlines() if str(root) in x]
+log=root/'supervisor.log'
+if log.exists():out['supervisor_log_tail']=log.read_text(errors='replace')[-4000:]
+print(json.dumps(out,allow_nan=False))

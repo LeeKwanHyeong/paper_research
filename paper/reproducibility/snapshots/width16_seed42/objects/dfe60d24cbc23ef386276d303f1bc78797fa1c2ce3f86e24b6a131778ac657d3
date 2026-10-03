@@ -1,0 +1,26 @@
+import shlex,sys
+from local_common import *
+c=contract();host=sys.argv[1];s=c['hosts'][host];start=read(B/'start_permit.json')
+permit=read(B/'training_permit.json')
+assert permit['contract_sha256']==digest(c) and permit['start_permit_sha256']==digest(start)
+assert set(permit['qualifications'])==set(c['hosts'])
+for h,q in permit['qualifications'].items():
+ assert q==read(B/'native'/h/'receipt.json') and q['status']=='passed' and q['host']==h
+ assert q['contract_sha256']==digest(c) and q['source_files_sha256']==c['source']['files_sha256']
+write(B/'launch'/f'{host}_intent.json',{'host':host,'tmux':s['tmux'],'contract_sha256':digest(c),'requested_unix':time.time()})
+subprocess.run(['scp','-q',str(B/'training_permit.json'),host+':'+s['root']+'/training_permit.json'],check=True)
+args=['timeout','--signal=TERM','--kill-after=15s',str(max(1,int(start['deadline_unix']-time.time()))),'env',
+      *(k+'='+v for k,v in s['environment'].items()),'MPLCONFIGDIR=/tmp/titantpp-width16-mpl',s['python'],
+      'paper/scripts/run_titantpp_history_width_campaign.py','--contract',s['root']+'/execution_contract.json','--host',host,'--mode','dispatch']
+command='cd '+shlex.quote(s['source_root'])+' && exec '+shlex.join(args)+' > '+shlex.quote(s['root']+'/supervisor.log')+' 2>&1'
+script='''import subprocess,json
+from pathlib import Path
+root=Path(ROOT)
+assert not (root/'supervisor.claim').exists() and not (root/'run').exists()
+assert subprocess.run([TMUX,'has-session','-t',SESSION],capture_output=True).returncode!=0
+subprocess.run([TMUX,'new-session','-d','-s',SESSION,COMMAND],check=True)
+print(json.dumps({'status':'launch_requested','session':SESSION,'root':str(root)}))
+'''.replace('ROOT',repr(s['root'])).replace('TMUX',repr(s['tmux_binary'])).replace('SESSION',repr(s['tmux'])).replace('COMMAND',repr(command))
+out=json.loads(remote(host,script))
+write(B/'launch'/f'{host}_receipt.json',{'host':host,'contract_sha256':digest(c),'response':out,'confirmed_training_started':False,'time':time.time()})
+print(json.dumps(out))

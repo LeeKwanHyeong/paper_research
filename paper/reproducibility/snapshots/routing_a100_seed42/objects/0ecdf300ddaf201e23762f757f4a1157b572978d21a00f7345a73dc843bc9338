@@ -1,0 +1,60 @@
+"""Prepare an isolated experiment from the previous audited source closure."""
+import hashlib
+import json
+import shutil
+from pathlib import Path
+
+B = Path(__file__).resolve().parents[1]
+PROJECT = B.parents[1]
+OLD = B.parent / 'titantpp_mlp_candidates_a100_20261002_v1_retry1'
+read = lambda p: json.loads(p.read_text())
+sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
+def write(p, obj):
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with p.open('x') as f:
+        json.dump(obj, f, indent=2, ensure_ascii=False)
+        f.write('\n')
+
+assert not (B / 'source').exists(), 'Never overwrite a prepared source'
+c = read(OLD / 'execution_contract.json')
+replacements = {
+    'CountAwareTitanMLPCandidates': 'CountAwareTitanRoutingPlacement',
+    'CountAwareTitanMLPCandidate': 'CountAwareTitanRoutingPlacement',
+    'run_titantpp_mlp_candidates': 'run_titantpp_routing_placement',
+    'verify_titantpp_mlp_candidates': 'verify_titantpp_routing_placement',
+    'titantpp_mlp_candidates_a100_20261002_v1': B.name,
+}
+lineage = {}
+for rel, digest in c['source']['files'].items():
+    src = OLD / 'source' / rel
+    assert sha(src) == digest, rel
+    newrel = rel
+    for a, z in replacements.items():
+        newrel = newrel.replace(a, z)
+    dst = B / 'source' / newrel
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if src.suffix == '.py':
+        content = src.read_text()
+        for a, z in replacements.items():
+            content = content.replace(a, z)
+        dst.write_text(content)
+    else:
+        shutil.copy2(src, dst)
+    lineage[newrel] = {'original_path': rel, 'original_sha256': digest}
+for folder in ('data', 'baselines'):
+    shutil.copytree(OLD / folder, B / folder)
+(B / 'source/sample_data').mkdir(parents=True)
+(B / 'source/sample_data/.keep').write_text('Frozen project root marker. Data is in sibling data/.\n')
+for name in ('provider.py', 'manage.py', 'terminal_observer.py', 'bootstrap.sh', 'training_pipeline.py', 'deploy.py', 'graphql.py'):
+    text = (OLD / 'control' / name).read_text()
+    text = text.replace(OLD.name, B.name)
+    text = text.replace('run_titantpp_mlp_candidates', 'run_titantpp_routing_placement')
+    (B / 'control' / name).write_text(text)
+write(B / 'source_lineage.json', {'original_campaign': OLD.name, 'source': lineage,
+    'shared_workspace_source_modified': False})
+write(B / 'user_authorization.json', {'approved': True, 'scope': 'two proposed backbone candidates x Intermittent/Taxi/RAF, seed42, RunPod A100 SXM',
+    'gpu_count': 1, 'total_cap_usd': 100, 'automatic_recharge': False,
+    'budget_response': '총 $100, 자동충전 없음', 'existing_campaigns_modified': False,
+    'training_defaults': {'maximum_epochs': 300, 'minimum_epochs': 40, 'patience': 40},
+    'cleanup': 'retrieve and SHA-verify originals, stop/delete this campaign-owned Pod only'})
+print(json.dumps({'isolated_source_files': len(lineage), 'bundle': str(B)}))

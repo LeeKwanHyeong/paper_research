@@ -1,0 +1,88 @@
+import importlib.util
+import json
+from pathlib import Path
+import tempfile
+import unittest
+from unittest.mock import patch
+
+spec = importlib.util.spec_from_file_location('queue_controller', Path(__file__).parents[1] / 'control/queue_after_seed42.py')
+q = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(q)
+
+
+class QueueTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.parent = {'jobs': [{'host': '5080', 'id': 'one'}]}
+        q.write(self.root / 'execution_contract.json', self.parent)
+        self.c = {'queue': {'predecessors': {'5080': {'root': str(self.root), 'contract_sha256': q.digest(self.parent)}}},
+            'hosts': {'5080': {'gpu_uuid': 'fake'}}}
+
+    def complete(self):
+        f = self.root / 'run/one/runs/arm/variant/seed_42'
+        e = {'status': 'complete', 'evaluation_scope': 'validation_only', 'held_out_test_evaluated': False,
+            'selected': {'epoch': 2}, 'last': {'epoch': 42}}
+        q.write(f / 'endpoint_replays.json', e)
+        folder = self.root / 'run/one'
+        (folder / 'checkpoint.pt').write_bytes(b'original-checkpoint')
+        files = {str(p.relative_to(folder)): q.sha(p) for p in folder.rglob('*') if p.is_file()}
+        m = {'status': 'complete', 'scientific_success': True, 'contract_sha256': q.digest(self.parent),
+            'job': {'id': 'one'}, 'files': files}
+        q.write(folder / 'terminal_manifest.json', m)
+        q.write(self.root / 'status.json', {'status': 'complete', 'completed': {
+            'one': {'terminal_manifest_sha256': q.sha(folder / 'terminal_manifest.json')}}})
+        q.write(self.root / 'supervisor.claim', {'pid': 999})
+
+    def test_running_owned_parent_waits(self):
+        q.write(self.root / 'status.json', {'status': 'running', 'supervisor_pid': 999})
+        with patch.object(q, 'owned_alive', return_value=True):
+            self.assertEqual(q.check_parent(self.c, '5080')['status'], 'waiting_predecessor')
+
+    def test_missing_parent_process_blocks(self):
+        q.write(self.root / 'status.json', {'status': 'running', 'supervisor_pid': 999})
+        with patch.object(q, 'owned_alive', return_value=False), self.assertRaisesRegex(RuntimeError, 'absent'):
+            q.check_parent(self.c, '5080')
+
+    def test_parent_failure_never_starts(self):
+        q.write(self.root / 'status.json', {'status': 'failed'})
+        q.write(self.root / 'failure.json', {'message': 'failure'})
+        with self.assertRaisesRegex(RuntimeError, 'Predecessor failed'):
+            q.check_parent(self.c, '5080')
+
+    def test_complete_originals_ready_only_after_exit_and_idle(self):
+        self.complete()
+        with patch.object(q, 'owned_alive', return_value=False), patch.object(q, 'gpu_pids', return_value=[]):
+            self.assertEqual(q.check_parent(self.c, '5080', True)['status'], 'ready')
+
+    def test_live_complete_parent_waits_for_exit(self):
+        self.complete()
+        with patch.object(q, 'owned_alive', return_value=True):
+            self.assertEqual(q.check_parent(self.c, '5080')['status'], 'waiting_predecessor_exit')
+
+    def test_unrelated_gpu_owner_waits(self):
+        self.complete()
+        with patch.object(q, 'owned_alive', return_value=False), patch.object(q, 'gpu_pids', return_value=[123]):
+            self.assertEqual(q.check_parent(self.c, '5080', True)['status'], 'waiting_gpu_idle')
+
+    def test_incomplete_manifest_blocks(self):
+        self.complete()
+        q.write(self.root / 'status.json', {'status': 'complete', 'completed': {}})
+        with self.assertRaisesRegex(RuntimeError, 'inventory'):
+            q.check_parent(self.c, '5080')
+
+    def test_corrupt_binary_blocks(self):
+        self.complete()
+        (self.root / 'run/one/checkpoint.pt').write_bytes(b'changed')
+        with self.assertRaisesRegex(RuntimeError, 'SHA mismatch'):
+            q.check_parent(self.c, '5080', True)
+
+    def test_changed_contract_blocks(self):
+        q.write(self.root / 'execution_contract.json', {'jobs': []})
+        with self.assertRaisesRegex(RuntimeError, 'contract changed'):
+            q.check_parent(self.c, '5080')
+
+
+if __name__ == '__main__':
+    unittest.main()

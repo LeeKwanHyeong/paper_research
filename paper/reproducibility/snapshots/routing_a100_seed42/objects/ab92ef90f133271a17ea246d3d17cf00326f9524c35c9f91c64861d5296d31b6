@@ -1,0 +1,39 @@
+"""One read-only SSH snapshot of this campaign; never starts/retries training."""
+import datetime
+import json
+import shlex
+from pathlib import Path
+from manage import B, read, sshcmd, write
+
+a = read(B / 'control/allocation.json')
+if (B / 'control/cleanup_receipt.json').exists():
+    snapshot = read(B / 'retrieved/terminal_snapshot.json')
+    reused = True
+else:
+    code = (B / 'control/terminal_observer.py').read_text()
+    code = code.replace('print(json.dumps(out,allow_nan=False))', '''
+for name in ('bootstrap.log','qualification.log','pipeline.log'):
+ p=root/name
+ if p.exists():out[name]=p.read_text(errors='replace')[-1800:]
+out['qualification_files']=[str(p.relative_to(root)) for p in (root/'qualification').rglob('*.json')]
+print(json.dumps(out,allow_nan=False))''')
+    snapshot = json.loads(sshcmd(a, 'python3 -c ' + shlex.quote(code), 60))
+    reused = False
+stamp = datetime.datetime.fromtimestamp(snapshot['observed_unix'], datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+folder = B / 'observations' / stamp
+write(folder / 'snapshot.json', snapshot)
+write(B / 'observations/latest.json', {'path': str(folder.relative_to(B)), 'observed_unix': snapshot['observed_unix'], 'terminal_snapshot_reused': reused})
+summary = {k: snapshot.get(k) for k in ('observed_unix','gpu','compute','owned_processes','qualification_files')}
+summary['owned_processes'] = [x for x in summary['owned_processes'] if 'python3 -c import json' not in x]
+summary['probe_result_counts'] = {str(n):sum('/parallel_'+str(n)+'/' in p and p.endswith('.result.json') for p in summary['qualification_files']) for n in (1,2,3,6)}
+summary['initialization_records'] = [p for p in summary.pop('qualification_files') if '/initialization_' in p]
+summary['status'] = snapshot['files'].get('status.json')
+summary['failure'] = snapshot['files'].get('pipeline_failure.json')
+q = snapshot['files'].get('qualification/receipt.json')
+summary['qualification'] = None if not q else {k:q[k] for k in ('status','selected_concurrency','completed_unix')}
+summary['runs'] = [{'job':r['job']['id'], 'status':r['status'], 'saved_epoch':(r.get('checkpoint_receipt') or {}).get('epoch'), 'checkpoint_bytes':r.get('last_checkpoint_bytes'), 'small_SHA':r.get('small_record_SHA_passed')} for r in snapshot['runs']]
+if not summary['status']:
+    summary['logs'] = {k:snapshot[k] for k in ('bootstrap.log','qualification.log','pipeline.log') if k in snapshot}
+    if 'qualification.log' in summary['logs']:
+        summary['logs'].pop('bootstrap.log', None)
+print(json.dumps(summary, ensure_ascii=False, indent=2))

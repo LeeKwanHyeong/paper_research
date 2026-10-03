@@ -1,0 +1,40 @@
+"""Owned-Pod provider operations; never expose provider credentials."""
+import hashlib,json,os,subprocess,time
+from pathlib import Path
+B=Path(__file__).resolve().parents[1]
+CLI='/private/tmp/paper-runpodctl-v2.14.0'
+CLI_SHA='5818914c30e5a2bfa5d0f0d54a2b2fbeceac7880e785c972475afc34524e764d'
+read=lambda p:json.loads(Path(p).read_text())
+def write(p,data,exclusive=False):
+ p=Path(p);p.parent.mkdir(parents=True,exist_ok=True)
+ if exclusive:
+  with p.open('x') as f:json.dump(data,f,indent=2);f.write('\n')
+ else:
+  tmp=p.with_suffix(p.suffix+'.tmp');tmp.write_text(json.dumps(data,indent=2)+'\n');os.replace(tmp,p)
+def api(*args,timeout=40):
+ assert hashlib.sha256(Path(CLI).read_bytes()).hexdigest()==CLI_SHA
+ p=subprocess.run([CLI,*args],capture_output=True,text=True,timeout=timeout)
+ if p.returncode:
+  try:d=json.loads(p.stderr)
+  except (ValueError,TypeError):d={}
+  # Only known public provider errors may be retained; never dump arbitrary output.
+  code=d.get('code','provider_error')
+  message=d.get('error','Provider operation failed; raw output suppressed')
+  if any(x in message.lower() for x in ('api_key','bearer','authorization','rpa_')):message='Credential-related provider error; details suppressed'
+  raise RuntimeError(json.dumps({'code':code,'error':message,'returncode':p.returncode}))
+ return json.loads(p.stdout) if p.stdout.strip() else {}
+def owned(a):
+ p=api('pod','get',a['pod_id'])
+ assert p['id']==a['pod_id'] and p['name']==a['name'],'Foreign Pod'
+ return p
+def teardown(a,reason):
+ owned(a)
+ api('pod','stop',a['pod_id'])
+ write(B/'control/stop_receipt.json',{'pod_id':a['pod_id'],'reason':reason,'time':time.time()})
+ api('pod','delete',a['pod_id'])
+ rows=api('pod','list');rows=rows.get('pods',rows) if isinstance(rows,dict) else rows
+ assert not any(p.get('id')==a['pod_id'] for p in rows)
+ ended=time.time()
+ write(B/'control/cleanup_receipt.json',{'pod_id':a['pod_id'],'deleted_and_absent':True,'reason':reason,'time':ended})
+ write(B/'cost_report.json',{'pod_id':a['pod_id'],'total_cap_usd':a['total_cap_usd'],'elapsed_upper_bound_seconds':ended-a['created_unix'],'running_rate_with_storage_usd_hour':a['running_rate_usd_hour'],'prior_attempt_cost_usd':a.get('prior_attempt_cost_usd',0),'elapsed_rate_upper_estimate_usd':(ended-a['created_unix'])/3600*a['running_rate_usd_hour'],'combined_attempts_estimate_usd':a.get('prior_attempt_cost_usd',0)+(ended-a['created_unix'])/3600*a['running_rate_usd_hour'],'individual_final_invoice':False,'account_balance_delta_not_attributed_to_this_Pod':True,'automatic_recharge':False})
+

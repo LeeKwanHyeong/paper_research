@@ -1,0 +1,28 @@
+# Width16 seed52/62 queue activation — 2026-10-03 17:13 KST
+
+User approved two remaining seeds on5080/5090. Eight additional fits are now queued in exclusive native tmux controllers; none has started scientific training yet. Existing seed42 workers remain active.
+
+| Server | Current seed42 | Newly queued after successful terminal and GPU idle |
+|---|---|---|
+|5080|Intermittent; owned GPU PID1127530|Taxi52→62, RAF52→62, Intermittent52→62 (6fits)|
+|5090|Instacart; owned GPU PID1866322|Instacart52→62 (2fits)|
+
+Queue controller PID5080=1128352,5090=1890496. Both commands/cwd match the new dedicated roots. Queues are server-owned and do not depend on the Mac. Parent failure/missing owner, SHA mismatch, occupied GPU, native qualification failure or deadline stop progression; no automatic retries or unrelated process termination.
+
+## Verification
+
+-19 focused CPU tests and19 subtests passed; independent review PASS.
+-8 existing width4 checkpoints/exposures SHA checked on their native servers.
+-8 native CPU initialization checks match original seed-specific baseline identities; CUDA was not initialized.
+-Local ARM64 torch2.14 initial hashes differed from native x86_64 torch2.11 even for original seed42. Expected identities were not changed. Original and replicated source local initial states agree; native verification passed.
+-Source113:112 byte-identical; only isolated campaign runner changed for seeds52/62 and independent host permits. Models/loss/data/loader/selection unchanged.
+-Deployment SHA verification passed:5080 122files,5090 120files. Only5080 received the existing admitted RAF train/validation copy; other research data/checkpoints are reused at original server paths.
+-Native GPU qualification and scientific training remain pending until each parent's successful completion and exit. Qualification is a separate process so it relinquishes CUDA before dispatch.
+
+## Remaining work
+
+1. **Existing seed42 completion — in progress:** currently executing on both servers, unchanged.
+2. **Native GPU qualification then seed52/62 fits — queued:** each host independently performs these after its predecessor passes terminal/manifest/replay/exit checks. Original min40/max300/patience40 and first2epoch cost gate remain.
+3. **Original retrieval and three-seed audit — next after terminal:** verify selected/last checkpoint identities and replays; report mean and sample standard deviation only for all three verified seeds. No new Test evaluation is authorized or executed by this training queue.
+
+Evidence: [activation](launch_confirmation.json), [contract](execution_contract.json), [latest observation](observations/latest.json), [local tests](verification/local_tests.xml), [native5080 CPU identities](verification/native_cpu_5080.json), [native5090 CPU identities](verification/native_cpu_5090.json).

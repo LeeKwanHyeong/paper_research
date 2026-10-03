@@ -1,0 +1,16 @@
+# History MLP width4 → width16: seed42, four datasets
+
+User authorized immediate parallel execution on the existing 5080 and 5090 on 2026-10-03. This is a new single-seed validation-only screen. Historical width4 fits are reused, not retrained.
+
+- 5080: Taxi → RAF → Intermittent; 5090: Instacart. One owned worker per GPU, two hosts in parallel.
+- Only correction width changes: eight bias-free 128→4→64 branches become 128→16→64. Original availability masks, fixed /8, zero output initialization, input transforms, losses, heads, AdamW and target populations remain unchanged.
+- Correction parameters6144→24576; total parameters increase18432. For max length256:96003→114435. Other sequence lengths have their own positional-embedding totals.
+- Seed42, minimum40/maximum300 epochs, patience40; first strict finite minimum full validation raw quantity RMSE selects the checkpoint. Same-epoch overall RMSE/MAE/recorded time NLL are retained. Time NLL is the original observed-duration likelihood, not a new continuous-time score.
+- Selected/last full validation replays include overall and train-fixed quantity bins, including tail RMSE/MAE/time NLL/count. Tail thresholds: Taxi>3449, RAF>200, Intermittent>187, Instacart>35. No threshold is re-fit to validation.
+- Selected checkpoint train diagnostic reuses original eligible population and SRS seed20261003, max2048 per train quantity bin, inverse inclusion weights N/n; matched baseline/candidate sample identity is enforced. Train metrics are weighted sample estimates; validation metrics use the full population. Validation aggregate predictions are reused from endpoint replay.
+- Parent109 frozen sources remain byte-identical. New model, runner, campaign and evaluator are isolated additions. Current shared project edits and other experiments are preserved. Source closure and native runtime/data/init/baseline validation replay must pass before learning.
+- No warm start, automatic retry/resume, new cloud rental, held-out/test metrics or manuscript edits. Single-seed findings do not establish three-seed superiority; elapsed times across different GPUs are not paper efficiency comparisons.
+- Native supervisor, exclusive claims and90s server-owned worker lease do not depend on the Mac. Per-fit36h and whole-campaign168h ceilings retain the prior native-server limits. The first two epochs are retained and check conservative300-epoch feasibility; these caps are not ETA promises. No unrelated process may be stopped.
+- Successful training requires terminal manifest, saved source/checkpoint/JSON SHA identities and selected/last validation replay. Retrieval and later CPU binary audit are separate completion stages.
+
+Status updated 2026-10-03 15:56:48 KST: **both servers training** (0/4 complete, 2 active, 2 queued). 5080 Taxi saved epoch9; 5090 Instacart has an active owned GPU worker, first checkpoint not yet observed. See [launch report](launch_report.md), [launch confirmation](launch_confirmation.json) and [latest observation](observations/latest.json).

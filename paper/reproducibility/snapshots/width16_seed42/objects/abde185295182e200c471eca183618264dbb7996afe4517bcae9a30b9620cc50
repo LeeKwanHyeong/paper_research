@@ -1,0 +1,15 @@
+import shlex,sys
+from local_common import *
+host=sys.argv[1];c=contract();s=c['hosts'][host];dest=B/'native'/host;dest.mkdir(parents=True,exist_ok=True)
+write(dest/'request.json',{'host':host,'contract_sha256':digest(c),'requested_unix':time.time()})
+args=['timeout','--signal=TERM','--kill-after=15s','5400','env',*(k+'='+v for k,v in s['environment'].items()),
+      'MPLCONFIGDIR=/tmp/titantpp-width16-mpl',s['python'],'paper/scripts/run_titantpp_history_width_campaign.py',
+      '--contract',s['root']+'/execution_contract.json','--host',host,'--mode','qualify']
+command='cd '+shlex.quote(s['source_root'])+' && '+shlex.join(args)
+with (dest/'qualification.log').open('xb') as log:
+ p=subprocess.run(['ssh','-o','BatchMode=yes','-o','ConnectTimeout=15',host,command],stdout=log,stderr=subprocess.STDOUT)
+write(dest/'process_exit.json',{'returncode':p.returncode,'finished_unix':time.time()})
+if p.returncode:
+ print((dest/'qualification.log').read_text()[-9000:]);raise SystemExit(p.returncode)
+subprocess.run(['scp','-q',host+':'+s['root']+'/qualification/receipt.json',str(dest/'receipt.json')],check=True)
+print(json.dumps({'host':host,'status':'passed','receipt':str(dest/'receipt.json')}))

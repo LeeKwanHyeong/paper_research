@@ -1,0 +1,120 @@
+"""Local provider observation and terminal retrieval; no training launch or secrets on Pod."""
+import fcntl,hashlib,json,os,shlex,subprocess,sys,tarfile,time
+from pathlib import Path
+B=Path(__file__).resolve().parents[1]
+CLI='/private/tmp/paper-runpodctl-v2.14.0'
+CLI_SHA='5818914c30e5a2bfa5d0f0d54a2b2fbeceac7880e785c972475afc34524e764d'
+read=lambda p:json.loads(Path(p).read_text())
+sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest()
+def write(p,x):
+ p=Path(p);p.parent.mkdir(parents=True,exist_ok=True);t=p.with_suffix(p.suffix+'.tmp');t.write_text(json.dumps(x,indent=2)+'\n');os.replace(t,p)
+def api(*args):
+ assert sha(CLI)==CLI_SHA
+ p=subprocess.run([CLI,*args],capture_output=True,text=True,timeout=30)
+ if p.returncode:raise RuntimeError('Provider query/action failed; credential output suppressed')
+ return json.loads(p.stdout) if p.stdout.strip() else {}
+def sshcmd(a,cmd,timeout=30):
+ p=subprocess.run(['ssh','-i',a['ssh']['key'],'-p',str(a['ssh']['port']),'-o','BatchMode=yes','-o','ConnectTimeout=15','-o','StrictHostKeyChecking=accept-new','-o','UserKnownHostsFile='+str(B/'control/known_hosts'),'root@'+a['ssh']['ip'],cmd],capture_output=True,timeout=timeout)
+ if p.returncode:raise RuntimeError('SSH observation failed, not a training failure')
+ return p.stdout
+
+def stop(a,reason):
+ api('pod','stop',a['pod_id']);after=api('pod','get',a['pod_id'])
+ write(B/'control/stop_receipt.json',{'pod_id':a['pod_id'],'reason':reason,'observed_unix':time.time(),
+  'desiredStatus':after.get('desiredStatus'),'runtimeStatus':after.get('runtimeStatus')})
+
+def retrieve(a):
+ observed=sshcmd(a,'python3 -c '+shlex.quote((B/'control/terminal_observer.py').read_text()),60)
+ write(B/'retrieved/terminal_snapshot.json',json.loads(observed))
+ remote=a['remote_root']; script="""import json,hashlib,tarfile
+from pathlib import Path
+b=Path(%r)
+files={}
+for root in ('run','source','qualification','claims','leases','progress','logs','control','resume'):
+ for p in sorted((b/root).rglob('*')):
+  if p.is_file() and not p.is_symlink():files[str(p.relative_to(b))]=hashlib.sha256(p.read_bytes()).hexdigest()
+for p in b.glob('*.json'):files[p.name]=hashlib.sha256(p.read_bytes()).hexdigest()
+for p in b.glob('*.log'):
+ if p.is_file():files[p.name]=hashlib.sha256(p.read_bytes()).hexdigest()
+(b/'retrieval_manifest.json').write_text(json.dumps({'files':files}))
+with tarfile.open(b/'retrieval.tar.gz','w:gz') as t:
+ for p in [*files,'retrieval_manifest.json']:t.add(b/p,arcname=p,recursive=False)
+print(hashlib.sha256((b/'retrieval.tar.gz').read_bytes()).hexdigest())
+"""%remote
+ digest=sshcmd(a,'python3 -c '+shlex.quote(script),120).decode().strip()
+ target=B/'retrieved';target.mkdir(exist_ok=True)
+ p=subprocess.run(['scp','-i',a['ssh']['key'],'-P',str(a['ssh']['port']),'-o','BatchMode=yes','-o','StrictHostKeyChecking=accept-new','-o','UserKnownHostsFile='+str(B/'control/known_hosts'),'root@'+a['ssh']['ip']+':'+remote+'/retrieval.tar.gz',str(target/'original.tar.gz')],capture_output=True,timeout=180)
+ if p.returncode:raise RuntimeError('Terminal transfer failed')
+ assert sha(target/'original.tar.gz')==digest
+ with tarfile.open(target/'original.tar.gz') as t:
+  for m in t.getmembers():assert m.isfile() and not Path(m.name).is_absolute() and '..' not in Path(m.name).parts
+  t.extractall(target/'original',filter='data')
+ manifest=read(target/'original/retrieval_manifest.json')
+ for p,d in manifest['files'].items():assert sha(target/'original'/p)==d,p
+ write(target/'retrieval_receipt.json',{'status':'sha_verified','files':len(manifest['files']),'archive_sha256':digest,'observed_unix':time.time(),'binary_cpu_audit':'pending'})
+ return True
+
+def once():
+ from provider import owned,teardown
+ a=read(B/'control/allocation.json');now=time.time();pod=owned(a)
+ balance=api('user')['clientBalance'];estimate=(now-a['created_unix'])/3600*a['running_rate_usd_hour']
+ spent=a.get('prior_attempt_cost_usd',0)+estimate  # Account balance also includes unrelated existing Pods and top-ups.
+ row={'observed_unix':now,'pod_id':a['pod_id'],'balance_usd':balance,'own_elapsed_rate_cost_usd':spent,'account_delta_not_pod_bill_usd':a['initial_balance_usd']-balance,'desiredStatus':pod.get('desiredStatus'),'runtimeStatus':pod.get('runtimeStatus')}
+ expired=spent>=a['work_cap_usd'] or now>=a['deadline_unix']
+ setup_expired=now>=a['setup_deadline_unix'] and not (B/'launch_receipt.json').exists()
+ if expired or setup_expired:
+  reason='work cost/time limit' if expired else 'setup deadline'
+  until=min(a['deadline_unix'],a['created_unix']+(a['work_cap_usd']-a.get('prior_attempt_cost_usd',0))/a['running_rate_usd_hour']*3600) if expired else a['setup_deadline_unix']
+  if now<until+120:
+   row['state']='deadline_wait_for_native_timeout';write(B/'monitor/latest.json',row);return False
+  if 'ssh' in a and (B/'deployment_receipt.json').exists():
+   try:
+    snapshot=json.loads(sshcmd(a,'python3 -c '+shlex.quote((B/'control/terminal_observer.py').read_text()),60))
+    remote_status=(snapshot['files'].get('status.json') or {}).get('status')
+    if remote_status not in ('complete','failed'):
+     stop(a,reason+'; no terminal receipt, preserve volume for recovery')
+     write(B/'control/cleanup_error.json',{'phase':'terminal_state_missing','time':now,'recovery_required':True});return True
+   except Exception:
+    stop(a,reason+'; terminal observation unavailable, preserve volume')
+    write(B/'control/cleanup_error.json',{'phase':'terminal_observation_failed','time':now,'recovery_required':True});return True
+  if 'ssh' in a and (B/'deployment_receipt.json').exists():
+   try:retrieve(a)
+   except Exception as e:
+    write(B/'control/cleanup_error.json',{'type':type(e).__name__,'time':now,'phase':'retrieve_before_stop'})
+    stop(a,reason+'; recovery pending');return True
+  teardown(a,reason);return True
+ if 'ssh' not in a:
+  row['state']='allocated_pending_SSH';write(B/'monitor/latest.json',row);return False
+ script="import json;from pathlib import Path;b=Path(%r);out={};\nfor n in ('status.json','pipeline_failure.json','qualification/receipt.json','progress.json','pipeline.claim','resume/status.json','resume/failure.json'):\n p=b/n\n if p.exists():out[n]=json.loads(p.read_text())\nprint(json.dumps(out))"%a['remote_root']
+ try:state=json.loads(sshcmd(a,'python3 -c '+shlex.quote(script)))
+ except RuntimeError:row['observation']='ssh_failed_not_training_failure';write(B/'monitor/latest.json',row);return False
+ row['remote']=state;write(B/'monitor/latest.json',row)
+ if a.get('resume_contract_sha256'):
+  resumed=state.get('resume/status.json',{})
+  if resumed.get('status') not in ('complete','failed'):
+   intent=read(B/'control/resume_intent.json')
+   if resumed or now<intent['preparation_hold_until']:
+    row['state']='authorized_resume_'+resumed.get('status','preparation');write(B/'monitor/latest.json',row);return False
+   row['state']='resume_activation_missing';write(B/'monitor/latest.json',row)
+   # Preparation is bounded; ordinary terminal retrieval remains enabled after its timeout.
+ if state.get('status.json',{}).get('status') in ('complete','failed') or 'pipeline_failure.json' in state:
+  try:
+   gpu=sshcmd(a,'nvidia-smi --query-compute-apps=pid --format=csv,noheader').decode().strip()
+   if gpu:
+    row['state']='waiting_for_owned_GPU_workers_to_exit';write(B/'monitor/latest.json',row);return False
+   retrieve(a);teardown(a,'terminal originals SHA verified')
+  except Exception as e:
+   write(B/'control/cleanup_error.json',{'type':type(e).__name__,'observed_unix':now});stop(a,'terminal recovery pending')
+  return True
+ return False
+
+if __name__=='__main__':
+ with (B/'control/manager.lock').open('a+') as lock:
+  fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+  write(B/'control/manager_receipt.json',{'pid':os.getpid(),'started_unix':time.time(),'mac_sleep_limit_acknowledged':True})
+  while True:
+   try:
+    if once():break
+   except Exception as e:write(B/'control/manager_error.json',{'type':type(e).__name__,'observed_unix':time.time()})
+   if '--once' in sys.argv:break
+   time.sleep(60)

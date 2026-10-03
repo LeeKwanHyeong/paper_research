@@ -1,0 +1,48 @@
+"""Check original initial identities on the native CPU; never initialize CUDA."""
+import concurrent.futures
+import json
+import shlex
+import subprocess
+from local_common import *
+
+c = contract()
+old = read(B.parent/'titantpp_history_width16_dual_20261003_v1/execution_contract.json')
+script = '''import json,sys,time,hashlib
+from pathlib import Path
+sys.dont_write_bytecode=True
+root=Path(ROOT)
+c=json.loads((root/'execution_contract.json').read_text())
+assert hashlib.sha256(json.dumps(c,sort_keys=True,ensure_ascii=False,separators=(',',':'),allow_nan=False).encode()).hexdigest()=='7b0681473fcde54a16b564821448490a5d6a5561c9d51b60903c9b7f2981e548'
+sys.path.insert(0,str(root/'source'))
+from paper.scripts import run_titantpp_history_width_campaign as r
+import torch
+torch.set_num_threads(4)
+assert torch.__version__==c['hosts'][HOST]['runtime_expected']['torch']
+checks=[]
+for row in ROWS:
+ d=next(d for d in c['datasets'] if d['dataset_id']==row['dataset'])
+ v=r.initial_states(d,row['seed'])
+ assert v['titantpp_history_mlp']==row['initial_state_sha256'],(row['dataset'],row['seed'],v)
+ checks.append({'dataset':row['dataset'],'seed':row['seed'],'initial_states':v,'original_initial_match':True})
+assert not torch.cuda.is_initialized(),'Native CPU check unexpectedly initialized CUDA'
+print(json.dumps({'status':'passed','host':HOST,'torch_version':torch.__version__,'checks':checks,'cuda_initialized':False,'scientific_training_started':False,'checked_unix':time.time()}))
+'''
+
+def one(host):
+    rows = [{'dataset': j['dataset'], 'seed': j['seed'], 'initial_state_sha256':
+        c['baseline_replays'][j['dataset']][str(j['seed'])]['initial_state_sha256']}
+        for j in c['jobs'] if j['host']==host]
+    s = old['hosts'][host]
+    code = script.replace('ROOT', repr(s['root'])).replace('HOST', repr(host)).replace('ROWS', repr(rows))
+    cmd = 'cd ' + shlex.quote(s['source_root']) + ' && ' + shlex.join(['timeout', '120', 'env',
+        *(k+'='+v for k,v in s['environment'].items()), 'MPLCONFIGDIR=/tmp/titantpp-width16-replication-mpl', s['python'], '-B', '-'])
+    out = subprocess.run(['ssh','-o','BatchMode=yes','-o','ConnectTimeout=15',host,cmd],
+        input=code,text=True,capture_output=True,timeout=150)
+    result = json.loads(out.stdout) if out.returncode==0 else {'status':'failed','returncode':out.returncode,'stdout':out.stdout,'stderr':out.stderr}
+    write(B/'verification'/f'native_cpu_{host}.json',result)
+    return result
+
+with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+    results = list(pool.map(one, ('5080','5090')))
+print(json.dumps(results,ensure_ascii=False))
+assert all(r['status']=='passed' for r in results)

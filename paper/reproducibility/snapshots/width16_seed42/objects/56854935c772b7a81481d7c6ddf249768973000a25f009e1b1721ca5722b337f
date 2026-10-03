@@ -1,0 +1,82 @@
+"""One read-only SSH per owned server; small records and current process evidence."""
+import concurrent.futures,datetime,json,subprocess
+from local_common import *
+c=read(B/'execution_contract.json')
+assert read(B/'current.json')['contract_sha256']==digest(c)
+stamp=datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
+dest=B/'observations'/stamp;dest.mkdir(parents=True)
+script='''import datetime,hashlib,json,math,pathlib,statistics,subprocess,time
+root=pathlib.Path(ROOTPATH)
+def read(p):
+ return json.loads(p.read_text()) if p.is_file() else None
+def command(args):
+ p=subprocess.run(args,capture_output=True,text=True,timeout=15)
+ return {'returncode':p.returncode,'stdout':p.stdout.strip(),'stderr':p.stderr.strip()}
+status=read(root/'status.json')
+result={'observed_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'host':HOST,'root':str(root),
+ 'status':status,'failure':read(root/'failure.json'),'progress':read(root/'progress.json'),
+ 'gpu':command(['nvidia-smi','--query-gpu=name,utilization.gpu,memory.used,memory.total','--format=csv,noheader']),
+ 'gpu_processes':command(['nvidia-smi','--query-compute-apps=pid,process_name,used_memory','--format=csv,noheader']),
+ 'jobs':[],'owned_processes':[]}
+pids=set()
+for line in result['gpu_processes']['stdout'].splitlines():
+ try:pids.add(int(line.split(',')[0]))
+ except ValueError:pass
+for record in (status or {},result['progress'] or {}):
+ for key in ('supervisor_pid','worker_group_pid','pid'):
+  if isinstance(record.get(key),int):pids.add(record[key])
+for pid in pids:
+ p=pathlib.Path('/proc')/str(pid)
+ try:
+  args=(p/'cmdline').read_bytes().decode().split(chr(0))[:-1]
+  result['owned_processes'].append({'pid':pid,'argv':args,'cwd':str((p/'cwd').resolve()),'alive':True})
+ except OSError:result['owned_processes'].append({'pid':pid,'alive':False})
+for job in JOBS:
+ f=root/'run'/job['id'];run=f/'runs'/job['arm']/'count_only_log_regression'/'seed_42'
+ row={'job':job,'status':read(f/'status.json'),'checkpoint_receipt':read(run/'server_checkpoint_receipt.json'),
+      'two_epoch_cost_receipt':read(f/'two_epoch_cost_receipt.json')}
+ history=read(run/'history.json')
+ if history:
+  rows=history['history'];finite=[r for r in rows if math.isfinite(r.get('val_qty_rmse',float('nan')))]
+  best=min(finite,key=lambda r:r['val_qty_rmse']) if finite else None
+  row.update(saved_epochs=len(rows),last_epoch=rows[-1] if rows else None,best_so_far=best)
+  timing=read(run/'epoch_timing.json')
+  if timing and timing.get('epochs'):
+   seconds=statistics.median(r['elapsed_seconds'] for r in timing['epochs'][-10:])
+   be=best.get('epoch') if best else None
+   row['recent_epoch_median_seconds']=seconds
+   if be is not None:
+    stop=min(300,max(40,be+40));row.update(no_further_improvement_stop_epoch=stop,
+      no_further_improvement_remaining_seconds=max(0,stop-len(rows))*seconds,
+      eta_excludes_replay_retrieval_audit=True)
+ manifest=read(f/'terminal_manifest.json')
+ if manifest:
+  checked={}
+  for rel,sha in manifest['files'].items():
+   p=f/rel
+   if p.suffix=='.json':
+    checked[rel]=p.is_file() and hashlib.sha256(p.read_bytes()).hexdigest()==sha
+  endpoints=read(run/'endpoint_replays.json')
+  row.update(terminal_manifest=manifest,small_json_sha_passed=all(checked.values()) and bool(checked),
+    small_json_files_checked=len(checked),endpoint_replays=endpoints,
+    selected_diagnostic=read(run/'selected_train_validation_diagnostic.json'),
+    comparison=read(run/'width4_width16_comparison.json'))
+ result['jobs'].append(row)
+print(json.dumps(result,ensure_ascii=False,allow_nan=False))
+'''
+def one(host):
+ spec=c['hosts'][host]
+ text=script.replace('ROOTPATH',repr(spec['root'])).replace('HOST',repr(host)).replace('JOBS',repr([j for j in c['jobs'] if j['host']==host]))
+ try:
+  out=json.loads(remote(host,text,timeout=90))
+ except Exception as e:out={'host':host,'observation_failed':True,'error':str(e),'no_training_failure_inferred':True}
+ write(dest/(host+'.json'),out)
+ summary={'host':host,'observed_utc':out.get('observed_utc'),'state':out.get('status'),'gpu':out.get('gpu'),
+          'jobs':[{k:v for k,v in row.items() if k in ('job','status','saved_epochs','best_so_far','recent_epoch_median_seconds','no_further_improvement_stop_epoch','no_further_improvement_remaining_seconds','small_json_sha_passed')} for row in out.get('jobs',[])]}
+ if out.get('observation_failed'):summary=out
+ return summary
+with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+ summaries=list(pool.map(one,('5080','5090')))
+write(dest/'summary.json',{'observations':summaries,'contract_sha256':digest(c)})
+(B/'observations/latest.json').write_text(json.dumps({'path':str(dest),'contract_sha256':digest(c)},indent=2)+'\n')
+print(json.dumps({'path':str(dest),'observations':summaries},ensure_ascii=False))

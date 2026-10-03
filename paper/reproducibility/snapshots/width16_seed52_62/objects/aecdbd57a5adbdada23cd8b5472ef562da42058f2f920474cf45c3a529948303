@@ -1,0 +1,284 @@
+"""CPU-only contract tests of the runner's actual functions, with GPU work stubbed."""
+from __future__ import annotations
+import ast
+from contextlib import contextmanager
+from copy import deepcopy
+import hashlib
+import json
+import math
+from pathlib import Path
+import statistics
+import sys
+import tempfile
+import time
+from types import ModuleType, SimpleNamespace
+import unittest
+from unittest.mock import patch
+
+BUNDLE=Path(__file__).resolve().parents[1]
+RUNNER=BUNDLE/'frozen_source/paper/scripts/run_titantpp_history_width_campaign.py'
+ARM='titantpp_history_mlp_width16'
+ASSIGNMENTS={'5080':['yellow_trip_hourly','raf_spare_parts','intermittent_frozen_5000'],'5090':['insta_market_basket']}
+
+def sha_json(value):
+    return hashlib.sha256(json.dumps(value,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+
+def sha_file(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+def require(condition,message):
+    if not condition:raise RuntimeError(message)
+
+def write_json(path,value,exclusive=False):
+    path=Path(path);path.parent.mkdir(parents=True,exist_ok=True)
+    with path.open('x' if exclusive else 'w') as stream:json.dump(value,stream)
+
+def load_functions():
+    # Execute the production function bodies, omitting imports of the ML stack.
+    tree=ast.parse(RUNNER.read_text(),filename=str(RUNNER))
+    names={'validate','qualify','run_fit','verify_training_permit'}
+    constants={'SCHEMA','SEEDS','TRAINING_PERMIT_SCHEMA','ASSIGNMENTS','ARMS'}
+    definitions=[node for node in tree.body if
+        (isinstance(node,ast.FunctionDef) and node.name in names) or
+        (isinstance(node,ast.Assign) and any(isinstance(t,ast.Name) and t.id in constants for t in node.targets))]
+    ns={'Path':Path,'require':require,'read':lambda p:json.loads(Path(p).read_text()),
+        'common':SimpleNamespace(sha_json=sha_json,sha_file=sha_file,write_json=write_json),
+        'ROOT':RUNNER.parents[2],'SCHEMA':'titantpp_history_width16_replication_20261003_v1',
+        'TRAINING_PERMIT_SCHEMA':'titantpp_history_width16_replication_training_permit_v1',
+        'ARMS':(ARM,),'ARM':ARM,'SEEDS':(52,62),'ASSIGNMENTS':ASSIGNMENTS,
+        'json':json,'time':time,'math':math,'statistics':statistics,'os':SimpleNamespace(getpid=lambda:123),
+        'gc':SimpleNamespace(collect=lambda:None)}
+    exec(compile(ast.Module(body=definitions,type_ignores=[]),str(RUNNER),'exec'),ns)
+    return ns
+
+
+def contract(root):
+    datasets=[{'dataset_id':d,'loader':{'max_seq_len':8},'quantity_boundaries_all_train_rows':[1,2,3,4]}
+        for ds in ASSIGNMENTS.values() for d in ds]
+    return {'schema':'titantpp_history_width16_replication_20261003_v1','arms':[ARM],
+        'training':{'batch_size':128,'maximum_epochs':300,'minimum_epochs':40,'patience':40,
+            'monitor':'validation_raw_quantity_rmse','tie':'strict_earliest_finite_minimum','warm_start':False},
+        'limits':{'total_wall_seconds':168*3600,'per_condition_seconds':36*3600,'workers_per_host':1,'automatic_retry':False},
+        'jobs':[{'id':f'{d}__{s}__{ARM}','host':h,'dataset':d,'seed':s,'arm':ARM}
+            for h,ds in ASSIGNMENTS.items() for d in ds for s in (52,62)],
+        'reuse':[{'host':h,'dataset':d,'seed':s,'arm':'titantpp_history_mlp'}
+            for h,ds in ASSIGNMENTS.items() for d in ds for s in (52,62)],
+        'baseline_replays':{d:{str(s):{} for s in (52,62)} for ds in ASSIGNMENTS.values() for d in ds},
+        'evaluation_scope':'validation_only','held_out_test_evaluated':False,
+        'source':{'files':{},'files_sha256':sha_json({})},'datasets':datasets,
+        'dataset_sha256':{d['dataset_id']:sha_json(d) for d in datasets},
+        'hosts':{h:{'root':str(root/h)} for h in ASSIGNMENTS},
+        'diagnostic':{'train_sampling':{'fixed':'unchanged'}}}
+
+class Tensor:
+    def float(self):return self
+    @property
+    def shape(self):return (128,8)
+    def __setitem__(self,key,value):pass
+    def mean(self):return self
+    def item(self):return True
+    def all(self):return self
+    def backward(self):pass
+    def numel(self):return 24576
+
+class Model:
+    def __init__(self):self.multilag_detail=self
+    def cuda(self):return self
+    def train(self):return self
+    def parameters(self):return [Tensor()]
+
+class Optimizer:
+    def __init__(self,*args,**kwargs):pass
+    def zero_grad(self,**kwargs):pass
+    def step(self):pass
+
+
+def fake_modules(training=None):
+    torch=ModuleType('torch')
+    torch.manual_seed=lambda seed:None;torch.bool=bool
+    torch.ones=torch.ones_like=torch.randint=lambda *a,**k:Tensor()
+    torch.isfinite=lambda value:Tensor()
+    torch.optim=SimpleNamespace(AdamW=Optimizer)
+    torch.nn=SimpleNamespace(utils=SimpleNamespace(clip_grad_norm_=lambda *a:Tensor()))
+    torch.cuda=SimpleNamespace(reset_peak_memory_stats=lambda:None,synchronize=lambda:None,
+        max_memory_allocated=lambda:100,get_device_properties=lambda device:SimpleNamespace(total_memory=1000),
+        empty_cache=lambda:None)
+    core=ModuleType('paper.scripts.count_aware_tpp_backbone.core')
+    core.target_outputs=lambda *a,**k:{'joint_loss':Tensor()}
+    checkpoint=ModuleType('simple_lab_test.search.common.runner')
+    checkpoint.torch_load_checkpoint=lambda path,**kwargs:json.loads(Path(path).read_text())
+    backbone=ModuleType('paper.scripts.count_aware_tpp_backbone')
+    if training is not None:backbone.training=training
+    return {'torch':torch,'paper':ModuleType('paper'),'paper.scripts':ModuleType('paper.scripts'),
+        'paper.scripts.count_aware_tpp_backbone':backbone,
+        'paper.scripts.count_aware_tpp_backbone.core':core,
+        'simple_lab_test.search.common.runner':checkpoint}
+
+class ReplicationTests(unittest.TestCase):
+    def setUp(self):
+        self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
+        self.root=Path(self.temp.name);self.ns=load_functions();self.c=contract(self.root)
+
+    def test_exact_eight_jobs_accepts_seed52_and_seed62(self):
+        self.assertIs(self.ns['validate'](self.c),self.c)
+        self.assertEqual(len(self.c['jobs']),8)
+
+    def test_seed42_and_seed_order_rejected(self):
+        for mode in ('seed42','reorder'):
+            with self.subTest(mode=mode):
+                c=deepcopy(self.c)
+                if mode=='seed42':c['jobs'][0]['seed']=42
+                else:c['jobs'][0],c['jobs'][1]=c['jobs'][1],c['jobs'][0]
+                with self.assertRaisesRegex(RuntimeError,'Scope/order'):self.ns['validate'](c)
+
+    def test_reuse_missing_duplicate_wrong_host_and_wrong_arm_rejected(self):
+        for mode in ('missing','duplicate','wrong_host','wrong_arm'):
+            with self.subTest(mode=mode):
+                c=deepcopy(self.c)
+                if mode=='missing':c['reuse'].pop()
+                if mode=='duplicate':c['reuse'][-1]=deepcopy(c['reuse'][0])
+                if mode=='wrong_host':c['reuse'][0]['host']='5090'
+                if mode=='wrong_arm':c['reuse'][0]['arm']='other'
+                with self.assertRaisesRegex(RuntimeError,'exposure coverage'):self.ns['validate'](c)
+
+    def test_baseline_replay_exact_seed_coverage(self):
+        for mode in ('missing','seed42','dataset'):
+            with self.subTest(mode=mode):
+                c=deepcopy(self.c);ref=c['baseline_replays']['yellow_trip_hourly']
+                if mode=='missing':ref.pop('62')
+                if mode=='seed42':ref['42']=ref.pop('62')
+                if mode=='dataset':c['baseline_replays'].pop('raf_spare_parts')
+                with self.assertRaisesRegex(RuntimeError,'replay coverage'):self.ns['validate'](c)
+
+    def permit(self,host):
+        root=Path(self.c['hosts'][host]['root']);start={'host':host,'nonce':1}
+        q={'status':'passed','host':host,'contract_sha256':sha_json(self.c),'source_files_sha256':self.c['source']['files_sha256']}
+        p={'schema':self.ns['TRAINING_PERMIT_SCHEMA'],'host':host,'contract_sha256':sha_json(self.c),
+            'start_permit_sha256':sha_json(start),'qualifications':{host:q}}
+        write_json(root/'start_permit.json',start);write_json(root/'training_permit.json',p)
+        write_json(root/'qualification/receipt.json',q)
+        return root,p
+
+    def test_native_permit_does_not_require_other_host_qualification(self):
+        for host in ASSIGNMENTS:
+            with self.subTest(host=host):
+                root,p=self.permit(host)
+                self.assertEqual(self.ns['verify_training_permit'](self.c,root),p)
+
+    def test_permit_rejects_foreign_host_schema_qualification_or_start(self):
+        for mode in ('host','schema','extra','qualification','start','local_change'):
+            with self.subTest(mode=mode):
+                root,p=self.permit('5080')
+                if mode=='host':p['host']='5090'
+                if mode=='schema':p['schema']='legacy'
+                if mode=='extra':p['qualifications']['5090']=p['qualifications']['5080']
+                if mode=='qualification':p['qualifications']['5080']['status']='checking'
+                if mode=='start':p['start_permit_sha256']='foreign'
+                if mode=='local_change':write_json(root/'qualification/receipt.json',{'status':'changed'})
+                write_json(root/'training_permit.json',p)
+                with self.assertRaises(RuntimeError):self.ns['verify_training_permit'](self.c,root)
+
+    def test_unknown_and_ambiguous_roots_rejected(self):
+        with self.assertRaisesRegex(RuntimeError,'host root'):
+            self.ns['verify_training_permit'](self.c,self.root/'unknown')
+        self.c['hosts']['5090']['root']=self.c['hosts']['5080']['root']
+        with self.assertRaisesRegex(RuntimeError,'host root'):
+            self.ns['verify_training_permit'](self.c,Path(self.c['hosts']['5080']['root']))
+
+    def qualification_fixture(self,host):
+        root=Path(self.c['hosts'][host]['root']);calls=[]
+        for d in ASSIGNMENTS[host]:
+            for seed in (52,62):
+                p=self.root/'baseline'/f'{d}_{seed}.json'
+                metrics={'qty_rmse':float(seed),'qty_mae':float(seed)/2,'time_nll':float(seed)/10}
+                write_json(p,{'initial_state_sha256':f'initial-{seed}','metrics':metrics,'seed':seed})
+                self.c['baseline_replays'][d][str(seed)]={'checkpoint':str(p),'checkpoint_sha256':sha_file(p),'metrics':metrics}
+        self.ns['authorization']=lambda *a:{'deadline_unix':time.time()+168*3600}
+        self.ns['PulseBudget']=lambda *a,**k:lambda:None
+        self.ns['common'].gpu_pids=lambda *a:[]
+        self.ns['common'].runtime_check=lambda *a:{'native':'same'}
+        self.ns['base']=SimpleNamespace(prepare_admitted_data=lambda d:('frame',{'dataset':d['dataset_id']}))
+        self.ns['time_interface']=lambda *a:{}
+        self.ns['width']=SimpleNamespace(synthetic_check=lambda *a:{'synthetic_optimizer_updates':1})
+        self.ns['initial_states']=lambda d,s:{'titantpp_history_mlp':f'initial-{s}',ARM:f'candidate-{s}'}
+        def replay(path,*args):
+            calls.append(Path(path).name)
+            return json.loads(Path(path).read_text())['metrics']
+        self.ns['core']=SimpleNamespace(replay_checkpoint=replay)
+        self.ns['diagnostic']=SimpleNamespace(evaluate_checkpoint=lambda d,p,*a,**k:{'source':str(p),'metrics':k['validation_replay']})
+        self.ns['build_model']=lambda *a:(Model(),{})
+        return root,calls
+
+    def test_qualify_uses_each_seed_checkpoint_and_distinct_diagnostic(self):
+        root,calls=self.qualification_fixture('5080')
+        with patch.dict(sys.modules,fake_modules()):self.ns['qualify'](self.c,'5080',root)
+        q=json.loads((root/'qualification/receipt.json').read_text())
+        self.assertEqual(len(calls),6)
+        for d in ASSIGNMENTS['5080']:
+            self.assertEqual(set(q['initialization'][d]),{'52','62'})
+            self.assertEqual(set(q['baselines'][d]),{'52','62'})
+            for seed in (52,62):
+                p=root/'qualification'/f'{d}__{seed}_baseline_diagnostic.json'
+                self.assertEqual(q['baselines'][d][str(seed)]['diagnostic_sha256'],sha_file(p))
+                self.assertEqual(q['baselines'][d][str(seed)]['metrics']['qty_rmse'],seed)
+        self.assertEqual(set(q['measurements']),set(ASSIGNMENTS['5080']))
+        self.assertEqual(q['synthetic_optimizer_updates'],16)
+
+    def test_qualify_rejects_seed62_initial_state_mismatch(self):
+        root,_=self.qualification_fixture('5090');ref=self.c['baseline_replays']['insta_market_basket']['62']
+        p=Path(ref['checkpoint']);payload=json.loads(p.read_text());payload['initial_state_sha256']='initial-52'
+        write_json(p,payload);ref['checkpoint_sha256']=sha_file(p)
+        with patch.dict(sys.modules,fake_modules()),self.assertRaisesRegex(RuntimeError,'initialization differs'):
+            self.ns['qualify'](self.c,'5090',root)
+
+    def test_run_fit_reads_matching_seed_baseline_diagnostic(self):
+        for seed in (52,62):
+            with self.subTest(seed=seed):
+                root=Path(self.c['hosts']['5090']['root']);d='insta_market_basket'
+                job=next(j for j in self.c['jobs'] if j['dataset']==d and j['seed']==seed)
+                runtime={'native':'same'};initial={'titantpp_history_mlp':f'initial-{seed}',ARM:f'candidate-{seed}'}
+                baseline=root/'qualification'/f'{d}__{seed}_baseline_diagnostic.json'
+                write_json(baseline,{'baseline_seed':seed})
+                q={'status':'passed','runtime':runtime,'initialization':{d:{str(seed):initial}},
+                    'baselines':{d:{str(seed):{'diagnostic_sha256':sha_file(baseline)}}}}
+                write_json(root/'qualification/receipt.json',q)
+                self.ns['authorization']=lambda *a:{'deadline_unix':time.time()+168*3600}
+                self.ns['verify_training_permit']=lambda *a:None
+                self.ns['common'].runtime_check=lambda *a:runtime
+                self.ns['PulseBudget']=lambda *a,**k:lambda:None
+                self.ns['initial_states']=lambda *a:initial
+                self.ns['base']=SimpleNamespace(prepare_admitted_data=lambda d:('frame',{}))
+                self.ns['time_interface']=lambda *a:{}
+                self.ns['training_args']=lambda c,d,folder,a:SimpleNamespace(output=folder)
+                self.ns['variant_for']=lambda arm:'count_only_log_regression'
+                exposure={'train':[]};captured=[]
+                @contextmanager
+                def audited(*a):yield exposure
+                self.ns['shared']=SimpleNamespace(audited_training=audited,last30_summary=lambda h:{})
+                self.ns['prior']=SimpleNamespace(audit_arm=lambda *a:100,audit_replay_accounting=lambda *a:None)
+                self.ns['core']=SimpleNamespace(check_baseline_prefix=lambda c,h,d,s,e:captured.append(('prefix',s)))
+                metrics={'qty_mae':1.,'qty_rmse':2.,'time_nll':3.}
+                def train_one(*,args,**kwargs):
+                    captured.append(('training_seed',kwargs['seed'],args.seeds))
+                    run=args.output/'runs'/ARM/'count_only_log_regression'/f'seed_{seed}'
+                    selected=run/'selected.pt';write_json(selected,{'selected':seed});write_json(run/'last_epoch_state.pt',{})
+                    write_json(run/'history.json',{'history':[{'val_qty_mae':1.,'val_qty_rmse':2.,'val_time_nll':3.} for _ in range(40)]})
+                    return {'initial_state_sha256':initial[ARM],'checkpoint_path':str(selected),'best_epoch':1,
+                        'parameter_count':114435,'elapsed_seconds':1.},None,None
+                training=SimpleNamespace(train_one=train_one,_resume_identity=lambda **k:{})
+                self.ns['replay_checkpoint']=lambda *a,**k:metrics
+                self.ns['diagnostic']=SimpleNamespace(evaluate_checkpoint=lambda *a,**k:{'candidate_seed':seed},
+                    compare_evaluations=lambda b,s:captured.append(('baseline',b['baseline_seed'])) or {'seed':b['baseline_seed']})
+                for ref in self.c['reuse']:
+                    if ref['dataset']==d and ref['seed']==seed:
+                        ref['remote_run']=str(self.root/'exposure'/str(seed));p=Path(ref['remote_run'])/'exposure.json'
+                        write_json(p,exposure);ref['file_sha256']={'exposure.json':sha_file(p)}
+                with patch.dict(sys.modules,fake_modules(training)):
+                    self.ns['run_fit'](self.c,'5090',root,job,time.time()+100)
+                self.assertIn(('baseline',seed),captured)
+                self.assertIn(('training_seed',seed,str(seed)),captured)
+                self.assertIn(('prefix',seed),captured)
+                manifest=json.loads((root/'run'/job['id']/'terminal_manifest.json').read_text())
+                self.assertTrue(manifest['scientific_success'])
+
+if __name__=='__main__':unittest.main(verbosity=2)

@@ -1,0 +1,90 @@
+"""Seal the user-approved eight seed52/62 fits; preserve the seed42 campaign."""
+import copy
+import hashlib
+import json
+from pathlib import Path
+import time
+from datetime import datetime, timezone
+
+B = Path(__file__).resolve().parents[1]
+ROOT = B.parents[1]
+OLD = ROOT / 'search_artifacts/titantpp_history_width16_dual_20261003_v1'
+
+
+def read(p):
+    return json.loads(p.read_text())
+
+
+def sha(p):
+    return hashlib.sha256(p.read_bytes()).hexdigest()
+
+
+def digest(v):
+    return hashlib.sha256(json.dumps(v, sort_keys=True, ensure_ascii=False,
+        separators=(',', ':'), allow_nan=False).encode()).hexdigest()
+
+
+def write(p, v):
+    with p.open('x') as f:
+        json.dump(v, f, indent=2, ensure_ascii=False, allow_nan=False)
+        f.write('\n')
+
+
+old = read(OLD / 'execution_contract.json')
+assert digest(old) == '7b0681473fcde54a16b564821448490a5d6a5561c9d51b60903c9b7f2981e548'
+assert old['source']['files_sha256'] == 'ce779bc7e8d7a616365cd49d5f868d782b1273a5bdc01649f71399bc87b09d3b'
+ancestor = read(ROOT / 'search_artifacts/titantpp_pakdd_extension_20261001_v1/prelaunch_v2/execution_contract.json')
+assert digest(ancestor) == '08f7e9ed402ba74fde099321f039b78de3a11b0bd93cba27492b1a84454f6a6c'
+c = copy.deepcopy(old)
+c['schema'] = 'titantpp_history_width16_replication_20261003_v1'
+c['approved_scope'] = 'User 2026-10-03 approved remaining seeds52,62 on5080/5090 for existing four-dataset width16 study.'
+c['jobs'] = [{**j, 'id': j['id'].replace('__42__', f'__{seed}__'), 'seed': seed}
+    for j in old['jobs'] for seed in (52, 62)]
+c['reuse'] = [x for x in ancestor['reuse'] if x['seed'] in (52, 62)]
+assert len(c['reuse']) == 8
+assert {(r['host'], r['dataset'], r['seed']) for r in c['reuse']} == {(j['host'], j['dataset'], j['seed']) for j in c['jobs']}
+binding = read(B / 'verification/baseline_binding.json')
+assert binding['status'] == 'local_originals_verified' and len(binding['rows']) == 8
+c['baseline_replays'] = {}
+for r in binding['rows']:
+    assert sha(Path(r['local_checkpoint'])) == r['checkpoint_sha256']
+    c['baseline_replays'].setdefault(r['dataset'], {})[str(r['seed'])] = {
+        k: r[k] for k in ('checkpoint', 'checkpoint_sha256', 'initial_state_sha256', 'metrics', 'validation_replay_source')}
+for d in c['baseline_replays']:
+    assert set(c['baseline_replays'][d]) == {'52', '62'}
+files = {rel: sha(B / 'frozen_source' / rel) for rel in old['source']['files']}
+changed = [rel for rel, h in files.items() if h != old['source']['files'][rel]]
+assert changed == ['paper/scripts/run_titantpp_history_width_campaign.py']
+c['source'].update(files=files, files_sha256=digest(files), revision_note=
+    '112 of113 seed42 sources byte-identical; only campaign seed-aware qualification/permit/dispatch scope changed. Model/loss/loader/optimizer/selection unchanged.')
+c['queue'] = {'policy': 'wait for own seed42 predecessor successful terminal, all artifact SHA, selected/last validation replay and GPU idle; independent native qualification then own-host dispatch',
+    'poll_seconds': 30, 'automatic_retry': False, 'predecessors': {
+        h: {'root': s['root'], 'contract_sha256': digest(old)} for h, s in old['hosts'].items()}}
+for h, s in c['hosts'].items():
+    name = f'titantpp_history_width16_replication_{h}_20261003_v1'
+    remote = '/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/' + name
+    s.update(root=remote, source_root=remote + '/source', output_dir=remote + '/run', tmux=name)
+c['reporting']['interpretation'] = 'seed52/62 replication; aggregate with matching completed seed42 only after all three seeds pass endpoint and original audits'
+c['reporting']['current_existing_test_access'] = 'Existing seed42 Taxi/RAF Test results were accessed during development; this campaign is training/validation only and does not restore test independence.'
+c['lineage'] = {'parent_contract_sha256': digest(old), 'parent_source_closure_sha256': old['source']['files_sha256'],
+    'unchanged_scientific_sources': 112, 'changed_operational_runner': changed,
+    'baseline_binding_sha256': sha(B / 'verification/baseline_binding.json')}
+c['operational_files'] = {'control/queue_after_seed42.py': sha(B / 'control/queue_after_seed42.py')}
+for k in ('architecture', 'training', 'limits', 'dataset_sha256', 'datasets', 'diagnostic'):
+    assert c[k] == old[k]
+write(B / 'execution_contract.json', c)
+write(B / 'design.json', read(OLD / 'design.json'))
+approval = {'approved': True, 'contract_sha256': digest(c), 'hosts': ['5080', '5090'],
+    'user_instruction': '자 그러면 이에 맞춰서 남은 2개의 seed도 학습할 수 있도록 하자. 5080, 5090에서.',
+    'scope': 'Eight fresh width16 fits:four datasets x seeds52,62. Dedicated server-owned queues after corresponding seed42 successful terminal. Validation-only; existing native runtimes/data, no shared deployment or cloud rental. Width4 reused.'}
+write(B / 'approval.json', approval)
+t = time.time()
+write(B / 'start_permit.json', {'contract_sha256': digest(c), 'approval_sha256': digest(approval),
+    'started_at_unix': t, 'started_at_utc': datetime.fromtimestamp(t, timezone.utc).isoformat(),
+    'deadline_unix': t + c['limits']['total_wall_seconds'],
+    'deadline_utc': datetime.fromtimestamp(t + c['limits']['total_wall_seconds'], timezone.utc).isoformat(),
+    'includes_queue_wait': True})
+write(B / 'current.json', {'bundle': str(B.relative_to(ROOT)), 'contract_sha256': digest(c),
+    'source_closure_sha256': c['source']['files_sha256'], 'hosts': {h: s['root'] for h, s in c['hosts'].items()}})
+print(json.dumps({'contract_sha256': digest(c), 'source_closure_sha256': c['source']['files_sha256'],
+    'jobs': len(c['jobs']), 'changed_source_files': changed}))

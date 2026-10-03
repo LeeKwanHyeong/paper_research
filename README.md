@@ -1,3 +1,5 @@
+> **후속 연구 안내 (2026-10-03):** 이 README의 v0.7은 역사적 validation freeze입니다. 이후 History MLP 폭 비교·관측 시간 계약·A100 후보·재현 소스와 master 통합 상태는 [연구 재현성 인덱스](paper/reproducibility/README.md)를 따릅니다. 아래 frozen 수치와 선택 기준은 그대로 보존합니다.
+
 # TitanTPP: A controlled evaluation of Titan-inspired memory for continuous-count temporal point processes
 
 > Manuscript version: v0.7 validation freeze

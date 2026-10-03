@@ -1,0 +1,37 @@
+import sys,time,json,shlex,subprocess,hashlib,tarfile
+from pathlib import Path
+B=Path(__file__).resolve().parents[1];sys.path.insert(0,str(B/'control'))
+from provider import api,read,write
+from manage import sshcmd,sha
+canon=lambda x:hashlib.sha256(json.dumps(x,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
+a=read(B/'control/allocation.json')
+transfer=read(B/'transfer_authorization.json')
+assert transfer['pod_id']==a['pod_id'] and transfer['total_cap_usd']==100
+s=api('ssh','info',a['pod_id']);assert s.get('ip') and s.get('port')
+a['ssh']={'key':s['ssh_key']['path'],'ip':s['ip'],'port':s['port']};write(B/'control/allocation.json',a)
+inv=sshcmd(a,'nvidia-smi --query-gpu=name,uuid,driver_version,memory.total --format=csv,noheader; /usr/bin/python3.12 --version',30).decode();assert inv.startswith('NVIDIA A100-SXM4-80GB,')
+write(B/'verification/native_inventory.json',{'output':inv})
+c=read(B/'execution_contract.draft.json');c['hosts']['a100']['gpu_uuid']=inv.splitlines()[0].split(',')[1].strip()
+c['cost']['prior_attempt_cost_usd']=a['prior_attempt_cost_usd'];c['cost']['running_rate_usd_hour']=a['running_rate_usd_hour'];c['limits']['total_wall_seconds']=a['deadline_unix']-a['created_unix']
+c['cost']['provider_stop_requested_iso']=a['provider_stop_requested_iso'];c['cost']['provider_stop']='Provider stopAfter requested at allocation; local manager retrieves originals and deletes owned Pod earlier upon terminal status'
+write(B/'execution_contract.json',c,True)
+approval={'approved':True,'contract_sha256':canon(c),'hosts':['a100'],'user_instruction':'A100 SXM one GPU; two candidates x Taxi/Intermittent/RAF; seed42 max300/min40/patience40; total USD100 no auto-recharge; qualified parallelism; original retrieval then owned Pod stop/delete'}
+write(B/'approval.json',approval,True)
+write(B/'start_permit.json',{'contract_sha256':canon(c),'approval_sha256':canon(approval),'started_at_unix':a['created_unix'],'deadline_unix':a['deadline_unix'],'work_cap_usd':80,'total_cap_usd':100},True)
+files={}
+for d in ['source','data','baselines']:
+ for p in (B/d).rglob('*'):
+  if p.is_file() and '__pycache__' not in p.parts:files[str(p.relative_to(B))]=sha(p)
+for n in ['execution_contract.json','approval.json','start_permit.json','expected_initialization.json','control/bootstrap.sh','control/training_pipeline.py']:files[n]=sha(B/n)
+write(B/'package_manifest.json',{'files':files},True)
+with tarfile.open(B/'deployment.tar.gz','w:gz') as t:
+ for n in [*files,'package_manifest.json']:t.add(B/n,arcname=n,recursive=False)
+remote=a['remote_root'];sshcmd(a,'test ! -e '+shlex.quote(remote))
+p=subprocess.run(['scp','-i',a['ssh']['key'],'-P',str(a['ssh']['port']),'-o','BatchMode=yes','-o','UserKnownHostsFile='+str(B/'control/known_hosts'),str(B/'deployment.tar.gz'),'root@'+a['ssh']['ip']+':/workspace/'+B.name+'.tar.gz'],capture_output=True,timeout=120);assert p.returncode==0
+r=sshcmd(a,'mkdir '+shlex.quote(remote)+' && tar --no-same-owner --no-same-permissions --touch -xzf '+shlex.quote(remote+'.tar.gz')+' -C '+shlex.quote(remote)+' && sha256sum '+shlex.quote(remote+'.tar.gz'),60).decode();assert r.split()[0]==sha(B/'deployment.tar.gz')
+write(B/'deployment_receipt.json',{'pod_id':a['pod_id'],'archive_sha256':r.split()[0],'status':'verified','time':time.time()},True)
+# Python Popen with new session and closed descriptors reliably detaches the bootstrap.
+code='import subprocess;from pathlib import Path;b=Path('+repr(remote)+');(b/"bootstrap.claim").open("x").close();log=(b/"bootstrap.log").open("xb");p=subprocess.Popen(["bash",str(b/"control/bootstrap.sh")],stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,close_fds=True);print(p.pid)'
+pid=int(sshcmd(a,'python3 -c '+shlex.quote(code),30).decode().strip())
+write(B/'control/bootstrap_requested.json',{'pid':pid,'time':time.time(),'qualification_then_six_authorized_fits':True,'training_permit_created':False},True)
+print(json.dumps({'uploaded_files':len(files),'bootstrap_pid':pid,'contract_sha256':canon(c),'GPU_UUID':c['hosts']['a100']['gpu_uuid']}))

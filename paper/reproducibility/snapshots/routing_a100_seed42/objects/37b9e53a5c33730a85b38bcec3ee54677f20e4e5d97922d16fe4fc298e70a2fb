@@ -1,0 +1,25 @@
+#!/bin/bash
+set -euo pipefail
+B=/workspace/titantpp_routing_placement_a100_20261003_v1
+mkdir -p "$B/cache/mpl" /tmp/xdg_cache_paper_research/torch/kernels
+export DEBIAN_FRONTEND=noninteractive
+mkdir -p "$B/source/sample_data"
+if ! /usr/bin/python3.12 -m venv /opt/titantpp-a100-venv; then
+  apt-get update -qq
+  apt-get install -y -qq python3.12-venv
+  /usr/bin/python3.12 -m venv /opt/titantpp-a100-venv
+fi
+ln -s /opt/titantpp-a100-venv "$B/venv"
+"$B/venv/bin/python" -m pip install --no-cache-dir 'torch==2.11.0' --index-url https://download.pytorch.org/whl/cu130
+"$B/venv/bin/python" -m pip install --no-cache-dir 'numpy==2.4.4' 'polars==1.39.3' 'matplotlib==3.10.8'
+command -v tmux >/dev/null || { apt-get update -qq; apt-get install -y -qq tmux; }
+"$B/venv/bin/python" - <<'PY'
+import json,hashlib
+from pathlib import Path
+b=Path('/workspace/titantpp_routing_placement_a100_20261003_v1')
+m=json.loads((b/'package_manifest.json').read_text())
+for p,s in m['files'].items():
+ assert hashlib.sha256((b/p).read_bytes()).hexdigest()==s,p
+(b/'deployment_verified.json').write_text(json.dumps({'status':'passed','files':len(m['files'])}))
+PY
+tmux new-session -d -s titantpp_routing_placement_a100_20261003_v1 "exec $B/venv/bin/python $B/control/training_pipeline.py > $B/pipeline.log 2>&1"

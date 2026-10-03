@@ -1,0 +1,156 @@
+"""Parameter-matched local attention and post-block history correction.
+
+Only the history routing or residual insertion changes. Heads, losses, branch
+eligibility, fixed /8, common tensors, and initialization RNG are inherited.
+"""
+import hashlib
+import json
+import torch
+from torch.nn import functional as F
+from models.TPPs.CountAwareTitanCoreAblation import (
+    CountAwareTitanCoreAblation, HistoryCorrection, metadata as base_metadata,
+)
+from models.TPPs.CountAwareTitanMultiLagDetail import lag_source_indices, _mask, _complete_state
+
+MODES = {'titantpp_history_recent4_attention': 'recent4_attention',
+         'titantpp_history_post_block': 'post_block'}
+ARMS = tuple(MODES)
+ROLE = 'observed_time_routing_placement_v1'
+
+
+def metadata(hidden_dim, mode):
+    if hidden_dim != 64 or mode not in MODES.values():
+        raise ValueError('MLP candidates require width64 and an explicit candidate')
+    result = base_metadata(hidden_dim, 'mlp')
+    result.update(candidate_name=next(a for a,m in MODES.items() if m == mode),
+                  backbone_contract_id='titantpp_routing_placement_v1', model_role=ROLE,
+                  routing_placement_candidate=mode, additional_parameter_count=6144,
+                  branch_availability='original_thresholds', residual_divisor=8,
+                  history_context='attention_up_to_four_previous_observed_states_within_segment' if mode == 'recent4_attention' else 'immediate_predecessor',
+                  multilag_detail_projections='gelu_current_plus_context',
+                  bottleneck_width=4, initialization='same_MLP_input_and_zero_output_forked_rng')
+    result.update(multilag_detail_insertion='between_encoder_blocks' if mode == 'recent4_attention' else 'after_second_encoder_block_before_static_memory',
+                  correction_source='first_encoder_block_states',
+                  attention_score='dot_existing_current_previous_projections_div_sqrt4' if mode == 'recent4_attention' else None,
+                  attention_values='existing_previous_projection' if mode == 'recent4_attention' else None,
+                  attention_window=4 if mode == 'recent4_attention' else 1,
+                  attention_no_history='zero_context_zero_correction',
+                  attention_dropout=0.0)
+    return result
+
+
+def identity(hidden_dim, mode):
+    return torch.tensor(list(hashlib.sha256(json.dumps(metadata(hidden_dim, mode), sort_keys=True).encode()).digest()), dtype=torch.uint8)
+
+
+class CandidateCorrection(HistoryCorrection):
+    def __init__(self, hidden_dim, candidate):
+        metadata(hidden_dim, candidate)
+        super().__init__(hidden_dim, 'mlp')
+        self.candidate = candidate
+
+    def forward(self, hidden, valid, *, memory_write_mask=None):
+        if self.candidate == 'post_block':
+            return super().forward(hidden, valid, memory_write_mask=memory_write_mask)
+        _mask(valid, tuple(hidden.shape[:2]), 'valid')
+        if memory_write_mask is not None:
+            _mask(memory_write_mask, tuple(valid.shape), 'memory_write_mask')
+        observed = valid if memory_write_mask is None else valid & memory_write_mask
+        safe = torch.where(observed.unsqueeze(-1), hidden, 0.)
+        if not torch.isfinite(safe).all():
+            raise ValueError('Nonfinite observed history')
+        source, available = lag_source_indices(valid, memory_write_mask=memory_write_mask, mode='local')
+        weights = torch.cat([p.weight for p in self.input_projections])
+        current = F.linear(safe, weights[:, :self.hidden_dim]).unflatten(-1, (8, 4))
+        previous = F.linear(safe, weights[:, self.hidden_dim:]).unflatten(-1, (8, 4))
+        # The existing two width-four projections supply query, key and value.
+        # No extra learned parameters or changes to /8 and branch eligibility.
+        predecessor = source[:, :, 0]
+        predecessor_available = available[:, :, 0]
+        index, alive = predecessor, predecessor_available
+        values, eligibility = [], []
+        for _ in range(4):
+            gathered = previous.gather(1, index[:, :, None, None].expand_as(previous))
+            values.append(torch.where(alive[:, :, None, None], gathered, 0.))
+            eligibility.append(alive)
+            alive = alive & predecessor_available.gather(1, index)
+            index = predecessor.gather(1, index)
+        values = torch.stack(values, dim=-2)  # B,L,8,4 predecessors,4 channels
+        eligible = torch.stack(eligibility, dim=-1).unsqueeze(-2)
+        scores = (current.unsqueeze(-2) * values).sum(-1) / 2.0
+        # Avoid all-masked softmax NaNs. Empty rows have exactly zero mass.
+        scores = scores.masked_fill(~eligible, torch.finfo(scores.dtype).min)
+        weights = torch.softmax(scores, dim=-1) * eligible.to(scores.dtype)
+        context = (weights.unsqueeze(-1) * values).sum(-2)
+        features = F.gelu(current + context, approximate='none')
+        features = torch.where(available.unsqueeze(-1), features, 0.)
+        return F.linear(features.flatten(-2), torch.cat([p.weight for p in self.output_projections], dim=1)) / 8
+
+
+class CountAwareTitanRoutingPlacement(CountAwareTitanCoreAblation):
+    def __init__(self, hidden_dim, train_log_mean, max_seq_len, *, candidate_mode, **kwargs):
+        super().__init__(hidden_dim, train_log_mean, max_seq_len, core_mode='mlp', **kwargs)
+        self.candidate_mode = candidate_mode
+        self.multilag_detail = CandidateCorrection(hidden_dim, candidate_mode)
+        self.register_buffer('routing_placement_identity', identity(hidden_dim, candidate_mode))
+
+    def _encode_base(self, dts, history_quantities, mask, *, memory_write_mask=None):
+        if self.candidate_mode == 'recent4_attention':
+            return super()._encode_base(dts, history_quantities, mask, memory_write_mask=memory_write_mask)
+        if dts.ndim != 2 or history_quantities.shape != dts.shape:
+            raise ValueError('Event inputs must have shape [batch, length]')
+        _mask(mask, tuple(dts.shape), 'mask')
+        valid = mask.to(dts.device)
+        observed = valid
+        if memory_write_mask is not None:
+            _mask(memory_write_mask, tuple(dts.shape), 'memory_write_mask')
+            observed = valid & memory_write_mask.to(dts.device)
+        safe_dts = torch.where(observed, dts, 0.)
+        safe_quantities = torch.where(observed, history_quantities, 0.)
+        if (not bool(torch.isfinite(safe_dts).all()) or bool((safe_dts < 0).any())
+                or not bool(torch.isfinite(safe_quantities).all()) or bool((safe_quantities < 0).any())):
+            raise ValueError('Observed durations and quantities must be finite and nonnegative')
+        if self.encoder is None or self.lmm is None or len(self.encoder.layers) != 2:
+            raise RuntimeError('Post-block correction requires the original two encoder blocks')
+        encoded = self.encoder.input_proj(self.continuous_features(safe_dts, safe_quantities, observed))
+        if self.encoder.use_pos_emb:
+            encoded = encoded + self.encoder._get_pos(encoded.size(1), encoded.device, encoded.dtype)
+        encoded = torch.where(observed.unsqueeze(-1), encoded, 0.)
+        first = self.encoder.layers[0](encoded, mask=observed)
+        correction = self.multilag_detail(first, valid, memory_write_mask=observed)
+        second = self.encoder.layers[1](first, mask=observed)
+        return torch.where(observed.unsqueeze(-1), second + correction, 0.)
+
+    def load_state_dict(self, state_dict, strict=True, assign=False):
+        value = state_dict.get('routing_placement_identity')
+        if not isinstance(value, torch.Tensor) or not torch.equal(value.cpu(), identity(self.core_hidden_dim, self.candidate_mode)):
+            raise ValueError('MLP candidate checkpoint identity mismatch')
+        _complete_state(self, state_dict)
+        return super().load_state_dict(state_dict, strict=strict, assign=assign)
+
+
+def validate_checkpoint(payload, expected_backbone):
+    meta = payload.get('encoder_config', {})
+    states = [payload[k] for k in ('model_state_dict', 'best_state_dict') if k in payload]
+    identified = payload.get('backbone') in ARMS or 'routing_placement_candidate' in meta or any('routing_placement_identity' in s for s in states)
+    if expected_backbone not in ARMS:
+        if identified:
+            raise ValueError('MLP candidate cannot be relabelled')
+        return False
+    mode = MODES[expected_backbone]
+    expected = metadata(meta.get('d_model'), mode)
+    resume, interface = payload.get('resume_identity', {}), payload.get('interface_meta', {})
+    if (payload.get('backbone') != expected_backbone or any(meta.get(k) != v for k,v in expected.items())
+            or payload.get('evaluation_scope') != 'validation_only' or payload.get('held_out_test_evaluated') is not False
+            or payload.get('variant') != 'count_only_log_regression' or resume.get('backbone') != expected_backbone
+            or resume.get('interface_meta') != interface or resume.get('arguments', {}).get('model_role') != ROLE
+            or resume.get('checkpoint_monitor') != 'validation_raw_quantity_rmse'
+            or meta.get('time_head', {}).get('observation_likelihood') != interface.get('time_head', {}).get('observation_likelihood')):
+        raise ValueError('MLP candidate metadata, split, head, selection or role mismatch')
+    for state in states:
+        value = state.get('routing_placement_identity')
+        if not isinstance(value, torch.Tensor) or not torch.equal(value.cpu(), identity(meta.get('d_model'), mode)):
+            raise ValueError('MLP candidate state identity mismatch')
+    if not states and (len(payload.get('checkpoint_state_sha256', '')) != 64 or payload.get('best_epoch', 0) < 1):
+        raise ValueError('Unbound MLP candidate summary')
+    return True

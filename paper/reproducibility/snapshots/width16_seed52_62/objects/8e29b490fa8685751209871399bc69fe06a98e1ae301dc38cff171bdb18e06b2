@@ -1,0 +1,36 @@
+"""Deploy the isolated sources and only each host's admitted data."""
+import json,subprocess,tarfile
+from local_common import *
+c=contract()
+assert read(B/'verification/cpu_initialization.json')['status']=='passed'
+assert all(read(B/'verification'/f'native_cpu_{h}.json')['status']=='passed' for h in c['hosts'])
+receipts={}
+for host,spec in c['hosts'].items():
+ files={'source/'+p:B/'frozen_source'/p for p in c['source']['files']}
+ files['source/sample_data/.keep']=B/'frozen_source/sample_data/.keep'
+ for n in ('execution_contract.json','approval.json','start_permit.json','design.json','README.md','control/queue_after_seed42.py'):files[n]=B/n
+ for dataset in spec['assigned_datasets']:
+  for p in (B/'data'/dataset).rglob('*'):
+   if p.is_file():files[str(p.relative_to(B))]=p
+ manifest={k:sha(p) for k,p in files.items()}
+ manifest_path=B/'deployment'/f'{host}_manifest.json';write(manifest_path,manifest)
+ files['deployment_manifest.json']=manifest_path
+ archive=B/'deployment'/f'{host}.tar.gz'
+ with tarfile.open(archive,'w:gz') as t:
+  for name,p in files.items():t.add(p,arcname=name)
+ root=spec['root']
+ remote(host,'from pathlib import Path\np=Path('+repr(root)+')\np.mkdir(exist_ok=False)\nprint(p)\n')
+ subprocess.run(['scp','-q',str(archive),host+':'+root+'/deployment.tar.gz'],check=True)
+ script='''import json,tarfile,hashlib
+from pathlib import Path
+p=Path(ROOT)
+with tarfile.open(p/'deployment.tar.gz') as t:
+ for m in t.getmembers():assert not m.issym() and not m.islnk() and not Path(m.name).is_absolute() and '..' not in Path(m.name).parts
+ t.extractall(p,filter='data')
+m=json.loads((p/'deployment_manifest.json').read_text())
+for k,v in m.items():assert hashlib.sha256((p/k).read_bytes()).hexdigest()==v,k
+print(json.dumps({'status':'passed','files':len(m),'root':str(p)}))
+'''.replace('ROOT',repr(root))
+ receipts[host]=json.loads(remote(host,script));receipts[host]['archive_sha256']=sha(archive)
+ write(B/'deployment'/f'{host}.json',receipts[host]);print(json.dumps({host:receipts[host]}),flush=True)
+write(B/'deployment_receipt.json',{'status':'passed','contract_sha256':digest(c),'hosts':receipts})

@@ -1,0 +1,14 @@
+"""Native provider auto-stop support absent from CLI2.14 flags; key stays on Mac."""
+import json,os,tomllib,subprocess
+from pathlib import Path
+def gql(query,variables):
+ c=tomllib.loads((Path.home()/'.runpod/config.toml').read_text())
+ key=os.environ.get('RUNPOD_API_KEY') or c['apikey']
+ payload=json.dumps({'query':query,'variables':variables})
+ config='url = "https://api.runpod.io/graphql"\nheader = '+json.dumps('Authorization: Bearer '+key)+'\nheader = "Content-Type: application/json"\nuser-agent = "runpodctl/2.14.0"\ndata = '+json.dumps(payload)+'\n'
+ p=subprocess.run(['curl','--silent','--show-error','--max-time','45','--config','-'],input=config,text=True,capture_output=True)
+ if p.returncode:raise RuntimeError('Provider request failed; credentials suppressed')
+ try:out=json.loads(p.stdout)
+ except ValueError:raise RuntimeError('Provider non-JSON response; raw body suppressed') from None
+ if out.get('errors'):raise RuntimeError(json.dumps({'errors':[x.get('message','provider error') for x in out['errors']]}))
+ return out['data']

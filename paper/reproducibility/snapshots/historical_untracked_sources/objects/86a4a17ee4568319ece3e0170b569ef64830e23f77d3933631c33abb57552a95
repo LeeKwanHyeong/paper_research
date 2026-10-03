@@ -1,0 +1,99 @@
+"""Opt-in contract for joint training on recorded positive integer durations.
+
+The existing loader merges zero into code one. The round/clamp latent model is
+an explicit probability model for those recorded codes, not a reconstruction of
+raw zero gaps or the data source's continuous-time recording mechanism.
+"""
+from __future__ import annotations
+
+import math
+from typing import Any
+
+import numpy as np
+
+from models.TPPs.CountAwareTPP import TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION
+
+ROLE = "observed_time_joint_v1"
+PAIR_ROLE = "observed_time_pair_message_v1"
+STATE_ROLE = "observed_time_state_transport_v1"
+MULTILAG_ROLE = "observed_time_multilag_detail_v1"
+LOCAL_GATE_ROLE = "observed_time_local_gate_v1"
+LOCAL_GATE_BACKBONES = ("titantpp", "titantpp_local_time_gate", "titantpp_local_quantity_gate")
+ROLES = (ROLE, PAIR_ROLE, STATE_ROLE, MULTILAG_ROLE, LOCAL_GATE_ROLE)
+MODE = "positive_integer_round_clamp_v1"
+BACKBONES = ("titantpp", "rmtpp", "thp", "nhp", "sahp")
+PAIR_BACKBONES = ("titantpp", "titantpp_pair_message_post_pool", "titantpp_pair_message_pre_pool")
+STATE_BACKBONES = ("titantpp", "titantpp_event_state_transport", "titantpp_elapsed_state_transport")
+MULTILAG_BACKBONES = ("titantpp", "titantpp_local_detail", "titantpp_multilag_detail")
+DATASETS = {
+    "intermittent_frozen_5000": ("week", None),
+    "yellow_trip_hourly": ("hour", None),
+    "insta_market_basket": ("day", 30),
+}
+
+
+def observation_contract(dataset: str) -> dict[str, Any]:
+    try:
+        unit, top_code = DATASETS[dataset]
+    except KeyError as exc:
+        raise ValueError("Unsupported observation dataset") from exc
+    return {"mode": MODE, "top_code": top_code, "unit": unit}
+
+
+def validate_launch(args: Any, backbones: tuple[str, ...], variants: tuple[str, ...]) -> None:
+    if getattr(args, "model_role", None) not in ROLES:
+        return
+    allowed = {ROLE: BACKBONES, PAIR_ROLE: PAIR_BACKBONES, STATE_ROLE: STATE_BACKBONES,
+               MULTILAG_ROLE: MULTILAG_BACKBONES, LOCAL_GATE_ROLE: LOCAL_GATE_BACKBONES}[args.model_role]
+    if not backbones or len(set(backbones)) != len(backbones) or set(backbones) - set(allowed):
+        raise ValueError("Observed-time joint role has unsupported or duplicate backbones")
+    if (args.time_head_mode != TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION
+            or variants != ("count_only_log_regression",)
+            or args.lambda_tail != 0.0 or args.lambda_log_qty != 1.0
+            or args.quantile_adaptive_strength != 0.0):
+        raise ValueError("Observed-time joint role requires heteroscedastic time and unchanged log-MSE quantity")
+    if args.checkpoint_monitor != "validation_raw_quantity_rmse":
+        raise ValueError("Observed-time joint role requires strict raw-RMSE selection")
+    observation_contract(args.dataset_contract)
+
+
+def validate_recorded_grid(frame: Any, dataset: str) -> None:
+    """Check admitted train/validation rows before the loader's integer cast."""
+    if set(frame["chronological_split"].unique().to_list()) - {"train", "validation"}:
+        raise ValueError("Observed-time joint input must exclude held-out rows")
+    values = frame["delta_t"].to_numpy().astype(np.float64)
+    if (not np.isfinite(values).all() or (values < 0).any()
+            or not np.equal(values, np.round(values)).all()):
+        raise ValueError("Recorded durations must be finite nonnegative integers before loader conversion")
+    code = observation_contract(dataset)["top_code"]
+    if code is not None and (values > code).any():
+        raise ValueError("Recorded duration exceeds dataset top code")
+
+
+def validate_training_identity(args: Any, interface: dict[str, Any], backbone: str,
+                               variant: str) -> None:
+    observation = interface.get("time_head", {}).get("observation_likelihood")
+    if getattr(args, "model_role", None) not in ROLES:
+        if observation is not None:
+            raise ValueError("Observation likelihood requires its explicit joint model role")
+        return
+    validate_launch(args, (backbone,), (variant,))
+    head = interface.get("time_head", {})
+    if observation != observation_contract(args.dataset_contract):
+        raise ValueError("Dataset observation identity mismatch")
+    if (head.get("mode") != args.time_head_mode or head.get("statistics_source_split") != "train"
+            or head.get("time_scale") != args.time_scale):
+        raise ValueError("Time initialization must be bound to train statistics")
+    stats = head.get("train_time_statistics", {})
+    checks = {"time_scale": args.time_scale,
+              "target_log_scaled_mean": head.get("time_initial_location"),
+              "target_log_scaled_std": head.get("time_initial_scale")}
+    for name, value in checks.items():
+        if (value is None or name not in stats or not math.isfinite(float(value))
+                or not math.isclose(float(value), float(stats[name]), rel_tol=0, abs_tol=1e-12)):
+            raise ValueError(f"Train-only time initialization mismatch: {name}")
+
+
+def time_model_kwargs(interface: dict[str, Any]) -> dict[str, Any]:
+    observation = interface.get("time_head", {}).get("observation_likelihood")
+    return {} if observation is None else {"time_observation_contract": dict(observation)}

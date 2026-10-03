@@ -1,0 +1,18 @@
+"""Authorize six fresh fits only after native correctness, baseline replay and concurrency probes."""
+import json,os,subprocess,sys,time,traceback
+from pathlib import Path
+B=Path(__file__).resolve().parents[1];sys.path.insert(0,str(B/'source'))
+from paper.scripts import run_titantpp_routing_placement as r
+c=r.read(B/'execution_contract.json');start=r.read(B/'start_permit.json');h=c['hosts']['a100'];env={**os.environ,**h['environment']}
+r.common.write_json(B/'pipeline.claim',{'pid':os.getpid(),'started_unix':time.time()},exclusive=True)
+command=[h['python'],str(B/'source/paper/scripts/run_titantpp_routing_placement.py'),'--contract',str(B/'execution_contract.json')]
+phase='qualification'
+try:
+ with (B/'qualification.log').open('x') as log:
+  subprocess.run(['timeout','--signal=TERM','--kill-after=15s','5400',*command,'--mode','qualify'],cwd=B/'source',env=env,stdout=log,stderr=subprocess.STDOUT,check=True)
+ q=r.read(B/'qualification/receipt.json');assert q['status']=='passed'
+ r.common.write_json(B/'training_permit.json',{'contract_sha256':r.common.sha_json(c),'start_permit_sha256':r.common.sha_json(start),'qualification_sha256':r.common.sha_file(B/'qualification/receipt.json')},exclusive=True)
+ phase='training';remaining=int(start['deadline_unix']-time.time());assert remaining>0
+ subprocess.run(['timeout','--signal=TERM','--kill-after=15s',str(remaining),*command,'--mode','dispatch'],cwd=B/'source',env=env,check=True)
+except BaseException as e:
+ r.common.write_json(B/'pipeline_failure.json',{'status':'failed','phase':phase,'type':type(e).__name__,'message':str(e),'traceback':traceback.format_exc(),'updated_unix':time.time(),'automatic_retry':False},exclusive=True);raise

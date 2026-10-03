@@ -1,0 +1,18 @@
+import hashlib,json,subprocess,time
+from pathlib import Path
+B=Path(__file__).resolve().parents[1]
+def read(p):return json.loads(Path(p).read_text())
+def sha(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+def digest(v):return hashlib.sha256(json.dumps(v,sort_keys=True,ensure_ascii=False,separators=(',',':'),allow_nan=False).encode()).hexdigest()
+def write(p,v):
+ p=Path(p);p.parent.mkdir(parents=True,exist_ok=True)
+ with p.open('x') as f:json.dump(v,f,ensure_ascii=False,indent=2,allow_nan=False);f.write('\n')
+def contract():
+ c=read(B/'execution_contract.json');a=read(B/'approval.json');s=read(B/'start_permit.json')
+ assert a['approved'] and a['contract_sha256']==digest(c) and s['approval_sha256']==digest(a)
+ assert s['contract_sha256']==digest(c) and s['started_at_unix']<=time.time()<s['deadline_unix']
+ assert digest(c['source']['files'])==c['source']['files_sha256']
+ for p,h in c['source']['files'].items():assert sha(B/'frozen_source'/p)==h,p
+ return c
+def remote(host,script,timeout=60):
+ return subprocess.check_output(['ssh','-o','BatchMode=yes','-o','ConnectTimeout=15',host,'python3 -'],input=script,text=True,timeout=timeout)

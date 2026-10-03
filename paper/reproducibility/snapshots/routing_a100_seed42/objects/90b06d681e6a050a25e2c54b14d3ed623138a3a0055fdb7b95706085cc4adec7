@@ -1,0 +1,30 @@
+# TitanTPP routing and placement — A100 SXM seed42 screen
+
+This is a separate campaign, authorized in this side conversation on 2026-10-03.
+The shared project source, manuscript, prior experiments and their automations are not changed.
+
+- One RunPod A100 SXM 80GB; two candidates × Intermittent, Taxi, RAF = six fits, seed42.
+- User-approved total spending cap **USD100**, automatic recharge not enabled by this experiment. Work80, retrieval/cleanup reserve20; all preparation attempts count toward this same cap.
+- Maximum300/minimum40/patience40. Earliest strict finite validation raw-quantity RMSE selects MAE/RMSE/time NLL from the same epoch. Input, loss, heads, AdamW, batch128, and training populations are unchanged.
+- `titantpp_history_recent4_attention`: branch-specific dot-product attention over up to four observed predecessors, using the existing width4 current/past projections as query/key/value. Score divisor sqrt4=2; zero context for no predecessor. Original branch masks and /8 retained.
+- `titantpp_history_post_block`: exactly the original lag-one MLP correction computed from first-block states, added after the second block and before static memory.
+- Each has6,144 correction parameters and96,003 total parameters. Output projections remain zero-initialized; common tensors and initialization RNG match original MLP.
+- Original seed42 MLP checkpoints/results are reused, not retrained. Native validation compatibility replay is required before new fits. This is a single-seed exploratory comparison across GPUs, not a final independent evaluation or paper efficiency measurement.
+- Qualification compares equal six-job synthetic work at concurrency1/2/3/6 and selects the smallest count within5% of the fastest; synthetic states are discarded.
+- First two real epochs remain part of each fit. Record the conservative remaining300-epoch projection as a warning, not an automatic interruption. Unlike the previous A100 campaign, a pessimistic projection does not force a stop/restart. The immutable native campaign deadline (at most48h and work allowance divided by measured rental rate) and per-condition deadline remain mandatory. Budget exhaustion preserves partial results; completion of300epochs is not guaranteed. No automatic retry/resume.
+- Train and validation only; held-out performance/predictions remain unopened.
+- Source is copied from the prior verified A100 closure into `source/`; all changes and SHA identity are isolated here.
+- Owned local provider manager retrieves and verifies the original archive, then stops/deletes only the new owned Pod. A provider compute-stop fallback is requested to preserve the volume. Its readback/application is not assumed. Mac sleep/network failure can delay provider actions; volume recovery/deletion may remain necessary if disconnected.
+
+Status: local preparation; no rental or native training at README creation.
+
+## Current status after local preparation
+
+- Local CPU verification:9 tests passed; train/validation admission and original baseline SHA checks passed.
+- Allocated owned A100 Pod:c88rn6dvhdafj0, GPU1, USD1.59/h (conservative running storage-inclusive1.5969444444/h).
+- Automatic approval review rejected deployment because specific approval for research-file transmission to RunPod was required. Proposed manifest:verification/proposed_transfer_manifest.json (132files,6,605,167bytes). No upload or native training executed.
+- The user explicitly approved this transfer on2026-10-03; evidence:transfer_authorization.json. The same owned Pod was resumed; creation/campaign deadlines and totalUSD100 cap remain unchanged. Historical pause evidence:control/transfer_approval_pause.json.
+- Deployment archive SHA verified;138 payload records transferred. CPU9 tests and native GPU correctness, native initial-state matching, all3 original MLP validation replays, and concurrency1/2/3/6 trials passed.
+- Scientific training started with3 concurrent fits and3 queued fits; launch_receipt.json records actual GPU worker evidence. First saved epochs are recorded separately in verification/first_checkpoint_confirmation.json when confirmed.
+- Synthetic equal-six-job measured work times:1worker9.9448s,2workers7.2207s,3workers6.3608s,6workers6.1211s. Three workers are within5% of the fastest six, so the declared rule selected3. These exclude process startup and are not scientific fit timing or paper efficiency measurements.
+- Bound scientific contract SHA:1db5a7e0cf97b8a667439b86cca8455a6e98158775c46ef1d19efdd26a5cbea0; source closure:2b8156fab28cf44e9c2fd4cd1f2888110f89f98874af5820a60037d44cc51870.

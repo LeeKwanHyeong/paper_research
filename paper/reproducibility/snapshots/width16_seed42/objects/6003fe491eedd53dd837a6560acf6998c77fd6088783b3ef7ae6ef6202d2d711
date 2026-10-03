@@ -1,0 +1,31 @@
+import json,subprocess,tarfile
+from local_common import *
+c=contract()
+files={'source/'+p:B/'frozen_source'/p for p in c['source']['files']}
+files['source/sample_data/.keep']=B/'frozen_source/sample_data/.keep'
+for n in ('execution_contract.json','approval.json','start_permit.json','design.json','README.md'):files[n]=B/n
+for p in (B/'data').rglob('*'):
+ if p.is_file():files[str(p.relative_to(B))]=p
+manifest={k:sha(p) for k,p in files.items()};write(B/'deployment_manifest.json',manifest)
+files['deployment_manifest.json']=B/'deployment_manifest.json'
+archive=B/'deployment.tar.gz'
+with tarfile.open(archive,'w:gz') as t:
+ for name,p in files.items():t.add(p,arcname=name)
+receipts={}
+for host,spec in c['hosts'].items():
+ root=spec['root']
+ remote(host,'from pathlib import Path\np=Path('+repr(root)+')\np.mkdir(exist_ok=False)\nprint(p)\n')
+ subprocess.run(['scp','-q',str(archive),host+':'+root+'/deployment.tar.gz'],check=True)
+ script='''import json,tarfile,hashlib
+from pathlib import Path
+p=Path(ROOT)
+with tarfile.open(p/'deployment.tar.gz') as t:
+ for m in t.getmembers():assert not m.issym() and not m.islnk() and not Path(m.name).is_absolute() and '..' not in Path(m.name).parts
+ t.extractall(p,filter='data')
+m=json.loads((p/'deployment_manifest.json').read_text())
+for k,v in m.items():assert hashlib.sha256((p/k).read_bytes()).hexdigest()==v,k
+print(json.dumps({'status':'passed','files':len(m),'root':str(p)}))
+'''.replace('ROOT',repr(root))
+ receipts[host]=json.loads(remote(host,script))
+ write(B/'deployment'/f'{host}.json',receipts[host]);print(json.dumps({host:receipts[host]}),flush=True)
+write(B/'deployment_receipt.json',{'status':'passed','contract_sha256':digest(c),'archive_sha256':sha(archive),'hosts':receipts})

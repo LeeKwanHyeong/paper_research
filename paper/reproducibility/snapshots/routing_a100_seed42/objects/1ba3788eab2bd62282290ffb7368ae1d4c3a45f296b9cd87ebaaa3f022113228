@@ -1,0 +1,70 @@
+"""Freeze this isolated source and admit train/validation data before renting."""
+import json
+import os
+import sys
+from copy import deepcopy
+from pathlib import Path
+
+B=Path(__file__).resolve().parents[1]
+OLD=B.parent/'titantpp_mlp_candidates_a100_20261002_v1_retry1'
+sys.path.insert(0,str(B/'source'))
+from paper.scripts import run_titantpp_routing_placement as r
+from models.TPPs.CountAwareTitanRoutingPlacement import MODES,metadata
+
+os.chdir(B/'source')
+def save(path, value):
+ if path.exists():
+  assert r.read(path)==value, 'Refuse to overwrite different preparation evidence: '+str(path)
+ else:
+  r.common.write_json(path,value,exclusive=True)
+c=deepcopy(r.read(OLD/'execution_contract.json'))
+remote='/workspace/'+B.name
+design={'schema':r.SCHEMA,'models':{a:metadata(64,m) for a,m in MODES.items()},
+ 'equations':{
+  'recent4_attention':'q_b=A_b h_t; k_bj=v_bj=B_b h_j; alpha=softmax_j(q_b dot k_bj / sqrt(4)) over up to 4 observed predecessors; r=sum_b available_b Wout_b GELU(q_b+sum_j alpha_bj v_bj)/8; B2(h+r)',
+  'post_block':'same original lag-one MLP r(h) with original availability and /8; B2(h)+r(h), then unchanged static memory and heads'},
+ 'seed':42,'maximum_epochs':300,'minimum_epochs':40,'patience':40,
+ 'baseline_retraining':False,'heads_loss_optimizer_data_unchanged':True,
+ 'correction_parameters':6144,'total_parameters':96003,
+ 'zero_output_initialization':True,'common_initial_tensors_and_RNG_equal':True,
+ 'screening_only_not_independent_final_evaluation':True}
+save(B/'design.json',design)
+c.update(schema=r.SCHEMA,arms=list(r.ARMS),architecture=design['models'],design_sha256=r.common.sha_json(design),
+ quantity_variants={a:r.VARIANT for a in r.ARMS},roles={a:r.ROLE for a in r.ARMS},
+ jobs=[{'id':f'{d}__42__{a}','host':'a100','dataset':d,'seed':42,'arm':a} for d in r.DATASETS for a in r.ARMS])
+h=c['hosts']['a100']
+for key in ('root','source_root','output_dir','python','tmux'):
+ h[key]=h[key].replace(OLD.name,B.name)
+h['gpu_uuid']='BIND_AFTER_ALLOCATION'
+h['environment']={k:v.replace(OLD.name,B.name) for k,v in h['environment'].items()}
+c['limits'].update(total_wall_seconds=48*3600,per_condition_seconds=48*3600,
+ first_two_epochs='Record 300-epoch conservative projection, not a separate fit or stop gate. Native immutable 48h/cost deadline and finite checks enforce the budget. No retry/resume or budget expansion.')
+c['cost']={'total_cap_usd':100,'work_cap_usd':80,'retrieval_cleanup_reserve_usd':20,
+ 'automatic_recharge':False,'running_rate_usd_hour':None,'prior_attempt_cost_usd':0,
+ 'provider_stop':'request compute stop with persistent volume retained; Mac manager SHA-retrieves originals before stop/delete; provider fallback readback may be unavailable'}
+files=r.common.source_manifest(root=B/'source',entrypoints=('paper/scripts/run_titantpp_routing_placement.py','paper/scripts/verify_titantpp_routing_placement.py'),
+ extra_files=('models/TPPs/vendor/s2p2/LICENCE','models/TPPs/vendor/s2p2/NOTICE','models/TPPs/vendor/attnhp/LICENSE'))
+c['source']={'base_git_revision':c['source']['base_git_revision'],'files':files,'files_sha256':r.common.sha_json(files),
+ 'revision_note':'Isolated derivative of prior A100 frozen closure; source-file hashes identify current experiment; shared working tree is not modified',
+ 'parent_source_files_sha256':r.read(OLD/'execution_contract.json')['source']['files_sha256']}
+r.validate(c)
+save(B/'execution_contract.draft.json',c)
+init={d['dataset_id']:r.initial_states(d,42) for d in c['datasets']}
+save(B/'expected_initialization.json',init)
+receipts={}
+for d in c['datasets']:
+ frame,receipt=r.base.prepare_admitted_data(d)
+ assert set(frame['chronological_split'].unique()) <= {'train','validation'}
+ assert receipt['held_out_materialized'] is False
+ receipts[d['dataset_id']]=receipt
+ del frame
+save(B/'verification/cpu_data_admission.json',{'status':'passed','datasets':receipts,'held_out_materialized':False})
+baseline_checks={}
+for d,ref in c['baseline_replays'].items():
+ assert r.common.sha_file(B/ref['checkpoint'])==ref['checkpoint_sha256']
+ assert r.common.sha_file(B/ref['exposure'])==ref['exposure_sha256']
+ baseline_checks[d]={'checkpoint_SHA':'passed','exposure_SHA':'passed'}
+save(B/'preparation_receipt.json',{'status':'CPU_tests_and_data_admission_passed','source_files':len(files),
+ 'closure_sha256':c['source']['files_sha256'],'cpu_tests_sha256':r.common.sha_file(B/'verification/cpu_tests.xml'),
+ 'baseline_SHA_checks':baseline_checks,'native_qualification':'pending','scientific_training_started':False})
+print(json.dumps({'files':len(files),'source_closure':c['source']['files_sha256'],'jobs':len(c['jobs']),'data_admission':'passed'}))

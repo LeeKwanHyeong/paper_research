@@ -1,0 +1,92 @@
+"""Freeze four approved width16 fits without mutating historical sources."""
+import json, shutil, subprocess, sys, time
+from copy import deepcopy
+from datetime import datetime, timezone
+from pathlib import Path
+
+ROOT = Path.cwd().resolve()
+sys.path.insert(0, str(ROOT))
+from paper.scripts import observed_slot_parallel_common as common
+
+B = Path(__file__).resolve().parents[1]
+OLD = ROOT / 'search_artifacts/titantpp_pakdd_extension_20261001_v1/prelaunch_v2'
+old = json.loads((OLD / 'execution_contract.json').read_text())
+assert common.sha_json(old) == '08f7e9ed402ba74fde099321f039b78de3a11b0bd93cba27492b1a84454f6a6c'
+assert not (B / 'execution_contract.json').exists()
+source = B / 'frozen_source'
+for rel, digest in old['source']['files'].items():
+    src = OLD / 'frozen_source' / rel
+    assert common.sha_file(src) == digest, rel
+    dst = source / rel
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src, dst)
+added = ['models/TPPs/CountAwareTitanHistoryWidth.py',
+         'paper/scripts/run_titantpp_history_width.py',
+         'paper/scripts/run_titantpp_history_width_campaign.py',
+         'paper/scripts/evaluate_titantpp_history_width.py']
+for rel in added:
+    dst = source / rel
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(ROOT / rel, dst)
+(source / 'sample_data').mkdir(exist_ok=True)
+(source / 'sample_data/.keep').write_text('Root marker; no data.\n')
+closure = common.source_manifest(source,
+    entrypoints=('paper/scripts/run_titantpp_history_width_campaign.py',), extra_files=())
+files = {**old['source']['files'], **closure}
+assert all(files[k] == v for k, v in old['source']['files'].items())
+assignments = {'5080': ['yellow_trip_hourly', 'raf_spare_parts', 'intermittent_frozen_5000'],
+               '5090': ['insta_market_basket']}
+arm = 'titantpp_history_mlp_width16'
+design = {'schema': 'titantpp_history_width16_design_v1', 'baseline': 'titantpp_history_mlp',
+          'candidate': arm, 'only_architecture_change': 'bias-free branch width4 to width16',
+          'branches': 8, 'branch_input_dim': 128, 'branch_hidden_dim': 16, 'branch_output_dim': 64,
+          'correction_parameters': 24576, 'extra_parameters_vs_width4': 18432,
+          'activation': 'GELU', 'branch_availability': 'unchanged original observed-history masks',
+          'residual_divisor': 8, 'initialization': 'forked RNG; ordinary input weights; zero output weights',
+          'heads_and_loss': 'unchanged original observed-time and log quantity MSE',
+          'cnn_gru_included': False, 'hpo': False}
+common.write_json(B / 'design.json', design, exclusive=True)
+c = deepcopy(old)
+c.update(schema='titantpp_history_width16_dual_20261003_v1',
+    approved_scope='2026-10-03 user approved immediate 5080/5090 parallel width16 comparison',
+    arms=[arm], roles={arm: 'observed_time_history_mlp_width16_v1'}, quantity_variants={arm: 'count_only_log_regression'},
+    architecture=design, design_sha256=common.sha_json(design),
+    jobs=[{'id': f'{d}__42__{arm}', 'host': h, 'dataset': d, 'seed': 42, 'arm': arm}
+          for h, ds in assignments.items() for d in ds],
+    reuse=[x for x in old['reuse'] if x['seed'] == 42],
+    diagnostic={'train_sampling': {'train_sampling_seed': 20261003, 'max_per_bin': 2048},
+                'train_weights': 'N_bin/n_bin', 'validation': 'complete original validation population',
+                'tail_thresholds': {d['dataset_id']: d['quantity_boundaries_all_train_rows'][-1] for d in old['datasets']},
+                'tail_definition': 'raw target quantity strictly greater than original train upper boundary',
+                'selected_and_last_validation': True, 'selected_train_sample': True,
+                'sample_reference': 'reports/titantpp_train_validation_tail_diagnostic_20261003_v1/contract.json'},
+    reporting={'metrics': ['qty_rmse', 'qty_mae', 'recorded_time_nll', 'tail_qty_rmse', 'tail_qty_mae', 'tail_count'],
+               'same_RMSE_selected_epoch': True, 'preserve_failed_and_unfavorable': True,
+               'interpretation': 'single-seed exploratory width comparison; train diagnostic is not generalization',
+               'baseline_retrained': False, 'efficiency_comparison': 'not a cross-GPU efficiency claim'},
+    nonlearned_baselines=[], lineage={'parent_contract_sha256': common.sha_json(old),
+        'unchanged_scientific_sources': len(old['source']['files']), 'new_files': added})
+c.pop('lineage_audit_sha256', None)
+for host, spec in c['hosts'].items():
+    name = f'titantpp_history_width16_{host}_20261003_v1'
+    remote = '/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/' + name
+    spec.update(root=remote, source_root=remote+'/source', output_dir=remote+'/run', tmux=name,
+                assigned_datasets=assignments[host])
+c['source'] = {'base_git_revision': old['source']['base_git_revision'],
+               'working_branch': subprocess.check_output(['git','branch','--show-current'],text=True).strip(),
+               'revision_note': 'Parent frozen109 reused byte-for-byte; new model/runner/evaluator sealed by content SHA. Dirty working tree preserved; no shared runtime deployment.',
+               'files': files, 'files_sha256': common.sha_json(files)}
+common.write_json(B/'execution_contract.json', c, exclusive=True)
+approval={'approved':True,'contract_sha256':common.sha_json(c),'hosts':['5080','5090'],
+          'user_instruction':'그러면 속도를 좀 높이기 위해 5080/5090에서 병렬로 바로 진행해보자. 그리고 큰 수량 RMSE 뿐 아니라 전체 RMSE, MAE, Time NLL까지 함께 확인할 수 있도록',
+          'scope':'four new width16 seed42 validation fits, original four width4 baselines reused; dedicated directories on two existing servers; no cloud rental or heldout; no unrelated processes stopped'}
+common.write_json(B/'approval.json', approval, exclusive=True)
+t=time.time()
+common.write_json(B/'start_permit.json',{'contract_sha256':common.sha_json(c),'approval_sha256':common.sha_json(approval),
+    'started_at_unix':t,'started_at_utc':datetime.fromtimestamp(t,timezone.utc).isoformat(),
+    'deadline_unix':t+c['limits']['total_wall_seconds'],
+    'deadline_utc':datetime.fromtimestamp(t+c['limits']['total_wall_seconds'],timezone.utc).isoformat()},exclusive=True)
+shutil.copytree(OLD/'data',B/'data')
+common.write_json(B/'current.json',{'bundle':str(B.relative_to(ROOT)),'contract_sha256':common.sha_json(c),
+    'source_closure_sha256':c['source']['files_sha256'],'hosts':{h:s['root'] for h,s in c['hosts'].items()}},exclusive=True)
+print(json.dumps({'contract_sha256':common.sha_json(c),'source_files':len(files),'source_sha256':c['source']['files_sha256']}))

@@ -1,0 +1,31 @@
+"""Activate one exclusive CPU waiting controller; it does not interrupt seed42."""
+import shlex
+import sys
+from local_common import *
+
+host = sys.argv[1]
+c = contract()
+s = c['hosts'][host]
+start = read(B / 'start_permit.json')
+write(B / 'launch' / f'{host}_intent.json', {'host': host, 'tmux': s['tmux'],
+    'contract_sha256': digest(c), 'requested_unix': time.time(), 'mode': 'queue_after_seed42'})
+args = ['timeout', '--signal=TERM', '--kill-after=30s', str(max(1, int(start['deadline_unix'] - time.time()))),
+    'env', *(k + '=' + v for k, v in s['environment'].items()),
+    'MPLCONFIGDIR=/tmp/titantpp-width16-replication-mpl', s['python'],
+    s['root'] + '/control/queue_after_seed42.py', '--contract', s['root'] + '/execution_contract.json', '--host', host]
+command = 'cd ' + shlex.quote(s['source_root']) + ' && exec ' + shlex.join(args) + ' > ' + shlex.quote(s['root'] + '/queue.log') + ' 2>&1'
+script = '''import hashlib,json,subprocess
+from pathlib import Path
+root=Path(ROOT)
+assert not (root/'queue.claim').exists() and not (root/'run').exists()
+assert not (root/'qualification.claim').exists() and not (root/'queue_failure.json').exists()
+manifest=json.loads((root/'deployment_manifest.json').read_text())
+for path,expected in manifest.items():assert hashlib.sha256((root/path).read_bytes()).hexdigest()==expected,path
+assert subprocess.run([TMUX,'has-session','-t',SESSION],capture_output=True).returncode!=0
+subprocess.run([TMUX,'new-session','-d','-s',SESSION,COMMAND],check=True)
+print(json.dumps({'status':'queue_activation_requested','session':SESSION,'root':str(root)}))
+'''.replace('ROOT', repr(s['root'])).replace('TMUX', repr(s['tmux_binary'])).replace('SESSION', repr(s['tmux'])).replace('COMMAND', repr(command))
+out = json.loads(remote(host, script))
+write(B / 'launch' / f'{host}_receipt.json', {'host': host, 'contract_sha256': digest(c),
+    'response': out, 'confirmed_training_started': False, 'time': time.time()})
+print(json.dumps(out))

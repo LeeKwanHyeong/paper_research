@@ -1,0 +1,37 @@
+# 폭 4→16 병렬 학습 시작 확인
+
+관측: 2026-10-03 15:56:48 KST. 상태: **진행 중**. 총 seed42 4조건 중 완료 0, 학습 중 2, 대기 2.
+
+| 서버 | 현재 학습 | 저장 epoch | 이후 순서 |
+|---|---|---:|---|
+| RTX 5080 | Taxi / width16 / seed42 | 9 (현재 best 5) | RAF → Intermittent |
+| RTX 5090 | Instacart / width16 / seed42 | 첫 epoch 저장 전 | 없음 |
+
+두 서버 모두 소유 supervisor·실제 GPU worker PID/명령·배치 진행 신호가 확인됐다. 관측된 실패는 없다. Instacart는 실제 학습 진입은 확인했으나 첫 checkpoint 저장은 아직 확인하지 못했다. 이 기록은 해당 관측 시각의 상태이며 미래 완료를 보장하지 않는다.
+
+## 비교 범위
+
+- 기존 폭4 checkpoint를 재사용하고 폭16만 새로 학습한다. CNN·GRU와 손실 변경을 함께 넣지 않는다.
+- 전체 validation RMSE로 선택한 **같은 checkpoint**에서 전체 RMSE·MAE·Time NLL과 큰 수량 구간 RMSE·MAE·Time NLL·표본 수를 비교한다.
+- 큰 수량 기준은 기존 train 기준을 고정한다: Taxi>3449, RAF>200, Intermittent>187, Instacart>35.
+- Validation은 전체 모집단, train 진단은 동일한 층화 표본과 포함확률 가중치를 쓰는 추정치다. Train과 validation의 수량 구간·추정 범위를 구분한다.
+- 최소40/최대300epoch, patience40, 첫 최소 validation raw RMSE 선택, 기존 분기 가용성·고정 /8·zero 초기화·출력부·손실을 유지한다.
+- 보정6144→24576파라미터, 전체 모델은18432개 증가한다. maxlen256은96003→114435개다.
+
+## 검증 완료
+
+- 모델/runner19개 + 지표18개, 동결 소스 환경에서 **37개 테스트 통과**.
+- 원래109개 소스 보존 + 추가4개 소스 동결, 총113개.
+- 두 GPU native qualification 통과: 공통 초기 가중치·RNG, 인과성·padding 관련 로컬 검사, strict checkpoint 경로, 유한 합성 optimizer update, 메모리 한도 확인.
+- 네 데이터 모두 기존 width4 선택 checkpoint의 full validation 재현 통과.
+- 기존 공통 프로젝트 파일8개의 SHA 보존 확인.
+
+## 남은 작업
+
+1. **학습과 종료 검증 — 진행 중:** 각 서버 supervisor가 배정된 조건을 이어 실행한다. 선택/마지막 checkpoint 재평가와 소형 JSON SHA 확인 후 학습 완료로 집계한다.
+2. **원본 회수·대조 — 다음 작업:** 완료 checkpoint와 소스를 회수·검증하고 같은 선택 epoch의 폭4/폭16 전체·큰 수량 지표를 정리한다. CPU binary 감사는 별도 완료 단계다.
+3. **후속 판단 — 다음 작업:** seed42 결과에서 train·validation 개선과 시간 NLL 손해를 함께 판단한다. 3seed 확정 결과로 표현하지 않는다.
+
+새 클라우드 자원·Runtime 변경·기존 A100 모니터 변경은 없다. 별도 자동 모니터는 생성하지 않았다. 서버 학습은 Mac 연결에 의존하지 않는다.
+
+근거: `launch_confirmation.json`, `observations/20261003T065648592316Z/`, `native/`, `verification/prelaunch_tests.json`, `execution_contract.json`.

@@ -1,0 +1,671 @@
+#!/usr/bin/env python3
+"""Bounded 18-arm benchmark adapter; all GPU entrypoints require new approval.
+
+Existing frozen supervisors and running experiments are untouched. Checkpoint
+resume is tested locally but the production campaign never resumes implicitly.
+"""
+from __future__ import annotations
+import argparse
+from copy import deepcopy
+import gc, json, math, os, signal, statistics, subprocess, sys, time
+from pathlib import Path
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path: sys.path.insert(0, str(ROOT))
+from paper.scripts import observed_slot_parallel_common as common
+from paper.scripts import run_observed_slot_partition as shared
+from paper.scripts import run_multilag_detail_execution as base
+from paper.scripts import local_detail_benchmark_contract as proposal
+require = common.require
+read = proposal.read
+ARMS = proposal.ARMS
+VARIANT = "count_only_log_regression"
+TIME_METRIC = "recorded_positive_integer_time_nll"
+
+
+def training_args(contract, data, output, arm):
+    from paper.scripts.count_aware_tpp_backbone import observed_time
+    require(arm in ARMS, "Unknown benchmark encoder")
+    args = base.training_args({**contract, "model_role": observed_time.ROLE}, data, output)
+    args.epochs = contract["training"]["maximum_epochs"]
+    args.min_epochs = contract["training"]["minimum_epochs"]
+    args.early_stopping_patience = contract["training"]["patience"]
+    args.model_role = observed_time.MULTILAG_ROLE if arm == "titantpp_local_detail" else observed_time.ROLE
+    args.execution_role = "fresh_local_detail_benchmark_validation"
+    return args
+
+
+def build_model(data, backbone):
+    from models.TPPs.CountAwareFactory import build_count_aware_model
+    require(backbone in ARMS, "Unknown benchmark encoder")
+    if backbone in ARMS[:2]:
+        return base.build_model(data, backbone)
+    config = {k:v for k,v in data["model"].items()
+              if k not in ("backbone", "lambda_log_qty", "lambda_tail", "time_head_lr_multiplier")}
+    return build_count_aware_model(backbone, **config,
+        train_log_mean=data["statistics"]["train_log_mean"], train_log_std=data["statistics"]["train_log_std"],
+        max_seq_len=data["loader"]["max_seq_len"])
+
+
+def time_interface(data, frame, contract):
+    interface = base.time_interface(data, frame, contract)
+    interface["backbone_design"] = {"schema": proposal.SCHEMA, "architecture": contract["architecture"],
+        "mode_by_arm": {a: ("local" if a == "titantpp_local_detail" else None) for a in ARMS},
+        "training": contract["training"], "comparison": contract["comparison"]}
+    return interface
+
+
+def initialization(data):
+    import torch
+    from simple_lab_test.search.common.runner import canonical_state_dict_sha256
+    states, rngs, hashes = {}, {}, {}
+    with torch.random.fork_rng(devices=[]):
+        for arm in ARMS:
+            torch.manual_seed(42)
+            model, _ = build_model(data, arm)
+            states[arm] = model.state_dict(); rngs[arm] = torch.get_rng_state().clone()
+            hashes[arm] = canonical_state_dict_sha256(states[arm])
+        require(all(torch.equal(v, states[ARMS[1]][k]) for k,v in states[ARMS[0]].items()),
+                "B/local common initial tensors changed")
+        require(torch.equal(rngs[ARMS[0]], rngs[ARMS[1]]), "B/local initialization RNG changed")
+    return hashes
+
+
+def audit_arm(history, summary, exposure, data, settings):
+    from paper.scripts.count_aware_tpp_backbone import training
+    epochs = len(history)
+    require(settings["minimum_epochs"] <= epochs <= settings["maximum_epochs"], "Epoch budget mismatch")
+    require([r["epoch"] for r in history] == list(range(1,epochs+1)), "Noncontinuous history")
+    require(all(r["train_all_finite"] for r in history), "Nonfinite training")
+    stop_at = None
+    for end in range(1, epochs+1):
+        prefix = history[:end]
+        best = training.earliest_strict_minimum(prefix, metric_key="val_qty_rmse")
+        require(best is not None and all(math.isfinite(r["val_qty_rmse"]) for r in prefix), "Nonfinite selector")
+        if training.early_stopping_exhausted(prefix, metric_key="val_qty_rmse",
+                min_epochs=settings["minimum_epochs"], patience=settings["patience"]):
+            stop_at = end; break
+    require(epochs == (stop_at if stop_at is not None else settings["maximum_epochs"]),
+            "Training did not stop at the prescribed first stopping epoch")
+    require(summary["status"] == "success" and summary["completed_epochs"] == epochs
+            and summary["stopped_early"] == (stop_at is not None), "Terminal training metadata mismatch")
+    best = training.earliest_strict_minimum(history, metric_key="val_qty_rmse")
+    require(summary["best_epoch"] == best["epoch"], "Not the strict earliest RMSE checkpoint")
+    require(summary["held_out_test_evaluated"] is False, "Held-out evaluation forbidden")
+    adjusted = {**data, "expected_global_steps": epochs * data["steps_per_epoch"]}
+    return shared.audit_exposure(exposure, adjusted, epochs=epochs)
+
+
+def audit_batch_prefixes(exposures):
+    require(set(exposures) == set(ARMS), "Missing benchmark arms")
+    for a in ARMS:
+        for b in ARMS:
+            n = min(len(exposures[a]["train"]), len(exposures[b]["train"]))
+            require(exposures[a]["train"][:n] == exposures[b]["train"][:n], "Actual train batch prefix differs")
+    hashes = {r["batch_order_sha256"] for e in exposures.values() for r in e["validation"]}
+    require(len(hashes) == 1, "Validation population/order differs")
+    return True
+
+
+class Budget:
+    def __init__(self, contract, permit, host, owner_pid, output):
+        self.contract, self.permit, self.spec = contract, permit, contract["hosts"][host]
+        self.owner_pid, self.output, self.last_scan = owner_pid, output, -math.inf
+        self.deadline = shared.fixed_start(permit, total_seconds=contract["limits"]["total_wall_seconds"])
+
+    def __call__(self):
+        require(os.getppid() == self.owner_pid, "Owned supervisor exited")
+        require(time.time() < self.permit["deadline_unix"] and time.monotonic() < self.deadline, "Common deadline reached")
+        if time.monotonic() - self.last_scan >= 10:
+            shared.check_storage(self.output, self.contract["limits"])
+            common.write_json(self.output / "gpu_observation.json", {"at_unix": time.time(),
+                "other_pids": sorted(common.gpu_pids(self.spec) - {os.getpid()}),
+                "policy": "observe_without_stopping"})
+            self.last_scan = time.monotonic()
+
+
+def production(contract, permit, host, qualification, budget):
+    import torch
+    from paper.scripts.count_aware_tpp_backbone import training
+    verify_process_environment(contract, host, active=True)
+    runtime = common.runtime_check(contract, host)
+    require(runtime == qualification["runtime"], "Qualified runtime changed")
+    output = Path(contract["hosts"][host]["output_dir"])
+    datasets = {}
+    for dataset_id in contract["hosts"][host]["assigned_datasets"]:
+        data = next(d for d in contract["datasets"] if d["dataset_id"] == dataset_id)
+        frame, metadata = base.prepare_admitted_data(data)
+        interface, initial = time_interface(data, frame, contract), initialization(data)
+        dest = output / dataset_id; dest.mkdir(exist_ok=False)
+        common.write_json(dest / "input_receipt.json", metadata, exclusive=True)
+        common.write_json(dest / "initialization.json", initial, exclusive=True)
+        quantity = {"boundaries": data["quantity_boundaries_all_train_rows"],
+                    "strata": [{"label": f"frozen_quantity_bin_{i}"} for i in range(5)]}
+        arms, exposures = {}, {}
+        for arm in ARMS:
+            budget(); proposal.validate_contract(contract)
+            require(common.runtime_check(contract, host) == runtime, "Runtime drift")
+            arm_budget = ArmBudget(contract, host, dataset_id, arm, budget)
+            args = training_args(contract, data, dest, arm)
+            run = dest / "runs" / arm / VARIANT / "seed_42"
+            require(not run.exists(), "Fresh arm required; no implicit resume or retry")
+            def status(epoch, records):
+                common.write_json(output / "status.json", {"status":"training", "host":host,
+                    "dataset":dataset_id, "backbone":arm, "epoch":epoch,
+                    "global_steps":sum(r["batches"] for r in records["train"]),
+                    "deadline_unix":permit["deadline_unix"]})
+                common.write_json(run / "exposure.json", records)
+            with shared.audited_training(training, data, arm_budget, status) as exposure:
+                summary, _, _ = training.train_one(args=args, frame=frame, quantity_contract=quantity,
+                    interface_meta=interface, backbone=arm, quantity_variant=VARIANT, seed=42)
+            history = read(run / "history.json")["history"]
+            steps = audit_arm(history, summary, exposure, data, contract["training"])
+            require(summary["initial_state_sha256"] == initial[arm], "Initial model state mismatch")
+            identity = training._resume_identity(args=args, backbone=arm, quantity_variant=VARIANT, seed=42,
+                monitor="validation_raw_quantity_rmse", interface_meta=interface, quantity_contract=quantity)
+            endpoints = {}
+            for label, path in (("selected",Path(summary["checkpoint_path"])), ("last",run/"last_epoch_state.pt")):
+                epoch = summary["best_epoch"] if label == "selected" else len(history)
+                endpoints[label] = replay_checkpoint(path, data, frame, arm_budget, expected_arm=arm,
+                    expected_identity=identity, expected_initial=initial[arm], expected_epoch=epoch)
+                audit_replay_accounting(endpoints[label])
+                require(all(math.isclose(endpoints[label][m], history[epoch-1][f],rel_tol=1e-10,abs_tol=1e-8)
+                    for m,f in (("qty_rmse","val_qty_rmse"),("qty_mae","val_qty_mae"),("time_nll","val_time_nll"))),
+                    "Checkpoint evaluation differs from recorded history")
+            first40 = [r["val_qty_rmse"] for r in history[:40]]
+            arms[arm] = {**endpoints, "last30":shared.last30_summary(history),
+                "first40":{"mean":statistics.mean(first40), "sd":statistics.stdev(first40), "count":40},
+                "best_epoch":summary["best_epoch"], "completed_epochs":len(history), "global_steps":steps,
+                "stopped_early":summary["stopped_early"], "initial_state_sha256":initial[arm],
+                "parameter_count":summary["parameter_count"], "elapsed_seconds":summary["elapsed_seconds"]}
+            exposures[arm] = deepcopy(exposure)
+            common.write_json(run/"exposure.json",exposure)
+            common.write_json(run/"endpoint_replays.json",arms[arm],exclusive=True)
+            arm_budget.finish(); gc.collect(); torch.cuda.empty_cache()
+        prefix = audit_batch_prefixes(exposures)
+        # Reuse the verified gate arithmetic; labels are mapped only inside this pure calculation.
+        comparisons = {reference:base.compare_arms({base.ARMS[0]:arms[reference],base.ARMS[1]:arms[reference],
+            base.ARMS[2]:arms["titantpp_local_detail"]}, contract["comparison"]["acceptance"])["against"][base.ARMS[0]]
+            for reference in ARMS if reference != "titantpp_local_detail"}
+        result = {"status":"complete", "dataset":dataset_id, "host":host, "arms":arms,
+            "batch_prefix_equal":prefix, "comparisons":comparisons, "time_metric":TIME_METRIC,
+            "evaluation_scope":"validation_only", "held_out_test_evaluated":False,
+            "claim":"single_seed controlled encoder comparison; parameter capacity not isolated"}
+        common.write_json(dest/"paired_comparison.json",result,exclusive=True)
+        datasets[dataset_id] = result
+    return {"status":"complete", "host":host, "datasets":datasets,
+        "contract_sha256":common.sha_json(contract), "deadline_unix":permit["deadline_unix"],
+        "total_optimizer_steps":sum(a["global_steps"] for d in datasets.values() for a in d["arms"].values()),
+        "endpoint_replays":len(datasets)*len(ARMS)*2, "held_out_test_evaluated":False}
+
+
+def make_start_permit(contract, approval, *, started_at_unix=None):
+    started = time.time() if started_at_unix is None else started_at_unix
+    permit = {"schema":"local_detail_benchmark_start_v1", "contract_sha256":common.sha_json(contract),
+        "approval_sha256":common.sha_json(approval), "started_at_unix":started,
+        "deadline_unix":started+contract["limits"]["total_wall_seconds"]}
+    verify_authorization(contract,approval,permit,next(iter(contract["hosts"])),now=started)
+    return permit
+
+
+def make_training_permit(contract,approval,start_permit,receipts):
+    require(len(receipts) == 1, "Exactly one host qualification required for a host training permit")
+    host = next(iter(receipts))
+    permit = {**start_permit,"training_host":host,
+        "qualifications":{h:{"receipt":r,"receipt_sha256":common.sha_json(r)} for h,r in receipts.items()}}
+    verify_authorization(contract,approval,permit,host,training=True)
+    return permit
+
+
+def validate_qualification_measurements(contract, receipt):
+    require(receipt.get("real_data_loaded") is False and receipt.get("held_out_evaluated") is False,
+            "Qualification split changed")
+    rows = receipt.get("costs", [])
+    require(len(rows)==2 and {r["length"] for r in rows}=={64,256}, "Qualification lengths differ")
+    require(receipt.get("checks") == {"finite_joint_updates":True,"B_local_initial_output_equal":True,
+        "shared_head_contract":True,"causality":True,"state_restore":True}, "Qualification checks missing")
+    memory = receipt["runtime"]["gpu"]["total_memory_bytes"]
+    for row in rows:
+        require(row["batch_size"]==128 and set(row["measurements"])==set(ARMS), "Qualification workload differs")
+        for value in row["measurements"].values():
+            times = value["step_seconds"]
+            require(len(times)==3 and all(math.isfinite(t) and t>0 for t in times)
+                    and value["median_step_seconds"]==statistics.median(times)
+                    and 0 < value["peak_allocated_bytes"] <= .8*memory
+                    and value["parameters"] > 0, "Invalid native cost measurement")
+
+
+def native_qualification(contract,approval,permit,host,budget):
+    verify_authorization(contract,approval,permit,host)
+    runtime = common.runtime_check(contract,host)
+    from paper.scripts.verify_local_detail_benchmark import qualify
+    result = qualify(device="cuda:0", batch_size=128, lengths=(64,256), budget=budget)
+    receipt = {**result,"status":"passed","host":host,"runtime":runtime,
+        "contract_sha256":common.sha_json(contract),"approval_sha256":common.sha_json(approval),
+        "source_files_sha256":contract["source"]["files_sha256"],
+        "started_at_unix":permit["started_at_unix"],"deadline_unix":permit["deadline_unix"],
+        "process_environment":contract["process_environment"][host],"library_sha256":contract["library_sha256"][host]}
+    validate_qualification_measurements(contract,receipt)
+    return receipt
+
+
+def verify_previous_run_complete(contract, host):
+    old = proposal.parent()["hosts"][host]
+    root = Path(old["root"])
+    require(common.sha_json(read(root/"frozen_execution/execution_contract.json")) == proposal.PARENT_SHA,
+            "Previous run identity changed")
+    require(read(root/"run/status.json")["status"] == "complete"
+            and read(root/"dispatch_status.json")["status"] == "complete", "Previous experiment still active or failed")
+    require(subprocess.run([old["tmux_binary"],"has-session","-t",old["tmux"]],capture_output=True).returncode != 0,
+            "Previous experiment tmux remains active")
+    claim = read(root/"dispatch_claim.json")
+    for path in Path('/proc').glob('[0-9]*/cmdline'):
+        try:
+            command = path.read_bytes()
+        except (FileNotFoundError, PermissionError, ProcessLookupError):
+            continue
+        require(str(root).encode() not in command, "Previous owned process remains active")
+    require(claim.get('host') == host, "Previous claim host differs")
+
+
+def verify_start_memory(contract, host):
+    free = subprocess.check_output(['nvidia-smi','--query-gpu=uuid,memory.free',
+        '--format=csv,noheader,nounits'],text=True)
+    rows = {parts[0].strip():int(parts[1].strip())*1024**2
+            for line in free.splitlines() if len(parts:=line.split(','))==2}
+    require(rows.get(contract['hosts'][host]['gpu_uuid'],0)>=contract['policy']['startup_min_free_gpu_bytes'],
+            "Insufficient free GPU memory; other processes preserved")
+
+
+def verify_authorization(contract, approval, permit, host, *, training=False, now=None):
+    """Pure pre-runtime boundary; a prepared contract never grants authority."""
+    proposal.validate_contract(contract, verify_source=False)
+    require(host in proposal.ASSIGNMENTS, "Unrecognized host")
+    digest = common.sha_json(contract)
+    require(approval.get("approved") is True and approval.get("contract_sha256") == digest
+            and set(approval.get("hosts", [])) == set(proposal.ASSIGNMENTS)
+            and isinstance(approval.get("user_instruction"), str) and approval["user_instruction"].strip(),
+            "Explicit approval bound to this contract and both hosts is required")
+    require(permit.get("schema") == "local_detail_benchmark_start_v1"
+            and permit.get("contract_sha256") == digest
+            and permit.get("approval_sha256") == common.sha_json(approval), "Permit authority mismatch")
+    started, deadline = permit.get("started_at_unix"), permit.get("deadline_unix")
+    now = time.time() if now is None else now
+    require(type(started) in (int, float) and type(deadline) in (int, float)
+            and math.isfinite(started) and math.isfinite(deadline)
+            and started <= now < deadline
+            and deadline - started == contract["limits"]["total_wall_seconds"],
+            "Expired, future or extended common deadline")
+    fixed = contract.get("launch", {}).get("fixed_started_at_unix")
+    if fixed is not None:
+        require(started == fixed and deadline == contract["launch"]["fixed_deadline_unix"],
+                "Implementation correction must retain the original common deadline")
+    if training:
+        qualifications = permit.get("qualifications", {})
+        require(permit.get("training_host") == host and set(qualifications) == {host},
+                "Training requires this host's own native qualification and permit")
+        for alias, entry in qualifications.items():
+            receipt = entry.get("receipt", {})
+            spec = contract["hosts"][alias]
+            require(entry.get("receipt_sha256") == common.sha_json(receipt)
+                    and receipt.get("status") == "passed" and receipt.get("host") == alias
+                    and receipt.get("contract_sha256") == digest
+                    and receipt.get("approval_sha256") == common.sha_json(approval)
+                    and receipt.get("started_at_unix") == started
+                    and receipt.get("deadline_unix") == deadline
+                    and receipt.get("source_files_sha256") == contract["source"]["files_sha256"]
+                    and receipt.get("synthetic_optimizer_updates") == 60
+                    and receipt.get("device") == "cuda:0", "Native qualification identity mismatch")
+            runtime = receipt.get("runtime", {})
+            require(runtime.get("gpu", {}).get("uuid") == spec["gpu_uuid"], "Qualified GPU mismatch")
+            require(all(runtime.get(k) == v for k, v in spec["runtime_expected"].items()),
+                    "Qualified runtime mismatch")
+            require(receipt.get("process_environment") == contract["process_environment"][alias]
+                    and receipt.get("library_sha256") == contract["library_sha256"][alias],
+                    "Qualified library/process environment mismatch")
+            validate_qualification_measurements(contract, receipt)
+    return contract["hosts"][host]
+
+
+def source_and_host(contract, host):
+    proposal.validate_contract(contract)
+    shared.verify_host_paths(contract["hosts"][host], __file__)
+
+
+def verify_process_environment(contract, host, *, active=False):
+    """Verify existing libraries without loading CUDA or mutating packages."""
+    env = contract["process_environment"][host]
+    require(set(env) == {"LD_LIBRARY_PATH", "XDG_CACHE_HOME"}, "Unexpected process environment")
+    root = Path(contract["hosts"][host]["root"])
+    require(env["XDG_CACHE_HOME"] == str(root / "cache"), "Cache must remain in the new run root")
+    lib = Path(env["LD_LIBRARY_PATH"])
+    require(lib.is_absolute() and lib.is_dir(), "Pinned CUDA library directory missing")
+    identities = contract["library_sha256"][host]
+    require(isinstance(identities, dict) and identities, "Missing installed library identities")
+    for name, digest in identities.items():
+        path = Path(name)
+        require(path.parent == lib and path.is_file() and not path.is_symlink()
+                and common.sha_file(path) == digest, "Pinned CUDA library changed: " + name)
+    if active:
+        require(all(os.environ.get(k) == v for k, v in env.items()), "Process library/cache environment changed")
+    return dict(env)
+
+
+def apply_process_environment(contract, host):
+    env = verify_process_environment(contract, host)
+    common.apply_environment(contract["hosts"][host])
+    cache = Path(env["XDG_CACHE_HOME"])
+    require(not cache.is_symlink(), "Cache cannot be a symlink")
+    cache.mkdir(mode=0o700, parents=False, exist_ok=True)
+    require(cache.is_dir() and os.access(cache, os.W_OK | os.X_OK), "Cache is not writable")
+    os.environ.update(env)
+    verify_process_environment(contract, host, active=True)
+
+
+def verify_local_qualification(contract, permit, host):
+    local = read(Path(contract["hosts"][host]["root"]) / "qualification/receipt.json")
+    require(local == permit["qualifications"][host]["receipt"], "Local/embedded qualification mismatch")
+    return local
+
+
+def storage_limits(contract):
+    return {**contract["limits"], "max_file_bytes": 64 * 1024**2}
+
+
+class ArmBudget:
+    """One arm's training plus both endpoint replays share a wall-time cap."""
+    def __init__(self, contract, host, dataset, arm, outer):
+        self.outer, self.limit = outer, contract["limits"]["per_arm_wall_seconds"]
+        self.started, self.monotonic_started = time.time(), time.monotonic()
+        self.path = Path(contract["hosts"][host]["output_dir"]) / "active_arm.json"
+        self.record = {"status": "active", "contract_sha256": common.sha_json(contract),
+            "host": host, "dataset": dataset, "backbone": arm,
+            "started_at_unix": self.started, "deadline_unix": self.started + self.limit,
+            "started_monotonic": self.monotonic_started, "deadline_monotonic": self.monotonic_started + self.limit,
+            "limit_seconds": self.limit}
+        common.write_json(self.path, self.record)
+        self()
+
+    def __call__(self):
+        self.outer()
+        require(time.time() < self.started + self.limit
+                and time.monotonic() < self.monotonic_started + self.limit, "Per-arm training/replay deadline reached")
+
+    def finish(self):
+        self()
+        common.write_json(self.path, {**self.record, "status": "complete", "completed_at_unix": time.time()})
+
+
+def verify_active_arm_deadline(contract, host):
+    """Supervisor watchdog also enforces an arm cap during a blocked GPU call."""
+    path = Path(contract["hosts"][host]["output_dir"]) / "active_arm.json"
+    if not path.exists():
+        return
+    active = read(path)
+    require(active.get("contract_sha256") == common.sha_json(contract) and active.get("host") == host
+            and active.get("backbone") in ARMS
+            and active.get("dataset") in contract["hosts"][host]["assigned_datasets"]
+            and active.get("limit_seconds") == contract["limits"]["per_arm_wall_seconds"]
+            and _finite(active.get("deadline_unix")) and _finite(active.get("started_at_unix"))
+            and active["deadline_unix"] - active["started_at_unix"] == active["limit_seconds"]
+            and _finite(active.get("deadline_monotonic")) and _finite(active.get("started_monotonic"))
+            and active["deadline_monotonic"] - active["started_monotonic"] == active["limit_seconds"],
+            "Active-arm watchdog identity changed")
+    require(active.get("status") in ("active", "complete"), "Invalid arm watchdog state")
+    if active["status"] == "active":
+        require(time.time() < active["deadline_unix"] and time.monotonic() < active["deadline_monotonic"],
+                "Per-arm training/replay deadline reached")
+
+
+def replay_checkpoint(path, data, frame, budget, *, device="cuda:0", expected_arm=None, expected_identity=None, expected_initial=None, expected_epoch=None):
+    from simple_lab_test.search.common.runner import torch_load_checkpoint
+    payload = torch_load_checkpoint(Path(path), map_location="cpu")
+    if expected_arm is not None:
+        from paper.scripts.count_aware_tpp_backbone.training import checkpoint_monitor_spec
+        selector = checkpoint_monitor_spec("validation_raw_quantity_rmse")
+        require(payload.get("backbone") == expected_arm and payload.get("seed") == 42
+                and payload.get("variant") == VARIANT, "Replay arm/seed/objective mismatch")
+        require(payload.get("resume_identity") == expected_identity
+                and payload.get("interface_meta") == expected_identity["interface_meta"]
+                and payload.get("initial_state_sha256") == expected_initial,
+                "Replay source/initialization/interface identity mismatch")
+        revision = expected_identity["arguments"]["source_revision"] if "source_revision" in expected_identity.get("arguments", {}) else None
+        if revision is not None:
+            require(payload.get("source_revision") == revision and payload.get("source_revision_history") == [revision], "Replay source revision mismatch")
+        require(payload.get("checkpoint_monitor") == "validation_raw_quantity_rmse"
+                and payload.get("checkpoint_monitor_history_key") == selector["history_key"]
+                and payload.get("checkpoint_selection") == selector["selection"], "Replay selector mismatch")
+        require(payload.get("epoch", payload.get("best_epoch")) == expected_epoch, "Replay epoch mismatch")
+    head = payload.get("interface", {}).get("time_head", {})
+    # The shared trainer writes its interface under interface_meta.
+    if not head:
+        head = payload.get("interface_meta", {}).get("time_head", {})
+    require(head.get("observation_likelihood") == data["model"]["time_observation_contract"],
+            "Replay observation likelihood metadata mismatch")
+    result = _replay_validation(payload, path, data, frame, budget, device=device)
+    result["time_metric"] = TIME_METRIC
+    return result
+
+
+def _replay_validation(payload, path, data, frame, budget_check, *, device="cuda:0"):
+    """One streaming validation pass with fixed train-derived strata; no records."""
+    import numpy as np
+    import torch
+    from models.TPPs.CountAwareFactory import validate_checkpoint_route
+    from paper.scripts.count_aware_tpp_backbone.core import target_outputs
+    from paper.scripts.run_taxi_quantity_interface_ablation import make_loader
+    from simple_lab_test.search.common.runner import canonical_state_dict_sha256
+    require(payload.get("backbone") in ARMS, "Unexpected endpoint backbone")
+    validate_checkpoint_route(payload, payload["backbone"])
+    require(payload["evaluation_scope"] == "validation_only"
+            and payload["held_out_test_evaluated"] is False, "Replay split changed")
+    state_digest = canonical_state_dict_sha256(payload["model_state_dict"])
+    require(payload.get("model_state_sha256") == state_digest, "Checkpoint state digest differs")
+    model, _ = build_model(data, payload["backbone"])
+    model.load_state_dict(payload["model_state_dict"], strict=True)
+    model.to(device).eval()
+    loader = make_loader(frame, target_split="validation", **{
+        key: data["loader"][key] for key in ("batch_size", "lookback_weeks", "max_seq_len")},
+        shuffle=False, generator=None)
+    q_bounds, h_bounds = data["quantity_boundaries_all_train_rows"], data["history_boundaries"]
+    partitions = [("quantity", q_bounds), ("history", h_bounds)]
+    if "additional_history_boundaries" in data:
+        partitions.append(("additional_history", data["additional_history_boundaries"]))
+    accumulator = {"overall": [0, 0., 0., 0.], "body": [0, 0., 0., 0.], "tail": [0, 0., 0., 0.]}
+    for kind, bounds in partitions:
+        accumulator.update({f"{kind}_{i}": [0, 0., 0., 0.] for i in range(len(bounds) + 1)})
+    with torch.no_grad():
+        for _, dts, mask, _, quantities in loader:
+            budget_check()
+            result = target_outputs(model, dts.to(device), mask.to(device), quantities.to(device), lambda_log_qty=1.)
+            q = result["true_qty"].cpu().numpy().astype(np.float64)
+            pred = result["pred_qty"].cpu().numpy().astype(np.float64)
+            t = result["time_loss"].cpu().numpy().astype(np.float64)
+            h = result["history_length"].cpu().numpy()
+            require(np.isfinite(q).all() and np.isfinite(pred).all() and np.isfinite(t).all(),
+                    "Nonfinite checkpoint replay")
+            masks = {"overall": np.ones(q.shape, dtype=bool), "body": q <= q_bounds[2], "tail": q > q_bounds[3]}
+            for kind, bounds in partitions:
+                values = q if kind == "quantity" else h
+                ids = np.searchsorted(bounds, values, side="left")
+                masks.update({f"{kind}_{i}": ids == i for i in range(len(bounds) + 1)})
+            error = pred - q
+            for key, selected in masks.items():
+                acc = accumulator[key]
+                acc[0] += int(selected.sum())
+                acc[1] += float(np.abs(error[selected]).sum())
+                acc[2] += float(np.square(error[selected]).sum())
+                acc[3] += float(t[selected].sum())
+    budget_check()
+    def finish(acc):
+        n, absolute, squared, temporal = acc
+        return {"count": n, "qty_mae": absolute / n if n else None, "qty_sse": squared,
+            "qty_rmse": math.sqrt(squared / n) if n else None,
+            "time_nll": temporal / n if n else None}
+    result = {**finish(accumulator["overall"]), "body": finish(accumulator["body"]),
+        "tail": finish(accumulator["tail"]), "quantity_boundaries": q_bounds,
+        "history_boundaries": h_bounds, "quantity_cells": [], "history_cells": [],
+        "checkpoint_path": str(path), "state_sha256": state_digest,
+        "evaluation_scope": "validation_only", "held_out_test_evaluated": False}
+    for kind, bounds in partitions:
+        result[kind + "_boundaries"] = bounds
+        result[kind + "_cells"] = [{"bin": i, **finish(accumulator[f"{kind}_{i}"])}
+                                    for i in range(len(bounds) + 1)]
+    require(result["count"] == data["inherited_data_identity"]["populations"]["validation"]["target_count"],
+            "Replay validation target count changed")
+    audit_replay_accounting(result)
+    return result
+
+
+def _finite(value, *, nonnegative=False):
+    return (type(value) in (int, float) and math.isfinite(value)
+            and (not nonnegative or value >= 0))
+
+
+def audit_replay_accounting(result):
+    """Disjoint quantity/history partitions each reconstruct the same population."""
+    require(type(result.get("count")) is int and result["count"] > 0, "Missing/nonpositive overall count")
+    def cell(value):
+        require(isinstance(value, dict) and type(value.get("count")) is int and value["count"] >= 0,
+                "Missing/invalid cell count")
+        require(_finite(value.get("qty_sse"), nonnegative=True), "Missing/nonfinite SSE")
+        if value["count"] == 0:
+            require(value["qty_sse"] == 0 and value.get("qty_rmse") is None
+                    and value.get("qty_mae") is None and value.get("time_nll") is None,
+                    "Empty cells must be explicit unavailable")
+        else:
+            require(_finite(value.get("qty_rmse"), nonnegative=True)
+                    and _finite(value.get("qty_mae"), nonnegative=True)
+                    and _finite(value.get("time_nll")), "Nonfinite/nonphysical cell metric")
+            require(math.isclose(value["qty_rmse"]**2 * value["count"], value["qty_sse"], rel_tol=1e-10, abs_tol=1e-8),
+                    "Cell SSE and RMSE disagree")
+    cell(result); cell(result["body"]); cell(result["tail"])
+    partitions = [("quantity", 5), ("history", 3)]
+    if "additional_history_boundaries" in result:
+        partitions.append(("additional_history", len(result["additional_history_boundaries"]) + 1))
+    for kind, n in partitions:
+        cells = result.get(kind + "_cells")
+        bounds = result.get(kind + "_boundaries")
+        require(isinstance(bounds, list) and len(bounds) == n-1
+                and all(_finite(b, nonnegative=True) for b in bounds)
+                and bounds == sorted(bounds), "Missing/invalid frozen boundaries")
+        require(isinstance(cells, list) and len(cells) == n
+                and [v.get("bin") for v in cells] == list(range(n)), "Missing/duplicated disjoint bins")
+        for value in cells: cell(value)
+        require(sum(v["count"] for v in cells) == result["count"], "Disjoint bin counts do not sum")
+        require(math.isclose(sum(v["qty_sse"] for v in cells), result["qty_sse"], rel_tol=1e-10, abs_tol=1e-8),
+                "Disjoint SSE does not sum")
+        require(math.isclose(sum(v["qty_mae"]*v["count"] for v in cells if v["count"]),
+                             result["qty_mae"]*result["count"], rel_tol=1e-10, abs_tol=1e-8), "Disjoint absolute errors do not sum")
+    bins = result["quantity_cells"]
+    require(result["tail"] == {k: v for k, v in bins[4].items() if k != "bin"}, "Tail differs from its disjoint bin")
+    body = result["body"]
+    require(body["count"] == sum(v["count"] for v in bins[:3])
+            and math.isclose(body["qty_sse"], sum(v["qty_sse"] for v in bins[:3]), rel_tol=1e-10, abs_tol=1e-8),
+            "Body accounting differs")
+
+
+def supervisor(command, contract_path, approval_path, permit_path, host):
+    contract, approval, permit = read(contract_path), read(approval_path), read(permit_path)
+    spec = verify_authorization(contract, approval, permit, host, training=command == "train")
+    source_and_host(contract, host)
+    verify_previous_run_complete(contract, host)
+    if command == "train": verify_local_qualification(contract, permit, host)
+    verify_start_memory(contract, host)
+    output = Path(spec["root"]) / ("qualification" if command == "qualify" else "run")
+    require(not output.exists(), "Fresh output required; no retry/resume")
+    output.mkdir(parents=True, exist_ok=False)
+    apply_process_environment(contract, host)
+    deadline = shared.fixed_start(permit, wall=time.time, monotonic=time.monotonic, total_seconds=contract["limits"]["total_wall_seconds"])
+    if command == "qualify": deadline = min(deadline, time.monotonic()+contract["limits"]["qualification_seconds_per_host"])
+    authority = {"contract_sha256": common.sha_json(contract), "approval_sha256": common.sha_json(approval),
+        "permit_sha256": common.sha_json(permit), "host": host, "owner_pid": os.getpid(), "command": command}
+    common.write_json(output / "wrapper_manifest.json", {"authority": authority,
+        "started_at_unix": time.time(), "deadline_unix": permit["deadline_unix"], "resume": False, "retry": False}, exclusive=True)
+    read_fd, write_fd = os.pipe(); child = None
+    old_signal = signal.signal(signal.SIGTERM, shared._supervisor_terminated)
+    try:
+        with (output / "worker.log").open("xb") as stream:
+            child = subprocess.Popen([spec["python"], str(Path(__file__).resolve()), "_worker",
+                "--stage", command, "--contract", str(Path(contract_path).resolve()),
+                "--approval", str(Path(approval_path).resolve()), "--permit", str(Path(permit_path).resolve()),
+                "--host", host, "--owner-pid", str(os.getpid()), "--authority-fd", str(read_fd)],
+                cwd=spec["source_root"], stdout=stream, stderr=subprocess.STDOUT, start_new_session=True, pass_fds=(read_fd,))
+            os.close(read_fd); read_fd = None
+            with os.fdopen(write_fd, "wb") as pipe:
+                write_fd = None; pipe.write(json.dumps(authority).encode())
+            while child.poll() is None:
+                require(time.time() < permit["deadline_unix"] and time.monotonic() < deadline, "Execution deadline reached")
+                if command == "train": verify_active_arm_deadline(contract, host)
+                shared.check_storage(output, storage_limits(contract)); time.sleep(1.)
+            require(child.returncode == 0, f"Owned worker failed: {child.returncode}")
+            require(time.time() < permit["deadline_unix"] and time.monotonic() < deadline, "Deadline reached before terminal audit")
+            result = read(output / ("receipt.json" if command == "qualify" else "partition_summary.json"))
+            require(result["status"] == ("passed" if command == "qualify" else "complete")
+                    and result["contract_sha256"] == common.sha_json(contract), "Invalid terminal receipt")
+            shared.check_storage(output, storage_limits(contract)); return result
+    except BaseException as error:
+        if child is not None: shared.kill_owned_process_group(child)
+        common.write_json(output / "status.json", {"status": "stopped", "error": str(error), "automatic_retry": False})
+        raise
+    finally:
+        signal.signal(signal.SIGTERM, old_signal)
+        for fd in (read_fd, write_fd):
+            if fd is not None: os.close(fd)
+
+
+def worker(args):
+    contract, approval, permit = read(args.contract), read(args.approval), read(args.permit)
+    spec = verify_authorization(contract, approval, permit, args.host, training=args.stage == "train")
+    source_and_host(contract, args.host)
+    require(args.owner_pid == os.getppid() and os.getsid(0) == os.getpid(), "Owned process-group worker required")
+    with os.fdopen(args.authority_fd, "rb") as pipe: authority = json.loads(pipe.read(4096))
+    expected = {"contract_sha256": common.sha_json(contract), "approval_sha256": common.sha_json(approval),
+        "permit_sha256": common.sha_json(permit), "host": args.host, "owner_pid": args.owner_pid, "command": args.stage}
+    require(authority == expected, "Inherited authority mismatch")
+    output = Path(spec["root"]) / ("qualification" if args.stage == "qualify" else "run")
+    require(read(output / "wrapper_manifest.json")["authority"] == expected, "Output ownership mismatch")
+    verify_start_memory(contract, args.host)
+    apply_process_environment(contract, args.host)
+    import resource
+    resource.setrlimit(resource.RLIMIT_FSIZE, (64 * 1024**2,) * 2)
+    budget = Budget(contract, permit, args.host, args.owner_pid, output); budget()
+    if args.stage == "qualify":
+        result = native_qualification(contract, approval, permit, args.host, budget)
+        common.write_json(output / "receipt.json", result, exclusive=True)
+        require(result["status"] == "passed", "CUDA cost qualification failed")
+    else:
+        qualification = verify_local_qualification(contract, permit, args.host)
+        result = production(contract, permit, args.host, qualification, budget)
+        budget(); common.write_json(output / "partition_summary.json", result, exclusive=True)
+    common.write_json(output / "status.json", {"status": result["status"], "host": args.host,
+        "deadline_unix": permit["deadline_unix"]})
+
+
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument("stage", choices=("qualify", "train", "_worker", "start-permit", "training-permit"))
+    p.add_argument("--stage", dest="worker_stage", choices=("qualify","train"))
+    p.add_argument("--contract", required=True); p.add_argument("--approval", required=True)
+    p.add_argument("--permit"); p.add_argument("--host", choices=("5080","5090"))
+    p.add_argument("--owner-pid",type=int); p.add_argument("--authority-fd",type=int)
+    p.add_argument("--output"); p.add_argument("--qualification")
+    a=p.parse_args()
+    if a.stage == "start-permit":
+        require(a.output is not None,"Output required")
+        result=make_start_permit(read(a.contract),read(a.approval))
+        common.write_json(a.output,result,exclusive=True)
+    elif a.stage == "training-permit":
+        require(all((a.output,a.permit,a.host,a.qualification)),"Host and qualification receipt required")
+        result=make_training_permit(read(a.contract),read(a.approval),read(a.permit),
+            {a.host:read(a.qualification)})
+        common.write_json(a.output,result,exclusive=True)
+    elif a.stage == "_worker":
+        require(a.worker_stage and a.permit and a.host and a.owner_pid and a.authority_fd is not None,"Worker authority required")
+        a.stage=a.worker_stage; worker(a)
+    else:
+        require(a.permit and a.host,"Host and permit required")
+        supervisor(a.stage,a.contract,a.approval,a.permit,a.host)
+
+
+if __name__ == "__main__":
+    main()

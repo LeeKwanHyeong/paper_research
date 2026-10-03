@@ -1,0 +1,220 @@
+"""Server-owned, CPU-only wait; qualify and dispatch only after the parent exits."""
+import argparse
+import csv
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import signal
+import subprocess
+import sys
+import time
+import traceback
+
+
+def read(path):
+    return json.loads(Path(path).read_text())
+
+
+def digest(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False,
+        separators=(',', ':'), allow_nan=False).encode()).hexdigest()
+
+
+def sha(path):
+    h = hashlib.sha256()
+    with Path(path).open('rb') as f:
+        for block in iter(lambda: f.read(1024 * 1024), b''):
+            h.update(block)
+    return h.hexdigest()
+
+
+def write(path, value, exclusive=False):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    text = json.dumps(value, indent=2, ensure_ascii=False, allow_nan=False) + '\n'
+    if exclusive:
+        with path.open('x') as f:
+            f.write(text)
+    else:
+        tmp = path.with_name(path.name + '.tmp.' + str(os.getpid()))
+        tmp.write_text(text)
+        tmp.replace(path)
+
+
+def require(condition, message):
+    if not condition:
+        raise RuntimeError(message)
+
+
+def owned_alive(pid, root):
+    if not isinstance(pid, int):
+        return False
+    path = Path('/proc') / str(pid)
+    try:
+        args = (path / 'cmdline').read_bytes().decode().split('\0')
+        cwd = (path / 'cwd').resolve()
+    except (OSError, UnicodeError):
+        return False
+    return cwd == root / 'source' and any(str(root) in a for a in args)
+
+
+def gpu_pids(spec):
+    result = subprocess.run(['nvidia-smi', '--query-compute-apps=gpu_uuid,pid',
+        '--format=csv,noheader,nounits'], capture_output=True, text=True,
+        timeout=15, check=True)
+    return [int(row[1]) for row in csv.reader(result.stdout.splitlines())
+        if row and row[0].strip() == spec['gpu_uuid']]
+
+
+def check_parent(c, host, verify_files=False):
+    gate = c['queue']['predecessors'][host]
+    root = Path(gate['root'])
+    pc = read(root / 'execution_contract.json')
+    require(digest(pc) == gate['contract_sha256'], 'Predecessor contract changed')
+    status = read(root / 'status.json')
+    require(not (root / 'failure.json').exists(), 'Predecessor failed; user action required')
+    if status.get('status') == 'running':
+        require(owned_alive(status.get('supervisor_pid'), root),
+            'Predecessor supervisor absent without terminal state; user action required')
+        return {'status': 'waiting_predecessor', 'parent_status': status}
+    require(status.get('status') == 'complete', 'Unconfirmed predecessor state')
+    ids = {j['id'] for j in pc['jobs'] if j['host'] == host}
+    require(ids == set(status.get('completed', {})), 'Incomplete predecessor job inventory')
+    for job_id in sorted(ids):
+        folder = root / 'run' / job_id
+        manifest_path = folder / 'terminal_manifest.json'
+        require(sha(manifest_path) == status['completed'][job_id]['terminal_manifest_sha256'],
+            'Predecessor manifest changed')
+        m = read(manifest_path)
+        require(m['scientific_success'] is True and m['status'] == 'complete'
+            and m['contract_sha256'] == gate['contract_sha256']
+            and m['job']['id'] == job_id, 'Predecessor terminal failed')
+        if verify_files:
+            for rel, expected in m['files'].items():
+                file = (folder / rel).resolve()
+                require(file.is_relative_to(folder.resolve()), 'Unsafe predecessor path')
+                require(sha(file) == expected, 'Predecessor artifact SHA mismatch: ' + rel)
+            endpoint_path = next(folder / rel for rel in m['files'] if rel.endswith('/endpoint_replays.json'))
+            e = read(endpoint_path)
+            require(e['status'] == 'complete' and e['evaluation_scope'] == 'validation_only'
+                and e['held_out_test_evaluated'] is False and e.get('selected') and e.get('last'),
+                'Predecessor endpoint replays incomplete')
+    claim = read(root / 'supervisor.claim')
+    if owned_alive(claim.get('pid'), root):
+        return {'status': 'waiting_predecessor_exit', 'parent_status': status}
+    busy = gpu_pids(c['hosts'][host])
+    if busy:
+        return {'status': 'waiting_gpu_idle', 'gpu_pids': busy, 'parent_status': status}
+    return {'status': 'ready', 'parent_status': status}
+
+
+def validate_local(c, host, root):
+    require(c['schema'] == 'titantpp_history_width16_replication_20261003_v1', 'Foreign queue')
+    require(root == Path(c['hosts'][host]['root']), 'Wrong queue root')
+    require(Path.cwd().resolve() == Path(c['hosts'][host]['source_root']), 'Wrong pinned cwd')
+    require(Path(sys.executable).resolve() == Path(c['hosts'][host]['python']).resolve(), 'Wrong Python')
+    approval, start = read(root / 'approval.json'), read(root / 'start_permit.json')
+    require(approval['approved'] is True and approval['contract_sha256'] == digest(c)
+        and approval['hosts'] == ['5080', '5090'], 'Missing authorization')
+    require(start['contract_sha256'] == digest(c) and start['approval_sha256'] == digest(approval), 'Permit mismatch')
+    require(start['deadline_unix'] - start['started_at_unix'] == 168 * 3600
+        and start['started_at_unix'] <= time.time() < start['deadline_unix'], 'Expired budget')
+    require(digest(c['source']['files']) == c['source']['files_sha256'], 'Source closure mismatch')
+    for rel, expected in c['source']['files'].items():
+        require(sha(root / 'source' / rel) == expected, 'Source changed: ' + rel)
+    for rel, expected in c['operational_files'].items():
+        require(sha(root / rel) == expected, 'Controller changed: ' + rel)
+    for k, value in c['hosts'][host]['environment'].items():
+        require(os.environ.get(k) == value, 'Environment changed: ' + k)
+    return start
+
+
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument('--contract', required=True)
+    p.add_argument('--host', required=True, choices=('5080', '5090'))
+    a = p.parse_args()
+    c = read(a.contract)
+    root = Path(c['hosts'][a.host]['root'])
+    require(Path(a.contract).resolve() == root / 'execution_contract.json', 'Wrong contract path')
+    with (root / 'queue.lock').open('a+') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        start = validate_local(c, a.host, root)
+        write(root / 'queue.claim', {'pid': os.getpid(), 'contract_sha256': digest(c),
+            'started_unix': time.time()}, exclusive=True)
+        state = {'host': a.host, 'controller_pid': os.getpid(), 'contract_sha256': digest(c),
+            'mac_required': False, 'automatic_retry': False, 'deadline_unix': start['deadline_unix']}
+        child = None
+
+        def publish(**extra):
+            write(root / 'queue_status.json', {**state, **extra, 'updated_unix': time.time()})
+
+        def interrupted(signum, frame):
+            raise RuntimeError('Queue received signal ' + str(signum))
+
+        signal.signal(signal.SIGTERM, interrupted)
+        signal.signal(signal.SIGINT, interrupted)
+
+        def stage(mode, limit):
+            nonlocal child
+            seconds = max(1, int(min(limit, start['deadline_unix'] - time.time())))
+            command = ['timeout', '--signal=TERM', '--kill-after=15s', str(seconds),
+                sys.executable, str(root / 'source/paper/scripts/run_titantpp_history_width_campaign.py'),
+                '--contract', str(root / 'execution_contract.json'), '--host', a.host, '--mode', mode]
+            with (root / (mode + '.log')).open('xb') as stream:
+                child = subprocess.Popen(command, cwd=root / 'source', env=os.environ.copy(),
+                    stdout=stream, stderr=subprocess.STDOUT, start_new_session=True)
+                while child.poll() is None:
+                    require(time.time() < start['deadline_unix'], 'Campaign deadline reached')
+                    publish(status=mode, child_group_pid=child.pid)
+                    time.sleep(5)
+                require(child.returncode == 0, mode + ' exited ' + str(child.returncode) + '; no retry')
+                child = None
+
+        try:
+            while True:
+                require(time.time() < start['deadline_unix'], 'Campaign expired while waiting')
+                parent = check_parent(c, a.host)
+                publish(**parent)
+                if parent['status'] == 'ready':
+                    parent = check_parent(c, a.host, verify_files=True)
+                    if parent['status'] == 'ready':
+                        write(root / 'predecessor_completion_receipt.json', {
+                            **parent, 'verified_unix': time.time(), 'all_manifest_files_sha_verified': True,
+                            'parent_contract_sha256': c['queue']['predecessors'][a.host]['contract_sha256']}, exclusive=True)
+                        break
+                time.sleep(30)
+            validate_local(c, a.host, root)
+            stage('qualify', c['limits']['qualification_seconds'])
+            require(not gpu_pids(c['hosts'][a.host]), 'GPU still occupied after qualification exit')
+            q = read(root / 'qualification/receipt.json')
+            require(q['status'] == 'passed' and q['host'] == a.host and q['contract_sha256'] == digest(c)
+                and q['source_files_sha256'] == c['source']['files_sha256'], 'Qualification mismatch')
+            write(root / 'training_permit.json', {
+                'schema': 'titantpp_history_width16_replication_training_permit_v1', 'host': a.host,
+                'contract_sha256': digest(c), 'start_permit_sha256': digest(start),
+                'qualifications': {a.host: q}, 'created_unix': time.time()}, exclusive=True)
+            stage('dispatch', start['deadline_unix'] - time.time())
+            require(read(root / 'status.json')['status'] == 'complete', 'Missing final terminal state')
+            publish(status='complete', scientific_conditions=len([j for j in c['jobs'] if j['host'] == a.host]))
+        except BaseException as exc:
+            if child is not None and child.poll() is None:
+                require(os.getpgid(child.pid) == child.pid, 'Child process identity changed')
+                os.killpg(child.pid, signal.SIGTERM)
+                try:
+                    child.wait(timeout=15)
+                except subprocess.TimeoutExpired:
+                    os.killpg(child.pid, signal.SIGKILL)
+                    child.wait(timeout=10)
+            failure = {'status': 'blocked', 'reason': str(exc), 'type': type(exc).__name__,
+                'traceback': traceback.format_exc(), 'automatic_retry': False,
+                'user_action_required': True, 'updated_unix': time.time()}
+            write(root / 'queue_failure.json', failure, exclusive=True)
+            publish(**failure)
+            raise
+
+
+if __name__ == '__main__':
+    main()

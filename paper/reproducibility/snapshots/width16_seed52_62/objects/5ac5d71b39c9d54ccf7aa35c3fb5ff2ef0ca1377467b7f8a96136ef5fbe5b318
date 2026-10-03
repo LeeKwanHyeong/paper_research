@@ -1,0 +1,929 @@
+"""Factory for count-aware TPP backbone controls with shared output heads."""
+
+from __future__ import annotations
+
+from dataclasses import asdict
+import math
+from typing import Any
+
+import torch
+
+from models.TPPs.CountAwareTPP import (
+    LOG_MSE_VARIANT,
+    TIME_HEAD_MODE_LEGACY_CLAMPED,
+    TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION,
+    CountAwareRMTPP,
+    CountAwareTHP,
+    CountAwareTitanTPP,
+    SharedTimeCountModel,
+    TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
+    TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
+    TITAN_MEMORY_MODE_NONE,
+    TITAN_MEMORY_MODE_PERSISTENT_ONLY,
+    TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
+    TITAN_MEMORY_MODE_STATIC_HARD,
+    TITAN_MEMORY_MODE_STATIC_WEIGHTED,
+    TITAN_MEMORY_MODE_STATIC_SOFT_GATED,
+    TITAN_MEMORY_MODE_SURPRISE_GATED,
+    TITAN_MEMORY_MODE_TITANS_MAC,
+    TITAN_MEMORY_MODE_TPP_GATED,
+    TITAN_QUANTITY_GRADIENT_ADAPTER_ONLY,
+    TITAN_QUANTITY_GRADIENT_SHARED,
+)
+from models.TPPs.NeuralHawkesTPP import CountAwareNHP
+from models.TPPs.CountAwareAdditionalTPP import (
+    ARMS as ADDITIONAL_TPP_ARMS, CountAwareS2P2, CountAwareAttNHP,
+    metadata as additional_tpp_metadata, validate_checkpoint as validate_additional_tpp_checkpoint,
+)
+from models.TPPs.SelfAttentiveHawkesTPP import CountAwareSAHP
+from models.TPPs.CountAwareTHPStaticMemory import (
+    CountAwareTHPStaticMemory,
+    THP_STATIC_MEMORY_BACKBONE,
+    static_memory_metadata,
+    validate_static_memory_checkpoint,
+)
+from models.TPPs.CountAwareTitanInterLayerMemory import (
+    CountAwareTitanInterLayerMemoryTPP,
+    INTERLAYER_MEMORY_BACKBONE,
+    interlayer_memory_metadata,
+    validate_interlayer_memory_checkpoint,
+)
+from models.TPPs.CountAwareTitanMemoryFiLM import (
+    CountAwareTitanMemoryFiLM,
+    MEMORY_FILM_BACKBONE,
+    memory_film_metadata,
+    validate_memory_film_checkpoint,
+)
+from models.TPPs.CountAwareTitanCausalQKV import (
+    CountAwareTitanCausalQKVTPP,
+    CAUSAL_QKV_BACKBONE,
+    causal_qkv_metadata,
+    validate_causal_qkv_checkpoint,
+)
+from models.TPPs.CountAwareTitanBoundedQK import (
+    CountAwareTitanBoundedQKTPP,
+    BOUNDED_QK_BACKBONE,
+    bounded_qk_metadata,
+    validate_bounded_qk_checkpoint,
+)
+from models.TPPs.CountAwareTitanLevelHistoryQKV import (
+    CountAwareTitanLevelHistoryQKVTPP,
+    LEVEL_HISTORY_QKV_BACKBONE,
+    level_history_qkv_metadata,
+    validate_level_history_qkv_checkpoint,
+)
+from models.TPPs.CountAwareTitanValueNorm import (
+    CountAwareTitanValueNormTPP,
+    VALUE_NORM_BACKBONE,
+    validate_value_norm_checkpoint,
+    value_norm_metadata,
+)
+from models.TPPs.CountAwareTitanSlotMemory import (
+    CountAwareTitanSlotMemoryTPP,
+    SLOT_MEMORY_BACKBONE,
+    slot_memory_metadata,
+    validate_slot_memory_checkpoint,
+)
+from models.TPPs.CountAwareTitanSuccessorMemory import (
+    CountAwareTitanSameEventMemoryTPP,
+    CountAwareTitanSuccessorMemoryTPP,
+    SAME_EVENT_MEMORY_BACKBONE,
+    SUCCESSOR_MEMORY_BACKBONE,
+    episode_memory_metadata,
+    validate_episode_memory_checkpoint,
+)
+from models.TPPs.CountAwareTitanNonlinearEpisodeMemory import (
+    CountAwareTitanNonlinearPrePoolTPP,
+    CountAwareTitanNonlinearPostPoolTPP,
+    PRE_POOL_MEMORY_BACKBONE,
+    POST_POOL_MEMORY_BACKBONE,
+    nonlinear_episode_metadata,
+    validate_nonlinear_episode_checkpoint,
+)
+from models.TPPs.CountAwareTitanTaskRoutedMemory import (
+    CountAwareTitanTaskSharedMemoryTPP,
+    CountAwareTitanTaskSplitMemoryTPP,
+    TASK_SHARED_MEMORY_BACKBONE,
+    TASK_SPLIT_MEMORY_BACKBONE,
+    task_routed_memory_metadata,
+    validate_task_routed_memory_checkpoint,
+)
+from models.TPPs.CountAwareTitanPairMessage import (
+    CountAwareTitanPairMessagePrePoolTPP, CountAwareTitanPairMessagePostPoolTPP,
+    PAIR_MESSAGE_PRE_POOL_BACKBONE, PAIR_MESSAGE_POST_POOL_BACKBONE,
+    pair_message_metadata, validate_pair_message_checkpoint,
+)
+from models.TPPs.CountAwareTitanStateTransport import (
+    CountAwareTitanStateTransport, EVENT_STATE_BACKBONE, ELAPSED_STATE_BACKBONE,
+    state_transport_metadata, validate_state_transport_checkpoint,
+)
+from models.TPPs.CountAwareTitanLocalGate import (CountAwareTitanLocalGate, LOCAL_GATE_BACKBONES, TIME_GATE_BACKBONE, gate_metadata, validate_local_gate_checkpoint)
+from models.TPPs.CountAwareTitanCoreAblation import (CountAwareTitanCoreAblation, MODES as CORE_MODES, metadata as core_metadata, validate_checkpoint as validate_core_checkpoint)
+from models.TPPs.CountAwareTitanActiveBranchNorm import (CountAwareTitanActiveBranchNorm, ARM as ACTIVE_NORM_ARM, metadata as active_norm_metadata, validate_checkpoint as validate_active_norm_checkpoint)
+from models.TPPs.CountAwareTitanHistoryControls import (CountAwareTitanHistoryControl, MODES as HISTORY_CONTROL_MODES, metadata as history_control_metadata, validate_checkpoint as validate_history_control_checkpoint)
+from models.TPPs.DeepRenewalEvent import (DeepRenewalEvent, ARM as RENEWAL_ARM, VARIANT as RENEWAL_VARIANT, TIME_MODE as RENEWAL_TIME_MODE, metadata as renewal_metadata, validate_checkpoint as validate_renewal_checkpoint)
+from models.TPPs.CountAwareTitanMultiLagDetail import (
+    CountAwareTitanMultiLagDetail, LOCAL_DETAIL_BACKBONE, MULTILAG_DETAIL_BACKBONE,
+    multilag_detail_metadata, validate_multilag_detail_checkpoint,
+)
+from models.Titan.common.key_value_memory import (
+    KEY_VALUE_BACKBONE,
+    KEY_VALUE_CONTRACT,
+    KEY_VALUE_MEMORY_MODE,
+)
+from models.Titan.common.elapsed_age import (
+    ELAPSED_AGE_BACKBONE, ELAPSED_AGE_BETA_KEY, ELAPSED_AGE_CONTRACT,
+    ELAPSED_AGE_MEMORY_MODE, elapsed_age_metadata,
+)
+
+
+HARD_LOCAL_TIME_BACKBONE = "titantpp_hard_memory_local_time"
+HARD_LOCAL_TIME_CONTRACT = "hard_lmm_local_time_v1"
+
+
+def validate_elapsed_age_checkpoint(payload: dict[str, Any], expected_backbone: str) -> bool:
+    """Validate this independent encoder route before legacy K/V detection."""
+    metadata = payload.get("encoder_config", {})
+    if not isinstance(metadata, dict):
+        raise ValueError("Invalid checkpoint encoder metadata")
+    states = [payload[name] for name in ("model_state_dict", "best_state_dict") if name in payload]
+    is_candidate = (
+        payload.get("backbone") == ELAPSED_AGE_BACKBONE
+        or metadata.get("elapsed_age_contract_id") == ELAPSED_AGE_CONTRACT
+        or metadata.get("memory_mode") == ELAPSED_AGE_MEMORY_MODE
+        or any(isinstance(state, dict) and ELAPSED_AGE_BETA_KEY in state for state in states)
+    )
+    if expected_backbone != ELAPSED_AGE_BACKBONE:
+        if is_candidate:
+            raise ValueError("Elapsed-age checkpoint cannot be loaded as another backbone")
+        return False
+    dim = metadata.get("d_model")
+    if type(dim) is not int or dim < 1 or dim % 4:
+        raise ValueError("Elapsed-age checkpoint hidden dimension mismatch")
+    required = {
+        **elapsed_age_metadata(dim),
+        "static_retrieval_contract_id": KEY_VALUE_CONTRACT,
+        "static_retrieval_aggregation": "softmax_cosine_topk",
+        "static_retrieval_temperature": 1.0,
+        "static_key_value_tied": False,
+        "static_key_initialization": "clone_values_no_rng",
+        "n_layers": 2, "n_heads": 4, "d_ff": dim * 2,
+        "persistent_mem_size": 16, "lmm_mem_size": 64, "lmm_topk": 4,
+    }
+    if (payload.get("backbone") != expected_backbone
+            or any(metadata.get(key) != value for key, value in required.items())):
+        raise ValueError("Elapsed-age checkpoint encoder metadata mismatch")
+    time_head = metadata.get("time_head", {})
+    if (payload.get("variant") != LOG_MSE_VARIANT
+            or not isinstance(time_head, dict)
+            or time_head.get("mode") != TIME_HEAD_MODE_LEGACY_CLAMPED
+            or payload.get("evaluation_scope") != "validation_only"
+            or payload.get("held_out_test_evaluated") is not False):
+        raise ValueError("Elapsed-age checkpoint head, objective or scope mismatch")
+    if not states:
+        raise ValueError("Elapsed-age checkpoint requires model state")
+    for state in states:
+        shapes = {ELAPSED_AGE_BETA_KEY: (2, 4), "lmm.mem": (1, 64, dim), "lmm.memory_keys": (1, 64, dim)}
+        if not isinstance(state, dict) or any(
+            not isinstance(state.get(name), torch.Tensor)
+            or tuple(state[name].shape) != shape or not bool(torch.isfinite(state[name]).all())
+            for name, shape in shapes.items()
+        ):
+            raise ValueError("Elapsed-age checkpoint requires finite beta, key and value tensors")
+    return True
+
+
+def validate_key_value_checkpoint(payload: dict[str, Any], expected_backbone: str) -> None:
+    """Do not reinterpret a separate-key checkpoint as a tied-bank backbone."""
+    metadata = payload.get("encoder_config", {})
+    if not isinstance(metadata, dict):
+        raise ValueError("Invalid checkpoint encoder metadata")
+    state = payload.get("model_state_dict", {})
+    has_keys = isinstance(state, dict) and "lmm.memory_keys" in state
+    is_candidate = (
+        payload.get("backbone") == KEY_VALUE_BACKBONE
+        or metadata.get("memory_mode") == KEY_VALUE_MEMORY_MODE
+        or metadata.get("static_retrieval_contract_id") == KEY_VALUE_CONTRACT
+        or has_keys
+    )
+    if expected_backbone != KEY_VALUE_BACKBONE:
+        if is_candidate:
+            raise ValueError("Separate-key checkpoint cannot be loaded as another backbone")
+        return
+    dim = metadata.get("d_model")
+    required = {
+        "backbone_contract_id": KEY_VALUE_CONTRACT,
+        "static_retrieval_contract_id": KEY_VALUE_CONTRACT,
+        "memory_mode": KEY_VALUE_MEMORY_MODE,
+        "static_retrieval_aggregation": "softmax_cosine_topk",
+        "static_retrieval_temperature": 1.0,
+        "static_key_value_tied": False,
+        "static_key_initialization": "clone_values_no_rng",
+        "persistent_mem_size": 16,
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+        "time_memory_route": "separate_key_static_matcher",
+        "quantity_memory_route": "separate_key_static_matcher",
+    }
+    if (payload.get("backbone") != expected_backbone or type(dim) is not int or dim < 1
+            or any(metadata.get(key) != value for key, value in required.items())
+            or metadata.get("additional_parameter_count") != 64 * dim):
+        raise ValueError("Separate-key checkpoint retrieval metadata mismatch")
+    time_head = metadata.get("time_head", {})
+    if (payload.get("variant") != LOG_MSE_VARIANT or not isinstance(time_head, dict)
+            or time_head.get("mode") != TIME_HEAD_MODE_LEGACY_CLAMPED):
+        raise ValueError("Separate-key checkpoint head/objective mismatch")
+    if "model_state_dict" in payload:
+        if not isinstance(state, dict) or any(
+            tuple(getattr(state.get(name), "shape", ())) != (1, 64, dim)
+            for name in ("lmm.mem", "lmm.memory_keys")
+        ):
+            raise ValueError("Separate-key checkpoint requires both key and value banks")
+
+
+def validate_checkpoint_route(payload: dict[str, Any], expected_backbone: str) -> None:
+    """Validate explicit candidate identity; compatible tensor shapes are not enough."""
+    if validate_history_control_checkpoint(payload, expected_backbone):
+        return
+    if validate_renewal_checkpoint(payload, expected_backbone):
+        return
+    if validate_active_norm_checkpoint(payload, expected_backbone):
+        return
+    if validate_additional_tpp_checkpoint(payload, expected_backbone):
+        return
+    if validate_local_gate_checkpoint(payload, expected_backbone):
+        return
+    if validate_core_checkpoint(payload, expected_backbone):
+        return
+    if validate_multilag_detail_checkpoint(payload, expected_backbone):
+        return
+    if validate_state_transport_checkpoint(payload, expected_backbone):
+        return
+    if validate_pair_message_checkpoint(payload, expected_backbone):
+        return
+    if validate_task_routed_memory_checkpoint(payload, expected_backbone):
+        return
+    if validate_nonlinear_episode_checkpoint(payload, expected_backbone):
+        return
+    if validate_episode_memory_checkpoint(payload, expected_backbone):
+        return
+    if validate_slot_memory_checkpoint(payload, expected_backbone):
+        return
+    if validate_value_norm_checkpoint(payload, expected_backbone):
+        return
+    if validate_level_history_qkv_checkpoint(payload, expected_backbone):
+        return
+    if validate_bounded_qk_checkpoint(payload, expected_backbone):
+        return
+    if validate_causal_qkv_checkpoint(payload, expected_backbone):
+        return
+    if validate_interlayer_memory_checkpoint(payload, expected_backbone):
+        return
+    if validate_memory_film_checkpoint(payload, expected_backbone):
+        return
+    if validate_elapsed_age_checkpoint(payload, expected_backbone):
+        return
+    validate_key_value_checkpoint(payload, expected_backbone)
+    validate_static_memory_checkpoint(payload, expected_backbone)
+    metadata = payload.get("encoder_config", {})
+    if not isinstance(metadata, dict):
+        raise ValueError("Invalid checkpoint encoder metadata")
+    is_routed = (
+        payload.get("backbone") == HARD_LOCAL_TIME_BACKBONE
+        or metadata.get("routing_contract_id") == HARD_LOCAL_TIME_CONTRACT
+        or metadata.get("memory_mode") == TITAN_MEMORY_MODE_HARD_LOCAL_TIME
+    )
+    if expected_backbone != HARD_LOCAL_TIME_BACKBONE:
+        if is_routed:
+            raise ValueError("Local-time checkpoint cannot be loaded as another backbone")
+        return
+    required = {
+        "routing_contract_id": HARD_LOCAL_TIME_CONTRACT,
+        "memory_mode": TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
+        "time_memory_route": "local_encoder_with_persistent_tokens",
+        "quantity_memory_route": "hard_local_memory_matcher",
+        "static_retrieval_aggregation": "arithmetic_mean",
+        "persistent_mem_size": 16,
+        "lmm_mem_size": 64,
+        "lmm_topk": 4,
+    }
+    if payload.get("backbone") != expected_backbone or any(
+        metadata.get(key) != expected for key, expected in required.items()
+    ):
+        raise ValueError("Local-time checkpoint routing metadata mismatch")
+    time_head = metadata.get("time_head", {})
+    if (payload.get("variant") != LOG_MSE_VARIANT or not isinstance(time_head, dict)
+            or time_head.get("mode") != TIME_HEAD_MODE_LEGACY_CLAMPED):
+        raise ValueError("Local-time checkpoint head/objective mismatch")
+
+
+def with_time_metadata(
+    model: SharedTimeCountModel,
+    encoder_metadata: dict[str, Any],
+) -> tuple[SharedTimeCountModel, dict[str, Any]]:
+    """Attach the shared time-head contract to backbone metadata."""
+    return model, {**encoder_metadata, "time_head": model.time_head_contract()}
+
+
+def build_count_aware_model(
+    backbone: str,
+    *,
+    hidden_dim: int,
+    train_log_mean: float,
+    max_seq_len: int,
+    train_log_std: float = 1.0,
+    quantity_variant: str = LOG_MSE_VARIANT,
+    quantile_adaptive_strength: float = 0.0,
+    quantile_adaptive_boundaries: tuple[
+        float, float, float, float
+    ] | None = None,
+    quantile_adaptive_weights: tuple[
+        float, float, float, float, float
+    ] | None = None,
+    quantity_sigma_floor: float = 1e-3,
+    lambda_location_huber: float = 1.0,
+    location_huber_delta: float = 0.25,
+    lambda_tail: float = 0.0,
+    tail_threshold: float = 46.0,
+    tail_normalization_scale: float = 46.0,
+    tail_clip_cap: float = 187.0,
+    tail_huber_delta: float = 1.0,
+    time_head_mode: str = TIME_HEAD_MODE_LEGACY_CLAMPED,
+    time_scale: float = 3.0,
+    time_w_max: float = 10.0 / 3.0,
+    time_intercept_limit: float = 30.0,
+    time_initial_intercept: float | None = None,
+    time_wd_safety_limit: float = 40.0,
+    time_initial_location: float | None = None,
+    time_initial_scale: float | None = None,
+    time_sigma_floor: float = 1e-3,
+    time_observation_contract: dict[str, Any] | None = None,
+    titans_memory_gradient_clip: float | None = None,
+) -> tuple[SharedTimeCountModel, dict[str, Any]]:
+    """Construct one controlled backbone and its serializable metadata."""
+    if backbone == RENEWAL_ARM:
+        if (hidden_dim != 64 or quantity_variant != RENEWAL_VARIANT or time_head_mode != RENEWAL_TIME_MODE
+                or time_observation_contract is None or lambda_tail != 0.):
+            raise ValueError('Deep Renewal requires its native distribution and recorded-time contract')
+        model = DeepRenewalEvent(time_observation_contract=time_observation_contract)
+        return with_time_metadata(model, {**renewal_metadata(), 'max_len': max_seq_len})
+    if backbone == ELAPSED_AGE_BACKBONE and (
+        quantity_variant != LOG_MSE_VARIANT or time_head_mode != TIME_HEAD_MODE_LEGACY_CLAMPED
+        or lambda_tail != 0.0
+    ):
+        raise ValueError("Elapsed-age candidate requires direct log-MSE, legacy time head and no tail loss")
+    if backbone == KEY_VALUE_BACKBONE and (
+        quantity_variant != LOG_MSE_VARIANT
+        or time_head_mode != TIME_HEAD_MODE_LEGACY_CLAMPED
+        or lambda_tail != 0.0
+    ):
+        raise ValueError("Separate-key candidate requires direct log-MSE, legacy time head and no tail loss")
+    if backbone == HARD_LOCAL_TIME_BACKBONE and (
+        quantity_variant != LOG_MSE_VARIANT
+        or time_head_mode != TIME_HEAD_MODE_LEGACY_CLAMPED
+        or lambda_tail != 0.0
+    ):
+        raise ValueError("Local-time candidate requires direct log-MSE, legacy time head and no tail loss")
+    if titans_memory_gradient_clip is not None:
+        if (not math.isfinite(titans_memory_gradient_clip)
+                or titans_memory_gradient_clip <= 0):
+            raise ValueError("titans_memory_gradient_clip must be finite and positive")
+        if backbone != "titantpp_titans_mac":
+            raise ValueError("Titans inner gradient clipping requires titantpp_titans_mac")
+    quantity_kwargs = {
+        "train_log_std": train_log_std,
+        "quantity_variant": quantity_variant,
+        "quantile_adaptive_strength": quantile_adaptive_strength,
+        "quantile_adaptive_boundaries": quantile_adaptive_boundaries,
+        "quantile_adaptive_weights": quantile_adaptive_weights,
+        "quantity_sigma_floor": quantity_sigma_floor,
+        "lambda_location_huber": lambda_location_huber,
+        "location_huber_delta": location_huber_delta,
+        "lambda_tail": lambda_tail,
+        "tail_threshold": tail_threshold,
+        "tail_normalization_scale": tail_normalization_scale,
+        "tail_clip_cap": tail_clip_cap,
+        "tail_huber_delta": tail_huber_delta,
+        "time_head_mode": time_head_mode,
+        "time_scale": time_scale,
+        "time_w_max": time_w_max,
+        "time_intercept_limit": time_intercept_limit,
+        "time_initial_intercept": time_initial_intercept,
+        "time_wd_safety_limit": time_wd_safety_limit,
+        "time_initial_location": time_initial_location,
+        "time_initial_scale": time_initial_scale,
+        "time_sigma_floor": time_sigma_floor,
+    }
+    if time_observation_contract is not None:
+        quantity_kwargs["time_observation_contract"] = time_observation_contract
+    if backbone in ADDITIONAL_TPP_ARMS:
+        if (hidden_dim != 64 or quantity_variant != LOG_MSE_VARIANT
+                or time_head_mode != TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION
+                or time_observation_contract is None or lambda_tail != 0.):
+            raise ValueError("Additional TPP requires frozen common heads, width64 and recorded-time law")
+        cls = CountAwareS2P2 if backbone == ADDITIONAL_TPP_ARMS[0] else CountAwareAttNHP
+        return with_time_metadata(cls(hidden_dim, train_log_mean, **quantity_kwargs),
+                                  additional_tpp_metadata(backbone, hidden_dim, max_seq_len))
+    if backbone in LOCAL_GATE_BACKBONES:
+        mode = 'time' if backbone == TIME_GATE_BACKBONE else 'quantity'
+        model = CountAwareTitanLocalGate(hidden_dim, train_log_mean, max_seq_len,
+            local_gate_mode=mode, **quantity_kwargs)
+        metadata = gate_metadata(hidden_dim, mode, time_scale, train_log_mean)
+        metadata['max_len'] = max_seq_len
+        return with_time_metadata(model, metadata)
+    if backbone == ACTIVE_NORM_ARM:
+        model = CountAwareTitanActiveBranchNorm(hidden_dim, train_log_mean, max_seq_len, **quantity_kwargs)
+        metadata = active_norm_metadata(hidden_dim)
+        metadata['max_len'] = max_seq_len
+        return with_time_metadata(model, metadata)
+    if backbone in CORE_MODES:
+        model = CountAwareTitanCoreAblation(hidden_dim, train_log_mean, max_seq_len, core_mode=CORE_MODES[backbone], **quantity_kwargs)
+        metadata = core_metadata(hidden_dim, CORE_MODES[backbone])
+        metadata["max_len"] = max_seq_len
+        return with_time_metadata(model, metadata)
+    if backbone in HISTORY_CONTROL_MODES:
+        if (hidden_dim != 64 or quantity_variant != LOG_MSE_VARIANT
+                or time_head_mode != TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION
+                or time_observation_contract is None or lambda_tail != 0.):
+            raise ValueError('History controls require frozen common heads and width64')
+        mode = HISTORY_CONTROL_MODES[backbone]
+        model = CountAwareTitanHistoryControl(hidden_dim, train_log_mean, max_seq_len, control_mode=mode, **quantity_kwargs)
+        return with_time_metadata(model, {**history_control_metadata(hidden_dim, mode), 'max_len': max_seq_len})
+    if backbone in (LOCAL_DETAIL_BACKBONE, MULTILAG_DETAIL_BACKBONE):
+        mode = "local" if backbone == LOCAL_DETAIL_BACKBONE else "multilag"
+        model = CountAwareTitanMultiLagDetail(
+            hidden_dim=hidden_dim, train_log_mean=train_log_mean,
+            max_seq_len=max_seq_len, multilag_detail_mode=mode,
+            multilag_detail_rank=4, **quantity_kwargs,
+        )
+        metadata = multilag_detail_metadata(hidden_dim, mode, rank=4)
+        metadata["max_len"] = max_seq_len
+        return with_time_metadata(model, metadata)
+    if backbone in (EVENT_STATE_BACKBONE, ELAPSED_STATE_BACKBONE):
+        clock = "event" if backbone == EVENT_STATE_BACKBONE else "elapsed"
+        model = CountAwareTitanStateTransport(
+            hidden_dim=hidden_dim, train_log_mean=train_log_mean,
+            max_seq_len=max_seq_len, state_transport_clock=clock,
+            state_transport_rank=8, state_transport_scan="parallel", **quantity_kwargs,
+        )
+        metadata = state_transport_metadata(
+            hidden_dim, clock, rank=8, scan="parallel", time_scale=time_scale,
+        )
+        metadata["max_len"] = max_seq_len
+        return with_time_metadata(model, metadata)
+    pair_candidates = {
+        PAIR_MESSAGE_POST_POOL_BACKBONE: (CountAwareTitanPairMessagePostPoolTPP, "post_pool"),
+        PAIR_MESSAGE_PRE_POOL_BACKBONE: (CountAwareTitanPairMessagePrePoolTPP, "pre_pool"),
+    }
+    if backbone in pair_candidates:
+        model_type, routing = pair_candidates[backbone]
+        model = model_type(hidden_dim=hidden_dim, train_log_mean=train_log_mean,
+                           max_seq_len=max_seq_len, **quantity_kwargs)
+        metadata = pair_message_metadata(hidden_dim, routing)
+        metadata["max_len"] = max_seq_len
+        return with_time_metadata(model, metadata)
+    task_routed_candidates = {
+        TASK_SHARED_MEMORY_BACKBONE: (CountAwareTitanTaskSharedMemoryTPP, "shared"),
+        TASK_SPLIT_MEMORY_BACKBONE: (CountAwareTitanTaskSplitMemoryTPP, "split"),
+    }
+    if backbone in task_routed_candidates:
+        model_type, routing = task_routed_candidates[backbone]
+        model = model_type(hidden_dim=hidden_dim, train_log_mean=train_log_mean,
+                           max_seq_len=max_seq_len, **quantity_kwargs)
+        metadata = task_routed_memory_metadata(hidden_dim, routing)
+        metadata["max_len"] = max_seq_len
+        return with_time_metadata(model, metadata)
+    nonlinear_episode_candidates = {
+        PRE_POOL_MEMORY_BACKBONE: (CountAwareTitanNonlinearPrePoolTPP, "pre"),
+        POST_POOL_MEMORY_BACKBONE: (CountAwareTitanNonlinearPostPoolTPP, "post"),
+    }
+    if backbone in nonlinear_episode_candidates:
+        model_type, pooling = nonlinear_episode_candidates[backbone]
+        model = model_type(hidden_dim=hidden_dim, train_log_mean=train_log_mean,
+                           max_seq_len=max_seq_len, **quantity_kwargs)
+        metadata = nonlinear_episode_metadata(hidden_dim, pooling)
+        metadata["max_len"] = max_seq_len
+        return with_time_metadata(model, metadata)
+    episode_candidates = {
+        SAME_EVENT_MEMORY_BACKBONE: (CountAwareTitanSameEventMemoryTPP, "same_event"),
+        SUCCESSOR_MEMORY_BACKBONE: (CountAwareTitanSuccessorMemoryTPP, "successor"),
+    }
+    if backbone in episode_candidates:
+        model_type, association = episode_candidates[backbone]
+        model = model_type(hidden_dim=hidden_dim, train_log_mean=train_log_mean,
+                           max_seq_len=max_seq_len, **quantity_kwargs)
+        metadata = episode_memory_metadata(hidden_dim, association)
+        metadata["max_len"] = max_seq_len
+        return with_time_metadata(model, metadata)
+    intermediate_candidates = {
+        SLOT_MEMORY_BACKBONE: (
+            CountAwareTitanSlotMemoryTPP,
+            slot_memory_metadata,
+        ),
+        VALUE_NORM_BACKBONE: (
+            CountAwareTitanValueNormTPP,
+            value_norm_metadata,
+        ),
+        LEVEL_HISTORY_QKV_BACKBONE: (
+            CountAwareTitanLevelHistoryQKVTPP,
+            level_history_qkv_metadata,
+        ),
+        BOUNDED_QK_BACKBONE: (
+            CountAwareTitanBoundedQKTPP,
+            bounded_qk_metadata,
+        ),
+        CAUSAL_QKV_BACKBONE: (
+            CountAwareTitanCausalQKVTPP,
+            causal_qkv_metadata,
+        ),
+        INTERLAYER_MEMORY_BACKBONE: (
+            CountAwareTitanInterLayerMemoryTPP,
+            interlayer_memory_metadata,
+        ),
+        MEMORY_FILM_BACKBONE: (
+            CountAwareTitanMemoryFiLM,
+            memory_film_metadata,
+        ),
+    }
+    if backbone in intermediate_candidates:
+        # Post-hoc evaluation rebuilds the identical encoder with the common
+        # frozen K=1 duration head. The joint trainer still enforces legacy
+        # time loss for these dedicated backbone roles.
+        allowed_time_heads = {TIME_HEAD_MODE_LEGACY_CLAMPED}
+        if backbone in (
+            CAUSAL_QKV_BACKBONE,
+            BOUNDED_QK_BACKBONE,
+            LEVEL_HISTORY_QKV_BACKBONE,
+        ):
+            allowed_time_heads.add(TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION)
+        if (
+            quantity_variant != LOG_MSE_VARIANT
+            or time_head_mode not in allowed_time_heads
+            or not math.isclose(lambda_tail, 0.0, rel_tol=0.0, abs_tol=1e-15)
+        ):
+            raise ValueError(
+                "Intermediate-memory candidates require direct log-MSE, an allowed time head and no tail loss"
+            )
+        model_type, metadata_factory = intermediate_candidates[backbone]
+        model = model_type(
+            hidden_dim=hidden_dim,
+            train_log_mean=train_log_mean,
+            max_seq_len=max_seq_len,
+            **quantity_kwargs,
+        )
+        encoder_metadata = metadata_factory(hidden_dim)
+        if backbone == SLOT_MEMORY_BACKBONE:
+            encoder_metadata["max_len"] = max_seq_len
+        if backbone in (
+            CAUSAL_QKV_BACKBONE,
+            BOUNDED_QK_BACKBONE,
+            LEVEL_HISTORY_QKV_BACKBONE,
+        ):
+            # Frozen-duration checkpoints must reconstruct the learned
+            # positional embedding at its original length before strict load.
+            encoder_metadata["max_len"] = max_seq_len
+        return with_time_metadata(model, encoder_metadata)
+    if backbone == "rmtpp":
+        model = CountAwareRMTPP(hidden_dim, train_log_mean, **quantity_kwargs)
+        return with_time_metadata(
+            model,
+            {
+                "candidate_name": "count_gru_h64",
+                "rnn_type": "gru",
+                "hidden_dim": hidden_dim,
+            },
+        )
+    if backbone == "nhp":
+        model = CountAwareNHP(hidden_dim, train_log_mean, **quantity_kwargs)
+        return with_time_metadata(
+            model,
+            {
+                "candidate_name": "count_nhp_ctlstm_h64",
+                "encoder_type": "continuous_time_lstm",
+                "hidden_dim": hidden_dim,
+                "shared_time_head": True,
+            },
+        )
+    if backbone == "sahp":
+        model = CountAwareSAHP(hidden_dim, train_log_mean, **quantity_kwargs)
+        return with_time_metadata(
+            model,
+            {
+                "candidate_name": "count_sahp_small",
+                "encoder_type": "causal_self_attention_with_continuous_decay",
+                "hidden_dim": hidden_dim,
+                "n_layers": 2,
+                "n_heads": 4,
+                "d_ff": hidden_dim * 4,
+                "shared_time_head": True,
+            },
+        )
+    if backbone == THP_STATIC_MEMORY_BACKBONE:
+        model = CountAwareTHPStaticMemory(hidden_dim, train_log_mean, **quantity_kwargs)
+        return with_time_metadata(model, static_memory_metadata())
+    if backbone == "thp":
+        model = CountAwareTHP(hidden_dim, train_log_mean, **quantity_kwargs)
+        return with_time_metadata(
+            model,
+            {
+                "candidate_name": "count_thp_small",
+                **asdict(model.encoder_config),
+            },
+        )
+    titan_modes = {
+        ELAPSED_AGE_BACKBONE: (ELAPSED_AGE_MEMORY_MODE, TITAN_QUANTITY_GRADIENT_SHARED),
+        KEY_VALUE_BACKBONE: (KEY_VALUE_MEMORY_MODE, TITAN_QUANTITY_GRADIENT_SHARED),
+        "titantpp": (
+            TITAN_MEMORY_MODE_STATIC_HARD,
+            TITAN_QUANTITY_GRADIENT_SHARED,
+        ),
+        HARD_LOCAL_TIME_BACKBONE: (
+            TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
+            TITAN_QUANTITY_GRADIENT_SHARED,
+        ),
+        "titantpp_weighted_static_memory": (
+            TITAN_MEMORY_MODE_STATIC_WEIGHTED,
+            TITAN_QUANTITY_GRADIENT_SHARED,
+        ),
+        "titantpp_no_memory": (
+            TITAN_MEMORY_MODE_NONE,
+            TITAN_QUANTITY_GRADIENT_SHARED,
+        ),
+        "titantpp_gated_soft_memory": (
+            TITAN_MEMORY_MODE_STATIC_SOFT_GATED,
+            TITAN_QUANTITY_GRADIENT_SHARED,
+        ),
+        "titantpp_surprise_memory": (
+            TITAN_MEMORY_MODE_SURPRISE_GATED,
+            TITAN_QUANTITY_GRADIENT_SHARED,
+        ),
+        "titantpp_persistent_only": (
+            TITAN_MEMORY_MODE_PERSISTENT_ONLY,
+            TITAN_QUANTITY_GRADIENT_SHARED,
+        ),
+        "titantpp_persistent_surprise_memory": (
+            TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
+            TITAN_QUANTITY_GRADIENT_SHARED,
+        ),
+        "titantpp_dual_memory_shared": (
+            TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
+            TITAN_QUANTITY_GRADIENT_SHARED,
+        ),
+        "titantpp_dual_memory_adapter_only": (
+            TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
+            TITAN_QUANTITY_GRADIENT_ADAPTER_ONLY,
+        ),
+        "titantpp_titans_mac": (
+            TITAN_MEMORY_MODE_TITANS_MAC,
+            TITAN_QUANTITY_GRADIENT_SHARED,
+        ),
+        "titantpp_tpp_gated_memory": (
+            TITAN_MEMORY_MODE_TPP_GATED,
+            TITAN_QUANTITY_GRADIENT_SHARED,
+        ),
+    }
+    if backbone in titan_modes:
+        memory_mode, quantity_memory_gradient_mode = titan_modes[backbone]
+        uses_persistent_memory = memory_mode in {
+            TITAN_MEMORY_MODE_PERSISTENT_ONLY,
+            TITAN_MEMORY_MODE_STATIC_HARD,
+            TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
+            TITAN_MEMORY_MODE_STATIC_WEIGHTED,
+            KEY_VALUE_MEMORY_MODE,
+            ELAPSED_AGE_MEMORY_MODE,
+            TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
+            TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
+            TITAN_MEMORY_MODE_TITANS_MAC,
+            TITAN_MEMORY_MODE_TPP_GATED,
+        }
+        uses_hard_memory = memory_mode in {
+            TITAN_MEMORY_MODE_STATIC_HARD,
+            TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
+            TITAN_MEMORY_MODE_STATIC_WEIGHTED,
+            KEY_VALUE_MEMORY_MODE,
+            ELAPSED_AGE_MEMORY_MODE,
+            TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
+        }
+        uses_soft_memory = memory_mode == TITAN_MEMORY_MODE_STATIC_SOFT_GATED
+        uses_surprise_memory = memory_mode in {
+            TITAN_MEMORY_MODE_SURPRISE_GATED,
+            TITAN_MEMORY_MODE_PERSISTENT_SURPRISE_GATED,
+            TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE,
+        }
+        model = CountAwareTitanTPP(
+            hidden_dim,
+            train_log_mean,
+            max_seq_len,
+            memory_mode=memory_mode,
+            quantity_memory_gradient_mode=quantity_memory_gradient_mode,
+            **quantity_kwargs,
+        )
+        candidate_names = {
+            ELAPSED_AGE_BACKBONE: "count_titan_elapsed_age_separate_keys",
+            KEY_VALUE_BACKBONE: "count_titan_static_top4_separate_keys_tau1",
+            "titantpp": "count_titan_small_lmm",
+            HARD_LOCAL_TIME_BACKBONE: "count_titan_hard_quantity_local_time",
+            "titantpp_weighted_static_memory": "count_titan_static_top4_weighted_tau1",
+            "titantpp_no_memory": "count_titan_no_memory",
+            "titantpp_gated_soft_memory": "count_titan_gated_soft_memory",
+            "titantpp_surprise_memory": "count_titan_surprise_memory",
+            "titantpp_persistent_only": "count_titan_persistent_only",
+            "titantpp_persistent_surprise_memory": (
+                "count_titan_persistent_surprise_memory"
+            ),
+            "titantpp_dual_memory_shared": "count_titan_dual_memory_shared",
+            "titantpp_dual_memory_adapter_only": (
+                "count_titan_dual_memory_adapter_only"
+            ),
+            "titantpp_titans_mac": "count_titan_faithful_titans_mac",
+            "titantpp_tpp_gated_memory": "count_titan_tpp_specific_gated_memory",
+        }
+        if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC:
+            model.titans_mac_encoder.neural_memory.gradient_max_norm = (
+                titans_memory_gradient_clip
+            )
+            if titans_memory_gradient_clip is not None:
+                candidate_names[backbone] = "count_titan_mac_inner_grad_clipped"
+        return with_time_metadata(
+            model,
+            {
+                "candidate_name": candidate_names[backbone],
+                **({
+                    "static_retrieval_contract_id": KEY_VALUE_CONTRACT,
+                    "static_retrieval_aggregation": "softmax_cosine_topk",
+                    "static_retrieval_temperature": 1.0,
+                    "static_key_value_tied": False,
+                    "static_key_initialization": "clone_values_no_rng",
+                    "additional_parameter_count": 64 * hidden_dim,
+                } if memory_mode in {KEY_VALUE_MEMORY_MODE, ELAPSED_AGE_MEMORY_MODE} else {}),
+                **({
+                    "routing_contract_id": HARD_LOCAL_TIME_CONTRACT,
+                    "static_retrieval_aggregation": "arithmetic_mean",
+                    "additional_parameter_count": 0,
+                } if memory_mode == TITAN_MEMORY_MODE_HARD_LOCAL_TIME else {}),
+                **({
+                    "static_retrieval_aggregation": "softmax_cosine_topk",
+                    "static_retrieval_temperature": 1.0,
+                    "static_retrieval_contract_id": "hard_lmm_weighted_static_v1",
+                    "additional_parameter_count": 0,
+                } if memory_mode == TITAN_MEMORY_MODE_STATIC_WEIGHTED else {}),
+                "backbone_contract_id": (
+                    KEY_VALUE_CONTRACT
+                    if memory_mode == KEY_VALUE_MEMORY_MODE
+                    else HARD_LOCAL_TIME_CONTRACT
+                    if memory_mode == TITAN_MEMORY_MODE_HARD_LOCAL_TIME
+                    else "W0"
+                    if memory_mode == TITAN_MEMORY_MODE_STATIC_WEIGHTED
+                    else "B1"
+                    if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+                    else "B2"
+                    if memory_mode == TITAN_MEMORY_MODE_TPP_GATED
+                    else "B0"
+                    if backbone == "titantpp"
+                    else "historical_ablation"
+                ),
+                "d_model": hidden_dim,
+                "n_layers": 2,
+                "n_heads": 4,
+                "d_ff": hidden_dim * 2,
+                "memory_mode": memory_mode,
+                "persistent_mem_size": 16 if uses_persistent_memory else 0,
+                "persistent_memory_update_scope": (
+                    "outer_loop_only"
+                    if memory_mode
+                    in {
+                        TITAN_MEMORY_MODE_TITANS_MAC,
+                        TITAN_MEMORY_MODE_TPP_GATED,
+                        TITAN_MEMORY_MODE_HARD_LOCAL_TIME,
+                        KEY_VALUE_MEMORY_MODE,
+                        ELAPSED_AGE_MEMORY_MODE,
+                    }
+                    else None
+                ),
+                "lmm_mem_size": 64 if uses_hard_memory else 0,
+                "lmm_topk": 4 if uses_hard_memory else 0,
+                "soft_memory_size": 64 if uses_soft_memory else 0,
+                "soft_memory_temperature": (
+                    1.0 if uses_soft_memory else None
+                ),
+                "surprise_memory_rank": (
+                    min(16, hidden_dim) if uses_surprise_memory else 0
+                ),
+                "surprise_chunk_size": 32 if uses_surprise_memory else 0,
+                "surprise_scan_backend": (
+                    "compiled_sequence_cuda" if uses_surprise_memory else None
+                ),
+                "surprise_update_rate_init": (
+                    0.01 if uses_surprise_memory else None
+                ),
+                "surprise_retention_init": (
+                    0.99 if uses_surprise_memory else None
+                ),
+                "surprise_momentum_init": (
+                    0.5 if uses_surprise_memory else None
+                ),
+                "surprise_state_scope": (
+                    "independent_input_sequence"
+                    if uses_surprise_memory
+                    or memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+                    else None
+                ),
+                "titans_neural_memory_depth": (
+                    2 if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC else 0
+                ),
+                "titans_neural_memory_hidden_expansion": (
+                    2 if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC else 0
+                ),
+                "titans_mac_segment_size": (
+                    16 if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC else 0
+                ),
+                "titans_scan_backend": (
+                    "compiled_sequence_cuda"
+                    if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+                    else None
+                ),
+                "titans_online_update": (
+                    "surprise_momentum_adaptive_forgetting"
+                    if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+                    else None
+                ),
+                "titans_memory_gradient_clip": titans_memory_gradient_clip,
+                "titans_event_order": (
+                    "segment_read_prediction_then_observed_write"
+                    if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+                    else None
+                ),
+                "tpp_gated_memory_size": (
+                    64 if memory_mode == TITAN_MEMORY_MODE_TPP_GATED else 0
+                ),
+                "tpp_gated_topk": (
+                    4 if memory_mode == TITAN_MEMORY_MODE_TPP_GATED else 0
+                ),
+                "tpp_gated_temperature": (
+                    1.0 if memory_mode == TITAN_MEMORY_MODE_TPP_GATED else None
+                ),
+                "tpp_gated_retrieval": (
+                    "similarity_weighted_sparse_topk_with_null"
+                    if memory_mode == TITAN_MEMORY_MODE_TPP_GATED
+                    else None
+                ),
+                "tpp_gated_confidence": (
+                    "null_mass_times_learned_scalar_gate"
+                    if memory_mode == TITAN_MEMORY_MODE_TPP_GATED
+                    else None
+                ),
+                "tpp_gated_write_policy": (
+                    "circular_observed_event_after_prediction"
+                    if memory_mode == TITAN_MEMORY_MODE_TPP_GATED
+                    else None
+                ),
+                "tpp_gated_state_scope": (
+                    "explicit_per_series_state"
+                    if memory_mode == TITAN_MEMORY_MODE_TPP_GATED
+                    else None
+                ),
+                "tpp_gated_scan_backend": (
+                    "compiled_sequence_cuda"
+                    if memory_mode == TITAN_MEMORY_MODE_TPP_GATED
+                    else None
+                ),
+                "memory_residual_gate_init": (
+                    0.0 if uses_soft_memory or uses_surprise_memory else None
+                ),
+                "time_memory_route": (
+                    "separate_key_static_matcher"
+                    if memory_mode == KEY_VALUE_MEMORY_MODE
+                    else "local_encoder_with_persistent_tokens"
+                    if memory_mode == TITAN_MEMORY_MODE_HARD_LOCAL_TIME
+                    else "similarity_weighted_static_matcher"
+                    if memory_mode == TITAN_MEMORY_MODE_STATIC_WEIGHTED
+                    else "hard_local_memory_matcher"
+                    if uses_hard_memory
+                    else "titans_mac"
+                    if memory_mode == TITAN_MEMORY_MODE_TITANS_MAC
+                    else "tpp_specific_gated_memory"
+                    if memory_mode == TITAN_MEMORY_MODE_TPP_GATED
+                    else "shared_memory_state"
+                ),
+                "quantity_memory_route": (
+                    "separate_key_static_matcher"
+                    if memory_mode == KEY_VALUE_MEMORY_MODE
+                    else "hard_local_memory_matcher"
+                    if memory_mode == TITAN_MEMORY_MODE_HARD_LOCAL_TIME
+                    else "hard_lmm_plus_surprise_residual"
+                    if memory_mode == TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE
+                    else "shared_memory_state"
+                ),
+                "quantity_memory_gradient_mode": (
+                    quantity_memory_gradient_mode
+                    if memory_mode == TITAN_MEMORY_MODE_DUAL_HARD_SURPRISE
+                    else "shared_state"
+                ),
+                "max_len": max_seq_len,
+                **(elapsed_age_metadata(hidden_dim) if memory_mode == ELAPSED_AGE_MEMORY_MODE else {}),
+            },
+        )
+    raise ValueError(f"Unsupported backbone: {backbone}")
+
+
+__all__ = ["build_count_aware_model"]

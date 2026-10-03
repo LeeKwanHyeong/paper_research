@@ -1,0 +1,55 @@
+"""One explicitly authorized A100 allocation; uncertain outcomes require reconciliation."""
+import json
+import subprocess
+import sys
+import time
+from datetime import datetime,timezone
+from pathlib import Path
+B=Path(__file__).resolve().parents[1]
+sys.path.insert(0,str(B/'control'))
+from provider import api,write,read
+from graphql import gql
+
+assert not (B/'control/allocation.json').exists() and not (B/'control/allocation_intent.json').exists()
+authorization=read(B/'user_authorization.json')
+assert authorization['approved'] and authorization['total_cap_usd']==100 and authorization['automatic_recharge'] is False
+assert read(B/'preparation_receipt.json')['status']=='CPU_tests_and_data_admission_passed'
+assert read(B/'verification/cpu_data_admission.json')['status']=='passed'
+user=api('user')
+assert user['clientBalance']>=100,'Insufficient existing balance for authorized cap; do not recharge'
+assert not user.get('isAutoPayEnabled',False),'Automatic-pay setting requires review'
+now=time.time();stop_at=now+49*3600
+request={'name':B.name,'cloudType':'SECURE','gpuTypeId':'NVIDIA A100-SXM4-80GB','gpuCount':1,
+ 'templateId':'runpod-torch-v280','imageName':'runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404',
+ 'containerDiskInGb':30,'volumeInGb':20,'volumeMountPath':'/workspace','ports':'22/tcp',
+ 'startSsh':True,'startJupyter':False,'minVcpuCount':12,'minMemoryInGb':64,'minCudaVersion':'13.0',
+ 'stopAfter':datetime.fromtimestamp(stop_at,timezone.utc).isoformat(),
+ 'env':[{'key':'PUBLIC_KEY','value':(Path.home()/'.runpod/ssh/runpodctl-ssh-key.pub').read_text().strip()}]}
+write(B/'control/allocation_intent.json',{'time':now,'request':{k:v for k,v in request.items() if k!='env'},
+ 'total_cap_usd':100,'automatic_recharge':False,'source_preparation_receipt':str(B/'preparation_receipt.json')},True)
+try:
+ p=gql('mutation($input:PodFindAndDeployOnDemandInput) { podFindAndDeployOnDemand(input:$input) { id name costPerHr createdAt gpuCount memoryInGb vcpuCount desiredStatus } }',{'input':request})['podFindAndDeployOnDemand']
+except Exception as e:
+ write(B/'control/allocation_error.json',{'type':type(e).__name__,'message':str(e),'time':time.time(),
+  'outcome_requires_reconciliation_before_retry':True},True)
+ raise
+assert p and p.get('id'),'Unknown allocation outcome'
+write(B/'control/creation_response.json',p,True)
+rate=float(p['costPerHr'])+50*.1/(30*24)
+a={'pod_id':p['id'],'name':B.name,'remote_root':'/workspace/'+B.name,'created_unix':now,
+ 'provider_createdAt':p['createdAt'],'gpu_rate_usd_hour':p['costPerHr'],'running_rate_usd_hour':rate,
+ 'initial_balance_usd':user['clientBalance'],'deadline_unix':now+min(48*3600,80/rate*3600),
+ 'setup_deadline_unix':now+5400,'provider_stop_requested_unix':stop_at,
+ 'provider_stop_requested_iso':request['stopAfter'],'total_cap_usd':100,'prior_attempt_cost_usd':0,
+ 'work_cap_usd':80,'automatic_recharge':False,'memoryInGb':p['memoryInGb'],'vcpuCount':p['vcpuCount']}
+write(B/'control/allocation.json',a,True)
+log=(B/'control/manager.log').open('x')
+manager=subprocess.Popen(['/usr/local/bin/python3',str(B/'control/manage.py')],stdin=subprocess.DEVNULL,
+ stdout=log,stderr=subprocess.STDOUT,start_new_session=True,close_fds=True)
+write(B/'control/manager_started.json',{'pid':manager.pid,'time':time.time()},True)
+if p['gpuCount']!=1 or float(p['costPerHr'])>1.59:
+ from provider import teardown
+ teardown(a,'Unexpected GPU count or price before deployment')
+ raise RuntimeError('Unexpected allocation; no scientific artifacts exist')
+print(json.dumps({'pod_id':p['id'],'gpu_count':p['gpuCount'],'GPU_rate':p['costPerHr'],
+ 'storage_inclusive_rate':rate,'manager_pid':manager.pid,'vCPUs':p['vcpuCount'],'memory_GB':p['memoryInGb']}))

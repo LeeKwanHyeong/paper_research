@@ -1,0 +1,470 @@
+"""Approved six-fit A100 validation-only candidate screen; no implicit retry."""
+from __future__ import annotations
+import argparse
+from copy import deepcopy
+import fcntl
+import gc
+import json
+import math
+import os
+from pathlib import Path
+import shutil
+import signal
+import statistics
+import subprocess
+import sys
+import time
+import traceback
+ROOT=Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:sys.path.insert(0,str(ROOT))
+from paper.scripts import observed_slot_parallel_common as common
+from paper.scripts import run_titantpp_core_ablation as core
+from paper.scripts import run_local_detail_benchmark as prior
+from paper.scripts import run_multilag_detail_execution as base
+from paper.scripts import run_observed_slot_partition as shared
+from models.TPPs.CountAwareTitanMLPCandidates import ARMS, ROLE
+ARMS=tuple(ARMS)
+CONTROL_ARMS=ARMS
+CONTROL_ROLE=ROLE
+ALL_ARMS=ARMS
+VARIANT='count_only_log_regression'
+SCHEMA='titantpp_mlp_candidates_a100_20261002_v1'
+DATASETS=('intermittent_frozen_5000','yellow_trip_hourly','raf_spare_parts')
+read=lambda p:json.loads(Path(p).read_text())
+require=common.require
+TIME_METRIC=prior.TIME_METRIC
+audit_replay_accounting=prior.audit_replay_accounting
+def variant_for(arm):return VARIANT
+def role_for(arm):return ROLE
+
+
+def validate(c):
+    require(c['schema']==SCHEMA and c['arms']==list(ARMS),'Foreign candidate campaign')
+    require(c['training']=={'batch_size':128,'maximum_epochs':300,'minimum_epochs':40,'patience':40,
+        'monitor':'validation_raw_quantity_rmse','tie':'strict_earliest_finite_minimum','warm_start':False},'Training drift')
+    expected=[{'id':f'{d}__42__{a}','host':'a100','dataset':d,'seed':42,'arm':a} for d in DATASETS for a in ARMS]
+    require(c['jobs']==expected,'Six-condition scope changed')
+    require(c['cost']['total_cap_usd']==100 and c['cost']['automatic_recharge'] is False,'Budget drift')
+    require(c['source']['files_sha256']==common.sha_json(c['source']['files']),'Source closure mismatch')
+    for p,s in c['source']['files'].items():require(common.sha_file(ROOT/p)==s,'Source drift '+p)
+    for d in c['datasets']:require(common.sha_json(d)==c['dataset_sha256'][d['dataset_id']],'Data contract drift')
+    return c
+
+
+def authorization(c,root):
+    validate(c);approval=read(root/'approval.json');start=read(root/'start_permit.json')
+    require(approval['approved'] and approval['contract_sha256']==common.sha_json(c),'Missing approval')
+    require(start['contract_sha256']==common.sha_json(c) and start['approval_sha256']==common.sha_json(approval),'Foreign start permit')
+    require(start['started_at_unix']<=time.time()<start['deadline_unix'],'Campaign deadline exhausted')
+    require(start['deadline_unix']-start['started_at_unix']<=c['limits']['total_wall_seconds'],'Enlarged time budget')
+    return start
+
+
+def runtime_check(c,host):
+    from paper.scripts.quantity_comparison_runtime import configure_runtime,runtime_identity
+    from paper.scripts.run_time_quantity_diagnostic import validate_import_origins
+    spec=c['hosts'][host]
+    require(Path(sys.executable).resolve()==Path(spec['python']).resolve(),'Wrong Python')
+    require(Path.cwd().resolve()==ROOT==Path(spec['source_root']),'Wrong source root')
+    require(all(os.environ.get(k)==v for k,v in spec['environment'].items()),'Environment drift')
+    configure_runtime('cuda:0',threads=2);result=runtime_identity('cuda:0');validate_import_origins()
+    require(result['gpu']['uuid']==spec['gpu_uuid'] and result['gpu']['visible_device_count']==1,'Wrong GPU')
+    for k,v in spec['runtime_expected'].items():require(result.get(k)==v,'Runtime drift '+k)
+    return result
+
+
+def build_model(data,arm):
+    from models.TPPs.CountAwareFactory import build_count_aware_model
+    require(arm in (*ARMS,'titantpp_history_mlp'),'Wrong model')
+    config={k:v for k,v in data['model'].items() if k not in ('backbone','lambda_log_qty','lambda_tail','time_head_lr_multiplier')}
+    return build_count_aware_model(arm,**config,train_log_mean=data['statistics']['train_log_mean'],
+        train_log_std=data['statistics']['train_log_std'],max_seq_len=data['loader']['max_seq_len'])
+
+
+def initial_states(data,seed):
+    import torch
+    from simple_lab_test.search.common.runner import canonical_state_dict_sha256
+    result={};states={};rngs={}
+    with torch.random.fork_rng(devices=[]):
+        for arm in (*ARMS,'titantpp_history_mlp'):
+            torch.manual_seed(seed);model,_=build_model(data,arm);state=model.state_dict();states[arm]=state
+            rngs[arm]=torch.get_rng_state().clone();result[arm]=canonical_state_dict_sha256(state)
+        baseline=states['titantpp_history_mlp']
+        for arm in CONTROL_ARMS:
+            require(torch.equal(rngs[arm],rngs['titantpp_history_mlp']),'Control initialization RNG changed')
+            for k,v in baseline.items():
+                require(torch.equal(v,states[arm][k]),'Common MLP tensor differs '+k)
+    return result
+
+
+def training_args(c,data,output,arm):
+    args=base.training_args({**c,'model_role':role_for(arm)},data,output)
+    args.epochs=300;args.min_epochs=40;args.early_stopping_patience=40
+    args.execution_role='fresh_mlp_candidate_validation'
+    return args
+
+
+def time_interface(data,frame,c,arm=None):
+    interface=base.time_interface(data,frame,c)
+    interface['backbone_design']={'schema':SCHEMA,'design_sha256':c['design_sha256'],
+        'architecture':c['architecture'],'train_time_scale':data['model']['time_scale'],
+        'time_statistics':data['time_statistics']}
+    return interface
+
+
+class PulseBudget:
+    def __init__(self,root,digest,job,deadline,lease=False):
+        self.root,self.digest,self.job,self.deadline,self.lease=root,digest,job,deadline,lease
+        self.last=0.;self.monotonic_deadline=time.monotonic()+max(0,deadline-time.time())
+    def __call__(self):
+        now=time.time();require(now<self.deadline and time.monotonic()<self.monotonic_deadline,'Absolute time budget exhausted')
+        if now-self.last<2:return
+        if self.lease:
+            r=read(self.root/'leases'/f'{self.job}.json')
+            require(r['contract_sha256']==self.digest and r['job']==self.job and now<r['expires_unix']<=self.deadline,'Owned supervisor lease expired')
+        require(shutil.disk_usage(self.root).free>5*1024**3,'Free disk below5GiB')
+        common.write_json(self.root/'progress'/f'{self.job}.json',{'job':self.job,'pid':os.getpid(),'updated_unix':now,'deadline_unix':self.deadline})
+        self.last=now
+
+
+def verify_training_permit(c,root):
+    p=read(root/'training_permit.json');start=read(root/'start_permit.json');q=read(root/'qualification/receipt.json')
+    require(p['contract_sha256']==common.sha_json(c) and p['start_permit_sha256']==common.sha_json(start),'Foreign training permit')
+    require(q['status']=='passed' and p['qualification_sha256']==common.sha_file(root/'qualification/receipt.json'),'Qualification changed')
+    return p
+
+
+def run_fit(c,host,root,job,deadline):
+    import torch
+    from paper.scripts.count_aware_tpp_backbone import training
+    start=authorization(c,root);q=read(root/'qualification/receipt.json');verify_training_permit(c,root)
+    require(q['status']=='passed' and q['runtime']==runtime_check(c,host),'Qualified runtime drift')
+    require(job in c['jobs'] and job['host']==host,'Unapproved fit')
+    budget=PulseBudget(root,common.sha_json(c),job['id'],min(deadline,start['deadline_unix']),lease=True)
+    budget();data=next(d for d in c['datasets'] if d['dataset_id']==job['dataset'])
+    arm,seed=job['arm'],job['seed']
+    frame,receipt=base.prepare_admitted_data(data);interface=time_interface(data,frame,c,arm)
+    initial=initial_states(data,seed)
+    require(initial==q['initialization'][data['dataset_id']][str(seed)],'Native initialization changed')
+    folder=root/'run'/job['id'];folder.mkdir(parents=True,exist_ok=False)
+    args=training_args(c,data,folder,arm)
+    args.epochs=300;args.min_epochs=40;args.early_stopping_patience=40;args.seeds=str(seed)
+    args.execution_role='fresh_mlp_candidate_validation'
+    common.write_json(folder/'input_receipt.json',receipt,exclusive=True)
+    common.write_json(folder/'initialization.json',initial,exclusive=True)
+    run=folder/'runs'/arm/variant_for(arm)/f'seed_{seed}'
+    quantity={'boundaries':data['quantity_boundaries_all_train_rows'],'strata':[{'label':f'frozen_quantity_bin_{i}'} for i in range(5)]}
+    def status(epoch,records):
+        budget();common.write_json(run/'exposure.json',records)
+        names=('last_epoch_state.pt','history.json','exposure.json','epoch_timing.json','train.log')
+        common.write_json(run/'server_checkpoint_receipt.json',{'epoch':epoch,'contract_sha256':common.sha_json(c),
+            'files':{n:common.sha_file(run/n) for n in names},'mac_ack_required':False,'time':time.time()})
+        common.write_json(folder/'status.json',{'status':'training','epoch':epoch,'global_steps':sum(x['batches'] for x in records['train']),
+            'job':job,'updated_unix':time.time(),'deadline_unix':deadline})
+        if epoch==2:
+            times=[x['elapsed_seconds'] for x in read(run/'epoch_timing.json')['epochs']]
+            remaining=max(times)*298*1.2+600
+            passed=remaining<deadline-time.time()
+            common.write_json(folder/'two_epoch_cost_receipt.json',{'status':'passed' if passed else 'failed','same_scientific_fit':True,
+                'measured_epoch_seconds':times,'projected_remaining_seconds':remaining,
+                'available_seconds':deadline-time.time(),'not_a_completion_guarantee':True})
+            require(passed,'Full-epoch projected300-epoch cost exceeds condition budget')
+    with shared.audited_training(training,data,budget,status) as exposure:
+        summary,_,_=training.train_one(args=args,frame=frame,quantity_contract=quantity,interface_meta=interface,
+            backbone=arm,quantity_variant=variant_for(arm),seed=seed)
+    history=read(run/'history.json')['history'];steps=prior.audit_arm(history,summary,exposure,data,c['training'])
+    require(summary['initial_state_sha256']==initial[arm],'Initial tensor identity mismatch')
+    identity=training._resume_identity(args=args,backbone=arm,quantity_variant=variant_for(arm),seed=seed,
+        monitor='validation_raw_quantity_rmse',interface_meta=interface,quantity_contract=quantity)
+    endpoints={}
+    for label,path in (('selected',Path(summary['checkpoint_path'])),('last',run/'last_epoch_state.pt')):
+        epoch=summary['best_epoch'] if label=='selected' else len(history)
+        endpoints[label]=replay_checkpoint(path,data,frame,budget,expected_arm=arm,expected_identity=identity,
+            expected_initial=initial[arm],expected_epoch=epoch,expected_seed=seed)
+        prior.audit_replay_accounting(endpoints[label])
+        require(all(math.isclose(endpoints[label][k],history[epoch-1][v],rel_tol=1e-10,abs_tol=1e-8)
+            for k,v in (('qty_mae','val_qty_mae'),('qty_rmse','val_qty_rmse'),('time_nll','val_time_nll'))),'Endpoint replay mismatch')
+    ref=c['baseline_replays'][data['dataset_id']]
+    baseline_exposure=read(root/ref['exposure'])
+    require(common.sha_file(root/ref['exposure'])==ref['exposure_sha256'],'Reference exposure changed')
+    n=min(len(exposure['train']),len(baseline_exposure['train']))
+    require(exposure['train'][:n]==baseline_exposure['train'][:n],'Baseline train prefix differs')
+    require(exposure['validation'][0]==baseline_exposure['validation'][0],'Baseline validation exposure differs')
+    result={**endpoints,'status':'complete','job':job,'best_epoch':summary['best_epoch'],'completed_epochs':len(history),
+        'global_steps':steps,'initial_state_sha256':initial[arm],'parameter_count':summary['parameter_count'],
+        'elapsed_seconds':summary['elapsed_seconds'],'last30':shared.last30_summary(history),
+        'first40':{'mean':statistics.mean(x['val_qty_rmse'] for x in history[:40]),
+            'sd':statistics.stdev(x['val_qty_rmse'] for x in history[:40]),'count':40},
+        'evaluation_scope':'validation_only','held_out_test_evaluated':False}
+    common.write_json(run/'endpoint_replays.json',result,exclusive=True);common.write_json(run/'exposure.json',exposure)
+    common.write_json(folder/'status.json',{'status':'complete','job':job,'updated_unix':time.time()})
+    files={str(p.relative_to(folder)):common.sha_file(p) for p in sorted(folder.rglob('*')) if p.is_file()}
+    common.write_json(folder/'terminal_manifest.json',{'status':'complete','scientific_success':True,'files':files,
+        'contract_sha256':common.sha_json(c),'job':job,'completed_unix':time.time()},exclusive=True)
+
+def stop_owned(child):
+    if child.poll() is not None:return
+    require(os.getpgid(child.pid)==child.pid,'Owned child process-group identity changed')
+    os.killpg(child.pid,signal.SIGTERM)
+    try:child.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        os.killpg(child.pid,signal.SIGKILL);child.wait(timeout=10)
+
+# Existing frozen endpoint evaluation, copied unchanged; build_model routes new encoders.
+def replay_checkpoint(path, data, frame, budget, *, device="cuda:0", expected_arm=None, expected_identity=None, expected_initial=None, expected_epoch=None, expected_seed=42):
+    from simple_lab_test.search.common.runner import torch_load_checkpoint
+    payload = torch_load_checkpoint(Path(path), map_location="cpu")
+    if expected_arm is not None:
+        from paper.scripts.count_aware_tpp_backbone.training import checkpoint_monitor_spec
+        selector = checkpoint_monitor_spec("validation_raw_quantity_rmse")
+        require(payload.get("backbone") == expected_arm and payload.get("seed") == expected_seed
+                and payload.get("variant") == variant_for(expected_arm), "Replay arm/seed/objective mismatch")
+        require(payload.get("resume_identity") == expected_identity
+                and payload.get("interface_meta") == expected_identity["interface_meta"]
+                and payload.get("initial_state_sha256") == expected_initial,
+                "Replay source/initialization/interface identity mismatch")
+        revision = expected_identity["arguments"]["source_revision"] if "source_revision" in expected_identity.get("arguments", {}) else None
+        if revision is not None:
+            require(payload.get("source_revision") == revision and payload.get("source_revision_history") == [revision], "Replay source revision mismatch")
+        require(payload.get("checkpoint_monitor") == "validation_raw_quantity_rmse"
+                and payload.get("checkpoint_monitor_history_key") == selector["history_key"]
+                and payload.get("checkpoint_selection") == selector["selection"], "Replay selector mismatch")
+        require(payload.get("epoch", payload.get("best_epoch")) == expected_epoch, "Replay epoch mismatch")
+    head = payload.get("interface", {}).get("time_head", {})
+    # The shared trainer writes its interface under interface_meta.
+    if not head:
+        head = payload.get("interface_meta", {}).get("time_head", {})
+    require(head.get("observation_likelihood") == data["model"]["time_observation_contract"],
+            "Replay observation likelihood metadata mismatch")
+    result = _replay_validation(payload, path, data, frame, budget, device=device)
+    result["time_metric"] = TIME_METRIC
+    return result
+
+def _replay_validation(payload, path, data, frame, budget_check, *, device="cuda:0"):
+    """One streaming validation pass with fixed train-derived strata; no records."""
+    import numpy as np
+    import torch
+    from models.TPPs.CountAwareFactory import validate_checkpoint_route
+    from paper.scripts.count_aware_tpp_backbone.core import target_outputs
+    from paper.scripts.run_taxi_quantity_interface_ablation import make_loader
+    from simple_lab_test.search.common.runner import canonical_state_dict_sha256
+    require(payload.get("backbone") in ALL_ARMS, "Unexpected endpoint backbone")
+    validate_checkpoint_route(payload, payload["backbone"])
+    require(payload["evaluation_scope"] == "validation_only"
+            and payload["held_out_test_evaluated"] is False, "Replay split changed")
+    state_digest = canonical_state_dict_sha256(payload["model_state_dict"])
+    require(payload.get("model_state_sha256") == state_digest, "Checkpoint state digest differs")
+    model, _ = build_model(data, payload["backbone"])
+    model.load_state_dict(payload["model_state_dict"], strict=True)
+    model.to(device).eval()
+    loader = make_loader(frame, target_split="validation", **{
+        key: data["loader"][key] for key in ("batch_size", "lookback_weeks", "max_seq_len")},
+        shuffle=False, generator=None)
+    q_bounds, h_bounds = data["quantity_boundaries_all_train_rows"], data["history_boundaries"]
+    partitions = [("quantity", q_bounds), ("history", h_bounds)]
+    if "additional_history_boundaries" in data:
+        partitions.append(("additional_history", data["additional_history_boundaries"]))
+    accumulator = {"overall": [0, 0., 0., 0.], "body": [0, 0., 0., 0.], "tail": [0, 0., 0., 0.]}
+    for kind, bounds in partitions:
+        accumulator.update({f"{kind}_{i}": [0, 0., 0., 0.] for i in range(len(bounds) + 1)})
+    with torch.no_grad():
+        for _, dts, mask, _, quantities in loader:
+            budget_check()
+            result = target_outputs(model, dts.to(device), mask.to(device), quantities.to(device), lambda_log_qty=1.)
+            q = result["true_qty"].cpu().numpy().astype(np.float64)
+            pred = result["pred_qty"].cpu().numpy().astype(np.float64)
+            t = result["time_loss"].cpu().numpy().astype(np.float64)
+            h = result["history_length"].cpu().numpy()
+            require(np.isfinite(q).all() and np.isfinite(pred).all() and np.isfinite(t).all(),
+                    "Nonfinite checkpoint replay")
+            masks = {"overall": np.ones(q.shape, dtype=bool), "body": q <= q_bounds[2], "tail": q > q_bounds[3]}
+            for kind, bounds in partitions:
+                values = q if kind == "quantity" else h
+                ids = np.searchsorted(bounds, values, side="left")
+                masks.update({f"{kind}_{i}": ids == i for i in range(len(bounds) + 1)})
+            error = pred - q
+            for key, selected in masks.items():
+                acc = accumulator[key]
+                acc[0] += int(selected.sum())
+                acc[1] += float(np.abs(error[selected]).sum())
+                acc[2] += float(np.square(error[selected]).sum())
+                acc[3] += float(t[selected].sum())
+    budget_check()
+    def finish(acc):
+        n, absolute, squared, temporal = acc
+        return {"count": n, "qty_mae": absolute / n if n else None, "qty_sse": squared,
+            "qty_rmse": math.sqrt(squared / n) if n else None,
+            "time_nll": temporal / n if n else None}
+    result = {**finish(accumulator["overall"]), "body": finish(accumulator["body"]),
+        "tail": finish(accumulator["tail"]), "quantity_boundaries": q_bounds,
+        "history_boundaries": h_bounds, "quantity_cells": [], "history_cells": [],
+        "checkpoint_path": str(path), "state_sha256": state_digest,
+        "evaluation_scope": "validation_only", "held_out_test_evaluated": False}
+    for kind, bounds in partitions:
+        result[kind + "_boundaries"] = bounds
+        result[kind + "_cells"] = [{"bin": i, **finish(accumulator[f"{kind}_{i}"])}
+                                    for i in range(len(bounds) + 1)]
+    require(result["count"] == data["inherited_data_identity"]["populations"]["validation"]["target_count"],
+            "Replay validation target count changed")
+    audit_replay_accounting(result)
+    return result
+
+
+def probe(c,root,job,probe_dir):
+    import torch
+    from paper.scripts.count_aware_tpp_backbone.core import target_outputs
+    runtime_check(c,'a100');data=next(d for d in c['datasets'] if d['dataset_id']==job['dataset'])
+    torch.manual_seed(42);model,_=build_model(data,job['arm']);model.cuda().train()
+    optimizer=torch.optim.AdamW(model.parameters(),lr=.001)
+    length=data['loader']['max_seq_len'];dt=torch.randint(1,8,(128,length),device='cuda:0').float()
+    q=torch.randint(1,20,dt.shape,device='cuda:0').float();mask=torch.ones_like(dt,dtype=torch.bool)
+    def step():
+        optimizer.zero_grad(set_to_none=True)
+        loss=target_outputs(model,dt,mask,q,lambda_log_qty=1.)['joint_loss'].mean()
+        require(torch.isfinite(loss).item(),'Nonfinite probe loss');loss.backward()
+        norm=torch.nn.utils.clip_grad_norm_(model.parameters(),1.);require(torch.isfinite(norm).item(),'Nonfinite probe gradients')
+        optimizer.step()
+    for _ in range(3):step()
+    torch.cuda.synchronize();common.write_json(probe_dir/(job['id']+'.ready.json'),{'pid':os.getpid()})
+    timeout=time.time()+180
+    while not (probe_dir/'go.json').exists():
+        require(time.time()<timeout,'Probe barrier expired');time.sleep(.1)
+    torch.cuda.reset_peak_memory_stats();started=time.time();timing=[]
+    for _ in range(30):
+        torch.cuda.synchronize();t=time.perf_counter();step();torch.cuda.synchronize();timing.append(time.perf_counter()-t)
+    common.write_json(probe_dir/(job['id']+'.result.json'),{'job':job,'steps':30,'warmup_steps':3,
+        'started_unix':started,'finished_unix':time.time(),'step_seconds':timing,
+        'peak_allocated_bytes':torch.cuda.max_memory_allocated(),'peak_reserved_bytes':torch.cuda.max_memory_reserved()},exclusive=True)
+
+
+def qualification(c,root):
+    import torch
+    from paper.scripts.verify_titantpp_mlp_candidates import check
+    start=authorization(c,root)
+    require(not common.gpu_pids(c['hosts']['a100']),'GPU occupied before isolated qualification')
+    common.write_json(root/'qualification.claim',{'pid':os.getpid(),'time':time.time()},exclusive=True)
+    runtime=runtime_check(c,'a100');budget=PulseBudget(root,common.sha_json(c),'qualification',min(start['deadline_unix'],time.time()+5400))
+    result={'status':'checking','runtime':runtime,'contract_sha256':common.sha_json(c),'source_files_sha256':c['source']['files_sha256'],
+        'correctness':check('cuda:0'),'initialization':{},'inputs':{},'baselines':{},'parallel_measurements':{}}
+    expected=read(root/'expected_initialization.json')
+    for data in c['datasets']:
+        budget();d=data['dataset_id'];frame,receipt=base.prepare_admitted_data(data);interface=time_interface(data,frame,c)
+        init=initial_states(data,42)
+        common.write_json(root/'qualification'/f'initialization_{d}.json',{'native':init,'local_diagnostic':expected[d],
+            'reference_MLP_initial_sha256':c['baseline_replays'][d]['initial_state_sha256']},exclusive=True)
+        require(init['titantpp_history_mlp']==c['baseline_replays'][d]['initial_state_sha256'],'Historical/native MLP initialization mismatch')
+        result['initialization'][d]={'42':init};result['inputs'][d]={'receipt':receipt,'interface_sha256':common.sha_json(interface)}
+        ref=c['baseline_replays'][d];path=root/ref['checkpoint']
+        require(common.sha_file(path)==ref['checkpoint_sha256'],'Baseline checkpoint changed')
+        endpoint=core.replay_checkpoint(path,data,frame,budget)
+        require(all(math.isclose(endpoint[k],ref['metrics'][k],rel_tol=1e-6,abs_tol=1e-8) for k in ('qty_mae','qty_rmse','time_nll')),'Cross-GPU baseline validation replay mismatch')
+        result['baselines'][d]={'status':'passed','checkpoint_sha256':ref['checkpoint_sha256'],'metrics':{k:endpoint[k] for k in ('qty_mae','qty_rmse','time_nll')}}
+        del frame;gc.collect();torch.cuda.empty_cache()
+    # Equal six-job synthetic workload in each concurrency trial. No scientific training.
+    for concurrency in (1,2,3,6):
+        total=0.;groups=[]
+        for group_id,offset in enumerate(range(0,len(c['jobs']),concurrency)):
+            budget();jobs=c['jobs'][offset:offset+concurrency];pdir=root/'qualification'/f'parallel_{concurrency}'/str(group_id);pdir.mkdir(parents=True)
+            children=[];streams=[]
+            try:
+                for job in jobs:
+                    log=(pdir/(job['id']+'.log')).open('x');streams.append(log)
+                    cmd=[sys.executable,str(Path(__file__).resolve()),'--contract',str(root/'execution_contract.json'),'--mode','probe','--job',job['id'],'--probe-dir',str(pdir)]
+                    children.append(subprocess.Popen(cmd,cwd=ROOT,stdout=log,stderr=subprocess.STDOUT,start_new_session=True))
+                until=time.time()+240
+                while not all((pdir/(j['id']+'.ready.json')).exists() for j in jobs):
+                    budget();require(time.time()<until and all(p.poll() is None for p in children),'Probe worker failed before barrier');time.sleep(.2)
+                common.write_json(pdir/'go.json',{'time':time.time()})
+                while any(p.poll() is None for p in children):
+                    budget();require(time.time()<until,'Probe wall cap');time.sleep(.2)
+                require(all(p.returncode==0 for p in children),'Parallel probe failed')
+                rows=[read(pdir/(j['id']+'.result.json')) for j in jobs]
+                wall=max(x['finished_unix'] for x in rows)-min(x['started_unix'] for x in rows)
+                total+=wall;groups.append({'group':group_id,'wall_seconds':wall,'rows':rows})
+            finally:
+                for p in children:stop_owned(p)
+                for stream in streams:stream.close()
+        result['parallel_measurements'][str(concurrency)]={'measured_work_seconds':total,'groups':groups,'measured_steps':180,'synthetic_optimizer_updates_including_warmup':198}
+    fastest=min(x['measured_work_seconds'] for x in result['parallel_measurements'].values())
+    eligible=[int(k) for k,v in result['parallel_measurements'].items() if v['measured_work_seconds']<=fastest*1.05]
+    # Choose fewer workers when within 5% of fastest, avoiding unnecessary CPU pressure.
+    result['selected_concurrency']=min(eligible)
+    result.update(status='passed',completed_unix=time.time(),held_out_test_evaluated=False,
+        selection_rule='minimum concurrency within 5 percent of fastest equal-six-job measured work time; synthetic, not paper efficiency')
+    common.write_json(root/'qualification/receipt.json',result,exclusive=True)
+    print(json.dumps({'status':'passed','selected_concurrency':result['selected_concurrency'],'seconds':{k:v['measured_work_seconds'] for k,v in result['parallel_measurements'].items()}}),flush=True)
+
+
+def verify_terminal(folder,c,job):
+    m=read(folder/'terminal_manifest.json');require(m['status']=='complete' and m['job']==job and m['contract_sha256']==common.sha_json(c),'Missing or foreign terminal receipt')
+    for p,s in m['files'].items():require(common.sha_file(folder/p)==s,'Terminal SHA mismatch '+p)
+    return {'status':'complete','terminal_manifest_sha256':common.sha_file(folder/'terminal_manifest.json')}
+
+
+def dispatch(c,root):
+    start=authorization(c,root);permit=verify_training_permit(c,root);q=read(root/'qualification/receipt.json')
+    require(not common.gpu_pids(c['hosts']['a100']),'GPU occupied before six-condition dispatch')
+    concurrency=q['selected_concurrency'];require(concurrency in (1,2,3,6),'Unqualified concurrency')
+    running={};pending=list(c['jobs']);results={};deadline=start['deadline_unix']
+    common.write_json(root/'supervisor.claim',{'pid':os.getpid(),'contract_sha256':common.sha_json(c),'started_unix':time.time()},exclusive=True)
+    def record():
+        common.write_json(root/'status.json',{'status':'running','completed':{k:v for k,v in results.items() if v['status']=='complete'},
+            'outcomes':results,'active_jobs':[v['job'] for v in running.values()],'worker_pids':[v['child'].pid for v in running.values()],
+            'pending_jobs':pending,'supervisor_pid':os.getpid(),'updated_unix':time.time(),'deadline_unix':deadline,'concurrency':concurrency,'mac_required_for_training':False})
+    try:
+        while pending or running:
+            now=time.time()
+            while pending and len(running)<concurrency and now<deadline:
+                job=pending.pop(0);j=job['id'];require(not (root/'run'/j).exists(),'Run exists; implicit retry forbidden')
+                limit=min(deadline,now+c['limits']['per_condition_seconds'])
+                common.write_json(root/'claims'/f'{j}.json',{'job':job,'deadline_unix':limit,'contract_sha256':common.sha_json(c)},exclusive=True)
+                common.write_json(root/'leases'/f'{j}.json',{'job':j,'contract_sha256':common.sha_json(c),'expires_unix':min(now+90,limit),'supervisor_pid':os.getpid()})
+                logpath=root/'logs'/f'{j}.log';logpath.parent.mkdir(exist_ok=True);log=logpath.open('x')
+                cmd=['timeout','--signal=TERM','--kill-after=15s',str(max(1,int(limit-now))),sys.executable,str(Path(__file__).resolve()),'--contract',str(root/'execution_contract.json'),'--mode','fit','--job',j,'--deadline',str(limit)]
+                child=subprocess.Popen(cmd,cwd=ROOT,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+                running[j]={'child':child,'job':job,'deadline':limit,'log':log}
+            for j,v in list(running.items()):
+                if now>=v['deadline']:stop_owned(v['child'])
+                if v['child'].poll() is not None:
+                    v['log'].close()
+                    try:
+                        require(v['child'].returncode==0,'Worker exit '+str(v['child'].returncode));results[j]=verify_terminal(root/'run'/j,c,v['job'])
+                    except Exception as e:
+                        results[j]={'status':'failed','returncode':v['child'].returncode,'reason':str(e),'automatic_retry':False}
+                    del running[j]
+                else:
+                    common.write_json(root/'leases'/f'{j}.json',{'job':j,'contract_sha256':common.sha_json(c),'expires_unix':min(now+90,v['deadline']),'supervisor_pid':os.getpid()})
+            if now>=deadline:
+                for j in pending:results[j['id']]={'status':'not_started','reason':'campaign_deadline'}
+                pending=[]
+            record()
+            if running:time.sleep(5)
+        common.write_json(root/'status.json',{'status':'complete' if all(x['status']=='complete' for x in results.values()) else 'failed',
+            'outcomes':results,'completed_conditions':sum(x['status']=='complete' for x in results.values()),'total_conditions':6,
+            'updated_unix':time.time(),'automatic_retry':False,'binary_cpu_audit':'pending'})
+    except BaseException as e:
+        for j,v in running.items():
+            stop_owned(v['child']);v['log'].close()
+            results[j]={'status':'interrupted','reason':'supervisor_failure','automatic_retry':False}
+        for job in pending:results[job['id']]={'status':'not_started','reason':'supervisor_failure'}
+        common.write_json(root/'failure.json',{'status':'failed','type':type(e).__name__,'message':str(e),'traceback':traceback.format_exc(),'outcomes':results,'updated_unix':time.time()},exclusive=True)
+        common.write_json(root/'status.json',{'status':'failed','reason':str(e),'outcomes':results,'updated_unix':time.time()})
+        raise
+
+
+def main():
+    p=argparse.ArgumentParser();p.add_argument('--contract',required=True);p.add_argument('--mode',choices=('qualify','probe','dispatch','fit'),required=True)
+    p.add_argument('--job');p.add_argument('--deadline',type=float);p.add_argument('--probe-dir');a=p.parse_args()
+    c=read(a.contract);root=Path(c['hosts']['a100']['root']);authorization(c,root)
+    require(Path.cwd().resolve()==ROOT==Path(c['hosts']['a100']['source_root']),'Wrong isolated source')
+    if a.mode=='qualify':qualification(c,root)
+    elif a.mode=='dispatch':dispatch(c,root)
+    elif a.mode=='probe':probe(c,root,next(j for j in c['jobs'] if j['id']==a.job),Path(a.probe_dir))
+    else:
+        job=next(j for j in c['jobs'] if j['id']==a.job)
+        try:run_fit(c,'a100',root,job,a.deadline)
+        except BaseException as e:
+            common.write_json(root/'run'/job['id']/'failure.json',{'status':'failed','job':job,'type':type(e).__name__,'message':str(e),'traceback':traceback.format_exc(),'automatic_retry':False,'updated_unix':time.time()})
+            raise
+
+if __name__=='__main__':main()
