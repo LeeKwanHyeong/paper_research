@@ -76,6 +76,10 @@ native x86 초기화는 같다고 가정하지 않는다. secret 검사는 알�
 
 ## 후속 작업 순서
 
+아래는 이 로컬 정리 완료 당시의 순서다. 이후 사용자가 승인한 master 통합·Push와
+codex branch 정리는 [후속 통합 완료 보고서](../titantpp_master_integration_20261003_v1/README.md)에서
+확인한다. 현재 남은 작업은 그 보고서의 폭 비교 계약과 별도 CNN＋GRU 설계다.
+
 1. **master 통합 범위 확정 — 다음 작업:** 현재 `paper_research/codex/hard-lmm-causal-qkv`
    보존 커밋을 기준으로 원격 최신 ref와 별도 branch 고유12커밋을 검토한다.
    `codex/b1-prior-prefix-read`9개, `codex/raw-rmse-baseline-completion`1개,

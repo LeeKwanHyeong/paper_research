@@ -1,0 +1,281 @@
+HEAD: 30bf808b48159c7a43ea253d9fa5f5b178dd51a1
+ARCHIVE: git archive --format=tar HEAD
+CWD: /private/tmp/titantpp-clean-master-xam8692y/checkout
+COMMAND: /usr/local/bin/python -B -m pytest -q -p no:cacheprovider simple_lab_test/search/tests/test_count_aware_checkpoint_selection.py simple_lab_test/search/tests/test_count_aware_titan_multilag_detail.py simple_lab_test/search/tests/test_count_aware_tpp_contract.py simple_lab_test/search/tests/test_observed_time_joint_training.py simple_lab_test/search/tests/test_pakdd_extension.py simple_lab_test/search/tests/test_titantpp_core_ablation.py simple_lab_test/search/tests/test_titantpp_history_width.py simple_lab_test/search/tests/test_titantpp_history_width_metrics.py simple_lab_test/search/tests/test_titantpp_mlp_candidates.py simple_lab_test/search/tests/test_reproducibility_archive.py simple_lab_test/search/tests/test_reproducibility_capture.py --junitxml=/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_master_integration_20261003_v1/verification/clean_master_tests.xml
+ENV: {"CUDA_VISIBLE_DEVICES": "", "MKL_NUM_THREADS": "4", "MPLCONFIGDIR": "/private/tmp/titantpp-clean-master-xam8692y/matplotlib", "OMP_NUM_THREADS": "4", "OPENBLAS_NUM_THREADS": "4", "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1", "PYTHONDONTWRITEBYTECODE": "1", "PYTHONPATH": "/private/tmp/titantpp-clean-master-xam8692y/checkout", "XDG_CACHE_HOME": "/private/tmp/titantpp-clean-master-xam8692y/cache"}
+
+........................................................................ [ 28%]
+........................................................................ [ 56%]
+...........F...FFFFFF................................................... [ 85%]
+......................................                                   [100%]
+=================================== FAILURES ===================================
+____________________________ test_scope_and_budget _____________________________
+
+    def test_scope_and_budget():
+>       c=draft();runner.validate_execution_contract(c)
+          ^^^^^^^
+
+simple_lab_test/search/tests/test_titantpp_core_ablation.py:19: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+simple_lab_test/search/tests/test_titantpp_core_ablation.py:15: in draft
+    return json.loads(Path('search_artifacts/titantpp_core_ablation_20260928_v1/draft_contract.json').read_text())
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('search_artifacts/titantpp_core_ablation_20260928_v1/draft_contract.json')
+mode = 'r', buffering = -1, encoding = 'locale', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'search_artifacts/titantpp_core_ablation_20260928_v1/draft_contract.json'
+
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py:1013: FileNotFoundError
+______________ test_initialization_capacity_and_no_static_memory _______________
+
+    def test_initialization_capacity_and_no_static_memory():
+>       c=draft()
+          ^^^^^^^
+
+simple_lab_test/search/tests/test_titantpp_core_ablation.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+simple_lab_test/search/tests/test_titantpp_core_ablation.py:15: in draft
+    return json.loads(Path('search_artifacts/titantpp_core_ablation_20260928_v1/draft_contract.json').read_text())
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('search_artifacts/titantpp_core_ablation_20260928_v1/draft_contract.json')
+mode = 'r', buffering = -1, encoding = 'locale', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'search_artifacts/titantpp_core_ablation_20260928_v1/draft_contract.json'
+
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py:1013: FileNotFoundError
+_____ test_actual_synthetic_training_and_both_replays[yellow_trip_hourly] ______
+
+cpu_training = None
+admitted_contract = {'acceptance': {'body_mae_ratio_max': 1.02, 'each_nonempty_middle_bin_mae_and_rmse_ratio_max': 1.02, 'last30_rmse_mean..., 4, 8, 16, 32, ...], 'control_lags': [1, 1, 1, 1, 1, 1, ...], 'gelu_approximate': 'none', 'hidden_dim': 64, ...}, ...}
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-1088/test_actual_synthetic_training0')
+dataset_id = 'yellow_trip_hourly'
+
+    @pytest.mark.parametrize('dataset_id',['yellow_trip_hourly','intermittent_frozen_5000','insta_market_basket'])
+    def test_actual_synthetic_training_and_both_replays(cpu_training,admitted_contract,tmp_path,dataset_id):
+>       c=draft();c['datasets']=deepcopy(admitted_contract['datasets'])
+          ^^^^^^^
+
+simple_lab_test/search/tests/test_titantpp_core_ablation.py:72: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+simple_lab_test/search/tests/test_titantpp_core_ablation.py:15: in draft
+    return json.loads(Path('search_artifacts/titantpp_core_ablation_20260928_v1/draft_contract.json').read_text())
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('search_artifacts/titantpp_core_ablation_20260928_v1/draft_contract.json')
+mode = 'r', buffering = -1, encoding = 'locale', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'search_artifacts/titantpp_core_ablation_20260928_v1/draft_contract.json'
+
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py:1013: FileNotFoundError
+__ test_actual_synthetic_training_and_both_replays[intermittent_frozen_5000] ___
+
+cpu_training = None
+admitted_contract = {'acceptance': {'body_mae_ratio_max': 1.02, 'each_nonempty_middle_bin_mae_and_rmse_ratio_max': 1.02, 'last30_rmse_mean..., 4, 8, 16, 32, ...], 'control_lags': [1, 1, 1, 1, 1, 1, ...], 'gelu_approximate': 'none', 'hidden_dim': 64, ...}, ...}
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-1088/test_actual_synthetic_training1')
+dataset_id = 'intermittent_frozen_5000'
+
+    @pytest.mark.parametrize('dataset_id',['yellow_trip_hourly','intermittent_frozen_5000','insta_market_basket'])
+    def test_actual_synthetic_training_and_both_replays(cpu_training,admitted_contract,tmp_path,dataset_id):
+>       c=draft();c['datasets']=deepcopy(admitted_contract['datasets'])
+          ^^^^^^^
+
+simple_lab_test/search/tests/test_titantpp_core_ablation.py:72: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+simple_lab_test/search/tests/test_titantpp_core_ablation.py:15: in draft
+    return json.loads(Path('search_artifacts/titantpp_core_ablation_20260928_v1/draft_contract.json').read_text())
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('search_artifacts/titantpp_core_ablation_20260928_v1/draft_contract.json')
+mode = 'r', buffering = -1, encoding = 'locale', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'search_artifacts/titantpp_core_ablation_20260928_v1/draft_contract.json'
+
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py:1013: FileNotFoundError
+_____ test_actual_synthetic_training_and_both_replays[insta_market_basket] _____
+
+cpu_training = None
+admitted_contract = {'acceptance': {'body_mae_ratio_max': 1.02, 'each_nonempty_middle_bin_mae_and_rmse_ratio_max': 1.02, 'last30_rmse_mean..., 4, 8, 16, 32, ...], 'control_lags': [1, 1, 1, 1, 1, 1, ...], 'gelu_approximate': 'none', 'hidden_dim': 64, ...}, ...}
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-1088/test_actual_synthetic_training2')
+dataset_id = 'insta_market_basket'
+
+    @pytest.mark.parametrize('dataset_id',['yellow_trip_hourly','intermittent_frozen_5000','insta_market_basket'])
+    def test_actual_synthetic_training_and_both_replays(cpu_training,admitted_contract,tmp_path,dataset_id):
+>       c=draft();c['datasets']=deepcopy(admitted_contract['datasets'])
+          ^^^^^^^
+
+simple_lab_test/search/tests/test_titantpp_core_ablation.py:72: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+simple_lab_test/search/tests/test_titantpp_core_ablation.py:15: in draft
+    return json.loads(Path('search_artifacts/titantpp_core_ablation_20260928_v1/draft_contract.json').read_text())
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('search_artifacts/titantpp_core_ablation_20260928_v1/draft_contract.json')
+mode = 'r', buffering = -1, encoding = 'locale', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'search_artifacts/titantpp_core_ablation_20260928_v1/draft_contract.json'
+
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py:1013: FileNotFoundError
+____________________ test_native_synthetic_algorithm_on_cpu ____________________
+
+cpu_training = None
+
+    def test_native_synthetic_algorithm_on_cpu(cpu_training):
+>       result=runner.qualify(draft(),device='cpu',batch_size=2,lengths=(8,20))
+                              ^^^^^^^
+
+simple_lab_test/search/tests/test_titantpp_core_ablation.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+simple_lab_test/search/tests/test_titantpp_core_ablation.py:15: in draft
+    return json.loads(Path('search_artifacts/titantpp_core_ablation_20260928_v1/draft_contract.json').read_text())
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('search_artifacts/titantpp_core_ablation_20260928_v1/draft_contract.json')
+mode = 'r', buffering = -1, encoding = 'locale', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'search_artifacts/titantpp_core_ablation_20260928_v1/draft_contract.json'
+
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py:1013: FileNotFoundError
+_______________ test_approval_expiry_scope_and_mutation_rejected _______________
+
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-1088/test_approval_expiry_scope_and0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x128269ca0>
+
+    def test_approval_expiry_scope_and_mutation_rejected(tmp_path,monkeypatch):
+        import time
+>       c=draft();approval={'approved':True,'hosts':['5080','5090'],'user_instruction':'5번까지 진행하자','contract_sha256':runner.common.sha_json(c)}
+          ^^^^^^^
+
+simple_lab_test/search/tests/test_titantpp_core_ablation.py:112: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+simple_lab_test/search/tests/test_titantpp_core_ablation.py:15: in draft
+    return json.loads(Path('search_artifacts/titantpp_core_ablation_20260928_v1/draft_contract.json').read_text())
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('search_artifacts/titantpp_core_ablation_20260928_v1/draft_contract.json')
+mode = 'r', buffering = -1, encoding = 'locale', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'search_artifacts/titantpp_core_ablation_20260928_v1/draft_contract.json'
+
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py:1013: FileNotFoundError
+=========================== short test summary info ============================
+FAILED simple_lab_test/search/tests/test_titantpp_core_ablation.py::test_scope_and_budget
+FAILED simple_lab_test/search/tests/test_titantpp_core_ablation.py::test_initialization_capacity_and_no_static_memory
+FAILED simple_lab_test/search/tests/test_titantpp_core_ablation.py::test_actual_synthetic_training_and_both_replays[yellow_trip_hourly]
+FAILED simple_lab_test/search/tests/test_titantpp_core_ablation.py::test_actual_synthetic_training_and_both_replays[intermittent_frozen_5000]
+FAILED simple_lab_test/search/tests/test_titantpp_core_ablation.py::test_actual_synthetic_training_and_both_replays[insta_market_basket]
+FAILED simple_lab_test/search/tests/test_titantpp_core_ablation.py::test_native_synthetic_algorithm_on_cpu
+FAILED simple_lab_test/search/tests/test_titantpp_core_ablation.py::test_approval_expiry_scope_and_mutation_rejected
+7 failed, 247 passed in 13.52s
+
+
+CORRECTED FOCUSED SELECTION: exact prior clean_checkout_after_fix command plus capture tests
+head=30bf808b48159c7a43ea253d9fa5f5b178dd51a1
+archived_head=30bf808b48159c7a43ea253d9fa5f5b178dd51a1
+cwd=/private/tmp/titantpp-clean-master-exact-ua98798v/checkout
+cmd=/usr/local/bin/python3 -B -m pytest -q -p no:cacheprovider simple_lab_test/search/tests/test_count_aware_tpp_contract.py simple_lab_test/search/tests/test_count_aware_checkpoint_selection.py simple_lab_test/search/tests/test_observed_time_joint_training.py simple_lab_test/search/tests/test_count_aware_titan_multilag_detail.py simple_lab_test/search/tests/test_titantpp_core_ablation.py::test_formula_padding_reset_gradients_and_causality simple_lab_test/search/tests/test_titantpp_core_ablation.py::test_registered_role_rejects_wrong_head_or_encoder simple_lab_test/search/tests/test_pakdd_extension.py simple_lab_test/search/tests/test_titantpp_mlp_candidates.py simple_lab_test/search/tests/test_titantpp_history_width.py simple_lab_test/search/tests/test_titantpp_history_width_metrics.py simple_lab_test/search/tests/test_reproducibility_archive.py simple_lab_test/search/tests/test_reproducibility_capture.py --junitxml=/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_master_integration_20261003_v1/verification/clean_master_tests.xml --basetemp=/private/tmp/titantpp-clean-master-exact-ua98798v/pytest-temp
+env={"CUDA_VISIBLE_DEVICES": "", "MKL_NUM_THREADS": "4", "MPLCONFIGDIR": "/private/tmp/titantpp-clean-master-exact-ua98798v/matplotlib", "OMP_NUM_THREADS": "4", "OPENBLAS_NUM_THREADS": "4", "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1", "PYTHONDONTWRITEBYTECODE": "1", "PYTHONPATH": "/private/tmp/titantpp-clean-master-exact-ua98798v/checkout", "XDG_CACHE_HOME": "/private/tmp/titantpp-clean-master-exact-ua98798v/cache"}
+........................................................................ [ 29%]
+........................................................................ [ 58%]
+........................................................................ [ 87%]
+...............................                                          [100%]
+247 passed in 13.34s

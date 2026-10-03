@@ -64,23 +64,27 @@ python3 paper/reproducibility/archive.py restore paper/reproducibility/snapshots
 Python 3.12/PyTorch 2.14 CPU 테스트 통과를 서버 x86/PyTorch 2.11의 초기화 SHA나
 GPU 수치 재현 성공으로 해석하지 않는다. 과거 계약의 runtime qualification을 따른다.
 
-## master 통합 순서
+## master 통합과 브랜치 보존 — 완료
 
 1. **현재 연구 변경 고정 — 완료:** `codex/hard-lmm-causal-qkv`에서 의존 소스,
    계약·테스트, 동결본, 연구 문서를 커밋한다. 실행 중인 remote bundle은 수정하지 않는다.
-2. **통합 범위 검토 — 다음 작업:** 로컬 master `567196e5` 대비 기존 94커밋과 이번
-   정리를 검토한다. 현재 DAG상 fast-forward 가능하지만 원격 최신 여부는 fetch 전 미확인이다.
-3. **별도 연구 이력 결정 — 다음 작업:** 아래 3개 branch의 고유 12커밋을 필요성·
-   충돌 기준으로 검토한다. 현재 branch와 중복 또는 불일치하는 연구 코드를 일괄 병합하지 않는다.
-4. **master 통합·원격 반영 — 다음 작업:** 검증된 범위로 별도 통합 checkout에서
-   확인 후 `paper_research/master`에 정리한다. 이번 로컬 정리에서 master·origin은 바꾸지 않는다.
+2. **통합 범위 검토 — 완료:** fetch로 원격 master `567196e5`를 확인하고 활성 정리본
+   `533f45bc`의98커밋을 fast-forward 범위로 확정했다.
+3. **별도 연구 이력 보존 — 완료:** 아래3개 branch의 고유12커밋은 과거 시간 손실·
+   선택 기준을 사용하는 대안이다. 현재 과학 코드에 채택하지 않고 원래 전체 이력을
+   `archive/20261003/*` tag로 보존했다.
+4. **master 통합·원격 반영 — 완료:** Git 파일만으로 만든 clean checkout의254개
+   CPU 테스트를 통과한 `b05c26e2`를 `paper_research/master`와 origin에 반영했다.
+   미추적 core ablation 계약 의존성은 원본 바이트의 tracked fixture로 해결했다.
+   원격13개 tag의 SHA 확인 후 로컬 codex12개·원격2개를 예상 tip 조건으로 정리했다.
 
 | 현재 HEAD에 없는 별도 이력 | 고유 커밋 | 처리 |
 |---|---:|---|
-| `codex/b1-prior-prefix-read` | 9 | branch 유지, 비교 검토 대기 |
-| `codex/raw-rmse-baseline-completion` | 1 (`16ebcc8b`) | branch 유지, 비교 검토 대기 |
-| `codex/hard-lmm-dual-timescale` | 2 (`c6562495`, `ca8823e6`) | branch 유지, 비교 검토 대기 |
+| `codex/b1-prior-prefix-read` | 9 | `archive/20261003/b1-prior-prefix-read` |
+| `codex/raw-rmse-baseline-completion` | 1 (`16ebcc8b`) | `archive/20261003/raw-rmse-baseline-completion` |
+| `codex/hard-lmm-dual-timescale` | 2 (`c6562495`, `ca8823e6`) | `archive/20261003/hard-lmm-dual-timescale` |
 
-기존 분기·원본 산출물은 삭제하지 않는다. 커밋은 보존 단위이며 모든 후보의 과학적
-타당성이나 논문 채택을 의미하지 않는다. 전체 GPU 재현·모든 과거 스크립트 실행은
-이번 검증 범위가 아니다.
+기존 commit·tag·원본 산출물은 보존한다. branch 이름 정리는 연구 이력 삭제가 아니다.
+복원 방법과 원격 SHA·삭제 검증은 [master 통합 보고서](../../reports/titantpp_master_integration_20261003_v1/README.md)를
+따른다. 커밋은 보존 단위이며 모든 후보의 과학적 타당성이나 논문 채택을 의미하지 않는다.
+전체 GPU 재현·모든 과거 스크립트 실행은 이번 검증 범위가 아니다.
