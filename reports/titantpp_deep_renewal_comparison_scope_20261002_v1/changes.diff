@@ -1,0 +1,109 @@
+--- main.before.tex
++++ paper/titantpp_pakdd_2027_draft/main.tex
+@@ -1,8 +1,9 @@
+ % Named working draft, 2 October 2026.
+ % Evidence: completed four-dataset validation study and nonlearned baselines.
+ % The ongoing 36-condition extension is not part of the main comparison;
+-% Appendix A contains the 13-condition subset at the 2026-10-02 10:51:58 KST
+-% cutoff, verified in reports/titantpp_extension_completed13_audit_20261002_v1.
++% Appendix A reports 10 structural conditions from the 13-condition audited
++% subset at the 2026-10-02 10:51:58 KST cutoff; the original audit is preserved
++% in reports/titantpp_extension_completed13_audit_20261002_v1.
+ % PAKDD 2027 page limit has not yet been announced.
+ % Standalone source: figures and bibliography are embedded below.
+ \documentclass[runningheads]{llncs}
+@@ -400,10 +401,9 @@
+ the number of available branches instead of eight. We retain a single
+ representative \method\ architecture throughout the main comparison.
+ 
+-An ongoing extension compares a parameter-matched current-state correction,
+-an all-available-branch correction, and an event-native Deep Renewal adapter.
+-The structural controls retain the common heads and regression objective;
+-Deep Renewal optimizes its native negative-binomial time and quantity losses.
++Two parameter-matched structural controls compare a current-state correction
++and an all-available-branch correction with the original history correction.
++Both retain the common heads and regression objective.
+ Appendix~\ref{app:extension} reports the verified completed subset, separating
+ Taxi's three-seed groups from single-seed results on other datasets.
+ 
+@@ -745,7 +745,8 @@
+ 
+ The common-head panel compares numerical-input adaptations of six TPP
+ encoders. Its objective and epoch cap do not equalize parameter counts,
+-tuning opportunity, or runtime. Rankings therefore concern these adapters.
++tuning opportunity, or runtime. Rankings therefore concern these adapters
++rather than native distributional demand predictors.
+ The quantity head supplies a point estimate rather than a normalized quantity
+ density, and Eq.~\eqref{eq:loss} is a multi-task objective rather than a full
+ joint marked-event likelihood.
+@@ -777,15 +778,15 @@
+ how its benefits extend beyond the development partitions.
+ 
+ \appendix
+-\section{Completed Subset of the Ongoing Extension}\label{app:extension}
+-This appendix reports 13 completed extension conditions at the 2 October
+-2026, 10:51:58 KST observation cutoff. Nine conditions form complete
++\section{Completed Structural Comparisons}\label{app:extension}
++This appendix reports 10 completed structural conditions at the 2 October
++2026, 10:51:58 KST observation cutoff. Six conditions form complete
+ three-seed Taxi groups; two conditions each cover Intermittent and Instacart
+ at seed 42. All reported conditions completed training and selected/last
+ validation re-evaluation. Archived checkpoints and frozen source were
+ verified against the selected epochs and recorded metrics. The results
+-extend the development validation study with structural controls and a
+-native quantity model.
++extend the development validation study with parameter-matched structural
++controls.
+ 
+ The current-only control removes the explicit predecessor input from the
+ correction while retaining history in the causal encoder. Its eight
+@@ -796,16 +797,8 @@
+ dividing by eight. It differs from active-count normalization, which changes
+ the divisor rather than availability.
+ 
+-The Deep Renewal comparison is an event-native adapter with raw gap--quantity
+-inputs, two 64-unit LSTM layers, and shifted negative-binomial duration and
+-quantity distributions. It retains its native two-NLL objective rather than
+-the common quantity-regression loss. Input windows, targets, optimizer,
+-maximum epochs, and RMSE checkpoint selection follow the shared protocol.
+-It is a next-event adaptation, not a replication of calendar-horizon
+-forecasting experiments.
+-
+ \begin{table}[h]
+-\caption{Completed Taxi groups from the ongoing extension, three-seed
++\caption{Completed Taxi structural controls, three-seed
+ validation mean $\pm$ sample standard deviation. All extension conditions
+ in this table have verified archived checkpoints. The original MLP results
+ are reused; all metrics refer to the same RMSE-selected checkpoint per run.}
+@@ -817,7 +810,6 @@
+ Original MLP & $25.6237\pm0.8320$ & $79.7111\pm2.8260$ & $1.0387\pm0.2843$\\
+ Current-only & $28.8130\pm0.4688$ & $90.0481\pm1.5131$ & $0.8818\pm0.1827$\\
+ All-available & $25.3290\pm0.2945$ & $78.1212\pm0.7114$ & $1.1907\pm0.3542$\\
+-Deep Renewal & $91.4747\pm1.0467$ & $404.7864\pm2.9784$ & $0.7902\pm0.0159$\\
+ \bottomrule
+ \end{tabular}
+ \end{table}
+@@ -828,10 +820,7 @@
+ but increases mean time NLL; its MAE and RMSE gains occur in one and two
+ of the three paired seeds, respectively. Together, these comparisons support
+ explicit predecessor correction on Taxi and identify a quantity--timing
+-trade-off between branch-availability rules. Deep Renewal exhibits larger
+-quantity errors and lower time NLL in this setting. All three selected
+-checkpoints are at epoch 300, so the comparison reflects the budget endpoint
+-rather than a demonstrated convergence limit.
++trade-off between branch-availability rules.
+ 
+ Table~\ref{tab:extension-seed42} reports the four completed structural
+ conditions outside Taxi alongside the corresponding original MLP results.
+@@ -864,9 +853,8 @@
+ \end{tabular}
+ \end{table}
+ 
+-At the stated cutoff, the seed-42 Deep Renewal fits on Intermittent and
+-Instacart were in progress. The seed-52/62 groups on those datasets and all
+-RAF extension groups were queued. Their three-seed comparisons remain
++At the stated cutoff, the seed-52/62 structural controls on Intermittent and
++Instacart and all RAF structural groups were queued. Their three-seed comparisons remain
+ pending; Table~\ref{tab:main} retains the completed common-head panel.
+ 
+ 

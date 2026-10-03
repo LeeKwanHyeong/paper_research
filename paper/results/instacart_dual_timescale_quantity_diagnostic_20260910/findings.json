@@ -1,0 +1,279 @@
+{
+  "status": "completed",
+  "reviewed_at": "2026-09-09T23:27:38.191383+00:00",
+  "contract_id": "instacart_dual_timescale_quantity_v1",
+  "candidate_revision": "ca8823e688a510e64e7fb81c9dc9d158d4bdfc7c",
+  "report_decision": "현재 dual-timescale 후보의 Instacart 약점은 비교 상대에 따라 구분됩니다. RMTPP 대비 validation RMSE는 0.53% 높고 MAE는 사실상 동률입니다. 제곱오차 차이의 83.62%가 평균 과소예측 차이 항으로 분해되며, 수량 8–35와 관측 이력 8–15 구간이 주된 불리 조건입니다. 반면 B 대비로는 전체 RMSE·MAE가 소폭 좋아졌지만 이력 2–3 구간에서 예측이 내려가며 오차가 커집니다. 이력 8–15에서는 B보다 개선되므로 짧은 이력 문제를 모든 benchmark 차이의 설명으로 적용하면 안 됩니다.\n\nTrain 1,991,192건을 series가 겹치지 않는 두 집단으로 나눈 결과, validation에서 먼저 고정한 5개 가설의 46개 방향 조건이 모두 재현됐습니다. 다만 train 전체에서는 후보의 RMSE가 THP보다 좋고 validation에서는 나빠집니다. RMTPP 대비 centered MSE도 train에서는 개선되고 validation에서는 악화됩니다. 따라서 조건별 오차 패턴의 재현과 전체 순위·일반화의 재현을 구분해야 합니다. 두 train 집단은 원래 모델 학습에 사용되었으며 out-of-fold 검증이 아닙니다.\n\n현재 근거는 어떤 조건에서 예측 수준과 오차가 달라지는지를 설명합니다. 과소예측의 발생 위치를 local/global memory, 공통 encoder 또는 quantity head 중 하나로 특정하는 인과 증거는 아직 없습니다. 일괄 상향 보정의 효과도 검증하지 않았습니다. 현재 승인된 Intermittent 평가와 이 진단을 합쳐 기존 후보의 최종 비교를 완료한 뒤 수정 여부를 결정하는 순서를 유지합니다. 이번 작업에서는 모델 변경·재학습·보정·checkpoint 재선택·held-out 평가를 실행하지 않았습니다.",
+  "populations": {
+    "validation": {
+      "targets": 503733,
+      "series": 206195
+    },
+    "train": {
+      "targets": 1991192,
+      "series": 205934
+    }
+  },
+  "validation_comparisons": {
+    "candidate_minus_b": {
+      "candidate": {
+        "bias": -0.8635037949773452,
+        "bias_squared": 0.745638803940277,
+        "centered_mse": 33.6884710374793,
+        "count": 503733,
+        "mae": 3.9854971233060033,
+        "mean_prediction": 9.68278362315885,
+        "mse": 34.43410984141959,
+        "mse_decomposition_residual": 1.1102230246251565e-14,
+        "rmse": 5.868058438821105
+      },
+      "count": 503733,
+      "delta_ae_sum": -4172.900764942169,
+      "delta_bias": -0.013873091703082818,
+      "delta_bias_squared": 0.023766471993959315,
+      "delta_centered_mse": -0.07258828901864689,
+      "delta_mae": -0.008283953532808308,
+      "delta_mse": -0.048821817024666814,
+      "delta_mse_decomposition_residual": 2.0761170560490427e-14,
+      "delta_rmse": -0.004158489941341159,
+      "delta_sse_sum": -24593.160355293487,
+      "mean_prediction_shift": -0.013873091703082851,
+      "reference": {
+        "bias": -0.8496307032742624,
+        "bias_squared": 0.7218723319463177,
+        "centered_mse": 33.76105932649795,
+        "count": 503733,
+        "mae": 3.9937810768388116,
+        "mean_prediction": 9.696656714861932,
+        "mse": 34.48293165844426,
+        "mse_decomposition_residual": -9.658940314238862e-15,
+        "rmse": 5.872216928762446
+      }
+    },
+    "candidate_minus_rmtpp": {
+      "candidate": {
+        "bias": -0.8635037949773452,
+        "bias_squared": 0.745638803940277,
+        "centered_mse": 33.6884710374793,
+        "count": 503733,
+        "mae": 3.9854971233060033,
+        "mean_prediction": 9.68278362315885,
+        "mse": 34.43410984141959,
+        "mse_decomposition_residual": 1.1102230246251565e-14,
+        "rmse": 5.868058438821105
+      },
+      "count": 503733,
+      "delta_ae_sum": -176.78630304336548,
+      "delta_bias": -0.1991236931756577,
+      "delta_bias_squared": 0.3042378842702564,
+      "delta_centered_mse": 0.05959667246567335,
+      "delta_mae": -0.0003509523955016469,
+      "delta_mse": 0.363834556735938,
+      "delta_mse_decomposition_residual": 8.271161533457416e-15,
+      "delta_rmse": 0.031083598659152223,
+      "delta_sse_sum": 183275.47276826034,
+      "mean_prediction_shift": -0.1991236931756577,
+      "reference": {
+        "bias": -0.6643801018016875,
+        "bias_squared": 0.44140091967002065,
+        "centered_mse": 33.62887436501363,
+        "count": 503733,
+        "mae": 3.985848075701505,
+        "mean_prediction": 9.881907316334507,
+        "mse": 34.07027528468365,
+        "mse_decomposition_residual": 2.831068712794149e-15,
+        "rmse": 5.836974840161953
+      }
+    },
+    "candidate_minus_thp": {
+      "candidate": {
+        "bias": -0.8635037949773452,
+        "bias_squared": 0.745638803940277,
+        "centered_mse": 33.6884710374793,
+        "count": 503733,
+        "mae": 3.9854971233060033,
+        "mean_prediction": 9.68278362315885,
+        "mse": 34.43410984141959,
+        "mse_decomposition_residual": 1.1102230246251565e-14,
+        "rmse": 5.868058438821105
+      },
+      "count": 503733,
+      "delta_ae_sum": -2773.3967790603638,
+      "delta_bias": -0.21386451761971237,
+      "delta_bias_squared": 0.32360761325452964,
+      "delta_centered_mse": -0.1393895440121682,
+      "delta_mae": -0.005505688090834404,
+      "delta_mse": 0.1842180692423696,
+      "delta_mse_decomposition_residual": 8.1601392309949e-15,
+      "delta_rmse": 0.01571772999551424,
+      "delta_sse_sum": 92796.72067366159,
+      "mean_prediction_shift": -0.21386451761971234,
+      "reference": {
+        "bias": -0.6496392773576328,
+        "bias_squared": 0.4220311906857474,
+        "centered_mse": 33.82786058149147,
+        "count": 503733,
+        "mae": 3.9910028113968377,
+        "mean_prediction": 9.896648140778563,
+        "mse": 34.24989177217722,
+        "mse_decomposition_residual": 2.942091015256665e-15,
+        "rmse": 5.852340708825591
+      }
+    }
+  },
+  "train_comparisons": {
+    "candidate_minus_b": {
+      "candidate": {
+        "bias": -0.4892338683030899,
+        "bias_squared": 0.2393497778948051,
+        "centered_mse": 31.524602944963807,
+        "count": 1991192,
+        "mae": 3.8851739358339983,
+        "mean_prediction": 9.61088505543706,
+        "mse": 31.763952722858605,
+        "mse_decomposition_residual": -6.938893903907228e-15,
+        "rmse": 5.635951802744467
+      },
+      "count": 1991192,
+      "delta_ae_sum": -12822.553372621536,
+      "delta_bias": -0.01808433639622875,
+      "delta_bias_squared": 0.017367896478750727,
+      "delta_centered_mse": -0.03555477734623835,
+      "delta_mae": -0.0064396368469847864,
+      "delta_mse": -0.018186880867496313,
+      "delta_mse_decomposition_residual": -8.68749516769185e-15,
+      "delta_rmse": -0.0016132393394023836,
+      "delta_sse_sum": -36213.571688297365,
+      "mean_prediction_shift": -0.01808433639622873,
+      "reference": {
+        "bias": -0.47114953190686115,
+        "bias_squared": 0.22198188141605438,
+        "centered_mse": 31.560157722310045,
+        "count": 1991192,
+        "mae": 3.891613572680983,
+        "mean_prediction": 9.62896939183329,
+        "mse": 31.7821396037261,
+        "mse_decomposition_residual": 1.7486012637846216e-15,
+        "rmse": 5.637565042083869
+      }
+    },
+    "candidate_minus_rmtpp": {
+      "candidate": {
+        "bias": -0.4892338683030899,
+        "bias_squared": 0.2393497778948051,
+        "centered_mse": 31.524602944963807,
+        "count": 1991192,
+        "mae": 3.8851739358339983,
+        "mean_prediction": 9.61088505543706,
+        "mse": 31.763952722858605,
+        "mse_decomposition_residual": -6.938893903907228e-15,
+        "rmse": 5.635951802744467
+      },
+      "count": 1991192,
+      "delta_ae_sum": -32819.12822854519,
+      "delta_bias": -0.1325413849385147,
+      "delta_bias_squared": 0.11212025020601735,
+      "delta_centered_mse": -0.08322522318113812,
+      "delta_mae": -0.01648215150952037,
+      "delta_mse": 0.028895027024876896,
+      "delta_mse_decomposition_residual": -2.3314683517128287e-15,
+      "delta_rmse": 0.002564039077409319,
+      "delta_sse_sum": 57535.54665172196,
+      "mean_prediction_shift": -0.1325413849385147,
+      "reference": {
+        "bias": -0.3566924833645752,
+        "bias_squared": 0.12722952768878776,
+        "centered_mse": 31.607828168144945,
+        "count": 1991192,
+        "mae": 3.9016560873435187,
+        "mean_prediction": 9.743426440375577,
+        "mse": 31.735057695833728,
+        "mse_decomposition_residual": -4.6074255521944e-15,
+        "rmse": 5.6333877636670575
+      }
+    },
+    "candidate_minus_thp": {
+      "candidate": {
+        "bias": -0.4892338683030899,
+        "bias_squared": 0.2393497778948051,
+        "centered_mse": 31.524602944963807,
+        "count": 1991192,
+        "mae": 3.8851739358339983,
+        "mean_prediction": 9.61088505543706,
+        "mse": 31.763952722858605,
+        "mse_decomposition_residual": -6.938893903907228e-15,
+        "rmse": 5.635951802744467
+      },
+      "count": 1991192,
+      "delta_ae_sum": -42786.95959973335,
+      "delta_bias": -0.1319611683683123,
+      "delta_bias_squared": 0.11170599577611945,
+      "delta_centered_mse": -0.2351962545147046,
+      "delta_mae": -0.02148811345150703,
+      "delta_mse": -0.12349025873858821,
+      "delta_mse_decomposition_residual": -3.0531133177191805e-15,
+      "delta_rmse": -0.010944954023553777,
+      "delta_sse_sum": -245892.81527820777,
+      "mean_prediction_shift": -0.13196116836831226,
+      "reference": {
+        "bias": -0.3572726999347776,
+        "bias_squared": 0.12764378211868566,
+        "centered_mse": 31.75979919947851,
+        "count": 1991192,
+        "mae": 3.9066620492855053,
+        "mean_prediction": 9.742846223805374,
+        "mse": 31.887442981597193,
+        "mse_decomposition_residual": -3.885780586188048e-15,
+        "rmse": 5.646896756768021
+      }
+    }
+  },
+  "bias_squared_share_of_validation_rmtpp_mse_gap": 0.836198427658054,
+  "hypothesis_replication": {
+    "H1_benchmark_quantity_level": {
+      "passed_checks": 24,
+      "total_checks": 24,
+      "status": "replicated"
+    },
+    "H2_rmtpp_history": {
+      "passed_checks": 6,
+      "total_checks": 6,
+      "status": "replicated"
+    },
+    "H3_B_history_tradeoff": {
+      "passed_checks": 8,
+      "total_checks": 8,
+      "status": "replicated"
+    },
+    "H4_B_mid_quantity": {
+      "passed_checks": 6,
+      "total_checks": 6,
+      "status": "replicated"
+    },
+    "H5_series_concentration": {
+      "passed_checks": 2,
+      "total_checks": 2,
+      "status": "replicated"
+    }
+  },
+  "hypothesis_checks_passed": 46,
+  "hypothesis_checks_total": 46,
+  "validation_mae_rmtpp_ci_crosses_zero": true,
+  "prior_candidate_interpretation": "Current B-relative overall prediction shift is -0.013873, with opposite history-conditioned signs and (8,20] mean shift +0.002286. Earlier BOUNDED-QK global downward-shift explanation is not transferred. B-relative short-history tradeoff independently reproduces.",
+  "numeric_replay": {
+    "original_absolute_gate_passed": false,
+    "separate_compatibility_audit_passed": true,
+    "max_raw_rmse_contrast_distortion_fraction": 0.0004726773458947947
+  },
+  "next_work": {
+    "target": "Existing ca8823e Intermittent 5090 evaluation + local final comparison",
+    "action": "Combine current candidate results before deciding whether another change is justified. No new run authorized or launched by this diagnostic."
+  },
+  "evidence_files": {
+    "contract.json": "0f7a37b537778ab71d4910ff4a47e624360f9be8767f53ebaf8b5070ab2a1152",
+    "validation/summary.json": "c4049c02362ce4613f95f2f132f89f113c8f43c6f5b4a287cfa9741451de69db",
+    "train/summary.json": "34f057e95fe3d101b0b32c8ed5dc242254121e9ef5d55c0888bae61adeb5b578",
+    "train_hypothesis_checks.json": "c2c693ebac64f1453a1cef498359e5a69af103837b167bea264fa05717083527",
+    "numeric_compatibility_audit.json": "20304706f2e4bd036e337e3918ded3afae70555caea00b99cb03b08a71196010"
+  }
+}

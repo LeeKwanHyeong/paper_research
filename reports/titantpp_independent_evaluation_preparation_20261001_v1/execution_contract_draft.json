@@ -1,0 +1,123 @@
+{
+  "schema": "titantpp_evaluation_execution_contract_draft_v1",
+  "created_utc": "2026-10-01T12:52:37.013377+00:00",
+  "status": "non_executable_draft",
+  "execution_authorized": false,
+  "purpose": "Evaluate the original 84 selected models after population eligibility is decided.",
+  "evaluation_registry": "evaluation_registry.json",
+  "registry_sha256": "43a80f25aa08bcb62a02c9ed10aa5fc573b9e45b84ffaafc4116fb35762980a9",
+  "protocol": "protocol_effective.json",
+  "protocol_sha256": "ea651442ad7a9d81245cf32d33dffa1b69cbe544f40ad1dc423950fd5a4264d0",
+  "main_conditions": 84,
+  "representative": "titantpp_history_mlp",
+  "models": [
+    "titantpp_history_mlp",
+    "rmtpp",
+    "thp",
+    "nhp",
+    "sahp",
+    "s2p2_matched_head",
+    "attnhp_matched_head"
+  ],
+  "datasets": [
+    "yellow_trip_hourly",
+    "intermittent_frozen_5000",
+    "insta_market_basket",
+    "raf_spare_parts"
+  ],
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "selection": "strict_first_min_validation_raw_quantity_rmse",
+  "endpoint": "selected_only_no_reselection",
+  "source_isolation": "One child process per original frozen source bundle, checked against registry file SHA.",
+  "candidate_host": {
+    "host": "5080",
+    "gpu_uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+    "python": "/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python3.12",
+    "inventory": "runtime_5080_readonly.json",
+    "inventory_sha256": "df80e9edaddc89038079a583727208f96702ac22c70a6e19ba2d9b057cfea8ab",
+    "native_qualification": "pending",
+    "runtime_redeployment": false
+  },
+  "analysis_runtime": {
+    "python": "3.12.10",
+    "numpy": "2.3.1",
+    "device": "cpu",
+    "status": "validated_preparation_runtime_to_bind_in_execution_contract"
+  },
+  "preparation_entrypoint": "evaluate_validation.py",
+  "preparation_entrypoint_sha256": "f6f1ab2ab9654a5b42be8cc5dae740cff400866609de5475ac833001d1186c27",
+  "preparation_scope": "CPU_validation_only_first_up_to_8_targets_from_2_sorted_entities_per_dataset",
+  "statistics_entrypoint": "paired_statistics.py",
+  "statistics_sha256": "60fe5aa975bb87afcd1d6dba5f8f6a2db2f7088fedc6ce295638065fb6ca3113",
+  "statistics_scope_lock": [
+    "synthetic",
+    "validation_smoke",
+    "validation"
+  ],
+  "cpu_smoke_passed_conditions": 84,
+  "prediction_rows": 462,
+  "unit_tests_passed": 14,
+  "population": {
+    "status": "pending",
+    "split_route": null,
+    "target_manifest_sha256": null,
+    "researcher_attestation": {
+      "status": "pending",
+      "note": "A request to continue preparation is not an attestation of no prior test viewing or model-selection use."
+    },
+    "independence": {
+      "yellow_trip_hourly": "not_established",
+      "intermittent_frozen_5000": "not_established",
+      "insta_market_basket": "not_established",
+      "raf_spare_parts": "not_established"
+    },
+    "existing_dataset_identities": "reports/titantpp_independent_evaluation_protocol_20261001_v1/dataset_manifest.json"
+  },
+  "execution_entrypoint": null,
+  "server_output_root": null,
+  "resource_caps": {
+    "wall_seconds": null,
+    "cpu_seconds": null,
+    "gpu_memory_bytes": null,
+    "deadline_utc": null,
+    "status": "must_be_measured_and_frozen_for_selected_population"
+  },
+  "prediction_protocol": {
+    "mode": "chronological_one_step_next_observed_event",
+    "same_target_ids_across_models_and_seeds": true,
+    "earlier_test_event_as_history": "only_after_that_event_is_predicted_and_observed",
+    "parameter_updates": false,
+    "target_or_future_in_input": false,
+    "refit_train_validation": false,
+    "test_fitted_preprocessing": false,
+    "missing_or_nonfinite_output": "retain_failure_and_stop_affected_comparison_no_favorable_intersection"
+  },
+  "no_training_or_parameter_updates": true,
+  "automatic_retry": false,
+  "failure_policy": "Preserve original outputs and errors; no population intersections, checkpoint changes, or favorable exclusions.",
+  "required_outputs": [
+    "execution_receipt",
+    "target_population_manifest",
+    "per_target_validation_or_approved_split_predictions",
+    "per_seed_metrics",
+    "paired_resampling_weights_digest",
+    "comparison_intervals",
+    "failure_and_missing_condition_records",
+    "runtime_and_resource_measurements",
+    "file_SHA_manifest"
+  ],
+  "blocking_fields": [
+    "eligible_population_and_label",
+    "target_manifest",
+    "researcher_access_record",
+    "full_population_execution_entrypoint",
+    "native_runtime_validation",
+    "resource_caps",
+    "deadline_and_output_root",
+    "explicit_performance_execution_authorization"
+  ]
+}

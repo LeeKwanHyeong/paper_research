@@ -1,0 +1,52 @@
+{
+  "schema": "instacart_dual_timescale_quantity_analysis_test_receipt_v1",
+  "created_at_utc": "2026-09-09T23:06:12Z",
+  "status": "passed",
+  "test_command": "python -m pytest -q paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/test_analysis.py",
+  "test_result": {
+    "passed": 6,
+    "failed": 0,
+    "reported_elapsed_seconds": 0.1
+  },
+  "files": {
+    "analyze_predictions.py": {
+      "sha256": "d858046b9a90b23aa6f45fcacec3b71af64af3045646abae0f9b08c7f23638c0"
+    },
+    "test_analysis.py": {
+      "sha256": "43ed9fdf06fd719898c436a715d9a282016a4a0cb4421bd93eb21969b808c845"
+    }
+  },
+  "coverage": [
+    "known MSE equals bias squared plus centered MSE and exact candidate-minus-reference decomposition",
+    "series-level positive-error concentration, signed negative sum, net sum, and fraction of series where the candidate is better",
+    "exact SHA-256 whole-series fold formula and invariance to input row order",
+    "duplicate canonical target pairs and non-finite predictions fail closed",
+    "quantity, history, history-by-quantity, recent-sign, fold, and four exclusive under/over partitions replay overall delta MSE",
+    "compact summary/strata/folds outputs and optional high-cardinality search-artifact boundary"
+  ],
+  "synthetic_contract_coverage": {
+    "full_history_by_quantity_grid": "30 synthetic rows cover all 6 history bands by 5 quantity bands",
+    "polars_schema_regression": "132 compact strata rows exercise nullable labels after the default 100-row inference prefix",
+    "bootstrap_replicates_in_tests": 20,
+    "study_contract_load_check": {
+      "contract_id": "instacart_dual_timescale_quantity_v1",
+      "split": "validation",
+      "expected_population_count": 503733,
+      "result": "passed"
+    }
+  },
+  "scale_rehearsal": {
+    "purpose": "runtime and memory-shape rehearsal only",
+    "fixture": "pre-existing paired validation artifact with prediction columns aliased to the four required roles",
+    "fixture_is_current_candidate_evidence": false,
+    "outputs_published": false,
+    "metrics_or_claims_retained": false,
+    "row_count": 503733,
+    "unique_series_count": 206195,
+    "bootstrap_replicates": 1000,
+    "analysis_elapsed_seconds": 9.796325957984664,
+    "compact_strata_rows": 132,
+    "compact_fold_rows": 6,
+    "per_series_detail_rows_not_written": 618585
+  }
+}

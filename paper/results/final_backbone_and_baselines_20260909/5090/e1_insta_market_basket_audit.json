@@ -1,0 +1,61 @@
+{
+  "status": "passed",
+  "summary": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/dual_timescale_ca8823e_5090/jobs/e1_insta_market_basket/runs/titantpp_dual_timescale_memory/count_only_log_regression/seed_42/summary.json",
+  "summary_sha256": "9b19520d993b8ccba1af58521a93542a4283e70758b61f2a2ce35774456092f1",
+  "checkpoint_sha256": "9bae7deae6e2f3f84ef18e15654c68900cce74b624392f136edd8e1afd2bc934",
+  "best_epoch": 1,
+  "completed_epochs": 1,
+  "metrics": {
+    "raw_rmse": 6.151310743230933,
+    "overall_mae": 4.121687261914393,
+    "body_mae": 3.4809834820243837,
+    "gt_p99_mae": 23.82058271198892,
+    "clamped_time_loss": 3.2099491086103487,
+    "validation_target_count": 503733,
+    "body_target_count": 477507,
+    "stratum_counts": {
+      "le_p50": 247651,
+      "p50_p90": 202534,
+      "p90_p95": 27322,
+      "p95_p99": 20190,
+      "gt_p99": 6036
+    }
+  },
+  "cuda_peak_memory_allocated_bytes": 512052224,
+  "validation_target_identity_sha256": "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8",
+  "validation_target_quantity_sha256": "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184",
+  "held_out_test_evaluated": false,
+  "selected_restore": {
+    "strict_model_restore": true,
+    "finite_forward": true,
+    "optimizer_restore": false,
+    "optimizer_parameters_restored": 0
+  },
+  "last_restore": {
+    "strict_model_restore": true,
+    "finite_forward": true,
+    "optimizer_restore": true,
+    "optimizer_parameters_restored": 46
+  },
+  "checkpoint_state_sha256": "f1a731a1bb41397241dba60acbc20d7e5bd1a398722082e9778be10fb3e7da07",
+  "last_checkpoint_sha256": "83e97c8d006133f38fb3096f06641daa2c3b20c6ab016f94500fe6cfb8ac6f7b",
+  "elapsed_seconds": 225.28486704826355,
+  "early_stopping": {
+    "comparison": "earliest_strict_finite_minimum",
+    "formula_by_variant": {
+      "count_only_log_mse_tail_head_only": "time_nll + lambda_log_qty * (log1p_quantity_mse + lambda_tail * tail_raw_huber)",
+      "count_only_log_mse_tail_shared": "time_nll + lambda_log_qty * (log1p_quantity_mse + lambda_tail * tail_raw_huber)",
+      "count_only_log_regression": "raw_quantity_rmse",
+      "count_only_lognormal_k1": "time_nll + lambda_log_qty * (gaussian_nll_on_log1p_quantity + lambda_location_huber * location_huber)",
+      "count_only_quantile_adaptive_log_regression": "raw_quantity_rmse"
+    },
+    "min_epochs": 1,
+    "monitor": "validation_raw_quantity_rmse",
+    "patience": 1,
+    "restore": "best_validation_raw_quantity_rmse"
+  },
+  "source_revision": "ca8823e688a510e64e7fb81c9dc9d158d4bdfc7c",
+  "selected_memory_gains": {
+    "transition_memory.alpha_raw": 0.619250476360321
+  }
+}

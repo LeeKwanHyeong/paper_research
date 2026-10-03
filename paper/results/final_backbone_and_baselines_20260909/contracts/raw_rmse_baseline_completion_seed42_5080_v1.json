@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "contract_id": "raw_rmse_baseline_completion_seed42_5080_v1",
+  "created_on": "2026-09-09",
+  "status": "frozen_before_remote_execution",
+  "repository": "paper_research",
+  "authorization": "User explicitly approved completing the four missing selector-aligned seed42 baseline fits on RTX 5080, while reserving RTX 5090 for new-model work.",
+  "purpose": "Complete the Intermittent and Taxi RMTPP/THP validation comparison after the original all-dataset gate stopped the first campaign.",
+  "scope": {
+    "baseline_backbones": ["rmtpp", "thp"],
+    "quantity_objective": "unweighted MSE on log1p quantity",
+    "quantity_variant": "count_only_log_regression",
+    "checkpoint_monitor": "validation_raw_quantity_rmse",
+    "checkpoint_rule": "earliest strict finite minimum validation raw quantity RMSE",
+    "early_stopping_monitor": "validation_raw_quantity_rmse",
+    "time_head": "legacy_clamped_rmtpp with intercept cap 300",
+    "optimizer": "AdamW",
+    "learning_rate": 0.001,
+    "batch_size": 128,
+    "gradient_clip": 1.0,
+    "hidden_dim": 64,
+    "maximum_epochs": 300,
+    "minimum_epochs": 40,
+    "patience": 40,
+    "seeds": [42],
+    "evaluation_scope": "validation_only",
+    "held_out_test_evaluated": false
+  },
+  "prior_campaign": {
+    "contract_id": "raw_rmse_baseline_alignment_seed42_v1",
+    "source_revision": "9440609673cfdf7bcfec5c77d7f677affd04ae49",
+    "registry_root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/raw_rmse_baseline_alignment_seed42_v1_9440609673cfdf7bcfec5c77d7f677affd04ae49",
+    "required_status": "stopped_gate_failed",
+    "required_gate_status": "failed",
+    "required_completed_job_ids": [
+      "e1_01_intermittent_frozen_5000_rmtpp_seed42",
+      "e1_02_intermittent_frozen_5000_thp_seed42",
+      "e1_03_yellow_trip_hourly_rmtpp_seed42",
+      "e1_04_yellow_trip_hourly_thp_seed42",
+      "e1_05_insta_market_basket_rmtpp_seed42",
+      "e1_06_insta_market_basket_thp_seed42",
+      "seed42_e300_01_insta_market_basket_rmtpp",
+      "seed42_e300_02_insta_market_basket_thp"
+    ],
+    "instacart_results_are_preserved_as_failure": true,
+    "reuse_or_retrain_prior_jobs": false
+  },
+  "datasets": [
+    {
+      "dataset": "intermittent_frozen_5000",
+      "data_path": "sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+      "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+      "split_manifest_path": "sample_data/intermittent_v2/intermittent_frozen_5000_split_manifest.json",
+      "split_manifest_sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04",
+      "lookback": 520,
+      "max_sequence_length": 256,
+      "expected_train_targets": 393824,
+      "expected_validation_targets": 86285,
+      "expected_train_target_identity_sha256": "fb8737489bc18e528adc322e2e55e26fcc5793aa6ff8021d93ceac98d7768aed",
+      "expected_train_target_quantity_sha256": "c4a9c3721d3861c190e81abe35156488f545b00c8ddbbed4022a9a82a4b3a215",
+      "expected_validation_target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+      "expected_validation_target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385",
+      "B_t0_raw_rmse_validation_metrics": {
+        "raw_rmse": 1.4995550721471171,
+        "overall_mae": 0.6043404183562111
+      },
+      "B_t0_raw_rmse_checkpoint_file_sha256": "63d38ee4401c208dcfa24206682edaca56e2d2a5ca1037b09decdc2ffa567c08",
+      "B_t0_raw_rmse_checkpoint_state_sha256": "4b984d415d83a479fdacb49b12d964afa668adad136511590a54293df763c0d0"
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "data_path": "sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+      "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+      "split_manifest_path": "sample_data/new_york_taxi/yellow_trip_hourly_split_manifest.json",
+      "split_manifest_sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85",
+      "lookback": 168,
+      "max_sequence_length": 256,
+      "expected_train_targets": 38393,
+      "expected_validation_targets": 8268,
+      "expected_train_target_identity_sha256": "fc6453af5a9a34c93dd3f299cd545c9ab946be11752ee001f38055e52cc9e637",
+      "expected_train_target_quantity_sha256": "bbabe4e040831f05bc96680afdb4c45a1856673e418bdd1db9495cda3f693680",
+      "expected_validation_target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+      "expected_validation_target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd",
+      "B_t0_raw_rmse_validation_metrics": {
+        "raw_rmse": 88.19499665350457,
+        "overall_mae": 28.67402025115017
+      },
+      "B_t0_raw_rmse_checkpoint_file_sha256": "46b456816dbc3c36e4f9c115c05b480fc030a8c2004646d179416d528bd897d5",
+      "B_t0_raw_rmse_checkpoint_state_sha256": "eddc8b4a11b233606bf74508f0ef721e05e55bbcb047d18edab4aa61f2f43c41"
+    }
+  ],
+  "jobs": [
+    {
+      "job_id": "completion_01_intermittent_frozen_5000_rmtpp_seed42",
+      "phase": "seed42_e300",
+      "host_role": "5080",
+      "dataset": "intermittent_frozen_5000",
+      "backbone": "rmtpp",
+      "seed": 42,
+      "epochs": 300,
+      "min_epochs": 40,
+      "patience": 40
+    },
+    {
+      "job_id": "completion_02_intermittent_frozen_5000_thp_seed42",
+      "phase": "seed42_e300",
+      "host_role": "5080",
+      "dataset": "intermittent_frozen_5000",
+      "backbone": "thp",
+      "seed": 42,
+      "epochs": 300,
+      "min_epochs": 40,
+      "patience": 40
+    },
+    {
+      "job_id": "completion_03_yellow_trip_hourly_rmtpp_seed42",
+      "phase": "seed42_e300",
+      "host_role": "5080",
+      "dataset": "yellow_trip_hourly",
+      "backbone": "rmtpp",
+      "seed": 42,
+      "epochs": 300,
+      "min_epochs": 40,
+      "patience": 40
+    },
+    {
+      "job_id": "completion_04_yellow_trip_hourly_thp_seed42",
+      "phase": "seed42_e300",
+      "host_role": "5080",
+      "dataset": "yellow_trip_hourly",
+      "backbone": "thp",
+      "seed": 42,
+      "epochs": 300,
+      "min_epochs": 40,
+      "patience": 40
+    }
+  ],
+  "runtime_policy": {
+    "hosts": {
+      "5080": {
+        "required_gpu_name_contains": "RTX 5080",
+        "minimum_free_vram_mib": 12000,
+        "require_gdm_inactive": false,
+        "permitted_backbones": ["rmtpp", "thp"],
+        "active_gdm_permitted_backbones": ["rmtpp", "thp"],
+        "active_gdm_exception": "User-authorized completion jobs may use RMTPP or THP on the desktop RTX 5080 only when no NVIDIA compute process exists and at least 12000 MiB is free."
+      }
+    },
+    "require_exactly_one_visible_gpu": true,
+    "require_no_existing_compute_process": true,
+    "deterministic_environment": {
+      "CUDA_VISIBLE_DEVICES": "0",
+      "PYTHONHASHSEED": "42",
+      "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    }
+  },
+  "cuda_smoke": {
+    "script": "paper/scripts/run_count_aware_cuda_model_test.py",
+    "required_gpu_name_contains": "RTX 5080",
+    "required_cases": [
+      {"backbone": "rmtpp", "variant": "count_only_log_regression"},
+      {"backbone": "thp", "variant": "count_only_log_regression"}
+    ],
+    "must_pass_before_any_full_fit": true
+  },
+  "frozen_learning_files_sha256": {
+    "paper/scripts/run_count_aware_tpp_backbone_control.py": "360b91571cbc8735f97523e3cd13ece137ae816ca5fc5fe390b28cfd5e39ce94",
+    "paper/scripts/count_aware_tpp_backbone/constants.py": "2f45d0e7b8d886eb27d10d8ad565c6304ae46cfa9965414a9359e342428c64d2",
+    "paper/scripts/count_aware_tpp_backbone/datasets.py": "0a2982d92a21d6dd0518adba5e631d40cf2222c9eb9ee476d861b27211623274",
+    "paper/scripts/count_aware_tpp_backbone/core.py": "025dfbe75a5a4e235466807f31873aa085f8ddffe680485fb4b9f4f7ef60c598",
+    "paper/scripts/count_aware_tpp_backbone/training.py": "5252db94a0a40bb70143131306e3b8e7b2f77edbb72a9da9354fe57517682308",
+    "paper/scripts/count_aware_tpp_backbone/reporting.py": "4764b790352b6a84a4efa9df9b17e3ad948534779539bf87422af7d8c06825c6",
+    "models/TPPs/CountAwareTPP.py": "eaa5cb7557c31e45f846911ef5ff91a7f9983d7b9bb7cf4f7a0960b23586d4a9",
+    "models/TPPs/CountAwareFactory.py": "ca7adf4c33673fcda4f1a553b8fc5053c4b3262bebd5431062913e931800f4c4",
+    "data_loader/event_seq_data_module.py": "7c11d9ace6c4e4d3bb03861aae92393aa946a38452d702dc7625210b339897ca"
+  },
+  "execution": {
+    "host": "5080",
+    "queue_order_is_strict": true,
+    "stop_on_first_failure": true,
+    "new_output_registry": true,
+    "overwrite": false,
+    "resume_exact_identity_only": true,
+    "additional_seeds": false,
+    "held_out_test": false,
+    "retrain_instacart": false
+  },
+  "held_out_lock": {
+    "selection_and_reporting_split": "validation",
+    "train_targets_split": "train",
+    "test_target_loader_allowed": false,
+    "test_metrics_allowed": false,
+    "test_artifacts_allowed": false,
+    "held_out_decision_use_allowed": false
+  }
+}

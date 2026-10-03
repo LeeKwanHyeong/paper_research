@@ -1,0 +1,245 @@
+{
+  "clock_preserved": true,
+  "deadline_is_estimate": false,
+  "fixed_deadline_kst": "2026-10-02 21:28:48 KST",
+  "limits": "excludes qualification, deployment, validation replays, queue waiting and filesystem slowdown; runtimes/hardware and head implementations changed; early stopping unknown",
+  "method": "Two sensitivity scenarios: legacy per-epoch cost plus current-proxy minus legacy-Titan cost; or legacy cost scaled by current-proxy/legacy-Titan. B/local use nearby measured local-gate cost. These are scenarios, NOT confidence intervals or measured new-backbone ETA.",
+  "native_current_head_benchmark_timing_measured": false,
+  "native_qualification_required_before_training": true,
+  "proposed_deadline_hours": 240,
+  "rows": [
+    {
+      "arm": "titantpp",
+      "dataset": "intermittent_frozen_5000",
+      "historical_seconds_per_epoch": null,
+      "host": "5080",
+      "hours_if_all_300_epochs": [
+        10.653243614816004,
+        10.653243614816004
+      ],
+      "projected_seconds_per_epoch_high": 127.83892337779204,
+      "projected_seconds_per_epoch_low": 127.83892337779204,
+      "proxy_seconds_per_epoch": 127.83892337779204
+    },
+    {
+      "arm": "titantpp_local_detail",
+      "dataset": "intermittent_frozen_5000",
+      "historical_seconds_per_epoch": null,
+      "host": "5080",
+      "hours_if_all_300_epochs": [
+        10.653243614816004,
+        10.653243614816004
+      ],
+      "projected_seconds_per_epoch_high": 127.83892337779204,
+      "projected_seconds_per_epoch_low": 127.83892337779204,
+      "proxy_seconds_per_epoch": 127.83892337779204
+    },
+    {
+      "arm": "rmtpp",
+      "dataset": "intermittent_frozen_5000",
+      "historical_seconds_per_epoch": 21.578814165782084,
+      "host": "5080",
+      "hours_if_all_300_epochs": [
+        2.3077021751350126,
+        4.150133804976208
+      ],
+      "projected_seconds_per_epoch_high": 49.80160565971449,
+      "projected_seconds_per_epoch_low": 27.692426101620146,
+      "proxy_seconds_per_epoch": 127.83892337779204
+    },
+    {
+      "arm": "thp",
+      "dataset": "intermittent_frozen_5000",
+      "historical_seconds_per_epoch": 53.86960781028128,
+      "host": "5080",
+      "hours_if_all_300_epochs": [
+        5.76097510096661,
+        6.8410332753511405
+      ],
+      "projected_seconds_per_epoch_high": 82.09239930421369,
+      "projected_seconds_per_epoch_low": 69.13170121159932,
+      "proxy_seconds_per_epoch": 127.83892337779204
+    },
+    {
+      "arm": "nhp",
+      "dataset": "intermittent_frozen_5000",
+      "historical_seconds_per_epoch": 197.70163500207101,
+      "host": "5080",
+      "hours_if_all_300_epochs": [
+        18.82703554133362,
+        21.142797264804756
+      ],
+      "projected_seconds_per_epoch_high": 253.71356717765707,
+      "projected_seconds_per_epoch_low": 225.92442649600343,
+      "proxy_seconds_per_epoch": 127.83892337779204
+    },
+    {
+      "arm": "sahp",
+      "dataset": "intermittent_frozen_5000",
+      "historical_seconds_per_epoch": 65.22862567496915,
+      "host": "5080",
+      "hours_if_all_300_epochs": [
+        6.975742049342506,
+        7.787618097408464
+      ],
+      "projected_seconds_per_epoch_high": 93.45141716890156,
+      "projected_seconds_per_epoch_low": 83.70890459211007,
+      "proxy_seconds_per_epoch": 127.83892337779204
+    }
+  ],
+  "scenarios": [
+    {
+      "5080_training_hours": [
+        7.5409854198426665,
+        8.367836188530251
+      ],
+      "completed_epochs_assumed_per_arm": 41
+    },
+    {
+      "5080_training_hours": [
+        18.392647365469916,
+        20.409356557390858
+      ],
+      "completed_epochs_assumed_per_arm": 100
+    },
+    {
+      "5080_training_hours": [
+        55.17794209640976,
+        61.22806967217257
+      ],
+      "completed_epochs_assumed_per_arm": 300
+    }
+  ],
+  "schema": "local_detail_benchmark_cost_estimate_v1",
+  "scope": "Only six Intermittent arms; historical scenarios, not measured completion ETA",
+  "sources": {
+    "paper/results/intermittent_log_backbone_control_20260811/source_5080_baselines/run_summaries.csv": {
+      "scope": "historical validation-only timing; old source/runtime",
+      "sha256": "bee985888f1e3c8f97bd2a49ce285b0ef38371a344a5ecfcb60bc476e544a58a"
+    },
+    "search_artifacts/count_aware_external_t0_nhp_sahp_e300_20260820/runs/nhp/count_only_log_regression/seed_42/summary.json": {
+      "completed_epochs": 234,
+      "elapsed_seconds": 46262.18259048462,
+      "old_head": "legacy_clamped_rmtpp",
+      "seconds_per_epoch": 197.70163500207101,
+      "sha256": "12eddd23faea58d23e751ae32cb1dce2dea479256d5ee56e0a91a96b057ed3fb"
+    },
+    "search_artifacts/count_aware_external_t0_sahp_all_e300_20260821_5090/runs/sahp/count_only_log_regression/seed_42/summary.json": {
+      "completed_epochs": 271,
+      "elapsed_seconds": 17676.95755791664,
+      "old_head": "legacy_clamped_rmtpp",
+      "seconds_per_epoch": 65.22862567496915,
+      "sha256": "4035d85917bf766938f396954951b28451674712a5183057c312a9707acd05b3"
+    },
+    "search_artifacts/count_aware_instacart_t0_e300_20260824_recovery1/insta_market_basket/t0_common_control/runs/nhp/count_only_log_regression/seed_42/summary.json": {
+      "completed_epochs": 68,
+      "elapsed_seconds": 51615.35849261284,
+      "old_head": "legacy_clamped_rmtpp",
+      "seconds_per_epoch": 759.0493895972477,
+      "sha256": "bbd0c39188e9a8297beaf9cb19ae2d57b943467d6faceefdd8db483e755c9a2b"
+    },
+    "search_artifacts/count_aware_instacart_t0_e300_20260824_recovery1/insta_market_basket/t0_common_control/runs/rmtpp/count_only_log_regression/seed_42/summary.json": {
+      "completed_epochs": 51,
+      "elapsed_seconds": 4529.707514047623,
+      "old_head": "legacy_clamped_rmtpp",
+      "seconds_per_epoch": 88.81779439309064,
+      "sha256": "dda105029efbbe2454a3d2ed759b2eebc980eb66d2a67da7d699db074b68053c"
+    },
+    "search_artifacts/count_aware_instacart_t0_e300_20260824_recovery1/insta_market_basket/t0_common_control/runs/sahp/count_only_log_regression/seed_42/summary.json": {
+      "completed_epochs": 51,
+      "elapsed_seconds": 7410.1043112277985,
+      "old_head": "legacy_clamped_rmtpp",
+      "seconds_per_epoch": 145.29616296525094,
+      "sha256": "471d68b4f669a20776127cce2b9368afc0380a3bc755d9daee9bd57890ca853e"
+    },
+    "search_artifacts/count_aware_instacart_t0_e300_20260824_recovery1/insta_market_basket/t0_common_control/runs/thp/count_only_log_regression/seed_42/summary.json": {
+      "completed_epochs": 51,
+      "elapsed_seconds": 6918.923010826111,
+      "old_head": "legacy_clamped_rmtpp",
+      "seconds_per_epoch": 135.66515707502177,
+      "sha256": "0ad81e35664d875aaa422ce806df62a5834d080f8d0fb51684d65dcaa6c48f50"
+    },
+    "search_artifacts/count_aware_instacart_t0_e300_20260824_recovery1/insta_market_basket/t0_common_control/runs/titantpp/count_only_log_regression/seed_42/summary.json": {
+      "completed_epochs": 66,
+      "elapsed_seconds": 10538.130406618118,
+      "old_head": "legacy_clamped_rmtpp",
+      "seconds_per_epoch": 159.66864252451694,
+      "sha256": "f6fc651d7ccea6773235162f6e05d9e5f2d160749adde6c742c9af4e4f8a3ed2"
+    },
+    "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control/runs/nhp/count_only_log_regression/seed_42/summary.json": {
+      "completed_epochs": 49,
+      "elapsed_seconds": 2746.406514406204,
+      "old_head": "legacy_clamped_rmtpp",
+      "seconds_per_epoch": 56.04911253890213,
+      "sha256": "802fe4c3fe66ce4d266ecfddb37ac583b70655742a50a5846ae4bd7f90313ab4"
+    },
+    "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control/runs/rmtpp/count_only_log_regression/seed_42/summary.json": {
+      "completed_epochs": 51,
+      "elapsed_seconds": 171.18944430351257,
+      "old_head": "legacy_clamped_rmtpp",
+      "seconds_per_epoch": 3.356655770657109,
+      "sha256": "706eded62b64c3a766af6b4e27aab15db0850c20a3d494313f4f3ec568137d7d"
+    },
+    "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control/runs/sahp/count_only_log_regression/seed_42/summary.json": {
+      "completed_epochs": 42,
+      "elapsed_seconds": 265.376944065094,
+      "old_head": "legacy_clamped_rmtpp",
+      "seconds_per_epoch": 6.318498668216524,
+      "sha256": "166a4418e38afb16ef51870ea63d4c4938ebdb743829d0efbb293c8b95f8e7e2"
+    },
+    "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control/runs/thp/count_only_log_regression/seed_42/summary.json": {
+      "completed_epochs": 65,
+      "elapsed_seconds": 423.8061091899872,
+      "old_head": "legacy_clamped_rmtpp",
+      "seconds_per_epoch": 6.520093987538265,
+      "sha256": "37509c6503896d88ac3b789f69ec6efc5b44055081f20a93144a1beb4a3df386"
+    },
+    "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control/runs/titantpp/count_only_log_regression/seed_42/summary.json": {
+      "completed_epochs": 42,
+      "elapsed_seconds": 487.4078850746155,
+      "old_head": "legacy_clamped_rmtpp",
+      "seconds_per_epoch": 11.604949644633702,
+      "sha256": "771bc13643ad71e21c7533586dbb457ff043a57a12804c77355fcffb192a8c44"
+    },
+    "search_artifacts/count_aware_titan_memory_backbone_screening_e300_20260818/runs/titantpp/count_only_log_regression/seed_42/summary.json": {
+      "completed_epochs": 240,
+      "elapsed_seconds": 23907.871652126312,
+      "old_head": "legacy_clamped_rmtpp",
+      "seconds_per_epoch": 99.61613188385964,
+      "sha256": "24451a80e9f2d407d50a25cb6530d449c1f767f6b4caf289bb8e51e47640436c"
+    },
+    "search_artifacts/local_gate_execution_20260922_v1/monitor/20260922T094459Z/terminal_5080/run/intermittent_frozen_5000/runs/titantpp_local_quantity_gate/count_only_log_regression/seed_42/summary.json": {
+      "completed_epochs": 120,
+      "elapsed_seconds": 15441.513599157333,
+      "head": "current_recorded_positive_integer",
+      "scope": "nearby local-gate runtime proxy, not exact B/local measurement",
+      "sha256": "692df4c6aa0c4f4f2872e858b6c32623d3b763d1c518cd126004698724fb32b8"
+    },
+    "search_artifacts/local_gate_execution_20260922_v1/monitor/20260922T094459Z/terminal_5080/run/intermittent_frozen_5000/runs/titantpp_local_time_gate/count_only_log_regression/seed_42/summary.json": {
+      "completed_epochs": 120,
+      "elapsed_seconds": 15239.828011512756,
+      "head": "current_recorded_positive_integer",
+      "scope": "nearby local-gate runtime proxy, not exact B/local measurement",
+      "sha256": "2d13f3ee61b7bf73fe7b6144607bbe250c5bddd75e1b879634040c0cc1a2c7ba"
+    },
+    "search_artifacts/local_gate_execution_20260922_v1/monitor/20260922T094459Z/terminal_5080/run/yellow_trip_hourly/runs/titantpp_local_quantity_gate/count_only_log_regression/seed_42/summary.json": {
+      "completed_epochs": 120,
+      "elapsed_seconds": 1618.1494009494781,
+      "head": "current_recorded_positive_integer",
+      "scope": "nearby local-gate runtime proxy, not exact B/local measurement",
+      "sha256": "adb3ab3888087b6160c5cc59cf8c5416c8f1383b3ab2ea1b3f3b642ed2c2a91f"
+    },
+    "search_artifacts/local_gate_execution_20260922_v1/monitor/20260922T094459Z/terminal_5080/run/yellow_trip_hourly/runs/titantpp_local_time_gate/count_only_log_regression/seed_42/summary.json": {
+      "completed_epochs": 120,
+      "elapsed_seconds": 1615.019778251648,
+      "head": "current_recorded_positive_integer",
+      "scope": "nearby local-gate runtime proxy, not exact B/local measurement",
+      "sha256": "4663ceab8c8e920a788e625603ce7ea2ff34ffc335fc57eeee7f88938e0be5b0"
+    },
+    "search_artifacts/local_gate_execution_20260922_v1/monitor/20260922T110622Z/5090.json": {
+      "field": "datasets.insta_market_basket.arms.titantpp_local_time_gate.summary.json",
+      "scope": "completed current-head nearby local-gate runtime proxy",
+      "sha256": "ad0d1c15836c231b7c084dcbabf2e9c5d7fde9ba113ae481390a8ad3a645ca42"
+    }
+  }
+}

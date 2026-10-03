@@ -1,0 +1,27 @@
+import React,{useState} from 'react';
+import {DataComponent,DataTable,ReportSection,RichNarrative,useDataApp} from '../../data-app-public.jsx';
+import './report.css';
+const datasets={Taxi:'yellow_trip_hourly',Intermittent:'intermittent_frozen_5000',Instacart:'insta_market_basket'};
+const labels={titantpp_history_mlp:'TitanTPP MLP',titantpp_history_mlp_active_norm:'활성 분기 정규화',s2p2_matched_head:'S2P2',attnhp_matched_head:'AttNHP',rmtpp:'RMTPP',thp:'THP',nhp:'NHP',sahp:'SAHP',titantpp:'B',titantpp_local_detail:'Full',titantpp_level_only:'수준만',titantpp_change_only:'변화만',titantpp_no_static_lmm:'Full 검색 제거',titantpp_mlp_conditional:'MLP 조건부 Gate',titantpp_mlp_constant:'MLP 상수 Gate',titantpp_change_conditional:'Full 조건부 Gate',titantpp_change_constant:'Full 상수 Gate'};
+const metrics=[['qty_mae','MAE ↓'],['qty_rmse','RMSE ↓'],['time_nll','시간 NLL ↓']];
+const num=v=>Number(v).toFixed(6);
+const meanCols=[{key:'model',label:'모델'},...metrics.map(([key,label])=>({key,label,renderCell:(v,r)=>`${num(v)} ± ${num(r[key+'_sd'])}`}))];
+const singleCols=[{key:'model',label:'모델',renderCell:v=>labels[v]||v},{key:'epoch',label:'선택 epoch'},...metrics.map(([key,label])=>({key,label,renderCell:num}))];
+const detailCols=[{key:'dataset',label:'데이터'},{key:'model',label:'모델',renderCell:v=>labels[v]||v},{key:'seed',label:'seed'},...singleCols.slice(1),{key:'audit',label:'감사 상태'}];
+const texts={Taxi:'대표 MLP는 가장 좋은 외부 비교군 RMTPP보다 평균 MAE 10.13%, RMSE 15.85% 낮습니다. 외부 6개 × 동일 seed 3개, 18쌍 모두에서 두 수량 지표가 낮습니다. 시간 NLL은 NHP·THP·SAHP·S2P2·AttNHP보다 높습니다.',Intermittent:'대표 MLP는 가장 좋은 외부 비교군 RMTPP보다 평균 MAE 21.72%, RMSE 34.39% 낮습니다. 외부 6개 × 동일 seed 3개, 18쌍 모두에서 두 수량 지표가 낮습니다. 평균 시간 NLL은 외부 6개 모두보다 높습니다.',Instacart:'대표 MLP의 평균 MAE는 RMTPP보다 약 0.16%, RMSE는 THP보다 약 0.42% 높습니다. S2P2·AttNHP의 3seed는 아직 완료되지 않아 아래 평균표에 넣지 않았습니다. 단일 seed에서 나타난 작은 개선을 모든 비교군에 대한 우월성으로 해석하지 않습니다.'};
+const normTexts={Taxi:'정규화는 seed42 기존 MLP 대비 MAE 4.29%, RMSE 3.86% 개선했습니다. 시간 NLL은 0.842735에서 1.171106으로 악화됐습니다.',Intermittent:'정규화는 seed42 기존 MLP 대비 MAE 11.59%, RMSE 8.17% 악화됐으며 시간 NLL도 높아졌습니다. 외부 모델보다 수량 지표가 좋더라도 기존 MLP를 교체할 근거가 되지는 않습니다.',Instacart:'정규화는 seed42 기존 MLP 대비 MAE 0.025%, RMSE 0.120% 개선했습니다. S2P2·AttNHP보다 MAE는 낮지만 RMSE는 높습니다. 정규화 70epoch 종료, 선택30epoch의 최종 validation 재평가 값입니다.'};
+export function ReportContent(){
+ const {snapshot,appTitle,visible}=useDataApp();const [dataset,setDataset]=useState('Taxi');const qid=datasets[dataset];const mean=snapshot.queries[qid].rows;
+ const seed=snapshot.queries.seed42.rows.filter(r=>r.dataset===dataset);const all=snapshot.queries.all_completed.rows;
+ return <article className='report-content'>
+ <header className='report-hero'><h1>{appTitle}</h1><RichNarrative id='summary' value={'**대표 모델은 기존 TitanTPP History MLP를 유지합니다.** Taxi·Intermittent에서 외부 TPP 6개 대비 수량 예측 우위가 반복됐습니다. Instacart와 시간 NLL에서는 우위를 확보하지 못한 비교가 있습니다.\n\n활성 분기 정규화는 데이터에 따라 효과가 달라, 기존 MLP의 일관된 개선판으로 볼 수 없습니다.'}/></header>
+ <label>비교 데이터　<select aria-label='비교 데이터' value={dataset} onChange={e=>setDataset(e.target.value)}>{Object.keys(datasets).map(d=><option key={d}>{d}</option>)}</select></label>
+ <ReportSection id={qid+'-finding'} title={dataset+' 3seed 결론'} queryId={qid} sourceRows={mean} showHeading={false}><RichNarrative id={qid+'-finding-body'} value={'## '+dataset+' — 완료된 3seed 비교\n\n'+texts[dataset]+'\n\n값은 평균 ± 표본표준편차입니다. 세 지표 모두 같은 validation RMSE 선택 checkpoint에서 비교합니다.'}/></ReportSection>
+ <DataComponent id={qid+'-table'} title={dataset+' · 기존 MLP와 외부 비교군'} kind='table' queryId={qid} sourceRows={mean} displayRows={mean}><DataTable rows={mean} columns={meanCols} searchable={false} caption={dataset+' 완료된 3seed 평균 및 표본표준편차'}/></DataComponent>
+ <ReportSection id='normalization' title='정규화 seed42 비교' queryId='seed42' sourceRows={seed} showHeading={false}><RichNarrative id={'normalization-'+qid} value={'## '+dataset+' — 정규화 seed42와 외부 비교군\n\n'+normTexts[dataset]+'\n\nTaxi·Intermittent 정규화는 4090, Instacart는 4090에서 2epoch 후 5080으로 복구했습니다. 한 seed의 탐색 결과이며 3seed 결론과 분리합니다.'}/></ReportSection>
+ <DataComponent id='seed42-table' title={dataset+' · 동일 seed42 전체 비교'} kind='table' queryId='seed42' sourceRows={seed} displayRows={seed}><DataTable rows={seed} columns={singleCols} searchable={false} caption={dataset+' seed42 선택 checkpoint'}/></DataComponent>
+ <RichNarrative id='interpretation' value={'## 이 결과를 논문에서 어떻게 사용할까\n\n- 공통 입력·head·loss·선택 규칙에서 **Taxi와 Intermittent의 수량 예측 개선**을 핵심 성능 근거로 사용합니다. 원 논문의 모든 native head·최적 튜닝 결과를 이겼다는 뜻은 아닙니다.\n- Instacart의 제한적인 개선, 시간 NLL 악화, Full 및 Gate의 반례를 보존합니다. 단일 seed의 작은 차이를 통계적 유의성으로 해석하지 않습니다.\n- 다음 RAF 24조건은 기존 MLP·정규화 MLP·외부 6개를 새로운 간헐적 수요 데이터에서 비교합니다. 불리한 모델이나 seed도 같은 규칙으로 포함합니다.'}/>
+ <DataComponent id='all_completed-table' title='내부 대안·Gate를 포함한 완료 조건 114개' kind='table' queryId='all_completed' sourceRows={all} displayRows={all}><DataTable rows={all} columns={detailCols} searchable caption='완료된 조건별 validation 결과; 진행 중 조건 제외'/></DataComponent>
+ <RichNarrative id='methods' value={'## 범위와 남은 검증\n\n증거 기준은 2026-10-01 07:07 KST이며 추가 TPP는 07:02 관측입니다. 모든 결과는 validation-only입니다. held-out/test는 열람하지 않았습니다.\n\n추가 TPP Instacart는 S2P2 seed42·52, AttNHP seed42만 완료됐습니다. 나머지 세 조건은 이 완료표에 포함하지 않았습니다. 추가 TPP의 checkpoint binary CPU 감사와 방금 완료된 5080 Instacart 정규화의 로컬 binary 회수·CPU 감사는 남아 있습니다. 학습·재평가 완료와 최종 감사를 구분합니다.\n\n개인5080 추가 cloud 임대료는 0이고 전기료는 미측정입니다. RunPod 계정잔액 감소 $3.036663은 Pod별 최종 청구서가 아닙니다. 다른 GPU·복구·종료 epoch의 학습 시간을 단독 속도 비교로 사용하지 않았습니다.'}/>
+ </article>
+}

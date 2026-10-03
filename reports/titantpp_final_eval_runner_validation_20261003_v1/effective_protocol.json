@@ -1,0 +1,338 @@
+{
+  "schema": "titantpp_final_evaluation_effective_design_20261003_v2",
+  "created_utc": "2026-10-02T21:49:58.994936+00:00",
+  "status": "selected_binding_and_CPU_sample_verification_passed_population_and_final_execution_pending",
+  "execution_authorized": false,
+  "registration": "local design freeze after validation development and A100 exploration; not a public or pre-development preregistration",
+  "representative": "titantpp_history_mlp",
+  "datasets": [
+    "yellow_trip_hourly",
+    "intermittent_frozen_5000",
+    "insta_market_basket",
+    "raf_spare_parts"
+  ],
+  "models": [
+    "titantpp_history_mlp",
+    "rmtpp",
+    "thp",
+    "nhp",
+    "sahp",
+    "s2p2_matched_head",
+    "attnhp_matched_head"
+  ],
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "main_conditions": 84,
+  "selection": "strict_first_min_validation_raw_quantity_rmse",
+  "checkpoint_manifest": "reports/titantpp_final_eval_checkpoint_binding_20261003_v1/evaluation_registry.json",
+  "dataset_manifest": "reports/titantpp_independent_final_evaluation_design_20261003_v1/dataset_freeze.json",
+  "split_access_ledger": "reports/titantpp_final_eval_population_eligibility_20261003_v1/eligibility.json",
+  "exploratory_variants_not_promoted": [
+    "titantpp_local_detail",
+    "titantpp_history_mlp_active_norm",
+    "Full_Gate",
+    "MLP_Gate",
+    "titantpp_history_mlp_cross_product",
+    "titantpp_history_mlp_recent4_mean"
+  ],
+  "primary_metric": "raw_quantity_rmse",
+  "secondary_metrics": [
+    "raw_quantity_mae",
+    "recorded_integer_bin_time_nll"
+  ],
+  "aggregation": {
+    "within_seed": "micro_event_weighted",
+    "across_seeds": "arithmetic_mean_of_seed_metrics",
+    "seed_dispersion": "sample_standard_deviation_ddof1",
+    "cross_dataset_raw_pooling": false,
+    "ensemble": false,
+    "difference": "TitanTPP_minus_comparator",
+    "relative_improvement": "100*(comparator_mean_RMSE-TitanTPP_mean_RMSE)/comparator_mean_RMSE",
+    "zero_denominator": "undefined_report_absolute_difference"
+  },
+  "fixed_validation_selected_anchors": {
+    "yellow_trip_hourly": "rmtpp",
+    "intermittent_frozen_5000": "rmtpp",
+    "insta_market_basket": "s2p2_matched_head",
+    "raf_spare_parts": "s2p2_matched_head"
+  },
+  "resampling": {
+    "draws": 10000,
+    "rng": "numpy_PCG64",
+    "seed_base": 20261001,
+    "dataset_seed_rule": "seed_base_plus_index_in_datasets",
+    "sort": "primary_cluster_key_string_ascending_or_calendar_hour_ascending",
+    "quantile": "linear",
+    "pointwise_interval_quantiles": [
+      0.025,
+      0.975
+    ],
+    "fixed_four_RMSE_anchor_interval_quantiles": [
+      0.00625,
+      0.99375
+    ],
+    "paired_across_all_models_and_seeds": true,
+    "seed_resampling": false,
+    "uncertainty_scope": "evaluation_sampling_conditional_on_three_fixed_trained_models",
+    "joint_losses": "multiplicity_weighted_error_sums_and_counts_then_seed_metrics_then_seed_mean_difference",
+    "units": {
+      "yellow_trip_hourly": "shared_calendar_hour_circular_blocks_across_all_spatial_cells",
+      "intermittent_frozen_5000": "whole_site_cd_cluster",
+      "insta_market_basket": "whole_user_oper_part_no_cluster",
+      "raf_spare_parts": "whole_part_oper_part_no_cluster"
+    },
+    "taxi_block_hours": 168,
+    "taxi_sensitivity_block_hours": [
+      24,
+      336
+    ],
+    "taxi_grid": "all hours between first and last eligible evaluation target time, including empty hours without imputed targets",
+    "taxi_algorithm": "sample_uniform_starts_concatenate_circular_L_hour_blocks_trim_to_T_hours_use_hour_multiplicity_for_existing_eligible_targets",
+    "minimum_cluster_count_to_compute": 2,
+    "minimum_taxi_grid_hours_to_compute": "2L",
+    "small_sample_reporting_threshold": 20,
+    "threshold_semantics": "reporting_guard_not_validity_guarantee",
+    "unavailable_timestamp": "no_target_order_fallback",
+    "invalid_draws": "report_count_and_reason_no_silent_redraw_or_interval_finalization",
+    "multiplicity_scope": "four_prespecified_anchor_RMSE_pairs_only_other_intervals_descriptive",
+    "pvalues": false,
+    "implementation_and_real_data_CIs_status": "31 tests and 108-condition validation sample pipeline verified (84 reused, 24 new); no benchmark-wide or held-out CIs",
+    "primary_unit": "Whole declared entity/site clusters; Intermittent whole sites preserve within-site series dependence; Taxi shared calendar blocks preserve cross-cell temporal shocks.",
+    "paired_entity_cluster_sensitivity_for_taxi": "10,000 complete-cell cluster draws, reported as a sensitivity conditional on cells; cannot substitute for shared-time primary uncertainty",
+    "upper_level_dependency_gate": "If site or system clustering violates the declared unit, freeze a metadata-justified higher-level plan before outcome release or limit inference; never select a favorable unit from CIs.",
+    "intermittent_sensitivity_unit": "whole_oper_part_no_cluster",
+    "analysis_runtime": {
+      "python": "3.12.10",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "packages": {
+        "torch": "2.14.0",
+        "numpy": "2.3.1",
+        "polars": "1.31.0",
+        "pytest": "9.0.3"
+      },
+      "device": "cpu",
+      "threads_per_inference_process": 2,
+      "inter_op_threads": 1,
+      "parallel_inference_processes": 1
+    }
+  },
+  "prediction_protocol": {
+    "mode": "chronological_one_step_next_observed_event",
+    "same_target_ids_across_models_and_seeds": true,
+    "earlier_test_event_as_history": "only_after_that_event_is_predicted_and_observed",
+    "parameter_updates": false,
+    "target_or_future_in_input": false,
+    "refit_train_validation": false,
+    "test_fitted_preprocessing": false,
+    "missing_or_nonfinite_output": "retain_failure_and_stop_affected_comparison_no_favorable_intersection"
+  },
+  "eligibility": {
+    "untouched_test_status": "not_established",
+    "unresolved_existing_test_label": "retrospective_locked_test_reevaluation",
+    "independent_route": "document_no_prior_exposure_and_target_lineage_or_freeze_genuinely_unused_later_or_external_cohort",
+    "reshuffle_old_rows_as_new_holdout": false
+  },
+  "remaining_requirements": [
+    "Establish prior-use and source-rights/lineage/cohort eligibility for a genuinely unused population, or explicitly choose retrospective legacy reevaluation.",
+    "Freeze raw-file, entity, event/target identities, cutoffs and permitted history before outcome access.",
+    "Complete and qualify full-population streaming and intended execution runtime/resources using synthetic or authorized validation data.",
+    "Bind host, runtime, cost/deadline, output manifests and explicit final population performance-access execution authorization."
+  ],
+  "methodological_sources": [
+    {
+      "title": "Bootstrapping clustered data",
+      "authors": "Field and Welsh",
+      "year": 2007,
+      "url": "https://rss.onlinelibrary.wiley.com/doi/10.1111/j.1467-9868.2007.00593.x"
+    },
+    {
+      "title": "The Jackknife and the Bootstrap for General Stationary Observations",
+      "authors": "Künsch",
+      "year": 1989,
+      "url": "https://doi.org/10.1214/aos/1176347265"
+    },
+    {
+      "title": "Common pitfalls and recommended practices",
+      "publisher": "scikit-learn",
+      "url": "https://scikit-learn.org/stable/common_pitfalls.html"
+    }
+  ],
+  "inference_started": false,
+  "predecessor_design": "reports/titantpp_independent_evaluation_protocol_20261001_v1/protocol.json",
+  "representative_architecture": {
+    "model": "titantpp_history_mlp",
+    "hidden_dim": 64,
+    "branches": 8,
+    "bottleneck_width": 4,
+    "correction_parameters": 6144,
+    "source_indices": "same immediate observed predecessor in all eight branches; thresholds are not lag retrieval offsets",
+    "availability_thresholds": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64,
+      128
+    ],
+    "availability_test": "observed row and contiguous observed count > threshold; withheld valid row resets eligibility; padding does not",
+    "residual_divisor": 8,
+    "output_projection_initialization": "zero",
+    "insertion": "between two frozen encoder blocks",
+    "checkpoint_source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+    "new_current_worktree_source_is_not_an_evaluation_substitute": true
+  },
+  "simple_quantity_baselines": [
+    {
+      "model": "last_observed_quantity",
+      "definition": "last raw quantity in exactly the same admitted observed history window",
+      "seed": null,
+      "time_nll": null
+    },
+    {
+      "model": "mean_quantity_in_same_observed_window",
+      "definition": "arithmetic mean of raw quantities over exactly the same admitted observed history window, excluding target and padding",
+      "seed": null,
+      "time_nll": null
+    }
+  ],
+  "baseline_protocol": {
+    "trained": false,
+    "fit_to_test": false,
+    "same_target_ids": true,
+    "repeated_as_three_seeds": false,
+    "empty_history": "ineligible under common next-event target contract; no method-specific dropping or tuned fallback",
+    "uncertainty_pairing": "one deterministic baseline prediction vector reused in the three fixed model-seed differences without adding independent replicates"
+  },
+  "structural_secondary_panel": {
+    "models": [
+      "titantpp_current_only_param_matched",
+      "titantpp_all_available_history_mlp"
+    ],
+    "conditions": 24,
+    "seeds": [
+      42,
+      52,
+      62
+    ],
+    "role": "prespecified supporting contrasts, not alternative representatives",
+    "binary_and_source_binding": "all 24 exact selected identities bound to original file/tensor/source SHA with passed CPU-audit reuse and local byte recheck; preserve heterogeneous GPU provenance",
+    "manifest": "reports/titantpp_final_eval_checkpoint_binding_20261003_v1/evaluation_registry.json",
+    "identity_binding_status": "complete"
+  },
+  "comparison_scope": {
+    "claim": "numerical-history common-head TPP encoder comparison plus the two simple quantity references and two structural controls",
+    "deep_renewal": "excluded from manuscript comparison at user request after its validation results existed; preserve all runs and research records; this scope is not evidence of dominance over native distributional demand predictors",
+    "selection_transparency": "Do not invent a pre-result exclusion rationale or describe native methods as invalid because they outperform TitanTPP. Method-family scope limits the claim and does not erase retrospective comparator-selection concerns.",
+    "A100": "cross-product and recent-four-mean remain separately reported single-seed exploration; neither replaces the representative"
+  },
+  "input_access": {
+    "all_learned_methods": [
+      "log1p of observed past gaps with frozen nonnegative handling",
+      "log1p of observed past raw quantities with frozen nonnegative handling",
+      "valid/observed masks and chronology/positions required by the frozen adapter"
+    ],
+    "simple_baselines": [
+      "same past raw quantities",
+      "same history masks/order/window"
+    ],
+    "bookkeeping_only": [
+      "entity ID",
+      "site/part or user mapping",
+      "target ID",
+      "split",
+      "timestamp for chronology/Taxi resampling"
+    ],
+    "forbidden_model_inputs": [
+      "current target quantity",
+      "current target elapsed gap when forecasting it",
+      "future rows",
+      "product category/item IDs",
+      "new calendar covariates",
+      "test-fitted normalization or clipping"
+    ],
+    "asof": "Only information observed by the forecast origin; no target-dependent history length/window, no future-based admission, no online parameter updates."
+  },
+  "evaluation_routes": {
+    "existing_checkpoints_no_retraining": "Allowed in a separately authorized evaluation if event definitions, unit/observation coding, numerical input schema and train-fitted transformations match; exact frozen checkpoint/source and causal target mask remain usable.",
+    "external_domain_interpretation": "Any frozen-weight application to newly sourced sites, users or archives is external transfer. Poor calibration is a result, not permission to refit on evaluation outcomes.",
+    "new_training_requires_new_design_and_approval": [
+      "required input dimension or semantic/unit change not handled by frozen observation coding",
+      "benchmark is redesigned with a different train/cohort construction to answer a different population claim",
+      "frozen selected checkpoint cannot be recovered",
+      "new model or tuned preprocessing/normalization/head is introduced"
+    ],
+    "fresh_data_after_redesign": "After label/result exposure, changed architecture or tuning uses those data only as development evidence; independent confirmation needs another genuinely unused cohort.",
+    "not_authorized_now": [
+      "new training",
+      "held-out/test prediction or performance generation/reading",
+      "remote execution or data extraction",
+      "paid resources"
+    ]
+  },
+  "one_shot_release": {
+    "before_release": [
+      "verify identity/lineage and pre-cutoff cohort rules without labels/performance",
+      "bind manifests, code/runtime, hardware/budget/deadline",
+      "CPU validation sample/synthetic checks passed; complete full-population wrapper and actual runtime/resource qualification before final evaluation.",
+      "obtain exact population and performance-access execution approval",
+      "seal manifests and analysis script hashes"
+    ],
+    "release_event": "One approved locked evaluation batch writes all models/seeds, failure records, target IDs and hashes; no sequential model-result peeking to choose which runs to retain.",
+    "after_release": "Run the frozen analyses and publish all prespecified results and failures, including negative effects. Record every access timestamp and any broken gate.",
+    "technical_failure": "Preserve first attempt; rerun the identical scientific specification only under the applicable execution authorization with diagnosis based on infrastructure/identity checks. Any scientific change makes same-cohort findings exploratory.",
+    "stop_before_release": [
+      "unresolved source/target overlap",
+      "post-cutoff cohort selection",
+      "hash/config mismatch",
+      "missing selected checkpoint",
+      "unexpected input/target alignment or NaN/Inf",
+      "unapproved data rights or environment/budget",
+      "new result exposure before freeze"
+    ]
+  },
+  "required_execution_approval_fields": [
+    "route: legacy reevaluation or genuinely new population",
+    "each dataset raw/split/target-ID/entity-ID SHA and source/license",
+    "calendar or source cutoffs, forecast origin, eligibility rule and allowed history",
+    "complete selected-checkpoint/source/runtime manifests for 84+24 learned conditions and two deterministic baselines",
+    "named host/GPU or CPU, maximum cost, deadline, no training flag",
+    "exact output directory, sealed result access owner/time",
+    "explicit held-out prediction/performance generation and reading permission"
+  ],
+  "readiness": {
+    "methodological_design_complete": true,
+    "clean_population_eligible": false,
+    "all_checkpoint_binaries_bound": true,
+    "synthetic_statistics_and_CPU_validation_sample_verified": true,
+    "full_population_streaming_verified": false,
+    "full_endpoint_replay_completed_this_step": false,
+    "native_GPU_verified": false,
+    "final_evaluation_execution_authorized": false
+  },
+  "updated_utc": "2026-10-02T22:02:56.855779+00:00",
+  "parent_design": "reports/titantpp_independent_final_evaluation_design_20261003_v1/design.json",
+  "parent_design_sha256": "914b97ca8d51f4674a4fae578d5c2d935592897f9b30fcbdb8c54372be407a5a",
+  "amendment": "amendment.json",
+  "checkpoint_manifest_sha256": "8b715bd360d895bb2ab433072333f9603cb7de2be5de081c0bf0243f0e86fe2b",
+  "validation_preparation_authorized": true,
+  "inference_started_scope": "independent final evaluation only; validation preparation inference has been performed",
+  "sample_verification": {
+    "learned_conditions": 108,
+    "reused_conditions": 84,
+    "newly_inferred_conditions": 24,
+    "common_targets": 22,
+    "prediction_rows": 638,
+    "deterministic_reference_rows": 44,
+    "unit_tests_passed": 31,
+    "scope": "validation_sample_correctness_only",
+    "heldout_read": false,
+    "benchmark_performance_claim": false,
+    "upstream_raw_lineage_proven_by_prepared_row_keys": false
+  },
+  "dataset_manifest_sha256": "41352749a27d66faa22c2f15b472598fdd80cfae4d2c2e577506a919ddc03d71"
+}

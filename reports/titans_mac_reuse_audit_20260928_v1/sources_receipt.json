@@ -1,0 +1,250 @@
+{
+  "schemaVersion": 1,
+  "items": [
+    {
+      "id": "mac-compatibility",
+      "title": "과거 MAC는 현재 백본 비교의 직접 대조군으로 재사용하기 어렵습니다.",
+      "queries": [
+        {
+          "id": "mac-contract-comparison",
+          "source": {
+            "label": "MAC 및 현재 core의 동결 계약·원본 validation 기록",
+            "files": [
+              {
+                "name": "mac_current_compatibility.csv"
+              },
+              {
+                "name": "stable_mac_conditions.csv"
+              },
+              {
+                "name": "analysis.json"
+              }
+            ],
+            "filters": [
+              "평가 범위: validation만",
+              "과거 안정화 MAC: seed52·62",
+              "현재 비교 대상: Taxi·Intermittent·Instacart"
+            ],
+            "caveats": [
+              "과거 seed42는 내부 gradient clipping 정책이 달라 안정화된 seed52·62와 합칠 수 없습니다.",
+              "같은 데이터와 수량 단위를 사용하지만 시간 손실과 선택·조기 종료 기준이 달라 현재 백본 우열을 분리할 수 없습니다."
+            ]
+          },
+          "columns": [
+            "dataset",
+            "seed",
+            "old_time_head",
+            "current_time_head",
+            "old_selector",
+            "current_selector"
+          ],
+          "rows": [
+            {
+              "dataset": "insta_market_basket",
+              "seed": 52,
+              "old_time_head": "legacy_clamped_rmtpp",
+              "current_time_head": "heteroscedastic_lognormal_duration",
+              "old_selector": "validation_joint_objective",
+              "current_selector": "validation_raw_quantity_rmse"
+            },
+            {
+              "dataset": "intermittent_frozen_5000",
+              "seed": 52,
+              "old_time_head": "legacy_clamped_rmtpp",
+              "current_time_head": "heteroscedastic_lognormal_duration",
+              "old_selector": "validation_joint_objective",
+              "current_selector": "validation_raw_quantity_rmse"
+            },
+            {
+              "dataset": "yellow_trip_hourly",
+              "seed": 52,
+              "old_time_head": "legacy_clamped_rmtpp",
+              "current_time_head": "heteroscedastic_lognormal_duration",
+              "old_selector": "validation_joint_objective",
+              "current_selector": "validation_raw_quantity_rmse"
+            },
+            {
+              "dataset": "insta_market_basket",
+              "seed": 62,
+              "old_time_head": "legacy_clamped_rmtpp",
+              "current_time_head": "heteroscedastic_lognormal_duration",
+              "old_selector": "validation_joint_objective",
+              "current_selector": "validation_raw_quantity_rmse"
+            },
+            {
+              "dataset": "intermittent_frozen_5000",
+              "seed": 62,
+              "old_time_head": "legacy_clamped_rmtpp",
+              "current_time_head": "heteroscedastic_lognormal_duration",
+              "old_selector": "validation_joint_objective",
+              "current_selector": "validation_raw_quantity_rmse"
+            },
+            {
+              "dataset": "yellow_trip_hourly",
+              "seed": 62,
+              "old_time_head": "legacy_clamped_rmtpp",
+              "current_time_head": "heteroscedastic_lognormal_duration",
+              "old_selector": "validation_joint_objective",
+              "current_selector": "validation_raw_quantity_rmse"
+            }
+          ],
+          "summary": "공통 세 데이터의 여섯 과거 MAC 조건에서 data/split SHA와 context·표본수가 같고 학습 시간 head 및 선택 monitor가 다름을 확인했습니다."
+        }
+      ]
+    },
+    {
+      "id": "reuse-existing-controls",
+      "title": "현재 공통 head의 기존 외부 비교 36조건은 재사용할 수 있습니다.",
+      "queries": [
+        {
+          "id": "completed-controls",
+          "source": {
+            "label": "기존 54조건 원본 summary·history·endpoint 및 현재 재사용 ledger",
+            "files": [
+              {
+                "name": "current_comparable_summary.csv"
+              },
+              {
+                "name": "verification.json"
+              },
+              {
+                "name": "condition_results.json"
+              }
+            ],
+            "filters": [
+              "평가 범위: validation만",
+              "seeds: 42·52·62",
+              "checkpoint: raw 수량 RMSE strict 최소"
+            ],
+            "caveats": [
+              "공통 head 인코더 비교이며 각 원논문의 native 모델 또는 최적 튜닝 순위가 아닙니다.",
+              "Full의 시간 성능 악화와 Instacart의 수량 반례를 유지합니다."
+            ]
+          },
+          "columns": [
+            "dataset",
+            "model",
+            "n_seeds",
+            "qty_rmse_mean"
+          ],
+          "rows": [
+            {
+              "dataset": "insta_market_basket",
+              "model": "nhp",
+              "n_seeds": 3,
+              "qty_rmse_mean": 6.761279431728098
+            },
+            {
+              "dataset": "insta_market_basket",
+              "model": "rmtpp",
+              "n_seeds": 3,
+              "qty_rmse_mean": 5.8775405927014095
+            },
+            {
+              "dataset": "insta_market_basket",
+              "model": "sahp",
+              "n_seeds": 3,
+              "qty_rmse_mean": 5.877590832923105
+            },
+            {
+              "dataset": "insta_market_basket",
+              "model": "thp",
+              "n_seeds": 3,
+              "qty_rmse_mean": 5.8581783561059755
+            },
+            {
+              "dataset": "insta_market_basket",
+              "model": "titantpp",
+              "n_seeds": 3,
+              "qty_rmse_mean": 5.879572603077227
+            },
+            {
+              "dataset": "insta_market_basket",
+              "model": "titantpp_local_detail",
+              "n_seeds": 3,
+              "qty_rmse_mean": 5.885932342650751
+            },
+            {
+              "dataset": "intermittent_frozen_5000",
+              "model": "nhp",
+              "n_seeds": 3,
+              "qty_rmse_mean": 12.875455309001829
+            },
+            {
+              "dataset": "intermittent_frozen_5000",
+              "model": "rmtpp",
+              "n_seeds": 3,
+              "qty_rmse_mean": 2.5499284385508636
+            },
+            {
+              "dataset": "intermittent_frozen_5000",
+              "model": "sahp",
+              "n_seeds": 3,
+              "qty_rmse_mean": 7.02983237023263
+            },
+            {
+              "dataset": "intermittent_frozen_5000",
+              "model": "thp",
+              "n_seeds": 3,
+              "qty_rmse_mean": 2.7533520927439197
+            },
+            {
+              "dataset": "intermittent_frozen_5000",
+              "model": "titantpp",
+              "n_seeds": 3,
+              "qty_rmse_mean": 1.780563410676539
+            },
+            {
+              "dataset": "intermittent_frozen_5000",
+              "model": "titantpp_local_detail",
+              "n_seeds": 3,
+              "qty_rmse_mean": 1.8140415871458793
+            },
+            {
+              "dataset": "yellow_trip_hourly",
+              "model": "nhp",
+              "n_seeds": 3,
+              "qty_rmse_mean": 318.8147842991665
+            },
+            {
+              "dataset": "yellow_trip_hourly",
+              "model": "rmtpp",
+              "n_seeds": 3,
+              "qty_rmse_mean": 94.72834690732364
+            },
+            {
+              "dataset": "yellow_trip_hourly",
+              "model": "sahp",
+              "n_seeds": 3,
+              "qty_rmse_mean": 120.52733730574307
+            },
+            {
+              "dataset": "yellow_trip_hourly",
+              "model": "thp",
+              "n_seeds": 3,
+              "qty_rmse_mean": 107.59765645432542
+            },
+            {
+              "dataset": "yellow_trip_hourly",
+              "model": "titantpp",
+              "n_seeds": 3,
+              "qty_rmse_mean": 90.50926422441245
+            },
+            {
+              "dataset": "yellow_trip_hourly",
+              "model": "titantpp_local_detail",
+              "n_seeds": 3,
+              "qty_rmse_mean": 78.77737799286741
+            }
+          ],
+          "preview": {
+            "kind": "aggregate",
+            "note": "18개 모델×데이터 셀, 각 3seed 평균이며 총54조건입니다.",
+            "totalRows": 18
+          },
+          "summary": "54조건의 원본 요약, 이력 최소 epoch, endpoint 상태 SHA 및 지표를 대조하고 현재 ledger의 B·Full18 재사용 일치를 확인했습니다."
+        }
+      ]
+    }
+  ]
+}

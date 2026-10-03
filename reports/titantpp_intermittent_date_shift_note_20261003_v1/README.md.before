@@ -1,0 +1,134 @@
+# TitanTPP — named LNCS working draft
+
+Evidence and editorial cutoff: 3 October 2026. This is a working manuscript,
+not a submission-ready or independently evaluated final paper.
+
+## Contents
+
+- `main.tex`: manuscript with five embedded vector figures,
+  nine tables, Appendices A--C, and 32 embedded references.
+- Author order: LeeKwanHyeong, then Changhee Lee (corresponding author).
+  The corresponding email is `chl8856@gmail.com`, verified on the
+  [official professor page](https://aix.korea.ac.kr/our-lab/professor), whose
+  Scholar link matches the profile supplied by the user.
+  Affiliation 1: Department of Applied Artificial Intelligence, Graduate
+  School of Software and AI Convergence, Korea University, Seoul, Republic
+  of Korea. The user confirmed the school and department; English names
+  follow the university's [department listing](https://library.korea.ac.kr/datause/archiving/thesis/thesis_collection/)
+  and [school website](https://gscit.korea.ac.kr/gscit/index.do).
+  Affiliation 2: Department of Artificial Intelligence, Korea University,
+  Seoul, Republic of Korea, as listed on the professor's official page.
+- `llncs.cls`: unmodified official Springer LNCS class, version 2.25.
+- `splncs04.bst`: unmodified official Springer bibliography style, provided
+  for future BibTeX-based editing.
+- `references.bib`: reviewed bibliography source retained for maintenance.
+  The present manuscript uses the embedded bibliography in `main.tex`.
+- `LNCS_README.txt`: original template distribution instructions.
+
+The main comparison contains 84 completed development-validation runs:
+four datasets, seven models, and three seeds. Appendix A now records all
+24 structural-control fits (two controls × four datasets × three seeds).
+Their checkpoint originals, frozen sources, selected epochs, saved metrics,
+and selected/last validation replay records have passed the original-file
+and CPU loading audit. The reused original MLP contributes another 12 rows,
+yielding 12 complete three-seed groups in the appendix table. The registry,
+means, sample standard deviations, paired results, and evidence hashes are
+in `reports/titantpp_structural3_final_audit_20261003_v1/` at repository root.
+No new training, forward pass, or replay was performed for this audit.
+
+Both Intermittent controls' seed-62 fits ran on RTX PRO 4500; their other
+seeds and the original MLP ran on RTX 5080. This provenance is explicit and
+does not enter the matched efficiency measurements. The evidence supports
+the direct predecessor correction most clearly on Taxi, with conditional
+quantity gains elsewhere; it does not establish a general advantage for
+the original branch-availability thresholds. Deep Renewal and A100 candidate
+results remain in separate research records and are not added to the paper's
+comparison panel.
+
+The independent final-evaluation design is recorded in
+`reports/titantpp_independent_final_evaluation_design_20261003_v1/`.
+Model choice and analysis rules are fixed; eligible evaluation data and
+complete binding of checkpoint originals remain prerequisites to execution.
+Legacy test partitions are not assumed to be untouched. No held-out
+performance or predictions were inspected in this revision.
+
+Appendix B describes the four train populations with common definitions.
+Taxi, Intermittent, and Instacart profiles are reused; RAF's missing train
+profile is computed against its frozen population identity. Appendix C uses
+all 84 completed selected validation records for quantity/history strata.
+Its comparator is fixed by each dataset's overall external-model RMSE.
+The analysis, all-model per-seed tables, source hashes, and standalone PDF/PNG
+figures are in `reports/titantpp_dataset_appendix_20261002_v1/` at repository
+root. No training, model inference, or held-out performance inspection was
+performed for this addition.
+
+## Compilation and verification status
+
+The 3 October structural-results revision passed the built-in LaTeX compiler
+in the existing editor. Source backups, the revision diff, claim-to-evidence
+checks, and the compilation receipt are in
+`reports/titantpp_structural_manuscript_final_20261003_v1/`.
+Appendices B/C, figures, the main comparison table, and references are reused.
+No separate PDF was compiled or exported for this revision. Full-document
+visual layout review remains outstanding; compilation alone does not verify it.
+
+Open `main.tex` in the Codex LaTeX editor. Figures and references are embedded;
+the official class is the only local TeX input. The standard packages used are
+`fontenc`, `amsmath`, `newtxtext`, `newtxmath`, `booktabs`, `array`, `tikz`,
+and `hyperref`.
+
+In an existing TeX installation with these packages, the usual build is:
+
+```sh
+pdflatex -interaction=nonstopmode -halt-on-error main.tex
+pdflatex -interaction=nonstopmode -halt-on-error main.tex
+```
+
+BibTeX is not required for this version. For PyCharm/TeXiFy on this Mac,
+`.latexmkrc` adds the existing MacTeX binary directory to the child-process
+PATH. Run latexmk from this manuscript directory; the verified output is
+`out/main.pdf` at repository root. No TeX distribution or plugin was installed
+as part of this edit.
+
+**Historical verification of the earlier author and figure edits follows.**
+Native and MacTeX compilation passed after those edits.
+During the earlier Appendix B/C edit, the first native attempt
+identified an undefined `\Description` command in the compiler's bundled
+LNCS 2.21 class. A `\providecommand` fallback preserves compatibility with
+older class versions; the next attempt succeeded. The packaged official
+LNCS 2.25 class remains unmodified. MacTeX compiled with that local class;
+the native tool uses its bundled class and does not read additional local
+project files.
+
+The prior busy responses are retained as historical verification records.
+The MacTeX PDF exported before the affiliation update has 20 pages. Its title
+page, Figure 1 (page 5), and Figure 4 (page 18) were rendered and visually
+reviewed. The subsequent affiliation-only update passed the native compiler
+in the existing editor; no separate PDF export was produced for that update.
+Figure 1 now has separate
+arrow shafts between blocks and branch connectors that enter the box borders.
+Figure 4 separates its delta symbols, metric names, axis titles, and tick
+labels. Numerical tables and all scientific prose are unchanged by this edit.
+The earlier anonymous-draft verification records describe their original
+source snapshots. Current revision evidence is in
+`reports/titantpp_author_figure_revision_20261002_v1/` at repository root.
+The pre-existing Appendix A table-width and duplicate appendix PDF-destination
+warnings remain outside this figure revision; full-document layout review
+is still pending.
+
+## Venue and remaining editorial work
+
+The [PAKDD 2027 research-track call](https://pakdd2027.org/pages/calls/research)
+specifies Springer LNCS formatting and double-blind review. Its page limit
+and submission system were not yet announced when this draft was prepared.
+The class and margins have not been modified. Recheck the call before final
+pagination and submission.
+
+Next steps are to establish the independent evaluation population and bind
+the remaining checkpoint originals under the fixed design, then execute and
+report that evaluation before submission. Full rendered-document review and
+final venue formatting follow. Structural-control training and original-file
+audits are complete; quantitative claims currently concern development
+validation, not an untouched final test population.
+
+Template source: [Springer proceedings author instructions](https://www.springer.com/gp/computer-science/lncs/conference-proceedings-guidelines).

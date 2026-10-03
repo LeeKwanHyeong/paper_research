@@ -1,0 +1,90 @@
+{
+  "contract_id": "jqt_seed42_equal_exposure_5090_v1",
+  "status": "running_initial_training_verified",
+  "authorization": {
+    "new_research_training": true,
+    "gpu_experiment": true,
+    "source_sync": true,
+    "scheduler_status": "PAUSED",
+    "scheduler_id": "vnc-hard-lmm-5090-screening",
+    "user_instruction": "5090으로 진행하자.",
+    "recorded_at_utc": "2026-09-10T02:21:54.113203+00:00"
+  },
+  "scientific_design": {
+    "backbone": "static B only",
+    "track": "legacy_cap300_compatibility_diagnostic",
+    "objectives": [
+      "joint",
+      "quantity_only",
+      "time_only"
+    ],
+    "datasets": [
+      "intermittent_frozen_5000",
+      "yellow_trip_hourly",
+      "insta_market_basket"
+    ],
+    "seed": 42,
+    "epochs_per_arm": 120,
+    "batch_size": 128,
+    "early_stopping": false,
+    "quantity_comparison": "J raw_quantity_rmse selector vs Q raw_quantity_rmse selector",
+    "time_comparison": "J legacy_time_loss selector vs T legacy_time_loss selector",
+    "same_step_report": "all epoch/global-step exposures aligned before comparison; paired audit must pass",
+    "joint_checkpoint_policy": "two selector snapshots remain distinct; cannot claim combined simultaneous performance",
+    "validation_usage": "model selection and descriptive diagnosis only",
+    "held_out_test": "locked",
+    "repeat_seeds": "not included in this pilot budget; preregister separately before superiority claim"
+  },
+  "validated_execution": {
+    "server": "5090",
+    "device": "cuda:0",
+    "source_revision": "76426fd981e624144947fd582f794c2832e9fe05",
+    "qualification": "cuda_qualification_v1.json",
+    "contracts": [
+      "remote_receipts/contracts/intermittent_frozen_5000.json",
+      "remote_receipts/contracts/yellow_trip_hourly.json",
+      "remote_receipts/contracts/insta_market_basket.json"
+    ],
+    "cpu_baseline_reference": "../titantpp_jqt_diagnostic_20260910/acceptance_receipt.json"
+  },
+  "intended_gpu_execution": {
+    "server": "5090",
+    "python": "/opt/miniconda3/envs/ai_env/bin/python3.12",
+    "source_target": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/jqt_cuda_seed42_20260910/source",
+    "artifact_target": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/jqt_cuda_seed42_20260910",
+    "observed_runtime": "preflight.json",
+    "executable_now": true,
+    "prerequisites_completed": [
+      "CUDA source commit and hash-matched deployment",
+      "strict actual CUDA runtime identity",
+      "synthetic continuous versus fresh-process resume qualification",
+      "all dataset data/split/target hashes validate",
+      "fresh empty output and exclusive GPU run lock",
+      "persisted absolute 72-hour deadline enforced by launcher"
+    ]
+  },
+  "cost_and_limits": {
+    "basis": "../titantpp_jqt_diagnostic_20260910/cost_basis.json",
+    "historical_5090_proxy_gpu_hours": 22.13518048688625,
+    "max_concurrent_gpu_jobs": 1,
+    "max_research_arms": 9,
+    "max_epochs_per_arm": 120,
+    "max_optimizer_steps_all_arms": 6816240,
+    "retry_policy": "no automatic restart or budget extension; interrupted arm may resume only within original aggregate ceiling and explicit scope",
+    "timeout_policy": "abort comparison if equal fixed exposure not completed; retain evidence; no selecting reduced epochs after seeing performance",
+    "money_cost": "unmeasured; no billing rate or energy measurement",
+    "enforcement_status": "active: one suite-wide absolute and monotonic deadline; owned child group timeout; no retry",
+    "hard_ceiling_seconds": 259200,
+    "deadline_scope": "qualification plus subsequent suite; no automatic retry/resume",
+    "deadline_unix": 1789267007.9221702
+  },
+  "decision_rule": {
+    "interpretation": "objective separation is a diagnostic, not established final architecture",
+    "gate": "repeatable Q/J quantity and T/J time gains at matched exposure and appropriate selectors required before structural promotion",
+    "controls_next": [
+      "capacity and end-to-end train/inference compute control for Q+T system",
+      "same separation treatment on RMTPP and THP",
+      "additional seeds, normalized observation-law track, and held-out lock before paper superiority claim"
+    ]
+  }
+}

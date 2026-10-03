@@ -1,0 +1,48 @@
+{
+  "additional_source_files": [
+    "paper/contracts/local_detail_benchmark_intermittent_recovery_lineage_v4.json",
+    "paper/contracts/local_detail_benchmark_observed_time_v3.json",
+    "paper/contracts/local_detail_benchmark_observed_time_v4.json",
+    "paper/contracts/local_detail_replication_seed42_lineage_v1.json",
+    "paper/scripts/local_detail_instacart_queue.py",
+    "paper/scripts/local_detail_instacart_replication_contract.py",
+    "paper/scripts/local_detail_replication_contract.py"
+  ],
+  "changed_existing_source_files": [
+    "paper/scripts/local_detail_benchmark_contract.py",
+    "paper/scripts/run_local_detail_benchmark.py",
+    "paper/scripts/verify_local_detail_benchmark.py"
+  ],
+  "dependency_tests": "read-only completed six-arm seed42 JSON audit and rejected corrupted counts, selector and endpoint totals",
+  "failed": 0,
+  "gpu_executed": false,
+  "held_out_evaluated": false,
+  "model_head_loss_optimizer_data_sources_unchanged": true,
+  "new_production_test": {
+    "checkpoint_replays": 24,
+    "dataset": "insta_market_basket",
+    "epochs_per_arm": 40,
+    "models": 6,
+    "seeds": [
+      52,
+      62
+    ],
+    "synthetic_data_only": true
+  },
+  "passed": 106,
+  "queue_tests": "active predecessor wait; dry-run no launch; one-shot launch and repeated-call suppression; uncertain launch cannot retry; authority and hash checks precede launch",
+  "status": "passed_synthetic_cpu",
+  "test_suites": {
+    "queue_tests.xml": {
+      "failures": 0,
+      "sha256": "953e9000650c938b911b5ed4e4e603a4e9a767c33daac5b32b713642425491b4",
+      "tests": 14
+    },
+    "regression_tests.xml": {
+      "failures": 0,
+      "sha256": "18e0cce5aa0e4846e3887d9511c7b8ec3e88bc8772c6cf3732297615c747def5",
+      "tests": 92
+    }
+  },
+  "tested_source_files_sha256": "a1b05c895389765fd66086433f4534d4b7003379eb17a7cf31a9bed2fa562e01"
+}

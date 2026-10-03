@@ -1,0 +1,753 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="14" skipped="0" tests="24" time="8.422" timestamp="2026-09-24T09:31:44.002401+09:00" hostname="LeeKwanHyeongs-MacBook-Pro.local"><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_exact_replication_scope_and_unchanged_scientific_settings" time="0.001" /><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_replication_contract_rejects_scope_drift[seed]" time="0.001" /><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_replication_contract_rejects_scope_drift[model]" time="0.001" /><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_replication_contract_rejects_scope_drift[head]" time="0.001" /><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_replication_contract_rejects_scope_drift[deadline]" time="0.001" /><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_replication_contract_rejects_scope_drift[job]" time="0.001" /><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_seed_changes_initialization_without_changing_shared_B_local_pair[yellow_trip_hourly]" time="0.020" /><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_seed_changes_initialization_without_changing_shared_B_local_pair[intermittent_frozen_5000]" time="0.018" /><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_both_seeds_all_models_production_checkpoint_and_batch_contract[yellow_trip_hourly]" time="0.035"><failure message="KeyError: 'design_sha256'">cpu_training = None
+admitted_contract = {'acceptance': {'body_mae_ratio_max': 1.02, 'each_nonempty_middle_bin_mae_and_rmse_ratio_max': 1.02, 'last30_rmse_mean..., 4, 8, 16, 32, ...], 'control_lags': [1, 1, 1, 1, 1, 1, ...], 'gelu_approximate': 'none', 'hidden_dim': 64, ...}, ...}
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x141133a70&gt;
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-941/test_both_seeds_all_models_pro0')
+dataset_id = 'yellow_trip_hourly'
+
+    @pytest.mark.parametrize('dataset_id',['yellow_trip_hourly','intermittent_frozen_5000'])
+    def test_both_seeds_all_models_production_checkpoint_and_batch_contract(cpu_training,admitted_contract,monkeypatch,tmp_path,dataset_id):
+        c=contract.protocol();c['datasets']=deepcopy(admitted_contract['datasets']);c['source']={'base_git_revision':'1'*40,'files_sha256':'synthetic'}
+        for d in c['datasets']:
+            d['steps_per_epoch']=(d['inherited_data_identity']['populations']['train']['target_count']+127)//128
+            d['expected_global_steps']=d['steps_per_epoch']*300
+        c['replication']['jobs']=[{'host':'5080','dataset':dataset_id,'seed':s} for s in (52,62)]
+        c['training']['maximum_epochs']=40
+        out=tmp_path/'production';out.mkdir();c['hosts']['5080'].update(output_dir=str(out),assigned_datasets=[dataset_id])
+        runtime={'device':'synthetic_cpu'}
+        monkeypatch.setattr(runner.common,'runtime_check',lambda *a:runtime)
+        monkeypatch.setattr(runner,'verify_process_environment',lambda *a,**k:None)
+        monkeypatch.setattr(runner,'validate_execution_contract',lambda *a,**k:None)
+        real_args,real_replay=runner.training_args,runner.replay_checkpoint
+        def cpu_args(*a):
+            args=real_args(*a);args.device='cpu';return args
+        def cpu_replay(*a,**kw):
+            kw['device']='cpu';return real_replay(*a,**kw)
+        monkeypatch.setattr(runner,'training_args',cpu_args);monkeypatch.setattr(runner,'replay_checkpoint',cpu_replay)
+&gt;       result=runner.production(c,{'deadline_unix':10**12},'5080',{'runtime':runtime},lambda:None)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+simple_lab_test/search/tests/test_local_detail_replication.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+paper/scripts/run_local_detail_benchmark.py:151: in production
+    interface, initial = time_interface(data, frame, contract), initialization(data, seed)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+paper/scripts/run_local_detail_benchmark.py:64: in time_interface
+    interface = base.time_interface(data, frame, contract)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+data = {'additional_history_boundaries': [64, 128], 'dataset_id': 'yellow_trip_hourly', 'epochs': 120, 'expected_global_steps': 300, ...}
+frame = shape: (24, 7)
+┌──────────────┬─────┬─────────┬────────────┬─────────────────────┬──────┬────────────────┐
+│ oper_part...  ┆ 0    ┆ 32.0           │
+└──────────────┴─────┴─────────┴────────────┴─────────────────────┴──────┴────────────────┘
+contract = {'approval_required': True, 'approved': False, 'architecture': {'additional_gate': False, 'availability_lags': [1, 2, ...ate': 'titantpp_local_detail', ...}, 'arms': ['titantpp', 'titantpp_local_detail', 'rmtpp', 'thp', 'nhp', 'sahp'], ...}
+
+    def time_interface(data, frame, contract):
+        import numpy as np
+        import torch
+        from data_loader.event_seq_data_module import RMTPPWeekLookbackDataset
+        from paper.scripts.run_count_aware_tpp_backbone_control import derive_train_time_contract
+        from paper.scripts.run_hard_lmm_frozen_lognormal_duration import target_dt_sha256
+        from paper.scripts.count_aware_tpp_backbone.observed_time import validate_recorded_grid
+        validate_recorded_grid(frame, data["dataset_id"])
+        loader, frozen = data["loader"], data["time_statistics"]
+        stats = derive_train_time_contract(frame, lookback_weeks=loader["lookback_weeks"], max_seq_len=loader["max_seq_len"])
+        for measured, key in (("time_scale", "train_time_scale"), ("target_log_scaled_mean", "train_log_scaled_mean"),
+                              ("target_log_scaled_std", "train_log_scaled_std")):
+            require(math.isclose(stats[measured], frozen[key], rel_tol=0, abs_tol=1e-12), "Train time statistics mismatch")
+        for split in ("train", "validation"):
+            dataset = RMTPPWeekLookbackDataset(frame, lookback_weeks=loader["lookback_weeks"],
+                max_seq_len=loader["max_seq_len"], val_ratio=.2, mode="all", split_col="chronological_split", target_splits={split})
+            values = torch.tensor(np.asarray([max(1., float(dataset.dt_lists[p][i+1])) for p, i in dataset.index], dtype=np.float64))
+            require(values.numel() == frozen[f"expected_{split}_targets"]
+                    and target_dt_sha256(values) == frozen[f"expected_{split}_target_dt_sha256"], "Duration target identity mismatch")
+        model = data["model"]
+        return {"train_target_mean": data["statistics"]["train_log_mean"],
+            "train_target_std": data["statistics"]["train_log_std"], "statistics": data["statistics"],
+            "data_scope": "verified_train_validation_only", "execution_contract_sha256": common.sha_json(contract),
+            "source_files_sha256": contract["source"]["files_sha256"],
+            "backbone_design": {"schema": "hard_lmm_multilag_detail_design_v1",
+&gt;               "design_sha256": contract["design_sha256"],
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+                "architecture": contract["architecture"],
+                "mode_by_arm": {ARMS[0]: None, ARMS[1]: "local", ARMS[2]: "multilag"},
+                "train_time_scale": model["time_scale"],
+                "time_statistics": data["time_statistics"]},
+            "time_head": {"mode": model["time_head_mode"], "time_scale": model["time_scale"],
+                "time_initial_location": model["time_initial_location"], "time_initial_scale": model["time_initial_scale"],
+                "statistics_source_split": "train", "train_time_statistics": stats,
+                "observation_likelihood": model["time_observation_contract"], "reported_metric": TIME_METRIC}}
+E       KeyError: 'design_sha256'
+
+paper/scripts/run_multilag_detail_execution.py:319: KeyError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_both_seeds_all_models_production_checkpoint_and_batch_contract[intermittent_frozen_5000]" time="0.026"><failure message="KeyError: 'design_sha256'">cpu_training = None
+admitted_contract = {'acceptance': {'body_mae_ratio_max': 1.02, 'each_nonempty_middle_bin_mae_and_rmse_ratio_max': 1.02, 'last30_rmse_mean..., 4, 8, 16, 32, ...], 'control_lags': [1, 1, 1, 1, 1, 1, ...], 'gelu_approximate': 'none', 'hidden_dim': 64, ...}, ...}
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x14169d730&gt;
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-941/test_both_seeds_all_models_pro1')
+dataset_id = 'intermittent_frozen_5000'
+
+    @pytest.mark.parametrize('dataset_id',['yellow_trip_hourly','intermittent_frozen_5000'])
+    def test_both_seeds_all_models_production_checkpoint_and_batch_contract(cpu_training,admitted_contract,monkeypatch,tmp_path,dataset_id):
+        c=contract.protocol();c['datasets']=deepcopy(admitted_contract['datasets']);c['source']={'base_git_revision':'1'*40,'files_sha256':'synthetic'}
+        for d in c['datasets']:
+            d['steps_per_epoch']=(d['inherited_data_identity']['populations']['train']['target_count']+127)//128
+            d['expected_global_steps']=d['steps_per_epoch']*300
+        c['replication']['jobs']=[{'host':'5080','dataset':dataset_id,'seed':s} for s in (52,62)]
+        c['training']['maximum_epochs']=40
+        out=tmp_path/'production';out.mkdir();c['hosts']['5080'].update(output_dir=str(out),assigned_datasets=[dataset_id])
+        runtime={'device':'synthetic_cpu'}
+        monkeypatch.setattr(runner.common,'runtime_check',lambda *a:runtime)
+        monkeypatch.setattr(runner,'verify_process_environment',lambda *a,**k:None)
+        monkeypatch.setattr(runner,'validate_execution_contract',lambda *a,**k:None)
+        real_args,real_replay=runner.training_args,runner.replay_checkpoint
+        def cpu_args(*a):
+            args=real_args(*a);args.device='cpu';return args
+        def cpu_replay(*a,**kw):
+            kw['device']='cpu';return real_replay(*a,**kw)
+        monkeypatch.setattr(runner,'training_args',cpu_args);monkeypatch.setattr(runner,'replay_checkpoint',cpu_replay)
+&gt;       result=runner.production(c,{'deadline_unix':10**12},'5080',{'runtime':runtime},lambda:None)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+simple_lab_test/search/tests/test_local_detail_replication.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+paper/scripts/run_local_detail_benchmark.py:151: in production
+    interface, initial = time_interface(data, frame, contract), initialization(data, seed)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+paper/scripts/run_local_detail_benchmark.py:64: in time_interface
+    interface = base.time_interface(data, frame, contract)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+data = {'additional_history_boundaries': [64, 128], 'dataset_id': 'intermittent_frozen_5000', 'epochs': 120, 'expected_global_steps': 300, ...}
+frame = shape: (24, 7)
+┌──────────────┬─────┬─────────┬────────────┬─────────────────────┬──────┬────────────────┐
+│ oper_part...  ┆ 0    ┆ 32.0           │
+└──────────────┴─────┴─────────┴────────────┴─────────────────────┴──────┴────────────────┘
+contract = {'approval_required': True, 'approved': False, 'architecture': {'additional_gate': False, 'availability_lags': [1, 2, ...ate': 'titantpp_local_detail', ...}, 'arms': ['titantpp', 'titantpp_local_detail', 'rmtpp', 'thp', 'nhp', 'sahp'], ...}
+
+    def time_interface(data, frame, contract):
+        import numpy as np
+        import torch
+        from data_loader.event_seq_data_module import RMTPPWeekLookbackDataset
+        from paper.scripts.run_count_aware_tpp_backbone_control import derive_train_time_contract
+        from paper.scripts.run_hard_lmm_frozen_lognormal_duration import target_dt_sha256
+        from paper.scripts.count_aware_tpp_backbone.observed_time import validate_recorded_grid
+        validate_recorded_grid(frame, data["dataset_id"])
+        loader, frozen = data["loader"], data["time_statistics"]
+        stats = derive_train_time_contract(frame, lookback_weeks=loader["lookback_weeks"], max_seq_len=loader["max_seq_len"])
+        for measured, key in (("time_scale", "train_time_scale"), ("target_log_scaled_mean", "train_log_scaled_mean"),
+                              ("target_log_scaled_std", "train_log_scaled_std")):
+            require(math.isclose(stats[measured], frozen[key], rel_tol=0, abs_tol=1e-12), "Train time statistics mismatch")
+        for split in ("train", "validation"):
+            dataset = RMTPPWeekLookbackDataset(frame, lookback_weeks=loader["lookback_weeks"],
+                max_seq_len=loader["max_seq_len"], val_ratio=.2, mode="all", split_col="chronological_split", target_splits={split})
+            values = torch.tensor(np.asarray([max(1., float(dataset.dt_lists[p][i+1])) for p, i in dataset.index], dtype=np.float64))
+            require(values.numel() == frozen[f"expected_{split}_targets"]
+                    and target_dt_sha256(values) == frozen[f"expected_{split}_target_dt_sha256"], "Duration target identity mismatch")
+        model = data["model"]
+        return {"train_target_mean": data["statistics"]["train_log_mean"],
+            "train_target_std": data["statistics"]["train_log_std"], "statistics": data["statistics"],
+            "data_scope": "verified_train_validation_only", "execution_contract_sha256": common.sha_json(contract),
+            "source_files_sha256": contract["source"]["files_sha256"],
+            "backbone_design": {"schema": "hard_lmm_multilag_detail_design_v1",
+&gt;               "design_sha256": contract["design_sha256"],
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+                "architecture": contract["architecture"],
+                "mode_by_arm": {ARMS[0]: None, ARMS[1]: "local", ARMS[2]: "multilag"},
+                "train_time_scale": model["time_scale"],
+                "time_statistics": data["time_statistics"]},
+            "time_head": {"mode": model["time_head_mode"], "time_scale": model["time_scale"],
+                "time_initial_location": model["time_initial_location"], "time_initial_scale": model["time_initial_scale"],
+                "statistics_source_split": "train", "train_time_statistics": stats,
+                "observation_likelihood": model["time_observation_contract"], "reported_metric": TIME_METRIC}}
+E       KeyError: 'design_sha256'
+
+paper/scripts/run_multilag_detail_execution.py:319: KeyError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu[titantpp-52]" time="0.079"><failure message="KeyError: 'strata'">cpu_training = None
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x14165ff50&gt;
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-941/test_new_seed_checkpoint_resum0')
+seed = 52, arm = 'titantpp'
+
+    @pytest.mark.parametrize('seed',[52,62])
+    @pytest.mark.parametrize('arm',runner.ARMS)
+    def test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu(cpu_training,monkeypatch,tmp_path,seed,arm):
+        helpers.install_loader(monkeypatch,{'train':[],'validation':[]})
+        args=helpers.args_for(monkeypatch,tmp_path,arm,'full');args.seeds=str(seed)
+        if arm=='titantpp_local_detail':args.model_role='observed_time_multilag_detail_v1'
+        meta=helpers.interface()
+        def run(a):
+            return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+                                      backbone=arm,quantity_variant=runner.VARIANT,seed=seed)
+&gt;       full,_,_=run(args);resumed=deepcopy(args);resumed.output_dir=tmp_path/'resume'
+                 ^^^^^^^^^
+
+simple_lab_test/search/tests/test_local_detail_replication.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+simple_lab_test/search/tests/test_local_detail_replication.py:96: in run
+    return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+paper/scripts/count_aware_tpp_backbone/training.py:839: in train_one
+    validation = evaluate(
+../../Library/Python/3.12/lib/python/site-packages/torch/utils/_contextlib.py:124: in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @torch.no_grad()
+    def evaluate(
+        *,
+        model: SharedTimeCountModel,
+        loader: Any,
+        quantity_contract: dict[str, Any],
+        device: str,
+        lambda_log_qty: float,
+        max_batches: int | None,
+        include_breakdowns: bool,
+    ) -&gt; dict[str, Any]:
+        """Evaluate shared metrics overall and by quantity/history strata."""
+        model.eval()
+        overall = empty_accumulator()
+        quantity_accumulators = [
+&gt;           empty_accumulator() for _ in quantity_contract["strata"]
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ]
+E       KeyError: 'strata'
+
+paper/scripts/count_aware_tpp_backbone/core.py:190: KeyError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu[titantpp-62]" time="0.009"><failure message="KeyError: 'strata'">cpu_training = None
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x114a01370&gt;
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-941/test_new_seed_checkpoint_resum1')
+seed = 62, arm = 'titantpp'
+
+    @pytest.mark.parametrize('seed',[52,62])
+    @pytest.mark.parametrize('arm',runner.ARMS)
+    def test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu(cpu_training,monkeypatch,tmp_path,seed,arm):
+        helpers.install_loader(monkeypatch,{'train':[],'validation':[]})
+        args=helpers.args_for(monkeypatch,tmp_path,arm,'full');args.seeds=str(seed)
+        if arm=='titantpp_local_detail':args.model_role='observed_time_multilag_detail_v1'
+        meta=helpers.interface()
+        def run(a):
+            return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+                                      backbone=arm,quantity_variant=runner.VARIANT,seed=seed)
+&gt;       full,_,_=run(args);resumed=deepcopy(args);resumed.output_dir=tmp_path/'resume'
+                 ^^^^^^^^^
+
+simple_lab_test/search/tests/test_local_detail_replication.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+simple_lab_test/search/tests/test_local_detail_replication.py:96: in run
+    return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+paper/scripts/count_aware_tpp_backbone/training.py:839: in train_one
+    validation = evaluate(
+../../Library/Python/3.12/lib/python/site-packages/torch/utils/_contextlib.py:124: in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @torch.no_grad()
+    def evaluate(
+        *,
+        model: SharedTimeCountModel,
+        loader: Any,
+        quantity_contract: dict[str, Any],
+        device: str,
+        lambda_log_qty: float,
+        max_batches: int | None,
+        include_breakdowns: bool,
+    ) -&gt; dict[str, Any]:
+        """Evaluate shared metrics overall and by quantity/history strata."""
+        model.eval()
+        overall = empty_accumulator()
+        quantity_accumulators = [
+&gt;           empty_accumulator() for _ in quantity_contract["strata"]
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ]
+E       KeyError: 'strata'
+
+paper/scripts/count_aware_tpp_backbone/core.py:190: KeyError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu[titantpp_local_detail-52]" time="0.012"><failure message="KeyError: 'strata'">cpu_training = None
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x1149b3800&gt;
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-941/test_new_seed_checkpoint_resum2')
+seed = 52, arm = 'titantpp_local_detail'
+
+    @pytest.mark.parametrize('seed',[52,62])
+    @pytest.mark.parametrize('arm',runner.ARMS)
+    def test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu(cpu_training,monkeypatch,tmp_path,seed,arm):
+        helpers.install_loader(monkeypatch,{'train':[],'validation':[]})
+        args=helpers.args_for(monkeypatch,tmp_path,arm,'full');args.seeds=str(seed)
+        if arm=='titantpp_local_detail':args.model_role='observed_time_multilag_detail_v1'
+        meta=helpers.interface()
+        def run(a):
+            return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+                                      backbone=arm,quantity_variant=runner.VARIANT,seed=seed)
+&gt;       full,_,_=run(args);resumed=deepcopy(args);resumed.output_dir=tmp_path/'resume'
+                 ^^^^^^^^^
+
+simple_lab_test/search/tests/test_local_detail_replication.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+simple_lab_test/search/tests/test_local_detail_replication.py:96: in run
+    return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+paper/scripts/count_aware_tpp_backbone/training.py:839: in train_one
+    validation = evaluate(
+../../Library/Python/3.12/lib/python/site-packages/torch/utils/_contextlib.py:124: in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @torch.no_grad()
+    def evaluate(
+        *,
+        model: SharedTimeCountModel,
+        loader: Any,
+        quantity_contract: dict[str, Any],
+        device: str,
+        lambda_log_qty: float,
+        max_batches: int | None,
+        include_breakdowns: bool,
+    ) -&gt; dict[str, Any]:
+        """Evaluate shared metrics overall and by quantity/history strata."""
+        model.eval()
+        overall = empty_accumulator()
+        quantity_accumulators = [
+&gt;           empty_accumulator() for _ in quantity_contract["strata"]
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ]
+E       KeyError: 'strata'
+
+paper/scripts/count_aware_tpp_backbone/core.py:190: KeyError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu[titantpp_local_detail-62]" time="0.011"><failure message="KeyError: 'strata'">cpu_training = None
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x1149d4500&gt;
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-941/test_new_seed_checkpoint_resum3')
+seed = 62, arm = 'titantpp_local_detail'
+
+    @pytest.mark.parametrize('seed',[52,62])
+    @pytest.mark.parametrize('arm',runner.ARMS)
+    def test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu(cpu_training,monkeypatch,tmp_path,seed,arm):
+        helpers.install_loader(monkeypatch,{'train':[],'validation':[]})
+        args=helpers.args_for(monkeypatch,tmp_path,arm,'full');args.seeds=str(seed)
+        if arm=='titantpp_local_detail':args.model_role='observed_time_multilag_detail_v1'
+        meta=helpers.interface()
+        def run(a):
+            return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+                                      backbone=arm,quantity_variant=runner.VARIANT,seed=seed)
+&gt;       full,_,_=run(args);resumed=deepcopy(args);resumed.output_dir=tmp_path/'resume'
+                 ^^^^^^^^^
+
+simple_lab_test/search/tests/test_local_detail_replication.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+simple_lab_test/search/tests/test_local_detail_replication.py:96: in run
+    return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+paper/scripts/count_aware_tpp_backbone/training.py:839: in train_one
+    validation = evaluate(
+../../Library/Python/3.12/lib/python/site-packages/torch/utils/_contextlib.py:124: in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @torch.no_grad()
+    def evaluate(
+        *,
+        model: SharedTimeCountModel,
+        loader: Any,
+        quantity_contract: dict[str, Any],
+        device: str,
+        lambda_log_qty: float,
+        max_batches: int | None,
+        include_breakdowns: bool,
+    ) -&gt; dict[str, Any]:
+        """Evaluate shared metrics overall and by quantity/history strata."""
+        model.eval()
+        overall = empty_accumulator()
+        quantity_accumulators = [
+&gt;           empty_accumulator() for _ in quantity_contract["strata"]
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ]
+E       KeyError: 'strata'
+
+paper/scripts/count_aware_tpp_backbone/core.py:190: KeyError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu[rmtpp-52]" time="0.006"><failure message="KeyError: 'strata'">cpu_training = None
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x114974d70&gt;
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-941/test_new_seed_checkpoint_resum4')
+seed = 52, arm = 'rmtpp'
+
+    @pytest.mark.parametrize('seed',[52,62])
+    @pytest.mark.parametrize('arm',runner.ARMS)
+    def test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu(cpu_training,monkeypatch,tmp_path,seed,arm):
+        helpers.install_loader(monkeypatch,{'train':[],'validation':[]})
+        args=helpers.args_for(monkeypatch,tmp_path,arm,'full');args.seeds=str(seed)
+        if arm=='titantpp_local_detail':args.model_role='observed_time_multilag_detail_v1'
+        meta=helpers.interface()
+        def run(a):
+            return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+                                      backbone=arm,quantity_variant=runner.VARIANT,seed=seed)
+&gt;       full,_,_=run(args);resumed=deepcopy(args);resumed.output_dir=tmp_path/'resume'
+                 ^^^^^^^^^
+
+simple_lab_test/search/tests/test_local_detail_replication.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+simple_lab_test/search/tests/test_local_detail_replication.py:96: in run
+    return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+paper/scripts/count_aware_tpp_backbone/training.py:839: in train_one
+    validation = evaluate(
+../../Library/Python/3.12/lib/python/site-packages/torch/utils/_contextlib.py:124: in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @torch.no_grad()
+    def evaluate(
+        *,
+        model: SharedTimeCountModel,
+        loader: Any,
+        quantity_contract: dict[str, Any],
+        device: str,
+        lambda_log_qty: float,
+        max_batches: int | None,
+        include_breakdowns: bool,
+    ) -&gt; dict[str, Any]:
+        """Evaluate shared metrics overall and by quantity/history strata."""
+        model.eval()
+        overall = empty_accumulator()
+        quantity_accumulators = [
+&gt;           empty_accumulator() for _ in quantity_contract["strata"]
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ]
+E       KeyError: 'strata'
+
+paper/scripts/count_aware_tpp_backbone/core.py:190: KeyError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu[rmtpp-62]" time="0.005"><failure message="KeyError: 'strata'">cpu_training = None
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x14165f4d0&gt;
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-941/test_new_seed_checkpoint_resum5')
+seed = 62, arm = 'rmtpp'
+
+    @pytest.mark.parametrize('seed',[52,62])
+    @pytest.mark.parametrize('arm',runner.ARMS)
+    def test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu(cpu_training,monkeypatch,tmp_path,seed,arm):
+        helpers.install_loader(monkeypatch,{'train':[],'validation':[]})
+        args=helpers.args_for(monkeypatch,tmp_path,arm,'full');args.seeds=str(seed)
+        if arm=='titantpp_local_detail':args.model_role='observed_time_multilag_detail_v1'
+        meta=helpers.interface()
+        def run(a):
+            return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+                                      backbone=arm,quantity_variant=runner.VARIANT,seed=seed)
+&gt;       full,_,_=run(args);resumed=deepcopy(args);resumed.output_dir=tmp_path/'resume'
+                 ^^^^^^^^^
+
+simple_lab_test/search/tests/test_local_detail_replication.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+simple_lab_test/search/tests/test_local_detail_replication.py:96: in run
+    return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+paper/scripts/count_aware_tpp_backbone/training.py:839: in train_one
+    validation = evaluate(
+../../Library/Python/3.12/lib/python/site-packages/torch/utils/_contextlib.py:124: in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @torch.no_grad()
+    def evaluate(
+        *,
+        model: SharedTimeCountModel,
+        loader: Any,
+        quantity_contract: dict[str, Any],
+        device: str,
+        lambda_log_qty: float,
+        max_batches: int | None,
+        include_breakdowns: bool,
+    ) -&gt; dict[str, Any]:
+        """Evaluate shared metrics overall and by quantity/history strata."""
+        model.eval()
+        overall = empty_accumulator()
+        quantity_accumulators = [
+&gt;           empty_accumulator() for _ in quantity_contract["strata"]
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ]
+E       KeyError: 'strata'
+
+paper/scripts/count_aware_tpp_backbone/core.py:190: KeyError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu[thp-52]" time="0.008"><failure message="KeyError: 'strata'">cpu_training = None
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x14169cf20&gt;
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-941/test_new_seed_checkpoint_resum6')
+seed = 52, arm = 'thp'
+
+    @pytest.mark.parametrize('seed',[52,62])
+    @pytest.mark.parametrize('arm',runner.ARMS)
+    def test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu(cpu_training,monkeypatch,tmp_path,seed,arm):
+        helpers.install_loader(monkeypatch,{'train':[],'validation':[]})
+        args=helpers.args_for(monkeypatch,tmp_path,arm,'full');args.seeds=str(seed)
+        if arm=='titantpp_local_detail':args.model_role='observed_time_multilag_detail_v1'
+        meta=helpers.interface()
+        def run(a):
+            return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+                                      backbone=arm,quantity_variant=runner.VARIANT,seed=seed)
+&gt;       full,_,_=run(args);resumed=deepcopy(args);resumed.output_dir=tmp_path/'resume'
+                 ^^^^^^^^^
+
+simple_lab_test/search/tests/test_local_detail_replication.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+simple_lab_test/search/tests/test_local_detail_replication.py:96: in run
+    return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+paper/scripts/count_aware_tpp_backbone/training.py:839: in train_one
+    validation = evaluate(
+../../Library/Python/3.12/lib/python/site-packages/torch/utils/_contextlib.py:124: in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @torch.no_grad()
+    def evaluate(
+        *,
+        model: SharedTimeCountModel,
+        loader: Any,
+        quantity_contract: dict[str, Any],
+        device: str,
+        lambda_log_qty: float,
+        max_batches: int | None,
+        include_breakdowns: bool,
+    ) -&gt; dict[str, Any]:
+        """Evaluate shared metrics overall and by quantity/history strata."""
+        model.eval()
+        overall = empty_accumulator()
+        quantity_accumulators = [
+&gt;           empty_accumulator() for _ in quantity_contract["strata"]
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ]
+E       KeyError: 'strata'
+
+paper/scripts/count_aware_tpp_backbone/core.py:190: KeyError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu[thp-62]" time="0.008"><failure message="KeyError: 'strata'">cpu_training = None
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x14169d220&gt;
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-941/test_new_seed_checkpoint_resum7')
+seed = 62, arm = 'thp'
+
+    @pytest.mark.parametrize('seed',[52,62])
+    @pytest.mark.parametrize('arm',runner.ARMS)
+    def test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu(cpu_training,monkeypatch,tmp_path,seed,arm):
+        helpers.install_loader(monkeypatch,{'train':[],'validation':[]})
+        args=helpers.args_for(monkeypatch,tmp_path,arm,'full');args.seeds=str(seed)
+        if arm=='titantpp_local_detail':args.model_role='observed_time_multilag_detail_v1'
+        meta=helpers.interface()
+        def run(a):
+            return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+                                      backbone=arm,quantity_variant=runner.VARIANT,seed=seed)
+&gt;       full,_,_=run(args);resumed=deepcopy(args);resumed.output_dir=tmp_path/'resume'
+                 ^^^^^^^^^
+
+simple_lab_test/search/tests/test_local_detail_replication.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+simple_lab_test/search/tests/test_local_detail_replication.py:96: in run
+    return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+paper/scripts/count_aware_tpp_backbone/training.py:839: in train_one
+    validation = evaluate(
+../../Library/Python/3.12/lib/python/site-packages/torch/utils/_contextlib.py:124: in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @torch.no_grad()
+    def evaluate(
+        *,
+        model: SharedTimeCountModel,
+        loader: Any,
+        quantity_contract: dict[str, Any],
+        device: str,
+        lambda_log_qty: float,
+        max_batches: int | None,
+        include_breakdowns: bool,
+    ) -&gt; dict[str, Any]:
+        """Evaluate shared metrics overall and by quantity/history strata."""
+        model.eval()
+        overall = empty_accumulator()
+        quantity_accumulators = [
+&gt;           empty_accumulator() for _ in quantity_contract["strata"]
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ]
+E       KeyError: 'strata'
+
+paper/scripts/count_aware_tpp_backbone/core.py:190: KeyError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu[nhp-52]" time="0.007"><failure message="KeyError: 'strata'">cpu_training = None
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x140f71df0&gt;
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-941/test_new_seed_checkpoint_resum8')
+seed = 52, arm = 'nhp'
+
+    @pytest.mark.parametrize('seed',[52,62])
+    @pytest.mark.parametrize('arm',runner.ARMS)
+    def test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu(cpu_training,monkeypatch,tmp_path,seed,arm):
+        helpers.install_loader(monkeypatch,{'train':[],'validation':[]})
+        args=helpers.args_for(monkeypatch,tmp_path,arm,'full');args.seeds=str(seed)
+        if arm=='titantpp_local_detail':args.model_role='observed_time_multilag_detail_v1'
+        meta=helpers.interface()
+        def run(a):
+            return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+                                      backbone=arm,quantity_variant=runner.VARIANT,seed=seed)
+&gt;       full,_,_=run(args);resumed=deepcopy(args);resumed.output_dir=tmp_path/'resume'
+                 ^^^^^^^^^
+
+simple_lab_test/search/tests/test_local_detail_replication.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+simple_lab_test/search/tests/test_local_detail_replication.py:96: in run
+    return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+paper/scripts/count_aware_tpp_backbone/training.py:839: in train_one
+    validation = evaluate(
+../../Library/Python/3.12/lib/python/site-packages/torch/utils/_contextlib.py:124: in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @torch.no_grad()
+    def evaluate(
+        *,
+        model: SharedTimeCountModel,
+        loader: Any,
+        quantity_contract: dict[str, Any],
+        device: str,
+        lambda_log_qty: float,
+        max_batches: int | None,
+        include_breakdowns: bool,
+    ) -&gt; dict[str, Any]:
+        """Evaluate shared metrics overall and by quantity/history strata."""
+        model.eval()
+        overall = empty_accumulator()
+        quantity_accumulators = [
+&gt;           empty_accumulator() for _ in quantity_contract["strata"]
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ]
+E       KeyError: 'strata'
+
+paper/scripts/count_aware_tpp_backbone/core.py:190: KeyError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu[nhp-62]" time="0.007"><failure message="KeyError: 'strata'">cpu_training = None
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x14169e8a0&gt;
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-941/test_new_seed_checkpoint_resum9')
+seed = 62, arm = 'nhp'
+
+    @pytest.mark.parametrize('seed',[52,62])
+    @pytest.mark.parametrize('arm',runner.ARMS)
+    def test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu(cpu_training,monkeypatch,tmp_path,seed,arm):
+        helpers.install_loader(monkeypatch,{'train':[],'validation':[]})
+        args=helpers.args_for(monkeypatch,tmp_path,arm,'full');args.seeds=str(seed)
+        if arm=='titantpp_local_detail':args.model_role='observed_time_multilag_detail_v1'
+        meta=helpers.interface()
+        def run(a):
+            return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+                                      backbone=arm,quantity_variant=runner.VARIANT,seed=seed)
+&gt;       full,_,_=run(args);resumed=deepcopy(args);resumed.output_dir=tmp_path/'resume'
+                 ^^^^^^^^^
+
+simple_lab_test/search/tests/test_local_detail_replication.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+simple_lab_test/search/tests/test_local_detail_replication.py:96: in run
+    return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+paper/scripts/count_aware_tpp_backbone/training.py:839: in train_one
+    validation = evaluate(
+../../Library/Python/3.12/lib/python/site-packages/torch/utils/_contextlib.py:124: in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @torch.no_grad()
+    def evaluate(
+        *,
+        model: SharedTimeCountModel,
+        loader: Any,
+        quantity_contract: dict[str, Any],
+        device: str,
+        lambda_log_qty: float,
+        max_batches: int | None,
+        include_breakdowns: bool,
+    ) -&gt; dict[str, Any]:
+        """Evaluate shared metrics overall and by quantity/history strata."""
+        model.eval()
+        overall = empty_accumulator()
+        quantity_accumulators = [
+&gt;           empty_accumulator() for _ in quantity_contract["strata"]
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ]
+E       KeyError: 'strata'
+
+paper/scripts/count_aware_tpp_backbone/core.py:190: KeyError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu[sahp-52]" time="0.009"><failure message="KeyError: 'strata'">cpu_training = None
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x165585b50&gt;
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-941/test_new_seed_checkpoint_resum10')
+seed = 52, arm = 'sahp'
+
+    @pytest.mark.parametrize('seed',[52,62])
+    @pytest.mark.parametrize('arm',runner.ARMS)
+    def test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu(cpu_training,monkeypatch,tmp_path,seed,arm):
+        helpers.install_loader(monkeypatch,{'train':[],'validation':[]})
+        args=helpers.args_for(monkeypatch,tmp_path,arm,'full');args.seeds=str(seed)
+        if arm=='titantpp_local_detail':args.model_role='observed_time_multilag_detail_v1'
+        meta=helpers.interface()
+        def run(a):
+            return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+                                      backbone=arm,quantity_variant=runner.VARIANT,seed=seed)
+&gt;       full,_,_=run(args);resumed=deepcopy(args);resumed.output_dir=tmp_path/'resume'
+                 ^^^^^^^^^
+
+simple_lab_test/search/tests/test_local_detail_replication.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+simple_lab_test/search/tests/test_local_detail_replication.py:96: in run
+    return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+paper/scripts/count_aware_tpp_backbone/training.py:839: in train_one
+    validation = evaluate(
+../../Library/Python/3.12/lib/python/site-packages/torch/utils/_contextlib.py:124: in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @torch.no_grad()
+    def evaluate(
+        *,
+        model: SharedTimeCountModel,
+        loader: Any,
+        quantity_contract: dict[str, Any],
+        device: str,
+        lambda_log_qty: float,
+        max_batches: int | None,
+        include_breakdowns: bool,
+    ) -&gt; dict[str, Any]:
+        """Evaluate shared metrics overall and by quantity/history strata."""
+        model.eval()
+        overall = empty_accumulator()
+        quantity_accumulators = [
+&gt;           empty_accumulator() for _ in quantity_contract["strata"]
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ]
+E       KeyError: 'strata'
+
+paper/scripts/count_aware_tpp_backbone/core.py:190: KeyError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu[sahp-62]" time="0.009"><failure message="KeyError: 'strata'">cpu_training = None
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x165585490&gt;
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-941/test_new_seed_checkpoint_resum11')
+seed = 62, arm = 'sahp'
+
+    @pytest.mark.parametrize('seed',[52,62])
+    @pytest.mark.parametrize('arm',runner.ARMS)
+    def test_new_seed_checkpoint_resume_is_exact_on_synthetic_cpu(cpu_training,monkeypatch,tmp_path,seed,arm):
+        helpers.install_loader(monkeypatch,{'train':[],'validation':[]})
+        args=helpers.args_for(monkeypatch,tmp_path,arm,'full');args.seeds=str(seed)
+        if arm=='titantpp_local_detail':args.model_role='observed_time_multilag_detail_v1'
+        meta=helpers.interface()
+        def run(a):
+            return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+                                      backbone=arm,quantity_variant=runner.VARIANT,seed=seed)
+&gt;       full,_,_=run(args);resumed=deepcopy(args);resumed.output_dir=tmp_path/'resume'
+                 ^^^^^^^^^
+
+simple_lab_test/search/tests/test_local_detail_replication.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+simple_lab_test/search/tests/test_local_detail_replication.py:96: in run
+    return training.train_one(args=a,frame=helpers.grid_frame(),quantity_contract={},interface_meta=meta,
+paper/scripts/count_aware_tpp_backbone/training.py:839: in train_one
+    validation = evaluate(
+../../Library/Python/3.12/lib/python/site-packages/torch/utils/_contextlib.py:124: in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @torch.no_grad()
+    def evaluate(
+        *,
+        model: SharedTimeCountModel,
+        loader: Any,
+        quantity_contract: dict[str, Any],
+        device: str,
+        lambda_log_qty: float,
+        max_batches: int | None,
+        include_breakdowns: bool,
+    ) -&gt; dict[str, Any]:
+        """Evaluate shared metrics overall and by quantity/history strata."""
+        model.eval()
+        overall = empty_accumulator()
+        quantity_accumulators = [
+&gt;           empty_accumulator() for _ in quantity_contract["strata"]
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ]
+E       KeyError: 'strata'
+
+paper/scripts/count_aware_tpp_backbone/core.py:190: KeyError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_native_qualification_seed_and_preserved_deadline" time="0.003" /><testcase classname="simple_lab_test.search.tests.test_local_detail_replication" name="test_replication_watchdog_rejects_wrong_seed" time="0.002" /></testsuite></testsuites>

@@ -1,0 +1,70 @@
+{
+  "status": "proposed_not_implemented_or_execution_frozen",
+  "created_at_utc": "2026-10-03T06:09:10.666065+00:00",
+  "scope": "Replace HistoryCorrection between encoder blocks 1 and 2 only",
+  "side_session_spec_status": "not_found; recommendation requested by user",
+  "candidate": {
+    "d_model": 64,
+    "conv1": {
+      "input_channels": 64,
+      "output_channels": 24,
+      "kernel_size": 3,
+      "dilation": 1,
+      "stride": 1,
+      "groups": 1,
+      "bias": false
+    },
+    "nonlinearity": "GELU",
+    "conv2": {
+      "input_channels": 24,
+      "output_channels": 64,
+      "kernel_size": 1,
+      "bias": false,
+      "initialization": "zero"
+    },
+    "context": "current and previous two observed hidden states within baseline-defined segment",
+    "missing_context": "zero vectors; padding is not an event; withheld valid rows break the segment",
+    "gate": "observed current position AND segment observed count including current >= 2",
+    "residual_scale": 0.125,
+    "branch_schedule": "replaced by single observed-history gate",
+    "correction_parameters": 6144
+  },
+  "baseline_correction_parameters": 6144,
+  "unchanged": [
+    "input log1p",
+    "encoder blocks",
+    "persistent banks",
+    "static top-4 retrieval",
+    "prediction heads",
+    "time likelihood",
+    "quantity loss",
+    "data split and preprocessing",
+    "baseline optimizer and batch settings"
+  ],
+  "proposed_selection": {
+    "seed": 42,
+    "min_epochs": 40,
+    "max_epochs": 300,
+    "patience": 40,
+    "criterion": "first minimum raw quantity validation RMSE"
+  },
+  "execution": {
+    "new_training_started": false,
+    "remote_actions": false,
+    "gpu_budget_allocated": false,
+    "full_model_implemented": false
+  },
+  "interpretation_limits": [
+    "window/feature layout/gate change jointly",
+    "k3 conv plus pointwise is algebraically a shared 3-state MLP",
+    "parameter equality does not establish runtime or gradient equality",
+    "no superiority or novelty claim established"
+  ],
+  "source_sha256": {
+    "models/TPPs/CountAwareTitanCoreAblation.py": "b34b61aadc7a2c91e000493caf2497fc89549a499082ca77ebbc3ed7cab2b120",
+    "models/TPPs/CountAwareTitanMultiLagDetail.py": "4bcbecdadf921df21a4e7fb379962eb4ecec2cfeb2f8ff1edccbb6b418807eae",
+    "models/TPPs/CountAwareTitanCausalQKV.py": "402f48187658401371ccadf0bf6ba2dc3413e1442a94d837562dac6b5d5bba68",
+    "paper/titantpp_pakdd_2027_draft/main.tex": "44189836334c73b75138689c9baa3496e53a650fdcff36ad9a75d534711aa331",
+    "paper/contracts/hard_lmm_causal_qkv_v1.md": "1ee6b2db37935751445cefbab36537e909e7694df2c1ca010983455a710c67a6"
+  }
+}

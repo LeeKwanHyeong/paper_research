@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "track": "legacy_cap300_compatibility_diagnostic",
+  "dataset_id": "intermittent_frozen_5000",
+  "seed": 42,
+  "epochs": 120,
+  "objectives": [
+    "joint",
+    "quantity_only",
+    "time_only"
+  ],
+  "data": {
+    "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+    "sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f"
+  },
+  "split_manifest": {
+    "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/intermittent_v2/intermittent_frozen_5000_split_manifest.json",
+    "sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04"
+  },
+  "source": null,
+  "runtime": null,
+  "loader": {
+    "num_workers": 0,
+    "drop_last": false,
+    "train_shuffle": true,
+    "validation_shuffle": false,
+    "batch_size": 128,
+    "lookback_weeks": 520,
+    "max_seq_len": 256
+  },
+  "model": {
+    "backbone": "titantpp",
+    "hidden_dim": 64,
+    "quantity_variant": "count_only_log_regression",
+    "time_head_mode": "legacy_clamped_rmtpp",
+    "time_intercept_limit": 300.0,
+    "time_scale": 3.0,
+    "time_w_max": 3.3333333333333335,
+    "lambda_tail": 0.0
+  },
+  "optimizer": {
+    "lr": 0.001,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0
+  },
+  "populations": {
+    "train": {
+      "target_count": 393824,
+      "target_identity_sha256": "fb8737489bc18e528adc322e2e55e26fcc5793aa6ff8021d93ceac98d7768aed",
+      "target_quantity_sha256": "c4a9c3721d3861c190e81abe35156488f545b00c8ddbbed4022a9a82a4b3a215"
+    },
+    "validation": {
+      "target_count": 86285,
+      "target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+      "target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385"
+    }
+  }
+}

@@ -1,0 +1,157 @@
+{
+  "scope": "source hashes and exact/synthetic mathematical checks, not model performance",
+  "dataset_opened": false,
+  "checkpoint_loaded": false,
+  "training_or_inference": false,
+  "source_identity": {
+    "models/TPPs/CountAwareTitanCoreAblation.py": {
+      "current_sha256": "b34b61aadc7a2c91e000493caf2497fc89549a499082ca77ebbc3ed7cab2b120",
+      "frozen_sha256": "b34b61aadc7a2c91e000493caf2497fc89549a499082ca77ebbc3ed7cab2b120",
+      "whole_file_identical": true
+    },
+    "models/TPPs/CountAwareTitanMultiLagDetail.py": {
+      "current_sha256": "4bcbecdadf921df21a4e7fb379962eb4ecec2cfeb2f8ff1edccbb6b418807eae",
+      "frozen_sha256": "4bcbecdadf921df21a4e7fb379962eb4ecec2cfeb2f8ff1edccbb6b418807eae",
+      "whole_file_identical": true
+    },
+    "models/TPPs/CountAwareTPP.py": {
+      "current_sha256": "9348e4ad18aea3c12e532cf1403fecd5f8a7af2d932f9c1019ddd8b3b48e4c1c",
+      "frozen_sha256": "d8439b3e86f5304471d0e70265ab3da9c362b2a1f7fd12d423ed8a3d33f52a2a",
+      "whole_file_identical": false,
+      "audited_function_ast_matches": {
+        "continuous_features": true,
+        "predict_quantity": true,
+        "quantity_outputs": true
+      }
+    },
+    "paper/scripts/count_aware_tpp_backbone/core.py": {
+      "current_sha256": "c5cc72a265a05199868332c9beaa32ce9568afaf5f4cfa0930b836215ab36084",
+      "frozen_sha256": "c5cc72a265a05199868332c9beaa32ce9568afaf5f4cfa0930b836215ab36084",
+      "whole_file_identical": true,
+      "audited_function_ast_matches": {
+        "target_outputs": true
+      }
+    }
+  },
+  "K_equals_sum_H_greater_than_lag": {
+    "1": 0,
+    "2": 1,
+    "3": 2,
+    "4": 2,
+    "7": 3,
+    "8": 3,
+    "9": 4,
+    "15": 4,
+    "16": 4,
+    "17": 5,
+    "31": 5,
+    "32": 5,
+    "33": 6,
+    "64": 6,
+    "65": 7,
+    "128": 7,
+    "129": 8,
+    "255": 8
+  },
+  "parameter_and_span_formulas": {
+    "4": {
+      "correction_parameters": 6144,
+      "total_parameters_length256_configuration_only": 96003,
+      "correction_span_upper_bound_by_K": {
+        "0": 0,
+        "1": 4,
+        "2": 8,
+        "3": 12,
+        "4": 16,
+        "5": 20,
+        "6": 24,
+        "7": 28,
+        "8": 32
+      }
+    },
+    "8": {
+      "correction_parameters": 12288,
+      "total_parameters_length256_configuration_only": 102147,
+      "correction_span_upper_bound_by_K": {
+        "0": 0,
+        "1": 8,
+        "2": 16,
+        "3": 24,
+        "4": 32,
+        "5": 40,
+        "6": 48,
+        "7": 56,
+        "8": 64
+      }
+    },
+    "16": {
+      "correction_parameters": 24576,
+      "total_parameters_length256_configuration_only": 114435,
+      "correction_span_upper_bound_by_K": {
+        "0": 0,
+        "1": 16,
+        "2": 32,
+        "3": 48,
+        "4": 64,
+        "5": 64,
+        "6": 64,
+        "7": 64,
+        "8": 64
+      }
+    },
+    "32": {
+      "correction_parameters": 49152,
+      "total_parameters_length256_configuration_only": 139011,
+      "correction_span_upper_bound_by_K": {
+        "0": 0,
+        "1": 32,
+        "2": 64,
+        "3": 64,
+        "4": 64,
+        "5": 64,
+        "6": 64,
+        "7": 64,
+        "8": 64
+      }
+    },
+    "64": {
+      "correction_parameters": 98304,
+      "total_parameters_length256_configuration_only": 188163,
+      "correction_span_upper_bound_by_K": {
+        "0": 0,
+        "1": 64,
+        "2": 64,
+        "3": 64,
+        "4": 64,
+        "5": 64,
+        "6": 64,
+        "7": 64,
+        "8": 64
+      }
+    }
+  },
+  "same_absolute_error_examples": [
+    {
+      "true": 200.0,
+      "prediction": 100.0,
+      "log_mse": 0.4735977563158361,
+      "raw_mse_before_fixed_scale": 10000.0,
+      "raw_head_gradient_before_fixed_scale": -20000.0
+    },
+    {
+      "true": 10100.0,
+      "prediction": 10000.0,
+      "log_mse": 9.898938340256108e-05,
+      "raw_mse_before_fixed_scale": 10000.0,
+      "raw_head_gradient_before_fixed_scale": -2000000.0
+    }
+  ],
+  "expm1_softplus_equals_exp_max_relative_error_in_examples": 8.881784197001252e-16,
+  "prior_history_bins_constant_K": false,
+  "counterexample": {
+    "prior_bin": "(1,3]",
+    "H2_K": 1,
+    "H3_K": 2
+  },
+  "status": "passed"
+}

@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "track": "legacy_cap300_compatibility_diagnostic",
+  "dataset_id": "yellow_trip_hourly",
+  "seed": 42,
+  "epochs": 120,
+  "objectives": [
+    "joint",
+    "quantity_only",
+    "time_only"
+  ],
+  "data": {
+    "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+    "sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46"
+  },
+  "split_manifest": {
+    "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/new_york_taxi/yellow_trip_hourly_split_manifest.json",
+    "sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85"
+  },
+  "source": null,
+  "runtime": null,
+  "loader": {
+    "num_workers": 0,
+    "drop_last": false,
+    "train_shuffle": true,
+    "validation_shuffle": false,
+    "batch_size": 128,
+    "lookback_weeks": 168,
+    "max_seq_len": 256
+  },
+  "model": {
+    "backbone": "titantpp",
+    "hidden_dim": 64,
+    "quantity_variant": "count_only_log_regression",
+    "time_head_mode": "legacy_clamped_rmtpp",
+    "time_intercept_limit": 300.0,
+    "time_scale": 3.0,
+    "time_w_max": 3.3333333333333335,
+    "lambda_tail": 0.0
+  },
+  "optimizer": {
+    "lr": 0.001,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0
+  },
+  "populations": {
+    "train": {
+      "target_count": 38393,
+      "target_identity_sha256": "fc6453af5a9a34c93dd3f299cd545c9ab946be11752ee001f38055e52cc9e637",
+      "target_quantity_sha256": "bbabe4e040831f05bc96680afdb4c45a1856673e418bdd1db9495cda3f693680"
+    },
+    "validation": {
+      "target_count": 8268,
+      "target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+      "target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd"
+    }
+  }
+}

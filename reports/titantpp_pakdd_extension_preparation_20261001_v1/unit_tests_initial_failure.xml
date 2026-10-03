@@ -1,0 +1,533 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="10" skipped="0" tests="15" time="2.112" timestamp="2026-10-01T23:14:12.562296+09:00" hostname="LeeKwanHyeongs-MacBook-Pro.local"><testcase classname="simple_lab_test.search.tests.test_pakdd_extension" name="test_synthetic_model_paths" time="0.129" /><testcase classname="simple_lab_test.search.tests.test_pakdd_extension" name="test_real_trainer_and_replays[yellow_trip_hourly-titantpp_current_only_param_matched]" time="0.083"><failure message="KeyError: 'steps_per_epoch'">cpu_training = None
+admitted_contract = {'acceptance': {'body_mae_ratio_max': 1.02, 'each_nonempty_middle_bin_mae_and_rmse_ratio_max': 1.02, 'last30_rmse_mean..., 4, 8, 16, 32, ...], 'control_lags': [1, 1, 1, 1, 1, 1, ...], 'gelu_approximate': 'none', 'hidden_dim': 64, ...}, ...}
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-1039/test_real_trainer_and_replays_0')
+arm = 'titantpp_current_only_param_matched', dataset = 'yellow_trip_hourly'
+
+    @pytest.mark.parametrize('arm',r.ARMS)
+    @pytest.mark.parametrize('dataset',['yellow_trip_hourly','intermittent_frozen_5000','insta_market_basket'])
+    def test_real_trainer_and_replays(cpu_training,admitted_contract,tmp_path,arm,dataset):
+        c=deepcopy(admitted_contract);c.update(design_sha256='synthetic',architecture={})
+        data=next(d for d in c['datasets'] if d['dataset_id']==dataset)
+        frame,_=r.base.prepare_admitted_data(data);interface=r.time_interface(data,frame,c,arm)
+        args=r.training_args(c,data,tmp_path/'train',arm);args.device='cpu';args.epochs=args.min_epochs=args.early_stopping_patience=3
+        q={'boundaries':data['quantity_boundaries_all_train_rows'],'strata':[{'label':f'bin{i}'} for i in range(5)]}
+        from paper.scripts.count_aware_tpp_backbone import training
+        with r.shared.audited_training(training,data,lambda:None,lambda *_:None) as exposure:
+            summary,_,_=training.train_one(args=args,frame=frame,quantity_contract=q,interface_meta=interface,backbone=arm,quantity_variant=r.variant_for(arm),seed=42)
+        run=args.output_dir/'runs'/arm/r.variant_for(arm)/'seed_42'
+        history=r.read(run/'history.json')['history']
+&gt;       r.prior.audit_arm(history,summary,exposure,data,{'minimum_epochs':3,'maximum_epochs':3,'patience':3})
+
+simple_lab_test/search/tests/test_pakdd_extension.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+history = [{'epoch': 1, 'train_all_finite': True, 'train_batch_count': 1, 'train_batch_joint_max': 2.4878845453583134, ...}, {'e......}, {'epoch': 3, 'train_all_finite': True, 'train_batch_count': 1, 'train_batch_joint_max': 2.3813838371466978, ...}]
+summary = {'backbone': 'titantpp_current_only_param_matched', 'backbone_label': 'titantpp_current_only_param_matched', 'best_epoch': 3, 'best_val_joint_objective': 2.708410502103448, ...}
+exposure = {'train': [{'batch_order_sha256': 'b4d164f7f28db9c4e4c6ce53f1cae510382f873726f98dfb99795f883fe95d0b', 'batches': 1, 'c...a256': '2e235f50298b87dc61ff94183bfcbbc394b78224884a750754f8f0637598ac7d', 'batches': 1, 'count': 8, 'epoch': 4, ...}]}
+data = {'additional_history_boundaries': [64, 128], 'dataset_id': 'yellow_trip_hourly', 'epochs': 120, 'expected_global_steps': 36000, ...}
+settings = {'maximum_epochs': 3, 'minimum_epochs': 3, 'patience': 3}
+
+    def audit_arm(history, summary, exposure, data, settings):
+        from paper.scripts.count_aware_tpp_backbone import training
+        epochs = len(history)
+        require(settings["minimum_epochs"] &lt;= epochs &lt;= settings["maximum_epochs"], "Epoch budget mismatch")
+        require([r["epoch"] for r in history] == list(range(1,epochs+1)), "Noncontinuous history")
+        require(all(r["train_all_finite"] for r in history), "Nonfinite training")
+        stop_at = None
+        for end in range(1, epochs+1):
+            prefix = history[:end]
+            best = training.earliest_strict_minimum(prefix, metric_key="val_qty_rmse")
+            require(best is not None and all(math.isfinite(r["val_qty_rmse"]) for r in prefix), "Nonfinite selector")
+            if training.early_stopping_exhausted(prefix, metric_key="val_qty_rmse",
+                    min_epochs=settings["minimum_epochs"], patience=settings["patience"]):
+                stop_at = end; break
+        require(epochs == (stop_at if stop_at is not None else settings["maximum_epochs"]),
+                "Training did not stop at the prescribed first stopping epoch")
+        require(summary["status"] == "success" and summary["completed_epochs"] == epochs
+                and summary["stopped_early"] == (stop_at is not None), "Terminal training metadata mismatch")
+        best = training.earliest_strict_minimum(history, metric_key="val_qty_rmse")
+        require(summary["best_epoch"] == best["epoch"], "Not the strict earliest RMSE checkpoint")
+        require(summary["held_out_test_evaluated"] is False, "Held-out evaluation forbidden")
+&gt;       adjusted = {**data, "expected_global_steps": epochs * data["steps_per_epoch"]}
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'steps_per_epoch'
+
+paper/scripts/run_local_detail_benchmark.py:114: KeyError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_pakdd_extension" name="test_real_trainer_and_replays[yellow_trip_hourly-titantpp_all_available_history_mlp]" time="0.065"><failure message="KeyError: 'steps_per_epoch'">cpu_training = None
+admitted_contract = {'acceptance': {'body_mae_ratio_max': 1.02, 'each_nonempty_middle_bin_mae_and_rmse_ratio_max': 1.02, 'last30_rmse_mean..., 4, 8, 16, 32, ...], 'control_lags': [1, 1, 1, 1, 1, 1, ...], 'gelu_approximate': 'none', 'hidden_dim': 64, ...}, ...}
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-1039/test_real_trainer_and_replays_1')
+arm = 'titantpp_all_available_history_mlp', dataset = 'yellow_trip_hourly'
+
+    @pytest.mark.parametrize('arm',r.ARMS)
+    @pytest.mark.parametrize('dataset',['yellow_trip_hourly','intermittent_frozen_5000','insta_market_basket'])
+    def test_real_trainer_and_replays(cpu_training,admitted_contract,tmp_path,arm,dataset):
+        c=deepcopy(admitted_contract);c.update(design_sha256='synthetic',architecture={})
+        data=next(d for d in c['datasets'] if d['dataset_id']==dataset)
+        frame,_=r.base.prepare_admitted_data(data);interface=r.time_interface(data,frame,c,arm)
+        args=r.training_args(c,data,tmp_path/'train',arm);args.device='cpu';args.epochs=args.min_epochs=args.early_stopping_patience=3
+        q={'boundaries':data['quantity_boundaries_all_train_rows'],'strata':[{'label':f'bin{i}'} for i in range(5)]}
+        from paper.scripts.count_aware_tpp_backbone import training
+        with r.shared.audited_training(training,data,lambda:None,lambda *_:None) as exposure:
+            summary,_,_=training.train_one(args=args,frame=frame,quantity_contract=q,interface_meta=interface,backbone=arm,quantity_variant=r.variant_for(arm),seed=42)
+        run=args.output_dir/'runs'/arm/r.variant_for(arm)/'seed_42'
+        history=r.read(run/'history.json')['history']
+&gt;       r.prior.audit_arm(history,summary,exposure,data,{'minimum_epochs':3,'maximum_epochs':3,'patience':3})
+
+simple_lab_test/search/tests/test_pakdd_extension.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+history = [{'epoch': 1, 'train_all_finite': True, 'train_batch_count': 1, 'train_batch_joint_max': 2.4878845453583134, ...}, {'e... ...}, {'epoch': 3, 'train_all_finite': True, 'train_batch_count': 1, 'train_batch_joint_max': 2.381318242327129, ...}]
+summary = {'backbone': 'titantpp_all_available_history_mlp', 'backbone_label': 'titantpp_all_available_history_mlp', 'best_epoch': 3, 'best_val_joint_objective': 2.707698604444854, ...}
+exposure = {'train': [{'batch_order_sha256': 'b4d164f7f28db9c4e4c6ce53f1cae510382f873726f98dfb99795f883fe95d0b', 'batches': 1, 'c...a256': '2e235f50298b87dc61ff94183bfcbbc394b78224884a750754f8f0637598ac7d', 'batches': 1, 'count': 8, 'epoch': 4, ...}]}
+data = {'additional_history_boundaries': [64, 128], 'dataset_id': 'yellow_trip_hourly', 'epochs': 120, 'expected_global_steps': 36000, ...}
+settings = {'maximum_epochs': 3, 'minimum_epochs': 3, 'patience': 3}
+
+    def audit_arm(history, summary, exposure, data, settings):
+        from paper.scripts.count_aware_tpp_backbone import training
+        epochs = len(history)
+        require(settings["minimum_epochs"] &lt;= epochs &lt;= settings["maximum_epochs"], "Epoch budget mismatch")
+        require([r["epoch"] for r in history] == list(range(1,epochs+1)), "Noncontinuous history")
+        require(all(r["train_all_finite"] for r in history), "Nonfinite training")
+        stop_at = None
+        for end in range(1, epochs+1):
+            prefix = history[:end]
+            best = training.earliest_strict_minimum(prefix, metric_key="val_qty_rmse")
+            require(best is not None and all(math.isfinite(r["val_qty_rmse"]) for r in prefix), "Nonfinite selector")
+            if training.early_stopping_exhausted(prefix, metric_key="val_qty_rmse",
+                    min_epochs=settings["minimum_epochs"], patience=settings["patience"]):
+                stop_at = end; break
+        require(epochs == (stop_at if stop_at is not None else settings["maximum_epochs"]),
+                "Training did not stop at the prescribed first stopping epoch")
+        require(summary["status"] == "success" and summary["completed_epochs"] == epochs
+                and summary["stopped_early"] == (stop_at is not None), "Terminal training metadata mismatch")
+        best = training.earliest_strict_minimum(history, metric_key="val_qty_rmse")
+        require(summary["best_epoch"] == best["epoch"], "Not the strict earliest RMSE checkpoint")
+        require(summary["held_out_test_evaluated"] is False, "Held-out evaluation forbidden")
+&gt;       adjusted = {**data, "expected_global_steps": epochs * data["steps_per_epoch"]}
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'steps_per_epoch'
+
+paper/scripts/run_local_detail_benchmark.py:114: KeyError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_pakdd_extension" name="test_real_trainer_and_replays[yellow_trip_hourly-deep_renewal_event_native_nb]" time="0.032"><failure message="AttributeError: 'DeepRenewalEvent' object has no attribute 'time_head_telemetry'">cpu_training = None
+admitted_contract = {'acceptance': {'body_mae_ratio_max': 1.02, 'each_nonempty_middle_bin_mae_and_rmse_ratio_max': 1.02, 'last30_rmse_mean..., 4, 8, 16, 32, ...], 'control_lags': [1, 1, 1, 1, 1, 1, ...], 'gelu_approximate': 'none', 'hidden_dim': 64, ...}, ...}
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-1039/test_real_trainer_and_replays_2')
+arm = 'deep_renewal_event_native_nb', dataset = 'yellow_trip_hourly'
+
+    @pytest.mark.parametrize('arm',r.ARMS)
+    @pytest.mark.parametrize('dataset',['yellow_trip_hourly','intermittent_frozen_5000','insta_market_basket'])
+    def test_real_trainer_and_replays(cpu_training,admitted_contract,tmp_path,arm,dataset):
+        c=deepcopy(admitted_contract);c.update(design_sha256='synthetic',architecture={})
+        data=next(d for d in c['datasets'] if d['dataset_id']==dataset)
+        frame,_=r.base.prepare_admitted_data(data);interface=r.time_interface(data,frame,c,arm)
+        args=r.training_args(c,data,tmp_path/'train',arm);args.device='cpu';args.epochs=args.min_epochs=args.early_stopping_patience=3
+        q={'boundaries':data['quantity_boundaries_all_train_rows'],'strata':[{'label':f'bin{i}'} for i in range(5)]}
+        from paper.scripts.count_aware_tpp_backbone import training
+        with r.shared.audited_training(training,data,lambda:None,lambda *_:None) as exposure:
+&gt;           summary,_,_=training.train_one(args=args,frame=frame,quantity_contract=q,interface_meta=interface,backbone=arm,quantity_variant=r.variant_for(arm),seed=42)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+simple_lab_test/search/tests/test_pakdd_extension.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+paper/scripts/count_aware_tpp_backbone/training.py:829: in train_one
+    train_telemetry = train_epoch_with_telemetry(
+paper/scripts/count_aware_tpp_backbone/training.py:596: in train_epoch_with_telemetry
+    **model.time_head_telemetry(),
+      ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = DeepRenewalEvent(
+  (rnn): LSTM(2, 64, num_layers=2, batch_first=True, dropout=0.1)
+  (dense): Linear(in_features=64, out_features=2, bias=True)
+)
+name = 'time_head_telemetry'
+
+    def __getattr__(self, name: str) -&gt; Union[Tensor, "Module"]:
+        if "_parameters" in self.__dict__:
+            _parameters = self.__dict__["_parameters"]
+            if name in _parameters:
+                return _parameters[name]
+        if "_buffers" in self.__dict__:
+            _buffers = self.__dict__["_buffers"]
+            if name in _buffers:
+                return _buffers[name]
+        if "_modules" in self.__dict__:
+            modules = self.__dict__["_modules"]
+            if name in modules:
+                return modules[name]
+&gt;       raise AttributeError(
+            f"'{type(self).__name__}' object has no attribute '{name}'"
+        )
+E       AttributeError: 'DeepRenewalEvent' object has no attribute 'time_head_telemetry'
+
+../../Library/Python/3.12/lib/python/site-packages/torch/nn/modules/module.py:1972: AttributeError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_pakdd_extension" name="test_real_trainer_and_replays[intermittent_frozen_5000-titantpp_current_only_param_matched]" time="0.064"><failure message="KeyError: 'steps_per_epoch'">cpu_training = None
+admitted_contract = {'acceptance': {'body_mae_ratio_max': 1.02, 'each_nonempty_middle_bin_mae_and_rmse_ratio_max': 1.02, 'last30_rmse_mean..., 4, 8, 16, 32, ...], 'control_lags': [1, 1, 1, 1, 1, 1, ...], 'gelu_approximate': 'none', 'hidden_dim': 64, ...}, ...}
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-1039/test_real_trainer_and_replays_3')
+arm = 'titantpp_current_only_param_matched'
+dataset = 'intermittent_frozen_5000'
+
+    @pytest.mark.parametrize('arm',r.ARMS)
+    @pytest.mark.parametrize('dataset',['yellow_trip_hourly','intermittent_frozen_5000','insta_market_basket'])
+    def test_real_trainer_and_replays(cpu_training,admitted_contract,tmp_path,arm,dataset):
+        c=deepcopy(admitted_contract);c.update(design_sha256='synthetic',architecture={})
+        data=next(d for d in c['datasets'] if d['dataset_id']==dataset)
+        frame,_=r.base.prepare_admitted_data(data);interface=r.time_interface(data,frame,c,arm)
+        args=r.training_args(c,data,tmp_path/'train',arm);args.device='cpu';args.epochs=args.min_epochs=args.early_stopping_patience=3
+        q={'boundaries':data['quantity_boundaries_all_train_rows'],'strata':[{'label':f'bin{i}'} for i in range(5)]}
+        from paper.scripts.count_aware_tpp_backbone import training
+        with r.shared.audited_training(training,data,lambda:None,lambda *_:None) as exposure:
+            summary,_,_=training.train_one(args=args,frame=frame,quantity_contract=q,interface_meta=interface,backbone=arm,quantity_variant=r.variant_for(arm),seed=42)
+        run=args.output_dir/'runs'/arm/r.variant_for(arm)/'seed_42'
+        history=r.read(run/'history.json')['history']
+&gt;       r.prior.audit_arm(history,summary,exposure,data,{'minimum_epochs':3,'maximum_epochs':3,'patience':3})
+
+simple_lab_test/search/tests/test_pakdd_extension.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+history = [{'epoch': 1, 'train_all_finite': True, 'train_batch_count': 1, 'train_batch_joint_max': 2.4878845453583134, ...}, {'e......}, {'epoch': 3, 'train_all_finite': True, 'train_batch_count': 1, 'train_batch_joint_max': 2.3813838371466978, ...}]
+summary = {'backbone': 'titantpp_current_only_param_matched', 'backbone_label': 'titantpp_current_only_param_matched', 'best_epoch': 3, 'best_val_joint_objective': 2.708410502103448, ...}
+exposure = {'train': [{'batch_order_sha256': 'b4d164f7f28db9c4e4c6ce53f1cae510382f873726f98dfb99795f883fe95d0b', 'batches': 1, 'c...a256': '2e235f50298b87dc61ff94183bfcbbc394b78224884a750754f8f0637598ac7d', 'batches': 1, 'count': 8, 'epoch': 4, ...}]}
+data = {'additional_history_boundaries': [64, 128], 'dataset_id': 'intermittent_frozen_5000', 'epochs': 120, 'expected_global_steps': 369240, ...}
+settings = {'maximum_epochs': 3, 'minimum_epochs': 3, 'patience': 3}
+
+    def audit_arm(history, summary, exposure, data, settings):
+        from paper.scripts.count_aware_tpp_backbone import training
+        epochs = len(history)
+        require(settings["minimum_epochs"] &lt;= epochs &lt;= settings["maximum_epochs"], "Epoch budget mismatch")
+        require([r["epoch"] for r in history] == list(range(1,epochs+1)), "Noncontinuous history")
+        require(all(r["train_all_finite"] for r in history), "Nonfinite training")
+        stop_at = None
+        for end in range(1, epochs+1):
+            prefix = history[:end]
+            best = training.earliest_strict_minimum(prefix, metric_key="val_qty_rmse")
+            require(best is not None and all(math.isfinite(r["val_qty_rmse"]) for r in prefix), "Nonfinite selector")
+            if training.early_stopping_exhausted(prefix, metric_key="val_qty_rmse",
+                    min_epochs=settings["minimum_epochs"], patience=settings["patience"]):
+                stop_at = end; break
+        require(epochs == (stop_at if stop_at is not None else settings["maximum_epochs"]),
+                "Training did not stop at the prescribed first stopping epoch")
+        require(summary["status"] == "success" and summary["completed_epochs"] == epochs
+                and summary["stopped_early"] == (stop_at is not None), "Terminal training metadata mismatch")
+        best = training.earliest_strict_minimum(history, metric_key="val_qty_rmse")
+        require(summary["best_epoch"] == best["epoch"], "Not the strict earliest RMSE checkpoint")
+        require(summary["held_out_test_evaluated"] is False, "Held-out evaluation forbidden")
+&gt;       adjusted = {**data, "expected_global_steps": epochs * data["steps_per_epoch"]}
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'steps_per_epoch'
+
+paper/scripts/run_local_detail_benchmark.py:114: KeyError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_pakdd_extension" name="test_real_trainer_and_replays[intermittent_frozen_5000-titantpp_all_available_history_mlp]" time="0.065"><failure message="KeyError: 'steps_per_epoch'">cpu_training = None
+admitted_contract = {'acceptance': {'body_mae_ratio_max': 1.02, 'each_nonempty_middle_bin_mae_and_rmse_ratio_max': 1.02, 'last30_rmse_mean..., 4, 8, 16, 32, ...], 'control_lags': [1, 1, 1, 1, 1, 1, ...], 'gelu_approximate': 'none', 'hidden_dim': 64, ...}, ...}
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-1039/test_real_trainer_and_replays_4')
+arm = 'titantpp_all_available_history_mlp', dataset = 'intermittent_frozen_5000'
+
+    @pytest.mark.parametrize('arm',r.ARMS)
+    @pytest.mark.parametrize('dataset',['yellow_trip_hourly','intermittent_frozen_5000','insta_market_basket'])
+    def test_real_trainer_and_replays(cpu_training,admitted_contract,tmp_path,arm,dataset):
+        c=deepcopy(admitted_contract);c.update(design_sha256='synthetic',architecture={})
+        data=next(d for d in c['datasets'] if d['dataset_id']==dataset)
+        frame,_=r.base.prepare_admitted_data(data);interface=r.time_interface(data,frame,c,arm)
+        args=r.training_args(c,data,tmp_path/'train',arm);args.device='cpu';args.epochs=args.min_epochs=args.early_stopping_patience=3
+        q={'boundaries':data['quantity_boundaries_all_train_rows'],'strata':[{'label':f'bin{i}'} for i in range(5)]}
+        from paper.scripts.count_aware_tpp_backbone import training
+        with r.shared.audited_training(training,data,lambda:None,lambda *_:None) as exposure:
+            summary,_,_=training.train_one(args=args,frame=frame,quantity_contract=q,interface_meta=interface,backbone=arm,quantity_variant=r.variant_for(arm),seed=42)
+        run=args.output_dir/'runs'/arm/r.variant_for(arm)/'seed_42'
+        history=r.read(run/'history.json')['history']
+&gt;       r.prior.audit_arm(history,summary,exposure,data,{'minimum_epochs':3,'maximum_epochs':3,'patience':3})
+
+simple_lab_test/search/tests/test_pakdd_extension.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+history = [{'epoch': 1, 'train_all_finite': True, 'train_batch_count': 1, 'train_batch_joint_max': 2.4878845453583134, ...}, {'e... ...}, {'epoch': 3, 'train_all_finite': True, 'train_batch_count': 1, 'train_batch_joint_max': 2.381318242327129, ...}]
+summary = {'backbone': 'titantpp_all_available_history_mlp', 'backbone_label': 'titantpp_all_available_history_mlp', 'best_epoch': 3, 'best_val_joint_objective': 2.707698604444854, ...}
+exposure = {'train': [{'batch_order_sha256': 'b4d164f7f28db9c4e4c6ce53f1cae510382f873726f98dfb99795f883fe95d0b', 'batches': 1, 'c...a256': '2e235f50298b87dc61ff94183bfcbbc394b78224884a750754f8f0637598ac7d', 'batches': 1, 'count': 8, 'epoch': 4, ...}]}
+data = {'additional_history_boundaries': [64, 128], 'dataset_id': 'intermittent_frozen_5000', 'epochs': 120, 'expected_global_steps': 369240, ...}
+settings = {'maximum_epochs': 3, 'minimum_epochs': 3, 'patience': 3}
+
+    def audit_arm(history, summary, exposure, data, settings):
+        from paper.scripts.count_aware_tpp_backbone import training
+        epochs = len(history)
+        require(settings["minimum_epochs"] &lt;= epochs &lt;= settings["maximum_epochs"], "Epoch budget mismatch")
+        require([r["epoch"] for r in history] == list(range(1,epochs+1)), "Noncontinuous history")
+        require(all(r["train_all_finite"] for r in history), "Nonfinite training")
+        stop_at = None
+        for end in range(1, epochs+1):
+            prefix = history[:end]
+            best = training.earliest_strict_minimum(prefix, metric_key="val_qty_rmse")
+            require(best is not None and all(math.isfinite(r["val_qty_rmse"]) for r in prefix), "Nonfinite selector")
+            if training.early_stopping_exhausted(prefix, metric_key="val_qty_rmse",
+                    min_epochs=settings["minimum_epochs"], patience=settings["patience"]):
+                stop_at = end; break
+        require(epochs == (stop_at if stop_at is not None else settings["maximum_epochs"]),
+                "Training did not stop at the prescribed first stopping epoch")
+        require(summary["status"] == "success" and summary["completed_epochs"] == epochs
+                and summary["stopped_early"] == (stop_at is not None), "Terminal training metadata mismatch")
+        best = training.earliest_strict_minimum(history, metric_key="val_qty_rmse")
+        require(summary["best_epoch"] == best["epoch"], "Not the strict earliest RMSE checkpoint")
+        require(summary["held_out_test_evaluated"] is False, "Held-out evaluation forbidden")
+&gt;       adjusted = {**data, "expected_global_steps": epochs * data["steps_per_epoch"]}
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'steps_per_epoch'
+
+paper/scripts/run_local_detail_benchmark.py:114: KeyError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_pakdd_extension" name="test_real_trainer_and_replays[intermittent_frozen_5000-deep_renewal_event_native_nb]" time="0.031"><failure message="AttributeError: 'DeepRenewalEvent' object has no attribute 'time_head_telemetry'">cpu_training = None
+admitted_contract = {'acceptance': {'body_mae_ratio_max': 1.02, 'each_nonempty_middle_bin_mae_and_rmse_ratio_max': 1.02, 'last30_rmse_mean..., 4, 8, 16, 32, ...], 'control_lags': [1, 1, 1, 1, 1, 1, ...], 'gelu_approximate': 'none', 'hidden_dim': 64, ...}, ...}
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-1039/test_real_trainer_and_replays_5')
+arm = 'deep_renewal_event_native_nb', dataset = 'intermittent_frozen_5000'
+
+    @pytest.mark.parametrize('arm',r.ARMS)
+    @pytest.mark.parametrize('dataset',['yellow_trip_hourly','intermittent_frozen_5000','insta_market_basket'])
+    def test_real_trainer_and_replays(cpu_training,admitted_contract,tmp_path,arm,dataset):
+        c=deepcopy(admitted_contract);c.update(design_sha256='synthetic',architecture={})
+        data=next(d for d in c['datasets'] if d['dataset_id']==dataset)
+        frame,_=r.base.prepare_admitted_data(data);interface=r.time_interface(data,frame,c,arm)
+        args=r.training_args(c,data,tmp_path/'train',arm);args.device='cpu';args.epochs=args.min_epochs=args.early_stopping_patience=3
+        q={'boundaries':data['quantity_boundaries_all_train_rows'],'strata':[{'label':f'bin{i}'} for i in range(5)]}
+        from paper.scripts.count_aware_tpp_backbone import training
+        with r.shared.audited_training(training,data,lambda:None,lambda *_:None) as exposure:
+&gt;           summary,_,_=training.train_one(args=args,frame=frame,quantity_contract=q,interface_meta=interface,backbone=arm,quantity_variant=r.variant_for(arm),seed=42)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+simple_lab_test/search/tests/test_pakdd_extension.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+paper/scripts/count_aware_tpp_backbone/training.py:829: in train_one
+    train_telemetry = train_epoch_with_telemetry(
+paper/scripts/count_aware_tpp_backbone/training.py:596: in train_epoch_with_telemetry
+    **model.time_head_telemetry(),
+      ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = DeepRenewalEvent(
+  (rnn): LSTM(2, 64, num_layers=2, batch_first=True, dropout=0.1)
+  (dense): Linear(in_features=64, out_features=2, bias=True)
+)
+name = 'time_head_telemetry'
+
+    def __getattr__(self, name: str) -&gt; Union[Tensor, "Module"]:
+        if "_parameters" in self.__dict__:
+            _parameters = self.__dict__["_parameters"]
+            if name in _parameters:
+                return _parameters[name]
+        if "_buffers" in self.__dict__:
+            _buffers = self.__dict__["_buffers"]
+            if name in _buffers:
+                return _buffers[name]
+        if "_modules" in self.__dict__:
+            modules = self.__dict__["_modules"]
+            if name in modules:
+                return modules[name]
+&gt;       raise AttributeError(
+            f"'{type(self).__name__}' object has no attribute '{name}'"
+        )
+E       AttributeError: 'DeepRenewalEvent' object has no attribute 'time_head_telemetry'
+
+../../Library/Python/3.12/lib/python/site-packages/torch/nn/modules/module.py:1972: AttributeError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_pakdd_extension" name="test_real_trainer_and_replays[insta_market_basket-titantpp_current_only_param_matched]" time="0.063"><failure message="KeyError: 'steps_per_epoch'">cpu_training = None
+admitted_contract = {'acceptance': {'body_mae_ratio_max': 1.02, 'each_nonempty_middle_bin_mae_and_rmse_ratio_max': 1.02, 'last30_rmse_mean..., 4, 8, 16, 32, ...], 'control_lags': [1, 1, 1, 1, 1, 1, ...], 'gelu_approximate': 'none', 'hidden_dim': 64, ...}, ...}
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-1039/test_real_trainer_and_replays_6')
+arm = 'titantpp_current_only_param_matched', dataset = 'insta_market_basket'
+
+    @pytest.mark.parametrize('arm',r.ARMS)
+    @pytest.mark.parametrize('dataset',['yellow_trip_hourly','intermittent_frozen_5000','insta_market_basket'])
+    def test_real_trainer_and_replays(cpu_training,admitted_contract,tmp_path,arm,dataset):
+        c=deepcopy(admitted_contract);c.update(design_sha256='synthetic',architecture={})
+        data=next(d for d in c['datasets'] if d['dataset_id']==dataset)
+        frame,_=r.base.prepare_admitted_data(data);interface=r.time_interface(data,frame,c,arm)
+        args=r.training_args(c,data,tmp_path/'train',arm);args.device='cpu';args.epochs=args.min_epochs=args.early_stopping_patience=3
+        q={'boundaries':data['quantity_boundaries_all_train_rows'],'strata':[{'label':f'bin{i}'} for i in range(5)]}
+        from paper.scripts.count_aware_tpp_backbone import training
+        with r.shared.audited_training(training,data,lambda:None,lambda *_:None) as exposure:
+            summary,_,_=training.train_one(args=args,frame=frame,quantity_contract=q,interface_meta=interface,backbone=arm,quantity_variant=r.variant_for(arm),seed=42)
+        run=args.output_dir/'runs'/arm/r.variant_for(arm)/'seed_42'
+        history=r.read(run/'history.json')['history']
+&gt;       r.prior.audit_arm(history,summary,exposure,data,{'minimum_epochs':3,'maximum_epochs':3,'patience':3})
+
+simple_lab_test/search/tests/test_pakdd_extension.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+history = [{'epoch': 1, 'train_all_finite': True, 'train_batch_count': 1, 'train_batch_joint_max': 2.4878845453583134, ...}, {'e......}, {'epoch': 3, 'train_all_finite': True, 'train_batch_count': 1, 'train_batch_joint_max': 2.3813838371466978, ...}]
+summary = {'backbone': 'titantpp_current_only_param_matched', 'backbone_label': 'titantpp_current_only_param_matched', 'best_epoch': 3, 'best_val_joint_objective': 2.708410502103448, ...}
+exposure = {'train': [{'batch_order_sha256': 'b4d164f7f28db9c4e4c6ce53f1cae510382f873726f98dfb99795f883fe95d0b', 'batches': 1, 'c...a256': '2e235f50298b87dc61ff94183bfcbbc394b78224884a750754f8f0637598ac7d', 'batches': 1, 'count': 8, 'epoch': 4, ...}]}
+data = {'additional_history_boundaries': [1, 3, 7, 15, 31], 'dataset_id': 'insta_market_basket', 'epochs': 120, 'expected_global_steps': 1866840, ...}
+settings = {'maximum_epochs': 3, 'minimum_epochs': 3, 'patience': 3}
+
+    def audit_arm(history, summary, exposure, data, settings):
+        from paper.scripts.count_aware_tpp_backbone import training
+        epochs = len(history)
+        require(settings["minimum_epochs"] &lt;= epochs &lt;= settings["maximum_epochs"], "Epoch budget mismatch")
+        require([r["epoch"] for r in history] == list(range(1,epochs+1)), "Noncontinuous history")
+        require(all(r["train_all_finite"] for r in history), "Nonfinite training")
+        stop_at = None
+        for end in range(1, epochs+1):
+            prefix = history[:end]
+            best = training.earliest_strict_minimum(prefix, metric_key="val_qty_rmse")
+            require(best is not None and all(math.isfinite(r["val_qty_rmse"]) for r in prefix), "Nonfinite selector")
+            if training.early_stopping_exhausted(prefix, metric_key="val_qty_rmse",
+                    min_epochs=settings["minimum_epochs"], patience=settings["patience"]):
+                stop_at = end; break
+        require(epochs == (stop_at if stop_at is not None else settings["maximum_epochs"]),
+                "Training did not stop at the prescribed first stopping epoch")
+        require(summary["status"] == "success" and summary["completed_epochs"] == epochs
+                and summary["stopped_early"] == (stop_at is not None), "Terminal training metadata mismatch")
+        best = training.earliest_strict_minimum(history, metric_key="val_qty_rmse")
+        require(summary["best_epoch"] == best["epoch"], "Not the strict earliest RMSE checkpoint")
+        require(summary["held_out_test_evaluated"] is False, "Held-out evaluation forbidden")
+&gt;       adjusted = {**data, "expected_global_steps": epochs * data["steps_per_epoch"]}
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'steps_per_epoch'
+
+paper/scripts/run_local_detail_benchmark.py:114: KeyError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_pakdd_extension" name="test_real_trainer_and_replays[insta_market_basket-titantpp_all_available_history_mlp]" time="0.063"><failure message="KeyError: 'steps_per_epoch'">cpu_training = None
+admitted_contract = {'acceptance': {'body_mae_ratio_max': 1.02, 'each_nonempty_middle_bin_mae_and_rmse_ratio_max': 1.02, 'last30_rmse_mean..., 4, 8, 16, 32, ...], 'control_lags': [1, 1, 1, 1, 1, 1, ...], 'gelu_approximate': 'none', 'hidden_dim': 64, ...}, ...}
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-1039/test_real_trainer_and_replays_7')
+arm = 'titantpp_all_available_history_mlp', dataset = 'insta_market_basket'
+
+    @pytest.mark.parametrize('arm',r.ARMS)
+    @pytest.mark.parametrize('dataset',['yellow_trip_hourly','intermittent_frozen_5000','insta_market_basket'])
+    def test_real_trainer_and_replays(cpu_training,admitted_contract,tmp_path,arm,dataset):
+        c=deepcopy(admitted_contract);c.update(design_sha256='synthetic',architecture={})
+        data=next(d for d in c['datasets'] if d['dataset_id']==dataset)
+        frame,_=r.base.prepare_admitted_data(data);interface=r.time_interface(data,frame,c,arm)
+        args=r.training_args(c,data,tmp_path/'train',arm);args.device='cpu';args.epochs=args.min_epochs=args.early_stopping_patience=3
+        q={'boundaries':data['quantity_boundaries_all_train_rows'],'strata':[{'label':f'bin{i}'} for i in range(5)]}
+        from paper.scripts.count_aware_tpp_backbone import training
+        with r.shared.audited_training(training,data,lambda:None,lambda *_:None) as exposure:
+            summary,_,_=training.train_one(args=args,frame=frame,quantity_contract=q,interface_meta=interface,backbone=arm,quantity_variant=r.variant_for(arm),seed=42)
+        run=args.output_dir/'runs'/arm/r.variant_for(arm)/'seed_42'
+        history=r.read(run/'history.json')['history']
+&gt;       r.prior.audit_arm(history,summary,exposure,data,{'minimum_epochs':3,'maximum_epochs':3,'patience':3})
+
+simple_lab_test/search/tests/test_pakdd_extension.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+history = [{'epoch': 1, 'train_all_finite': True, 'train_batch_count': 1, 'train_batch_joint_max': 2.4878845453583134, ...}, {'e... ...}, {'epoch': 3, 'train_all_finite': True, 'train_batch_count': 1, 'train_batch_joint_max': 2.381318242327129, ...}]
+summary = {'backbone': 'titantpp_all_available_history_mlp', 'backbone_label': 'titantpp_all_available_history_mlp', 'best_epoch': 3, 'best_val_joint_objective': 2.707698604444854, ...}
+exposure = {'train': [{'batch_order_sha256': 'b4d164f7f28db9c4e4c6ce53f1cae510382f873726f98dfb99795f883fe95d0b', 'batches': 1, 'c...a256': '2e235f50298b87dc61ff94183bfcbbc394b78224884a750754f8f0637598ac7d', 'batches': 1, 'count': 8, 'epoch': 4, ...}]}
+data = {'additional_history_boundaries': [1, 3, 7, 15, 31], 'dataset_id': 'insta_market_basket', 'epochs': 120, 'expected_global_steps': 1866840, ...}
+settings = {'maximum_epochs': 3, 'minimum_epochs': 3, 'patience': 3}
+
+    def audit_arm(history, summary, exposure, data, settings):
+        from paper.scripts.count_aware_tpp_backbone import training
+        epochs = len(history)
+        require(settings["minimum_epochs"] &lt;= epochs &lt;= settings["maximum_epochs"], "Epoch budget mismatch")
+        require([r["epoch"] for r in history] == list(range(1,epochs+1)), "Noncontinuous history")
+        require(all(r["train_all_finite"] for r in history), "Nonfinite training")
+        stop_at = None
+        for end in range(1, epochs+1):
+            prefix = history[:end]
+            best = training.earliest_strict_minimum(prefix, metric_key="val_qty_rmse")
+            require(best is not None and all(math.isfinite(r["val_qty_rmse"]) for r in prefix), "Nonfinite selector")
+            if training.early_stopping_exhausted(prefix, metric_key="val_qty_rmse",
+                    min_epochs=settings["minimum_epochs"], patience=settings["patience"]):
+                stop_at = end; break
+        require(epochs == (stop_at if stop_at is not None else settings["maximum_epochs"]),
+                "Training did not stop at the prescribed first stopping epoch")
+        require(summary["status"] == "success" and summary["completed_epochs"] == epochs
+                and summary["stopped_early"] == (stop_at is not None), "Terminal training metadata mismatch")
+        best = training.earliest_strict_minimum(history, metric_key="val_qty_rmse")
+        require(summary["best_epoch"] == best["epoch"], "Not the strict earliest RMSE checkpoint")
+        require(summary["held_out_test_evaluated"] is False, "Held-out evaluation forbidden")
+&gt;       adjusted = {**data, "expected_global_steps": epochs * data["steps_per_epoch"]}
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'steps_per_epoch'
+
+paper/scripts/run_local_detail_benchmark.py:114: KeyError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_pakdd_extension" name="test_real_trainer_and_replays[insta_market_basket-deep_renewal_event_native_nb]" time="0.031"><failure message="AttributeError: 'DeepRenewalEvent' object has no attribute 'time_head_telemetry'">cpu_training = None
+admitted_contract = {'acceptance': {'body_mae_ratio_max': 1.02, 'each_nonempty_middle_bin_mae_and_rmse_ratio_max': 1.02, 'last30_rmse_mean..., 4, 8, 16, 32, ...], 'control_lags': [1, 1, 1, 1, 1, 1, ...], 'gelu_approximate': 'none', 'hidden_dim': 64, ...}, ...}
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-1039/test_real_trainer_and_replays_8')
+arm = 'deep_renewal_event_native_nb', dataset = 'insta_market_basket'
+
+    @pytest.mark.parametrize('arm',r.ARMS)
+    @pytest.mark.parametrize('dataset',['yellow_trip_hourly','intermittent_frozen_5000','insta_market_basket'])
+    def test_real_trainer_and_replays(cpu_training,admitted_contract,tmp_path,arm,dataset):
+        c=deepcopy(admitted_contract);c.update(design_sha256='synthetic',architecture={})
+        data=next(d for d in c['datasets'] if d['dataset_id']==dataset)
+        frame,_=r.base.prepare_admitted_data(data);interface=r.time_interface(data,frame,c,arm)
+        args=r.training_args(c,data,tmp_path/'train',arm);args.device='cpu';args.epochs=args.min_epochs=args.early_stopping_patience=3
+        q={'boundaries':data['quantity_boundaries_all_train_rows'],'strata':[{'label':f'bin{i}'} for i in range(5)]}
+        from paper.scripts.count_aware_tpp_backbone import training
+        with r.shared.audited_training(training,data,lambda:None,lambda *_:None) as exposure:
+&gt;           summary,_,_=training.train_one(args=args,frame=frame,quantity_contract=q,interface_meta=interface,backbone=arm,quantity_variant=r.variant_for(arm),seed=42)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+simple_lab_test/search/tests/test_pakdd_extension.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+paper/scripts/count_aware_tpp_backbone/training.py:829: in train_one
+    train_telemetry = train_epoch_with_telemetry(
+paper/scripts/count_aware_tpp_backbone/training.py:596: in train_epoch_with_telemetry
+    **model.time_head_telemetry(),
+      ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = DeepRenewalEvent(
+  (rnn): LSTM(2, 64, num_layers=2, batch_first=True, dropout=0.1)
+  (dense): Linear(in_features=64, out_features=2, bias=True)
+)
+name = 'time_head_telemetry'
+
+    def __getattr__(self, name: str) -&gt; Union[Tensor, "Module"]:
+        if "_parameters" in self.__dict__:
+            _parameters = self.__dict__["_parameters"]
+            if name in _parameters:
+                return _parameters[name]
+        if "_buffers" in self.__dict__:
+            _buffers = self.__dict__["_buffers"]
+            if name in _buffers:
+                return _buffers[name]
+        if "_modules" in self.__dict__:
+            modules = self.__dict__["_modules"]
+            if name in modules:
+                return modules[name]
+&gt;       raise AttributeError(
+            f"'{type(self).__name__}' object has no attribute '{name}'"
+        )
+E       AttributeError: 'DeepRenewalEvent' object has no attribute 'time_head_telemetry'
+
+../../Library/Python/3.12/lib/python/site-packages/torch/nn/modules/module.py:1972: AttributeError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_pakdd_extension" name="test_actual_epoch_resume_model_optimizer_rng_shuffle[titantpp_current_only_param_matched]" time="0.113" /><testcase classname="simple_lab_test.search.tests.test_pakdd_extension" name="test_actual_epoch_resume_model_optimizer_rng_shuffle[titantpp_all_available_history_mlp]" time="0.113" /><testcase classname="simple_lab_test.search.tests.test_pakdd_extension" name="test_actual_epoch_resume_model_optimizer_rng_shuffle[deep_renewal_event_native_nb]" time="0.031"><failure message="AttributeError: 'DeepRenewalEvent' object has no attribute 'time_head_telemetry'">cpu_training = None
+admitted_contract = {'acceptance': {'body_mae_ratio_max': 1.02, 'each_nonempty_middle_bin_mae_and_rmse_ratio_max': 1.02, 'last30_rmse_mean..., 4, 8, 16, 32, ...], 'control_lags': [1, 1, 1, 1, 1, 1, ...], 'gelu_approximate': 'none', 'hidden_dim': 64, ...}, ...}
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-1039/test_actual_epoch_resume_model2')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x14f567bf0&gt;
+arm = 'deep_renewal_event_native_nb'
+
+    @pytest.mark.parametrize('arm',r.ARMS)
+    def test_actual_epoch_resume_model_optimizer_rng_shuffle(cpu_training,admitted_contract,tmp_path,monkeypatch,arm):
+        from paper.scripts.count_aware_tpp_backbone import training
+        c=deepcopy(admitted_contract);c.update(design_sha256='synthetic',architecture={})
+        data=c['datasets'][0];frame,_=r.base.prepare_admitted_data(data);interface=r.time_interface(data,frame,c,arm)
+        q={'boundaries':data['quantity_boundaries_all_train_rows'],'strata':[{'label':f'bin{i}'} for i in range(5)]}
+        def args_for(folder):
+            a=r.training_args(c,data,folder,arm);a.device='cpu';a.epochs=a.min_epochs=a.early_stopping_patience=3;return a
+        a=args_for(tmp_path/'continuous');b=args_for(tmp_path/'resumed')
+        def fit(a):return training.train_one(args=a,frame=frame,quantity_contract=q,interface_meta=interface,backbone=arm,quantity_variant=r.variant_for(arm),seed=42)
+&gt;       fit(a)
+
+simple_lab_test/search/tests/test_pakdd_extension.py:49: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+simple_lab_test/search/tests/test_pakdd_extension.py:48: in fit
+    def fit(a):return training.train_one(args=a,frame=frame,quantity_contract=q,interface_meta=interface,backbone=arm,quantity_variant=r.variant_for(arm),seed=42)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+paper/scripts/count_aware_tpp_backbone/training.py:829: in train_one
+    train_telemetry = train_epoch_with_telemetry(
+paper/scripts/count_aware_tpp_backbone/training.py:596: in train_epoch_with_telemetry
+    **model.time_head_telemetry(),
+      ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = DeepRenewalEvent(
+  (rnn): LSTM(2, 64, num_layers=2, batch_first=True, dropout=0.1)
+  (dense): Linear(in_features=64, out_features=2, bias=True)
+)
+name = 'time_head_telemetry'
+
+    def __getattr__(self, name: str) -&gt; Union[Tensor, "Module"]:
+        if "_parameters" in self.__dict__:
+            _parameters = self.__dict__["_parameters"]
+            if name in _parameters:
+                return _parameters[name]
+        if "_buffers" in self.__dict__:
+            _buffers = self.__dict__["_buffers"]
+            if name in _buffers:
+                return _buffers[name]
+        if "_modules" in self.__dict__:
+            modules = self.__dict__["_modules"]
+            if name in modules:
+                return modules[name]
+&gt;       raise AttributeError(
+            f"'{type(self).__name__}' object has no attribute '{name}'"
+        )
+E       AttributeError: 'DeepRenewalEvent' object has no attribute 'time_head_telemetry'
+
+../../Library/Python/3.12/lib/python/site-packages/torch/nn/modules/module.py:1972: AttributeError</failure></testcase><testcase classname="simple_lab_test.search.tests.test_pakdd_extension" name="test_extreme_tail_against_high_precision_and_gradient" time="0.012" /><testcase classname="simple_lab_test.search.tests.test_pakdd_extension" name="test_native_role_cannot_use_log_mse" time="0.000" /></testsuite></testsuites>

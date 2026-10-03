@@ -1,0 +1,279 @@
+{
+  "data_path": "/Users/igwanhyeong/PycharmProjects/paper_research/sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+  "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+  "source_revision_reviewed": "ca8823e688a510e64e7fb81c9dc9d158d4bdfc7c",
+  "access_scope": "Parquet predicate selects train/validation before table materialization. File SHA hashes opaque bytes; no held-out rows are materialized or analyzed.",
+  "filtered_rows": 46792,
+  "series_count": 131,
+  "assertions": {
+    "target_counts_match": {
+      "train": 38393,
+      "validation": 8268
+    },
+    "nonfirst_dt_equals_seq_difference": true,
+    "history_max_is_168": true
+  },
+  "reconstruction": {
+    "time_unit": "hour",
+    "target": "For each series and context end i, target is stored delta_t[i+1], cast to int32 and clipped to minimum 1.",
+    "history": "Count rows with seq in [seq[i]-167, seq[i]], capped at 255 after appending one target; no cap binds in Taxi (max history 168).",
+    "split": "Target split determines train/validation; validation history includes earlier train and validation rows.",
+    "full_window": "Diagnostic only: context seq minus first observed series seq >= 167; excludes early-series startup context.",
+    "timestamps": "Absolute demand_dt/time_bucket columns are not passed by this loader; seq chooses the window and delta_t is model input/target.",
+    "quantile_method": "numpy.quantile default linear interpolation"
+  },
+  "source_files": {
+    "data_loader/event_seq_data_module.py": {
+      "path": "/private/tmp/paper_research_dual_timescale/data_loader/event_seq_data_module.py",
+      "sha256": "7c11d9ace6c4e4d3bb03861aae92393aa946a38452d702dc7625210b339897ca",
+      "line_ranges": [
+        [
+          246,
+          262
+        ],
+        [
+          295,
+          312
+        ],
+        [
+          337,
+          354
+        ]
+      ]
+    },
+    "paper/scripts/count_aware_tpp_backbone/core.py": {
+      "path": "/private/tmp/paper_research_dual_timescale/paper/scripts/count_aware_tpp_backbone/core.py",
+      "sha256": "025dfbe75a5a4e235466807f31873aa085f8ddffe680485fb4b9f4f7ef60c598",
+      "line_ranges": [
+        [
+          19,
+          25
+        ],
+        [
+          69,
+          87
+        ],
+        [
+          101,
+          101
+        ]
+      ]
+    },
+    "paper/scripts/count_aware_tpp_backbone/datasets.py": {
+      "path": "/private/tmp/paper_research_dual_timescale/paper/scripts/count_aware_tpp_backbone/datasets.py",
+      "sha256": "0a2982d92a21d6dd0518adba5e631d40cf2222c9eb9ee476d861b27211623274",
+      "line_ranges": [
+        [
+          52,
+          57
+        ]
+      ]
+    },
+    "simple_lab_test/notebooks/preprocessing/yellow_trip.ipynb": {
+      "path": "/private/tmp/paper_research_dual_timescale/simple_lab_test/notebooks/preprocessing/yellow_trip.ipynb",
+      "sha256": "4c097a547cc1e7ee05eee06fae8cdd388e801f51a6a28e6ab2f1f1c7005993f9",
+      "line_ranges": [
+        [
+          185,
+          201
+        ],
+        [
+          235,
+          242
+        ]
+      ]
+    }
+  },
+  "profiles": {
+    "train": {
+      "overall": {
+        "count": 38393,
+        "dt1_count": 31651,
+        "dt1_share": 0.8243950720183367,
+        "dt_mean": 1.739926549110515,
+        "dt_p50": 1.0,
+        "dt_p99": 15.0,
+        "dt_max": 115,
+        "dt_gt15_count": 352,
+        "dt_gt50_count": 8,
+        "qty_mean": 229.0271664105436,
+        "qty_p50": 7.0,
+        "qty_le2_count": 12985,
+        "history_min": 1,
+        "history_max": 168
+      },
+      "history_le64": {
+        "count": 10250,
+        "dt1_count": 6121,
+        "dt1_share": 0.597170731707317,
+        "dt_mean": 3.242926829268293,
+        "dt_p50": 1.0,
+        "dt_p99": 25.0,
+        "dt_max": 115,
+        "dt_gt15_count": 346,
+        "dt_gt50_count": 8,
+        "qty_mean": 91.12087804878048,
+        "qty_p50": 2.0,
+        "qty_le2_count": 6306,
+        "history_min": 1,
+        "history_max": 64
+      },
+      "history_65to128": {
+        "count": 8787,
+        "dt1_count": 6788,
+        "dt1_share": 0.7725048366905656,
+        "dt_mean": 1.5092750654375782,
+        "dt_p50": 1.0,
+        "dt_p99": 7.0,
+        "dt_max": 23,
+        "dt_gt15_count": 6,
+        "dt_gt50_count": 0,
+        "qty_mean": 105.5562763172869,
+        "qty_p50": 2.0,
+        "qty_le2_count": 4429,
+        "history_min": 65,
+        "history_max": 128
+      },
+      "history_gt128": {
+        "count": 19356,
+        "dt1_count": 18742,
+        "dt1_share": 0.9682785699524695,
+        "dt_mean": 1.0487187435420542,
+        "dt_p50": 1.0,
+        "dt_p99": 2.0,
+        "dt_max": 8,
+        "dt_gt15_count": 0,
+        "dt_gt50_count": 0,
+        "qty_mean": 358.1074602190535,
+        "qty_p50": 28.0,
+        "qty_le2_count": 2250,
+        "history_min": 129,
+        "history_max": 168
+      },
+      "short_history_by_elapsed_observation": {
+        "early_series_startup": {
+          "count": 6773,
+          "dt1_count": 4991,
+          "dt1_share": 0.7368965008120478,
+          "dt_mean": 2.2923372213199467,
+          "dt_p50": 1.0,
+          "dt_p99": 20.0,
+          "dt_max": 115,
+          "dt_gt15_count": 128,
+          "dt_gt50_count": 1,
+          "qty_mean": 137.1785028790787,
+          "qty_p50": 3.0,
+          "qty_le2_count": 3122,
+          "history_min": 1,
+          "history_max": 64
+        },
+        "full_168h_window": {
+          "count": 3477,
+          "dt1_count": 1130,
+          "dt1_share": 0.3249928098935864,
+          "dt_mean": 5.094621800402646,
+          "dt_p50": 3.0,
+          "dt_p99": 31.0,
+          "dt_max": 68,
+          "dt_gt15_count": 218,
+          "dt_gt50_count": 7,
+          "qty_mean": 1.4032211676732815,
+          "qty_p50": 1.0,
+          "qty_le2_count": 3184,
+          "history_min": 3,
+          "history_max": 64
+        }
+      }
+    },
+    "validation": {
+      "overall": {
+        "count": 8268,
+        "dt1_count": 6790,
+        "dt1_share": 0.8212385099177552,
+        "dt_mean": 1.778785679729076,
+        "dt_p50": 1.0,
+        "dt_p99": 16.0,
+        "dt_max": 67,
+        "dt_gt15_count": 86,
+        "dt_gt50_count": 2,
+        "qty_mean": 213.4559748427673,
+        "qty_p50": 6.0,
+        "qty_le2_count": 2911,
+        "history_min": 8,
+        "history_max": 168
+      },
+      "history_le64": {
+        "count": 1241,
+        "dt1_count": 443,
+        "dt1_share": 0.3569701853344077,
+        "dt_mean": 4.98952457695407,
+        "dt_p50": 3.0,
+        "dt_p99": 31.0,
+        "dt_max": 67,
+        "dt_gt15_count": 84,
+        "dt_gt50_count": 2,
+        "qty_mean": 1.4077356970185335,
+        "qty_p50": 1.0,
+        "qty_le2_count": 1124,
+        "history_min": 8,
+        "history_max": 64
+      },
+      "history_65to128": {
+        "count": 1475,
+        "dt1_count": 1004,
+        "dt1_share": 0.680677966101695,
+        "dt_mean": 1.7416949152542374,
+        "dt_p50": 1.0,
+        "dt_p99": 8.259999999999991,
+        "dt_max": 20,
+        "dt_gt15_count": 2,
+        "dt_gt50_count": 0,
+        "qty_mean": 2.7403389830508473,
+        "qty_p50": 2.0,
+        "qty_le2_count": 1050,
+        "history_min": 65,
+        "history_max": 128
+      },
+      "history_gt128": {
+        "count": 5552,
+        "dt1_count": 5343,
+        "dt1_share": 0.9623559077809798,
+        "dt_mean": 1.0709654178674353,
+        "dt_p50": 1.0,
+        "dt_p99": 3.0,
+        "dt_max": 13,
+        "dt_gt15_count": 0,
+        "dt_gt50_count": 0,
+        "qty_mean": 316.8344740634006,
+        "qty_p50": 25.0,
+        "qty_le2_count": 737,
+        "history_min": 129,
+        "history_max": 168
+      },
+      "short_history_by_elapsed_observation": {
+        "full_168h_window": {
+          "count": 1241,
+          "dt1_count": 443,
+          "dt1_share": 0.3569701853344077,
+          "dt_mean": 4.98952457695407,
+          "dt_p50": 3.0,
+          "dt_p99": 31.0,
+          "dt_max": 67,
+          "dt_gt15_count": 84,
+          "dt_gt50_count": 2,
+          "qty_mean": 1.4077356970185335,
+          "qty_p50": 1.0,
+          "qty_le2_count": 1124,
+          "history_min": 8,
+          "history_max": 64
+        }
+      }
+    }
+  },
+  "interpretation_limits": [
+    "Metadata alone cannot attribute the epoch-83 time-loss spike to individual targets or estimate their losses.",
+    "history<=64 includes early dense-series startup in train, so an unconditional short-history train/validation comparison is composition-confounded.",
+    "Mature train short histories and validation short histories both contain sparse, low-quantity, long-gap events; this does not establish a new validation-only duration regime.",
+    "No model checkpoint was opened, no torch.load used, no training/evaluation was run."
+  ]
+}

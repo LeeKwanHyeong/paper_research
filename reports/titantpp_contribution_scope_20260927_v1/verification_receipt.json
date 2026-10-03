@@ -1,0 +1,165 @@
+{
+  "status": "passed",
+  "checked_at_utc": "2026-09-27T14:19:57.850566+00:00",
+  "scope": "Step 1 research planning: local source and validation JSON evidence plus primary literature; no model execution",
+  "branch": "codex/hard-lmm-causal-qkv",
+  "head": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+  "input_file_sha256": {
+    "models/TPPs/CountAwareTitanMultiLagDetail.py": "4bcbecdadf921df21a4e7fb379962eb4ecec2cfeb2f8ff1edccbb6b418807eae",
+    "models/TPPs/CountAwareTPP.py": "d8439b3e86f5304471d0e70265ab3da9c362b2a1f7fd12d423ed8a3d33f52a2a",
+    "models/Titan/common/memory.py": "405ccbfa900b877250c6f1c5a4c6652f46e0a500303cea35a5c6cc7cac02af36",
+    "reports/local_detail_3seed_final_20260927_v1/final_report.md": "25e2888ce1e3e4d18f3024e24f2a3238d3b8ca60856fbc3b3cf844ec32507ce1",
+    "reports/local_detail_3seed_final_20260927_v1/terminal_audit.json": "8e0b86ad828e9af0e5792d8c009566563faf0f3b1df44e8948f8cff68330ea8f",
+    "reports/local_detail_3seed_final_20260927_v1/three_seed_summary.json": "7cc0b50b41e64ad68064cadfa75c3ee421282a62bdc2ef90ebfd8f1028651009",
+    "paper/contracts/local_detail_benchmark_replication_v1.json": "bffbd3645216a8d4c312319e44ea1c6c9538a2bda8d78a8094ce2c7a895fbec8",
+    "paper/contracts/local_detail_instacart_remaining_recovery_v1.json": "0676a79a566f2abff763638185ddb19e1a4d0e7a329edb9aed6e981892c9f1b1"
+  },
+  "hash_kind": "raw file bytes, not canonical contract hash",
+  "model_files_match_frozen_contracts": [
+    {
+      "contract": "paper/contracts/local_detail_benchmark_replication_v1.json",
+      "file": "models/TPPs/CountAwareTitanMultiLagDetail.py",
+      "matched": true
+    },
+    {
+      "contract": "paper/contracts/local_detail_benchmark_replication_v1.json",
+      "file": "models/TPPs/CountAwareTPP.py",
+      "matched": true
+    },
+    {
+      "contract": "paper/contracts/local_detail_benchmark_replication_v1.json",
+      "file": "models/Titan/common/memory.py",
+      "matched": true
+    },
+    {
+      "contract": "paper/contracts/local_detail_instacart_remaining_recovery_v1.json",
+      "file": "models/TPPs/CountAwareTitanMultiLagDetail.py",
+      "matched": true
+    },
+    {
+      "contract": "paper/contracts/local_detail_instacart_remaining_recovery_v1.json",
+      "file": "models/TPPs/CountAwareTPP.py",
+      "matched": true
+    },
+    {
+      "contract": "paper/contracts/local_detail_instacart_remaining_recovery_v1.json",
+      "file": "models/Titan/common/memory.py",
+      "matched": true
+    }
+  ],
+  "validation_metric_mean_and_sample_sd_checks": 54,
+  "dataset_comparisons": [
+    {
+      "dataset": "yellow_trip_hourly",
+      "qty_rmse_change_percent": -12.962083309457151,
+      "epoch_seconds_change_percent": 8.474810696322677,
+      "training_elapsed_ratio": 2.786430651978767,
+      "additional_parameters": 6144
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "qty_rmse_change_percent": 1.880201304182716,
+      "epoch_seconds_change_percent": 9.116761257875684,
+      "training_elapsed_ratio": 1.259459946304165,
+      "additional_parameters": 6144
+    },
+    {
+      "dataset": "insta_market_basket",
+      "qty_rmse_change_percent": 0.1081666985487173,
+      "epoch_seconds_change_percent": 21.301920214127513,
+      "training_elapsed_ratio": 1.2003842202168549,
+      "additional_parameters": 6144
+    }
+  ],
+  "counterexamples": [
+    {
+      "dataset": "yellow_trip_hourly",
+      "stratum": "history",
+      "bin": 1,
+      "count_per_seed": 1475,
+      "rmse_B_local": [
+        2.5125712396337807,
+        2.7916079080919545
+      ]
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "stratum": "quantity",
+      "bin": 4,
+      "count_per_seed": 1141,
+      "rmse_B_local": [
+        8.62304948684275,
+        9.409058747066442
+      ]
+    },
+    {
+      "dataset": "insta_market_basket",
+      "stratum": "quantity",
+      "bin": 4,
+      "count_per_seed": 6036,
+      "rmse_B_local": [
+        24.424559091588545,
+        24.78951283174425
+      ]
+    }
+  ],
+  "completion_counts": {
+    "conditions": 54,
+    "endpoint_replays": 108,
+    "groups": {
+      "seed42_reused": {
+        "conditions": 18,
+        "endpoint_replays": 36,
+        "optimizer_steps": 7678963
+      },
+      "5080_new": {
+        "conditions": 24,
+        "endpoint_replays": 48,
+        "optimizer_steps": 3448376
+      },
+      "5090_original_completed": {
+        "conditions": 8,
+        "endpoint_replays": 16,
+        "optimizer_steps": 7342904
+      },
+      "5090_recovery": {
+        "conditions": 4,
+        "endpoint_replays": 8,
+        "optimizer_steps": 4635986
+      }
+    }
+  },
+  "B_local_performance_gate": {
+    "passes": 0,
+    "total": 9
+  },
+  "documents": {
+    "source_register.md": {
+      "sha256": "41c4800fa7d211c3cd2a73955f9e967695efff3b4ed36e92c9c1185e87f38f4d",
+      "bytes": 15416
+    },
+    "research_decision.md": {
+      "sha256": "976fb2996da1b66a5d44fe8b8a6d7254ac5be7d22477118b8603dfd285a78b16",
+      "bytes": 32682
+    }
+  },
+  "local_markdown_links_checked": 13,
+  "markdown_table_column_counts": "passed",
+  "scope_checks": {
+    "remote_command_executed": false,
+    "gpu_training_executed": false,
+    "model_or_checkpoint_loaded": false,
+    "held_out_data_or_scores_read": false,
+    "training_source_or_contract_edited": false,
+    "packages_installed": false,
+    "commit_or_push_performed": false,
+    "external_baselines_executed": false
+  },
+  "limitations": [
+    "Contribution candidates are hypotheses, not confirmed novelty or external benchmark victories.",
+    "Current validation informed these hypotheses; this is not retrospective preregistration.",
+    "FlexTPP full PDF was not fully accessible; paper-linked README labels the implementation unofficial.",
+    "TimeMixer++ dedicated executable/version was not verified.",
+    "Only the listed local inputs were hash-checked; no whole-runtime or full training rerun is claimed."
+  ]
+}

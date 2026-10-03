@@ -1,0 +1,100 @@
+{
+  "contract_id": "dual_timescale_intermittent_quantity_extension_v1",
+  "created_on": "2026-09-10",
+  "authorization": "User explicitly approved unchanged ca8823e Intermittent seed42 on 5090 after seeing the Taxi time-guard failure. Run this one additional quantity-focused evaluation; keep all prior decisions and evidence.",
+  "source_revision": "ca8823e688a510e64e7fb81c9dc9d158d4bdfc7c",
+  "source_root": "/home/leekwanhyeong/workspace/paper_research_dual_timescale_ca8823e/source",
+  "source_manifest": "/home/leekwanhyeong/workspace/paper_research_dual_timescale_ca8823e/manifest.json",
+  "source_manifest_sha256": "a2807787fed399a8da14d9033677133964f795959280c1de3cb0a6f6d421ebd6",
+  "original_contract_sha256": "4fdba2b5d2fc458eae923b7628b9e3a0dfcd72f0de6e79bf5cafb86a0b07cc8e",
+  "output_root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/dual_timescale_intermittent_quantity_extension_ca8823e_20260910",
+  "prior_campaign_root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/dual_timescale_ca8823e_5090",
+  "prior_evidence_sha256": {
+    "status.json": "1eb4bb69e3bbaa588e0e9b9c67f7567ad1a47a2eb6b29f49dcade82b42779606",
+    "identity.json": "a61e316de0959d2afb17161459ac9af28543f7b005b361f469e85d249ee23880",
+    "e1_intermittent_frozen_5000_audit.json": "718a14c6e6deaf207ed2bf425e6fbe9a22322598212870377732803531c0bc17",
+    "cuda_tests_receipt.json": "6d05c5b5b46cf5804cb31d1734546e85f8132b1f228a7be2333b77b22a227726",
+    "cost.json": "51880b40fd647ba29c016fc5829702e45e2148aa9b0637e8f583fede9bbb41d2",
+    "seed42_screening_yellow_trip_hourly_audit.json": "5f6dca46db62bac0711a465962abdfa6339165f7df6808f55aac60a04a6cf98e",
+    "seed42_screening_insta_market_basket_audit.json": "327590c7584cd6e18ba1fe425c470ad2f7120cca6eebf9691c286da3a2bb3b03"
+  },
+  "runner_sha256": "86ad8d7f905eab67f4ed2dd6bae4c547a44488d006a62775ac52a8eb0fe7dc74",
+  "benchmark_reference_sha256": "549e8133ee633aa8b1b6092d4a36a81e92854362b6453f5c13ab3fff73f2d240",
+  "datasets": [
+    "intermittent_frozen_5000"
+  ],
+  "seeds": [
+    42
+  ],
+  "phase": {
+    "epochs": 300,
+    "minimum_epochs": 40,
+    "patience": 40
+  },
+  "checkpoint_monitor": "validation_raw_quantity_rmse",
+  "reuse_e1": true,
+  "initialization": "fresh_same_seed_as_original_campaign_not_e1_warmstart",
+  "common_training": {
+    "seed": 42,
+    "quantity_variant": "count_only_log_regression",
+    "quantity_loss": "unweighted_mse_on_log1p_quantity",
+    "checkpoint_monitor": "validation_raw_quantity_rmse",
+    "checkpoint_rule": "earliest_strict_finite_minimum",
+    "early_stopping_monitor": "validation_raw_quantity_rmse",
+    "optimizer": "AdamW",
+    "learning_rate": 0.001,
+    "batch_size": 128,
+    "gradient_clip": 1.0,
+    "hidden_dim": 64,
+    "lambda_log_quantity": 1.0,
+    "lambda_tail": 0.0,
+    "quantile_adaptive_strength": 0.0,
+    "time_head": "legacy_clamped_rmtpp",
+    "time_scale": 3.0,
+    "time_w_max": 3.3333333333333335,
+    "time_intercept_limit": 300.0
+  },
+  "data_binding": {
+    "dataset": "intermittent_frozen_5000",
+    "data_path": "sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+    "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+    "split_manifest_path": "sample_data/intermittent_v2/intermittent_frozen_5000_split_manifest.json",
+    "split_manifest_sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04",
+    "lookback": 520,
+    "max_sequence_length": 256,
+    "expected_train_targets": 393824,
+    "expected_validation_targets": 86285,
+    "expected_train_target_identity_sha256": "fb8737489bc18e528adc322e2e55e26fcc5793aa6ff8021d93ceac98d7768aed",
+    "expected_train_target_quantity_sha256": "c4a9c3721d3861c190e81abe35156488f545b00c8ddbbed4022a9a82a4b3a215",
+    "expected_validation_target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+    "expected_validation_target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385",
+    "B_t0_raw_rmse_validation_metrics": {
+      "raw_rmse": 1.4995550721471171,
+      "overall_mae": 0.6043404183562111
+    },
+    "B_t0_raw_rmse_checkpoint_file_sha256": "63d38ee4401c208dcfa24206682edaca56e2d2a5ca1037b09decdc2ffa567c08",
+    "B_t0_raw_rmse_checkpoint_state_sha256": "4b984d415d83a479fdacb49b12d964afa668adad136511590a54293df763c0d0"
+  },
+  "evaluation_scope": "validation_only",
+  "additional_jobs_authorized": false,
+  "held_out_test_evaluated": false,
+  "extra_seeds_authorized": false,
+  "training_code_modified": false,
+  "prior_failure_preserved": true,
+  "reporting": {
+    "primary": "raw_RMSE",
+    "secondary": [
+      "overall_MAE",
+      "body_MAE",
+      "gt_p99_MAE"
+    ],
+    "legacy_time_loss": "report unchanged definition; retain original full gate result separately",
+    "reference_models": [
+      "TitanTPP(B)",
+      "RMTPP",
+      "THP"
+    ],
+    "adoption": "No automatic adoption. Complete single-seed quantity coverage, no follow-up jobs."
+  },
+  "resume_policy": "Explicit --resume only after inspection; same contract, runner, command, source, runtime and output identity. Inherited GPU lock prevents duplicates. Original trainer restores model, optimizer and RNG; completed audit is idempotent."
+}

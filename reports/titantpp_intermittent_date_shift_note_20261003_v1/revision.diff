@@ -1,0 +1,48 @@
+--- main.tex.before
++++ main.tex
+@@ -345,10 +345,12 @@
+ complete model rather than inferring its cost from the correction alone.
+ 
+ \section{Experimental Setup}
+-\subsection{Data and Evaluation Scope}
++\subsection{Data and Evaluation Scope}\label{sec:data-scope}
+ The four datasets encode different quantity-bearing events. Taxi counts
+ pickups within a spatial cell and an active hour. Intermittent contains
+-positive order quantities for site--part sequences. Instacart aggregates
++positive order quantities for site--part sequences. For confidentiality and
++de-identification, the dates of historical Intermittent observations were
++shifted by a constant offset. Instacart aggregates
+ product rows for each user on the same recorded activity day, yielding a
+ basket-size proxy rather than physical purchased units. RAF represents
+ positive monthly spare-parts demand, with event gaps measured in months.
+@@ -900,6 +902,10 @@
+ not a count of physical units. In these event sequences, empty calendar
+ periods contribute to the recorded gap rather than separate zero-quantity
+ targets. Gaps retain their dataset-specific units (Table~\ref{tab:train-characteristics}).
++
++Intermittent calendar dates refer to the shifted timeline described in
++Sect.~\ref{sec:data-scope}; calendar covariates are absent from
++the model inputs.
+ 
+ We describe each frozen training population using the same definitions.
+ Quantity quantiles include all train event rows. Gap and usable-history
+--- README.md.before
++++ README.md
+@@ -2,6 +2,17 @@
+ 
+ Evidence and editorial cutoff: 3 October 2026. This is a working manuscript,
+ not a submission-ready or independently evaluated final paper.
++
++## Intermittent date provenance clarification (3 October 2026)
++
++The user explicitly confirmed that historical Intermittent observation dates
++were shifted by a constant offset for security and de-identification. The
++data description and Appendix B now identify the dates as a shifted timeline.
++This statement records the user's confirmation; it does not claim an
++independent audit of the original and shifted timestamps or establish access
++or redistribution permissions. No data, splits, models, or numerical results
++were changed. The confirmation and source revision evidence are retained in
++`reports/titantpp_intermittent_date_shift_note_20261003_v1/` at repository root.
+ 
+ ## Contents
+ 

@@ -1,0 +1,45 @@
+{
+  "reason": "Current frozen parquet data are irregular positive/active event rows, not complete regular calendar series. Correct comparator priorities and explain task adaptation.",
+  "edits": [
+    {
+      "old_str": "**권장 주 비교군:** 기존 RMTPP·THP·NHP·SAHP를 유지하고, **S2P2·PatchTST·DLinear를 우선 검토한다. 경량 설계를 핵심으로 내세우면 PatchMixer까지 포함한다.** 최근 TPP와 강한 수량 예측 모델을 함께 비교해야 연구 질문에 맞는다.",
+      "new_str": "**2026-09-29 데이터 적합성 확인 후 수정:** 현재 동결 데이터는 등간격 달력 시계열이 아니라 사건 목록이다. PatchTST·PatchMixer·DLinear를 곧바로 우선 주 비교군으로 올린 기존 제안은 수정한다. **기존 RMTPP·THP·NHP·SAHP를 유지하고, 추가 주 비교 후보는 불규칙 사건을 다루는 S2P2·AttNHP부터 검토한다.** 이들도 현재의 수량 target·시간 관측 단위·공통 head에 맞는지 검증해야 하며, 공식 구현의 존재만으로 적용 완료가 아니다. 패치·선형 시계열 모델은 별도 변환 타당성 검토를 통과할 때만 보조 비교로 제안한다."
+    },
+    {
+      "old_str": "우선 1: PatchTST",
+      "new_str": "보류: PatchTST"
+    },
+    {
+      "old_str": "우선 1: DLinear",
+      "new_str": "보류: DLinear"
+    },
+    {
+      "old_str": "경량 기여에 우선: PatchMixer",
+      "new_str": "보류: PatchMixer"
+    },
+    {
+      "old_str": "보완 2: AttNHP",
+      "new_str": "추가 주 비교 후보: AttNHP"
+    },
+    {
+      "old_str": "분해·선형 예측 구조를 보존한 task-adapted 비교로 명시한다. 저비용 기준선이므로 같은 실험 목록에서 누락하지 않는다.",
+      "new_str": "현재 사건 목록에 바로 적용 가능한 기준선으로 간주하지 않는다. 사건 순서에 대한 선형 예측으로 바꾸면 시간축 의미와 구조 변경을 명시한 보조 비교다. 직접 적용할 단순 기준선은 직전 사건 수량·과거 사건 수량 평균부터 검토한다."
+    },
+    {
+      "old_str": "S2P2를 과제에 충실하게 적용하기 어려울 때 우선 대안이다. 제외·대체는 성능 관측 전에 구조 호환성 기준으로 결정한다.",
+      "new_str": "S2P2와 함께 사건 기반 추가 비교 후보로 검토한다. 수량 출력과 현재 관측 시간 단위를 맞추는 계약이 필요하다. 제외·대체는 성능 관측 전에 구조 호환성 기준으로 결정한다."
+    },
+    {
+      "old_str": "S2P2의 추가는 최근 TPP 대표성을, PatchTST·PatchMixer·DLinear의 추가는 수량 예측과 효율의 경쟁력을 보완한다. 이 목록만으로 모든 최신 방법을 망라했다고 주장하지 않으며, 투고 직전에 관련 문헌을 갱신한다. 공식 구현을 찾았다는 사실은 현재 Runtime에서 실행·공정한 변환까지 검증했다는 뜻이 아니다.",
+      "new_str": "우선순위는 **같은 다음 사건 수량 과제에 맞는 비교**다. PatchTST·PatchMixer와 비교해야만 backbone 기여가 성립하는 것은 아니다. 별도 사건 순서 변형을 추가한다면 변형 모델임을 표기하고, 원래 등간격 장기 예측 모델 대비 우월성으로 확대하지 않는다. 이 목록만으로 모든 최신 방법을 망라했다고 주장하지 않으며, 투고 직전에 관련 문헌을 갱신한다."
+    },
+    {
+      "old_str": "**불규칙 사건과 패치 모델의 입력 계약**",
+      "new_str": "**현재 데이터에서 패치 모델을 바로 쓸 수 없는 이유 — 확인 완료**\n\n확인 대상은 동결 parquet의 schema와 train 행이며 held-out 행·예측 성능은 읽지 않았다. 파일은 `oper_part_no`(계열), `seq`(시간 좌표), `delta_t`(사건 간격), `demand_qty`(사건 수량)를 가진 긴 형태의 사건 테이블이다. 긴 형태나 parquet 저장 형식 자체가 장애는 아니다. **0 수량을 포함한 모든 달력 구간이 보존된 등간격 시계열인가**가 핵심이다.\n\n- **Intermittent:** 전처리 `build_positive_events`에서 `order_qty > 0`만 남긴다. 실제 train 예시의 주 인덱스는 1, 6, 11, 16…처럼 건너뛴다. row를 한 주씩으로 읽으면 시간 의미가 바뀐다.\n- **Taxi:** 승차가 있는 시간만 남긴다. 일부 구간이 연속해도 전체 격자의 모든 시간·0 수량을 포함한 테이블이라는 뜻은 아니다.\n- **Instacart:** 관측 활동일의 사건 목록이며 기록 간격 상한도 있다. 현재 파일만으로 정확한 일별 달력 수요가 모두 복원된다고 가정할 수 없다.\n\n가능한 경로는 둘이며, 어느 쪽도 단순 파일 포맷 변환이 아니다.\n1. **사건 순서로 변형:** 최근 L개 사건의 수량·관측 간격을 고정 길이 입력으로 만들고 다음 사건 수량을 예측한다. 이 경우 등간격 시간 패치는 “연속된 사건 묶음”이 된다. 가변 길이·padding·정규화·간격 사용을 검증한 **사건 순서용 변형 모델**이며 보조 비교 후보로만 둔다. PatchTST는 채널 독립 설계이므로 간격을 별도 열에 추가하는 것만으로 수량 예측에 그 간격이 반영된다고 가정하면 안 된다.\n2. **달력 시간축으로 재구성:** 원본과 관측 범위를 확인하고 무사건과 미관측을 구분해야 한다. 빈 구간에 0을 채워 다음 주·시간의 수량을 평가하면 현재의 “다음 발생 사건 수량”과 다른 과제다. 이를 연구하려면 새 데이터·target·split·모델 출력·평가 계약이 필요하다. 현재 결과표에 같은 실험으로 합치지 않는다.\n\n따라서 아래 항목은 **즉시 구현할 계약이 아니라, 보류된 보조 비교의 타당성 심사 기준**이다. 데이터 재구성·새 adapter·새 실험은 수행하지 않았다. 근거: 내부 데이터 특성 분석 [L5], `paper/scripts/build_intermittent_frozen_subset.py`의 `build_positive_events`, [PatchTST 공식 입력 로더](https://github.com/yuqinie98/PatchTST/blob/main/PatchTST_supervised/data_provider/data_loader.py), [PatchTST 설계](https://github.com/yuqinie98/PatchTST), [PatchMixer 공식 모델](https://github.com/Zeying-Gong/PatchMixer/blob/main/models/PatchMixer.py).\n\n**보조 비교를 다시 검토할 경우의 입력 심사 기준**"
+    },
+    {
+      "old_str": "- 우선 S2P2·PatchTST·DLinear, 경량 기여에는 PatchMixer의 task adapter와 공식 구현 호환성을 확인한다.",
+      "new_str": "- S2P2·AttNHP부터 현재 사건 기반 과제·수량 head·시간 관측 단위와의 호환성을 확인한다. PatchTST·PatchMixer·DLinear는 사건 순서 변형의 필요성과 공정성을 따로 검토하기 전까지 보류한다."
+    }
+  ]
+}

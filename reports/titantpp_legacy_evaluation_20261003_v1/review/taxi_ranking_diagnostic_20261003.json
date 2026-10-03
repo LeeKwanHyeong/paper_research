@@ -1,0 +1,62 @@
+{
+  "scope": "posthoc descriptive diagnosis of already-approved stored Taxi test predictions; no new inference, fitting or selection",
+  "generated_utc": "2026-10-02T23:40:17.313506+00:00",
+  "analysis_sha256": "5041fa56d0bb7f40a721d4d78465682b8e651c5e422e8227cee7857e7d5d2488",
+  "same_seed42_validation_test_bindings": {
+    "checkpoint_file_sha256": true,
+    "state_tensor_sha256": true,
+    "selected_epoch": true,
+    "source_closure_sha256": true
+  },
+  "seed42_selected_epoch": 60,
+  "seed42_validation_rmse_original": 82.48393408380633,
+  "seed42_validation_rmse_replayed": 82.48393408380636,
+  "rmse_diagnostics": [
+    {
+      "seed": 42,
+      "n": 8327,
+      "titan_rmse": 140.46182729292923,
+      "s2p2_rmse": 120.31740593975118,
+      "quantity_cutoff_99pct_nearest": 3449.0,
+      "upper_quantity_count": 84,
+      "total_titan_minus_s2p2_sse": 43743785.72387059,
+      "upper_quantity_titan_minus_s2p2_sse": 40703696.92082667,
+      "upper_share_of_signed_excess": 0.9305023844476047,
+      "upper_titan_mean_signed_error": -745.078874860491,
+      "upper_s2p2_mean_signed_error": -328.62154715401783
+    },
+    {
+      "seed": 52,
+      "n": 8327,
+      "titan_rmse": 102.67550967309005,
+      "s2p2_rmse": 108.26662573513937,
+      "quantity_cutoff_99pct_nearest": 3449.0,
+      "upper_quantity_count": 84,
+      "total_titan_minus_s2p2_sse": -9820880.132943664,
+      "upper_quantity_titan_minus_s2p2_sse": 1513951.2802891135,
+      "upper_share_of_signed_excess": -0.1541563749679255,
+      "upper_titan_mean_signed_error": 5.066650390625,
+      "upper_s2p2_mean_signed_error": -334.1383899507068
+    },
+    {
+      "seed": 62,
+      "n": 8327,
+      "titan_rmse": 112.7337940350456,
+      "s2p2_rmse": 118.04050703208834,
+      "quantity_cutoff_99pct_nearest": 3449.0,
+      "upper_quantity_count": 84,
+      "total_titan_minus_s2p2_sse": -10197685.388245381,
+      "upper_quantity_titan_minus_s2p2_sse": -19803223.60500598,
+      "upper_share_of_signed_excess": 1.941933179055775,
+      "upper_titan_mean_signed_error": -232.9763416108631,
+      "upper_s2p2_mean_signed_error": -587.5492873418899
+    }
+  ],
+  "limitations": [
+    "Upper quantity groups are descriptive, chosen for this diagnosis after observing the ranking; not new confirmatory tests.",
+    "Signed SSE contribution is not a percentage of RMSE and can exceed 100% where other groups offset errors.",
+    "Seed42 arithmetic influence does not prove a training mechanism or warrant excluding that seed.",
+    "This does not identify causes such as overfitting, changes in demand, or a specific architecture defect."
+  ],
+  "originals_modified": false
+}

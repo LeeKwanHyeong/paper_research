@@ -1,0 +1,71 @@
+{
+  "status": "passed",
+  "summary": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/dual_timescale_ca8823e_5090/jobs/seed42_screening_yellow_trip_hourly/runs/titantpp_dual_timescale_memory/count_only_log_regression/seed_42/summary.json",
+  "summary_sha256": "621de3ffdd9c7408ede1abed4e438b7df84bac351874c259e76d187b84d55a56",
+  "checkpoint_sha256": "5f60540ca827f0be84bd57942e70b0bbc203c79adf1042ef3700e207073dab82",
+  "best_epoch": 83,
+  "completed_epochs": 123,
+  "metrics": {
+    "raw_rmse": 78.25542706791491,
+    "overall_mae": 25.048307621614565,
+    "body_mae": 15.738602683477058,
+    "gt_p99_mae": 303.4513140328323,
+    "clamped_time_loss": 10.825869968628675,
+    "validation_target_count": 8268,
+    "body_target_count": 7888,
+    "stratum_counts": {
+      "le_p50": 4364,
+      "p50_p90": 3138,
+      "p90_p95": 386,
+      "p95_p99": 301,
+      "gt_p99": 79
+    }
+  },
+  "cuda_peak_memory_allocated_bytes": 2282563584,
+  "validation_target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+  "validation_target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd",
+  "held_out_test_evaluated": false,
+  "selected_restore": {
+    "strict_model_restore": true,
+    "finite_forward": true,
+    "optimizer_restore": false,
+    "optimizer_parameters_restored": 0
+  },
+  "last_restore": {
+    "strict_model_restore": true,
+    "finite_forward": true,
+    "optimizer_restore": true,
+    "optimizer_parameters_restored": 46
+  },
+  "checkpoint_state_sha256": "14c96d1fedb90808f2de0ee6693769169cd6ffc9de9b183f14efe6e3f6416e26",
+  "last_checkpoint_sha256": "92d8be45b5ced54ae8f525452c85f272a57f78de08f5bdb92d272d8ba536ec05",
+  "elapsed_seconds": 1391.7380857467651,
+  "early_stopping": {
+    "comparison": "earliest_strict_finite_minimum",
+    "formula_by_variant": {
+      "count_only_log_mse_tail_head_only": "time_nll + lambda_log_qty * (log1p_quantity_mse + lambda_tail * tail_raw_huber)",
+      "count_only_log_mse_tail_shared": "time_nll + lambda_log_qty * (log1p_quantity_mse + lambda_tail * tail_raw_huber)",
+      "count_only_log_regression": "raw_quantity_rmse",
+      "count_only_lognormal_k1": "time_nll + lambda_log_qty * (gaussian_nll_on_log1p_quantity + lambda_location_huber * location_huber)",
+      "count_only_quantile_adaptive_log_regression": "raw_quantity_rmse"
+    },
+    "min_epochs": 40,
+    "monitor": "validation_raw_quantity_rmse",
+    "patience": 40,
+    "restore": "best_validation_raw_quantity_rmse"
+  },
+  "source_revision": "ca8823e688a510e64e7fb81c9dc9d158d4bdfc7c",
+  "selected_memory_gains": {
+    "transition_memory.alpha_raw": 1.6375731229782104
+  },
+  "gate": {
+    "status": "failed",
+    "checks": {
+      "raw_rmse": true,
+      "overall_mae": true,
+      "body_mae": true,
+      "gt_p99_mae": true,
+      "clamped_time_loss": false
+    }
+  }
+}

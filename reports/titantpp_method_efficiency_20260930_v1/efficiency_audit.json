@@ -1,0 +1,141 @@
+{
+  "evaluation_scope": "validation_only",
+  "current_mlp_costs": [
+    {
+      "dataset": "yellow_trip_hourly",
+      "eligible_seeds": [
+        42,
+        52,
+        62
+      ],
+      "amortized_seconds_per_epoch": {
+        "n": 3,
+        "mean": 13.015028124491373,
+        "sample_sd": 0.010621287639163196
+      },
+      "peak_allocated_mib": {
+        "n": 3,
+        "mean": 1869.46826171875,
+        "sample_sd": 0.0
+      }
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "eligible_seeds": [
+        42,
+        52,
+        62
+      ],
+      "amortized_seconds_per_epoch": {
+        "n": 3,
+        "mean": 123.0958049801134,
+        "sample_sd": 1.1861318207616145
+      },
+      "peak_allocated_mib": {
+        "n": 3,
+        "mean": 1869.46826171875,
+        "sample_sd": 0.0
+      }
+    },
+    {
+      "dataset": "insta_market_basket",
+      "eligible_seeds": [
+        42
+      ],
+      "amortized_seconds_per_epoch": {
+        "n": 1,
+        "mean": 245.14870716503688,
+        "sample_sd": null
+      },
+      "peak_allocated_mib": {
+        "n": 1,
+        "mean": 410.04541015625,
+        "sample_sd": null
+      }
+    }
+  ],
+  "historical_costs": [
+    {
+      "dataset": "intermittent_frozen_5000",
+      "old_b0_seconds_per_epoch": 107.0674103329579,
+      "old_mac_seconds_per_epoch": 583.2922647915552,
+      "old_mac_over_b0_ratio": 5.447897385185975,
+      "old_b0_target_outputs_median_ms": 5.276474024867639,
+      "old_mac_target_outputs_median_ms": 33.7370584893506,
+      "old_b0_peak_allocated_mib": 364.88916015625,
+      "old_mac_peak_allocated_mib": 145.05322265625
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "old_b0_seconds_per_epoch": 7.684694420723688,
+      "old_mac_seconds_per_epoch": 52.706703662872314,
+      "old_mac_over_b0_ratio": 6.858659665208754,
+      "old_b0_target_outputs_median_ms": 5.283766455249861,
+      "old_mac_target_outputs_median_ms": 35.01857799710706,
+      "old_b0_peak_allocated_mib": 364.88916015625,
+      "old_mac_peak_allocated_mib": 74.29541015625
+    }
+  ],
+  "historical_run_metadata": [
+    {
+      "dataset": "yellow_trip_hourly",
+      "arm": "titantpp",
+      "source": "search_artifacts/count_aware_b012_seed42_screening_e300_20260828_recovery1/shards/yellow_trip_hourly/titantpp/titan_b012_screening",
+      "declared_execution_host": "RTX5090-server",
+      "execution_role": "shard_5090_yellow_trip_hourly_titantpp_seed42_e300",
+      "source_revision": "08e59880cd61cbd27cec40aa04636452b87bebfc",
+      "physical_gpu_uuid_proven_by_this_record": false
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "arm": "titantpp_titans_mac",
+      "source": "search_artifacts/count_aware_b012_seed42_screening_e300_20260828_recovery1/shards/yellow_trip_hourly/titantpp_titans_mac/titan_b012_screening",
+      "declared_execution_host": "RTX5090-server",
+      "execution_role": "shard_5090_yellow_trip_hourly_titantpp_titans_mac_seed42_e300",
+      "source_revision": "08e59880cd61cbd27cec40aa04636452b87bebfc",
+      "physical_gpu_uuid_proven_by_this_record": false
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "arm": "titantpp",
+      "source": "search_artifacts/count_aware_b012_seed42_screening_e300_20260828_recovery1/intermittent_frozen_5000/titan_b012_screening",
+      "declared_execution_host": "LeeKwanHyeongs-MacBook-Pro.local",
+      "execution_role": "recovery_5080_intermittent_frozen_5000_b012_seed42_e300",
+      "source_revision": "08e59880cd61cbd27cec40aa04636452b87bebfc",
+      "physical_gpu_uuid_proven_by_this_record": false
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "arm": "titantpp_titans_mac",
+      "source": "search_artifacts/count_aware_b012_seed42_screening_e300_20260828_recovery1/shards/intermittent_frozen_5000/titantpp_titans_mac/titan_b012_screening",
+      "declared_execution_host": "leekwanhyeong-LEGION-T7-34IAS10",
+      "execution_role": "recovery_5080_intermittent_frozen_5000_titantpp_titans_mac_seed42_e300",
+      "source_revision": "08e59880cd61cbd27cec40aa04636452b87bebfc",
+      "physical_gpu_uuid_proven_by_this_record": false
+    }
+  ],
+  "direct_current_mlp_vs_mac_speedup_established": false,
+  "direct_memory_saving_established": false,
+  "historical_source_evidence": [
+    {
+      "revision": "cc0382a21f3d1e37e41692bb8dd673fc01582c59",
+      "path": "paper/scripts/analyze_count_aware_titantpp_mac.py",
+      "sha256": "99bf5aafa4dfec0d7fb8bb7171ec4e2da53e68b7d2c400a49fff8b074c59a874"
+    },
+    {
+      "revision": "08e59880cd61cbd27cec40aa04636452b87bebfc",
+      "path": "paper/scripts/count_aware_tpp_backbone/training.py",
+      "sha256": "408a7ef09ad3946d5def2bdff8dcd1ea5e3005311e8fed4f6884e54c32f87a40"
+    }
+  ],
+  "short_paired_gpu_profile": {
+    "necessary_for_new_direct_speed_claim": true,
+    "approved": false,
+    "executed": false
+  },
+  "full_mac_accuracy_training": {
+    "needed_for_matched_accuracy_claim": true,
+    "not_needed_for_step_latency_only": true,
+    "approved": false
+  }
+}

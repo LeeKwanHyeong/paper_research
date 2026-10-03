@@ -1,0 +1,40 @@
+{
+  "schema": "titantpp_preparation_reconciliation_v1",
+  "created_utc": "2026-10-02T22:02:56.855779+00:00",
+  "parent_design": "reports/titantpp_independent_final_evaluation_design_20261003_v1/design.json",
+  "parent_design_sha256": "914b97ca8d51f4674a4fae578d5c2d935592897f9b30fcbdb8c54372be407a5a",
+  "prior_effective_protocol": "reports/titantpp_independent_evaluation_preparation_20261001_v1/protocol_effective.json",
+  "prior_effective_protocol_sha256": "ea651442ad7a9d81245cf32d33dffa1b69cbe544f40ad1dc423950fd5a4264d0",
+  "authorization": "2026-10-03 human approval of population eligibility/original binding followed by common evaluator verification; synthetic and CPU validation only",
+  "changes": [
+    {
+      "field": "checkpoint_registry",
+      "reason": "36 stale local aliases incorrectly reported missing; 10/1 recovered originals were preserved and verified",
+      "result": "108 selected identities bound; no checkpoint reselection, training, or remote calls",
+      "registry": "reports/titantpp_final_eval_checkpoint_binding_20261003_v1/evaluation_registry.json",
+      "sha256": "8b715bd360d895bb2ab433072333f9603cb7de2be5de081c0bf0243f0e86fe2b"
+    },
+    {
+      "field": "intermittent_primary_uncertainty_unit",
+      "reason": "restore already-recorded 10/1 metadata amendment for 5,000 series nested in 50 sites, which 10/3 draft omitted",
+      "result": "whole_site_cd_cluster primary; whole_oper_part_no_cluster sensitivity",
+      "evidence": "reports/titantpp_independent_evaluation_preparation_20261001_v1/amendment.json"
+    },
+    {
+      "field": "evaluator_readiness",
+      "reason": "prior 84-condition validation smoke and 14 tests already existed; reuse and extend",
+      "result": "31 tests passed; prior 84-condition inference reused after identity/source verification; 24 structural conditions newly inferred on CPU validation sample; 2 deterministic references added"
+    }
+  ],
+  "unchanged": [
+    "representative TitanTPP History MLP",
+    "selected epochs and checkpoint tensors",
+    "84 main plus 24 structural conditions, seeds 42/52/62",
+    "raw quantity RMSE primary metric",
+    "fixed validation-selected anchors",
+    "no A100 candidate promotion",
+    "no held-out/test access or independent final evaluation execution"
+  ],
+  "population_decision": "No genuinely unused population yet established. Taxi February 2015 prior use is user-unsure and requires checking. Metadata eligibility report is separately preserved.",
+  "scope_limit": "CPU validation sample correctness only; no full endpoint replay, full-population streaming/resource qualification, or native-GPU verification."
+}

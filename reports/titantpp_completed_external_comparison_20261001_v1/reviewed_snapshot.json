@@ -1,0 +1,452 @@
+{
+  "title": "TitanTPP는 두 데이터에서 수량 예측 우위를 유지한다",
+  "buildStatus": "complete",
+  "report": {
+    "title": "TitanTPP는 두 데이터에서 수량 예측 우위를 유지한다",
+    "asOf": "2026-10-01"
+  },
+  "queries": {
+    "yellow_trip_hourly": {
+      "id": "yellow_trip_hourly",
+      "rows": [
+        {
+          "model": "TitanTPP MLP",
+          "seed_count": 3,
+          "qty_mae": 25.623660546099536,
+          "qty_rmse": 79.71112004291759,
+          "time_nll": 1.0386682460071053,
+          "qty_mae_sd": 0.8320056149251175,
+          "qty_rmse_sd": 2.825982552445712,
+          "time_nll_sd": 0.284330735061213
+        },
+        {
+          "model": "RMTPP",
+          "seed_count": 3,
+          "qty_mae": 28.51235897524994,
+          "qty_rmse": 94.72834690732364,
+          "time_nll": 1.5797759178752449,
+          "qty_mae_sd": 0.6344326511941201,
+          "qty_rmse_sd": 3.4006002791116043,
+          "time_nll_sd": 0.940036555268404
+        },
+        {
+          "model": "THP",
+          "seed_count": 3,
+          "qty_mae": 32.40951277607584,
+          "qty_rmse": 107.59765645432542,
+          "time_nll": 0.6629288338180976,
+          "qty_mae_sd": 0.8144030169095765,
+          "qty_rmse_sd": 4.504045317772478,
+          "time_nll_sd": 0.01744632622098708
+        },
+        {
+          "model": "NHP",
+          "seed_count": 3,
+          "qty_mae": 94.26935217630823,
+          "qty_rmse": 318.8147842991665,
+          "time_nll": 0.6516431092394962,
+          "qty_mae_sd": 1.875179237726422,
+          "qty_rmse_sd": 5.301108233719563,
+          "time_nll_sd": 0.0020589159916247803
+        },
+        {
+          "model": "SAHP",
+          "seed_count": 3,
+          "qty_mae": 34.226025774769774,
+          "qty_rmse": 120.52733730574307,
+          "time_nll": 0.6848208523407089,
+          "qty_mae_sd": 0.4539482540530303,
+          "qty_rmse_sd": 1.9996329409675624,
+          "time_nll_sd": 0.014588485851589174
+        },
+        {
+          "model": "S2P2 (공통 head)",
+          "seed_count": 3,
+          "qty_mae": 33.02314953530504,
+          "qty_rmse": 106.35404514793419,
+          "time_nll": 0.6657649786151737,
+          "qty_mae_sd": 0.5568661333817311,
+          "qty_rmse_sd": 1.9135299083543449,
+          "time_nll_sd": 0.024177804645351745
+        },
+        {
+          "model": "AttNHP (공통 head)",
+          "seed_count": 3,
+          "qty_mae": 35.981088524202804,
+          "qty_rmse": 127.12903292712775,
+          "time_nll": 0.6876371795678453,
+          "qty_mae_sd": 1.6087736734508964,
+          "qty_rmse_sd": 8.99191551720525,
+          "time_nll_sd": 0.019429453933278634
+        }
+      ],
+      "source": {
+        "name": "Taxi completed validation",
+        "files": [
+          "reports/titantpp_core_ablation_execution_20260928_v1/final_conditions.csv",
+          "search_artifacts/titantpp_additional_tpp_20260930_v1/hourly_comparison/20260930T235903944489Z/comparison.json",
+          "reports/titantpp_active_branch_norm_runpod4090_20260930_v1/comparison.json",
+          "search_artifacts/titantpp_instacart_norm_5080_20260930_v1/monitor/20260930T220711276848Z/snapshot.json",
+          "reports/titantpp_mlp_gate_execution_20260929_v1/comparison.json",
+          "reports/titantpp_raf_execution_20261001_v1/comparison.json"
+        ],
+        "description": "同一 validation RMSE checkpoint; 3 seeds 42/52/62; mean and sample SD",
+        "caveats": [
+          "Validation only; 5080 additional comparators, Instacart normalization and RAF CPU audits passed. 5090 final audit pending."
+        ],
+        "metricDefinitions": [
+          {
+            "label": "qty_mae",
+            "definition": "Three-seed arithmetic mean at each seed minimum raw validation RMSE checkpoint; lower is better",
+            "componentIds": [
+              "yellow_trip_hourly-table"
+            ]
+          },
+          {
+            "label": "qty_rmse",
+            "definition": "Three-seed arithmetic mean at each seed minimum raw validation RMSE checkpoint; lower is better",
+            "componentIds": [
+              "yellow_trip_hourly-table"
+            ]
+          },
+          {
+            "label": "time_nll",
+            "definition": "Three-seed arithmetic mean at each seed minimum raw validation RMSE checkpoint; lower is better",
+            "componentIds": [
+              "yellow_trip_hourly-table"
+            ]
+          }
+        ]
+      }
+    },
+    "intermittent_frozen_5000": {
+      "id": "intermittent_frozen_5000",
+      "rows": [
+        {
+          "model": "TitanTPP MLP",
+          "seed_count": 3,
+          "qty_mae": 0.7005228040732806,
+          "qty_rmse": 1.6730340821466259,
+          "time_nll": 0.4971113785838635,
+          "qty_mae_sd": 0.05405519213884766,
+          "qty_rmse_sd": 0.08188746220355891,
+          "time_nll_sd": 0.20946282119858153
+        },
+        {
+          "model": "RMTPP",
+          "seed_count": 3,
+          "qty_mae": 0.894884757399133,
+          "qty_rmse": 2.5499284385508636,
+          "time_nll": 0.2747591236077846,
+          "qty_mae_sd": 0.04940455229933077,
+          "qty_rmse_sd": 0.16040219358000543,
+          "time_nll_sd": 0.0047442981076645735
+        },
+        {
+          "model": "THP",
+          "seed_count": 3,
+          "qty_mae": 0.8993308457435104,
+          "qty_rmse": 2.7533520927439197,
+          "time_nll": 0.2910661852784127,
+          "qty_mae_sd": 0.06610333278146419,
+          "qty_rmse_sd": 0.17842694575153387,
+          "time_nll_sd": 0.004535812337633599
+        },
+        {
+          "model": "NHP",
+          "seed_count": 3,
+          "qty_mae": 4.518767075732424,
+          "qty_rmse": 12.875455309001829,
+          "time_nll": 0.46129307311320505,
+          "qty_mae_sd": 0.17058999171439326,
+          "qty_rmse_sd": 1.0405036701256363,
+          "time_nll_sd": 0.096944557169034
+        },
+        {
+          "model": "SAHP",
+          "seed_count": 3,
+          "qty_mae": 1.861945110701881,
+          "qty_rmse": 7.02983237023263,
+          "time_nll": 0.34480017927263445,
+          "qty_mae_sd": 0.08992630271453558,
+          "qty_rmse_sd": 0.7672675690558383,
+          "time_nll_sd": 0.01377116719007902
+        },
+        {
+          "model": "S2P2 (공통 head)",
+          "seed_count": 3,
+          "qty_mae": 0.9358861031442669,
+          "qty_rmse": 2.5758420371469417,
+          "time_nll": 0.23493324886836353,
+          "qty_mae_sd": 0.00856917931512323,
+          "qty_rmse_sd": 0.07656316204692269,
+          "time_nll_sd": 0.018927569557824767
+        },
+        {
+          "model": "AttNHP (공통 head)",
+          "seed_count": 3,
+          "qty_mae": 1.0412629652885879,
+          "qty_rmse": 3.0799373976086404,
+          "time_nll": 0.2946216922697574,
+          "qty_mae_sd": 0.09376055975026659,
+          "qty_rmse_sd": 0.2981745908236406,
+          "time_nll_sd": 0.0568524271362799
+        }
+      ],
+      "source": {
+        "name": "Intermittent completed validation",
+        "files": [
+          "reports/titantpp_core_ablation_execution_20260928_v1/final_conditions.csv",
+          "search_artifacts/titantpp_additional_tpp_20260930_v1/hourly_comparison/20260930T235903944489Z/comparison.json",
+          "reports/titantpp_active_branch_norm_runpod4090_20260930_v1/comparison.json",
+          "search_artifacts/titantpp_instacart_norm_5080_20260930_v1/monitor/20260930T220711276848Z/snapshot.json",
+          "reports/titantpp_mlp_gate_execution_20260929_v1/comparison.json",
+          "reports/titantpp_raf_execution_20261001_v1/comparison.json"
+        ],
+        "description": "同一 validation RMSE checkpoint; 3 seeds 42/52/62; mean and sample SD",
+        "caveats": [
+          "Validation only; 5080 additional comparators, Instacart normalization and RAF CPU audits passed. 5090 final audit pending."
+        ],
+        "metricDefinitions": [
+          {
+            "label": "qty_mae",
+            "definition": "Three-seed arithmetic mean at each seed minimum raw validation RMSE checkpoint; lower is better",
+            "componentIds": [
+              "intermittent_frozen_5000-table"
+            ]
+          },
+          {
+            "label": "qty_rmse",
+            "definition": "Three-seed arithmetic mean at each seed minimum raw validation RMSE checkpoint; lower is better",
+            "componentIds": [
+              "intermittent_frozen_5000-table"
+            ]
+          },
+          {
+            "label": "time_nll",
+            "definition": "Three-seed arithmetic mean at each seed minimum raw validation RMSE checkpoint; lower is better",
+            "componentIds": [
+              "intermittent_frozen_5000-table"
+            ]
+          }
+        ]
+      }
+    },
+    "insta_market_basket": {
+      "id": "insta_market_basket",
+      "rows": [
+        {
+          "model": "TitanTPP MLP",
+          "seed_count": 3,
+          "qty_mae": 3.991574299178903,
+          "qty_rmse": 5.882742066966134,
+          "time_nll": 2.807087277062449,
+          "qty_mae_sd": 0.002592049028596968,
+          "qty_rmse_sd": 0.00477087963425493,
+          "time_nll_sd": 0.004149487590785835
+        },
+        {
+          "model": "RMTPP",
+          "seed_count": 3,
+          "qty_mae": 3.9851840313115505,
+          "qty_rmse": 5.8775405927014095,
+          "time_nll": 2.805147676954776,
+          "qty_mae_sd": 0.0051967143085474565,
+          "qty_rmse_sd": 0.021322223513311905,
+          "time_nll_sd": 0.004839822870518819
+        },
+        {
+          "model": "THP",
+          "seed_count": 3,
+          "qty_mae": 4.001302713463153,
+          "qty_rmse": 5.8581783561059755,
+          "time_nll": 2.805648611727112,
+          "qty_mae_sd": 0.002485497629084104,
+          "qty_rmse_sd": 0.025304102160425904,
+          "time_nll_sd": 0.0015533508175068105
+        },
+        {
+          "model": "NHP",
+          "seed_count": 3,
+          "qty_mae": 4.492281565521571,
+          "qty_rmse": 6.761279431728098,
+          "time_nll": 2.813233604444489,
+          "qty_mae_sd": 0.030410272976951033,
+          "qty_rmse_sd": 0.05381639641760841,
+          "time_nll_sd": 0.008019810130985041
+        },
+        {
+          "model": "SAHP",
+          "seed_count": 3,
+          "qty_mae": 3.9979097355783546,
+          "qty_rmse": 5.877590832923105,
+          "time_nll": 2.8018487793187825,
+          "qty_mae_sd": 0.009944955510730435,
+          "qty_rmse_sd": 0.0067289946645476256,
+          "time_nll_sd": 0.0012586094545948803
+        }
+      ],
+      "source": {
+        "name": "Instacart completed validation",
+        "files": [
+          "reports/titantpp_core_ablation_execution_20260928_v1/final_conditions.csv",
+          "search_artifacts/titantpp_additional_tpp_20260930_v1/hourly_comparison/20260930T235903944489Z/comparison.json",
+          "reports/titantpp_active_branch_norm_runpod4090_20260930_v1/comparison.json",
+          "search_artifacts/titantpp_instacart_norm_5080_20260930_v1/monitor/20260930T220711276848Z/snapshot.json",
+          "reports/titantpp_mlp_gate_execution_20260929_v1/comparison.json",
+          "reports/titantpp_raf_execution_20261001_v1/comparison.json"
+        ],
+        "description": "同一 validation RMSE checkpoint; 3 seeds 42/52/62; mean and sample SD",
+        "caveats": [
+          "Validation only; 5080 additional comparators, Instacart normalization and RAF CPU audits passed. 5090 final audit pending."
+        ],
+        "metricDefinitions": [
+          {
+            "label": "qty_mae",
+            "definition": "Three-seed arithmetic mean at each seed minimum raw validation RMSE checkpoint; lower is better",
+            "componentIds": [
+              "insta_market_basket-table"
+            ]
+          },
+          {
+            "label": "qty_rmse",
+            "definition": "Three-seed arithmetic mean at each seed minimum raw validation RMSE checkpoint; lower is better",
+            "componentIds": [
+              "insta_market_basket-table"
+            ]
+          },
+          {
+            "label": "time_nll",
+            "definition": "Three-seed arithmetic mean at each seed minimum raw validation RMSE checkpoint; lower is better",
+            "componentIds": [
+              "insta_market_basket-table"
+            ]
+          }
+        ]
+      }
+    },
+    "raf_spare_parts": {
+      "id": "raf_spare_parts",
+      "rows": [
+        {
+          "model": "TitanTPP MLP",
+          "seed_count": 3,
+          "qty_mae": 9.250601522216883,
+          "qty_rmse": 33.950679180073024,
+          "time_nll": 3.5446261768183067,
+          "qty_mae_sd": 0.08548392678627673,
+          "qty_rmse_sd": 0.05880386470147634,
+          "time_nll_sd": 0.06692937000939018
+        },
+        {
+          "model": "활성 분기 정규화",
+          "seed_count": 3,
+          "qty_mae": 9.232175011390112,
+          "qty_rmse": 33.89791445323217,
+          "time_nll": 3.563069556566881,
+          "qty_mae_sd": 0.09735246825996897,
+          "qty_rmse_sd": 0.08038561334528513,
+          "time_nll_sd": 0.09779588063911081
+        },
+        {
+          "model": "RMTPP",
+          "seed_count": 3,
+          "qty_mae": 9.136204564111056,
+          "qty_rmse": 34.55032733120328,
+          "time_nll": 3.519108272476731,
+          "qty_mae_sd": 0.055678014468013064,
+          "qty_rmse_sd": 0.250627048553142,
+          "time_nll_sd": 0.14630357520040627
+        },
+        {
+          "model": "THP",
+          "seed_count": 3,
+          "qty_mae": 9.301358198478082,
+          "qty_rmse": 34.744517470768365,
+          "time_nll": 3.392755479802774,
+          "qty_mae_sd": 0.1819002055995457,
+          "qty_rmse_sd": 0.3204133163281381,
+          "time_nll_sd": 0.01874519257229992
+        },
+        {
+          "model": "NHP",
+          "seed_count": 3,
+          "qty_mae": 9.179252661011025,
+          "qty_rmse": 36.27307783825351,
+          "time_nll": 3.3889470518572447,
+          "qty_mae_sd": 0.08815933265436442,
+          "qty_rmse_sd": 0.31864123499191854,
+          "time_nll_sd": 0.055637838617789225
+        },
+        {
+          "model": "SAHP",
+          "seed_count": 3,
+          "qty_mae": 9.233170785123457,
+          "qty_rmse": 35.419269494244105,
+          "time_nll": 3.741496848227401,
+          "qty_mae_sd": 0.020876095990418102,
+          "qty_rmse_sd": 0.2130471959371725,
+          "time_nll_sd": 0.0745365199601399
+        },
+        {
+          "model": "S2P2 (공통 head)",
+          "seed_count": 3,
+          "qty_mae": 9.27298777857169,
+          "qty_rmse": 33.99470373349431,
+          "time_nll": 3.4187288919690904,
+          "qty_mae_sd": 0.05168394797336973,
+          "qty_rmse_sd": 0.1261185452077655,
+          "time_nll_sd": 0.028388238446048774
+        },
+        {
+          "model": "AttNHP (공통 head)",
+          "seed_count": 3,
+          "qty_mae": 9.191659003154639,
+          "qty_rmse": 34.876643893807326,
+          "time_nll": 3.970710085449816,
+          "qty_mae_sd": 0.0433969393818474,
+          "qty_rmse_sd": 0.06756723846631019,
+          "time_nll_sd": 0.06093054574519713
+        }
+      ],
+      "source": {
+        "name": "RAF completed validation",
+        "files": [
+          "reports/titantpp_core_ablation_execution_20260928_v1/final_conditions.csv",
+          "search_artifacts/titantpp_additional_tpp_20260930_v1/hourly_comparison/20260930T235903944489Z/comparison.json",
+          "reports/titantpp_active_branch_norm_runpod4090_20260930_v1/comparison.json",
+          "search_artifacts/titantpp_instacart_norm_5080_20260930_v1/monitor/20260930T220711276848Z/snapshot.json",
+          "reports/titantpp_mlp_gate_execution_20260929_v1/comparison.json",
+          "reports/titantpp_raf_execution_20261001_v1/comparison.json"
+        ],
+        "description": "同一 validation RMSE checkpoint; 3 seeds 42/52/62; mean and sample SD",
+        "caveats": [
+          "Validation only; 5080 additional comparators, Instacart normalization and RAF CPU audits passed. 5090 final audit pending."
+        ],
+        "metricDefinitions": [
+          {
+            "label": "qty_mae",
+            "definition": "Three-seed arithmetic mean at each seed minimum raw validation RMSE checkpoint; lower is better",
+            "componentIds": [
+              "raf_spare_parts-table"
+            ]
+          },
+          {
+            "label": "qty_rmse",
+            "definition": "Three-seed arithmetic mean at each seed minimum raw validation RMSE checkpoint; lower is better",
+            "componentIds": [
+              "raf_spare_parts-table"
+            ]
+          },
+          {
+            "label": "time_nll",
+            "definition": "Three-seed arithmetic mean at each seed minimum raw validation RMSE checkpoint; lower is better",
+            "componentIds": [
+              "raf_spare_parts-table"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

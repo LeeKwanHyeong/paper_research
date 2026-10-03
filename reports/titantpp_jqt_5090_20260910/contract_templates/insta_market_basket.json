@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "track": "legacy_cap300_compatibility_diagnostic",
+  "dataset_id": "insta_market_basket",
+  "seed": 42,
+  "epochs": 120,
+  "objectives": [
+    "joint",
+    "quantity_only",
+    "time_only"
+  ],
+  "data": {
+    "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/insta_market_basket/instacart_marked_target_with_split.parquet",
+    "sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2"
+  },
+  "split_manifest": {
+    "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/insta_market_basket/instacart_marked_target_split_manifest.json",
+    "sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d"
+  },
+  "source": null,
+  "runtime": null,
+  "loader": {
+    "num_workers": 0,
+    "drop_last": false,
+    "train_shuffle": true,
+    "validation_shuffle": false,
+    "batch_size": 128,
+    "lookback_weeks": 52,
+    "max_seq_len": 64
+  },
+  "model": {
+    "backbone": "titantpp",
+    "hidden_dim": 64,
+    "quantity_variant": "count_only_log_regression",
+    "time_head_mode": "legacy_clamped_rmtpp",
+    "time_intercept_limit": 300.0,
+    "time_scale": 3.0,
+    "time_w_max": 3.3333333333333335,
+    "lambda_tail": 0.0
+  },
+  "optimizer": {
+    "lr": 0.001,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0
+  },
+  "populations": {
+    "train": {
+      "target_count": 1991192,
+      "target_identity_sha256": "c361f5e9904c25f18c91007f6e1209518a02fb755799e81c8300ee759b2a1210",
+      "target_quantity_sha256": "07e98693d5ac26caeaeb3c60d6d31fad21ab8f1e40ac649f231ac299963817d8"
+    },
+    "validation": {
+      "target_count": 503733,
+      "target_identity_sha256": "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8",
+      "target_quantity_sha256": "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184"
+    }
+  }
+}

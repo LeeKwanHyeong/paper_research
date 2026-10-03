@@ -1,0 +1,1424 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "Instacart dual-timescale 수량 진단: 동일 표본·frozen 모델 비교",
+    "description": "TitanTPP(B), 현재 dual-timescale 후보, aligned RMTPP·THP의 seed42 Instacart 수량 오차를 동일 표본에서 분해한 기술 보고서입니다.",
+    "generatedAt": "2026-09-09T23:36:34.903314+00:00",
+    "cards": [],
+    "charts": [
+      {
+        "id": "quantity_contribution",
+        "title": "Target 수량 구간별 candidate−RMTPP MSE 차이 기여",
+        "subtitle": "Validation과 train; 음수는 dual-timescale 후보에 유리, 각 split의 막대 합은 해당 전체 ΔMSE",
+        "type": "bar",
+        "dataset": "quantity_contributions",
+        "sourceId": "strata_contributions",
+        "valueFormat": "number",
+        "encodings": {
+          "x": {
+            "field": "group_label",
+            "type": "ordinal",
+            "label": "Target 수량 구간"
+          },
+          "y": {
+            "field": "delta_contribution",
+            "type": "quantitative",
+            "label": "전체 ΔMSE 기여"
+          },
+          "color": {
+            "field": "split_label",
+            "type": "nominal",
+            "label": "Split"
+          },
+          "tooltip": [
+            {
+              "field": "count",
+              "type": "quantitative",
+              "label": "표본 수",
+              "format": "number"
+            },
+            {
+              "field": "row_fraction",
+              "type": "quantitative",
+              "label": "Split 내 비중",
+              "format": "percent"
+            },
+            {
+              "field": "candidate_mse",
+              "type": "quantitative",
+              "label": "후보 MSE",
+              "format": "number"
+            },
+            {
+              "field": "reference_mse",
+              "type": "quantitative",
+              "label": "RMTPP MSE",
+              "format": "number"
+            },
+            {
+              "field": "delta_mse",
+              "type": "quantitative",
+              "label": "구간 ΔMSE",
+              "format": "number"
+            }
+          ]
+        },
+        "settings": {
+          "groupMode": "grouped",
+          "showValues": true,
+          "sort": "none",
+          "categoryLabelPolicy": "rotate"
+        },
+        "labels": {
+          "values": "all"
+        },
+        "legend": {
+          "position": "bottom",
+          "title": "Split"
+        },
+        "palette": {
+          "kind": "categorical"
+        },
+        "referenceLines": [
+          {
+            "axis": "y",
+            "value": 0,
+            "label": "동률",
+            "color": "neutral",
+            "lineStyle": "solid"
+          }
+        ],
+        "layout": "full",
+        "source": {
+          "id": "quantity_contribution_executed_sql",
+          "label": "수량·이력 구간별 paired MSE 차이 기여",
+          "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/report/build_report.py",
+          "query": {
+            "engine": "sqlite3 in-memory",
+            "language": "sql",
+            "sql": "SELECT payload FROM reviewed_aggregate_rows WHERE dataset = 'quantity_contributions' ORDER BY row_order",
+            "description": "build_datasets가 감사된 집계 파일에서 만든 행을 reviewed_aggregate_rows에 넣고 이 SQL로 읽은 뒤 payload를 JSON으로 복원합니다. 전후 행의 정확한 일치를 검사합니다. 원래 계산: inputs = load_inputs(); data = build_datasets(inputs); rows = data['quantity_contributions'] + data['history_contributions']",
+            "tables_used": [
+              "reviewed_aggregate_rows",
+              "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/validation/strata.csv",
+              "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train/strata.csv"
+            ],
+            "filters": {
+              "dataset": "quantity_contributions"
+            },
+            "executed_at": "2026-09-09T23:36:34.903314+00:00",
+            "metric_definitions": {
+              "delta_contribution": "stratum_count / split_count * (candidate_MSE - RMTPP_MSE); negative favors candidate"
+            }
+          }
+        }
+      },
+      {
+        "id": "history_contribution",
+        "title": "관측 history 길이별 candidate−RMTPP MSE 차이 기여",
+        "subtitle": "History는 예측 입력 창의 관측 사건 수; 음수는 dual-timescale 후보에 유리",
+        "type": "bar",
+        "dataset": "history_contributions",
+        "sourceId": "strata_contributions",
+        "valueFormat": "number",
+        "encodings": {
+          "x": {
+            "field": "group_label",
+            "type": "ordinal",
+            "label": "관측 history 길이"
+          },
+          "y": {
+            "field": "delta_contribution",
+            "type": "quantitative",
+            "label": "전체 ΔMSE 기여"
+          },
+          "color": {
+            "field": "split_label",
+            "type": "nominal",
+            "label": "Split"
+          },
+          "tooltip": [
+            {
+              "field": "count",
+              "type": "quantitative",
+              "label": "표본 수",
+              "format": "number"
+            },
+            {
+              "field": "row_fraction",
+              "type": "quantitative",
+              "label": "Split 내 비중",
+              "format": "percent"
+            },
+            {
+              "field": "delta_mse",
+              "type": "quantitative",
+              "label": "구간 ΔMSE",
+              "format": "number"
+            },
+            {
+              "field": "delta_mae",
+              "type": "quantitative",
+              "label": "구간 ΔMAE",
+              "format": "number"
+            }
+          ]
+        },
+        "settings": {
+          "groupMode": "grouped",
+          "showValues": true,
+          "sort": "none"
+        },
+        "labels": {
+          "values": "all"
+        },
+        "legend": {
+          "position": "bottom",
+          "title": "Split"
+        },
+        "palette": {
+          "kind": "categorical"
+        },
+        "referenceLines": [
+          {
+            "axis": "y",
+            "value": 0,
+            "label": "동률",
+            "color": "neutral",
+            "lineStyle": "solid"
+          }
+        ],
+        "layout": "full",
+        "source": {
+          "id": "history_contribution_executed_sql",
+          "label": "수량·이력 구간별 paired MSE 차이 기여",
+          "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/report/build_report.py",
+          "query": {
+            "engine": "sqlite3 in-memory",
+            "language": "sql",
+            "sql": "SELECT payload FROM reviewed_aggregate_rows WHERE dataset = 'history_contributions' ORDER BY row_order",
+            "description": "build_datasets가 감사된 집계 파일에서 만든 행을 reviewed_aggregate_rows에 넣고 이 SQL로 읽은 뒤 payload를 JSON으로 복원합니다. 전후 행의 정확한 일치를 검사합니다. 원래 계산: inputs = load_inputs(); data = build_datasets(inputs); rows = data['quantity_contributions'] + data['history_contributions']",
+            "tables_used": [
+              "reviewed_aggregate_rows",
+              "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/validation/strata.csv",
+              "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train/strata.csv"
+            ],
+            "filters": {
+              "dataset": "history_contributions"
+            },
+            "executed_at": "2026-09-09T23:36:34.903314+00:00",
+            "metric_definitions": {
+              "delta_contribution": "stratum_count / split_count * (candidate_MSE - RMTPP_MSE); negative favors candidate"
+            }
+          }
+        }
+      },
+      {
+        "id": "bias_decomposition",
+        "title": "candidate−RMTPP ΔMSE의 bias²·centered-MSE 분해",
+        "subtitle": "Validation 전체와 train series-disjoint 두 fold; 음수는 후보에 유리",
+        "type": "bar",
+        "dataset": "bias_decomposition",
+        "sourceId": "bias_fold_decomposition",
+        "valueFormat": "number",
+        "encodings": {
+          "x": {
+            "field": "scope_label",
+            "type": "ordinal",
+            "label": "진단 범위"
+          },
+          "y": {
+            "field": "delta_component",
+            "type": "quantitative",
+            "label": "ΔMSE 구성요소"
+          },
+          "color": {
+            "field": "component",
+            "type": "nominal",
+            "label": "구성요소"
+          },
+          "tooltip": [
+            {
+              "field": "count",
+              "type": "quantitative",
+              "label": "표본 수",
+              "format": "number"
+            },
+            {
+              "field": "delta_mse",
+              "type": "quantitative",
+              "label": "전체 ΔMSE",
+              "format": "number"
+            }
+          ]
+        },
+        "settings": {
+          "groupMode": "grouped",
+          "showValues": true,
+          "sort": "none"
+        },
+        "labels": {
+          "values": "all"
+        },
+        "legend": {
+          "position": "bottom",
+          "title": "구성요소"
+        },
+        "palette": {
+          "kind": "categorical"
+        },
+        "referenceLines": [
+          {
+            "axis": "y",
+            "value": 0,
+            "label": "동률",
+            "color": "neutral",
+            "lineStyle": "solid"
+          }
+        ],
+        "layout": "full",
+        "source": {
+          "id": "bias_decomposition_executed_sql",
+          "label": "Validation 및 train fold의 bias²·centered-MSE 분해",
+          "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/report/build_report.py",
+          "query": {
+            "engine": "sqlite3 in-memory",
+            "language": "sql",
+            "sql": "SELECT payload FROM reviewed_aggregate_rows WHERE dataset = 'bias_decomposition' ORDER BY row_order",
+            "description": "build_datasets가 감사된 집계 파일에서 만든 행을 reviewed_aggregate_rows에 넣고 이 SQL로 읽은 뒤 payload를 JSON으로 복원합니다. 전후 행의 정확한 일치를 검사합니다. 원래 계산: inputs = load_inputs(); rows = build_datasets(inputs)['bias_decomposition']",
+            "tables_used": [
+              "reviewed_aggregate_rows",
+              "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/validation/summary.json",
+              "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train/summary.json",
+              "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train/fold_strata.csv"
+            ],
+            "filters": {
+              "dataset": "bias_decomposition"
+            },
+            "executed_at": "2026-09-09T23:36:34.903314+00:00",
+            "metric_definitions": {
+              "decomposition": "delta_MSE = delta_bias_squared + delta_centered_MSE"
+            }
+          }
+        }
+      }
+    ],
+    "tables": [
+      {
+        "id": "validation_model_metrics",
+        "title": "Validation 동일 표본 4모델 수량 지표",
+        "subtitle": "Instacart seed42 target 503,733건; checkpoint는 validation raw RMSE의 최솟값으로 선택",
+        "dataset": "validation_model_metrics",
+        "sourceId": "summary_metrics",
+        "defaultSort": {
+          "field": "rmse",
+          "direction": "asc"
+        },
+        "columns": [
+          {
+            "field": "model_label",
+            "label": "모델",
+            "type": "text"
+          },
+          {
+            "field": "selected_epoch",
+            "label": "선택 epoch",
+            "format": "number"
+          },
+          {
+            "field": "count",
+            "label": "표본 수",
+            "format": "number"
+          },
+          {
+            "field": "mae",
+            "label": "Raw MAE",
+            "format": "number"
+          },
+          {
+            "field": "rmse",
+            "label": "Raw RMSE",
+            "format": "number"
+          },
+          {
+            "field": "body_mae_y_le_25",
+            "label": "Body MAE (y≤25)",
+            "format": "number"
+          },
+          {
+            "field": "tail_mae_y_gt_35",
+            "label": "Tail MAE (y>35)",
+            "format": "number"
+          },
+          {
+            "field": "bias",
+            "label": "Bias",
+            "format": "number",
+            "semantic": "movement"
+          }
+        ],
+        "source": {
+          "id": "validation_model_metrics_executed_sql",
+          "label": "동일 표본 4모델 aggregate 수량 지표",
+          "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/report/build_report.py",
+          "query": {
+            "engine": "sqlite3 in-memory",
+            "language": "sql",
+            "sql": "SELECT payload FROM reviewed_aggregate_rows WHERE dataset = 'validation_model_metrics' ORDER BY row_order",
+            "description": "build_datasets가 감사된 집계 파일에서 만든 행을 reviewed_aggregate_rows에 넣고 이 SQL로 읽은 뒤 payload를 JSON으로 복원합니다. 전후 행의 정확한 일치를 검사합니다. 원래 계산: inputs = load_inputs(); rows = build_datasets(inputs)['validation_model_metrics']",
+            "tables_used": [
+              "reviewed_aggregate_rows",
+              "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/validation/summary.json",
+              "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train/summary.json",
+              "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/validation/comparison_table.csv",
+              "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train/fold_strata.csv"
+            ],
+            "filters": {
+              "dataset": "validation_model_metrics"
+            },
+            "executed_at": "2026-09-09T23:36:34.903314+00:00",
+            "metric_definitions": {
+              "error": "prediction - true_qty",
+              "MAE": "mean(abs(error)) in raw quantity units",
+              "MSE": "mean(error^2) in squared raw quantity units",
+              "RMSE": "sqrt(MSE) in raw quantity units",
+              "bias": "mean(error); negative means underprediction",
+              "centered_MSE": "mean((error - bias)^2)"
+            }
+          }
+        }
+      },
+      {
+        "id": "hypothesis_checks",
+        "title": "Validation 고정 H1–H5의 train fold 검사",
+        "subtitle": "전체 train으로 적합된 frozen 모델의 설명적 재현; out-of-fold 평가가 아님",
+        "dataset": "hypothesis_checks",
+        "sourceId": "train_hypothesis_results",
+        "defaultSort": {
+          "field": "hypothesis_label",
+          "direction": "asc"
+        },
+        "columns": [
+          {
+            "field": "hypothesis_label",
+            "label": "가설",
+            "type": "text"
+          },
+          {
+            "field": "status_label",
+            "label": "판정",
+            "type": "text"
+          },
+          {
+            "field": "passed_checks",
+            "label": "통과 조건",
+            "format": "number"
+          },
+          {
+            "field": "total_checks",
+            "label": "전체 조건",
+            "format": "number"
+          },
+          {
+            "field": "failed_checks",
+            "label": "실패 조건",
+            "format": "number"
+          },
+          {
+            "field": "validation_claim",
+            "label": "Validation에서 고정한 설명",
+            "type": "text"
+          }
+        ],
+        "source": {
+          "id": "hypothesis_checks_executed_sql",
+          "label": "Validation 고정 H1–H5의 train fold별 검사",
+          "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train_hypothesis_checks.json",
+          "query": {
+            "engine": "sqlite3 in-memory",
+            "language": "sql",
+            "sql": "SELECT payload FROM reviewed_aggregate_rows WHERE dataset = 'hypothesis_checks' ORDER BY row_order",
+            "description": "build_datasets가 감사된 집계 파일에서 만든 행을 reviewed_aggregate_rows에 넣고 이 SQL로 읽은 뒤 payload를 JSON으로 복원합니다. 전후 행의 정확한 일치를 검사합니다. 원래 계산: inputs = load_inputs(); rows = build_datasets(inputs)['hypothesis_checks']",
+            "tables_used": [
+              "reviewed_aggregate_rows",
+              "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/validation_hypotheses.json",
+              "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train_hypothesis_checks.json",
+              "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train/fold_strata.csv"
+            ],
+            "filters": {
+              "dataset": "hypothesis_checks"
+            },
+            "executed_at": "2026-09-09T23:36:34.903314+00:00",
+            "metric_definitions": {}
+          }
+        }
+      }
+    ],
+    "sources": [
+      {
+        "id": "summary_metrics",
+        "label": "동일 표본 4모델 aggregate 수량 지표",
+        "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/report/build_report.py",
+        "query": {
+          "engine": "python-stdlib",
+          "language": "python",
+          "id": "build_datasets.validation_model_metrics",
+          "sql": "inputs = load_inputs(); rows = build_datasets(inputs)['validation_model_metrics']",
+          "description": "검증된 validation/train summary에서 4모델 지표와 candidate−RMTPP 비교를 구성합니다.",
+          "tables_used": [
+            "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/validation/summary.json",
+            "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train/summary.json",
+            "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/validation/comparison_table.csv",
+            "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train/fold_strata.csv"
+          ],
+          "filters": {
+            "dataset": "insta_market_basket",
+            "seed": 42,
+            "held_out_test": false
+          },
+          "executed_at": "2026-09-09T23:36:34.903314+00:00",
+          "metric_definitions": {
+            "error": "prediction - true_qty",
+            "MAE": "mean(abs(error)) in raw quantity units",
+            "MSE": "mean(error^2) in squared raw quantity units",
+            "RMSE": "sqrt(MSE) in raw quantity units",
+            "bias": "mean(error); negative means underprediction",
+            "centered_MSE": "mean((error - bias)^2)"
+          }
+        }
+      },
+      {
+        "id": "strata_contributions",
+        "label": "수량·이력 구간별 paired MSE 차이 기여",
+        "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/report/build_report.py",
+        "query": {
+          "engine": "python-stdlib",
+          "language": "python",
+          "id": "build_datasets.strata_contributions",
+          "sql": "inputs = load_inputs(); data = build_datasets(inputs); rows = data['quantity_contributions'] + data['history_contributions']",
+          "description": "두 split의 strata에서 candidate_minus_rmtpp만 선택하고 구간별 전체 ΔMSE 기여를 보존합니다.",
+          "tables_used": [
+            "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/validation/strata.csv",
+            "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train/strata.csv"
+          ],
+          "filters": {
+            "comparison": "candidate_minus_rmtpp",
+            "partition_families": [
+              "quantity_band",
+              "history_band"
+            ]
+          },
+          "executed_at": "2026-09-09T23:36:34.903314+00:00",
+          "metric_definitions": {
+            "delta_contribution": "stratum_count / split_count * (candidate_MSE - RMTPP_MSE); negative favors candidate"
+          }
+        }
+      },
+      {
+        "id": "bias_fold_decomposition",
+        "label": "Validation 및 train fold의 bias²·centered-MSE 분해",
+        "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/report/build_report.py",
+        "query": {
+          "engine": "python-stdlib",
+          "language": "python",
+          "id": "build_datasets.bias_decomposition",
+          "sql": "inputs = load_inputs(); rows = build_datasets(inputs)['bias_decomposition']",
+          "description": "Validation 전체와 train의 series-disjoint 두 fold에서 candidate−RMTPP ΔMSE를 bias²와 centered MSE 차이로 분해합니다.",
+          "tables_used": [
+            "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/validation/summary.json",
+            "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train/summary.json",
+            "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train/fold_strata.csv"
+          ],
+          "filters": {
+            "comparison": "candidate_minus_rmtpp",
+            "train_folds": [
+              0,
+              1
+            ]
+          },
+          "executed_at": "2026-09-09T23:36:34.903314+00:00",
+          "metric_definitions": {
+            "decomposition": "delta_MSE = delta_bias_squared + delta_centered_MSE"
+          }
+        }
+      },
+      {
+        "id": "frozen_contract",
+        "label": "행 단위 추론 전 동결한 진단 계약",
+        "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/contract.json"
+      },
+      {
+        "id": "inference_audits",
+        "label": "Frozen CPU 추론과 동일 모집단 감사",
+        "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/report/build_report.py",
+        "query": {
+          "engine": "python-stdlib",
+          "language": "python",
+          "id": "frozen_inference_audits",
+          "sql": "audits = [load_json(INPUT_PATHS[name]) for name in ('validation_inference_audit', 'train_inference_audit')]",
+          "description": "Checkpoint restore, source/state 보존, 모집단 identity와 prediction artifact SHA를 확인합니다.",
+          "tables_used": [
+            "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/validation_inference_audit.json",
+            "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train_inference_audit.json"
+          ],
+          "executed_at": "2026-09-09T23:36:34.903314+00:00"
+        }
+      },
+      {
+        "id": "reviewed_findings",
+        "label": "Validation 설명 동결 후 train에서 검토한 최종 판정",
+        "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/findings.json"
+      },
+      {
+        "id": "methodology",
+        "label": "진단 방법과 해석 경계",
+        "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/methodology.md"
+      },
+      {
+        "id": "source_reuse",
+        "label": "B cache와 공통 source 재사용 감사",
+        "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/source_reuse_audit.json"
+      },
+      {
+        "id": "numeric_compatibility",
+        "label": "CPU/CUDA float32 수치 재생 정책과 보완 감사",
+        "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/report/build_report.py",
+        "query": {
+          "engine": "python-stdlib",
+          "language": "python",
+          "id": "numeric_compatibility_supplement",
+          "sql": "audits = [load_json(INPUT_PATHS[name]) for name in ('numeric_replay_policy', 'numeric_compatibility_audit', 'stratum_numeric_materiality_audit')]",
+          "description": "기존 절대오차 1e-5 실패를 보존하고, 사전 동결한 atol+rtol 기준·state/population identity·contrast 안정성을 검사합니다.",
+          "tables_used": [
+            "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/numeric_replay_policy.json",
+            "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/numeric_compatibility_audit.json",
+            "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/stratum_numeric_materiality_audit.json"
+          ],
+          "executed_at": "2026-09-09T23:36:34.903314+00:00"
+        }
+      },
+      {
+        "id": "validation_hypotheses",
+        "label": "Train 추론 전에 동결한 validation 설명 가설",
+        "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/validation_hypotheses.json"
+      },
+      {
+        "id": "train_hypothesis_results",
+        "label": "Validation 고정 H1–H5의 train fold별 검사",
+        "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train_hypothesis_checks.json",
+        "query": {
+          "engine": "python-stdlib",
+          "language": "python",
+          "id": "build_datasets.hypothesis_checks",
+          "sql": "inputs = load_inputs(); rows = build_datasets(inputs)['hypothesis_checks']",
+          "description": "Train 시작 전에 고정한 H1–H5를 두 series-disjoint fold에서 각각 검사하고 성공·실패 수를 집계합니다.",
+          "tables_used": [
+            "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/validation_hypotheses.json",
+            "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train_hypothesis_checks.json",
+            "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train/fold_strata.csv"
+          ],
+          "filters": {
+            "folds": [
+              0,
+              1
+            ],
+            "interpretation": "descriptive_in_sample_replication"
+          },
+          "executed_at": "2026-09-09T23:36:34.903314+00:00"
+        }
+      },
+      {
+        "id": "analysis_quality_assurance",
+        "label": "분석기 테스트와 독립 재계산 감사",
+        "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/report/build_report.py",
+        "query": {
+          "engine": "python-stdlib",
+          "language": "python",
+          "id": "analysis_quality_assurance",
+          "sql": "qa = {name: load_json(INPUT_PATHS[name]) for name in ('test_receipt', 'independent_audit')}",
+          "description": "분석기 단위 테스트와 별도 구현의 metric·가설·최종 판정 재계산 결과를 확인합니다.",
+          "tables_used": [
+            "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/test_receipt.json",
+            "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/independent_audit.json"
+          ],
+          "executed_at": "2026-09-09T23:36:34.903314+00:00"
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "body": "# Instacart dual-timescale 수량 진단: 동일 표본·frozen 모델 비교"
+      },
+      {
+        "id": "technical_summary",
+        "type": "markdown",
+        "sourceId": "summary_metrics",
+        "body": "## 기술 요약: 같은 표본에서 후보의 이득 위치와 한계를 분리했습니다\n\nInstacart validation **503,733건**에서 dual-timescale 후보의 raw RMSE는 **5.868058**, RMTPP는 **5.836975**이며 차이는 **+0.031084**입니다. MAE 차이는 **−0.000351**이고, MSE 차이는 **+0.363835**로 후보가 높습니다. 같은 후보의 B 대비 ΔRMSE는 **−0.004158**, THP 대비 ΔRMSE는 **+0.015718**입니다. 따라서 raw RMSE는 B보다 낮지만 RMTPP와 THP보다 높습니다. 네 모델 중 validation raw MAE 최솟값은 Dual-timescale 후보, body MAE(`y≤25`) 최솟값은 Dual-timescale 후보, tail MAE(`y>35`) 최솟값은 THP입니다.\n\nTrain **1,991,192건**의 candidate−RMTPP ΔMSE는 **+0.028895**이며, series-disjoint F0/F1은 **+0.014984 / +0.042888**로 같은 방향입니다. 이 fold 비교는 전체 train으로 이미 적합된 frozen 모델을 나눈 설명적 복제이며 out-of-fold 일반화가 아닙니다. Seed 42 한 번의 validation·train 진단이므로 인과 효과나 held-out 개선을 증명하지 않습니다.\n\nWhole-series paired bootstrap에서 validation ΔMSE의 2.5–97.5 백분위 범위는 **[0.329497, 0.398854]**로 0 위에 있고, ΔMAE 범위는 **[-0.001704, 0.001091]**로 0을 가로지릅니다. 이는 관측 series의 case variation이며 학습 seed 불확실성이 아닙니다. 또한 같은 validation이 checkpoint 선택에 이미 사용됐으므로 이 구간을 독립적인 확인 검정으로 해석할 수 없습니다."
+      },
+      {
+        "id": "reviewed_decision",
+        "type": "markdown",
+        "sourceId": "reviewed_findings",
+        "body": "### 검토 판정\n\n현재 dual-timescale 후보의 Instacart 약점은 비교 상대에 따라 구분됩니다. RMTPP 대비 validation RMSE는 0.53% 높고 MAE는 사실상 동률입니다. 제곱오차 차이의 83.62%가 평균 과소예측 차이 항으로 분해되며, 수량 8–35와 관측 이력 8–15 구간이 주된 불리 조건입니다. 반면 B 대비로는 전체 RMSE·MAE가 소폭 좋아졌지만 이력 2–3 구간에서 예측이 내려가며 오차가 커집니다. 이력 8–15에서는 B보다 개선되므로 짧은 이력 문제를 모든 benchmark 차이의 설명으로 적용하면 안 됩니다.\n\nTrain 1,991,192건을 series가 겹치지 않는 두 집단으로 나눈 결과, validation에서 먼저 고정한 5개 가설의 46개 방향 조건이 모두 재현됐습니다. 다만 train 전체에서는 후보의 RMSE가 THP보다 좋고 validation에서는 나빠집니다. RMTPP 대비 centered MSE도 train에서는 개선되고 validation에서는 악화됩니다. 따라서 조건별 오차 패턴의 재현과 전체 순위·일반화의 재현을 구분해야 합니다. 두 train 집단은 원래 모델 학습에 사용되었으며 out-of-fold 검증이 아닙니다.\n\n현재 근거는 어떤 조건에서 예측 수준과 오차가 달라지는지를 설명합니다. 과소예측의 발생 위치를 local/global memory, 공통 encoder 또는 quantity head 중 하나로 특정하는 인과 증거는 아직 없습니다. 일괄 상향 보정의 효과도 검증하지 않았습니다. 현재 승인된 Intermittent 평가와 이 진단을 합쳐 기존 후보의 최종 비교를 완료한 뒤 수정 여부를 결정하는 순서를 유지합니다. 이번 작업에서는 모델 변경·재학습·보정·checkpoint 재선택·held-out 평가를 실행하지 않았습니다."
+      },
+      {
+        "id": "metrics_note",
+        "type": "markdown",
+        "sourceId": "summary_metrics",
+        "body": "## 같은 selector와 같은 표본에서 네 모델의 위치를 확인했습니다\n\n아래 표는 네 frozen checkpoint의 동일 validation target을 직접 재평가한 값입니다. Raw MAE·RMSE·body/tail MAE는 수량 원단위이며 bias는 `prediction − true_qty`의 평균입니다. 음수 bias는 과소예측을 뜻합니다. Train 값은 모델 순위를 주장하기 위한 성능표가 아니라 뒤의 병목 재현 진단에만 사용했습니다."
+      },
+      {
+        "id": "metrics_table",
+        "type": "table",
+        "tableId": "validation_model_metrics",
+        "layout": "full"
+      },
+      {
+        "id": "quantity_note",
+        "type": "markdown",
+        "sourceId": "strata_contributions",
+        "body": "## 오차 차이가 생긴 구간을 target 수량·history·편향 성분으로 나눴습니다\n\n### 실제 target 수량 구간\n\n실제 target 수량 구간별 막대는 구간 ΔMSE에 구간 표본 비중을 곱한 전체 MSE 차이 기여입니다. Validation의 가장 큰 불리 기여는 **(8,20] (+0.433734)**, 가장 큰 유리 기여는 **<=8 (−0.456384)**입니다. Train에서는 각각 **(8,20] (+0.312646)**, **<=8 (−0.316992)**입니다. 각 split 안에서 막대를 더하면 전체 candidate−RMTPP ΔMSE가 되지만, 서로 다른 partition family의 막대를 함께 더하면 안 됩니다. Train 막대는 전체 train으로 적합된 모델의 설명적 in-sample 진단입니다. 실제 target 수량은 예측 전에 알 수 없는 사후 설명 변수이므로, 이 구간을 직접 gate 입력이나 데이터셋별 규칙으로 사용하는 근거는 아닙니다."
+      },
+      {
+        "id": "quantity_chart",
+        "type": "chart",
+        "chartId": "quantity_contribution",
+        "layout": "full"
+      },
+      {
+        "id": "history_note",
+        "type": "markdown",
+        "sourceId": "strata_contributions",
+        "body": "### 관측 history 길이\n\n관측 history 길이별 막대는 구간 ΔMSE에 구간 표본 비중을 곱한 전체 MSE 차이 기여입니다. Validation의 가장 큰 불리 기여는 **8-15 (+0.273830)**, 가장 큰 유리 기여는 **2-3 (−0.030739)**입니다. Train에서는 각각 **8-15 (+0.113796)**, **1 (−0.128951)**입니다. 각 split 안에서 막대를 더하면 전체 candidate−RMTPP ΔMSE가 되지만, 서로 다른 partition family의 막대를 함께 더하면 안 됩니다. Train 막대는 전체 train으로 적합된 모델의 설명적 in-sample 진단입니다. Validation에서는 RMTPP 대비 H2–3 기여가 **−0.030739**, H8–15가 **+0.273830**인 반면, B 대비로는 각각 **+0.070198**와 **−0.085670**입니다. 비교 대상에 따라 방향이 뒤집히므로 짧은 이력 하나로 benchmark RMSE 격차를 설명할 수 없습니다. History 1에서는 동적 residual이 구조적으로 0이지만, 학습 후 후보 전체가 B와 같지는 않습니다. Local memory는 history 2부터, global prefix memory는 history 10부터 가능하므로 8–15 전체를 global 활성 구간으로 해석할 수 없습니다."
+      },
+      {
+        "id": "history_chart",
+        "type": "chart",
+        "chartId": "history_contribution",
+        "layout": "full"
+      },
+      {
+        "id": "bias_note",
+        "type": "markdown",
+        "sourceId": "bias_fold_decomposition",
+        "body": "### Bias²와 centered error\n\n아래 분해는 candidate−RMTPP ΔMSE를 평균 level shift의 차이인 Δbias²와 평균 오차를 제거한 Δcentered MSE로 나눕니다. Validation에서 두 성분은 각각 **+0.304238**와 **+0.059597**이며, Δbias²가 전체 양의 gap의 **83.62%**를 차지합니다. Train F0/F1도 같은 두 성분을 보여 주지만, 학습에 쓰인 사례를 나눈 진단이므로 새 series에 대한 보정 가능성으로 읽을 수 없습니다."
+      },
+      {
+        "id": "bias_chart",
+        "type": "chart",
+        "chartId": "bias_decomposition",
+        "layout": "full"
+      },
+      {
+        "id": "hypothesis_note",
+        "type": "markdown",
+        "sourceId": "train_hypothesis_results",
+        "body": "## Validation에서 고정한 설명을 train의 두 series fold에서 다시 검사했습니다\n\nValidation 결과를 본 뒤 H1–H5의 방향 조건을 고정하고 train 추론을 시작했습니다. 두 fold의 세부 부호 검사 결과는 재현 **5개**, 부분 재현 **0개**, 미재현 **0개**이며, 총 46개 조건 중 실패한 조건은 **0개**입니다. 표의 실패 조건도 판정에서 제거하지 않았습니다. Train의 history 구성은 validation과 달라 aggregate 패턴만 비교하지 않고, `fold_strata.csv`의 comparator별 within-stratum 부호로 각 조건을 판정했습니다."
+      },
+      {
+        "id": "hypothesis_table",
+        "type": "table",
+        "tableId": "hypothesis_checks",
+        "layout": "full"
+      },
+      {
+        "id": "scope",
+        "type": "markdown",
+        "sourceId": "frozen_contract",
+        "body": "## 범위와 재현 방법\n\n### 모집단·지표 정의\n\n대상은 `insta_market_basket`, seed 42의 validation **503,733건**과 train **1,991,192건**입니다. 모든 모델은 validation raw quantity RMSE selector로 이미 선택된 checkpoint이며 이 진단에서 학습, calibration, checkpoint 재선택을 하지 않았습니다. 오차는 `prediction − true_qty`, MSE는 `mean(error²)`, RMSE는 `sqrt(MSE)`, MAE는 `mean(abs(error))`입니다. `MSE = bias² + centered MSE`를 float64로 계산했습니다. Primary contrast는 candidate−RMTPP이며 음수는 후보에 유리합니다. Held-out test는 읽지 않았습니다."
+      },
+      {
+        "id": "method",
+        "type": "markdown",
+        "sourceId": "inference_audits",
+        "body": "### Frozen checkpoint와 같은 표본 재생\n\nB는 계약에 고정된 GPU prediction cache의 SHA-256과 canonical target identity·수량·순서를 재검증해 재사용했습니다. 이 검증은 B의 행 단위 CPU bitwise 재생을 주장하지 않습니다. 현재 dual-timescale 후보, RMTPP, THP는 commit `ca8823e688a510e64e7fb81c9dc9d158d4bdfc7c`의 공통 loader에서 CPU inference로 다시 생성했습니다. 네 모델은 같은 dataset instance와 순서를 사용했고, 추론 전후 model state가 같으며 저장된 paired prediction SHA가 analyzer 입력 SHA와 일치하는지 검사했습니다."
+      },
+      {
+        "id": "numeric_note",
+        "type": "markdown",
+        "sourceId": "numeric_compatibility",
+        "body": "### 기존 절대오차 실패와 보완 수치 호환성 판정\n\nValidation CPU 재생에서 RMTPP raw RMSE는 기존 CUDA 요약보다 **+0.00001404** 높아 원래 절대오차 `1e-5` 기준을 넘었습니다. MAE 차이는 **+0.00000668**이었습니다. Source·checkpoint state·모집단 identity는 일치했습니다. 이 결과를 확인한 뒤 candidate 행 단위 분석과 train 추론 전에 `atol=1e-5, rtol=1e-5` 정책을 별도 동결했습니다. 보완 감사에서 모든 aggregate scalar가 통과했고 세 reference에 대한 raw-RMSE contrast 방향이 유지됐으며 contrast 왜곡은 모두 0.1% 이내였습니다. Stratum별 기존 CUDA 요약과의 최대 절대 차이는 MAE **0.00060613**, RMSE **0.00043771**이었지만 검토한 30개 candidate−reference MAE/RMSE 부호는 모두 유지됐습니다. 이는 float32 CPU(torch 2.14)와 기존 CUDA(torch 2.11)의 수치 호환성 판정이며, 행 단위 bitwise 동등성이나 새로운 성능 기준을 뜻하지 않습니다."
+      },
+      {
+        "id": "limitations",
+        "type": "markdown",
+        "sourceId": "methodology",
+        "body": "## 한계와 다음 판단\n\n### 해석 한계\n\nTrain의 두 fold는 series ID 해시로 서로 겹치지 않지만, frozen 모델은 이미 두 fold를 포함한 전체 train으로 적합됐습니다. 따라서 fold 방향 일치는 학습 사례 안의 설명적 재현이며 out-of-fold 성능 근거가 아닙니다. Whole-series bootstrap도 관측 series의 case variation만 나타내며 학습 seed 불확실성을 나타내지 않습니다. 같은 validation이 checkpoint 선택에 이미 사용됐으므로 bootstrap 구간도 독립적인 확인 검정이 아닙니다. 수량 구간은 사후 target 기반이고, single seed이며, validation과 train만 사용했습니다. B는 검증된 GPU cache를 재사용했고 다른 세 모델은 CPU에서 재생했으므로 보완 수치 호환성 범위 안의 backend 차이가 남습니다. 관측적 오차 분해만으로 dual memory의 인과 효과, 공통 데이터셋 개선, held-out test 성능을 확정할 수 없습니다."
+      },
+      {
+        "id": "next",
+        "type": "markdown",
+        "sourceId": "reviewed_findings",
+        "body": "### 다음 판단\n\n다음 판단 대상은 **Existing ca8823e Intermittent 5090 evaluation + local final comparison**입니다. Combine current candidate results before deciding whether another change is justified. No new run authorized or launched by this diagnostic. 이번 진단만으로 새 후보 실행을 승인하거나 정당화하지 않습니다. 이 진단 자체는 모델을 변경하지 않습니다."
+      },
+      {
+        "id": "questions",
+        "type": "markdown",
+        "body": "### 남은 연구 질문\n\n- Validation에서 확인한 가장 큰 불리 기여 구간이 독립 seed와 held-out test에서도 유지되는가?\n- Δbias²와 Δcentered MSE 중 공통 Backbone 변경으로 안정적으로 줄일 수 있는 성분은 무엇인가?\n- 같은 변경이 Instacart의 짧은 이력을 보존하면서 Taxi와 Intermittent의 기존 이득을 유지하는가?"
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-09-09T23:36:34.903314+00:00",
+    "status": "ready",
+    "datasets": {
+      "validation_model_metrics": [
+        {
+          "sort_key": 0,
+          "model": "candidate",
+          "model_label": "Dual-timescale 후보",
+          "selected_epoch": 72,
+          "count": 503733,
+          "mae": 3.9854971233060033,
+          "rmse": 5.868058438821105,
+          "mse": 34.43410984141959,
+          "bias": -0.8635037949773452,
+          "centered_mse": 33.6884710374793,
+          "body_mae_y_le_25": 3.4338330465976963,
+          "tail_mae_y_gt_35": 21.781932748967723
+        },
+        {
+          "sort_key": 1,
+          "model": "b",
+          "model_label": "TitanTPP(B)",
+          "selected_epoch": 72,
+          "count": 503733,
+          "mae": 3.9937810768388116,
+          "rmse": 5.872216928762446,
+          "mse": 34.48293165844426,
+          "bias": -0.8496307032742624,
+          "centered_mse": 33.76105932649795,
+          "body_mae_y_le_25": 3.4386015026106223,
+          "tail_mae_y_gt_35": 21.917794740539737
+        },
+        {
+          "sort_key": 2,
+          "model": "rmtpp",
+          "model_label": "RMTPP",
+          "selected_epoch": 40,
+          "count": 503733,
+          "mae": 3.985848075701505,
+          "rmse": 5.836974840161953,
+          "mse": 34.07027528468365,
+          "bias": -0.6643801018016875,
+          "centered_mse": 33.62887436501363,
+          "body_mae_y_le_25": 3.440219341947282,
+          "tail_mae_y_gt_35": 21.88915297975597
+        },
+        {
+          "sort_key": 3,
+          "model": "thp",
+          "model_label": "THP",
+          "selected_epoch": 50,
+          "count": 503733,
+          "mae": 3.9910028113968377,
+          "rmse": 5.852340708825591,
+          "mse": 34.24989177217722,
+          "bias": -0.6496392773576328,
+          "centered_mse": 33.82786058149147,
+          "body_mae_y_le_25": 3.454442265386192,
+          "tail_mae_y_gt_35": 21.77330711770326
+        }
+      ],
+      "quantity_contributions": [
+        {
+          "split": "validation",
+          "split_label": "Validation",
+          "group_order": 0,
+          "group_label": "<=8",
+          "count": 247651,
+          "row_fraction": 0.49163147937498636,
+          "candidate_mse": 14.80975384610341,
+          "reference_mse": 15.73805856427632,
+          "delta_mse": -0.9283047181729103,
+          "delta_mae": -0.11941512275476018,
+          "delta_contribution": -0.45638382190612764
+        },
+        {
+          "split": "validation",
+          "split_label": "Validation",
+          "group_order": 1,
+          "group_label": "(8,20]",
+          "count": 202534,
+          "row_fraction": 0.40206617394532423,
+          "candidate_mse": 21.679740726550598,
+          "reference_mse": 20.60097785797586,
+          "delta_mse": 1.0787628685747386,
+          "delta_mae": 0.10432829763534102,
+          "delta_contribution": 0.43373405916212776
+        },
+        {
+          "split": "validation",
+          "split_label": "Validation",
+          "group_order": 2,
+          "group_label": "(20,25]",
+          "count": 27322,
+          "row_fraction": 0.05423905124341665,
+          "candidate_mse": 81.54959219286417,
+          "reference_mse": 77.8636782437357,
+          "delta_mse": 3.6859139491284623,
+          "delta_mae": 0.19741403991538498,
+          "delta_contribution": 0.1999204755656029
+        },
+        {
+          "split": "validation",
+          "split_label": "Validation",
+          "group_order": 3,
+          "group_label": "(25,35]",
+          "count": 20190,
+          "row_fraction": 0.04008075706773231,
+          "candidate_mse": 170.7375176871466,
+          "reference_mse": 165.73605260507668,
+          "delta_mse": 5.001465082069927,
+          "delta_mae": 0.17433857075231707,
+          "delta_contribution": 0.2004625069371906
+        },
+        {
+          "split": "validation",
+          "split_label": "Validation",
+          "group_order": 4,
+          "group_label": ">35",
+          "count": 6036,
+          "row_fraction": 0.011982538368540477,
+          "candidate_mse": 598.3721097909762,
+          "reference_mse": 599.5320195359225,
+          "delta_mse": -1.159909744946276,
+          "delta_mae": -0.10722023078824705,
+          "delta_contribution": -0.013898663022862752
+        },
+        {
+          "split": "train",
+          "split_label": "Train",
+          "group_order": 0,
+          "group_label": "<=8",
+          "count": 1022434,
+          "row_fraction": 0.5134783586916781,
+          "candidate_mse": 15.744062637338141,
+          "reference_mse": 16.361404442031805,
+          "delta_mse": -0.6173418046936643,
+          "delta_mae": -0.0922067824119428,
+          "delta_contribution": -0.31699165662586126
+        },
+        {
+          "split": "train",
+          "split_label": "Train",
+          "group_order": 1,
+          "group_label": "(8,20]",
+          "count": 782701,
+          "row_fraction": 0.3930816315051487,
+          "candidate_mse": 20.991898626277887,
+          "reference_mse": 20.1965262093091,
+          "delta_mse": 0.7953724169687888,
+          "delta_mae": 0.07452379509410223,
+          "delta_contribution": 0.3126462873162849
+        },
+        {
+          "split": "train",
+          "split_label": "Train",
+          "group_order": 2,
+          "group_label": "(20,25]",
+          "count": 98144,
+          "row_fraction": 0.04928906906014086,
+          "candidate_mse": 80.1873088427646,
+          "reference_mse": 78.64071139419352,
+          "delta_mse": 1.5465974485710774,
+          "delta_mae": 0.06961804461845578,
+          "delta_contribution": 0.0762303484508575
+        },
+        {
+          "split": "train",
+          "split_label": "Train",
+          "group_order": 3,
+          "group_label": "(25,35]",
+          "count": 68685,
+          "row_fraction": 0.034494413396598624,
+          "candidate_mse": 172.19488550169135,
+          "reference_mse": 171.19355680386013,
+          "delta_mse": 1.0013286978312124,
+          "delta_mae": 0.017403148992132245,
+          "delta_contribution": 0.03454024604886763
+        },
+        {
+          "split": "train",
+          "split_label": "Train",
+          "group_order": 4,
+          "group_label": ">35",
+          "count": 19228,
+          "row_fraction": 0.009656527346433694,
+          "candidate_mse": 573.2980349051282,
+          "reference_mse": 581.326821588356,
+          "delta_mse": -8.028786683227736,
+          "delta_mae": -0.25491764424172914,
+          "delta_contribution": -0.0775301981652713
+        }
+      ],
+      "history_contributions": [
+        {
+          "split": "validation",
+          "split_label": "Validation",
+          "group_order": 0,
+          "group_label": "1",
+          "count": 261,
+          "row_fraction": 0.0005181316292559749,
+          "candidate_mse": 114.22173797810694,
+          "reference_mse": 109.88037056759009,
+          "delta_mse": 4.3413674105168525,
+          "delta_mae": 0.3059316293489891,
+          "delta_contribution": 0.0022493997696098897
+        },
+        {
+          "split": "validation",
+          "split_label": "Validation",
+          "group_order": 1,
+          "group_label": "2-3",
+          "count": 130279,
+          "row_fraction": 0.2586270901449776,
+          "candidate_mse": 35.59150791978148,
+          "reference_mse": 35.71036371554848,
+          "delta_mse": -0.11885579576700422,
+          "delta_mae": -0.010871977483049022,
+          "delta_contribution": -0.030739328606086046
+        },
+        {
+          "split": "validation",
+          "split_label": "Validation",
+          "group_order": 2,
+          "group_label": "4-7",
+          "count": 205041,
+          "row_fraction": 0.4070430168363002,
+          "candidate_mse": 33.17093709517464,
+          "reference_mse": 32.912281253407116,
+          "delta_mse": 0.25865584176752066,
+          "delta_mae": -0.003601068067036195,
+          "delta_contribution": 0.1052840541553843
+        },
+        {
+          "split": "validation",
+          "split_label": "Validation",
+          "group_order": 3,
+          "group_label": "8-15",
+          "count": 140970,
+          "row_fraction": 0.27985063515791103,
+          "candidate_mse": 35.14422309466632,
+          "reference_mse": 34.16573845140933,
+          "delta_mse": 0.9784846432569907,
+          "delta_mae": 0.013372547448742722,
+          "delta_contribution": 0.2738295489077308
+        },
+        {
+          "split": "validation",
+          "split_label": "Validation",
+          "group_order": 4,
+          "group_label": "16-31",
+          "count": 26298,
+          "row_fraction": 0.052206228299515815,
+          "candidate_mse": 33.569935630642405,
+          "reference_mse": 33.25895753114736,
+          "delta_mse": 0.3109780994950455,
+          "delta_mae": -0.006137614091890065,
+          "delta_contribution": 0.01623499365838789
+        },
+        {
+          "split": "validation",
+          "split_label": "Validation",
+          "group_order": 5,
+          "group_label": "32-63",
+          "count": 884,
+          "row_fraction": 0.0017548979320393939,
+          "candidate_mse": 45.762566801884056,
+          "reference_mse": 47.48580727865961,
+          "delta_mse": -1.7232404767755511,
+          "delta_mae": 0.19728671412122756,
+          "delta_contribution": -0.003024111149099994
+        },
+        {
+          "split": "train",
+          "split_label": "Train",
+          "group_order": 0,
+          "group_label": "1",
+          "count": 205934,
+          "row_fraction": 0.10342247256919473,
+          "candidate_mse": 37.88268822348461,
+          "reference_mse": 39.12952367494817,
+          "delta_mse": -1.2468354514635607,
+          "delta_mae": -0.028103613528823956,
+          "delta_contribution": -0.12895080527728964
+        },
+        {
+          "split": "train",
+          "split_label": "Train",
+          "group_order": 1,
+          "group_label": "2-3",
+          "count": 496800,
+          "row_fraction": 0.2494987926829758,
+          "candidate_mse": 32.55978132339158,
+          "reference_mse": 32.638827651924466,
+          "delta_mse": -0.07904632853288263,
+          "delta_mae": -0.010171565106093627,
+          "delta_contribution": -0.01972196353497608
+        },
+        {
+          "split": "train",
+          "split_label": "Train",
+          "group_order": 2,
+          "group_label": "4-7",
+          "count": 733605,
+          "row_fraction": 0.3684250438933061,
+          "candidate_mse": 30.208460351088778,
+          "reference_mse": 30.061888928078933,
+          "delta_mse": 0.1465714230098456,
+          "delta_mae": -0.01633482527020602,
+          "delta_contribution": 0.0540005829559067
+        },
+        {
+          "split": "train",
+          "split_label": "Train",
+          "group_order": 3,
+          "group_label": "8-15",
+          "count": 479357,
+          "row_fraction": 0.2407387132933439,
+          "candidate_mse": 31.12684797963778,
+          "reference_mse": 30.654152935876027,
+          "delta_mse": 0.4726950437617532,
+          "delta_mae": -0.018585823493364906,
+          "delta_contribution": 0.11379599661534535
+        },
+        {
+          "split": "train",
+          "split_label": "Train",
+          "group_order": 4,
+          "group_label": "16-31",
+          "count": 74300,
+          "row_fraction": 0.03731433231953523,
+          "candidate_mse": 28.951654482104917,
+          "reference_mse": 28.66953538221999,
+          "delta_mse": 0.2821190998849268,
+          "delta_mae": -0.015457555535343559,
+          "delta_contribution": 0.010527085846794312
+        },
+        {
+          "split": "train",
+          "split_label": "Train",
+          "group_order": 5,
+          "group_label": "32-63",
+          "count": 1196,
+          "row_fraction": 0.0006006452416442011,
+          "candidate_mse": 31.804114717517113,
+          "reference_mse": 33.062544034022324,
+          "delta_mse": -1.258429316505211,
+          "delta_mae": 0.05237903473369254,
+          "delta_contribution": -0.0007558695809044192
+        }
+      ],
+      "bias_decomposition": [
+        {
+          "scope": "validation",
+          "scope_label": "Validation",
+          "component": "Bias² 차이",
+          "component_order": 0,
+          "count": 503733,
+          "delta_component": 0.3042378842702564,
+          "delta_mse": 0.363834556735938
+        },
+        {
+          "scope": "validation",
+          "scope_label": "Validation",
+          "component": "Centered MSE 차이",
+          "component_order": 1,
+          "count": 503733,
+          "delta_component": 0.05959667246567335,
+          "delta_mse": 0.363834556735938
+        },
+        {
+          "scope": "train_fold_0",
+          "scope_label": "Train F0",
+          "component": "Bias² 차이",
+          "component_order": 0,
+          "count": 998509,
+          "delta_component": 0.11271718408723799,
+          "delta_mse": 0.014983883709138723
+        },
+        {
+          "scope": "train_fold_0",
+          "scope_label": "Train F0",
+          "component": "Centered MSE 차이",
+          "component_order": 1,
+          "count": 998509,
+          "delta_component": -0.09773330037809913,
+          "delta_mse": 0.014983883709138723
+        },
+        {
+          "scope": "train_fold_1",
+          "scope_label": "Train F1",
+          "component": "Bias² 차이",
+          "component_order": 0,
+          "count": 992683,
+          "delta_component": 0.11151235555049005,
+          "delta_mse": 0.042887814048590656
+        },
+        {
+          "scope": "train_fold_1",
+          "scope_label": "Train F1",
+          "component": "Centered MSE 차이",
+          "component_order": 1,
+          "count": 992683,
+          "delta_component": -0.06862454150190445,
+          "delta_mse": 0.042887814048590656
+        }
+      ],
+      "hypothesis_checks": [
+        {
+          "sort_key": 0,
+          "hypothesis_id": "H1_benchmark_quantity_level",
+          "hypothesis_label": "H1 · benchmark 대비 수량 수준",
+          "validation_claim": "Candidate is more negatively biased than RMTPP and THP. Quantity 8<y<=35 adds MSE while y<=8 helps.",
+          "status": "replicated",
+          "status_label": "재현",
+          "passed_checks": 24,
+          "total_checks": 24,
+          "failed_checks": 0
+        },
+        {
+          "sort_key": 1,
+          "hypothesis_id": "H2_rmtpp_history",
+          "hypothesis_label": "H2 · RMTPP 대비 history",
+          "validation_claim": "Against RMTPP, history8–15 is a weakness while history2–3 is not.",
+          "status": "replicated",
+          "status_label": "재현",
+          "passed_checks": 6,
+          "total_checks": 6,
+          "failed_checks": 0
+        },
+        {
+          "sort_key": 2,
+          "hypothesis_id": "H3_B_history_tradeoff",
+          "hypothesis_label": "H3 · B 대비 history trade-off",
+          "validation_claim": "Against B, history2–3 shifts downward and worsens MSE, whereas history8–15 shifts upward and improves MSE.",
+          "status": "replicated",
+          "status_label": "재현",
+          "passed_checks": 8,
+          "total_checks": 8,
+          "failed_checks": 0
+        },
+        {
+          "sort_key": 3,
+          "hypothesis_id": "H4_B_mid_quantity",
+          "hypothesis_label": "H4 · B 대비 중간 수량",
+          "validation_claim": "In B comparison, quantity(8,20] MSE worsens without an aggregate downward prediction shift; centered error worsens.",
+          "status": "replicated",
+          "status_label": "재현",
+          "passed_checks": 6,
+          "total_checks": 6,
+          "failed_checks": 0
+        },
+        {
+          "sort_key": 4,
+          "hypothesis_id": "H5_series_concentration",
+          "hypothesis_label": "H5 · series 집중도",
+          "validation_claim": "The worst1% of series does not contain a majority of all positive candidate-minus-RMTPP SSE.",
+          "status": "replicated",
+          "status_label": "재현",
+          "passed_checks": 2,
+          "total_checks": 2,
+          "failed_checks": 0
+        }
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "summary_metrics",
+      "label": "동일 표본 4모델 aggregate 수량 지표",
+      "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/report/build_report.py",
+      "query": {
+        "engine": "python-stdlib",
+        "language": "python",
+        "id": "build_datasets.validation_model_metrics",
+        "sql": "inputs = load_inputs(); rows = build_datasets(inputs)['validation_model_metrics']",
+        "description": "검증된 validation/train summary에서 4모델 지표와 candidate−RMTPP 비교를 구성합니다.",
+        "tables_used": [
+          "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/validation/summary.json",
+          "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train/summary.json",
+          "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/validation/comparison_table.csv",
+          "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train/fold_strata.csv"
+        ],
+        "filters": {
+          "dataset": "insta_market_basket",
+          "seed": 42,
+          "held_out_test": false
+        },
+        "executed_at": "2026-09-09T23:36:34.903314+00:00",
+        "metric_definitions": {
+          "error": "prediction - true_qty",
+          "MAE": "mean(abs(error)) in raw quantity units",
+          "MSE": "mean(error^2) in squared raw quantity units",
+          "RMSE": "sqrt(MSE) in raw quantity units",
+          "bias": "mean(error); negative means underprediction",
+          "centered_MSE": "mean((error - bias)^2)"
+        }
+      }
+    },
+    {
+      "id": "strata_contributions",
+      "label": "수량·이력 구간별 paired MSE 차이 기여",
+      "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/report/build_report.py",
+      "query": {
+        "engine": "python-stdlib",
+        "language": "python",
+        "id": "build_datasets.strata_contributions",
+        "sql": "inputs = load_inputs(); data = build_datasets(inputs); rows = data['quantity_contributions'] + data['history_contributions']",
+        "description": "두 split의 strata에서 candidate_minus_rmtpp만 선택하고 구간별 전체 ΔMSE 기여를 보존합니다.",
+        "tables_used": [
+          "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/validation/strata.csv",
+          "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train/strata.csv"
+        ],
+        "filters": {
+          "comparison": "candidate_minus_rmtpp",
+          "partition_families": [
+            "quantity_band",
+            "history_band"
+          ]
+        },
+        "executed_at": "2026-09-09T23:36:34.903314+00:00",
+        "metric_definitions": {
+          "delta_contribution": "stratum_count / split_count * (candidate_MSE - RMTPP_MSE); negative favors candidate"
+        }
+      }
+    },
+    {
+      "id": "bias_fold_decomposition",
+      "label": "Validation 및 train fold의 bias²·centered-MSE 분해",
+      "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/report/build_report.py",
+      "query": {
+        "engine": "python-stdlib",
+        "language": "python",
+        "id": "build_datasets.bias_decomposition",
+        "sql": "inputs = load_inputs(); rows = build_datasets(inputs)['bias_decomposition']",
+        "description": "Validation 전체와 train의 series-disjoint 두 fold에서 candidate−RMTPP ΔMSE를 bias²와 centered MSE 차이로 분해합니다.",
+        "tables_used": [
+          "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/validation/summary.json",
+          "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train/summary.json",
+          "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train/fold_strata.csv"
+        ],
+        "filters": {
+          "comparison": "candidate_minus_rmtpp",
+          "train_folds": [
+            0,
+            1
+          ]
+        },
+        "executed_at": "2026-09-09T23:36:34.903314+00:00",
+        "metric_definitions": {
+          "decomposition": "delta_MSE = delta_bias_squared + delta_centered_MSE"
+        }
+      }
+    },
+    {
+      "id": "frozen_contract",
+      "label": "행 단위 추론 전 동결한 진단 계약",
+      "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/contract.json"
+    },
+    {
+      "id": "inference_audits",
+      "label": "Frozen CPU 추론과 동일 모집단 감사",
+      "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/report/build_report.py",
+      "query": {
+        "engine": "python-stdlib",
+        "language": "python",
+        "id": "frozen_inference_audits",
+        "sql": "audits = [load_json(INPUT_PATHS[name]) for name in ('validation_inference_audit', 'train_inference_audit')]",
+        "description": "Checkpoint restore, source/state 보존, 모집단 identity와 prediction artifact SHA를 확인합니다.",
+        "tables_used": [
+          "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/validation_inference_audit.json",
+          "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train_inference_audit.json"
+        ],
+        "executed_at": "2026-09-09T23:36:34.903314+00:00"
+      }
+    },
+    {
+      "id": "reviewed_findings",
+      "label": "Validation 설명 동결 후 train에서 검토한 최종 판정",
+      "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/findings.json"
+    },
+    {
+      "id": "methodology",
+      "label": "진단 방법과 해석 경계",
+      "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/methodology.md"
+    },
+    {
+      "id": "source_reuse",
+      "label": "B cache와 공통 source 재사용 감사",
+      "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/source_reuse_audit.json"
+    },
+    {
+      "id": "numeric_compatibility",
+      "label": "CPU/CUDA float32 수치 재생 정책과 보완 감사",
+      "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/report/build_report.py",
+      "query": {
+        "engine": "python-stdlib",
+        "language": "python",
+        "id": "numeric_compatibility_supplement",
+        "sql": "audits = [load_json(INPUT_PATHS[name]) for name in ('numeric_replay_policy', 'numeric_compatibility_audit', 'stratum_numeric_materiality_audit')]",
+        "description": "기존 절대오차 1e-5 실패를 보존하고, 사전 동결한 atol+rtol 기준·state/population identity·contrast 안정성을 검사합니다.",
+        "tables_used": [
+          "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/numeric_replay_policy.json",
+          "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/numeric_compatibility_audit.json",
+          "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/stratum_numeric_materiality_audit.json"
+        ],
+        "executed_at": "2026-09-09T23:36:34.903314+00:00"
+      }
+    },
+    {
+      "id": "validation_hypotheses",
+      "label": "Train 추론 전에 동결한 validation 설명 가설",
+      "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/validation_hypotheses.json"
+    },
+    {
+      "id": "train_hypothesis_results",
+      "label": "Validation 고정 H1–H5의 train fold별 검사",
+      "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train_hypothesis_checks.json",
+      "query": {
+        "engine": "python-stdlib",
+        "language": "python",
+        "id": "build_datasets.hypothesis_checks",
+        "sql": "inputs = load_inputs(); rows = build_datasets(inputs)['hypothesis_checks']",
+        "description": "Train 시작 전에 고정한 H1–H5를 두 series-disjoint fold에서 각각 검사하고 성공·실패 수를 집계합니다.",
+        "tables_used": [
+          "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/validation_hypotheses.json",
+          "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train_hypothesis_checks.json",
+          "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/train/fold_strata.csv"
+        ],
+        "filters": {
+          "folds": [
+            0,
+            1
+          ],
+          "interpretation": "descriptive_in_sample_replication"
+        },
+        "executed_at": "2026-09-09T23:36:34.903314+00:00"
+      }
+    },
+    {
+      "id": "analysis_quality_assurance",
+      "label": "분석기 테스트와 독립 재계산 감사",
+      "path": "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/report/build_report.py",
+      "query": {
+        "engine": "python-stdlib",
+        "language": "python",
+        "id": "analysis_quality_assurance",
+        "sql": "qa = {name: load_json(INPUT_PATHS[name]) for name in ('test_receipt', 'independent_audit')}",
+        "description": "분석기 단위 테스트와 별도 구현의 metric·가설·최종 판정 재계산 결과를 확인합니다.",
+        "tables_used": [
+          "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/test_receipt.json",
+          "paper/results/instacart_dual_timescale_quantity_diagnostic_20260910/independent_audit.json"
+        ],
+        "executed_at": "2026-09-09T23:36:34.903314+00:00"
+      }
+    }
+  ]
+}

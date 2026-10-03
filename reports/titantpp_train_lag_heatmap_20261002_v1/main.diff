@@ -1,0 +1,411 @@
+--- main_before.tex
++++ paper/titantpp_pakdd_2027_draft/main.tex
+@@ -623,11 +623,15 @@
+ Train distributions provide context for these differences
+ (Appendix~\ref{app:data-characteristics}). Median usable histories are
+ 129, 40, 3, and 5 events for Taxi, Intermittent, RAF, and Instacart.
+-After within-series centering, adjacent log-quantity correlations are
+-$0.749$, $0.928$, $-0.105$, and $0.037$, respectively. Stronger adjacent
+-association may help history correction on Taxi and Intermittent; the
+-stratum errors establish where gains occur, while this proposed explanation
+-remains a hypothesis rather than an identified causal effect.
++The train-only lag profiles distinguish strong short-range association on
++Taxi from more persistent association on Intermittent, whereas RAF and
++Instacart exhibit much weaker within-series correlations
++(Fig.~\ref{fig:train-lag-correlation}). Together with the completed Taxi
++structural controls, this contrast motivates the hypothesis that directly
++coupling adjacent contextual states is useful when recent quantities carry
++substantial within-series information. The error decomposition identifies
++the realized gains and losses; the four-dataset association provides a
++post hoc interpretation of their variation.
+ 
+ \section{Computational Efficiency}
+ \subsection{Matched Measurement Protocol}
+@@ -973,15 +977,378 @@
+ \label{fig:train-history}
+ \end{figure}
+ 
+-Taxi and Intermittent retain substantially longer histories and stronger
+-within-series adjacent association than the other datasets.
+-RAF's median usable train history is three events, and 93.58\% of targets
+-have at most seven; the corresponding Instacart values are five and 72.13\%.
+-RAF's centered correlation is $-0.105$, compared with Instacart's $0.037$.
+-The RAF estimate summarizes very short sequences after mean removal, so it
+-should not be read as a stable negative dependence law. These distributions
+-make history correction's dataset dependence plausible, while the observed
+-error comparisons below establish where its gains and losses occur.
++\subsection{Event-Lag Association and Applicability}
++We extend Eq.~\eqref{eq:within-correlation} to event lags
++$\ell\in\{1,2,4,8,16\}$ by pairing
++$x^{(\ell)}_{e,j}=\log(1+q_{e,j-\ell})$ with
++$y^{(\ell)}_{e,j}=\log(1+q_{e,j})$ and recomputing each series'
++two means at every lag. Pairs remain within the same training series.
++The lag counts observed events rather than calendar units, and the
++descriptive calculation covers the full train sequence without the model's
++input-window restriction. The lag-one column reproduces
++Table~\ref{tab:train-characteristics}.
++
++% Generated from reports/titantpp_train_lag_heatmap_20261002_v1/analysis.json.
++\begin{figure}[t]
++\centering
++\begin{tikzpicture}[x=1.65cm,y=1.10cm,font=\scriptsize]
++\node at (2.5,4.70) {Event lag $\ell$};
++\node at (0.5,4.30) {1};
++\node at (1.5,4.30) {2};
++\node at (2.5,4.30) {4};
++\node at (3.5,4.30) {8};
++\node at (4.5,4.30) {16};
++\node[anchor=east] at (-.10,3.5) {Taxi};
++\definecolor{lagcell00}{HTML}{5C8AA5}
++\filldraw[fill=lagcell00,draw=white,line width=.6pt] (0,3) rectangle (1,4);
++\node[text=black,font=\bfseries\small] at (0.5,3.73) {$0.749$};
++\node[text=black,font=\scriptsize] at (0.5,3.44) {P: 38,393};
++\node[text=black,font=\scriptsize] at (0.5,3.20) {S: 131};
++\definecolor{lagcell01}{HTML}{86A8BC}
++\filldraw[fill=lagcell01,draw=white,line width=.6pt] (1,3) rectangle (2,4);
++\node[text=black,font=\bfseries\small] at (1.5,3.73) {$0.546$};
++\node[text=black,font=\scriptsize] at (1.5,3.44) {P: 38,262};
++\node[text=black,font=\scriptsize] at (1.5,3.20) {S: 131};
++\definecolor{lagcell02}{HTML}{DCE4E9}
++\filldraw[fill=lagcell02,draw=white,line width=.6pt] (2,3) rectangle (3,4);
++\node[text=black,font=\bfseries\small] at (2.5,3.73) {$0.136$};
++\node[text=black,font=\scriptsize] at (2.5,3.44) {P: 38,000};
++\node[text=black,font=\scriptsize] at (2.5,3.20) {S: 131};
++\definecolor{lagcell03}{HTML}{EBDDCF}
++\filldraw[fill=lagcell03,draw=white,line width=.6pt] (3,3) rectangle (4,4);
++\node[text=black,font=\bfseries\small] at (3.5,3.73) {$-0.191$};
++\node[text=black,font=\scriptsize] at (3.5,3.44) {P: 37,476};
++\node[text=black,font=\scriptsize] at (3.5,3.20) {S: 131};
++\definecolor{lagcell04}{HTML}{EEE3D8}
++\filldraw[fill=lagcell04,draw=white,line width=.6pt] (4,3) rectangle (5,4);
++\node[text=black,font=\bfseries\small] at (4.5,3.73) {$-0.150$};
++\node[text=black,font=\scriptsize] at (4.5,3.44) {P: 36,428};
++\node[text=black,font=\scriptsize] at (4.5,3.20) {S: 131};
++\node[anchor=east] at (-.10,2.5) {Intermittent};
++\definecolor{lagcell10}{HTML}{376F92}
++\filldraw[fill=lagcell10,draw=white,line width=.6pt] (0,2) rectangle (1,3);
++\node[text=white,font=\bfseries\small] at (0.5,2.73) {$0.928$};
++\node[text=white,font=\scriptsize] at (0.5,2.44) {P: 393,824};
++\node[text=white,font=\scriptsize] at (0.5,2.20) {S: 5,000};
++\definecolor{lagcell11}{HTML}{3B7294}
++\filldraw[fill=lagcell11,draw=white,line width=.6pt] (1,2) rectangle (2,3);
++\node[text=white,font=\bfseries\small] at (1.5,2.73) {$0.910$};
++\node[text=white,font=\scriptsize] at (1.5,2.44) {P: 388,824};
++\node[text=white,font=\scriptsize] at (1.5,2.20) {S: 5,000};
++\definecolor{lagcell12}{HTML}{4A7D9C}
++\filldraw[fill=lagcell12,draw=white,line width=.6pt] (2,2) rectangle (3,3);
++\node[text=black,font=\bfseries\small] at (2.5,2.73) {$0.834$};
++\node[text=black,font=\scriptsize] at (2.5,2.44) {P: 378,824};
++\node[text=black,font=\scriptsize] at (2.5,2.20) {S: 5,000};
++\definecolor{lagcell13}{HTML}{6691AB}
++\filldraw[fill=lagcell13,draw=white,line width=.6pt] (3,2) rectangle (4,3);
++\node[text=black,font=\bfseries\small] at (3.5,2.73) {$0.700$};
++\node[text=black,font=\scriptsize] at (3.5,2.44) {P: 358,824};
++\node[text=black,font=\scriptsize] at (3.5,2.20) {S: 5,000};
++\definecolor{lagcell14}{HTML}{95B2C4}
++\filldraw[fill=lagcell14,draw=white,line width=.6pt] (4,2) rectangle (5,3);
++\node[text=black,font=\bfseries\small] at (4.5,2.73) {$0.473$};
++\node[text=black,font=\scriptsize] at (4.5,2.44) {P: 318,836};
++\node[text=black,font=\scriptsize] at (4.5,2.20) {S: 4,983};
++\node[anchor=east] at (-.10,1.5) {RAF};
++\definecolor{lagcell20}{HTML}{F1E9E1}
++\filldraw[fill=lagcell20,draw=white,line width=.6pt] (0,1) rectangle (1,2);
++\node[text=black,font=\bfseries\small] at (0.5,1.73) {$-0.105$};
++\node[text=black,font=\scriptsize] at (0.5,1.44) {P: 25,779};
++\node[text=black,font=\scriptsize] at (0.5,1.20) {S: 5,000};
++\definecolor{lagcell21}{HTML}{F0E6DD}
++\filldraw[fill=lagcell21,draw=white,line width=.6pt] (1,1) rectangle (2,2);
++\node[text=black,font=\bfseries\small] at (1.5,1.73) {$-0.127$};
++\node[text=black,font=\scriptsize] at (1.5,1.44) {P: 20,779};
++\node[text=black,font=\scriptsize] at (1.5,1.20) {S: 4,857};
++\definecolor{lagcell22}{HTML}{F4F0EC}
++\filldraw[fill=lagcell22,draw=white,line width=.6pt] (2,1) rectangle (3,2);
++\node[text=black,font=\bfseries\small] at (2.5,1.73) {$-0.055$};
++\node[text=black,font=\scriptsize] at (2.5,1.44) {P: 11,567};
++\node[text=black,font=\scriptsize] at (2.5,1.20) {S: 3,639};
++\definecolor{lagcell23}{HTML}{F5F2EF}
++\filldraw[fill=lagcell23,draw=white,line width=.6pt] (3,1) rectangle (4,2);
++\node[text=black,font=\bfseries\small] at (3.5,1.73) {$-0.043$};
++\node[text=black,font=\scriptsize] at (3.5,1.44) {P: 1,655};
++\node[text=black,font=\scriptsize] at (3.5,1.20) {S: 846};
++\definecolor{lagcell24}{HTML}{E1E1E1}
++\filldraw[fill=lagcell24,draw=white,line width=.6pt] (4,1) rectangle (5,2);
++\node[text=black,font=\bfseries\small] at (4.5,1.73) {NA};
++\node[text=black,font=\scriptsize] at (4.5,1.44) {P: 0};
++\node[text=black,font=\scriptsize] at (4.5,1.20) {S: 0};
++\node[anchor=east] at (-.10,0.5) {Instacart};
++\definecolor{lagcell30}{HTML}{F0F2F4}
++\filldraw[fill=lagcell30,draw=white,line width=.6pt] (0,0) rectangle (1,1);
++\node[text=black,font=\bfseries\small] at (0.5,0.73) {$0.037$};
++\node[text=black,font=\scriptsize] at (0.5,0.44) {P: 1,991,192};
++\node[text=black,font=\scriptsize] at (0.5,0.20) {S: 205,934};
++\definecolor{lagcell31}{HTML}{EEF1F3}
++\filldraw[fill=lagcell31,draw=white,line width=.6pt] (1,0) rectangle (2,1);
++\node[text=black,font=\bfseries\small] at (1.5,0.73) {$0.049$};
++\node[text=black,font=\scriptsize] at (1.5,0.44) {P: 1,785,258};
++\node[text=black,font=\scriptsize] at (1.5,0.20) {S: 174,097};
++\definecolor{lagcell32}{HTML}{F3F4F5}
++\filldraw[fill=lagcell32,draw=white,line width=.6pt] (2,0) rectangle (3,1);
++\node[text=black,font=\bfseries\small] at (2.5,0.73) {$0.025$};
++\node[text=black,font=\scriptsize] at (2.5,0.44) {P: 1,455,330};
++\node[text=black,font=\scriptsize] at (2.5,0.20) {S: 127,226};
++\definecolor{lagcell33}{HTML}{F8F8F8}
++\filldraw[fill=lagcell33,draw=white,line width=.6pt] (3,0) rectangle (4,1);
++\node[text=black,font=\bfseries\small] at (3.5,0.73) {$-0.002$};
++\node[text=black,font=\scriptsize] at (3.5,0.44) {P: 1,015,220};
++\node[text=black,font=\scriptsize] at (3.5,0.20) {S: 83,611};
++\definecolor{lagcell34}{HTML}{F7F5F4}
++\filldraw[fill=lagcell34,draw=white,line width=.6pt] (4,0) rectangle (5,1);
++\node[text=black,font=\bfseries\small] at (4.5,0.73) {$-0.018$};
++\node[text=black,font=\scriptsize] at (4.5,0.44) {P: 536,635};
++\node[text=black,font=\scriptsize] at (4.5,0.20) {S: 38,640};
++\node at (2.5,-.35) {P: event pairs; S: series with at least one pair};
++\definecolor{lagbar0}{HTML}{B76C25}
++\fill[lagbar0] (1.2500,-.80) rectangle (1.2750,-.62);
++\definecolor{lagbar1}{HTML}{B86F29}
++\fill[lagbar1] (1.2750,-.80) rectangle (1.3000,-.62);
++\definecolor{lagbar2}{HTML}{B9722E}
++\fill[lagbar2] (1.3000,-.80) rectangle (1.3250,-.62);
++\definecolor{lagbar3}{HTML}{BB7532}
++\fill[lagbar3] (1.3250,-.80) rectangle (1.3500,-.62);
++\definecolor{lagbar4}{HTML}{BC7836}
++\fill[lagbar4] (1.3500,-.80) rectangle (1.3750,-.62);
++\definecolor{lagbar5}{HTML}{BD7B3A}
++\fill[lagbar5] (1.3750,-.80) rectangle (1.4000,-.62);
++\definecolor{lagbar6}{HTML}{BF7D3F}
++\fill[lagbar6] (1.4000,-.80) rectangle (1.4250,-.62);
++\definecolor{lagbar7}{HTML}{C08043}
++\fill[lagbar7] (1.4250,-.80) rectangle (1.4500,-.62);
++\definecolor{lagbar8}{HTML}{C18347}
++\fill[lagbar8] (1.4500,-.80) rectangle (1.4750,-.62);
++\definecolor{lagbar9}{HTML}{C3864B}
++\fill[lagbar9] (1.4750,-.80) rectangle (1.5000,-.62);
++\definecolor{lagbar10}{HTML}{C48950}
++\fill[lagbar10] (1.5000,-.80) rectangle (1.5250,-.62);
++\definecolor{lagbar11}{HTML}{C58B54}
++\fill[lagbar11] (1.5250,-.80) rectangle (1.5500,-.62);
++\definecolor{lagbar12}{HTML}{C68E58}
++\fill[lagbar12] (1.5500,-.80) rectangle (1.5750,-.62);
++\definecolor{lagbar13}{HTML}{C8915D}
++\fill[lagbar13] (1.5750,-.80) rectangle (1.6000,-.62);
++\definecolor{lagbar14}{HTML}{C99461}
++\fill[lagbar14] (1.6000,-.80) rectangle (1.6250,-.62);
++\definecolor{lagbar15}{HTML}{CA9765}
++\fill[lagbar15] (1.6250,-.80) rectangle (1.6500,-.62);
++\definecolor{lagbar16}{HTML}{CC9A69}
++\fill[lagbar16] (1.6500,-.80) rectangle (1.6750,-.62);
++\definecolor{lagbar17}{HTML}{CD9C6E}
++\fill[lagbar17] (1.6750,-.80) rectangle (1.7000,-.62);
++\definecolor{lagbar18}{HTML}{CE9F72}
++\fill[lagbar18] (1.7000,-.80) rectangle (1.7250,-.62);
++\definecolor{lagbar19}{HTML}{D0A276}
++\fill[lagbar19] (1.7250,-.80) rectangle (1.7500,-.62);
++\definecolor{lagbar20}{HTML}{D1A57A}
++\fill[lagbar20] (1.7500,-.80) rectangle (1.7750,-.62);
++\definecolor{lagbar21}{HTML}{D2A87F}
++\fill[lagbar21] (1.7750,-.80) rectangle (1.8000,-.62);
++\definecolor{lagbar22}{HTML}{D4AA83}
++\fill[lagbar22] (1.8000,-.80) rectangle (1.8250,-.62);
++\definecolor{lagbar23}{HTML}{D5AD87}
++\fill[lagbar23] (1.8250,-.80) rectangle (1.8500,-.62);
++\definecolor{lagbar24}{HTML}{D6B08B}
++\fill[lagbar24] (1.8500,-.80) rectangle (1.8750,-.62);
++\definecolor{lagbar25}{HTML}{D8B390}
++\fill[lagbar25] (1.8750,-.80) rectangle (1.9000,-.62);
++\definecolor{lagbar26}{HTML}{D9B694}
++\fill[lagbar26] (1.9000,-.80) rectangle (1.9250,-.62);
++\definecolor{lagbar27}{HTML}{DAB998}
++\fill[lagbar27] (1.9250,-.80) rectangle (1.9500,-.62);
++\definecolor{lagbar28}{HTML}{DCBB9C}
++\fill[lagbar28] (1.9500,-.80) rectangle (1.9750,-.62);
++\definecolor{lagbar29}{HTML}{DDBEA1}
++\fill[lagbar29] (1.9750,-.80) rectangle (2.0000,-.62);
++\definecolor{lagbar30}{HTML}{DEC1A5}
++\fill[lagbar30] (2.0000,-.80) rectangle (2.0250,-.62);
++\definecolor{lagbar31}{HTML}{E0C4A9}
++\fill[lagbar31] (2.0250,-.80) rectangle (2.0500,-.62);
++\definecolor{lagbar32}{HTML}{E1C7AD}
++\fill[lagbar32] (2.0500,-.80) rectangle (2.0750,-.62);
++\definecolor{lagbar33}{HTML}{E2C9B2}
++\fill[lagbar33] (2.0750,-.80) rectangle (2.1000,-.62);
++\definecolor{lagbar34}{HTML}{E4CCB6}
++\fill[lagbar34] (2.1000,-.80) rectangle (2.1250,-.62);
++\definecolor{lagbar35}{HTML}{E5CFBA}
++\fill[lagbar35] (2.1250,-.80) rectangle (2.1500,-.62);
++\definecolor{lagbar36}{HTML}{E6D2BE}
++\fill[lagbar36] (2.1500,-.80) rectangle (2.1750,-.62);
++\definecolor{lagbar37}{HTML}{E8D5C3}
++\fill[lagbar37] (2.1750,-.80) rectangle (2.2000,-.62);
++\definecolor{lagbar38}{HTML}{E9D8C7}
++\fill[lagbar38] (2.2000,-.80) rectangle (2.2250,-.62);
++\definecolor{lagbar39}{HTML}{EADACB}
++\fill[lagbar39] (2.2250,-.80) rectangle (2.2500,-.62);
++\definecolor{lagbar40}{HTML}{EBDDD0}
++\fill[lagbar40] (2.2500,-.80) rectangle (2.2750,-.62);
++\definecolor{lagbar41}{HTML}{EDE0D4}
++\fill[lagbar41] (2.2750,-.80) rectangle (2.3000,-.62);
++\definecolor{lagbar42}{HTML}{EEE3D8}
++\fill[lagbar42] (2.3000,-.80) rectangle (2.3250,-.62);
++\definecolor{lagbar43}{HTML}{EFE6DC}
++\fill[lagbar43] (2.3250,-.80) rectangle (2.3500,-.62);
++\definecolor{lagbar44}{HTML}{F1E8E1}
++\fill[lagbar44] (2.3500,-.80) rectangle (2.3750,-.62);
++\definecolor{lagbar45}{HTML}{F2EBE5}
++\fill[lagbar45] (2.3750,-.80) rectangle (2.4000,-.62);
++\definecolor{lagbar46}{HTML}{F3EEE9}
++\fill[lagbar46] (2.4000,-.80) rectangle (2.4250,-.62);
++\definecolor{lagbar47}{HTML}{F5F1ED}
++\fill[lagbar47] (2.4250,-.80) rectangle (2.4500,-.62);
++\definecolor{lagbar48}{HTML}{F6F4F2}
++\fill[lagbar48] (2.4500,-.80) rectangle (2.4750,-.62);
++\definecolor{lagbar49}{HTML}{F7F7F6}
++\fill[lagbar49] (2.4750,-.80) rectangle (2.5000,-.62);
++\definecolor{lagbar50}{HTML}{F6F7F7}
++\fill[lagbar50] (2.5000,-.80) rectangle (2.5250,-.62);
++\definecolor{lagbar51}{HTML}{F2F4F5}
++\fill[lagbar51] (2.5250,-.80) rectangle (2.5500,-.62);
++\definecolor{lagbar52}{HTML}{EEF1F2}
++\fill[lagbar52] (2.5500,-.80) rectangle (2.5750,-.62);
++\definecolor{lagbar53}{HTML}{E9EEF0}
++\fill[lagbar53] (2.5750,-.80) rectangle (2.6000,-.62);
++\definecolor{lagbar54}{HTML}{E5EBEE}
++\fill[lagbar54] (2.6000,-.80) rectangle (2.6250,-.62);
++\definecolor{lagbar55}{HTML}{E1E8EC}
++\fill[lagbar55] (2.6250,-.80) rectangle (2.6500,-.62);
++\definecolor{lagbar56}{HTML}{DDE5EA}
++\fill[lagbar56] (2.6500,-.80) rectangle (2.6750,-.62);
++\definecolor{lagbar57}{HTML}{D9E2E7}
++\fill[lagbar57] (2.6750,-.80) rectangle (2.7000,-.62);
++\definecolor{lagbar58}{HTML}{D5DFE5}
++\fill[lagbar58] (2.7000,-.80) rectangle (2.7250,-.62);
++\definecolor{lagbar59}{HTML}{D0DCE3}
++\fill[lagbar59] (2.7250,-.80) rectangle (2.7500,-.62);
++\definecolor{lagbar60}{HTML}{CCD9E1}
++\fill[lagbar60] (2.7500,-.80) rectangle (2.7750,-.62);
++\definecolor{lagbar61}{HTML}{C8D6DF}
++\fill[lagbar61] (2.7750,-.80) rectangle (2.8000,-.62);
++\definecolor{lagbar62}{HTML}{C4D3DC}
++\fill[lagbar62] (2.8000,-.80) rectangle (2.8250,-.62);
++\definecolor{lagbar63}{HTML}{C0D0DA}
++\fill[lagbar63] (2.8250,-.80) rectangle (2.8500,-.62);
++\definecolor{lagbar64}{HTML}{BCCDD8}
++\fill[lagbar64] (2.8500,-.80) rectangle (2.8750,-.62);
++\definecolor{lagbar65}{HTML}{B8CAD6}
++\fill[lagbar65] (2.8750,-.80) rectangle (2.9000,-.62);
++\definecolor{lagbar66}{HTML}{B3C7D4}
++\fill[lagbar66] (2.9000,-.80) rectangle (2.9250,-.62);
++\definecolor{lagbar67}{HTML}{AFC5D2}
++\fill[lagbar67] (2.9250,-.80) rectangle (2.9500,-.62);
++\definecolor{lagbar68}{HTML}{ABC2CF}
++\fill[lagbar68] (2.9500,-.80) rectangle (2.9750,-.62);
++\definecolor{lagbar69}{HTML}{A7BFCD}
++\fill[lagbar69] (2.9750,-.80) rectangle (3.0000,-.62);
++\definecolor{lagbar70}{HTML}{A3BCCB}
++\fill[lagbar70] (3.0000,-.80) rectangle (3.0250,-.62);
++\definecolor{lagbar71}{HTML}{9FB9C9}
++\fill[lagbar71] (3.0250,-.80) rectangle (3.0500,-.62);
++\definecolor{lagbar72}{HTML}{9AB6C6}
++\fill[lagbar72] (3.0500,-.80) rectangle (3.0750,-.62);
++\definecolor{lagbar73}{HTML}{96B3C4}
++\fill[lagbar73] (3.0750,-.80) rectangle (3.1000,-.62);
++\definecolor{lagbar74}{HTML}{92B0C2}
++\fill[lagbar74] (3.1000,-.80) rectangle (3.1250,-.62);
++\definecolor{lagbar75}{HTML}{8EADC0}
++\fill[lagbar75] (3.1250,-.80) rectangle (3.1500,-.62);
++\definecolor{lagbar76}{HTML}{8AAABE}
++\fill[lagbar76] (3.1500,-.80) rectangle (3.1750,-.62);
++\definecolor{lagbar77}{HTML}{86A7BB}
++\fill[lagbar77] (3.1750,-.80) rectangle (3.2000,-.62);
++\definecolor{lagbar78}{HTML}{81A4B9}
++\fill[lagbar78] (3.2000,-.80) rectangle (3.2250,-.62);
++\definecolor{lagbar79}{HTML}{7DA1B7}
++\fill[lagbar79] (3.2250,-.80) rectangle (3.2500,-.62);
++\definecolor{lagbar80}{HTML}{799EB5}
++\fill[lagbar80] (3.2500,-.80) rectangle (3.2750,-.62);
++\definecolor{lagbar81}{HTML}{759BB3}
++\fill[lagbar81] (3.2750,-.80) rectangle (3.3000,-.62);
++\definecolor{lagbar82}{HTML}{7198B0}
++\fill[lagbar82] (3.3000,-.80) rectangle (3.3250,-.62);
++\definecolor{lagbar83}{HTML}{6D96AE}
++\fill[lagbar83] (3.3250,-.80) rectangle (3.3500,-.62);
++\definecolor{lagbar84}{HTML}{6893AC}
++\fill[lagbar84] (3.3500,-.80) rectangle (3.3750,-.62);
++\definecolor{lagbar85}{HTML}{6490AA}
++\fill[lagbar85] (3.3750,-.80) rectangle (3.4000,-.62);
++\definecolor{lagbar86}{HTML}{608DA8}
++\fill[lagbar86] (3.4000,-.80) rectangle (3.4250,-.62);
++\definecolor{lagbar87}{HTML}{5C8AA5}
++\fill[lagbar87] (3.4250,-.80) rectangle (3.4500,-.62);
++\definecolor{lagbar88}{HTML}{5887A3}
++\fill[lagbar88] (3.4500,-.80) rectangle (3.4750,-.62);
++\definecolor{lagbar89}{HTML}{5484A1}
++\fill[lagbar89] (3.4750,-.80) rectangle (3.5000,-.62);
++\definecolor{lagbar90}{HTML}{50819F}
++\fill[lagbar90] (3.5000,-.80) rectangle (3.5250,-.62);
++\definecolor{lagbar91}{HTML}{4B7E9D}
++\fill[lagbar91] (3.5250,-.80) rectangle (3.5500,-.62);
++\definecolor{lagbar92}{HTML}{477B9A}
++\fill[lagbar92] (3.5500,-.80) rectangle (3.5750,-.62);
++\definecolor{lagbar93}{HTML}{437898}
++\fill[lagbar93] (3.5750,-.80) rectangle (3.6000,-.62);
++\definecolor{lagbar94}{HTML}{3F7596}
++\fill[lagbar94] (3.6000,-.80) rectangle (3.6250,-.62);
++\definecolor{lagbar95}{HTML}{3B7294}
++\fill[lagbar95] (3.6250,-.80) rectangle (3.6500,-.62);
++\definecolor{lagbar96}{HTML}{376F92}
++\fill[lagbar96] (3.6500,-.80) rectangle (3.6750,-.62);
++\definecolor{lagbar97}{HTML}{326C90}
++\fill[lagbar97] (3.6750,-.80) rectangle (3.7000,-.62);
++\definecolor{lagbar98}{HTML}{2E698D}
++\fill[lagbar98] (3.7000,-.80) rectangle (3.7250,-.62);
++\definecolor{lagbar99}{HTML}{2A668B}
++\fill[lagbar99] (3.7250,-.80) rectangle (3.7500,-.62);
++\node[below] at (1.25,-.81) {$-1$};
++\node[below] at (2.5,-.81) {$0$};
++\node[below] at (3.75,-.81) {$1$};
++\node[anchor=east] at (1.08,-.71) {$r_{\ell}$};
++\end{tikzpicture}
++\caption{Train-only within-series log-quantity correlation at event lags 1, 2, 4, 8, and 16. Each cell reports $r_{\ell}$, the number of event pairs (P), and the number of contributing series (S). All cells share the color scale $[-1,1]$; gray NA denotes no available pairs. Pair counts include constant and single-pair series, which contribute zero to one or both centered sums of squares. These are descriptive event offsets, not the correction module\textquotesingle{}s branch indices.}
++\label{fig:train-lag-correlation}
++\Description{A four-by-five heatmap. Taxi correlation declines from 0.749 at lag one to negative values at lags eight and sixteen. Intermittent remains positive, declining from 0.928 to 0.473. RAF has small negative correlations through lag eight and no pairs at lag sixteen. Instacart correlations remain close to zero. Pair and series counts are printed in every cell.}
++\end{figure}
++
++Taxi and Intermittent exhibit different forms of serial association.
++On Taxi, correlation declines from $0.749$ at lag one to $0.546$ at lag two
++and $0.136$ at lag four, then becomes negative at lags eight and sixteen.
++Intermittent retains a correlation of $0.473$ even at lag sixteen.
++RAF's available-lag estimates range from $-0.127$ to $-0.043$, while
++Instacart remains close to zero throughout the displayed range
++($|r_{\ell}|<0.05$). Thus the two datasets with larger quantity gains
++share strong immediate association, although its persistence differs.
++
++The sample counts qualify the longer-lag comparison. RAF supplies 25,779
++pairs at lag one, only 1,655 at lag eight, and none at lag sixteen.
++After within-series centering, a series with one pair contributes zero
++to both sums of squares; short-series estimates can also be affected by
++mean removal. RAF's small negative values therefore describe this sample
++rather than a stable negative dependence law. A sensitivity analysis
++restricts every lag to the same series with at least 20 train events:
++131 on Taxi, 4,968 on Intermittent, and 31,020 on Instacart; RAF supplies
++none. In this fixed cohort, Instacart's correlations at lags one and two
++increase to $0.074$ and $0.092$, respectively, while Taxi and
++Intermittent retain their stronger immediate association.
++
++These profiles suggest an applicability hypothesis for history correction:
++combining adjacent contextual states can be useful when recent quantities
++carry substantial information within a series. The completed Taxi
++parameter-matched control supports that architectural interpretation
++(Appendix~\ref{app:extension}). Data characteristics alone, however, do
++not determine the error trade-off. Intermittent's last-quantity baseline
++achieves lower MAE than \method, while \method\ achieves lower RMSE;
++RAF and Instacart exhibit offsetting gains and losses across quantity bins
++(Appendix~\ref{app:strata}). The weak Instacart lag profile also persists
++among longer series, complementing the observation that S2P2's RMSE
++advantage spans every nonempty history bin. This post hoc analysis relates
++the observed results to train characteristics without assigning their
++causes to a single distributional property. All eight correction branches
++read the immediate predecessor; the displayed lags describe the data and
++do not denote different branch inputs.
+ 
+ \section{Validation Errors by Quantity and Usable History}\label{app:strata}
+ \subsection{Partitions and Aggregation}

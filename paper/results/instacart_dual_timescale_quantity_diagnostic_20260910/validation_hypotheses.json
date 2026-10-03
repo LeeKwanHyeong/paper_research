@@ -1,0 +1,64 @@
+{
+  "frozen_at": "2026-09-09T23:09:25.346225+00:00",
+  "contract_id": "instacart_dual_timescale_quantity_v1",
+  "source_validation_summary_sha256": "c4049c02362ce4613f95f2f132f89f113c8f43c6f5b4a287cfa9741451de69db",
+  "source_validation_strata_sha256": "e5fc759d28d070bdb4ef63ae83e8aa5e39d59f335621aab34a5807cb33c5a236",
+  "train_predictions_not_started": true,
+  "hypotheses": [
+    {
+      "id": "H1_benchmark_quantity_level",
+      "claim": "Candidate is more negatively biased than RMTPP and THP. Quantity 8<y<=35 adds MSE while y<=8 helps.",
+      "train_fold_checks": [
+        "candidate mean_prediction_shift < 0 versus each benchmark",
+        "delta_bias_squared > 0 versus each benchmark",
+        "delta_mse > 0 for each of (8,20], (20,25], (25,35] versus each benchmark",
+        "delta_mse < 0 for <=8 versus each benchmark"
+      ],
+      "interpretation": "Validate all signs in each series-disjoint fold; describe partial replication explicitly. Bias decomposition is accounting, not causal proof or calibration authorization."
+    },
+    {
+      "id": "H2_rmtpp_history",
+      "claim": "Against RMTPP, history8–15 is a weakness while history2–3 is not.",
+      "train_fold_checks": [
+        "candidate_minus_rmtpp history8–15 delta_mse > 0 and mean_prediction_shift < 0",
+        "candidate_minus_rmtpp history2–3 delta_mse < 0"
+      ],
+      "interpretation": "Within-stratum signs are checked because train/validation history compositions differ; do not require identical aggregate contribution shares."
+    },
+    {
+      "id": "H3_B_history_tradeoff",
+      "claim": "Against B, history2–3 shifts downward and worsens MSE, whereas history8–15 shifts upward and improves MSE.",
+      "train_fold_checks": [
+        "candidate_minus_b history2–3 delta_mse > 0 and mean_prediction_shift < 0",
+        "candidate_minus_b history8–15 delta_mse < 0 and mean_prediction_shift > 0"
+      ],
+      "interpretation": "This is a comparison-specific tradeoff, not a claim that short history explains the gap to every benchmark."
+    },
+    {
+      "id": "H4_B_mid_quantity",
+      "claim": "In B comparison, quantity(8,20] MSE worsens without an aggregate downward prediction shift; centered error worsens.",
+      "train_fold_checks": [
+        "candidate_minus_b quantity(8,20] delta_mse > 0",
+        "candidate_minus_b quantity(8,20] delta_centered_mse > 0",
+        "candidate_minus_b quantity(8,20] mean_prediction_shift >= 0"
+      ],
+      "interpretation": "Test rather than carry over the earlier BOUNDED-QK global downshift explanation."
+    },
+    {
+      "id": "H5_series_concentration",
+      "claim": "The worst1% of series does not contain a majority of all positive candidate-minus-RMTPP SSE.",
+      "train_fold_checks": [
+        "top1pct_series_share_of_gross_positive_delta_sse < 0.5 in each fold"
+      ],
+      "interpretation": "Keep gross positive contribution separate from net gap; not a basis for deleting difficult series."
+    }
+  ],
+  "forbidden": [
+    "new_model_fit",
+    "calibration_fit",
+    "checkpoint_reselection",
+    "held_out_test",
+    "revise_hypotheses_after_train_results"
+  ],
+  "scope_caveat": "Both folds were seen during original model training; descriptive diagnostic replication only."
+}

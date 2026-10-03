@@ -1,0 +1,45 @@
+{
+  "validated_at_utc": "2026-09-10T23:57:45.404526+00:00",
+  "assessment": "Share with caveats",
+  "scope": "Three-dataset static B objective ablation, seed42 validation. Local frozen JSON and frozen source code only.",
+  "extraction_contract_checks": "passed",
+  "completed_datasets": 3,
+  "completed_arms": 9,
+  "epochs_per_arm": 120,
+  "total_optimizer_steps": 6816240,
+  "independent_reviewer": "monitor_schema_review",
+  "independent_review": "No material numerical errors or required interpretation revisions. Primary selectors, all same-epoch comparisons, clipping and late-phase calculations agree with independently read final terminal JSON.",
+  "code_path_reviewer": "quantity_loss_path_review",
+  "code_path_review": "Frozen revision 76426fd981e624144947fd582f794c2832e9fe05 confirms unweighted log1p quantity MSE, expm1 raw prediction, target-weighted raw RMSE/MAE, train/validation timing distinction and legacy clamped time loss.",
+  "claim_controls": {
+    "primary_and_final_epoch_separated": true,
+    "J_quantity_and_time_checkpoints_not_combined": true,
+    "legacy_time_not_normalized_NLL": true,
+    "late_phase_ranges_post_hoc_descriptive": true,
+    "gradient_probe_separate_source_CPU_zero_update": true,
+    "no_statistical_or_benchmark_superiority_claim": true,
+    "no_causal_claim_from_clipping_frequency": true
+  },
+  "model_checkpoint_loaded": false,
+  "raw_data_executed": false,
+  "held_out_evaluated": false,
+  "remote_access_this_integration": false,
+  "new_training_started": false,
+  "artifacts_sha256": {
+    "validation_report.md": "2e9e6fe8a845b56917b109d0671bddef9de22ad15278d9914fe19578f10a3f78",
+    "validation_results.json": "dfcfc9a2f95122b64772642be2f191b87b082ae0a85887a7ebad099519d26cb9",
+    "build_report.py": "fe34a6b6718a6af527224dc5fd1aced16747601cd38d8c46d881a69a5bc4f1ac"
+  },
+  "evidence_sha256": {
+    "reports/titantpp_jqt_5090_20260910/monitor/20260910T233614Z_snapshot.json": "11478d5f6803754f4dd118d5c02017bc75bd85d3ecd65a17ada97134c56c6b58",
+    "reports/titantpp_jqt_5090_20260910/monitor/20260910T233614Z_check.json": "6c5e2211f83ebdd2b19dea7876cc320c76e773cd6c470a6fceca2dc1df2853a2",
+    "reports/titantpp_jqt_5090_20260910/monitor/20260910T233614Z_terminal/collection_manifest.json": "2ccd49c9e40485e0680b70c86560e2baac9a8f256e28844a149fc3aef1808dbb",
+    "reports/titantpp_jqt_5090_20260910/execution_policy.json": "916ab4cae0081187e6e90f0993eeffc84018bcfa935fa463b84816213ad39d7d",
+    "reports/titantpp_jqt_diagnostic_20260910/gradient_summary.json": "f6cdf1a51ffeac2ead1e325e68ed3158ff854e713b223797b90e81141e499540",
+    "reports/titantpp_jqt_diagnostic_20260910/contracts/frozen_gradient_probe_v1.json": "4dd6931335b46a277250756bc8d728e96b02b05cff0b30cae60ed71a5b6432cb",
+    "search_artifacts/jqt_cuda_5090_20260910/source/models/TPPs/CountAwareTPP.py": "eaa5cb7557c31e45f846911ef5ff91a7f9983d7b9bb7cf4f7a0960b23586d4a9",
+    "search_artifacts/jqt_cuda_5090_20260910/source/paper/scripts/time_quantity_diagnostic.py": "90e7e95bfe198ad847d98e50770f6d97269e455c650c49f985f585cf84e63b3e",
+    "search_artifacts/jqt_cuda_5090_20260910/source/paper/scripts/run_time_quantity_diagnostic.py": "0948f8a395abab7d27afce3a51dc3ce8dda125a629a1a95da72a58a7ea1e873f"
+  },
+  "report_app_verification": "passed; see app_data_verification.json and app_verification.json"
+}

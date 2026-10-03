@@ -1,0 +1,427 @@
+{
+  "created_utc": "2026-10-02T21:59:05.229624+00:00",
+  "scope": "source/schema/date/provenance metadata; no evaluation",
+  "calendar_date_footer_allowlist": [
+    "tpep_pickup_datetime",
+    "time_bucket",
+    "demand_dt"
+  ],
+  "materialized_column_allowlist": [
+    "site_cd",
+    "oper_part_no"
+  ],
+  "taxi": [
+    {
+      "path": "sample_data/new_york_taxi/yellow_trip.parquet",
+      "size_bytes": 308631567,
+      "column_names": [
+        "VendorID",
+        "tpep_pickup_datetime",
+        "tpep_dropoff_datetime",
+        "passenger_count",
+        "trip_distance",
+        "pickup_longitude",
+        "pickup_latitude",
+        "RateCodeID",
+        "store_and_fwd_flag",
+        "dropoff_longitude",
+        "dropoff_latitude",
+        "payment_type",
+        "fare_amount",
+        "extra",
+        "mta_tax",
+        "tip_amount",
+        "tolls_amount",
+        "improvement_surcharge",
+        "total_amount"
+      ],
+      "calendar_date_footer_only": {
+        "tpep_pickup_datetime": {
+          "min": "2015-01-01 00:00:00",
+          "max": "2015-01-31 23:59:59",
+          "row_groups_with_date_statistics": 49
+        }
+      },
+      "data_rows_loaded": false,
+      "target_or_gap_statistics_read": false
+    },
+    {
+      "path": "sample_data/new_york_taxi/yellow_trip_hourly.parquet",
+      "size_bytes": 171098,
+      "column_names": [
+        "oper_part_no",
+        "demand_dt",
+        "seq",
+        "delta_t",
+        "demand_qty",
+        "time_bucket",
+        "source_resolution",
+        "grid_size_deg",
+        "min_active_buckets"
+      ],
+      "calendar_date_footer_only": {
+        "time_bucket": {
+          "min": "2015-01-01 00:00:00",
+          "max": "2015-01-31 23:00:00",
+          "row_groups_with_date_statistics": 1
+        },
+        "demand_dt": {
+          "min": "20150101000000",
+          "max": "20150131230000",
+          "row_groups_with_date_statistics": 1
+        }
+      },
+      "data_rows_loaded": false,
+      "target_or_gap_statistics_read": false
+    }
+  ],
+  "intermittent": {
+    "sampling_manifest_allowed": {
+      "created_at": "2026-08-10T12:39:03.465286+00:00",
+      "source": {
+        "path": "/Users/igwanhyeong/data/demand_engine/data_v2/intermittent.parquet",
+        "sha256": "d1b2e126e8594a1ce2b7539163d132f00a5d210c6fc3cb5b0f92c1de22b2ec58"
+      },
+      "sampling": {
+        "sample_size": 5000,
+        "seed": 20260810,
+        "min_events": 20,
+        "min_per_site": 40,
+        "bins": 5,
+        "site_count": 50
+      }
+    },
+    "raw_source_exists": false,
+    "selected_mapping": {
+      "path": "sample_data/intermittent_v2/intermittent_frozen_5000_selected_series.parquet",
+      "file_sha256": "4158df2f34d8d19465592d72ba4180443e7cbc6e557640b906c5e37bbbf3fd75",
+      "rows": 5000,
+      "unique_sites": 50,
+      "unique_series": 5000,
+      "canonical_pair_json_sha256": "c800e50f8eeda7a9e17857cc57c1b64dfaacbd54d953f85883d980dbcbd452f3",
+      "columns_read": [
+        "site_cd",
+        "oper_part_no"
+      ],
+      "identifiers_released": false
+    },
+    "events": {
+      "path": "sample_data/intermittent_v2/intermittent_frozen_5000_events.parquet",
+      "size_bytes": 725654,
+      "column_names": [
+        "oper_part_no",
+        "demand_dt",
+        "seq",
+        "demand_qty"
+      ],
+      "calendar_date_footer_only": {
+        "demand_dt": {
+          "min": "20180101",
+          "max": "20300318",
+          "row_groups_with_date_statistics": 2
+        }
+      },
+      "data_rows_loaded": false,
+      "target_or_gap_statistics_read": false
+    }
+  },
+  "instacart_raw_stat_only": [
+    {
+      "path": "sample_data/insta_market_basket/orders.csv",
+      "exists": true,
+      "size_bytes": 108968645
+    },
+    {
+      "path": "sample_data/insta_market_basket/order_products__prior.csv",
+      "exists": true,
+      "size_bytes": 577550706
+    },
+    {
+      "path": "sample_data/insta_market_basket/order_products__train.csv",
+      "exists": true,
+      "size_bytes": 24680147
+    }
+  ],
+  "raf": {
+    "source": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/data/candidates/raf_spare_parts/raw/RAF data - 7 years demand - 5000 items.xls",
+      "sha256": "1165f2d54759bf7661becc39a2e80265626b59965c61f2ad8ad12a3d7940cf09",
+      "size_bytes": 3001344
+    },
+    "date_metadata": {
+      "date_start": "1996-01",
+      "date_end": "2002-12",
+      "months": 84
+    },
+    "event_definition": {
+      "sequence_unit": "Item Ref no",
+      "timestamp": "calendar month",
+      "quantity": "monthly demand when demand > 0",
+      "delta_t": "months since the previous positive-demand month",
+      "model_schema": {
+        "entity": "oper_part_no formatted as RAF::<zero-padded item reference>",
+        "timestamp": "demand_dt as YYYYMMDD integer on the first day of each month",
+        "order": "seq as the 1-based month index from January 1996",
+        "quantity": "demand_qty as an unscaled positive count",
+        "split": "chronological_split"
+      }
+    },
+    "split": {
+      "method": "global chronological month boundary",
+      "train_months": 58,
+      "validation_months": 13,
+      "test_months": 13,
+      "boundaries": {
+        "train": "1996-01 through 2000-10",
+        "validation": "2000-11 through 2001-11",
+        "test": "2001-12 through 2002-12"
+      }
+    },
+    "source_rights_local_assertions_not_authority_grant": {
+      "path": "benchmark_data/data/candidates/raf_spare_parts/raw/RAF data - 7 years demand - 5000 items.xls",
+      "original_local_path": "/Users/igwanhyeong/data/intermittent/RAF data - 7 years demand - 5000 items.xls",
+      "repository": "https://github.com/danieldehaan96/spdf",
+      "repository_citation": "Daniel de Haan, GitHub repository for benchmarking spare parts demand forecasting for intermittent demand, version 1.0.0, 2021-09-20, https://github.com/danieldehaan96/spdf",
+      "provenance_citation": "R. H. Teunter and L. Duncan, Forecasting intermittent demand: a comparative study, Journal of the Operational Research Society, 60(3), 321-329, 2009, https://doi.org/10.1057/palgrave.jors.2602569",
+      "distribution_description_citation": "A. A. Syntetos, M. Z. Babai, and N. Altay, On the demand distributions of spare parts, International Journal of Production Research, 50(8), 2101-2117, 2012, https://doi.org/10.1080/00207543.2011.562561",
+      "license_status": "no explicit data license found in the public repository",
+      "research_use_status": "usable for non-commercial academic analysis with repository and provenance citations",
+      "redistribution_status": "do not redistribute the raw workbook without explicit permission"
+    },
+    "raw_stat_and_hash": {
+      "path": "benchmark_data/data/candidates/raf_spare_parts/raw/RAF data - 7 years demand - 5000 items.xls",
+      "exists": true,
+      "size_bytes": 3001344,
+      "sha256": "1165f2d54759bf7661becc39a2e80265626b59965c61f2ad8ad12a3d7940cf09"
+    },
+    "workbook_rows_opened": false
+  },
+  "source_files": [
+    {
+      "path": "TEST_SESSION_PROTOCOL.md",
+      "exists": true,
+      "size_bytes": 27340,
+      "sha256": "b82674713e5a8bf20f03c7cc75ec4a978c5f1da48e9813f5b622a8a339ee7730"
+    },
+    {
+      "path": "paper/scripts/build_intermittent_frozen_subset.py",
+      "exists": true,
+      "size_bytes": 10415,
+      "sha256": "2c0e7f215a5ac168606e3b7881297db0ccf4b68807610b80593ea09db3a1abdd"
+    },
+    {
+      "path": "simple_lab_test/notebooks/preprocessing/tpp_split_utils.py",
+      "exists": true,
+      "size_bytes": 12032,
+      "sha256": "a0ac5e178499506565739cdd1ebb9863bb6ea662338b30cb2806ee98cdabfa9e"
+    },
+    {
+      "path": "simple_lab_test/notebooks/preprocessing/yellow_trip.ipynb",
+      "exists": true,
+      "size_bytes": 14797,
+      "sha256": "4c097a547cc1e7ee05eee06fae8cdd388e801f51a6a28e6ab2f1f1c7005993f9"
+    },
+    {
+      "path": "simple_lab_test/notebooks/preprocessing/insta_market_basket.ipynb",
+      "exists": true,
+      "size_bytes": 56476,
+      "sha256": "28461105fee01f0fe9376b7c9d1c5cbc9d9376c3ea57865a416c2a714738f640"
+    },
+    {
+      "path": "simple_lab_test/notebooks/preprocessing/insta_market_basket_tpp_splits.ipynb",
+      "exists": true,
+      "size_bytes": 18840,
+      "sha256": "150c22cf7e29b8ef83b99c7d106857bc448dc475198ab434ae0c246094f8a3f6"
+    },
+    {
+      "path": "benchmark_data/scripts/audit_and_prepare_raf.py",
+      "exists": true,
+      "size_bytes": 10754,
+      "sha256": "4528acb349d026abd018ff4751b6f0b2c82189ad9615d9531e400f16b1f79fda"
+    },
+    {
+      "path": "benchmark_data/contracts/raf_spare_parts_v1.json",
+      "exists": true,
+      "size_bytes": 3148,
+      "sha256": "ce210da058a60c9f3de2a10174b3b9f8da0a5e058e29c29fc3144ecd318efdab"
+    },
+    {
+      "path": "benchmark_data/manifests/raf_spare_parts_v1.json",
+      "exists": true,
+      "size_bytes": 3360,
+      "sha256": "787939f661bc6ebf33d41481d6572543d19205d9fb21e8b7fc7bcbefad1e6205"
+    },
+    {
+      "path": "sample_data/intermittent_v2/intermittent_frozen_5000_sampling_manifest.json",
+      "exists": true,
+      "size_bytes": 2946,
+      "sha256": "8559221be8859575e122ad2d4af5727151700de05711691e9f371c822e7201df"
+    },
+    {
+      "path": "reports/titantpp_pakdd_extension_preparation_20261001_v1/lineage.json",
+      "exists": true,
+      "size_bytes": 8828,
+      "sha256": "6ce6e244abb47a3a799ff6f2d326bdcbad8c8ecfe72b92656abddc1cc8442e2d"
+    },
+    {
+      "path": "reports/titantpp_independent_evaluation_preparation_20261001_v1/lineage_review.json",
+      "exists": true,
+      "size_bytes": 157987,
+      "sha256": "4d34928adccd5f9daac7210f72d9ae8297ac2b5c2bd2b953b684ad95b48fc555"
+    },
+    {
+      "path": "reports/titantpp_independent_evaluation_preparation_20261001_v1/protocol_effective.json",
+      "exists": true,
+      "size_bytes": 6575,
+      "sha256": "ea651442ad7a9d81245cf32d33dffa1b69cbe544f40ad1dc423950fd5a4264d0"
+    },
+    {
+      "path": "reports/titantpp_independent_evaluation_preparation_20261001_v1/amendment.json",
+      "exists": true,
+      "size_bytes": 1344,
+      "sha256": "4b3f5d867d840659f87f903ccbb1ab74ac85a25e114c3f6dc43aaa6d407dcf1f"
+    }
+  ],
+  "notebook_code_only": [
+    {
+      "path": "simple_lab_test/notebooks/preprocessing/yellow_trip.ipynb",
+      "outputs_read_or_saved": false,
+      "code_sha256": "6f9ec5252d1e14b03254285c8367a44ee61fd05888726f49c64465efea10c3c8",
+      "code_cells": [
+        {
+          "cell_index": 2,
+          "source": "from pathlib import Path\nimport sys\n\nimport polars as pl\nfrom IPython.display import display\n\n\ndef resolve_project_root(start: Path | None = None) -> Path:\n    \"\"\"Find the repository root from a notebook or script working directory.\"\"\"\n    anchor = (start or Path.cwd()).resolve()\n    base = anchor if anchor.is_dir() else anchor.parent\n    for candidate in [base, *base.parents]:\n        if all((candidate / name).exists() for name in (\"sample_data\", \"simple_lab_test\", \"utils\")):\n            return candidate\n    fallback = Path(\"~/workspace/paper_research\").expanduser().resolve()\n    if all((fallback / name).exists() for name in (\"sample_data\", \"simple_lab_test\", \"utils\")):\n        return fallback\n    raise RuntimeError(\"Could not locate the paper_research project root.\")\n\n\nPROJECT_ROOT = resolve_project_root()\nif str(PROJECT_ROOT) not in sys.path:\n    sys.path.insert(0, str(PROJECT_ROOT))\n\nRAW_PATH = PROJECT_ROOT / \"sample_data\" / \"new_york_taxi\" / \"yellow_trip.parquet\"\nOUTPUT_PATH = PROJECT_ROOT / \"sample_data\" / \"new_york_taxi\" / \"yellow_trip_hourly.parquet\"\n\nprint(\"PROJECT_ROOT =\", PROJECT_ROOT)\nprint(\"RAW_PATH     =\", RAW_PATH)\nprint(\"OUTPUT_PATH  =\", OUTPUT_PATH)"
+        },
+        {
+          "cell_index": 4,
+          "source": "# 1 hour bucket: event time is measured as elapsed hourly bucket count.\nRESOLUTION = \"hourly\"\nBUCKET_EVERY = \"1h\"\n\n# Spatial bucket size. 0.02 degrees is the setting used by the long-epoch experiments.\nGRID_SIZE_DEG = 0.02\n\n# Keep only grid cells with enough positive hourly buckets to form meaningful sequences.\nMIN_ACTIVE_BUCKETS = 72\n\n# 0 means use all vendors; set 1 or 2 to reproduce vendor-specific subsets.\nVENDOR_ID = 0\n\n# Loose NYC-area bounds remove malformed coordinate rows without overfitting to a tiny zone.\nMIN_LON, MAX_LON = -75.0, -72.0\nMIN_LAT, MAX_LAT = 40.0, 42.0\n\n# Set to an integer for a quick subset preprocessing run; keep None for the paper dataset.\nMAX_SERIES = None\n\nprint({\n    \"resolution\": RESOLUTION,\n    \"bucket_every\": BUCKET_EVERY,\n    \"grid_size_deg\": GRID_SIZE_DEG,\n    \"min_active_buckets\": MIN_ACTIVE_BUCKETS,\n    \"vendor_id\": VENDOR_ID,\n    \"max_series\": MAX_SERIES,\n})"
+        },
+        {
+          "cell_index": 6,
+          "source": "raw_df = pl.read_parquet(RAW_PATH)\nprint(\"raw rows =\", raw_df.height)\nprint(\"raw columns =\", raw_df.columns)\ndisplay(raw_df.head(5))"
+        },
+        {
+          "cell_index": 8,
+          "source": "def yellow_trip_datetime_expr(df: pl.DataFrame) -> pl.Expr:\n    \"\"\"Parse pickup datetime robustly across local/server parquet schemas.\"\"\"\n    dtype = df.schema.get(\"tpep_pickup_datetime\")\n    expr = pl.col(\"tpep_pickup_datetime\")\n    if dtype == pl.Utf8:\n        return expr.str.strptime(pl.Datetime, strict=False)\n    return expr.cast(pl.Datetime, strict=False)\n\n\ndef build_yellow_trip_hourly_events(raw_df: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFrame]:\n    \"\"\"Convert raw trip rows into positive-demand hourly grid-cell events.\"\"\"\n    required = {\"tpep_pickup_datetime\", \"pickup_longitude\", \"pickup_latitude\"}\n    missing = sorted(required - set(raw_df.columns))\n    if missing:\n        raise ValueError(f\"yellow_trip parquet is missing required columns: {missing}\")\n\n    working_df = raw_df\n    if VENDOR_ID in (1, 2):\n        working_df = working_df.filter(pl.col(\"VendorID\") == int(VENDOR_ID))\n\n    # Count positive pickups per spatial cell and hourly timestamp.\n    events = (\n        working_df.with_columns([\n            yellow_trip_datetime_expr(working_df).alias(\"pickup_dt\"),\n            pl.col(\"pickup_longitude\").cast(pl.Float64).alias(\"pickup_lon\"),\n            pl.col(\"pickup_latitude\").cast(pl.Float64).alias(\"pickup_lat\"),\n        ])\n        .filter(\n            pl.col(\"pickup_dt\").is_not_null()\n            & pl.col(\"pickup_lon\").is_not_null()\n            & pl.col(\"pickup_lat\").is_not_null()\n            & pl.col(\"pickup_lon\").is_between(MIN_LON, MAX_LON)\n            & pl.col(\"pickup_lat\").is_between(MIN_LAT, MAX_LAT)\n        )\n        .with_columns([\n            (pl.col(\"pickup_lon\") / GRID_SIZE_DEG).floor().cast(pl.Int64).alias(\"gx\"),\n            (pl.col(\"pickup_lat\") / GRID_SIZE_DEG).floor().cast(pl.Int64).alias(\"gy\"),\n            pl.col(\"pickup_dt\").dt.truncate(BUCKET_EVERY).alias(\"time_bucket\"),\n        ])\n        .with_columns(\n            (pl.col(\"gx\").cast(pl.String) + pl.lit(\"_\") + pl.col(\"gy\").cast(pl.String)).alias(\"oper_part_no\")\n        )\n        .group_by([\"oper_part_no\", \"time_bucket\"], maintain_order=True)\n        .agg(pl.len().cast(pl.Float64).alias(\"demand_qty\"))\n    )\n\n    # Global hourly index makes elapsed time comparable across grid cells.\n    bucket_map = (\n        events.select(\"time_bucket\")\n        .unique()\n        .sort(\"time_bucket\")\n        .with_row_index(\"seq\", offset=1)\n        .with_columns(\n            pl.col(\"time_bucket\").dt.strftime(\"%Y%m%d%H%M%S\").cast(pl.Int64).alias(\"demand_dt\")\n        )\n    )\n\n    events = (\n        events.join(bucket_map, on=\"time_bucket\", how=\"left\")\n        .select([\"oper_part_no\", \"time_bucket\", \"demand_dt\", \"seq\", \"demand_qty\"])\n        .sort([\"oper_part_no\", \"seq\"])\n    )\n\n    series_stats = (\n        events.group_by(\"oper_part_no\")\n        .agg([\n            pl.len().alias(\"active_buckets\"),\n            pl.col(\"demand_qty\").sum().alias(\"total_demand\"),\n        ])\n        .sort([\"active_buckets\", \"total_demand\"], descending=[True, True])\n    )\n\n    if series_stats.height == 0:\n        raise ValueError(\"No valid yellow-trip grid-cell events remained after filtering.\")\n\n    max_active = int(series_stats.select(pl.col(\"active_buckets\").max()).item())\n    effective_min_active = min(int(MIN_ACTIVE_BUCKETS), max_active)\n    if effective_min_active < int(MIN_ACTIVE_BUCKETS):\n        print(\n            f\"[WARN] requested MIN_ACTIVE_BUCKETS={MIN_ACTIVE_BUCKETS}, \"\n            f\"but max active buckets={max_active}. Using {effective_min_active}.\"\n        )\n\n    eligible_series = series_stats.filter(pl.col(\"active_buckets\") >= effective_min_active)\n    if MAX_SERIES is not None:\n        eligible_series = eligible_series.head(int(MAX_SERIES))\n\n    event_df = (\n        events.join(eligible_series.select(\"oper_part_no\"), on=\"oper_part_no\", how=\"inner\")\n        .sort([\"oper_part_no\", \"seq\"])\n        .with_columns(\n            (pl.col(\"seq\") - pl.col(\"seq\").shift(1).over(\"oper_part_no\"))\n            .fill_null(0)\n            .cast(pl.Int32)\n            .alias(\"delta_t\")\n        )\n        .with_columns([\n            pl.lit(RESOLUTION).alias(\"source_resolution\"),\n            pl.lit(float(GRID_SIZE_DEG)).alias(\"grid_size_deg\"),\n            pl.lit(int(effective_min_active)).alias(\"min_active_buckets\"),\n        ])\n        .select([\n            \"oper_part_no\",\n            \"demand_dt\",\n            \"seq\",\n            \"delta_t\",\n            \"demand_qty\",\n            \"time_bucket\",\n            \"source_resolution\",\n            \"grid_size_deg\",\n            \"min_active_buckets\",\n        ])\n    )\n\n    return event_df, series_stats\n\n\nyellow_hourly_df, yellow_series_stats = build_yellow_trip_hourly_events(raw_df)\nprint(\"hourly event rows =\", yellow_hourly_df.height)\nprint(\"hourly series     =\", yellow_hourly_df.select(pl.col(\"oper_part_no\").n_unique()).item())\ndisplay(yellow_hourly_df.head(10))"
+        },
+        {
+          "cell_index": 10,
+          "source": "required_output_cols = {\"oper_part_no\", \"demand_dt\", \"seq\", \"delta_t\", \"demand_qty\"}\nmissing_output_cols = sorted(required_output_cols - set(yellow_hourly_df.columns))\nassert not missing_output_cols, f\"Missing output columns: {missing_output_cols}\"\nassert yellow_hourly_df.filter(pl.col(\"demand_qty\") <= 0).height == 0\n\nsummary = yellow_hourly_df.select([\n    pl.len().alias(\"rows\"),\n    pl.col(\"oper_part_no\").n_unique().alias(\"series\"),\n    pl.col(\"seq\").min().alias(\"min_seq\"),\n    pl.col(\"seq\").max().alias(\"max_seq\"),\n    pl.col(\"demand_qty\").mean().alias(\"mean_qty\"),\n    pl.col(\"demand_qty\").max().alias(\"max_qty\"),\n])\ndisplay(summary)\n\ndisplay(\n    yellow_hourly_df.group_by(\"oper_part_no\")\n    .agg([\n        pl.len().alias(\"events\"),\n        pl.col(\"demand_qty\").sum().alias(\"total_qty\"),\n    ])\n    .sort([\"events\", \"total_qty\"], descending=[True, True])\n    .head(10)\n)"
+        },
+        {
+          "cell_index": 12,
+          "source": "OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)\nyellow_hourly_df.write_parquet(OUTPUT_PATH)\nprint(f\"saved: {OUTPUT_PATH}\")\nprint(f\"rows={yellow_hourly_df.height:,}, series={yellow_hourly_df.select(pl.col('oper_part_no').n_unique()).item():,}\")"
+        }
+      ]
+    },
+    {
+      "path": "simple_lab_test/notebooks/preprocessing/insta_market_basket.ipynb",
+      "outputs_read_or_saved": false,
+      "code_sha256": "5471104d87b264151b0cc378468b04a127cfecfb819b6c9fcb0aa245a39df816",
+      "code_cells": [
+        {
+          "cell_index": 2,
+          "source": "from pathlib import Path\nimport gc\nimport numpy as np\nimport pandas as pd\n\nfrom pathlib import Path\nimport sys\n\nSERVER_PROJECT_ROOT = Path('~/workspace/paper_research').expanduser().resolve()\nif str(SERVER_PROJECT_ROOT) not in sys.path:\n    sys.path.insert(0, str(SERVER_PROJECT_ROOT))\n\nfrom utils.notebook_bootstrap import bootstrap_notebook\n\nPROJECT_ROOT, DIR = bootstrap_notebook(preferred_root=SERVER_PROJECT_ROOT)\n\nDATA_DIR = PROJECT_ROOT / \"sample_data\" / \"insta_market_basket\"\nOUTPUT_DIR = DATA_DIR\n\nORDER_PRODUCT_FILES = [\n    \"order_products__prior.csv\",\n    \"order_products__train.csv\",\n]\n\nCHUNKSIZE = 5_000_000\nLOG_EVERY_N_CHUNKS = 1\n\nprint(\"PROJECT_ROOT:\", PROJECT_ROOT)\nprint(\"DATA_DIR:\", DATA_DIR)\nprint(\"OUTPUT_DIR:\", OUTPUT_DIR)"
+        },
+        {
+          "cell_index": 4,
+          "source": "aisles = pd.read_csv(DATA_DIR / \"aisles.csv\")\ndepartments = pd.read_csv(DATA_DIR / \"departments.csv\")\nproducts = pd.read_csv(DATA_DIR / \"products.csv\")\n\nproducts_lookup = products[[\"product_id\", \"aisle_id\", \"department_id\"]].copy()\n\ndepartment_mark_map = departments.sort_values(\"department_id\").reset_index(drop=True).copy()\ndepartment_mark_map[\"mark\"] = np.arange(len(department_mark_map), dtype=np.int16)\n\ndept_to_mark = dict(zip(department_mark_map[\"department_id\"], department_mark_map[\"mark\"]))\ndept_to_name = dict(zip(departments[\"department_id\"], departments[\"department\"]))\n\ndisplay(departments.head())\ndisplay(products.head())\ndisplay(department_mark_map.head())\n\nprint(\"products:\", len(products))\nprint(\"aisles:\", len(aisles))\nprint(\"departments:\", len(departments))\nprint(\"department mark range:\", department_mark_map[\"mark\"].min(), department_mark_map[\"mark\"].max())"
+        },
+        {
+          "cell_index": 6,
+          "source": "orders = pd.read_csv(DATA_DIR / \"orders.csv\")\norders = orders.sort_values([\"user_id\", \"order_number\"]).reset_index(drop=True)\n\norders[\"elapsed_days\"] = orders.groupby(\"user_id\", sort=False)[\"days_since_prior_order\"].transform(\n    lambda s: s.fillna(0).cumsum()\n)\norders[\"elapsed_days_hour\"] = orders[\"elapsed_days\"] + orders[\"order_hour_of_day\"] / 24.0\norders[\"day_bucket\"] = np.floor(orders[\"elapsed_days\"]).astype(\"int32\")\n\nprint(\"orders rows:\", len(orders))\nprint(\"users:\", orders[\"user_id\"].nunique())\nprint(\"eval_set counts:\")\ndisplay(orders[\"eval_set\"].value_counts())\n\nuser_order_counts = orders.groupby(\"user_id\", sort=False)[\"order_number\"].max()\ndisplay(user_order_counts.describe(percentiles=[0.25, 0.5, 0.75, 0.9, 0.95, 0.99]))\n\ntime_diff = orders.groupby(\"user_id\", sort=False)[\"elapsed_days_hour\"].diff()\nprint(\"negative elapsed_days_hour diffs:\", int((time_diff < 0).sum()))\nprint(\"non-positive elapsed_days_hour diffs:\", int((time_diff <= 0).sum()))\nprint(\"same-day order transitions using elapsed_days only:\", int((orders.groupby(\"user_id\", sort=False)[\"elapsed_days\"].diff() == 0).sum()))"
+        },
+        {
+          "cell_index": 8,
+          "source": "def build_order_level_tables(\n    data_dir: Path,\n    products_lookup: pd.DataFrame,\n    order_product_files: list[str],\n    chunksize: int = 5_000_000,\n) -> tuple[pd.DataFrame, pd.DataFrame]:\n    order_stat_parts: list[pd.DataFrame] = []\n    dept_count_parts: list[pd.DataFrame] = []\n\n    for file_name in order_product_files:\n        path = data_dir / file_name\n        print(f\"reading {path.name}\")\n\n        reader = pd.read_csv(\n            path,\n            usecols=[\"order_id\", \"product_id\", \"reordered\"],\n            chunksize=chunksize,\n        )\n\n        for chunk_idx, chunk in enumerate(reader, start=1):\n            chunk = chunk.merge(products_lookup, on=\"product_id\", how=\"left\", validate=\"many_to_one\")\n            if chunk[\"department_id\"].isna().any():\n                missing = chunk.loc[chunk[\"department_id\"].isna(), \"product_id\"].drop_duplicates().head(10).tolist()\n                raise ValueError(f\"product_id not found in products.csv: {missing}\")\n\n            chunk[\"department_id\"] = chunk[\"department_id\"].astype(\"int16\")\n\n            order_stats = (\n                chunk.groupby(\"order_id\", sort=False)\n                .agg(\n                    basket_size=(\"product_id\", \"size\"),\n                    reordered_count=(\"reordered\", \"sum\"),\n                )\n                .reset_index()\n            )\n\n            dept_counts = (\n                chunk.groupby([\"order_id\", \"department_id\"], sort=False)\n                .size()\n                .reset_index(name=\"dept_count\")\n            )\n\n            order_stat_parts.append(order_stats)\n            dept_count_parts.append(dept_counts)\n\n            if chunk_idx % LOG_EVERY_N_CHUNKS == 0:\n                print(\n                    f\"  chunk {chunk_idx}: product rows={len(chunk):,}, \"\n                    f\"orders={order_stats['order_id'].nunique():,}, \"\n                    f\"order-departments={len(dept_counts):,}\"\n                )\n\n            del chunk, order_stats, dept_counts\n            gc.collect()\n\n    order_stats_all = (\n        pd.concat(order_stat_parts, ignore_index=True)\n        .groupby(\"order_id\", as_index=False, sort=False)[[\"basket_size\", \"reordered_count\"]]\n        .sum()\n    )\n\n    dept_counts_all = (\n        pd.concat(dept_count_parts, ignore_index=True)\n        .groupby([\"order_id\", \"department_id\"], as_index=False, sort=False)[\"dept_count\"]\n        .sum()\n    )\n\n    dominant_departments = (\n        dept_counts_all.sort_values([\"order_id\", \"dept_count\", \"department_id\"], ascending=[True, False, True])\n                    .drop_duplicates(\"order_id\")\n                    .rename(columns={\"department_id\": \"dominant_department_id\", \"dept_count\": \"dominant_department_count\"})\n    )\n\n    order_summary = order_stats_all.merge(dominant_departments, on=\"order_id\", how=\"inner\", validate=\"one_to_one\")\n\n    order_summary[\"basket_size\"] = order_summary[\"basket_size\"].astype(\"int16\")\n    order_summary[\"reordered_count\"] = order_summary[\"reordered_count\"].astype(\"int16\")\n    order_summary[\"dominant_department_id\"] = order_summary[\"dominant_department_id\"].astype(\"int16\")\n    order_summary[\"dominant_department_count\"] = order_summary[\"dominant_department_count\"].astype(\"int16\")\n\n    return order_summary, dept_counts_all\n\n\norder_summary, order_department_counts = build_order_level_tables(\n    data_dir=DATA_DIR,\n    products_lookup=products_lookup,\n    order_product_files=ORDER_PRODUCT_FILES,\n    chunksize=CHUNKSIZE,\n)\n\nprint(\"order_summary rows:\", len(order_summary))\nprint(\"order_department_counts rows:\", len(order_department_counts))\ndisplay(order_summary.head())\ndisplay(order_summary[\"basket_size\"].describe(percentiles=[0.25, 0.5, 0.75, 0.9, 0.95, 0.99]))"
+        },
+        {
+          "cell_index": 10,
+          "source": "observed_orders = orders.merge(order_summary, on=\"order_id\", how=\"inner\", validate=\"one_to_one\")\nobserved_orders = observed_orders.sort_values([\"user_id\", \"day_bucket\", \"order_number\"]).reset_index(drop=True)\n\nprint(\"observed orders with product labels:\", len(observed_orders))\nprint(\"observed users:\", observed_orders[\"user_id\"].nunique())\ndisplay(observed_orders[\"eval_set\"].value_counts())\n\norder_time = observed_orders[[\"order_id\", \"user_id\", \"day_bucket\"]].copy()\n\ndaily_department_counts = order_department_counts.merge(order_time, on=\"order_id\", how=\"inner\", validate=\"many_to_one\")\ndaily_department_counts = (\n    daily_department_counts.groupby([\"user_id\", \"day_bucket\", \"department_id\"], as_index=False, sort=False)[\"dept_count\"]\n    .sum()\n)\n\ndaily_dominant_department = (\n    daily_department_counts.sort_values(\n        [\"user_id\", \"day_bucket\", \"dept_count\", \"department_id\"],\n        ascending=[True, True, False, True],\n    )\n    .drop_duplicates([\"user_id\", \"day_bucket\"])\n    .rename(columns={\"department_id\": \"dominant_department_id\", \"dept_count\": \"dominant_department_count\"})\n)\n\ndaily = (\n    observed_orders.groupby([\"user_id\", \"day_bucket\"], as_index=False, sort=False)\n    .agg(\n        demand_qty=(\"basket_size\", \"sum\"),\n        order_count=(\"order_id\", \"size\"),\n        reordered_count=(\"reordered_count\", \"sum\"),\n        first_order_number=(\"order_number\", \"first\"),\n        last_order_number=(\"order_number\", \"last\"),\n        first_order_hour=(\"order_hour_of_day\", \"first\"),\n        last_order_hour=(\"order_hour_of_day\", \"last\"),\n        first_elapsed_days_hour=(\"elapsed_days_hour\", \"first\"),\n        last_elapsed_days_hour=(\"elapsed_days_hour\", \"last\"),\n        eval_set_latest=(\"eval_set\", \"last\"),\n    )\n)\n\ndaily = daily.merge(\n    daily_dominant_department[[\"user_id\", \"day_bucket\", \"dominant_department_id\", \"dominant_department_count\"]],\n    on=[\"user_id\", \"day_bucket\"],\n    how=\"inner\",\n    validate=\"one_to_one\",\n)\n\ndaily = daily.sort_values([\"user_id\", \"day_bucket\"]).reset_index(drop=True)\ndaily[\"delta_t\"] = daily.groupby(\"user_id\", sort=False)[\"day_bucket\"].diff().fillna(0).astype(\"int16\")\ndaily[\"demand_qty\"] = daily[\"demand_qty\"].astype(\"float64\")\ndaily[\"z\"] = np.log1p(daily[\"demand_qty\"])\ndaily[\"mark\"] = daily[\"dominant_department_id\"].map(dept_to_mark).astype(\"int16\")\ndaily[\"dominant_department\"] = daily[\"dominant_department_id\"].map(dept_to_name)\ndaily[\"reorder_ratio\"] = daily[\"reordered_count\"] / daily[\"demand_qty\"]\n\ndaily[\"oper_part_no\"] = \"user_\" + daily[\"user_id\"].astype(str)\ndaily[\"demand_dt\"] = daily[\"day_bucket\"].astype(\"int32\")\ndaily[\"seq\"] = daily[\"day_bucket\"].astype(\"int32\")\n\nmarked_target_like = daily[[\"oper_part_no\", \"demand_dt\", \"seq\", \"delta_t\", \"demand_qty\", \"z\", \"mark\"]].copy()\n\nprint(\"daily active rows:\", len(daily))\nprint(\"daily users:\", daily[\"user_id\"].nunique())\ndisplay(marked_target_like.head())\ndisplay(marked_target_like[\"demand_qty\"].describe(percentiles=[0.25, 0.5, 0.75, 0.9, 0.95, 0.99]))\ndisplay(marked_target_like[\"delta_t\"].describe(percentiles=[0.25, 0.5, 0.75, 0.9, 0.95, 0.99]))"
+        },
+        {
+          "cell_index": 12,
+          "source": "def assert_quantity_table_quality(df: pd.DataFrame, mark_map: pd.DataFrame) -> None:\n    duplicate_keys = df.duplicated([\"oper_part_no\", \"seq\"]).sum()\n    assert duplicate_keys == 0, f\"duplicated entity-time rows: {duplicate_keys}\"\n\n    null_counts = df.isna().sum()\n    assert int(null_counts.sum()) == 0, f\"null values found:\\n{null_counts[null_counts > 0]}\"\n\n    assert (df[\"delta_t\"] >= 0).all(), \"negative delta_t exists\"\n    assert (df[\"demand_qty\"] > 0).all(), \"non-positive demand_qty exists\"\n    assert np.isfinite(df[\"z\"]).all(), \"non-finite z exists\"\n\n    min_mark = int(df[\"mark\"].min())\n    max_mark = int(df[\"mark\"].max())\n    assert min_mark >= 0, f\"invalid min mark: {min_mark}\"\n    assert max_mark < len(mark_map), f\"invalid max mark: {max_mark}\"\n\n    first_delta = df.sort_values([\"oper_part_no\", \"seq\"]).groupby(\"oper_part_no\", sort=False)[\"delta_t\"].first()\n    assert (first_delta == 0).all(), \"first delta_t must be 0 for every entity\"\n\n\nassert_quantity_table_quality(marked_target_like, department_mark_map)\n\nprint(\"quality checks passed\")\nprint(\"shape:\", marked_target_like.shape)\nprint(\"entities:\", marked_target_like[\"oper_part_no\"].nunique())\nprint(\"mark counts:\")\ndisplay(marked_target_like[\"mark\"].value_counts().sort_index().to_frame(\"count\"))\n\nentity_lengths = marked_target_like.groupby(\"oper_part_no\", sort=False).size()\nprint(\"entity length distribution:\")\ndisplay(entity_lengths.describe(percentiles=[0.25, 0.5, 0.75, 0.9, 0.95, 0.99]))"
+        },
+        {
+          "cell_index": 14,
+          "source": "daily = daily.sort_values([\"user_id\", \"seq\"]).reset_index(drop=True)\ndaily[\"event_idx\"] = daily.groupby(\"user_id\", sort=False).cumcount()\ndaily[\"n_events\"] = daily.groupby(\"user_id\", sort=False)[\"seq\"].transform(\"size\")\ndaily[\"chronological_split\"] = \"train\"\n\nvalidation_mask = ((daily[\"n_events\"] >= 5) & (daily[\"event_idx\"] == daily[\"n_events\"] - 2)) | (\n    (daily[\"n_events\"] == 4) & (daily[\"event_idx\"] == daily[\"n_events\"] - 1)\n)\ntest_mask = (daily[\"n_events\"] >= 5) & (daily[\"event_idx\"] == daily[\"n_events\"] - 1)\n\ndaily.loc[validation_mask, \"chronological_split\"] = \"validation\"\ndaily.loc[test_mask, \"chronological_split\"] = \"test\"\n\nmarked_target_like_with_split = daily[\n    [\n        \"oper_part_no\",\n        \"demand_dt\",\n        \"seq\",\n        \"delta_t\",\n        \"demand_qty\",\n        \"z\",\n        \"mark\",\n        \"chronological_split\",\n    ]\n].copy()\n\ndisplay(marked_target_like_with_split[\"chronological_split\"].value_counts())\ndisplay(marked_target_like_with_split.head())"
+        },
+        {
+          "cell_index": 16,
+          "source": "def save_table(df: pd.DataFrame, output_dir: Path, stem: str) -> Path:\n    parquet_path = output_dir / f\"{stem}.parquet\"\n    csv_path = output_dir / f\"{stem}.csv\"\n\n    try:\n        df.to_parquet(parquet_path, index=False)\n        print(f\"saved parquet: {parquet_path}\")\n        return parquet_path\n    except Exception as exc:\n        print(f\"parquet save failed for {stem}: {exc}\")\n        df.to_csv(csv_path, index=False)\n        print(f\"saved csv fallback: {csv_path}\")\n        return csv_path\n\n\nrich_columns = [\n    \"user_id\",\n    \"oper_part_no\",\n    \"demand_dt\",\n    \"seq\",\n    \"delta_t\",\n    \"demand_qty\",\n    \"z\",\n    \"mark\",\n    \"dominant_department_id\",\n    \"dominant_department\",\n    \"dominant_department_count\",\n    \"order_count\",\n    \"reordered_count\",\n    \"reorder_ratio\",\n    \"first_order_number\",\n    \"last_order_number\",\n    \"first_order_hour\",\n    \"last_order_hour\",\n    \"first_elapsed_days_hour\",\n    \"last_elapsed_days_hour\",\n    \"eval_set_latest\",\n    \"event_idx\",\n    \"n_events\",\n    \"chronological_split\",\n]\nrich_table = daily[rich_columns].copy()\n\nsaved_paths = []\nsaved_paths.append(save_table(marked_target_like, OUTPUT_DIR, \"instacart_marked_target_df\"))\nsaved_paths.append(save_table(marked_target_like_with_split, OUTPUT_DIR, \"instacart_marked_target_with_split\"))\nsaved_paths.append(save_table(rich_table, OUTPUT_DIR, \"instacart_quantity_reconstruction_rich\"))\n\nmark_map_path = OUTPUT_DIR / \"instacart_department_mark_map.csv\"\ndepartment_mark_map.to_csv(mark_map_path, index=False)\nsaved_paths.append(mark_map_path)\nprint(f\"saved mark map: {mark_map_path}\")\n\nprint(\"\\nSaved files:\")\nfor path in saved_paths:\n    print(\"-\", path)"
+        },
+        {
+          "cell_index": 18,
+          "source": "BUILD_USER_DEPARTMENT_VARIANT = False\n\nif BUILD_USER_DEPARTMENT_VARIANT:\n    user_dept_daily = daily_department_counts.sort_values([\"user_id\", \"department_id\", \"day_bucket\"]).copy()\n    user_dept_daily[\"oper_part_no\"] = (\n        \"user_\" + user_dept_daily[\"user_id\"].astype(str) + \"_dept_\" + user_dept_daily[\"department_id\"].astype(str)\n    )\n    user_dept_daily[\"demand_dt\"] = user_dept_daily[\"day_bucket\"].astype(\"int32\")\n    user_dept_daily[\"seq\"] = user_dept_daily[\"day_bucket\"].astype(\"int32\")\n    user_dept_daily[\"delta_t\"] = (\n        user_dept_daily.groupby(\"oper_part_no\", sort=False)[\"seq\"].diff().fillna(0).astype(\"int16\")\n    )\n    user_dept_daily[\"demand_qty\"] = user_dept_daily[\"dept_count\"].astype(\"float64\")\n    user_dept_daily[\"z\"] = np.log1p(user_dept_daily[\"demand_qty\"])\n    user_dept_daily[\"mark\"] = user_dept_daily[\"department_id\"].map(dept_to_mark).astype(\"int16\")\n\n    user_dept_marked = user_dept_daily[\n        [\"oper_part_no\", \"demand_dt\", \"seq\", \"delta_t\", \"demand_qty\", \"z\", \"mark\"]\n    ].copy()\n    assert_quantity_table_quality(user_dept_marked, department_mark_map)\n    save_table(user_dept_marked, OUTPUT_DIR, \"instacart_user_department_marked_target_df\")\n\n    print(\"user-department rows:\", len(user_dept_marked))\n    print(\"user-department entities:\", user_dept_marked[\"oper_part_no\"].nunique())\n    display(user_dept_marked.head())\nelse:\n    print(\"Skipped user-department variant. Set BUILD_USER_DEPARTMENT_VARIANT=True to build it.\")"
+        }
+      ]
+    },
+    {
+      "path": "simple_lab_test/notebooks/preprocessing/insta_market_basket_tpp_splits.ipynb",
+      "outputs_read_or_saved": false,
+      "code_sha256": "326e29e95c67218ff3b9eb92831f8b7b3cd8263e73aedb836f763cf6e4381593",
+      "code_cells": [
+        {
+          "cell_index": 2,
+          "source": "from pathlib import Path\nimport sys\n\ndef resolve_project_root(start: Path | None = None) -> Path:\n    \"\"\"Find the project root even when Jupyter starts from home or /tmp.\"\"\"\n    anchor = (start or Path.cwd()).expanduser().resolve()\n    base = anchor if anchor.is_dir() else anchor.parent\n    candidates = [base, *base.parents]\n    candidates.extend([\n        Path('~/workspace/paper_research').expanduser(),\n        Path('/home/workspace/paper_research'),\n        Path('/Users/igwanhyeong/PycharmProjects/paper_research'),\n    ])\n    for candidate in candidates:\n        if all((candidate / name).exists() for name in ('sample_data', 'models', 'utils')):\n            return candidate\n    raise RuntimeError('Could not locate the paper_research project root.')\n\nPROJECT_ROOT = resolve_project_root()\nPREPROCESSING_DIR = PROJECT_ROOT / 'simple_lab_test' / 'notebooks' / 'preprocessing'\nfor path in (PROJECT_ROOT, PREPROCESSING_DIR):\n    if str(path) not in sys.path:\n        sys.path.insert(0, str(path))\n\nfrom tpp_split_utils import SplitConfig, build_and_save_quantity_splits, ensure_project_root_on_path\n\nPROJECT_ROOT = ensure_project_root_on_path(PROJECT_ROOT)\nprint('PROJECT_ROOT =', PROJECT_ROOT)"
+        },
+        {
+          "cell_index": 4,
+          "source": "cfg = SplitConfig(\n    dataset_name='insta_market_basket',\n    input_path=PROJECT_ROOT / 'sample_data' / 'insta_market_basket' / 'instacart_marked_target_df.parquet',\n    output_dir=PROJECT_ROOT / 'sample_data' / 'insta_market_basket',\n    output_prefix='instacart_marked_target',\n    scale_base=2.0,\n    train_ratio=0.70,\n    validation_ratio=0.15,\n    test_ratio=0.15,\n)\ncfg"
+        },
+        {
+          "cell_index": 6,
+          "source": "result = build_and_save_quantity_splits(cfg, overwrite=True)\nprint('max_order fitted on train =', result['max_order'])\nfor name, path in result['paths'].items():\n    print(f'{name}: {path}')"
+        },
+        {
+          "cell_index": 8,
+          "source": "from IPython.display import display\nimport polars as pl\n\nlabeled_df = result['labeled_df']\ndisplay(labeled_df.head())\ndisplay(pl.DataFrame(result['summary']['split_counts']))\ndisplay(pl.DataFrame(result['summary']['mark_counts']).pivot(values='len', index='mark', columns='chronological_split').fill_null(0).sort('mark'))\ndisplay(labeled_df.select([\n    pl.len().alias('rows'),\n    pl.col('oper_part_no').n_unique().alias('series'),\n    pl.col('demand_qty').median().alias('qty_median'),\n    pl.col('demand_qty').quantile(0.95).alias('qty_p95'),\n    pl.col('demand_qty').max().alias('qty_max'),\n    pl.col('scale_residual').min().alias('residual_min'),\n    pl.col('scale_residual').max().alias('residual_max'),\n]))"
+        },
+        {
+          "cell_index": 9,
+          "source": ""
+        }
+      ]
+    }
+  ],
+  "prior_access_metadata_reused": {
+    "path": "reports/titantpp_pakdd_extension_preparation_20261001_v1/lineage.json",
+    "datasets": {
+      "yellow_trip_hourly": {
+        "classification": "same_event_keys_in_available_artifacts",
+        "historical_test_access": "confirmed by prior access review",
+        "final_evaluation_role": "previously exposed legacy test; not untouched independent confirmation"
+      },
+      "insta_market_basket": {
+        "classification": "same_event_keys_in_available_artifacts",
+        "historical_test_access": "confirmed by prior access review",
+        "final_evaluation_role": "previously exposed legacy test; not untouched independent confirmation"
+      },
+      "intermittent_frozen_5000": {
+        "classification": "unresolved_source_entity_mapping",
+        "final_evaluation_role": "legacy holdout with unresolved prior exposure; no untouched independence claim",
+        "raw_current_source_available": false,
+        "raw_legacy_source_available": false
+      },
+      "raf_spare_parts": {
+        "classification": "separate_dataset_from_the_identified_legacy_tests",
+        "historical_test_access": "no confirmed access in bounded prior search; not proof of nonaccess",
+        "final_evaluation_role": "fixed temporal holdout; disclose incomplete historical access evidence"
+      }
+    },
+    "incidental_manifest_target_summaries_previously_exposed": true,
+    "no_target_summaries_reopened": true
+  },
+  "preparation_lineage_keys": [
+    "access_scope",
+    "created_utc",
+    "historical_manifests_rechecked",
+    "independence_status",
+    "intermittent",
+    "raf",
+    "researcher_attestation",
+    "status"
+  ],
+  "no_new_evaluation": true
+}

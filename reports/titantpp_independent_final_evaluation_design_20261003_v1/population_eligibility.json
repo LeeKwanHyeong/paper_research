@@ -1,0 +1,138 @@
+{
+  "created_utc": "2026-10-02T21:49:58.994936+00:00",
+  "clean_population_verified": false,
+  "rows": [
+    {
+      "dataset": "yellow_trip_hourly",
+      "independence_status": "not_established",
+      "lineage_classification": "same_event_keys_in_available_artifacts",
+      "historical_access_record": "confirmed by prior access review",
+      "same_event_key_overlap": {
+        "left": 8327,
+        "right": 8327,
+        "intersection": 8327,
+        "left_only": 0,
+        "right_only": 0
+      },
+      "clean_population_path": null,
+      "clean_population_sha256": null,
+      "eligible_target_ids_sha256": null,
+      "eligible_entity_ids_sha256": null,
+      "approved_cutoff": null,
+      "approved_evaluation_period": null,
+      "legacy_label": "previously_exposed_legacy_test",
+      "clean_route": "Later non-overlapping raw calendar period after the latest timestamp in every previously used partition; same frozen spatial cells and hourly aggregation.",
+      "minimum_metadata": [
+        "raw release identifier and immutable SHA",
+        "full previously used calendar end cutoff",
+        "cell mapping and unit definitions",
+        "pre-cutoff entity eligibility",
+        "event-key overlap report",
+        "data rights and prior-access attestation"
+      ],
+      "currently_unresolved": [
+        "new raw period not acquired or bound",
+        "retrospective min_count=100 and min_coverage=0.999 need cutoff-only eligibility audit",
+        "common temporal shocks across spatial cells"
+      ],
+      "scope": "future-period generalization conditional on the frozen region/cell cohort, not new-city generalization"
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "independence_status": "not_established",
+      "lineage_classification": "unresolved_source_entity_mapping",
+      "historical_access_record": "mapping unresolved; do not infer absence from disjoint literal keys",
+      "same_event_key_overlap": null,
+      "clean_population_path": null,
+      "clean_population_sha256": null,
+      "eligible_target_ids_sha256": null,
+      "eligible_entity_ids_sha256": null,
+      "approved_cutoff": null,
+      "approved_evaluation_period": null,
+      "legacy_label": "legacy_holdout_exposure_unresolved",
+      "clean_route": "A new timestamped extraction after all prior per-site cutoffs, or independently sourced sites/parts with verified source mapping; freeze a cohort using only pre-cutoff metadata.",
+      "minimum_metadata": [
+        "upstream owner and redistribution/evaluation permission",
+        "site_cd::part_no identity map",
+        "extraction as-of timestamp and per-site cutoffs",
+        "current 5000-series selection and strata code",
+        "event definition and quantity/gap units",
+        "historical extract event-key deduplication"
+      ],
+      "currently_unresolved": [
+        "raw current and legacy source unavailable in recorded lineage",
+        "legacy demand>8 and burst merging versus current positive rows not reconciled",
+        "5000-series retrospective stratification may depend on future information",
+        "cross-series site dependency needs metadata audit"
+      ],
+      "scope": "same-site temporal transfer or new-site transfer must be named separately before labels are released"
+    },
+    {
+      "dataset": "insta_market_basket",
+      "independence_status": "not_established",
+      "lineage_classification": "same_event_keys_in_available_artifacts",
+      "historical_access_record": "confirmed by prior access review",
+      "same_event_key_overlap": {
+        "left": 578387,
+        "right": 578387,
+        "intersection": 578387,
+        "left_only": 0,
+        "right_only": 0
+      },
+      "clean_population_path": null,
+      "clean_population_sha256": null,
+      "eligible_target_ids_sha256": null,
+      "eligible_entity_ids_sha256": null,
+      "approved_cutoff": null,
+      "approved_evaluation_period": null,
+      "legacy_label": "previously_exposed_legacy_test",
+      "clean_route": "Separately sourced, previously unused basket histories with the same event/quantity definition and documented historical timestamps; no verified later release is available locally.",
+      "minimum_metadata": [
+        "dataset license and release SHA",
+        "customer identity provenance and non-overlap",
+        "order chronology and observed-gap coding",
+        "basket-size definition",
+        "as-of customer eligibility",
+        "whether a real timestamp or a reconstructed relative clock is supplied"
+      ],
+      "currently_unresolved": [
+        "no clean dataset bound",
+        "same archive relabeling or Kaggle eval_set reassignment does not create independence",
+        "relative dates cannot be represented as a verified later calendar cohort",
+        "if uncapped new gaps are recoded to 30, report the same recorded observation task"
+      ],
+      "scope": "external basket-history transfer, not proof of within-archive unseen final test"
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "independence_status": "not_established",
+      "lineage_classification": "separate_dataset_from_the_identified_legacy_tests",
+      "historical_access_record": "no confirmed access in bounded prior search; not proof of nonaccess",
+      "same_event_key_overlap": null,
+      "clean_population_path": null,
+      "clean_population_sha256": null,
+      "eligible_target_ids_sha256": null,
+      "eligible_entity_ids_sha256": null,
+      "approved_cutoff": null,
+      "approved_evaluation_period": null,
+      "legacy_label": "fixed_temporal_holdout_with_incomplete_access_history",
+      "clean_route": "An independently sourced parts/monthly-demand archive or a demonstrably unused later release; the known 84-month archive provides no later period.",
+      "minimum_metadata": [
+        "archive identifier and SHA",
+        "part identity and source-system provenance",
+        "coverage months and pre-cutoff part eligibility",
+        "quantity and monthly-gap definitions",
+        "duplicate/derived archive audit",
+        "prior-access attestation"
+      ],
+      "currently_unresolved": [
+        "2001-12..2002-12 fixed holdout is not proven untouched by bounded access search",
+        "independent archive not bound",
+        "zero-demand months are not additional next-positive-event targets",
+        "shared supplier/system shocks may cross part clusters"
+      ],
+      "scope": "external parts transfer if new data is obtained; otherwise transparently named fixed legacy-holdout reevaluation"
+    }
+  ],
+  "access_caveat": "Prior incidental held-out target-distribution summary exposure is recorded; no new held-out quantities, gaps, predictions, performance, or mixed result files were read in this work."
+}

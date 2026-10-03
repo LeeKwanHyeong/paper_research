@@ -1,0 +1,220 @@
+{
+  "schemaVersion": 1,
+  "items": [
+    {
+      "id": "train-characteristics",
+      "title": "데이터별 실제 이력과 수량 연속성",
+      "queries": [
+        {
+          "id": "train-profile",
+          "source": {
+            "label": "Frozen training events",
+            "files": [
+              "yellow_trip_hourly_with_split.parquet",
+              "intermittent_frozen_5000_with_split.parquet",
+              "instacart_marked_target_with_split.parquet",
+              "execution_contract.json",
+              "analyze.py"
+            ],
+            "filters": [
+              "chronological_split = train",
+              "Same-entity adjacent observations; first event excluded from target population"
+            ],
+            "executedAt": "2026-09-28T02:30:05.560574+00:00",
+            "caveats": [
+              "Training descriptions are exploratory; they do not establish why Full or MLP performs differently.",
+              "Quantity is a pickup count for Taxi, positive order quantity for Intermittent, and summed product-row count per recorded user-day for Instacart."
+            ],
+            "evidenceFlow": [
+              {
+                "kind": "validation",
+                "title": "Frozen identities",
+                "body": "All three train target counts, target identity hashes and quantity hashes match the execution contract. Data and split manifest hashes also match."
+              }
+            ],
+            "metricDefinitions": [
+              "History length is the observed context after the frozen time window and maximum sequence-length restriction.",
+              "Within-series correlation demeans each entity’s adjacent log1p(quantity) pairs before pooling."
+            ]
+          },
+          "rows": [
+            {
+              "dataset": "yellow_trip_hourly",
+              "history_median": 129.0,
+              "history_p95": 168.0,
+              "equal_adjacent_pct": 20.32922668194723,
+              "within_series_log_correlation": 0.7491136059664648,
+              "train_targets": 38393
+            },
+            {
+              "dataset": "intermittent_frozen_5000",
+              "history_median": 40.0,
+              "history_p95": 144.0,
+              "equal_adjacent_pct": 61.98961972860973,
+              "within_series_log_correlation": 0.9281208525025131,
+              "train_targets": 393824
+            },
+            {
+              "dataset": "insta_market_basket",
+              "history_median": 5.0,
+              "history_p95": 14.0,
+              "equal_adjacent_pct": 10.235225935017818,
+              "within_series_log_correlation": 0.03717500371245614,
+              "train_targets": 1991192
+            }
+          ],
+          "columns": [
+            "dataset",
+            "history_median",
+            "history_p95",
+            "equal_adjacent_pct",
+            "within_series_log_correlation",
+            "train_targets"
+          ],
+          "methods": [
+            {
+              "language": "python",
+              "code": "def correlation(x, y, ids):\n    \"\"\"Pooled and pair-wise within-entity demeaned descriptive correlations.\"\"\"\n    n = np.bincount(ids)\n    sx, sy = np.bincount(ids, x), np.bincount(ids, y)\n    mx = np.divide(sx, n, out=np.zeros_like(sx), where=n > 0)\n    my = np.divide(sy, n, out=np.zeros_like(sy), where=n > 0)\n    dx, dy = x - mx[ids], y - my[ids]\n    xx, yy, xy = np.bincount(ids, dx*dx), np.bincount(ids, dy*dy), np.bincount(ids, dx*dy)\n    valid = (n >= 4) & (xx > 1e-12) & (yy > 1e-12)\n    den = math.sqrt(float(np.dot(dx, dx) * np.dot(dy, dy)))\n    pooled = float(np.corrcoef(x, y)[0, 1]) if np.std(x) and np.std(y) else None\n    return {'pairs': len(x), 'pooled': pooled,\n            'within_entity_demeaned': float(np.dot(dx, dy)/den) if den else None,\n            'entity_correlations_min4_pairs_nonconstant': distribution(xy[valid]/np.sqrt(xx[valid]*yy[valid])),\n            'entities_with_pairs': int((n > 0).sum()),\n            'eligible_entities': int(valid.sum()), 'excluded_entities': int(((n > 0) & ~valid).sum())}\n"
+            }
+          ],
+          "preview": {
+            "kind": "aggregate",
+            "note": "Three complete frozen train populations; not validation performance."
+          }
+        }
+      ]
+    },
+    {
+      "id": "effective-structure",
+      "title": "이력 길이에 따라 실제로 활성화되는 분기가 다름",
+      "queries": [
+        {
+          "id": "branch-profile",
+          "source": {
+            "label": "Frozen training events",
+            "files": [
+              "analyze.py",
+              "CountAwareTitanMultiLagDetail.py",
+              "CountAwareTitanCoreAblation.py",
+              "execution_contract.json"
+            ],
+            "filters": [
+              "chronological_split = train",
+              "Same-entity adjacent observations; first event excluded from target population"
+            ],
+            "executedAt": "2026-09-28T02:30:05.560574+00:00",
+            "caveats": [
+              "Eligibility is measured at the final observed position of each training example.",
+              "The shared eligibility rules cannot alone explain a Full versus MLP performance gap."
+            ],
+            "evidenceFlow": [
+              {
+                "kind": "validation",
+                "title": "Frozen identities",
+                "body": "All three train target counts, target identity hashes and quantity hashes match the execution contract. Data and split manifest hashes also match."
+              }
+            ],
+            "metricDefinitions": [
+              "Full and MLP both read the previous event in each of eight branches; branch eligibility is history_count > [1,2,4,8,16,32,64,128]."
+            ]
+          },
+          "rows": [
+            {
+              "dataset": "yellow_trip_hourly",
+              "mean_active_branches": 6.983434480243794,
+              "history_le7_pct": 2.4118980022399916,
+              "branch_gt64_share": 0.733024249212096
+            },
+            {
+              "dataset": "intermittent_frozen_5000",
+              "mean_active_branches": 5.5652626553993665,
+              "history_le7_pct": 8.887218656049404,
+              "branch_gt64_share": 0.2824002600146258
+            },
+            {
+              "dataset": "insta_market_basket",
+              "mean_active_branches": 2.450429190153436,
+              "history_le7_pct": 72.13463091454767,
+              "branch_gt64_share": 0.0
+            }
+          ],
+          "columns": [
+            "dataset",
+            "mean_active_branches",
+            "history_le7_pct",
+            "branch_gt64_share"
+          ],
+          "methods": [
+            {
+              "language": "calculation",
+              "code": "mean_active_branches = sum(mean(history_count > k) for k in [1,2,4,8,16,32,64,128])"
+            }
+          ],
+          "preview": {
+            "kind": "aggregate",
+            "note": "Training example branch availability, not measured hidden-state contribution."
+          }
+        }
+      ]
+    },
+    {
+      "id": "validation-counterexample",
+      "title": "전체 성능과 특정 이력 구간의 우열이 다름",
+      "queries": [
+        {
+          "id": "paired-seed42",
+          "source": {
+            "label": "Saved validation ledger",
+            "files": [
+              "ledger.json",
+              "validation_conditions.csv",
+              "validation_strata.csv"
+            ],
+            "metricDefinitions": [
+              "Intermittent seed42 quantity RMSE uses each model’s strict raw-RMSE-selected checkpoint."
+            ],
+            "filters": [
+              "dataset = intermittent_frozen_5000",
+              "seed = 42",
+              "evaluation_scope = validation_only",
+              "history subgroup: observed history > 128"
+            ],
+            "caveats": [
+              "Only seed42 has a completed Full–MLP pair for this dataset in the pinned snapshot.",
+              "History length and quantity scale are confounded; subgroup differences are not causal evidence."
+            ],
+            "executedAt": "2026-09-28T02:30:05.560574+00:00"
+          },
+          "capturedAt": "2026-09-28T01:55:42Z",
+          "rows": [
+            {
+              "model": "titantpp_local_detail",
+              "seed": 42,
+              "overall_validation_rmse": 1.7925061097463937,
+              "history_gt128_rmse": 0.36375577745753096,
+              "history_gt128_count": 32741
+            },
+            {
+              "model": "titantpp_history_mlp",
+              "seed": 42,
+              "overall_validation_rmse": 1.578487165641012,
+              "history_gt128_rmse": 0.5398664277515764,
+              "history_gt128_count": 32741
+            }
+          ],
+          "columns": [
+            "model",
+            "seed",
+            "overall_validation_rmse",
+            "history_gt128_rmse",
+            "history_gt128_count"
+          ],
+          "preview": {
+            "kind": "aggregate",
+            "note": "Selected overall and long-history validation aggregates; no replay or held-out read."
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "policy_id": "float32_cpu_cuda_replay_v1",
+  "frozen_at": "2026-09-09T23:03:10.520384+00:00",
+  "original_contract_sha256": "0f7a37b537778ab71d4910ff4a47e624360f9be8767f53ebaf8b5070ab2a1152",
+  "original_contract_unchanged": true,
+  "trigger": {
+    "role": "rmtpp",
+    "original_absolute_tolerance": 1e-05,
+    "observed_qty_rmse_difference": 1.4039787792796687e-05,
+    "observed_qty_mae_difference": 6.675557398416743e-06,
+    "observed_log_qty_mse_difference": -2.5770113321055277e-08
+  },
+  "interpretation": "Source/state/population match. CPU torch2.14 versus original CUDA torch2.11 allows small floating-point implementation differences; this is a disclosed technical replay amendment, not a performance or model-selection criterion change.",
+  "checks": {
+    "source_state_population_identity_required": true,
+    "metric_atol": 1e-05,
+    "metric_rtol": 1e-05,
+    "metrics": [
+      "qty_mae",
+      "qty_rmse",
+      "log_qty_mse"
+    ],
+    "raw_rmse_contrast_sign_preserved_for_all_three_references": true,
+    "raw_rmse_contrast_absolute_perturbation_at_most_fraction_of_original": 0.001
+  },
+  "excluded_changes": [
+    "quantity predictions",
+    "checkpoint selection",
+    "model training",
+    "stratum boundaries",
+    "fold assignment",
+    "hypothesis criteria"
+  ],
+  "timing": "Policy fixed after original strict aggregate replay failure and before any candidate per-row analysis or train predictions."
+}

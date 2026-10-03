@@ -1,0 +1,19 @@
+{
+  "dataset": "insta_market_basket",
+  "seed": 42,
+  "inference_revision": "ca8823e688a510e64e7fb81c9dc9d158d4bdfc7c",
+  "baseline_B_training_revision": "f75243473adc25d622319dbca9bda7e076d8240f",
+  "benchmark_training_revision": "9440609673cfdf7bcfec5c77d7f677affd04ae49",
+  "source_compatibility": {
+    "byte_identical_across_three_revisions": ["data_loader/event_seq_data_module.py", "paper/scripts/count_aware_tpp_backbone/core.py", "paper/scripts/run_taxi_quantity_interface_ablation.py", "models/TPPs/TitanTPP.py", "models/Titan/common/memory.py"],
+    "CountAwareTPP_change": "f752434 to 9440609 adds a heteroscedastic lognormal path; legacy time, quantity, and encoder branches unchanged. 9440609 to ca8823e identical.",
+    "factory_change": "f752434 and 9440609 identical; ca8823e adds candidate routes without changing B/RMTPP/THP construction.",
+    "final_verification": "Strict checkpoint restore and full validation metric replay required, absolute tolerance 0.00001."
+  },
+  "cache_reuse": {
+    "B_train": "Exact checkpoint, state, full canonical target identity and quantity hashes verified. Prediction, quantity, history_length, series_index, target_index, context_end match canonical train population.",
+    "B_validation": "Exact checkpoint, state, full canonical target identity and quantity hashes verified. Only pred_b and metadata reused; older FULL/BOUNDED-QK predictions excluded.",
+    "candidate_RMTPP_THP": "New CPU-only inference from selected checkpoints; no model fitting."
+  },
+  "scope": "train and validation only; no held-out test rows materialized; no GPU work or checkpoint reselection"
+}

@@ -1,0 +1,70 @@
+{
+  "status": "passed",
+  "scope": "retrospective_validation_history_audit",
+  "rows": [
+    {
+      "dataset": "yellow_trip_hourly",
+      "selected_B_epoch": 45,
+      "selected_candidate_epoch": 83,
+      "history_points_with_RMSE_below_selected_B_and_legacy_time_within_B_plus_0_01": 15,
+      "same_epoch_examples": [
+        {
+          "model": "B",
+          "epoch": 45,
+          "val_qty_rmse": 88.19499665350457,
+          "val_qty_mae": 28.67402025115017,
+          "val_time_nll": 1.473390626529593
+        },
+        {
+          "model": "candidate",
+          "epoch": 45,
+          "val_qty_rmse": 80.78133057873058,
+          "val_qty_mae": 25.718789593315265,
+          "val_time_nll": 1.4400609666720414
+        },
+        {
+          "model": "B",
+          "epoch": 83,
+          "val_qty_rmse": 93.16408031085784,
+          "val_qty_mae": 29.370771292007714,
+          "val_time_nll": 8.007973875452137
+        },
+        {
+          "model": "candidate",
+          "epoch": 83,
+          "val_qty_rmse": 78.25542706791491,
+          "val_qty_mae": 25.048307621614565,
+          "val_time_nll": 10.825869968628675
+        }
+      ]
+    },
+    {
+      "dataset": "insta_market_basket",
+      "selected_B_epoch": 72,
+      "selected_candidate_epoch": 72,
+      "history_points_with_RMSE_below_selected_B_and_legacy_time_within_B_plus_0_01": 1
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "selected_B_epoch": 77,
+      "selected_candidate_epoch": 37,
+      "history_points_with_RMSE_below_selected_B_and_legacy_time_within_B_plus_0_01": 0
+    }
+  ],
+  "source_sha256": {
+    "paper/results/final_backbone_and_baselines_20260909/B_reference/yellow_trip_hourly/history.json": "4474a21ee9cd0da8827c98ed276fbe20450b4911c7a3524c8355ec184de9e23f",
+    "paper/results/final_backbone_and_baselines_20260909/5090/final/jobs/seed42_screening_yellow_trip_hourly/runs/titantpp_dual_timescale_memory/count_only_log_regression/seed_42/history.json": "1ede73648b9a3944e1113b2244b43b046a4261b5b638271b553bd2931d3cb8e4",
+    "paper/results/final_backbone_and_baselines_20260909/B_reference/insta_market_basket/history.json": "a54b5f0d5ccec68e9bc2a93e37dd825e54ed14c6c27c5c0ec752d4e84c833bb8",
+    "paper/results/final_backbone_and_baselines_20260909/5090/instacart_completed/jobs/seed42_screening_insta_market_basket/runs/titantpp_dual_timescale_memory/count_only_log_regression/seed_42/history.json": "73c8511b5543026737ab94bdb8f8543eb65e1fc962666c3efafbb86df886cbb2",
+    "paper/results/final_backbone_and_baselines_20260909/B_reference/intermittent_frozen_5000/history.json": "a6ac84b7a9936f048a5b70976c82ae2145eef3d93ddf567830f2ec8b0bc9c332",
+    "paper/results/dual_timescale_intermittent_quantity_extension_20260910/remote/jobs/seed42_intermittent_frozen_5000/runs/titantpp_dual_timescale_memory/count_only_log_regression/seed_42/history.json": "1e1d243f363ad4497f2f7a0dfae7ab32f0c24610d96bf5354a4d6c192132f5fe"
+  },
+  "checkpoint_loaded": false,
+  "checkpoint_reselected": false,
+  "original_campaign_decision_changed": false,
+  "limitations": [
+    "Counts are retrospective explanatory diagnostics, not a new selection rule.",
+    "Only whole-population metrics exist at each history point; Body/tail and checkpoint availability are not established for epoch45.",
+    "Same-epoch differences describe training trajectories, not proof that encoder sharing is or is not causal."
+  ]
+}

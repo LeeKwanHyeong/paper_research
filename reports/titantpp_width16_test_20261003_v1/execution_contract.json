@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-03T07:48:36.193582+00:00",
+  "approval": {
+    "test_inference_authorized": true,
+    "retraining_authorized": false,
+    "allowed_splits": [
+      "validation",
+      "test"
+    ],
+    "datasets": [
+      "yellow_trip_hourly",
+      "raf_spare_parts"
+    ],
+    "models": [
+      "titantpp_history_mlp_width16"
+    ],
+    "seeds": [
+      42
+    ],
+    "user_text": "그러면 현재 Taxi랑 RAF를 Test data로 확인해보면?",
+    "scope": "Completed validation-selected width16 checkpoints; compare existing width4 seed42 on identical existing test splits. Local CPU only; no remote training or manuscript mutation."
+  },
+  "registry_sha256": "9b03f970306ef43efd93782700d5ab45fa83f2da8dd18f927f308a0ea62cc6b1",
+  "dataset_manifest_sha256": "351116d3d5414704d5ba54c432560c235b3f866816e35a57765d47c0a13e3f95",
+  "dataset_sha256": {
+    "yellow_trip_hourly": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+    "raf_spare_parts": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d"
+  },
+  "route": "post_validation_exploratory_existing_test_reevaluation",
+  "not_independent_untouched_data": true,
+  "selection": "first strict minimum full validation raw quantity RMSE; no test-based selection",
+  "tail_thresholds": {
+    "yellow_trip_hourly": 3449,
+    "raf_spare_parts": 200
+  },
+  "resources": {
+    "device": "local_cpu",
+    "workers": 1,
+    "torch_threads": 4,
+    "per_condition_seconds": 1800,
+    "campaign_seconds": 7200,
+    "paid_rental": false
+  },
+  "validation_gate": {
+    "references": {
+      "yellow_trip_hourly": {
+        "count": 8268,
+        "qty_rmse": 82.49911936207754,
+        "qty_mae": 26.75194131065724,
+        "time_nll": 0.6791508012510068
+      },
+      "raf_spare_parts": {
+        "count": 6690,
+        "qty_rmse": 33.98383138713944,
+        "qty_mae": 9.329765900724494,
+        "time_nll": 3.5558638276263737
+      }
+    },
+    "rtol": 1e-05,
+    "atol": 1e-05,
+    "qualification": "full validation, target leakage checks, state/file SHA immutability required before test"
+  },
+  "evaluator": {
+    "parent_path": "reports/titantpp_legacy_evaluation_20261003_v1/evaluate.py",
+    "parent_sha256": "ee450eac24af999aa81e19af6866f63b16a3eed3c9483283ca27ce19156cb0cc",
+    "path": "reports/titantpp_width16_test_20261003_v1/evaluate.py",
+    "sha256": "65462440c0f749c8b30ecef3e56bbcb99f2eecd53d366f4c695ac4052f2357f7",
+    "change": "Only import frozen width runner and install process-local factory hooks before model construction. No changes to loader, outputs, metrics or population."
+  },
+  "training_contract_canonical_sha256": "7b0681473fcde54a16b564821448490a5d6a5561c9d51b60903c9b7f2981e548"
+}

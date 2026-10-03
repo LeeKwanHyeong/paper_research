@@ -1,0 +1,377 @@
+{
+  "contract_id": "titantpp_pakdd_validation_extension_design_20261001_v1",
+  "status": "design_fixed_non_executable",
+  "created_utc": "2026-10-01T13:29:32.126280+00:00",
+  "authorization": {
+    "design_and_local_CPU_checks": true,
+    "new_scientific_fits": false,
+    "GPU_qualification": false,
+    "heldout_performance_access": false,
+    "cloud_rental": false
+  },
+  "representative_model": "titantpp_history_mlp",
+  "scope": "validation_development_before_final_evaluation",
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "datasets": [
+    {
+      "dataset_id": "yellow_trip_hourly",
+      "data": {
+        "path": "sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+        "sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46"
+      },
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 168,
+        "max_seq_len": 256,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "baseline_model_spec": {
+        "hidden_dim": 64,
+        "lambda_log_qty": 1.0,
+        "lambda_tail": 0.0,
+        "quantity_variant": "count_only_log_regression",
+        "time_head_lr_multiplier": 1.0,
+        "time_head_mode": "heteroscedastic_lognormal_duration",
+        "time_initial_location": 0.2357508697949888,
+        "time_initial_scale": 0.5898045019331329,
+        "time_observation_contract": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "hour"
+        },
+        "time_scale": 1.0,
+        "time_sigma_floor": 0.001
+      },
+      "baseline_train_statistics": {
+        "all_train_quantity_sha256": "b6090245dd4b69e5b23bfde51a64bbecea3030245760ddd355b333714fdeab53",
+        "initialization_policy": "use original frozen B mu/std after verifying recalculation; no refitted replacement",
+        "raw_scale": 685.6777796861172,
+        "recomputation_absolute_tolerance": 1e-12,
+        "train_log_mean": 2.837734592747447,
+        "train_log_std": 2.1840596349132664
+      },
+      "optimizer": {
+        "grad_clip": 1.0,
+        "lr": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.01
+      },
+      "steps_per_epoch": 300,
+      "train_targets": 38393,
+      "validation_targets": 8268,
+      "support_checked": true,
+      "heldout_support_checked": false
+    },
+    {
+      "dataset_id": "intermittent_frozen_5000",
+      "data": {
+        "path": "sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+        "sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f"
+      },
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 520,
+        "max_seq_len": 256,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "baseline_model_spec": {
+        "hidden_dim": 64,
+        "lambda_log_qty": 1.0,
+        "lambda_tail": 0.0,
+        "quantity_variant": "count_only_log_regression",
+        "time_head_lr_multiplier": 1.0,
+        "time_head_mode": "heteroscedastic_lognormal_duration",
+        "time_initial_location": -0.21389036220110552,
+        "time_initial_scale": 0.6816420108412236,
+        "time_observation_contract": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "week"
+        },
+        "time_scale": 3.0,
+        "time_sigma_floor": 0.001
+      },
+      "baseline_train_statistics": {
+        "all_train_quantity_sha256": "785526474507af840bc5a7e7f4baef1322c4e61b9d0cfa24be109f25efb55be5",
+        "initialization_policy": "use original frozen B mu/std after verifying recalculation; no refitted replacement",
+        "raw_scale": 36.878211774114746,
+        "recomputation_absolute_tolerance": 1e-12,
+        "train_log_mean": 1.821123902075507,
+        "train_log_std": 1.2853917394914367
+      },
+      "optimizer": {
+        "grad_clip": 1.0,
+        "lr": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.01
+      },
+      "steps_per_epoch": 3077,
+      "train_targets": 393824,
+      "validation_targets": 86285,
+      "support_checked": true,
+      "heldout_support_checked": false
+    },
+    {
+      "dataset_id": "insta_market_basket",
+      "data": {
+        "path": "sample_data/insta_market_basket/instacart_marked_target_with_split.parquet",
+        "sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2"
+      },
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 52,
+        "max_seq_len": 64,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "baseline_model_spec": {
+        "hidden_dim": 64,
+        "lambda_log_qty": 1.0,
+        "lambda_tail": 0.0,
+        "quantity_variant": "count_only_log_regression",
+        "time_head_lr_multiplier": 1.0,
+        "time_head_mode": "heteroscedastic_lognormal_duration",
+        "time_initial_location": 0.07012359239272,
+        "time_initial_scale": 0.885319372563578,
+        "time_observation_contract": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": 30,
+          "unit": "day"
+        },
+        "time_scale": 7.0,
+        "time_sigma_floor": 0.001
+      },
+      "baseline_train_statistics": {
+        "all_train_quantity_sha256": "e6e224976a591f6f9cc90d58e6c70153f20d2fada9903638068d5fb4ac94b92f",
+        "initialization_policy": "use original frozen B mu/std after verifying recalculation; no refitted replacement",
+        "raw_scale": 12.620737951818787,
+        "recomputation_absolute_tolerance": 1e-12,
+        "train_log_mean": 2.185918026533729,
+        "train_log_std": 0.6878440815807482
+      },
+      "optimizer": {
+        "grad_clip": 1.0,
+        "lr": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.01
+      },
+      "steps_per_epoch": 15557,
+      "train_targets": 1991192,
+      "validation_targets": 503733,
+      "support_checked": true,
+      "heldout_support_checked": false
+    },
+    {
+      "dataset_id": "raf_spare_parts",
+      "data": {
+        "path": "search_artifacts/titantpp_raf_5080_20260930_v1/data/raf_spare_parts/train_validation.parquet",
+        "sha256": "d805cad0242078fedfbb87eed18bde9b73d37bfc9b93c6b75aac49087244efa2"
+      },
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 84,
+        "max_seq_len": 84,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "baseline_model_spec": {
+        "hidden_dim": 64,
+        "lambda_log_qty": 1.0,
+        "lambda_tail": 0.0,
+        "quantity_variant": "count_only_log_regression",
+        "time_head_lr_multiplier": 1.0,
+        "time_head_mode": "heteroscedastic_lognormal_duration",
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_observation_contract": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "time_scale": 6.0,
+        "time_sigma_floor": 0.001
+      },
+      "baseline_train_statistics": {
+        "all_train_quantity_sha256": "dfa47b1848a9dd7e57f0115c22dcd6628f164849d92bdfb217834da3a34b1a6d",
+        "initialization_policy": "derive once from RAF train only; shared across models/seeds",
+        "raw_scale": 54.02472556614234,
+        "recomputation_absolute_tolerance": 1e-12,
+        "train_log_mean": 1.697903161487293,
+        "train_log_std": 1.1687925850626832
+      },
+      "optimizer": {
+        "grad_clip": 1.0,
+        "lr": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.01
+      },
+      "steps_per_epoch": 202,
+      "train_targets": 25779,
+      "validation_targets": 6690,
+      "support_checked": true,
+      "heldout_support_checked": false
+    }
+  ],
+  "arms": [
+    {
+      "model_id": "titantpp_current_only_param_matched",
+      "role": "capacity-matched control for explicit predecessor input",
+      "branches": 8,
+      "input_width": 64,
+      "bottleneck_width": 6,
+      "output_width": 64,
+      "bias": false,
+      "additional_parameters": 6144,
+      "thresholds": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        32,
+        64,
+        128
+      ],
+      "divisor": 8,
+      "explicit_predecessor": false,
+      "zero_output_init": true,
+      "caveat": "current state already contains causal history; rank increases from 4 to 6"
+    },
+    {
+      "model_id": "titantpp_all_available_history_mlp",
+      "role": "control for progressive branch availability",
+      "branches": 8,
+      "input_width": 128,
+      "bottleneck_width": 4,
+      "output_width": 64,
+      "bias": false,
+      "additional_parameters": 6144,
+      "thresholds": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "divisor": 8,
+      "explicit_predecessor": true,
+      "zero_output_init": true,
+      "predecessor_rule": "all branches gather true lag-one index; never unmask pre-zeroed branch indices",
+      "caveat": "changes active capacity and residual magnitude jointly on short histories"
+    },
+    {
+      "model_id": "deep_renewal_event_native_nb",
+      "role": "direct next-event quantity comparator",
+      "hidden_dim": 64,
+      "layers": 2,
+      "dropout": 0.1,
+      "input_transform": "raw interval-size after shared frozen loader",
+      "time_distribution": "1+NB(mu_dt,alpha_dt)",
+      "quantity_distribution": "1+NB(mu_qty,alpha_qty)",
+      "dispersion": "two global learned scalars with softplus + 1e-5",
+      "quantity_prediction": "1+mu_qty, same mean for both RMSE and MAE",
+      "loss": "target-only time observed-mass NLL + quantity shifted-NB NLL",
+      "instacart_topcode": "recorded D=30 => P(NB>=29)",
+      "label_scope": "native-family PyTorch next-event adapter; not original calendar-horizon replication",
+      "dense_bias_init": 5.0,
+      "dispersion_bias_init": 2.0,
+      "lstm_initializer_verification": "pending implementation equivalence checks",
+      "reference_revision": "889a3df86a89a365880b4bc1488bcf4c039f265e"
+    }
+  ],
+  "training": {
+    "max_epochs": 300,
+    "min_epochs": 40,
+    "patience": 40,
+    "batch_size": 128,
+    "optimizer": {
+      "name": "AdamW",
+      "lr": 0.001,
+      "weight_decay": 0.01,
+      "grad_clip": 1.0
+    },
+    "selection": "strict_first_min_validation_raw_quantity_rmse",
+    "no_warm_start": true,
+    "target_exposure": "all canonical train next-event targets once per epoch",
+    "global_deadline": null,
+    "condition_wall_time_cap": null
+  },
+  "reporting": {
+    "same_selected_checkpoint": [
+      "quantity_RMSE",
+      "quantity_MAE",
+      "recorded_time_NLL"
+    ],
+    "selected_and_last": true,
+    "seed_aggregation": "mean and sample standard deviation ddof=1",
+    "paired_comparison": "same dataset, seed and canonical target IDs",
+    "unfavorable_and_failed_conditions": "retain",
+    "primary_quantity_prediction": "same forecast for RMSE and MAE",
+    "early_performance_based_subset_exclusion": false,
+    "sum_of_heterogeneous_training_losses_as_rank": false
+  },
+  "reuse": {
+    "history_mlp_conditions": 12,
+    "main_table_conditions": 84,
+    "no_correction_B_conditions": 9,
+    "no_correction_B_raf_present": false,
+    "no_retraining_completed_conditions": true,
+    "registry": "reports/titantpp_independent_evaluation_preparation_20261001_v1/evaluation_registry.json",
+    "registry_sha256": "43a80f25aa08bcb62a02c9ed10aa5fc573b9e45b84ffaafc4116fb35762980a9"
+  },
+  "new_condition_counts": {
+    "architecture_controls": 24,
+    "deep_renewal": 12,
+    "total_fits": 36,
+    "nonlearned_data_model_rows": 8
+  },
+  "nonlearned_baselines": [
+    "last_observed_quantity",
+    "mean_quantity_in_same_observed_window"
+  ],
+  "deployment": {
+    "host_assignment": null,
+    "runtime_identity": null,
+    "source_closure": null,
+    "launcher": null,
+    "earlier_campaign_budgets_inherited": false
+  },
+  "candidate_allocation_not_a_reservation": {
+    "5080": [
+      "yellow_trip_hourly",
+      "intermittent_frozen_5000",
+      "raf_spare_parts"
+    ],
+    "5090": [
+      "insta_market_basket"
+    ]
+  },
+  "pre_execution_requirements": [
+    "production adapters and model identity",
+    "common base initialization and RNG for controls",
+    "MXNet-to-PyTorch LSTM and distribution fidelity review",
+    "native top-coded NB stable log-survival and gradients",
+    "canonical target IDs, loader and batch-prefix parity",
+    "save/resume optimizer/RNG/selection tests",
+    "approved bounded native GPU validation and measured resource caps",
+    "frozen source/runtime, absolute deadlines and explicit campaign launch approval"
+  ],
+  "evaluation_population": "evaluation_population_decision.json"
+}

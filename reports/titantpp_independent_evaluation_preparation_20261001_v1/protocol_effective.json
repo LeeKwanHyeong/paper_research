@@ -1,0 +1,158 @@
+{
+  "schema": "titantpp_independent_evaluation_design_preparation_v2",
+  "created_utc": "2026-10-01T12:18:46.509103+00:00",
+  "status": "CPU_preparation_passed_population_and_execution_contract_pending",
+  "execution_authorized": false,
+  "registration": "local_plan_after_validation_development_before_new_test_access_not_public_preregistration",
+  "representative": "titantpp_history_mlp",
+  "datasets": [
+    "yellow_trip_hourly",
+    "intermittent_frozen_5000",
+    "insta_market_basket",
+    "raf_spare_parts"
+  ],
+  "models": [
+    "titantpp_history_mlp",
+    "rmtpp",
+    "thp",
+    "nhp",
+    "sahp",
+    "s2p2_matched_head",
+    "attnhp_matched_head"
+  ],
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "main_conditions": 84,
+  "selection": "strict_first_min_validation_raw_quantity_rmse",
+  "checkpoint_manifest": "evaluation_registry.json",
+  "dataset_manifest": "reports/titantpp_independent_evaluation_protocol_20261001_v1/dataset_manifest.json",
+  "split_access_ledger": "reports/titantpp_independent_evaluation_protocol_20261001_v1/split_access_ledger.json",
+  "exploratory_variants_not_promoted": [
+    "titantpp_local_detail",
+    "titantpp_history_mlp_active_norm",
+    "Full_Gate",
+    "MLP_Gate"
+  ],
+  "primary_metric": "raw_quantity_rmse",
+  "secondary_metrics": [
+    "raw_quantity_mae",
+    "recorded_integer_bin_time_nll"
+  ],
+  "aggregation": {
+    "within_seed": "micro_event_weighted",
+    "across_seeds": "arithmetic_mean_of_seed_metrics",
+    "seed_dispersion": "sample_standard_deviation_ddof1",
+    "cross_dataset_raw_pooling": false,
+    "ensemble": false,
+    "difference": "TitanTPP_minus_comparator",
+    "relative_improvement": "100*(comparator_mean_RMSE-TitanTPP_mean_RMSE)/comparator_mean_RMSE",
+    "zero_denominator": "undefined_report_absolute_difference"
+  },
+  "fixed_validation_selected_anchors": {
+    "yellow_trip_hourly": "rmtpp",
+    "intermittent_frozen_5000": "rmtpp",
+    "insta_market_basket": "s2p2_matched_head",
+    "raf_spare_parts": "s2p2_matched_head"
+  },
+  "resampling": {
+    "draws": 10000,
+    "rng": "numpy_PCG64",
+    "seed_base": 20261001,
+    "dataset_seed_rule": "seed_base_plus_index_in_datasets",
+    "sort": "primary_cluster_key_string_ascending_or_calendar_hour_ascending",
+    "quantile": "linear",
+    "pointwise_interval_quantiles": [
+      0.025,
+      0.975
+    ],
+    "fixed_four_RMSE_anchor_interval_quantiles": [
+      0.00625,
+      0.99375
+    ],
+    "paired_across_all_models_and_seeds": true,
+    "seed_resampling": false,
+    "uncertainty_scope": "evaluation_sampling_conditional_on_three_fixed_trained_models",
+    "joint_losses": "multiplicity_weighted_error_sums_and_counts_then_seed_metrics_then_seed_mean_difference",
+    "units": {
+      "yellow_trip_hourly": "shared_calendar_hour_circular_blocks_across_all_spatial_cells",
+      "intermittent_frozen_5000": "whole_site_cd_cluster",
+      "insta_market_basket": "whole_user_oper_part_no_cluster",
+      "raf_spare_parts": "whole_part_oper_part_no_cluster"
+    },
+    "taxi_block_hours": 168,
+    "taxi_sensitivity_block_hours": [
+      24,
+      336
+    ],
+    "taxi_grid": "all_hours_between_first_and_last_eligible_test_time_including_empty_hours_no_imputed_targets",
+    "taxi_algorithm": "sample_uniform_starts_concatenate_circular_L_hour_blocks_trim_to_T_hours_use_hour_multiplicity_for_existing_eligible_targets",
+    "minimum_cluster_count_to_compute": 2,
+    "minimum_taxi_grid_hours_to_compute": "2L",
+    "small_sample_reporting_threshold": 20,
+    "threshold_semantics": "reporting_guard_not_validity_guarantee",
+    "unavailable_timestamp": "no_target_order_fallback",
+    "invalid_draws": "report_count_and_reason_no_silent_redraw_or_interval_finalization",
+    "multiplicity_scope": "four_prespecified_anchor_RMSE_pairs_only_other_intervals_descriptive",
+    "pvalues": false,
+    "implementation_and_real_data_CIs_status": "14_tests_passed_and_validation_sample_pipeline_checked_no_benchmark_or_heldout_CIs",
+    "intermittent_sensitivity_unit": "whole_oper_part_no_cluster",
+    "analysis_runtime": {
+      "python": "3.12.10",
+      "numpy": "2.3.1",
+      "device": "cpu",
+      "status": "validated_preparation_runtime_to_bind_in_execution_contract"
+    }
+  },
+  "prediction_protocol": {
+    "mode": "chronological_one_step_next_observed_event",
+    "same_target_ids_across_models_and_seeds": true,
+    "earlier_test_event_as_history": "only_after_that_event_is_predicted_and_observed",
+    "parameter_updates": false,
+    "target_or_future_in_input": false,
+    "refit_train_validation": false,
+    "test_fitted_preprocessing": false,
+    "missing_or_nonfinite_output": "retain_failure_and_stop_affected_comparison_no_favorable_intersection"
+  },
+  "eligibility": {
+    "untouched_test_status": "not_established",
+    "unresolved_existing_test_label": "retrospective_locked_test_reevaluation",
+    "independent_route": "document_no_prior_exposure_and_target_lineage_or_freeze_genuinely_unused_later_or_external_cohort",
+    "reshuffle_old_rows_as_new_holdout": false
+  },
+  "remaining_requirements": [
+    "resolve_researcher_access_attestation_and_split_lineage_or_label_retrospective_reevaluation",
+    "freeze_eligible_population_and_target_identity_manifest",
+    "complete_full_population_wrapper_and_native_runtime_validation",
+    "freeze_actual_host_runtime_resource_caps_deadline_outputs",
+    "obtain_explicit_evaluation_execution_and_performance_access_authorization"
+  ],
+  "methodological_sources": [
+    {
+      "title": "Bootstrapping clustered data",
+      "authors": "Field and Welsh",
+      "year": 2007,
+      "url": "https://rss.onlinelibrary.wiley.com/doi/10.1111/j.1467-9868.2007.00593.x"
+    },
+    {
+      "title": "The Jackknife and the Bootstrap for General Stationary Observations",
+      "authors": "Künsch",
+      "year": 1989,
+      "url": "https://doi.org/10.1214/aos/1176347265"
+    },
+    {
+      "title": "Common pitfalls and recommended practices",
+      "publisher": "scikit-learn",
+      "url": "https://scikit-learn.org/stable/common_pitfalls.html"
+    }
+  ],
+  "updated_utc": "2026-10-01T12:52:37.013377+00:00",
+  "parent_protocol": "reports/titantpp_independent_evaluation_protocol_20261001_v1/protocol.json",
+  "parent_protocol_sha256": "e73dd4d8b38be4563c374ec9aa10debf2cb7429d052409db5e42afd85c9484d3",
+  "amendment": "amendment.json",
+  "amendment_sha256": "4b3f5d867d840659f87f903ccbb1ab74ac85a25e114c3f6dc43aaa6d407dcf1f",
+  "checkpoint_manifest_sha256": "43a80f25aa08bcb62a02c9ed10aa5fc573b9e45b84ffaafc4116fb35762980a9",
+  "lineage_followup": "lineage_review.json"
+}

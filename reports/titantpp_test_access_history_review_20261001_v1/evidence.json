@@ -1,0 +1,312 @@
+{
+  "created_utc": "2026-10-01T13:49:09.825139+00:00",
+  "scope": {
+    "local_project_Codex_session_files": 892,
+    "event_cutoff_exclusive_utc": "2026-09-10T00:00:00Z",
+    "candidate_commands": 90,
+    "candidate_count_is_not_confirmed_read_count": true,
+    "deduplication": "timestamp + command SHA256; forked histories may contain copied events",
+    "confirmed_selected_read_or_ranking_commands": 6,
+    "coverage": "bounded log search; not exhaustive of all people/tools/time",
+    "underlying_test_metric_prediction_files_opened": false,
+    "historical_tool_output_strings_machine_scanned": true,
+    "historical_metric_values_emitted_to_model_or_saved": false,
+    "new_training_or_evaluation": false
+  },
+  "command_evidence": [
+    {
+      "timestamp_utc": "2026-07-02T23:09:43.676Z",
+      "timestamp_kst": "2026-07-03T08:09:43.676000+09:00",
+      "source_log": "/Users/igwanhyeong/.codex/sessions/2026/04/03/rollout-2026-04-03T18-59-32-019d52c8-9e40-7af2-a98c-09797975c419.jsonl",
+      "call_line": 12846,
+      "output_line": 12850,
+      "call_id": "call_s8SY2QPf6mwD7OyojyqAo3HT",
+      "command_line_sha256": "00cc4fe9af59f330a29245c81a33ba9b36c8fab5dabc8681478d5c3ef36c43e5",
+      "output_line_sha256": "012778596e26821d9ddbba60ae084c5b176c746d4960c05051d3f4ce7d412df6",
+      "command_sha256": "9b6b77a3e3136ccf9889001d234bf13bb9629bfe7b497ac5da33ca059e3ce311",
+      "command_excerpts": [
+        "head -n 5 search_artifacts/insta_ablation_baseline_e200/leaderboard/test_summary.csv"
+      ],
+      "successful_exit": true,
+      "output_has_numeric_rows": true,
+      "output_metric_field_names": [
+        "mean_test_dt_mae",
+        "mean_test_mark_acc",
+        "mean_test_nll",
+        "mean_test_nll_marker",
+        "mean_test_nll_steps",
+        "mean_test_nll_time",
+        "mean_test_qty_mae",
+        "mean_test_score",
+        "mean_test_total",
+        "mean_test_value_mae"
+      ],
+      "metric_values_included": false,
+      "finding": "test metric file read and returned to assistant"
+    },
+    {
+      "timestamp_utc": "2026-07-02T23:10:47.469Z",
+      "timestamp_kst": "2026-07-03T08:10:47.469000+09:00",
+      "source_log": "/Users/igwanhyeong/.codex/sessions/2026/04/03/rollout-2026-04-03T18-59-32-019d52c8-9e40-7af2-a98c-09797975c419.jsonl",
+      "call_line": 12863,
+      "output_line": 12864,
+      "call_id": "call_m2qSyGCgrxBFOvODOU3JBmtE",
+      "command_line_sha256": "acc1e0a77c687a4525dc826b6c74e55774ca95b17cef50047e0a72894ea66331",
+      "output_line_sha256": "4de1c541cda5971a78a29d5d2db5b729ce66baa36350f5d234bc32fd475949c6",
+      "command_sha256": "e728a120d829093a6b1e0d24bba37ea5d2087f3ad9e26a5c3ff9dfed68e7f3e3",
+      "command_excerpts": [
+        "test=pd.read_csv(base/f/'leaderboard/test_summary.csv')",
+        "bs=sub.loc[sub.mean_test_score.idxmax()]",
+        "bq=sub.loc[sub.mean_test_qty_mae.idxmin()]",
+        "bn=sub.loc[sub.mean_test_nll.idxmin()]",
+        "print(...sort_values(['criterion','score'], ascending=[True,False])...)"
+      ],
+      "successful_exit": true,
+      "output_has_numeric_rows": true,
+      "output_metric_field_names": [],
+      "metric_values_included": false,
+      "finding": "test-based candidate ranking executed"
+    },
+    {
+      "timestamp_utc": "2026-07-10T04:46:03.697Z",
+      "timestamp_kst": "2026-07-10T13:46:03.697000+09:00",
+      "source_log": "/Users/igwanhyeong/.codex/sessions/2026/06/09/rollout-2026-06-09T09-45-03-019ea9d7-0c12-7350-a247-f798b221c904.jsonl",
+      "call_line": 2282,
+      "output_line": 2285,
+      "call_id": "call_Ojcw1064Bf0FdyXTNVUUPpzD",
+      "command_line_sha256": "2265c3b32460229e9636c22516a2a24ee179440b449df659d1afdaacdf33220a",
+      "output_line_sha256": "37ac8379b958da68db72884263a9adff2e7ba05480e4dc511be0913038c2a918",
+      "command_sha256": "494b5d3cc09ef7a7c3855458af391c91f1e5f700cccd959dced6679a931a8b18",
+      "command_excerpts": [
+        "sed -n '1,40p' /Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/model_enhancement_v3_taxi_short_e50_0710/leaderboard/test_summary.csv"
+      ],
+      "successful_exit": true,
+      "output_has_numeric_rows": true,
+      "output_metric_field_names": [
+        "mean_test_dt_mae",
+        "mean_test_mark_acc",
+        "mean_test_nll",
+        "mean_test_nll_marker",
+        "mean_test_nll_steps",
+        "mean_test_nll_time",
+        "mean_test_qty_mae",
+        "mean_test_score",
+        "mean_test_total",
+        "mean_test_value_mae"
+      ],
+      "metric_values_included": false,
+      "finding": "test metric file read and returned to assistant"
+    },
+    {
+      "timestamp_utc": "2026-07-10T04:56:11.665Z",
+      "timestamp_kst": "2026-07-10T13:56:11.665000+09:00",
+      "source_log": "/Users/igwanhyeong/.codex/sessions/2026/06/09/rollout-2026-06-09T09-45-03-019ea9d7-0c12-7350-a247-f798b221c904.jsonl",
+      "call_line": 2371,
+      "output_line": 2375,
+      "call_id": "call_T92tHlgujwTKLbsTwcZhx6mu",
+      "command_line_sha256": "727c1366e2d08eb447c5d951d3eb5a2874beb032be0ae3900dbcb1a02cfe27dd",
+      "output_line_sha256": "6850a53bd53c4726099b619d39f977d01856f35bc2b6db74751c506f34c1171d",
+      "command_sha256": "cd1159c22a31adb6957ead72674f8613c21e1cf48d4ec887c61dc7a71e1fa4d7",
+      "command_excerpts": [
+        "sed -n '1,20p' /Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/model_enhancement_v2_inter_short_e50_0710/leaderboard/test_summary.csv"
+      ],
+      "successful_exit": true,
+      "output_has_numeric_rows": true,
+      "output_metric_field_names": [
+        "mean_test_dt_mae",
+        "mean_test_mark_acc",
+        "mean_test_nll",
+        "mean_test_nll_marker",
+        "mean_test_nll_steps",
+        "mean_test_nll_time",
+        "mean_test_qty_mae",
+        "mean_test_score",
+        "mean_test_total",
+        "mean_test_value_mae"
+      ],
+      "metric_values_included": false,
+      "finding": "test metric file read and returned to assistant"
+    },
+    {
+      "timestamp_utc": "2026-07-10T04:56:11.665Z",
+      "timestamp_kst": "2026-07-10T13:56:11.665000+09:00",
+      "source_log": "/Users/igwanhyeong/.codex/sessions/2026/06/09/rollout-2026-06-09T09-45-03-019ea9d7-0c12-7350-a247-f798b221c904.jsonl",
+      "call_line": 2372,
+      "output_line": 2376,
+      "call_id": "call_Gbze84ktfG8x2rYerXtjUU2n",
+      "command_line_sha256": "b1ddebc631c29aabea9e44b85ebdf54b82c4323c44d3a17755af1d679e215ef1",
+      "output_line_sha256": "f0592b83dd7bb1658129d67f31ef1206d176d1e6ee30687b83c7bc5c90e1c5f1",
+      "command_sha256": "ee4332476947ec98fe4c69bc08f6ded1d58d67f9b77a94c2fc9e566307d2b458",
+      "command_excerpts": [
+        "sed -n '1,20p' /Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/model_enhancement_v3_inter_short_e50_0710/leaderboard/test_summary.csv"
+      ],
+      "successful_exit": true,
+      "output_has_numeric_rows": true,
+      "output_metric_field_names": [
+        "mean_test_dt_mae",
+        "mean_test_mark_acc",
+        "mean_test_nll",
+        "mean_test_nll_marker",
+        "mean_test_nll_steps",
+        "mean_test_nll_time",
+        "mean_test_qty_mae",
+        "mean_test_score",
+        "mean_test_total",
+        "mean_test_value_mae"
+      ],
+      "metric_values_included": false,
+      "finding": "test metric file read and returned to assistant"
+    },
+    {
+      "timestamp_utc": "2026-07-11T23:33:18.396Z",
+      "timestamp_kst": "2026-07-12T08:33:18.396000+09:00",
+      "source_log": "/Users/igwanhyeong/.codex/sessions/2026/06/09/rollout-2026-06-09T09-45-03-019ea9d7-0c12-7350-a247-f798b221c904.jsonl",
+      "call_line": 2533,
+      "output_line": 2537,
+      "call_id": "call_3B8Wt2NCGYOqSBco6OFhILyB",
+      "command_line_sha256": "f3fa27f04e3078fc065e1e5d99e98e87c2c9a9965e07b20191c9266970ce0de8",
+      "output_line_sha256": "665be22e5100bcfca08655f5859c0d04510d5783fae17095c05777dcc46802f2",
+      "command_sha256": "1f9c2c86383a3b59dbeb72d2aa68dcba13bc73215d71fa711ca75677c7a02e51",
+      "command_excerpts": [
+        "sed -n '1,80p' /Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/model_enhancement_v3b_taxi_multiseed_e50_0710/leaderboard/test_summary.csv"
+      ],
+      "successful_exit": true,
+      "output_has_numeric_rows": true,
+      "output_metric_field_names": [
+        "mean_test_dt_mae",
+        "mean_test_mark_acc",
+        "mean_test_nll",
+        "mean_test_nll_marker",
+        "mean_test_nll_steps",
+        "mean_test_nll_time",
+        "mean_test_qty_mae",
+        "mean_test_score",
+        "mean_test_total",
+        "mean_test_value_mae"
+      ],
+      "metric_values_included": false,
+      "finding": "test metric file read and returned to assistant"
+    }
+  ],
+  "assistant_message_evidence": [
+    {
+      "timestamp_utc": "2026-07-02T23:12:31.200Z",
+      "source_log": "/Users/igwanhyeong/.codex/sessions/2026/04/03/rollout-2026-04-03T18-59-32-019d52c8-9e40-7af2-a98c-09797975c419.jsonl",
+      "line": 12894,
+      "raw_line_sha256": "1f74a6a8c24f9745cb0f4189adb9b42bdf0bb21e8dd6830b92d9d7d01303ddb5",
+      "role": "assistant",
+      "verbatim_excerpt_without_performance_values": "test 기준으로도 같은 방향입니다.",
+      "human_physically_read_proven": false
+    },
+    {
+      "timestamp_utc": "2026-07-10T04:46:12.788Z",
+      "source_log": "/Users/igwanhyeong/.codex/sessions/2026/06/09/rollout-2026-06-09T09-45-03-019ea9d7-0c12-7350-a247-f798b221c904.jsonl",
+      "line": 2290,
+      "raw_line_sha256": "6f44e458cf7d71b993d7738707d77085816f0f515741e4f3ebc05e8ea1f9a4b3",
+      "role": "assistant",
+      "verbatim_excerpt_without_performance_values": "수치 대조 결과, primary `best_val_nll` test metric은 프롬프트와 artifact가 일치합니다. 로그 에러 패턴 검색도 매칭이 없어서 정상 완료 근거로 문서에 넣겠습니다.",
+      "human_physically_read_proven": false
+    },
+    {
+      "timestamp_utc": "2026-07-10T04:56:24.624Z",
+      "source_log": "/Users/igwanhyeong/.codex/sessions/2026/06/09/rollout-2026-06-09T09-45-03-019ea9d7-0c12-7350-a247-f798b221c904.jsonl",
+      "line": 2380,
+      "raw_line_sha256": "806e51f21a1efe0e610ddf9d5c791d212a9bf5cda2f44e42aa4f790314f57a3d",
+      "role": "assistant",
+      "verbatim_excerpt_without_performance_values": "Intermittent의 primary test metrics도 artifact와 프롬프트가 일치합니다. 이제 validation checkpoint, scale-wise, artifact integrity만 짧게 확인하고 Notion 교체문을 만들겠습니다.",
+      "human_physically_read_proven": false
+    },
+    {
+      "timestamp_utc": "2026-07-10T05:00:55.155Z",
+      "source_log": "/Users/igwanhyeong/.codex/sessions/2026/06/09/rollout-2026-06-09T09-45-03-019ea9d7-0c12-7350-a247-f798b221c904.jsonl",
+      "line": 2423,
+      "raw_line_sha256": "98f6e91e6b3536b4ac81d03278024b4f981d8582d30b65c7d9684a303c1e832f",
+      "role": "assistant",
+      "verbatim_excerpt_without_performance_values": "- Intermittent와 Taxi의 `best_val_nll` checkpoint 기준 held-out test 결과 통합 표 추가",
+      "human_physically_read_proven": false
+    }
+  ],
+  "manifest_links": [
+    {
+      "manifest": "search_artifacts/insta_ablation_baseline_e200/experiment_manifest.json",
+      "sha256": "b73261b1f2546fb85e6fde86b85221e45bc7ad74cc6697163da74c38d6bfad8f",
+      "dataset_specs_allowlisted": [
+        {
+          "name": "insta_market_basket",
+          "parquet_path": "/home/leekwanhyeong/workspace/paper_research/sample_data/insta_market_basket/instacart_marked_target_df.parquet",
+          "split_manifest_path": "/home/leekwanhyeong/workspace/paper_research/sample_data/insta_market_basket/instacart_marked_target_split_manifest.json",
+          "data_sha256": null,
+          "split_manifest_sha256": null
+        }
+      ]
+    },
+    {
+      "manifest": "search_artifacts/model_enhancement_v3_taxi_short_e50_0710/experiment_manifest.json",
+      "sha256": "4f0109b5536a05d94a50214efe3df74989df67e584485a0af1106bf2716374b5",
+      "dataset_specs_allowlisted": [
+        {
+          "name": "yellow_trip_hourly",
+          "parquet_path": "/home/leekwanhyeong/workspace/paper_research/sample_data/new_york_taxi/yellow_trip_hourly.parquet",
+          "split_manifest_path": "/home/leekwanhyeong/workspace/paper_research/sample_data/new_york_taxi/yellow_trip_hourly_split_manifest.json",
+          "data_sha256": null,
+          "split_manifest_sha256": null
+        }
+      ]
+    },
+    {
+      "manifest": "search_artifacts/model_enhancement_v2_inter_short_e50_0710/experiment_manifest.json",
+      "sha256": "b0e954335e8907c79e9d5455039cc40e644ba9779d4a6806e8afb7efdf5953f3",
+      "dataset_specs_allowlisted": [
+        {
+          "name": "intermittent",
+          "parquet_path": "/home/leekwanhyeong/workspace/paper_research/sample_data/head_office/marked_target_df.parquet",
+          "split_manifest_path": "/home/leekwanhyeong/workspace/paper_research/sample_data/head_office/marked_target_split_manifest.json",
+          "data_sha256": null,
+          "split_manifest_sha256": null
+        }
+      ]
+    },
+    {
+      "manifest": "search_artifacts/model_enhancement_v3_inter_short_e50_0710/experiment_manifest.json",
+      "sha256": "53184fd172320a2e4fee9af3a0dae5fb3720c47a624168e31f67c5e144f6e0a4",
+      "dataset_specs_allowlisted": [
+        {
+          "name": "intermittent",
+          "parquet_path": "/home/leekwanhyeong/workspace/paper_research/sample_data/head_office/marked_target_df.parquet",
+          "split_manifest_path": "/home/leekwanhyeong/workspace/paper_research/sample_data/head_office/marked_target_split_manifest.json",
+          "data_sha256": null,
+          "split_manifest_sha256": null
+        }
+      ]
+    },
+    {
+      "manifest": "search_artifacts/model_enhancement_v3b_taxi_multiseed_e50_0710/experiment_manifest.json",
+      "sha256": "b7b471d49e7791d958cb50de3ddf63ac20acbc4f81e9c63ffcdd981a264b084e",
+      "dataset_specs_allowlisted": [
+        {
+          "name": "yellow_trip_hourly",
+          "parquet_path": "/home/leekwanhyeong/workspace/paper_research/sample_data/new_york_taxi/yellow_trip_hourly.parquet",
+          "split_manifest_path": "/home/leekwanhyeong/workspace/paper_research/sample_data/new_york_taxi/yellow_trip_hourly_split_manifest.json",
+          "data_sha256": null,
+          "split_manifest_sha256": null
+        }
+      ]
+    }
+  ],
+  "conclusion": {
+    "past_project_test_generation": "confirmed previously",
+    "past_assistant_test_reading_and_reporting": "confirmed by command, return and assistant prose",
+    "past_Instacart_test_based_candidate_ranking": "confirmed",
+    "human_actual_viewing_or_memory": "not inferred from log presence",
+    "current_MLP_selection_using_test": "not established by these historical records",
+    "current_split_exact_byte_or_event_overlap": "not established; shared manifest path alone insufficient"
+  },
+  "effective_dataset_status": {
+    "yellow_trip_hourly": "historical_test_read_and_reported_same_split_manifest_path_exact_overlap_unresolved",
+    "insta_market_basket": "historical_test_read_ranked_and_reported_same_split_manifest_path_exact_overlap_unresolved",
+    "intermittent_frozen_5000": "legacy_intermittent_test_read_and_reported_current_subset_overlap_unresolved",
+    "raf_spare_parts": "no_confirmed_read_in_this_bounded_search_not_evidence_of_nonaccess"
+  },
+  "researcher_reply_preserved": "기억이 불확실함",
+  "requires_repeated_memory_question": false
+}

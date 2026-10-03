@@ -1,0 +1,176 @@
+{
+  "checked_at": "2026-09-10T07:06:23.669212+09:00",
+  "status": "stopped_seed42_gate_failed",
+  "current_job": "seed42_screening_yellow_trip_hourly",
+  "source_revision": "ca8823e688a510e64e7fb81c9dc9d158d4bdfc7c",
+  "contract_sha256": "4fdba2b5d2fc458eae923b7628b9e3a0dfcd72f0de6e79bf5cafb86a0b07cc8e",
+  "error": null,
+  "final_model": "TitanTPP(B)",
+  "held_out_test_evaluated": false,
+  "completed_screenings": {
+    "seed42_screening_insta_market_basket": {
+      "status": "passed",
+      "summary": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/dual_timescale_ca8823e_5090/jobs/seed42_screening_insta_market_basket/runs/titantpp_dual_timescale_memory/count_only_log_regression/seed_42/summary.json",
+      "summary_sha256": "e0e06aeff8164ce8368590ce105b4c992fa1dd36e34c61e8c8382ed3697d6f81",
+      "checkpoint_sha256": "a62f05ca648708672eed86cdaaa94ce6ac0748354436cf1bc4ca527f02f3f0c8",
+      "best_epoch": 72,
+      "completed_epochs": 112,
+      "metrics": {
+        "raw_rmse": 5.86805909849433,
+        "overall_mae": 3.98549719917371,
+        "body_mae": 3.4338327972285,
+        "gt_p99_mae": 21.781940409290307,
+        "clamped_time_loss": 3.214804606758436,
+        "validation_target_count": 503733,
+        "body_target_count": 477507,
+        "stratum_counts": {
+          "le_p50": 247651,
+          "p50_p90": 202534,
+          "p90_p95": 27322,
+          "p95_p99": 20190,
+          "gt_p99": 6036
+        }
+      },
+      "cuda_peak_memory_allocated_bytes": 512052224,
+      "validation_target_identity_sha256": "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8",
+      "validation_target_quantity_sha256": "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184",
+      "held_out_test_evaluated": false,
+      "selected_restore": {
+        "strict_model_restore": true,
+        "finite_forward": true,
+        "optimizer_restore": false,
+        "optimizer_parameters_restored": 0
+      },
+      "last_restore": {
+        "strict_model_restore": true,
+        "finite_forward": true,
+        "optimizer_restore": true,
+        "optimizer_parameters_restored": 46
+      },
+      "checkpoint_state_sha256": "8a1136a654f4de25d5e16e39183c0fb3ec4586e8c0227451d14f693defa5a6aa",
+      "last_checkpoint_sha256": "52e267423e2fa26117488c45e912780de82e3128e058eb8eabbd1b51b47e2e57",
+      "elapsed_seconds": 23793.32988882065,
+      "early_stopping": {
+        "comparison": "earliest_strict_finite_minimum",
+        "formula_by_variant": {
+          "count_only_log_mse_tail_head_only": "time_nll + lambda_log_qty * (log1p_quantity_mse + lambda_tail * tail_raw_huber)",
+          "count_only_log_mse_tail_shared": "time_nll + lambda_log_qty * (log1p_quantity_mse + lambda_tail * tail_raw_huber)",
+          "count_only_log_regression": "raw_quantity_rmse",
+          "count_only_lognormal_k1": "time_nll + lambda_log_qty * (gaussian_nll_on_log1p_quantity + lambda_location_huber * location_huber)",
+          "count_only_quantile_adaptive_log_regression": "raw_quantity_rmse"
+        },
+        "min_epochs": 40,
+        "monitor": "validation_raw_quantity_rmse",
+        "patience": 40,
+        "restore": "best_validation_raw_quantity_rmse"
+      },
+      "source_revision": "ca8823e688a510e64e7fb81c9dc9d158d4bdfc7c",
+      "selected_memory_gains": {
+        "transition_memory.alpha_raw": 1.4432328939437866
+      },
+      "gate": {
+        "status": "passed",
+        "checks": {
+          "raw_rmse": true,
+          "overall_mae": true,
+          "body_mae": true,
+          "gt_p99_mae": true,
+          "clamped_time_loss": true
+        }
+      }
+    },
+    "seed42_screening_yellow_trip_hourly": {
+      "status": "passed",
+      "summary": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/dual_timescale_ca8823e_5090/jobs/seed42_screening_yellow_trip_hourly/runs/titantpp_dual_timescale_memory/count_only_log_regression/seed_42/summary.json",
+      "summary_sha256": "621de3ffdd9c7408ede1abed4e438b7df84bac351874c259e76d187b84d55a56",
+      "checkpoint_sha256": "5f60540ca827f0be84bd57942e70b0bbc203c79adf1042ef3700e207073dab82",
+      "best_epoch": 83,
+      "completed_epochs": 123,
+      "metrics": {
+        "raw_rmse": 78.25542706791491,
+        "overall_mae": 25.048307621614565,
+        "body_mae": 15.738602683477058,
+        "gt_p99_mae": 303.4513140328323,
+        "clamped_time_loss": 10.825869968628675,
+        "validation_target_count": 8268,
+        "body_target_count": 7888,
+        "stratum_counts": {
+          "le_p50": 4364,
+          "p50_p90": 3138,
+          "p90_p95": 386,
+          "p95_p99": 301,
+          "gt_p99": 79
+        }
+      },
+      "cuda_peak_memory_allocated_bytes": 2282563584,
+      "validation_target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+      "validation_target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd",
+      "held_out_test_evaluated": false,
+      "selected_restore": {
+        "strict_model_restore": true,
+        "finite_forward": true,
+        "optimizer_restore": false,
+        "optimizer_parameters_restored": 0
+      },
+      "last_restore": {
+        "strict_model_restore": true,
+        "finite_forward": true,
+        "optimizer_restore": true,
+        "optimizer_parameters_restored": 46
+      },
+      "checkpoint_state_sha256": "14c96d1fedb90808f2de0ee6693769169cd6ffc9de9b183f14efe6e3f6416e26",
+      "last_checkpoint_sha256": "92d8be45b5ced54ae8f525452c85f272a57f78de08f5bdb92d272d8ba536ec05",
+      "elapsed_seconds": 1391.7380857467651,
+      "early_stopping": {
+        "comparison": "earliest_strict_finite_minimum",
+        "formula_by_variant": {
+          "count_only_log_mse_tail_head_only": "time_nll + lambda_log_qty * (log1p_quantity_mse + lambda_tail * tail_raw_huber)",
+          "count_only_log_mse_tail_shared": "time_nll + lambda_log_qty * (log1p_quantity_mse + lambda_tail * tail_raw_huber)",
+          "count_only_log_regression": "raw_quantity_rmse",
+          "count_only_lognormal_k1": "time_nll + lambda_log_qty * (gaussian_nll_on_log1p_quantity + lambda_location_huber * location_huber)",
+          "count_only_quantile_adaptive_log_regression": "raw_quantity_rmse"
+        },
+        "min_epochs": 40,
+        "monitor": "validation_raw_quantity_rmse",
+        "patience": 40,
+        "restore": "best_validation_raw_quantity_rmse"
+      },
+      "source_revision": "ca8823e688a510e64e7fb81c9dc9d158d4bdfc7c",
+      "selected_memory_gains": {
+        "transition_memory.alpha_raw": 1.6375731229782104
+      },
+      "gate": {
+        "status": "failed",
+        "checks": {
+          "raw_rmse": true,
+          "overall_mae": true,
+          "body_mae": true,
+          "gt_p99_mae": true,
+          "clamped_time_loss": false
+        }
+      }
+    }
+  },
+  "completed_epoch": 123,
+  "best_epoch": 83,
+  "best_rmse": 78.25542706791491,
+  "best_mae": 25.048307621614565,
+  "best_legacy_time_loss": 10.825869968628675,
+  "all_finite": true,
+  "train_event_counts": [
+    38393
+  ],
+  "gpu": {
+    "exit_code": 0,
+    "stdout": "NVIDIA GeForce RTX 5090, 0 %, 2 MiB"
+  },
+  "compute": {
+    "exit_code": 0,
+    "stdout": ""
+  },
+  "tmux": {
+    "exit_code": 0,
+    "stdout": "sellm-ai-env: 1 windows (created Mon Aug 24 18:31:43 2026)"
+  },
+  "campaign_log_tail": "ail_raw_huber)\", \"count_only_log_regression\": \"raw_quantity_rmse\", \"count_only_lognormal_k1\": \"time_nll + lambda_log_qty * (gaussian_nll_on_log1p_quantity + lambda_location_huber * location_huber)\", \"count_only_quantile_adaptive_log_regression\": \"raw_quantity_rmse\"}, \"min_epochs\": 40, \"monitor\": \"validation_raw_quantity_rmse\", \"patience\": 40, \"restore\": \"best_validation_raw_quantity_rmse\"}, \"source_revision\": \"ca8823e688a510e64e7fb81c9dc9d158d4bdfc7c\", \"selected_memory_gains\": {\"transition_memory.alpha_raw\": 1.6375731229782104}, \"gate\": {\"status\": \"failed\", \"checks\": {\"raw_rmse\": true, \"overall_mae\": true, \"body_mae\": true, \"gt_p99_mae\": true, \"clamped_time_loss\": false}}}}, \"contract_sha256\": \"4fdba2b5d2fc458eae923b7628b9e3a0dfcd72f0de6e79bf5cafb86a0b07cc8e\", \"source_revision\": \"ca8823e688a510e64e7fb81c9dc9d158d4bdfc7c\", \"manifest_sha256\": \"a2807787fed399a8da14d9033677133964f795959280c1de3cb0a6f6d421ebd6\", \"host_role\": \"5090\", \"held_out_test_evaluated\": false, \"runtime\": {\"python\": \"3.12.13 | packaged by Anaconda, Inc. | (main, Mar 19 2026, 20:20:58) [GCC 14.3.0]\", \"torch\": \"2.11.0+cu130\", \"cuda\": \"13.0\", \"host\": \"RTX5090-server\", \"python_executable\": \"/opt/miniconda3/envs/ai_env/bin/python3.12\"}, \"gpu_preflight\": {\"gpu_name\": \"NVIDIA GeForce RTX 5090\", \"total_vram_mib\": 32607, \"free_vram_mib\": 32110, \"utilization_percent\": 0, \"compute_processes\": []}, \"current_job\": \"seed42_screening_yellow_trip_hourly\", \"final_model\": \"TitanTPP(B)\", \"failed_dataset\": \"yellow_trip_hourly\"}\n"
+}

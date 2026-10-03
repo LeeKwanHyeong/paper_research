@@ -1,0 +1,63 @@
+{
+  "scope": "Finalized Instacart validation results integrated into the existing manuscript",
+  "manuscript_replacements": [
+    {
+      "before": "Results include the completed RAF eight-model, three-seed comparison and the additional-comparator observation at 08:59 KST. The remaining Instacart comparator results will be integrated after completion.",
+      "after": "The four-dataset comparison is complete: TitanTPP and six common-head TPP encoders each have three-seed validation results, including the finalized Instacart S2P2 and AttNHP runs. The RAF normalization variant is reported separately. Source and checkpoint audits are complete for the included runs."
+    },
+    {
+      "before": "These RAF, Instacart, and time-likelihood results reveal where the benefits are limited, providing a basis for understanding the trade-off between quantity accuracy, duration modeling, and computation.",
+      "after": "On Instacart, small MAE gains over S2P2 and AttNHP accompany higher RMSE. Together, these results characterize the trade-off between quantity accuracy, duration modeling, and computation across demand settings."
+    },
+    {
+      "before": "The additional Instacart panel remains incomplete at the observation cutoff.",
+      "after": "The Instacart panel includes all six external encoders across the same three seeds."
+    },
+    {
+      "before": "The completed core, 5080 additional-comparator, and RAF artifacts have passed source and checkpoint integrity checks;",
+      "after": "The completed core, additional-comparator, and RAF artifacts have passed source and checkpoint integrity checks;"
+    },
+    {
+      "before": "All reported means use three completed seeds. The two additional Instacart groups await completion at the stored observation cutoff.",
+      "after": "All 28 dataset–model groups contain three completed seeds, giving 84 runs in the common comparison."
+    },
+    {
+      "before": "Lower is better. “Pending” marks incomplete three-seed groups at the 1 October 2026, 08:59 KST observation cutoff; it is not a partial-seed mean.",
+      "after": "Lower is better. All dataset–model groups are complete."
+    },
+    {
+      "before": "| Instacart | S2P2 | Pending | Pending | Pending |",
+      "after": "| Instacart | S2P2 | 3.9987 ± 0.0063 | 5.8523 ± 0.0150 | 2.7970 ± 0.0014 |"
+    },
+    {
+      "before": "| Instacart | AttNHP | Pending | Pending | Pending |",
+      "after": "| Instacart | AttNHP | 3.9958 ± 0.0021 | 5.8648 ± 0.0194 | 2.8080 ± 0.0028 |"
+    },
+    {
+      "before": "On Instacart, TitanTPP’s mean MAE is approximately 0.16% higher than RMTPP’s, and its RMSE is approximately 0.42% higher than THP’s in the completed original panel. The additional Instacart groups remain incomplete at the report cutoff, so their three-seed means are pending.",
+      "after": "On Instacart, RMTPP achieves the lowest mean MAE, while S2P2 achieves the lowest mean RMSE and time NLL. TitanTPP’s mean MAE is 0.16% higher than RMTPP’s. Relative to S2P2 and AttNHP, TitanTPP reduces mean MAE by 0.18% and 0.11%, but increases mean RMSE by 0.52% and 0.31%, respectively. TitanTPP has lower MAE in two of three paired seeds against each added comparator, whereas both comparators have lower RMSE in all three seeds. S2P2 also has lower time NLL than TitanTPP in every seed.\n\nQuantity-stratified errors account for the MAE–RMSE trade-off against S2P2. Targets with quantities at most 20 make up 89.37% of the Instacart validation set, and TitanTPP has lower mean MAE and RMSE in each of the two corresponding quantity bins. S2P2 performs better in all three bins above 20. For quantities above 35, mean RMSE is 24.6419 for TitanTPP and 23.4686 for S2P2. The larger squared errors above 20 outweigh TitanTPP’s gains on smaller quantities, producing a higher overall RMSE despite its lower MAE."
+    },
+    {
+      "before": "Train-only characterization suggests one explanation for this difference.",
+      "after": "Train-only characterization offers a possible explanation for the limited benefit of history correction on Instacart."
+    },
+    {
+      "before": "Internal evidence: [complete comparison]",
+      "after": "Internal evidence: [Taxi, Intermittent, and RAF comparison]"
+    },
+    {
+      "before": ", [RAF per-seed and stratified results]",
+      "after": ", [final Instacart comparison and audit](/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_instacart_final_analysis_20261001_v1/report.md), [RAF per-seed and stratified results]"
+    },
+    {
+      "before": "The remaining Instacart comparator results are needed to complete the cross-dataset evaluation. RAF shows a small RMSE difference and a reversal under MAE, rather than a uniform gain across quantity metrics.",
+      "after": "The quantity gains vary across datasets: RAF shows a small RMSE difference and a reversal under MAE, while Instacart shows small MAE gains over the added comparators alongside higher RMSE in every paired seed."
+    },
+    {
+      "before": "- [RAF 24-condition results and audit]",
+      "after": "- [Final Instacart three-seed results, selected/last comparisons, and original-file audit](/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_instacart_final_analysis_20261001_v1/report.md).\n- [RAF 24-condition results and audit]"
+    }
+  ],
+  "source_analysis": "reports/titantpp_instacart_final_analysis_20261001_v1/analysis.json",
+  "source_analysis_sha256": "60b9ffcac50f7c0988780a7a1c470a8e7f5be1c5d5b9cb36eeeaa8e44949d98f"
+}

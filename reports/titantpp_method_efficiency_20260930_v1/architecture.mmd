@@ -1,0 +1,18 @@
+flowchart TB
+    H["Observed events: gap + quantity"] --> X["log1p inputs + linear projection + position"]
+    X --> E1["Causal encoder 1: d=64, 4 heads"]
+    P1["16 persistent K/V vectors"] --> E1
+    E1 --> ADD["Add history residual"]
+    E1 --> PAIR["Current + immediate observed predecessor"]
+    PAIR --> MLP["8 branches: 128 → 4 → 64, GELU"]
+    MASK["History-length availability; fixed divisor 8"] --> MLP
+    MLP --> ADD
+    ADD --> E2["Causal encoder 2"]
+    P2["16 persistent K/V vectors"] --> E2
+    E2 --> R["Cosine top-4; mean raw prototypes; residual"]
+    BANK["64 static prototypes"] --> R
+    R --> Z["Last observed state shared by both heads"]
+    Z --> Q["Quantity: softplus → expm1; log-MSE"]
+    Z --> T["Duration: conditional lognormal; integer-bin NLL"]
+    TARGET["Withheld next-event target"] -. "loss only; no encoder access" .-> Q
+    TARGET -. "loss only; no encoder access" .-> T

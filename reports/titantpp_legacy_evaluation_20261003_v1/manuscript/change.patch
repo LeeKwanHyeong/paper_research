@@ -1,0 +1,594 @@
+--- before.tex
++++ main.tex
+@@ -1,10 +1,11 @@
+ % Named working draft, 3 October 2026.
+-% Evidence: completed four-dataset validation study and nonlearned baselines.
++% Evidence: completed four-dataset validation study plus 108-condition existing-test reevaluation.
+ % Appendix A reports all 24 audited structural-control fits over three seeds.
+ % Source: reports/titantpp_structural3_final_audit_20261003_v1/comparison.json;
+ % this reuses the prior completed13/completed22 audits and original MLP records.
+ % Independent-evaluation design: reports/titantpp_independent_final_evaluation_design_20261003_v1;
+-% population eligibility and complete checkpoint binding remain outstanding.
++% Existing-split reevaluation: reports/titantpp_legacy_evaluation_20261003_v1;
++% all 108 selected checkpoints are bound; this is not an untouched independent assessment.
+ % A100 exploratory candidates and Deep Renewal remain in separate research records.
+ % PAKDD 2027 page limit has not yet been announced.
+ % Standalone source: figures and bibliography are embedded below.
+@@ -14,6 +15,7 @@
+ \usepackage{newtxtext}
+ \usepackage[varvw]{newtxmath}
+ \usepackage{booktabs,array}
++\usepackage{graphicx}
+ \usepackage{tikz}
+ \usetikzlibrary{arrows.meta,positioning,fit,calc}
+ \usepackage[hidelinks]{hyperref}
+@@ -42,26 +44,26 @@
+ \maketitle
+ 
+ \begin{abstract}
+-Predicting demand events requires estimating both their timing and their
+-quantity from an irregular history. We introduce TitanTPP, a compact event
+-encoder with a bottleneck history correction between two causal attention
+-blocks. The correction combines current and immediately preceding contextual
+-states, while learned static banks supply additional context without online
+-parameter updates. A common-input, common-head comparison covers six temporal
+-point process encoders across four datasets and three seeds. On the development
+-validation partitions, TitanTPP reduces mean quantity RMSE by 15.85\% on Taxi
+-and 34.39\% on Intermittent relative to the strongest external encoder on each
+-dataset. The improvement over the last-quantity baseline on Intermittent is
+-smaller, at 2.04\% in RMSE, and that baseline achieves lower MAE. RAF exhibits
+-a small RMSE gain with an MAE trade-off, while Instacart favors external
+-encoders on RMSE. Parameter-matched controls support the direct predecessor
+-path most clearly on Taxi but do not establish a general advantage for the
+-original branch-availability rule. Matched batch measurements against a Titans-MAC adapter
+-indicate that the MAC adapter requires 5.58--5.74 times TitanTPP's
+-training-step compute time. TitanTPP reduces peak allocated training memory by
+-approximately 75.5\%, while its evaluation memory is higher. These results
+-support conditional quantity-prediction benefits from compact history
+-correction and lower training costs within the measured batch workloads.
++Predicting demand events requires estimating both timing and quantity from
++an irregular history. We introduce TitanTPP, a compact event encoder with
++a bottleneck history correction between two causal attention blocks. The
++correction combines adjacent contextual states, while learned static banks
++supply context without online parameter updates. We compare six common-head
++temporal point process encoders on four datasets and three seeds, separating
++development validation from a frozen reevaluation of existing test splits.
++These previously accessed splits do not provide an untouched independent
++assessment. On Intermittent test targets, TitanTPP reduces mean quantity RMSE
++by 14.12\% relative to the strongest external encoder and by 13.88\% relative
++to the last-quantity rule. S2P2 achieves lower mean RMSE on Taxi and Instacart;
++the RAF difference is small and its conditional interval includes zero.
++Parameter-matched controls support the direct predecessor path on Taxi and
++Intermittent, but all-available branches further reduce RMSE on both datasets.
++Duration likelihood exhibits different rankings. Matched batch measurements
++show that a Titans-MAC adapter uses 5.58--5.74 times TitanTPP's
++training-step compute time. TitanTPP uses approximately 75.5\% less
++allocated training memory, alongside higher evaluation memory. The evidence supports conditional
++quantity benefits from compact history correction and lower training costs
++within the measured workloads, rather than uniform predictive superiority.
+ \keywords{Temporal point processes \and Event quantity prediction \and History encoding \and Intermittent demand}
+ \end{abstract}
+ 
+@@ -92,13 +94,15 @@
+ during inference.
+ 
+ Our evaluation separates quantity accuracy, duration likelihood, and
+-computational cost. Under shared inputs, prediction heads, and training rules,
+-\method\ improves quantity MAE and RMSE over six TPP encoders in every paired
+-seed on Taxi and Intermittent. The gains are smaller on RAF and do not extend
+-to the best Instacart RMSE. Simple quantity baselines further qualify the
+-Intermittent result: repeating the last quantity achieves lower MAE, whereas
+-\method\ achieves lower RMSE. Matched batch measurements provide a separate
+-comparison with a Titans-MAC event adapter.
++computational cost. Development validation favors \method\ over the six
++TPP encoders on Taxi and Intermittent. A subsequent frozen reevaluation of
++existing test splits retains the Intermittent quantity advantage, including
++over the last-quantity rule, but S2P2 has lower mean RMSE on Taxi and
++Instacart. RAF yields a small difference with an interval spanning zero.
++The distinction matters because the existing splits have prior research
++access and cannot be presented as untouched independent evidence.
++Matched batch measurements separately compare the computational paths of
++\method\ and a Titans-MAC event adapter.
+ 
+ Our contributions are as follows.
+ \begin{enumerate}
+@@ -108,9 +112,10 @@
+ \item We evaluate next-event quantity prediction across four datasets and
+ three seeds against six common-head TPP encoders and two nonlearned baselines.
+ Correction-removal experiments and 24 completed parameter-matched control
+-fits examine adjacent-state coupling and branch availability separately. The comparisons
+-identify substantial quantity gains over the six learned encoders on Taxi
+-and Intermittent, with smaller or reversed gains in other demand settings.
++fits examine adjacent-state coupling and branch availability separately.
++The 108-condition existing-test reevaluation reports all fixed models,
++conditional uncertainty, and ranking reversals without reselecting the
++representative architecture or checkpoints.
+ \item We characterize computational cost against a Titans-MAC adapter using
+ matched input batches. The measurements distinguish lower training compute
+ and memory from the higher allocation observed during evaluation.
+@@ -358,27 +363,37 @@
+ targets. Table~\ref{tab:data} summarizes the target populations.
+ 
+ \begin{table}[t]
+-\caption{Frozen train and validation targets. Maximum rows include the
++\caption{Frozen train, development-validation, and existing test targets. Maximum rows include the
+ withheld target; lookbacks follow the dataset's recorded units.}
+ \label{tab:data}\centering\small
+-\begin{tabular}{lrrrl}
++\begin{tabular}{lrrrrl}
+ \toprule
+-Dataset & Train & Validation & Max. rows & Lookback\\
+-\midrule
+-Taxi & 38,393 & 8,268 & 256 & 168 hours\\
+-Intermittent & 393,824 & 86,285 & 256 & 520 weeks\\
+-Instacart & 1,991,192 & 503,733 & 64 & 52 days\\
+-RAF & 25,779 & 6,690 & 84 & 84 months\\
++Dataset & Train & Validation & Test & Max. rows & Lookback\\
++\midrule
++Taxi & 38,393 & 8,268 & 8,327 & 256 & 168 hours\\
++Intermittent & 393,824 & 86,285 & 88,019 & 256 & 520 weeks\\
++Instacart & 1,991,192 & 503,733 & 578,387 & 64 & 52 days\\
++RAF & 25,779 & 6,690 & 5,226 & 84 & 84 months\\
+ \bottomrule
+ \end{tabular}
+ \end{table}
+ 
+ Frozen splits follow event order within each sequence, approximately
+-70/15/15. The comparisons in this draft concern development validation
+-partitions, which also informed architecture choices. Taxi sequence
++70/15/15. Development comparisons use validation partitions that also
++informed architecture choices. We separately reevaluate the existing test
++splits under a frozen protocol. Prior research access prevents treating
++these splits as untouched independent evaluation data. Taxi sequence
+ selection and Intermittent filtering depend on full observed sequence
+-lengths, defining retrospective cohorts. We distinguish these comparisons
+-from an independent final evaluation in Sect.~\ref{sec:limitations}.
++lengths, defining retrospective cohorts. These limits apply to the
++reevaluation as well as the development comparisons.
++
++Test prediction is chronological and one-step within each sequence.
++Only earlier observations within the frozen time window and length limit
++enter a forecast. An earlier test event may enter a later history after
++its own prediction and observation; the current target and future events
++cannot condition the forecast. Model parameters and train-derived
++transformations remain fixed. No retraining, train--validation refit, or
++test-fitted preprocessing is performed.
+ 
+ \subsection{Comparators and Controls}
+ The common-head panel contains RMTPP, NHP, THP, SAHP, S2P2, and AttNHP.
+@@ -434,9 +449,36 @@
+ identities are retained. All three metrics refer to the RMSE-selected
+ checkpoint rather than separate metric-specific minima.
+ 
++The existing-test reevaluation contains 108 selected-checkpoint conditions:
++the seven-model main panel and two structural controls on four datasets
++at all three seeds. The representative architecture and earliest
++minimum-validation-RMSE checkpoint identities were frozen before this
++reevaluation. Two deterministic quantity rules each contribute one
++prediction vector per dataset. Their seed dispersion and duration NLL
++are undefined.
++
++We estimate evaluation-sample uncertainty conditional on the three fixed
++trained fits. Paired bootstrap weights apply to every model and seed;
++seeds themselves are not resampled. Each draw aggregates error sums and
++target counts before computing seed-specific metrics and their mean
++difference. Predictions are not ensembled. The resampling units are entire
++sites for Intermittent, users for Instacart, and parts for RAF. Taxi uses
++circular blocks of 168 shared calendar hours across spatial cells.
++Eligible analyses use 10,000 draws with fixed random-number settings.
++
++RMTPP remains the validation-selected RMSE anchor for Taxi and
++Intermittent, and S2P2 for Instacart and RAF. We report pointwise 95\%
++percentile intervals and nominal 98.75\% intervals for this fixed family
++of four anchor contrasts. Other comparisons are descriptive. The primary
++Taxi interval requires at least two 168-hour blocks; shorter records do
++not qualify. Separate 24/336-hour and whole-cell sensitivities cannot
++replace an unavailable primary interval. Intermittent whole-series
++resampling is likewise a sensitivity to the primary whole-site analysis.
++Intervals with fewer than 20 nominal units are interpreted descriptively.
++
+ \section{Results}
+-\subsection{Comparison with TPP Encoders}
+-Table~\ref{tab:main} reports the complete four-dataset comparison. On Taxi
++\subsection{Development Validation: TPP Encoders}
++Table~\ref{tab:main} reports the complete four-dataset development-validation comparison. On Taxi
+ and Intermittent, \method\ achieves lower quantity MAE and RMSE than each
+ external encoder in all 36 paired comparisons (two datasets, six comparators,
+ three seeds). RMTPP is the strongest external model on the mean quantity
+@@ -506,7 +548,7 @@
+ lower RMSE in every paired seed. The improvement observed on Taxi and
+ Intermittent therefore does not transfer uniformly to basket-size prediction.
+ 
+-\subsection{Comparison with Simple Quantity Rules}
++\subsection{Development Validation: Simple Quantity Rules}
+ Table~\ref{tab:naive} places the learned-model results beside two direct
+ history summaries. \method\ improves both quantity metrics over both rules
+ on Taxi, Instacart, and RAF. Intermittent is different. Repeating the last
+@@ -549,8 +591,8 @@
+ reported comparison preserves that distinction instead of selecting a
+ different checkpoint for each metric.
+ 
+-\subsection{Effect of the History Correction}
+-Removing the correction yields the B control in Table~\ref{tab:ablation}.
++\subsection{Development Validation: History Correction}
++Removing the correction yields the validation-only B control in Table~\ref{tab:ablation}.
+ Adding the 6,144-parameter path reduces mean MAE/RMSE by 10.89\%/11.93\% on
+ Taxi and 7.68\%/6.04\% on Intermittent. On Instacart, MAE falls by about
+ 0.04\% and RMSE rises by about 0.05\%. Mean time NLL increases on all three
+@@ -558,7 +600,7 @@
+ datasets that exhibit the largest gains over the external encoders.
+ 
+ \begin{table}[t]
+-\caption{Correction-removal control, mean $\pm$ sample standard deviation
++\caption{Correction-removal control on development validation, mean $\pm$ sample standard deviation
+ over three seeds. B retains the causal encoder and both types of learned
+ bank, but omits the intermediate correction.}
+ \label{tab:ablation}\centering\small
+@@ -645,6 +687,147 @@
+ substantial within-series information. The error decomposition identifies
+ the realized gains and losses; the four-dataset association provides a
+ post hoc interpretation of their variation.
++
++\subsection{Frozen Reevaluation of Existing Test Splits}\label{sec:legacy-test}
++All 108 selected-checkpoint conditions completed on the same RTX 5080.
++The evaluator verified target identities, observed-history summaries, and
++parameter immutability across models. Table~\ref{tab:legacy-test-main} reports the
++seven-model main panel; Appendix~\ref{app:extension} adds both structural
++controls. The development-validation results above are retained separately.
++
++On Intermittent, \method\ has the lowest mean MAE and RMSE in the main
++panel. Its RMSE is 2.7612 versus 3.2154 for S2P2, a 14.12\% reduction.
++S2P2 is the lowest-RMSE external encoder on all four test partitions, which
++differs from the validation-selected anchor on Taxi and Intermittent.
++On Taxi, S2P2 has lower mean MAE (36.8359 versus 37.2005) and RMSE
++(115.5415 versus 118.6237); \method's RMSE is 2.67\% higher.
++Its 51.91\% reduction relative to the fixed RMTPP anchor therefore does
++not establish superiority over the full test comparator panel.
++On Instacart, \method's RMSE is 0.57\% higher than S2P2's, while RMTPP
++has the lowest MAE. On RAF, S2P2's RMSE of 39.7729 is only 0.06\% below
++\method's 39.7951, and RMTPP again has lower MAE. These point comparisons
++do not alter the frozen representative or checkpoint selection.
++
++Duration likelihood does not follow the quantity ranking. On Intermittent,
++\method's mean time NLL increases from 0.4971 on validation to 15.3778
++on the existing test targets; THP achieves 8.3263 on those test targets.
++The mean NLL of \method\ also exceeds S2P2's on all four datasets.
++We report these adverse timing results without attributing the change to
++an untested mechanism.
++
++\begin{table}[p]
++\centering\small
++\caption{Retrospective reevaluation of existing test splits, not an untouched independent evaluation. Learned-model entries are mean $\pm$ sample standard deviation over the three fixed seeds. The representative and six common-head external encoders are shown; structural controls appear in Appendix~\ref{app:extension}.}
++\label{tab:legacy-test-main}
++\begin{tabular}{lrrr}
++\toprule
++Model & MAE & RMSE & Time NLL \\
++\midrule
++\multicolumn{4}{l}{\textit{Taxi}}\\
++TitanTPP & $37.2005 \pm 4.9741$ & $118.6237 \pm 19.5696$ & $1.0292 \pm 0.2727$ \\
++RMTPP & $65.2770 \pm 16.1035$ & $246.6473 \pm 82.5064$ & $0.9156 \pm 0.1604$ \\
++THP & $58.3486 \pm 11.0759$ & $202.1740 \pm 36.2182$ & $0.6891 \pm 0.0091$ \\
++NHP & $116.3324 \pm 9.7128$ & $381.0762 \pm 26.2349$ & $0.6836 \pm 0.0018$ \\
++SAHP & $40.9008 \pm 4.9240$ & $148.2495 \pm 30.2157$ & $0.7062 \pm 0.0189$ \\
++S2P2 & $36.8359 \pm 2.3815$ & $115.5415 \pm 6.4023$ & $0.6900 \pm 0.0115$ \\
++AttNHP & $38.7528 \pm 1.0565$ & $131.3198 \pm 2.4279$ & $0.7022 \pm 0.0085$ \\
++\midrule
++\multicolumn{4}{l}{\textit{Intermittent}}\\
++TitanTPP & $1.1335 \pm 0.0195$ & $2.7612 \pm 0.0793$ & $15.3778 \pm 1.7331$ \\
++RMTPP & $1.6923 \pm 0.1808$ & $4.2115 \pm 0.2126$ & $24.1327 \pm 11.9947$ \\
++THP & $1.3123 \pm 0.0270$ & $3.4839 \pm 0.1232$ & $8.3263 \pm 1.2297$ \\
++NHP & $2.3278 \pm 0.1593$ & $5.9065 \pm 0.8507$ & $18.5828 \pm 15.7636$ \\
++SAHP & $3.6770 \pm 0.6892$ & $12.2524 \pm 1.5182$ & $14.9114 \pm 2.7259$ \\
++S2P2 & $1.3197 \pm 0.0264$ & $3.2154 \pm 0.2743$ & $13.6738 \pm 4.5922$ \\
++AttNHP & $4.3493 \pm 0.7011$ & $12.2891 \pm 2.6891$ & $19.4867 \pm 2.0468$ \\
++\midrule
++\multicolumn{4}{l}{\textit{Instacart}}\\
++TitanTPP & $4.0637 \pm 0.0030$ & $5.9802 \pm 0.0047$ & $2.8314 \pm 0.0105$ \\
++RMTPP & $4.0541 \pm 0.0059$ & $5.9691 \pm 0.0227$ & $2.8328 \pm 0.0088$ \\
++THP & $4.0754 \pm 0.0083$ & $5.9550 \pm 0.0141$ & $2.8226 \pm 0.0055$ \\
++NHP & $4.5898 \pm 0.0360$ & $6.8962 \pm 0.0630$ & $2.8465 \pm 0.0109$ \\
++SAHP & $4.0712 \pm 0.0065$ & $5.9742 \pm 0.0118$ & $2.8241 \pm 0.0057$ \\
++S2P2 & $4.0746 \pm 0.0096$ & $5.9465 \pm 0.0113$ & $2.8154 \pm 0.0021$ \\
++AttNHP & $4.0635 \pm 0.0020$ & $5.9514 \pm 0.0235$ & $2.8314 \pm 0.0056$ \\
++\midrule
++\multicolumn{4}{l}{\textit{RAF}}\\
++TitanTPP & $10.0563 \pm 0.0875$ & $39.7951 \pm 0.0750$ & $4.0468 \pm 0.4139$ \\
++RMTPP & $9.9063 \pm 0.0370$ & $40.4632 \pm 0.2416$ & $3.8998 \pm 0.3550$ \\
++THP & $10.1230 \pm 0.2305$ & $40.5551 \pm 0.2953$ & $3.4563 \pm 0.0246$ \\
++NHP & $9.9691 \pm 0.0932$ & $42.1763 \pm 0.3005$ & $3.5902 \pm 0.1385$ \\
++SAHP & $10.2616 \pm 0.1032$ & $41.0493 \pm 0.1561$ & $4.2326 \pm 0.1553$ \\
++S2P2 & $10.0958 \pm 0.1455$ & $39.7729 \pm 0.1609$ & $3.7415 \pm 0.0883$ \\
++AttNHP & $9.9839 \pm 0.0284$ & $40.2036 \pm 0.2044$ & $4.9508 \pm 0.1657$ \\
++\bottomrule
++\end{tabular}
++\end{table}
++
++The simple rules in Table~\ref{tab:legacy-test-simple} provide a second
++reference. On Intermittent, \method\ reduces MAE/RMSE relative to repeating
++the last quantity by 10.29\%/13.88\%. This reverses the validation MAE
++ordering and illustrates why the two partitions must remain distinct.
++On Instacart, its RMSE essentially equals the window mean (both round to
++5.9802); the paired difference is $-0.000044$, with pointwise 95\% interval
++$[-0.008345,0.008408]$. On RAF, the window mean yields lower point-estimate
++RMSE (39.3579) than any of the nine learned configurations, with higher
++MAE than \method. The TitanTPP-minus-window-mean RMSE interval spans zero
++($[-1.2962,2.0974]$). No uniform advantage over simple rules follows.
++
++\begin{table}[t]
++\centering\small
++\caption{Deterministic quantity references on the identical legacy-test targets and observed windows. Each reference has one prediction vector; seed dispersion and time NLL are not defined.}
++\label{tab:legacy-test-simple}
++\begin{tabular}{llrr}
++\toprule
++Dataset & Model & MAE & RMSE \\
++\midrule
++Taxi & Last quantity & 42.6110 & 137.5822 \\
++Taxi & Window mean & 120.9687 & 364.6521 \\
++Intermittent & Last quantity & 1.2636 & 3.2063 \\
++Intermittent & Window mean & 5.7517 & 18.8566 \\
++Instacart & Last quantity & 5.0746 & 7.5102 \\
++Instacart & Window mean & 4.1174 & 5.9802 \\
++RAF & Last quantity & 12.2036 & 45.8550 \\
++RAF & Window mean & 11.3012 & 39.3579 \\
++\bottomrule
++\end{tabular}
++\end{table}
++
++Table~\ref{tab:legacy-test-anchors} retains the four contrasts fixed
++before this reevaluation. The primary resampling populations contain 50
++Intermittent sites, 196,615 Instacart users, and 3,307 RAF parts. The
++nominal adjusted intervals favor \method\ over the Intermittent RMTPP
++anchor, favor S2P2 on Instacart, and include zero on RAF. These intervals
++condition on the trained fits and do not correct for prior development or
++research access. Intermittent's descriptive comparison with the test-best
++external encoder, S2P2, yields a pointwise 95\% RMSE-difference interval
++of $[-0.5676,-0.3343]$, outside the four-anchor adjusted family.
++
++Taxi supplies only 176 shared calendar hours, fewer than the required two
++168-hour blocks. Its primary confidence interval is therefore unavailable;
++no significance conclusion is drawn from the mean ranking. The 24-hour
++sensitivity has only seven nominal blocks and is descriptive. Whole-cell
++resampling conditions on the observed temporal path and cannot replace the
++primary temporal analysis; the 336-hour analysis is also unavailable.
++
++\begin{table}[t]
++\centering\small
++\caption{Existing-test RMSE difference, TitanTPP minus the fixed
++validation-selected anchor. Negative values favor TitanTPP. Intervals are
++conditional on the three fixed fits; 98.75\% intervals adjust the four
++anchor contrasts. Taxi's primary interval is unavailable.}
++\label{tab:legacy-test-anchors}
++\begin{tabular}{llrrr}
++\toprule
++Dataset & Anchor & $\Delta$ RMSE & 95\% CI & 98.75\% CI\\
++\midrule
++Taxi & RMTPP & $-128.0236$ & --- & ---\\
++Intermittent & RMTPP & $-1.4503$ & $[-1.7431,-1.1581]$ & $[-1.8271,-1.0858]$\\
++Instacart & S2P2 & $0.0336$ & $[0.0291,0.0380]$ & $[0.0278,0.0392]$\\
++RAF & S2P2 & $0.0222$ & $[-0.6079,0.5925]$ & $[-0.8063,0.7222]$\\
++\bottomrule
++\end{tabular}
++\end{table}
+ 
+ \section{Computational Efficiency}
+ \subsection{Matched Measurement Protocol}
+@@ -729,74 +912,80 @@
+ separately for training and evaluation.
+ 
+ \section{Discussion and Limitations}\label{sec:limitations}
+-The results favor compact history correction for quantity prediction on Taxi
+-and Intermittent, with smaller or reversed gains elsewhere. The last-quantity
+-baseline's lower Intermittent MAE is particularly informative: outperforming
+-the learned encoder panel does not establish superiority over every useful
+-demand predictor. Duration likelihood also follows a different ranking.
+-The model is therefore best characterized through its quantity--timing--cost
+-trade-offs across demand settings.
+-
+-The reported partitions informed architecture development. A separate
+-final-evaluation design fixes the representative architecture and comparison
+-panel and specifies paired resampling of whole entities or, for Taxi,
+-shared calendar-time blocks, retaining all three seeds together. Execution
+-remains pending verification of an
+-eligible evaluation population and binding of all checkpoint originals.
+-Prior access to legacy test artifacts prevents treating those data as
+-automatically untouched. The three-seed means, sample standard deviations,
+-and paired wins reported here describe repeatability; they do not constitute
+-a significance test or an independent assessment of generalization.
+-
+-The B comparison changes capacity as well as the correction path.
+-Parameter-matched controls provide the strongest evidence for direct
+-adjacent-state coupling on Taxi, a less consistent quantity benefit on
+-Intermittent, and a small benefit on RAF; Instacart's mean RMSE is essentially
+-unchanged. The all-available alternative achieves lower mean quantity errors
+-on Taxi and a small RMSE reduction on Instacart. These results do not establish
+-superiority of the original availability thresholds. The effects of bottleneck
+-rank, insertion position, and initialization remain unresolved.
+-Appendix~\ref{app:extension} reports all eight control groups over three
+-seeds and records the transferred Intermittent runs' GPU provenance. Likewise, the static-retrieval removal
+-comparison available for a different internal variant does not isolate
+-that component's necessity in the representative architecture.
++The existing-test results retain the clearest quantity benefit on
++Intermittent, where \method\ improves over the six external encoders and
++both simple rules. Taxi's development advantage over the entire external
++panel does not persist: S2P2 has lower test mean MAE and RMSE. Instacart
++favors S2P2 on RMSE, while RAF gives a small, uncertain difference and
++favors other predictors on MAE. The Intermittent duration NLL also
++increases markedly between validation and test. These outcomes support
++conditional quantity benefits, with separate timing and cost trade-offs.
++
++The reevaluation protocol and 108 checkpoint identities were frozen before
++execution, but the datasets and legacy test artifacts had prior research
++access. This is a retrospective check on existing splits, not a new
++independent assessment. Bootstrap intervals describe evaluation-sample
++uncertainty conditional on three fitted seeds; they omit training-seed
++uncertainty and do not undo adaptive development. The fixed anchor family
++also differs from choosing the lowest test error: S2P2 leads the external
++panel in test RMSE on every dataset. Taxi's short test span prevents the
++primary temporal interval from being estimated.
++
++The B comparison changes capacity as well as the correction path and is
++limited to development validation. Parameter-matched existing-test controls
++provide evidence for the additional direct predecessor path on Taxi and
++Intermittent: mean RMSE is 17.72\% and 5.07\% lower than current-only,
++respectively. Current-only retains the encoder's history and has lower
++mean test RMSE on RAF and slightly lower RMSE on Instacart. Activating all
++available branches further reduces RMSE on Taxi and Intermittent, so the
++original availability thresholds do not establish a superior design.
++Appendix~\ref{app:extension} reports both partitions and the transferred
++Intermittent controls' training GPU provenance. The effects of bottleneck
++rank, insertion position, and initialization remain unresolved. A
++static-retrieval removal comparison for a different internal variant does
++not isolate that component's necessity in the representative architecture.
+ 
+ The common-head panel compares numerical-input adaptations of six TPP
+ encoders. Its objective and epoch cap do not equalize parameter counts,
+-tuning opportunity, or runtime. Rankings therefore concern these adapters
+-rather than native distributional demand predictors.
+-The quantity head supplies a point estimate rather than a normalized quantity
+-density, and Eq.~\eqref{eq:loss} is a multi-task objective rather than a full
+-joint marked-event likelihood.
+-
+-The data also limit prospective and operational interpretations. Cohorts are
++tuning opportunity, or runtime. The native-loss Deep Renewal experiment
++was excluded from the manuscript comparison after its validation results
++were available; its records are retained separately. This post-result
++scope restriction limits coverage of demand models and cannot support
++superiority over native distributional demand predictors.
++The quantity head supplies a point estimate rather than a normalized
++quantity density, and Eq.~\eqref{eq:loss} is a multi-task objective rather
++than a full joint marked-event likelihood.
++
++The data limit prospective and operational interpretations. Cohorts are
+ retrospectively selected; Instacart is a basket-size proxy with upper-coded
+ durations; and the local Intermittent source still requires upstream
+-provenance and redistribution documentation. Inputs omit item identities,
+-calendar covariates, and product composition. The task addresses the next
+-recorded event, not inventory cost or accumulated calendar-horizon demand.
++provenance and redistribution documentation. The confirmed constant date
++shift preserves historical intervals but does not itself resolve those
++documentation requirements. Inputs omit item identities, calendar
++covariates, and product composition. The task addresses the next recorded
++event, not inventory cost or accumulated calendar-horizon demand.
+ Finally, the efficiency study covers short, warmed batch workloads on one
+ GPU. Full-epoch time, time to matched accuracy, energy, and deployment
+ latency require separate measurements.
+ 
+ \section{Conclusion}
+ \method\ adds a compact bottleneck correction of adjacent contextual states
+-to a causal event encoder. Static learned banks complement this history
+-path while parameters remain fixed during inference. A four-dataset,
+-three-seed validation study identifies the strongest quantity gains over
+-the common-head TPP panel on Taxi and Intermittent. RAF and Instacart expose
+-smaller gains and metric-dependent reversals, and a last-quantity baseline
+-narrows the Intermittent advantage to RMSE. Completed parameter-matched
+-controls support the direct predecessor path most clearly on Taxi, while
+-branch-availability preferences depend on the dataset and metric.
++to a causal event encoder, with static learned banks and fixed parameters
++at inference. The completed three-seed reevaluation of existing test splits
++shows lower quantity errors than the common-head TPP panel and simple
++rules on Intermittent. S2P2 has lower mean RMSE on Taxi and Instacart, and
++the RAF contrast is small with an interval spanning zero. Parameter-matched
++controls support the direct predecessor path on Taxi and Intermittent,
++while the all-available alternative rules out a general superiority claim
++for the original branch-availability design.
+ 
+ Matched batch measurements indicate lower training-step compute time and
+ peak allocated training memory than a Titans-MAC adapter, alongside higher
+-evaluation memory. The evidence supports adjacent-state correction with
+-conditional quantity gains and a training-cost advantage within the measured
+-workloads. An independent final evaluation under the frozen design remains
+-necessary to assess whether these benefits extend beyond the development
+-partitions.
++evaluation memory. The resulting contribution is a compact correction
++architecture with conditional quantity benefits and a measured training-cost
++advantage. Previously accessed evaluation splits and retrospective cohort
++selection limit generalization claims; prospective evaluation on a new
++cohort remains a separate future investigation.
+ 
+ \appendix
+ \section{Completed Structural Comparisons}\label{app:extension}
+@@ -893,6 +1082,60 @@
+ from the original direct predecessor path or its availability thresholds in
+ this setting. Table~\ref{tab:main} retains the completed common-head panel.
+ 
++
++\subsection{Existing-Test Structural Results}
++Table~\ref{tab:legacy-test-structural} reevaluates the same selected
++checkpoints on the fixed existing test targets. All inference runs use
++RTX 5080; this does not erase the training GPU differences above.
++Relative to current-only, the original reduces mean RMSE by 17.72\%
++on Taxi and 5.07\% on Intermittent. The Intermittent paired difference is
++$-0.1476$, with pointwise 95\% interval $[-0.1801,-0.1196]$.
++On RAF the direction reverses: current-only has RMSE 39.4644 versus
++39.7951 for the original; the original-minus-current-only interval is
++$[0.0240,0.7017]$. Instacart also slightly favors current-only on RMSE.
++These descriptive structural contrasts are outside the adjusted four-anchor
++family, and Taxi still lacks a primary temporal interval.
++
++All-available reduces mean RMSE relative to the original by 16.29\% on
++Taxi and 3.66\% on Intermittent, while increasing mean time NLL on both.
++Intermittent's original-minus-all-available RMSE interval is
++$[0.0300,0.1646]$. Instacart's mean RMSE improves by 0.11\%; RAF instead
++has 0.51\% higher RMSE, with a pointwise interval spanning zero.
++The evidence separates a useful direct predecessor path in some settings
++from an unsupported claim that the original availability thresholds are
++optimal. All configurations are retained in the comparison, and these
++results do not trigger a new representative or checkpoint choice.
++
++\begin{table}[t]
++\centering\small
++\caption{Retrospective reevaluation of existing test splits, not an untouched independent evaluation. Learned-model entries are mean $\pm$ sample standard deviation over the three fixed seeds. The original representative is retained alongside both controls; no model is selected using these results. Training GPU provenance is unchanged, while reevaluation uses the same RTX 5080.}
++\label{tab:legacy-test-structural}
++\begin{tabular}{lrrr}
++\toprule
++Model & MAE & RMSE & Time NLL \\
++\midrule
++\multicolumn{4}{l}{\textit{Taxi}}\\
++TitanTPP & $37.2005 \pm 4.9741$ & $118.6237 \pm 19.5696$ & $1.0292 \pm 0.2727$ \\
++Current-only & $43.7261 \pm 0.6303$ & $144.1745 \pm 7.0896$ & $0.8627 \pm 0.1699$ \\
++All-available & $32.1247 \pm 3.4150$ & $99.3041 \pm 12.8465$ & $1.1848 \pm 0.3680$ \\
++\midrule
++\multicolumn{4}{l}{\textit{Intermittent}}\\
++TitanTPP & $1.1335 \pm 0.0195$ & $2.7612 \pm 0.0793$ & $15.3778 \pm 1.7331$ \\
++Current-only & $1.2643 \pm 0.1168$ & $2.9088 \pm 0.2458$ & $27.0452 \pm 5.8714$ \\
++All-available & $1.1344 \pm 0.0580$ & $2.6602 \pm 0.0973$ & $21.1990 \pm 23.2514$ \\
++\midrule
++\multicolumn{4}{l}{\textit{Instacart}}\\
++TitanTPP & $4.0637 \pm 0.0030$ & $5.9802 \pm 0.0047$ & $2.8314 \pm 0.0105$ \\
++Current-only & $4.0636 \pm 0.0036$ & $5.9762 \pm 0.0177$ & $2.8437 \pm 0.0264$ \\
++All-available & $4.0616 \pm 0.0051$ & $5.9733 \pm 0.0032$ & $2.8311 \pm 0.0094$ \\
++\midrule
++\multicolumn{4}{l}{\textit{RAF}}\\
++TitanTPP & $10.0563 \pm 0.0875$ & $39.7951 \pm 0.0750$ & $4.0468 \pm 0.4139$ \\
++Current-only & $10.0158 \pm 0.1180$ & $39.4644 \pm 0.2248$ & $3.6845 \pm 0.2162$ \\
++All-available & $10.2498 \pm 0.2777$ & $39.9983 \pm 0.2113$ & $3.9688 \pm 0.2106$ \\
++\bottomrule
++\end{tabular}
++\end{table}
+ 
+ \section{Data Definitions and Training Distributions}\label{app:data-characteristics}
+ Taxi events are pickup counts in active spatial-cell hours; Intermittent
+@@ -1347,7 +1590,7 @@
+ Intermittent retains a correlation of $0.473$ even at lag sixteen.
+ RAF's available-lag estimates range from $-0.127$ to $-0.043$, while
+ Instacart remains close to zero throughout the displayed range
+-($|r_{\ell}|<0.05$). Thus the two datasets with larger quantity gains
++($|r_{\ell}|<0.05$). Thus the two datasets with larger development-validation quantity gains
+ share strong immediate association, although its persistence differs.
+ 
+ The sample counts qualify the longer-lag comparison. RAF supplies 25,779
+@@ -1368,9 +1611,11 @@
+ parameter-matched controls provide stronger quantity gains on Taxi and
+ Intermittent than on RAF, although the Intermittent ranking varies by seed
+ (Appendix~\ref{app:extension}). Data characteristics alone, however, do
+-not determine the error trade-off. Intermittent's last-quantity baseline
+-achieves lower MAE than \method, while \method\ achieves lower RMSE;
+-RAF and Instacart exhibit offsetting gains and losses across quantity bins
++not determine the error trade-off. On development validation, Intermittent's
++last-quantity baseline achieves lower MAE than \method, while \method\
++achieves lower RMSE; the existing-test reevaluation instead favors \method\
++on both metrics (Sect.~\ref{sec:legacy-test}). RAF and Instacart exhibit
++offsetting validation gains and losses across quantity bins
+ (Appendix~\ref{app:strata}). The weak Instacart lag profile also persists
+ among longer series, complementing the observation that S2P2's RMSE
+ advantage spans every nonempty history bin. This post hoc analysis relates

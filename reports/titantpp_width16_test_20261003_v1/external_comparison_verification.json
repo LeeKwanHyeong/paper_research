@@ -1,0 +1,32 @@
+{
+  "passed": true,
+  "reviewer": "independent test_prediction_inventory",
+  "external_conditions": 12,
+  "datasets": [
+    "yellow_trip_hourly",
+    "raf_spare_parts"
+  ],
+  "seed": 42,
+  "split": "test",
+  "exact_matching_fields": [
+    "data_file_sha256",
+    "target_identity_sha256",
+    "truth_sha256",
+    "loader",
+    "schema",
+    "expected_target_count",
+    "parts target/truth digests"
+  ],
+  "verified_prediction_parquet_count": 21,
+  "actual_checkpoint_file_sha_and_registry_binding_count": 14,
+  "selection": "strict_first_min_validation_raw_quantity_rmse",
+  "runtime_difference": {
+    "width16": "CPU / PyTorch2.14.0",
+    "external": "RTX5080 CUDA / PyTorch2.11.0"
+  },
+  "limitations": [
+    "single-seed existing Test reevaluation",
+    "common-head encoder comparison, not native decoder reproduction",
+    "not same-runtime efficiency comparison"
+  ]
+}

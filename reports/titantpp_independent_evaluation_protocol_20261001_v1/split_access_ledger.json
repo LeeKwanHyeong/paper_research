@@ -1,0 +1,84 @@
+{
+  "created_utc": "2026-10-01T12:14:44.138408+00:00",
+  "scope": "recorded evidence, not exhaustive human access logs",
+  "historical_audit": {
+    "path": "reports/titantpp_followup_contract_5080_20260927_v1/heldout_provenance_audit.json",
+    "checked_at_utc": "2026-09-27T14:28:51.273705+00:00",
+    "manifest_count_checked": 91,
+    "test_metric_named_file_count": 4094,
+    "dataset_record_occurrences_not_unique_experiments": {
+      "insta_market_basket": 42,
+      "intermittent": 24,
+      "yellow_trip_hourly": 15
+    },
+    "limits": [
+      "Artifact existence and nonzero size establish prior generated files, not whether a person read them or used them for model selection.",
+      "Historical same manifest path does not establish identical historical file bytes without a recorded historical checksum.",
+      "Split manifest counts are not evidence of model test evaluation.",
+      "No historical test metric files, predictions or mixed result summaries were opened.",
+      "An initial unfiltered split-manifest metadata preview incidentally exposed held-out aggregate target-distribution fields. Values were not used for any choice and are deliberately not copied here; subsequent metadata reads use an allowlist."
+    ],
+    "future_test_policy": "Existing held-out cannot be described as untouched on current evidence. Keep locked; a separate provenance resolution and evaluation contract is required, with a genuinely unused external/later temporal set if needed. Do not move existing test rows into validation."
+  },
+  "datasets": [
+    {
+      "dataset": "yellow_trip_hourly",
+      "status": "independence_not_established",
+      "evidence": "Historical test-named result files and current split-manifest path references; historical bytes and human use unresolved."
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "status": "independence_not_established",
+      "evidence": "Historical intermittent/head_office evaluation exists; current frozen_5000 cohort and historical target overlap unresolved. No exact-path match does not prove non-exposure."
+    },
+    {
+      "dataset": "insta_market_basket",
+      "status": "independence_not_established",
+      "evidence": "Historical test-named result files and current split-manifest path references; historical bytes and human use unresolved."
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "status": "current_campaign_validation_only_prior_coverage_incomplete",
+      "evidence": "Current deployment contains train/validation only. Two sampled earlier contracts declare validation_only and held_out_test_evaluated=false; this is not an exhaustive historical access audit."
+    }
+  ],
+  "raf_historical_allowlisted_contracts": [
+    {
+      "path": "paper/results/hard_lmm_local_time_screening_20260904/source_5080/raf_spare_parts/launch_contract.json",
+      "metadata": {
+        "dataset": "raf_spare_parts",
+        "data_path": "/home/leekwanhyeong/workspace/paper_research/benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_with_split.parquet",
+        "data_sha256": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d",
+        "split_manifest_path": "/home/leekwanhyeong/workspace/paper_research/benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_split_manifest.json",
+        "split_manifest_sha256": "cd2458aa3809014aa74b8a121572a74e3d86dc520a690335d79a1e5150899e27",
+        "evaluation_scope": "validation_only",
+        "held_out_test_evaluated": false,
+        "source_revision": "b9d0ac0b5052102d32a7bce57bff294d75576bdb"
+      }
+    },
+    {
+      "path": "search_artifacts/count_aware_b012_seed42_screening_e300_20260828_recovery1/raf_spare_parts/titan_b012_screening/launch_contract.json",
+      "metadata": {
+        "dataset": "raf_spare_parts",
+        "data_path": "/home/leekwanhyeong/workspace/paper_research_b012_08e5988_shard5090_d2601cf/benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_with_split.parquet",
+        "data_sha256": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d",
+        "split_manifest_path": "/home/leekwanhyeong/workspace/paper_research_b012_08e5988_shard5090_d2601cf/benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_split_manifest.json",
+        "split_manifest_sha256": "cd2458aa3809014aa74b8a121572a74e3d86dc520a690335d79a1e5150899e27",
+        "evaluation_scope": "validation_only",
+        "held_out_test_evaluated": false,
+        "source_revision": "08e59880cd61cbd27cec40aa04636452b87bebfc"
+      }
+    }
+  ],
+  "researcher_attestation": {
+    "status": "requested_pending_response",
+    "scope": "prior human viewing or selection use; does not replace historical data identity audit"
+  },
+  "current_work": {
+    "data_bytes_hashed": true,
+    "heldout_rows_or_predictions_or_performance_opened": false,
+    "new_inference_or_training": false,
+    "new_remote_access": false
+  },
+  "interpretation": "Do not relabel existing test as untouched. Test-file creation is not proof of human viewing. Existing validation is development evidence."
+}

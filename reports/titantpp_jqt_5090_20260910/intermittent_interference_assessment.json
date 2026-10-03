@@ -1,0 +1,107 @@
+{
+  "created_at_utc": "2026-09-10T10:08:55.994437+00:00",
+  "scope": "Existing train history and previously audited seed42 validation results; no new model execution",
+  "source_snapshot": "reports/titantpp_jqt_5090_20260910/monitor/20260910T100218Z_intermittent_snapshot.json",
+  "source_snapshot_sha256": "8522d5c8aa961533efcd54f88d3c15936953e5fa3b0d28d59dc8a793a46d2206",
+  "rows": [
+    {
+      "objective": "joint",
+      "completed_epochs": 120,
+      "optimizer_steps": 369240,
+      "threshold_exceeding_batches": 9179,
+      "threshold_exceeding_percent": 2.485917018741198,
+      "by_epoch": [
+        {
+          "epoch": 1,
+          "count": 758
+        },
+        {
+          "epoch": 2,
+          "count": 2410
+        },
+        {
+          "epoch": 3,
+          "count": 2519
+        },
+        {
+          "epoch": 4,
+          "count": 2534
+        },
+        {
+          "epoch": 5,
+          "count": 939
+        },
+        {
+          "epoch": 6,
+          "count": 18
+        },
+        {
+          "epoch": 108,
+          "count": 1
+        }
+      ],
+      "history_sha256": "6d97d40aef4caeb227782d73a71e4483a174f474dba6de9b0d5c0f98712f88f1"
+    },
+    {
+      "objective": "quantity_only",
+      "completed_epochs": 120,
+      "optimizer_steps": 369240,
+      "threshold_exceeding_batches": 44,
+      "threshold_exceeding_percent": 0.01191636875744773,
+      "by_epoch": [
+        {
+          "epoch": 1,
+          "count": 44
+        }
+      ],
+      "history_sha256": "afda9963bc0b6af777cb537bfcaac643f9e7663bfa125b472283133917c4a6f9"
+    },
+    {
+      "objective": "time_only",
+      "completed_epochs": 120,
+      "optimizer_steps": 369240,
+      "threshold_exceeding_batches": 8895,
+      "threshold_exceeding_percent": 2.409002274943126,
+      "by_epoch": [
+        {
+          "epoch": 1,
+          "count": 686
+        },
+        {
+          "epoch": 2,
+          "count": 2160
+        },
+        {
+          "epoch": 3,
+          "count": 2409
+        },
+        {
+          "epoch": 4,
+          "count": 2496
+        },
+        {
+          "epoch": 5,
+          "count": 1118
+        },
+        {
+          "epoch": 6,
+          "count": 26
+        }
+      ],
+      "history_sha256": "029d1d1128b9d043a9bd2af147213349208d1131a09da9f846ff2fe91a28619b"
+    }
+  ],
+  "definition": "Count of the pre-clipping norm returned by actual clip_grad_norm_ exceeding grad_clip=1 in the optimizer-step path; not amount of AdamW update suppression",
+  "independent_review": "monitor_schema_review independently recomputed counts and verified frozen source lines 543-544 and 569",
+  "interpretation": "Early clipping is observed in both J and T; Q has fewer clipped batches but no primary validation raw-RMSE improvement. This weakens a simple destructive-interference/complete-separation explanation for this Intermittent run. Does not rule out phase-specific interference or establish a causal clipping effect.",
+  "limitations": [
+    "One seed and fixed optimizer/budget; not convergence or separately tuned optimum",
+    "Directional task gradients were measured only at selected frozen checkpoints, not throughout this training trajectory",
+    "Aggregate quantity metrics do not identify quantity strata or history-length causes",
+    "Separate J quantity and J time selectors are not one simultaneous-performance model"
+  ],
+  "remote_access": false,
+  "checkpoint_loaded": false,
+  "new_training": false,
+  "files_mutated": "This derived local assessment only; original source/results retained"
+}

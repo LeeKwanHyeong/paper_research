@@ -1,0 +1,155 @@
+{
+  "status": "passed",
+  "summary": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/dual_timescale_intermittent_quantity_extension_ca8823e_20260910/jobs/seed42_intermittent_frozen_5000/runs/titantpp_dual_timescale_memory/count_only_log_regression/seed_42/summary.json",
+  "summary_sha256": "e57faf4bc1a2a2af1c878572d6990f22103f24d32c2e2d73e6d4f12d725e2f59",
+  "checkpoint_sha256": "ac205087fea33c7421d3b762157de507a37a7e210ab93236f674a546069d5f9f",
+  "best_epoch": 37,
+  "completed_epochs": 77,
+  "metrics": {
+    "raw_rmse": 1.5808443362211952,
+    "overall_mae": 0.6676581531512666,
+    "body_mae": 0.5021262488211281,
+    "gt_p99_mae": 5.826921040086136,
+    "clamped_time_loss": -3.1682424992725307,
+    "validation_target_count": 86285,
+    "body_target_count": 81739,
+    "stratum_counts": {
+      "le_p50": 45036,
+      "p50_p90": 29579,
+      "p90_p95": 7124,
+      "p95_p99": 3405,
+      "gt_p99": 1141
+    }
+  },
+  "cuda_peak_memory_allocated_bytes": 2282563584,
+  "validation_target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+  "validation_target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385",
+  "held_out_test_evaluated": false,
+  "selected_restore": {
+    "strict_model_restore": true,
+    "finite_forward": true,
+    "optimizer_restore": false,
+    "optimizer_parameters_restored": 0
+  },
+  "last_restore": {
+    "strict_model_restore": true,
+    "finite_forward": true,
+    "optimizer_restore": true,
+    "optimizer_parameters_restored": 46
+  },
+  "checkpoint_state_sha256": "f1e35fdcefd11ae03b2abdefd08222ead30a7252c524b9a10b14006f8c181070",
+  "last_checkpoint_sha256": "c4eb27ca05533ca012ea23f1ece94e802ccbab18d69eeaeb5a2114325c226f40",
+  "elapsed_seconds": 7947.769498825073,
+  "early_stopping": {
+    "comparison": "earliest_strict_finite_minimum",
+    "formula_by_variant": {
+      "count_only_log_mse_tail_head_only": "time_nll + lambda_log_qty * (log1p_quantity_mse + lambda_tail * tail_raw_huber)",
+      "count_only_log_mse_tail_shared": "time_nll + lambda_log_qty * (log1p_quantity_mse + lambda_tail * tail_raw_huber)",
+      "count_only_log_regression": "raw_quantity_rmse",
+      "count_only_lognormal_k1": "time_nll + lambda_log_qty * (gaussian_nll_on_log1p_quantity + lambda_location_huber * location_huber)",
+      "count_only_quantile_adaptive_log_regression": "raw_quantity_rmse"
+    },
+    "min_epochs": 40,
+    "monitor": "validation_raw_quantity_rmse",
+    "patience": 40,
+    "restore": "best_validation_raw_quantity_rmse"
+  },
+  "source_revision": "ca8823e688a510e64e7fb81c9dc9d158d4bdfc7c",
+  "selected_memory_gains": {
+    "transition_memory.alpha_raw": -0.9171152710914612
+  },
+  "original_gate_for_transparency": {
+    "status": "failed",
+    "checks": {
+      "raw_rmse": false,
+      "overall_mae": false,
+      "body_mae": false,
+      "gt_p99_mae": false,
+      "clamped_time_loss": false
+    }
+  },
+  "quantity_components_of_original_gate": {
+    "raw_rmse": false,
+    "overall_mae": false,
+    "body_mae": false,
+    "gt_p99_mae": false
+  },
+  "comparisons": [
+    {
+      "model": "TitanTPP(B)",
+      "metrics": {
+        "raw_rmse": {
+          "reference": 1.4995550721471171,
+          "candidate": 1.5808443362211952,
+          "relative_change_percent": 5.42089220889268
+        },
+        "overall_mae": {
+          "reference": 0.6043404183562111,
+          "candidate": 0.6676581531512666,
+          "relative_change_percent": 10.477163676604317
+        },
+        "body_mae": {
+          "reference": 0.4657896038725777,
+          "candidate": 0.5021262488211281,
+          "relative_change_percent": 7.801085435666089
+        },
+        "gt_p99_mae": {
+          "reference": 5.148108011792356,
+          "candidate": 5.826921040086136,
+          "relative_change_percent": 13.1856796077098
+        }
+      }
+    },
+    {
+      "model": "RMTPP",
+      "metrics": {
+        "raw_rmse": {
+          "reference": 1.8336068666543628,
+          "candidate": 1.5808443362211952,
+          "relative_change_percent": -13.784990394062135
+        },
+        "overall_mae": {
+          "reference": 0.6695222346000851,
+          "candidate": 0.6676581531512666,
+          "relative_change_percent": -0.2784196479944989
+        },
+        "body_mae": {
+          "reference": 0.4824280230339994,
+          "candidate": 0.5021262488211281,
+          "relative_change_percent": 4.0831429449819545
+        },
+        "gt_p99_mae": {
+          "reference": 7.982565155163028,
+          "candidate": 5.826921040086136,
+          "relative_change_percent": -27.00440363687664
+        }
+      }
+    },
+    {
+      "model": "THP",
+      "metrics": {
+        "raw_rmse": {
+          "reference": 1.6497231014396287,
+          "candidate": 1.5808443362211952,
+          "relative_change_percent": -4.1751712853100305
+        },
+        "overall_mae": {
+          "reference": 0.5983332298981423,
+          "candidate": 0.6676581531512666,
+          "relative_change_percent": 11.58634015111042
+        },
+        "body_mae": {
+          "reference": 0.4319402402415595,
+          "candidate": 0.5021262488211281,
+          "relative_change_percent": 16.249009015765136
+        },
+        "gt_p99_mae": {
+          "reference": 6.593146294903901,
+          "candidate": 5.826921040086136,
+          "relative_change_percent": -11.621541833676751
+        }
+      }
+    }
+  ],
+  "interpretation": "Exploratory quantity extension; prior Taxi failure unchanged; no model adoption."
+}

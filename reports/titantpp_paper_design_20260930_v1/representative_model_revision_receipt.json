@@ -1,0 +1,69 @@
+{
+  "at_utc": "2026-09-30T00:26:39.169692+00:00",
+  "page_id": "3ebbbe40-5613-8105-9aa0-c5b73d6d47e3",
+  "before_draft_sha256": "f1c3a8fec7fb0e455c9db9ecb3c54487f99963cd07c29928d3cf17c0e66bb955",
+  "after_draft_sha256": "3103f344ca2d45d577e33fb1363125e71551e29cbf399e202aaf797c389093b0",
+  "content_updates": [
+    {
+      "old_str": "- 다음 작업: 대표 모델을 전체 데이터에 공통으로 고정하고, 방법의 차별성·효율 근거·독립 평가의 빈칸을 채운다. 데이터별 Full/MLP 승자를 사후 선택하지 않는다.",
+      "new_str": "- 완료: 2026-09-30 사용자 “오케이 그러면 MLP로 진행하자”에 따라 기존 이력 MLP 구성(`titantpp_history_mlp`)을 논문의 단일 제안 모델 TitanTPP로 확정했다. Taxi·Intermittent·Instacart 모두 같은 구성을 사용한다.\n- 다음 작업: 확정한 구조의 방법 설명과 원본 Titans 대비 대응, 효율 근거·독립 평가를 정리한다. 기존 validation을 검토한 뒤 선택했다는 사실을 기록한다."
+    },
+    {
+      "old_str": "학습 가능한 메모리와 저차원 이력 보완을 통해 다음 사건 수량 예측에 적합한 표현을 학습한다.",
+      "new_str": "학습 가능한 메모리와 저차원 MLP 이력 보완을 통해 다음 사건 수량 예측에 적합한 표현을 학습한다."
+    },
+    {
+      "old_str": "- 표현 설계: persistent memory를 갖는 인과적 encoder와 정적 prototype 검색을 연결하고, encoder 단계 사이에 저차원 이력 잔차 보완을 둔다.",
+      "new_str": "- 표현 설계: persistent memory를 갖는 인과적 encoder와 정적 prototype 검색을 유지하고, 두 encoder 단계 사이에서 현재·직전 표현을 결합하는 저차원 MLP의 잔차 출력으로 이력을 보완한다. 추가 조건부 Gate와 학습 가능한 상수 계수는 사용하지 않는다."
+    },
+    {
+      "old_str": "**완료 조건:** 최종 채택 구조의 입력·계산식·보완 위치·메모리 상태·복잡도를 고정하고, 원본 Titans 및 일반 causal Transformer/THP와의 차이를 설명한다.",
+      "new_str": "**현재 기준선과 다음 작업:** 채택 구조는 기존 이력 MLP로 고정했다. 해당 구성의 입력·계산식·보완 위치·메모리 상태·복잡도를 방법 절에 기술하고, 원본 Titans 및 일반 causal Transformer/THP와의 차이를 설명한다."
+    },
+    {
+      "old_str": "현재 TitanTPP 후보 구성은 그 경로를 사용하지 않지만",
+      "new_str": "채택한 TitanTPP는 그 경로를 사용하지 않지만"
+    },
+    {
+      "old_str": "다만 최종 채택할 TitanTPP 구성 대비 정확한 가속 배수는 아직 같은 조건에서 확정하지 않았다.",
+      "new_str": "다만 채택한 TitanTPP(기존 이력 MLP) 대비 정확한 가속 배수는 아직 같은 조건에서 확정하지 않았다."
+    },
+    {
+      "old_str": "아래 표는 최종 구조를 선택하기 위한 기존 구성별 근거다. 논문의 주 비교 표는 전체 데이터에 공통으로 고정한 한 가지 구성을 TitanTPP로 표기하고, 나머지 구성은 ablation 표에 둔다. 현재 수치를 이름만 바꾸어 합치지 않는다.",
+      "new_str": "논문의 주 비교 표는 세 데이터 모두 기존 `titantpp_history_mlp` 결과를 TitanTPP로 표기한다. 아래 구성별 수치는 선택 근거와 ablation을 위한 보존 자료다. Full 결과를 TitanTPP의 결과로 대신 사용하거나 구성 간 수치를 합치지 않는다."
+    },
+    {
+      "old_str": "### 6.1 구성 요소 검증의 역할 — 기존 실험 완료 / 대표 구조 선택은 다음 작업",
+      "new_str": "### 6.1 구성 요소 검증의 역할 — 기존 실험 완료 / 이력 MLP 채택 확정"
+    },
+    {
+      "old_str": "Full·History MLP·수준만·변화만·정적 검색 제거는 제안 구조를 선택하고 그 작동 원리를 확인하기 위한 실험 구성명이다. 논문 C1의 기여 이름은 TitanTPP로 통일하고, 이 구성명은 ablation과 재현 자료에서 유지한다.",
+      "new_str": "논문에서 TitanTPP는 기존 History MLP 구성(`titantpp_history_mlp`)을 가리킨다. Full·수준만·변화만·정적 검색 제거와 B는 설계 비교군으로 배치하며, 원래 구성명과 실험 ID는 ablation과 재현 자료에서 유지한다. 기존 실험 ID `titantpp`는 이력 보완 없는 B이므로 새 논문 명칭과 혼동하지 않는다."
+    },
+    {
+      "old_str": "- 주 비교 표에는 전체 데이터에 공통으로 고정한 TitanTPP의 결과를 사용한다. MLP를 채택하면 그 구성이 제안 모델이고 Full은 대안 구성이다. Full을 채택하면 반대다. 데이터별로 유리한 구성의 결과를 골라 단일 모델의 성능으로 합치지 않는다.",
+      "new_str": "- 주 비교 표에는 Taxi·Intermittent·Instacart의 기존 이력 MLP seed42·52·62 결과를 사용한다. Full은 수준·변화 분리를 적용한 대안 구성으로 둔다. 현재 정적 검색 제거 실험은 Full 기반이므로 MLP에서 그 모듈만 제거한 결과로 해석하지 않는다."
+    },
+    {
+      "old_str": "**현재 결정 상태:** 제안 방법의 명칭과 서술 방식은 TitanTPP로 정리했다. 최종 채택 구조는 아직 확정하지 않았으며, 기존 validation 결과·설계 근거·비용 근거를 종합해 고정한다. 이 문서 수정은 모델 선택 완료나 새 실험 실행을 의미하지 않는다.",
+      "new_str": "**현재 결정 상태 — 완료:** 사용자 승인으로 기존 plain History MLP 구성을 최종 TitanTPP로 채택했다. Gate·학습 가능한 상수 계수·정적 검색 제거를 추가하지 않는다. Intermittent의 MAE·RMSE 개선과 Taxi의 외부 비교 경쟁력을 선택 근거로 삼고, Taxi에서 Full보다 높은 평균 오차와 Instacart의 우위 미확보·시간 NLL 상충관계도 보존한다. 비용 우월성은 이 선택만으로 입증되지 않는다. 기존 학습 결과를 재사용하며 이번 결정으로 새 학습이나 held-out 평가를 시작하지 않는다."
+    },
+    {
+      "old_str": "4. **Method:** 최종 채택한 한 가지 TitanTPP 구조를 입력 → persistent-memory causal encoder → 저차원 이력 잔차 → 다음 encoder → 정적 검색 → 공통 시간·수량 head의 흐름으로 제시한다.",
+      "new_str": "4. **Method:** 채택한 TitanTPP 구조를 시간·수량 입력 → persistent-memory causal encoder → 현재·직전 표현의 저차원 MLP 잔차 보완 → 다음 encoder → 정적 검색 → 공통 시간·수량 head의 흐름으로 제시한다."
+    },
+    {
+      "old_str": "**대표 모델과 설계 차이를 고정한다 — 다음 작업**\n- 대상: paper_research 논문 방법 절.\n- 데이터 공통 대표 모델과 원본 대비 구조 대응을 확정한다. Full/MLP 중 선택 이유, B 대비 보완 효과, 일반 Transformer와의 차이가 설명되면 완료다.\n- 공통 주장과 표에 의존하므로 현 세션에서 순서대로 정리한다.",
+      "new_str": "**논문 대표 모델을 고정한다 — 완료**\n- 대상: paper_research 논문 설계안과 `representative_model_decision.json`.\n- 기존 plain History MLP를 TitanTPP로 채택했고, 세 데이터의 3seed 결과 및 원래 실험 ID와 대응시켰다. 기존 계약·소스·결과는 수정하지 않았다.\n\n**채택 구조의 방법 절과 비교 표를 작성한다 — 다음 작업**\n- 대상: paper_research 논문 방법 절·주 결과표·ablation 표.\n- 채택한 MLP 보완의 계산식·인과성·초기화, B 및 원본 Titans·일반 Transformer 대비 설계 차이를 설명한다. 기존 MLP 결과를 주 표에, Full 등의 대안을 별도 검증 표에 배치한다.\n- 공통 주장과 표에 의존하므로 현 세션에서 순서대로 정리한다."
+    },
+    {
+      "old_str": "- 대표 모델·평가 규칙을 먼저 잠근다. 관련성이 높은 추가 TPP만 선정하며, 기존 결과를 무조건 재학습하지 않는다.",
+      "new_str": "- 대표 모델은 기존 이력 MLP로 고정했다. 독립 평가 계약과 비교 규칙을 확정한 뒤 관련성이 높은 추가 TPP만 선정하며, 기존 결과를 무조건 재학습하지 않는다."
+    }
+  ],
+  "notion_update_verified": true,
+  "decision_file": "representative_model_decision.json",
+  "all_14_content_updates_verified": true,
+  "original_tables_preserved": true,
+  "verified_at_utc": "2026-09-30T00:27:31.526949+00:00"
+}

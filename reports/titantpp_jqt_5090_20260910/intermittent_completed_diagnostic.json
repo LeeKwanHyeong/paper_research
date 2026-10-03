@@ -1,0 +1,57 @@
+{
+  "recorded_at_utc": "2026-09-10T09:55:51.650801+00:00",
+  "source_snapshot": "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_jqt_5090_20260910/monitor/20260910T092853Z_snapshot.json",
+  "source_revision": "76426fd981e624144947fd582f794c2832e9fe05",
+  "dataset": "intermittent_frozen_5000",
+  "backbone": "static B",
+  "seed": 42,
+  "evaluation_split": "validation_only",
+  "validation_targets": 86285,
+  "train_targets_per_epoch": 393824,
+  "training_complete": true,
+  "finished_at_KST": "2026-09-10T18:06:30.004042+09:00",
+  "epochs_per_arm": 120,
+  "global_steps_per_arm": 369240,
+  "batch_size": 128,
+  "verified_evidence": "monitor/20260910T092853Z_check.json",
+  "metrics": {
+    "raw_quantity_rmse": {
+      "joint": 1.4995550721471174,
+      "single_task": 1.5483892378684414,
+      "single_task_minus_joint": 0.04883416572132404,
+      "relative_change_percent": 3.2565770092992663
+    },
+    "quantity_mae_at_rmse_selector": {
+      "joint": 0.6043404183562111,
+      "single_task": 0.5978500423048976,
+      "single_task_minus_joint": -0.006490376051313529,
+      "relative_change_percent": -1.0739602803610526
+    },
+    "legacy_clamped_time_loss": {
+      "joint": -3.5662264926509413,
+      "single_task": -3.520814090278808,
+      "single_task_minus_joint": 0.045412402372133176
+    }
+  },
+  "quantity_selector_epochs": {
+    "J": 77,
+    "Q": 24
+  },
+  "time_selector_epochs": {
+    "J": 120,
+    "T": 120
+  },
+  "MAE_selection_rule": "Read MAE at each raw-RMSE-selected checkpoint; no separate MAE selection.",
+  "independent_MAE_calculation_verified": true,
+  "interpretation": "Intermittent seed42 validation shows a small MAE gain with Q, but worse raw RMSE and worse T legacy time loss. This does not establish broad benefits from objective separation.",
+  "unverified": [
+    "Which quantity/history strata account for the MAE/RMSE tradeoff",
+    "Body/tail MAE for these J/Q/T checkpoints",
+    "Repeat-seed robustness",
+    "Held-out performance",
+    "Actual checkpoint tensors and files were not reopened in this JSON review"
+  ],
+  "held_out_test_evaluated": false,
+  "new_remote_execution": false,
+  "current_other_dataset_progress": "Not checked in this Intermittent-only review"
+}

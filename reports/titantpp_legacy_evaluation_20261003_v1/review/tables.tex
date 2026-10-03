@@ -1,0 +1,111 @@
+% Requires booktabs and graphicx. Preserve the existing development-validation tables.
+% Source analysis JSON SHA-256: 5041fa56d0bb7f40a721d4d78465682b8e651c5e422e8227cee7857e7d5d2488
+
+\begin{table}[p]
+\centering\small
+\caption{Retrospective reevaluation of existing test splits, not an untouched independent evaluation. Learned-model entries are mean $\pm$ sample standard deviation over the three fixed seeds. All nine learned models are shown.}
+\label{tab:legacy-test-main}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llrrr}
+\toprule
+Dataset & Model & MAE & RMSE & Time NLL \\
+\midrule
+Taxi & TitanTPP & $37.2005 \pm 4.9741$ & $118.6237 \pm 19.5696$ & $1.02918 \pm 0.27266$ \\
+Taxi & RMTPP & $65.2770 \pm 16.1035$ & $246.6473 \pm 82.5064$ & $0.91558 \pm 0.16043$ \\
+Taxi & THP & $58.3486 \pm 11.0759$ & $202.1740 \pm 36.2182$ & $0.68914 \pm 0.00908$ \\
+Taxi & NHP & $116.3324 \pm 9.7128$ & $381.0762 \pm 26.2349$ & $0.68360 \pm 0.00183$ \\
+Taxi & SAHP & $40.9008 \pm 4.9240$ & $148.2495 \pm 30.2157$ & $0.70619 \pm 0.01889$ \\
+Taxi & S2P2 & $36.8359 \pm 2.3815$ & $115.5415 \pm 6.4023$ & $0.69002 \pm 0.01153$ \\
+Taxi & AttNHP & $38.7528 \pm 1.0565$ & $131.3198 \pm 2.4279$ & $0.70222 \pm 0.00849$ \\
+Taxi & Current-only control & $43.7261 \pm 0.6303$ & $144.1745 \pm 7.0896$ & $0.86273 \pm 0.16988$ \\
+Taxi & All-available-history control & $32.1247 \pm 3.4150$ & $99.3041 \pm 12.8465$ & $1.18476 \pm 0.36798$ \\
+Intermittent & TitanTPP & $1.1335 \pm 0.0195$ & $2.7612 \pm 0.0793$ & $15.37780 \pm 1.73309$ \\
+Intermittent & RMTPP & $1.6923 \pm 0.1808$ & $4.2115 \pm 0.2126$ & $24.13268 \pm 11.99469$ \\
+Intermittent & THP & $1.3123 \pm 0.0270$ & $3.4839 \pm 0.1232$ & $8.32634 \pm 1.22974$ \\
+Intermittent & NHP & $2.3278 \pm 0.1593$ & $5.9065 \pm 0.8507$ & $18.58278 \pm 15.76365$ \\
+Intermittent & SAHP & $3.6770 \pm 0.6892$ & $12.2524 \pm 1.5182$ & $14.91141 \pm 2.72586$ \\
+Intermittent & S2P2 & $1.3197 \pm 0.0264$ & $3.2154 \pm 0.2743$ & $13.67378 \pm 4.59219$ \\
+Intermittent & AttNHP & $4.3493 \pm 0.7011$ & $12.2891 \pm 2.6891$ & $19.48669 \pm 2.04683$ \\
+Intermittent & Current-only control & $1.2643 \pm 0.1168$ & $2.9088 \pm 0.2458$ & $27.04525 \pm 5.87138$ \\
+Intermittent & All-available-history control & $1.1344 \pm 0.0580$ & $2.6602 \pm 0.0973$ & $21.19904 \pm 23.25141$ \\
+Instacart & TitanTPP & $4.0637 \pm 0.0030$ & $5.9802 \pm 0.0047$ & $2.83139 \pm 0.01045$ \\
+Instacart & RMTPP & $4.0541 \pm 0.0059$ & $5.9691 \pm 0.0227$ & $2.83283 \pm 0.00882$ \\
+Instacart & THP & $4.0754 \pm 0.0083$ & $5.9550 \pm 0.0141$ & $2.82265 \pm 0.00552$ \\
+Instacart & NHP & $4.5898 \pm 0.0360$ & $6.8962 \pm 0.0630$ & $2.84646 \pm 0.01090$ \\
+Instacart & SAHP & $4.0712 \pm 0.0065$ & $5.9742 \pm 0.0118$ & $2.82411 \pm 0.00572$ \\
+Instacart & S2P2 & $4.0746 \pm 0.0096$ & $5.9465 \pm 0.0113$ & $2.81544 \pm 0.00210$ \\
+Instacart & AttNHP & $4.0635 \pm 0.0020$ & $5.9514 \pm 0.0235$ & $2.83139 \pm 0.00564$ \\
+Instacart & Current-only control & $4.0636 \pm 0.0036$ & $5.9762 \pm 0.0177$ & $2.84368 \pm 0.02636$ \\
+Instacart & All-available-history control & $4.0616 \pm 0.0051$ & $5.9733 \pm 0.0032$ & $2.83115 \pm 0.00940$ \\
+RAF & TitanTPP & $10.0563 \pm 0.0875$ & $39.7951 \pm 0.0750$ & $4.04679 \pm 0.41387$ \\
+RAF & RMTPP & $9.9063 \pm 0.0370$ & $40.4632 \pm 0.2416$ & $3.89975 \pm 0.35496$ \\
+RAF & THP & $10.1230 \pm 0.2305$ & $40.5551 \pm 0.2953$ & $3.45626 \pm 0.02464$ \\
+RAF & NHP & $9.9691 \pm 0.0932$ & $42.1763 \pm 0.3005$ & $3.59020 \pm 0.13851$ \\
+RAF & SAHP & $10.2616 \pm 0.1032$ & $41.0493 \pm 0.1561$ & $4.23256 \pm 0.15526$ \\
+RAF & S2P2 & $10.0958 \pm 0.1455$ & $39.7729 \pm 0.1609$ & $3.74154 \pm 0.08834$ \\
+RAF & AttNHP & $9.9839 \pm 0.0284$ & $40.2036 \pm 0.2044$ & $4.95077 \pm 0.16572$ \\
+RAF & Current-only control & $10.0158 \pm 0.1180$ & $39.4644 \pm 0.2248$ & $3.68451 \pm 0.21615$ \\
+RAF & All-available-history control & $10.2498 \pm 0.2777$ & $39.9983 \pm 0.2113$ & $3.96881 \pm 0.21056$ \\
+\bottomrule
+\end{tabular}}
+\end{table}
+\begin{table}[p]
+\centering\small
+\caption{Deterministic quantity references on the identical legacy-test targets and observed windows. Each reference has one prediction vector; seed dispersion and time NLL are not defined.}
+\label{tab:legacy-test-simple}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llrrr}
+\toprule
+Dataset & Model & MAE & RMSE & Time NLL \\
+\midrule
+Taxi & Last observed quantity & 42.6110 & 137.5822 & --- \\
+Taxi & Observed-window mean & 120.9687 & 364.6521 & --- \\
+Intermittent & Last observed quantity & 1.2636 & 3.2063 & --- \\
+Intermittent & Observed-window mean & 5.7517 & 18.8566 & --- \\
+Instacart & Last observed quantity & 5.0746 & 7.5102 & --- \\
+Instacart & Observed-window mean & 4.1174 & 5.9802 & --- \\
+RAF & Last observed quantity & 12.2036 & 45.8550 & --- \\
+RAF & Observed-window mean & 11.3012 & 39.3579 & --- \\
+\bottomrule
+\end{tabular}}
+\end{table}
+\begin{table}[p]
+\centering\small
+\caption{TitanTPP minus the frozen validation-selected anchor in legacy-test RMSE. Intervals are conditional on the three fixed trained seeds. The 95\% intervals are pointwise; 98.75\% intervals adjust the four prespecified anchor comparisons. Dashes denote an unavailable interval. Taxi uses shared 168-hour blocks; sensitivity analyses never replace an unestimable primary interval.}
+\label{tab:legacy-test-anchors}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llrrrl}
+\toprule
+Dataset & Anchor & $\Delta$ RMSE & 95\% CI & 98.75\% CI & Status \\
+\midrule
+Taxi & RMTPP & -128.023568 & --- & --- & Not estimable \\
+Intermittent & RMTPP & -1.450253 & [-1.743087, -1.158078] & [-1.827089, -1.085751] & Computed conditional \\
+Instacart & S2P2 & 0.033618 & [0.029092, 0.038015] & [0.027795, 0.039208] & Computed conditional \\
+RAF & S2P2 & 0.022161 & [-0.607894, 0.592478] & [-0.806270, 0.722236] & Computed conditional \\
+\bottomrule
+\end{tabular}}
+\end{table}
+\begin{table}[p]
+\centering\small
+\caption{Retrospective reevaluation of existing test splits, not an untouched independent evaluation. Learned-model entries are mean $\pm$ sample standard deviation over the three fixed seeds. The representative and two structural controls are repeated from the complete panel.}
+\label{tab:legacy-test-structural}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llrrr}
+\toprule
+Dataset & Model & MAE & RMSE & Time NLL \\
+\midrule
+Taxi & TitanTPP & $37.2005 \pm 4.9741$ & $118.6237 \pm 19.5696$ & $1.02918 \pm 0.27266$ \\
+Taxi & Current-only control & $43.7261 \pm 0.6303$ & $144.1745 \pm 7.0896$ & $0.86273 \pm 0.16988$ \\
+Taxi & All-available-history control & $32.1247 \pm 3.4150$ & $99.3041 \pm 12.8465$ & $1.18476 \pm 0.36798$ \\
+Intermittent & TitanTPP & $1.1335 \pm 0.0195$ & $2.7612 \pm 0.0793$ & $15.37780 \pm 1.73309$ \\
+Intermittent & Current-only control & $1.2643 \pm 0.1168$ & $2.9088 \pm 0.2458$ & $27.04525 \pm 5.87138$ \\
+Intermittent & All-available-history control & $1.1344 \pm 0.0580$ & $2.6602 \pm 0.0973$ & $21.19904 \pm 23.25141$ \\
+Instacart & TitanTPP & $4.0637 \pm 0.0030$ & $5.9802 \pm 0.0047$ & $2.83139 \pm 0.01045$ \\
+Instacart & Current-only control & $4.0636 \pm 0.0036$ & $5.9762 \pm 0.0177$ & $2.84368 \pm 0.02636$ \\
+Instacart & All-available-history control & $4.0616 \pm 0.0051$ & $5.9733 \pm 0.0032$ & $2.83115 \pm 0.00940$ \\
+RAF & TitanTPP & $10.0563 \pm 0.0875$ & $39.7951 \pm 0.0750$ & $4.04679 \pm 0.41387$ \\
+RAF & Current-only control & $10.0158 \pm 0.1180$ & $39.4644 \pm 0.2248$ & $3.68451 \pm 0.21615$ \\
+RAF & All-available-history control & $10.2498 \pm 0.2777$ & $39.9983 \pm 0.2113$ & $3.96881 \pm 0.21056$ \\
+\bottomrule
+\end{tabular}}
+\end{table}

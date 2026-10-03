@@ -1,0 +1,205 @@
+{
+  "created_utc": "2026-10-01T14:03:30.005002+00:00",
+  "scope": "event identifiers, split membership and source only",
+  "datasets": {
+    "yellow_trip_hourly": {
+      "classification": "same_event_keys_in_available_artifacts",
+      "historical_execution_bytes": "not recoverable from manifest; no historical data digest",
+      "historical_test_access": "confirmed by prior access review",
+      "historical_manifest": {
+        "path": "search_artifacts/model_enhancement_v3_taxi_short_e50_0710/experiment_manifest.json",
+        "sha256": "4f0109b5536a05d94a50214efe3df74989df67e584485a0af1106bf2716374b5"
+      },
+      "split_config": {
+        "dataset_name": "yellow_trip_hourly",
+        "input_path": "/home/leekwanhyeong/workspace/paper_research/sample_data/new_york_taxi/yellow_trip_hourly.parquet",
+        "output_dir": "/home/leekwanhyeong/workspace/paper_research/sample_data/new_york_taxi",
+        "output_prefix": "yellow_trip_hourly",
+        "scale_base": 10.0,
+        "train_ratio": 0.7,
+        "validation_ratio": 0.15,
+        "test_ratio": 0.15,
+        "entity_col": "oper_part_no",
+        "order_col": "seq",
+        "clip_min_qty": 1.0,
+        "min_count": 100,
+        "min_coverage": 0.999
+      },
+      "manifest_created_at": "2026-06-14T16:32:52",
+      "split_manifest_sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85",
+      "current_data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+      "available_legacy_test_sha256": "36995209462dc976551e103f9c966f69ba0bbdccc572157b9d5983b3204bfe60",
+      "current_test_identity": {
+        "rows": 8327,
+        "unique": 8327,
+        "columns": [
+          "oper_part_no",
+          "seq",
+          "demand_dt"
+        ],
+        "canonical_csv_sha256": "f1a0de3df8625996591dccbb0fa1eae98e67d170a534704a762ab82289059efc"
+      },
+      "available_legacy_test_identity": {
+        "rows": 8327,
+        "unique": 8327,
+        "columns": [
+          "oper_part_no",
+          "seq",
+          "demand_dt"
+        ],
+        "canonical_csv_sha256": "f1a0de3df8625996591dccbb0fa1eae98e67d170a534704a762ab82289059efc"
+      },
+      "overlap": {
+        "left": 8327,
+        "right": 8327,
+        "intersection": 8327,
+        "left_only": 0,
+        "right_only": 0
+      },
+      "final_evaluation_role": "previously exposed legacy test; not untouched independent confirmation"
+    },
+    "insta_market_basket": {
+      "classification": "same_event_keys_in_available_artifacts",
+      "historical_execution_bytes": "not recoverable from manifest; no historical data digest",
+      "historical_test_access": "confirmed by prior access review",
+      "historical_manifest": {
+        "path": "search_artifacts/insta_ablation_baseline_e200/experiment_manifest.json",
+        "sha256": "b73261b1f2546fb85e6fde86b85221e45bc7ad74cc6697163da74c38d6bfad8f"
+      },
+      "split_config": {
+        "dataset_name": "insta_market_basket",
+        "input_path": "/home/leekwanhyeong/workspace/paper_research/sample_data/insta_market_basket/instacart_marked_target_df.parquet",
+        "output_dir": "/home/leekwanhyeong/workspace/paper_research/sample_data/insta_market_basket",
+        "output_prefix": "instacart_marked_target",
+        "scale_base": 2.0,
+        "train_ratio": 0.7,
+        "validation_ratio": 0.15,
+        "test_ratio": 0.15,
+        "entity_col": "oper_part_no",
+        "order_col": "seq",
+        "clip_min_qty": 1.0,
+        "min_count": 100,
+        "min_coverage": 0.999
+      },
+      "manifest_created_at": "2026-06-14T16:32:16",
+      "split_manifest_sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d",
+      "current_data_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+      "available_legacy_test_sha256": "ce8a2c7997d6415cb36b5fd4d3059dde539b2916a8bd97a2f929a788cfe6711c",
+      "current_test_identity": {
+        "rows": 578387,
+        "unique": 578387,
+        "columns": [
+          "oper_part_no",
+          "seq",
+          "demand_dt"
+        ],
+        "canonical_csv_sha256": "5ba5779b865d3e5a4c0c75451abad2aa6616f9111ed1c2ff1e7dcf2d125767ea"
+      },
+      "available_legacy_test_identity": {
+        "rows": 578387,
+        "unique": 578387,
+        "columns": [
+          "oper_part_no",
+          "seq",
+          "demand_dt"
+        ],
+        "canonical_csv_sha256": "5ba5779b865d3e5a4c0c75451abad2aa6616f9111ed1c2ff1e7dcf2d125767ea"
+      },
+      "overlap": {
+        "left": 578387,
+        "right": 578387,
+        "intersection": 578387,
+        "left_only": 0,
+        "right_only": 0
+      },
+      "final_evaluation_role": "previously exposed legacy test; not untouched independent confirmation"
+    },
+    "intermittent_frozen_5000": {
+      "classification": "unresolved_source_entity_mapping",
+      "available_legacy_test_identity": {
+        "rows": 41344,
+        "unique": 41344,
+        "columns": [
+          "oper_part_no",
+          "seq",
+          "demand_dt"
+        ],
+        "canonical_csv_sha256": "f72a2255b8019f86c0ee2b9c523d7483c0d2738838f255923548c83a4e59b46a"
+      },
+      "current_test_identity": {
+        "rows": 88019,
+        "unique": 88019,
+        "columns": [
+          "oper_part_no",
+          "seq",
+          "demand_dt"
+        ],
+        "canonical_csv_sha256": "cf8a9788909545f81bdf57c4f49f48a9eff996215470743d5c3e2933ea38ddea"
+      },
+      "literal_overlap": {
+        "left": 41344,
+        "right": 88019,
+        "intersection": 0,
+        "left_only": 41344,
+        "right_only": 88019
+      },
+      "candidate_part_date_overlap": {
+        "left": 41344,
+        "right": 85391,
+        "intersection": 0,
+        "left_only": 41344,
+        "right_only": 85391
+      },
+      "candidate_mapping_is_verified": false,
+      "legacy_event_rule": "notebook candidate: demand>8, merge bursts with gaps<=3 weeks; exact build provenance unbound",
+      "current_event_rule": "positive source rows; site_cd::part_no; fixed 5000 stratified series; no burst merging",
+      "raw_current_source_available": false,
+      "raw_legacy_source_available": false,
+      "final_evaluation_role": "legacy holdout with unresolved prior exposure; no untouched independence claim"
+    },
+    "raf_spare_parts": {
+      "classification": "separate_dataset_from_the_identified_legacy_tests",
+      "test_identity": {
+        "rows": 5226,
+        "unique": 5226,
+        "columns": [
+          "oper_part_no",
+          "seq",
+          "demand_dt"
+        ],
+        "canonical_csv_sha256": "5b64ba9399d0b67f0f8c0d334f6405cac90a91c7cc1822959a42d0610b001679"
+      },
+      "current_data_sha256": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d",
+      "historical_test_access": "no confirmed access in bounded prior search; not proof of nonaccess",
+      "final_evaluation_role": "fixed temporal holdout; disclose incomplete historical access evidence",
+      "train_months": "1996-01..2000-10",
+      "validation_months": "2000-11..2001-11",
+      "test_months": "2001-12..2002-12"
+    }
+  },
+  "split_source": {
+    "path": "simple_lab_test/notebooks/preprocessing/tpp_split_utils.py",
+    "historical_revision": "3407f09",
+    "historical_sha256": "a0ac5e178499506565739cdd1ebb9863bb6ea662338b30cb2806ee98cdabfa9e",
+    "current_sha256": "a0ac5e178499506565739cdd1ebb9863bb6ea662338b30cb2806ee98cdabfa9e",
+    "unchanged": true
+  },
+  "evaluation_decision": {
+    "validation_extension": "all four frozen train/validation datasets; no split changes",
+    "final_existing_test": "all four fixed test populations, after model freeze and separate evaluation permit; legacy holdout description",
+    "untouched_independent_test_claim": false,
+    "new_independent_confirmation": {
+      "Taxi": "a later non-overlapping raw calendar period after all current event timestamps; same frozen spatial aggregation",
+      "Intermittent": "new extraction after current per-site date cutoffs, or provenance-verified external sites/parts",
+      "Instacart": "no verified later release available locally; use separately sourced basket histories or an external event-quantity dataset",
+      "RAF": "this 84-month archive cannot supply later periods; independently sourced parts/months needed for new confirmation"
+    },
+    "new_data_acquisition_or_evaluation_started": false
+  },
+  "access_note": {
+    "heldout_performance_or_predictions_read": false,
+    "heldout_quantity_gap_columns_materialized": false,
+    "incidental_manifest_target_summaries_exposed": true,
+    "description": "Initial manifest inspection accidentally emitted existing summary fields including heldout target-distribution aggregates. No performance or predictions; subsequent reads are allowlisted. This is recorded rather than called a pristine unseen split."
+  }
+}

@@ -1,0 +1,94 @@
+--- README.md.before
++++ README.md
+@@ -1,11 +1,11 @@
+ # TitanTPP — named LNCS working draft
+ 
+-Evidence and editorial cutoff: 2 October 2026. This is a working manuscript,
++Evidence and editorial cutoff: 3 October 2026. This is a working manuscript,
+ not a submission-ready or independently evaluated final paper.
+ 
+ ## Contents
+ 
+-- `main.tex`: manuscript with four embedded vector figures,
++- `main.tex`: manuscript with five embedded vector figures,
+   nine tables, Appendices A--C, and 32 embedded references.
+ - Author order: LeeKwanHyeong, then Changhee Lee (corresponding author).
+   The corresponding email is `chl8856@gmail.com`, verified on the
+@@ -26,10 +26,31 @@
+ - `LNCS_README.txt`: original template distribution instructions.
+ 
+ The main comparison contains 84 completed development-validation runs:
+-four datasets, seven models, and three seeds. The appendix separately records
+-11 completed conditions from the ongoing extension as of 07:14 KST. Its
+-checkpoint binary CPU audit was still pending at that observation cutoff.
+-No running best-so-far result is presented as a completed result.
++four datasets, seven models, and three seeds. Appendix A now records all
++24 structural-control fits (two controls × four datasets × three seeds).
++Their checkpoint originals, frozen sources, selected epochs, saved metrics,
++and selected/last validation replay records have passed the original-file
++and CPU loading audit. The reused original MLP contributes another 12 rows,
++yielding 12 complete three-seed groups in the appendix table. The registry,
++means, sample standard deviations, paired results, and evidence hashes are
++in `reports/titantpp_structural3_final_audit_20261003_v1/` at repository root.
++No new training, forward pass, or replay was performed for this audit.
++
++Both Intermittent controls' seed-62 fits ran on RTX PRO 4500; their other
++seeds and the original MLP ran on RTX 5080. This provenance is explicit and
++does not enter the matched efficiency measurements. The evidence supports
++the direct predecessor correction most clearly on Taxi, with conditional
++quantity gains elsewhere; it does not establish a general advantage for
++the original branch-availability thresholds. Deep Renewal and A100 candidate
++results remain in separate research records and are not added to the paper's
++comparison panel.
++
++The independent final-evaluation design is recorded in
++`reports/titantpp_independent_final_evaluation_design_20261003_v1/`.
++Model choice and analysis rules are fixed; eligible evaluation data and
++complete binding of checkpoint originals remain prerequisites to execution.
++Legacy test partitions are not assumed to be untouched. No held-out
++performance or predictions were inspected in this revision.
+ 
+ Appendix B describes the four train populations with common definitions.
+ Taxi, Intermittent, and Instacart profiles are reused; RAF's missing train
+@@ -42,6 +63,14 @@
+ performed for this addition.
+ 
+ ## Compilation and verification status
++
++The 3 October structural-results revision passed the built-in LaTeX compiler
++in the existing editor. Source backups, the revision diff, claim-to-evidence
++checks, and the compilation receipt are in
++`reports/titantpp_structural_manuscript_final_20261003_v1/`.
++Appendices B/C, figures, the main comparison table, and references are reused.
++No separate PDF was compiled or exported for this revision. Full-document
++visual layout review remains outstanding; compilation alone does not verify it.
+ 
+ Open `main.tex` in the Codex LaTeX editor. Figures and references are embedded;
+ the official class is the only local TeX input. The standard packages used are
+@@ -61,7 +90,8 @@
+ `out/main.pdf` at repository root. No TeX distribution or plugin was installed
+ as part of this edit.
+ 
+-**Native and MacTeX compilation passed after the author and figure edits.**
++**Historical verification of the earlier author and figure edits follows.**
++Native and MacTeX compilation passed after those edits.
+ During the earlier Appendix B/C edit, the first native attempt
+ identified an undefined `\Description` command in the compiler's bundled
+ LNCS 2.21 class. A `\providecommand` fallback preserves compatibility with
+@@ -94,10 +124,11 @@
+ The class and margins have not been modified. Recheck the call before final
+ pagination and submission.
+ 
+-Next steps are to review the full rendered document, establish the
+-independent evaluation scope, and incorporate the extension results when
+-their complete groups and audits are available. Pending training does not
+-prevent editing this manuscript now. Quantitative claims currently concern
+-development validation, not an untouched final test population.
++Next steps are to establish the independent evaluation population and bind
++the remaining checkpoint originals under the fixed design, then execute and
++report that evaluation before submission. Full rendered-document review and
++final venue formatting follow. Structural-control training and original-file
++audits are complete; quantitative claims currently concern development
++validation, not an untouched final test population.
+ 
+ Template source: [Springer proceedings author instructions](https://www.springer.com/gp/computer-science/lncs/conference-proceedings-guidelines).

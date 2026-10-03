@@ -1,0 +1,32 @@
+{
+  "status": "prior_artifacts_preserved_corrections_recorded_for_effective_contract",
+  "prior_design": "reports/titantpp_independent_final_evaluation_design_20261003_v1/design.json",
+  "later_evidence_preparation": "reports/titantpp_independent_evaluation_preparation_20261001_v1/",
+  "corrections": [
+    {
+      "topic": "Intermittent bootstrap",
+      "old_10_3_design": "whole_oper_part_no primary",
+      "effective_rule": "whole_site_cd primary; whole_oper_part_no sensitivity",
+      "source": "10/1 preparation/amendment.json, supported by50site/5000series identifier mapping",
+      "reason": "The10/3 design omitted an already approved10/1 amendment."
+    },
+    {
+      "topic": "Taxi cohort filters",
+      "old_interpretation": "min_count100/min_coverage0.999 as cohort selection",
+      "effective_rule": "These are train-only max-order construction thresholds. Actual source cohort filter is full-January active_buckets>=72.",
+      "source": "yellow_trip.ipynb code and tpp_split_utils.py::fit_max_order_from_train"
+    },
+    {
+      "topic": "Checkpoint/evaluator readiness",
+      "old_10_3_design": "36 legacy original paths absent and evaluator readiness not established",
+      "effective_rule": "10/1 preparation already reports84 original bindings and CPU validation-only preparation. Current binding/evaluator agents verify effective sources; old-path absence is not current absence.",
+      "source": "10/1 preparation README/protocol_effective; current task binding report is authoritative once verified"
+    },
+    {
+      "topic": "Independent population readiness",
+      "effective_rule": "Unchanged: no clean evaluation population is certified merely by artifact or evaluator completion."
+    }
+  ],
+  "model_checkpoint_selection_changed": false,
+  "prior_design_modified": false
+}

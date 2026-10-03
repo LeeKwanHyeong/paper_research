@@ -1,0 +1,266 @@
+--- /Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_completed22_audit_20261002_v1/main.before.tex
++++ /Users/igwanhyeong/PycharmProjects/paper_research/paper/titantpp_pakdd_2027_draft/main.tex
+@@ -1,9 +1,10 @@
+ % Named working draft, 2 October 2026.
+ % Evidence: completed four-dataset validation study and nonlearned baselines.
+ % The ongoing 36-condition extension is not part of the main comparison;
+-% Appendix A reports 10 structural conditions from the 13-condition audited
+-% subset at the 2026-10-02 10:51:58 KST cutoff; the original audit is preserved
+-% in reports/titantpp_extension_completed13_audit_20261002_v1.
++% Appendix A reports 21 structural conditions at the 2026-10-02 21:57 KST
++% cutoff, using reports/titantpp_completed22_audit_20261002_v1 and the reused
++% reports/titantpp_extension_completed13_audit_20261002_v1 audit.
++% A100 exploratory candidates and Deep Renewal remain in separate research records.
+ % PAKDD 2027 page limit has not yet been announced.
+ % Standalone source: figures and bibliography are embedded below.
+ \documentclass[runningheads]{llncs}
+@@ -405,7 +406,7 @@
+ and an all-available-branch correction with the original history correction.
+ Both retain the common heads and regression objective.
+ Appendix~\ref{app:extension} reports the verified completed subset, separating
+-Taxi's three-seed groups from single-seed results on other datasets.
++complete three-seed groups from individual runs in incomplete groups.
+ 
+ Two nonlearned baselines predict either the last observed quantity or the
+ mean quantity in exactly the same observed input window. They require no
+@@ -576,22 +577,25 @@
+ \end{tabular}
+ \end{table}
+ 
+-The completed parameter-matched Taxi comparison further examines the
+-adjacent-state input (Appendix~\ref{app:extension}). Relative to a current-only
+-correction with the same parameter count, \method\ reduces mean MAE/RMSE
+-by 11.07\%/11.48\%, with lower quantity errors in all three paired seeds.
+-Because the current-only control retains the causal encoder's history,
+-this comparison supports directly combining adjacent contextual states
+-beyond the history already encoded in the current state.
++The completed parameter-matched controls examine the adjacent-state input
++(Appendix~\ref{app:extension}). Relative to a current-only correction with
++the same parameter count, \method\ reduces mean MAE/RMSE by
++11.07\%/11.48\% on Taxi, 4.78\%/4.11\% on Intermittent, and
++0.58\%/0.75\% on RAF. RMSE is lower in all three paired Taxi and RAF
++seeds, but only two Intermittent seeds. Current-only has lower mean time
++NLL on all three datasets; its Intermittent seed-62 run also uses a different
++GPU. Because this control retains the causal encoder's history, the
++comparison assesses the additional direct predecessor path, with the
++largest quantity benefit on Taxi.
+ 
+ Branch availability has a different effect. Activating all eight branches
+ wherever a predecessor exists reduces Taxi mean MAE/RMSE by 1.15\%/1.99\%
+-relative to \method, while increasing time NLL. In the completed seed-42
+-comparisons, the original correction achieves lower errors on all three
+-metrics than either structural control on Intermittent; Instacart's RMSE
+-differences slightly favor the controls. These results distinguish the
+-benefit of adjacent-state coupling on Taxi from the dataset-dependent
+-trade-offs of its branch-availability rule.
++relative to \method, while increasing time NLL. On RAF, mean quantity
++errors remain close and time NLL decreases. Intermittent's completed
++all-available seeds have opposing rankings, while both controls slightly
++reduce Instacart RMSE at seeds 42 and 52. These results distinguish the
++benefit of adjacent-state coupling from the dataset-dependent trade-offs
++of its branch-availability rule.
+ 
+ An exploratory normalization variant replaces the fixed divisor in
+ Eq.~\eqref{eq:correction} with the number of available branches, with a
+@@ -626,8 +630,9 @@
+ The train-only lag profiles distinguish strong short-range association on
+ Taxi from more persistent association on Intermittent, whereas RAF and
+ Instacart exhibit much weaker within-series correlations
+-(Fig.~\ref{fig:train-lag-correlation}). Together with the completed Taxi
+-structural controls, this contrast motivates the hypothesis that directly
++(Fig.~\ref{fig:train-lag-correlation}). Together with the stronger quantity
++benefits of direct predecessor input on Taxi and Intermittent than on RAF,
++this contrast motivates the hypothesis that directly
+ coupling adjacent contextual states is useful when recent quantities carry
+ substantial within-series information. The error decomposition identifies
+ the realized gains and losses; the four-dataset association provides a
+@@ -731,17 +736,18 @@
+ Three-seed means, sample standard deviations, and paired wins describe
+ repeatability; they do not constitute a significance test.
+ 
+-The B comparison changes capacity as well as the correction path. The
+-completed parameter-matched Taxi controls strengthen the evidence for
+-adjacent-state coupling, while the all-available alternative achieves lower
+-mean quantity errors. This separates the correction's empirical benefit
+-from superiority of the original availability thresholds. The effects of
+-bottleneck rank, insertion position, and initialization remain unresolved.
+-Appendix~\ref{app:extension} distinguishes the extension's completed
+-three-seed groups from its seed-42 results; the other groups remain in
+-progress or queued at the stated cutoff. Likewise, the static-retrieval
+-removal comparison available for a different internal variant does not
+-isolate that component's necessity in the representative architecture.
++The B comparison changes capacity as well as the correction path.
++Parameter-matched controls provide the strongest evidence for direct
++adjacent-state coupling on Taxi, a less consistent quantity benefit on
++Intermittent, and a small benefit on RAF. The all-available alternative
++achieves lower mean quantity errors on Taxi, so these results do not
++establish superiority of the original availability thresholds. The effects
++of bottleneck rank, insertion position, and initialization remain unresolved.
++Appendix~\ref{app:extension} separates completed three-seed groups from
++individual runs in incomplete groups and records the transferred
++Intermittent run's GPU provenance. Likewise, the static-retrieval removal
++comparison available for a different internal variant does not isolate
++that component's necessity in the representative architecture.
+ 
+ The common-head panel compares numerical-input adaptations of six TPP
+ encoders. Its objective and epoch cap do not equalize parameter counts,
+@@ -779,14 +785,14 @@
+ 
+ \appendix
+ \section{Completed Structural Comparisons}\label{app:extension}
+-This appendix reports 10 completed structural conditions at the 2 October
+-2026, 10:51:58 KST observation cutoff. Six conditions form complete
+-three-seed Taxi groups; two conditions each cover Intermittent and Instacart
+-at seed 42. All reported conditions completed training and selected/last
+-validation re-evaluation. Archived checkpoints and frozen source were
+-verified against the selected epochs and recorded metrics. The results
+-extend the development validation study with parameter-matched structural
+-controls.
++This appendix reports 21 completed structural conditions at the 2 October
++2026, 21:57 KST observation cutoff: six on Taxi, five on Intermittent,
++six on RAF, and four on Instacart. Each condition completed training and
++selected/last validation re-evaluation; archived checkpoints and frozen
++source were verified against the selected epochs and recorded metrics.
++Table~\ref{tab:extension} contains the five complete three-seed control
++groups alongside the reused original MLP results. The six conditions in
++incomplete groups are reported individually in Table~\ref{tab:extension-partial}.
+ 
+ The current-only control removes the explicit predecessor input from the
+ correction while retaining history in the causal encoder. Its eight
+@@ -797,19 +803,37 @@
+ dividing by eight. It differs from active-count normalization, which changes
+ the divisor rather than availability.
+ 
+-\begin{table}[h]
+-\caption{Completed Taxi structural controls, three-seed
+-validation mean $\pm$ sample standard deviation. All extension conditions
+-in this table have verified archived checkpoints. The original MLP results
+-are reused; all metrics refer to the same RMSE-selected checkpoint per run.}
++Taxi and RAF controls ran on RTX 5080, and Instacart controls on RTX 5090.
++Intermittent seeds 42 and 52 ran on RTX 5080; the current-only seed-62 fit
++ran on RTX PRO 4500 after transfer of its unstarted condition. Its frozen
++training and selection rules were retained, and native qualification and
++baseline replay passed. The Intermittent current-only aggregate therefore
++spans two GPU types, while its original MLP reference ran on RTX 5080.
++
++\begin{table}[t]
++\caption{Complete structural-control groups on development validation data,
++mean $\pm$ sample standard deviation over seeds 42, 52, and 62. Original MLP
++results are reused. Each run contributes MAE, RMSE, and time NLL from the
++same RMSE-selected checkpoint. The Intermittent current-only group includes
++one RTX PRO 4500 run, as described in the text.}
+ \label{tab:extension}\centering\small
+ \begin{tabular}{lrrr}
+ \toprule
+ Configuration & MAE & RMSE & Time NLL\\
+ \midrule
++\multicolumn{4}{l}{\textit{Taxi}}\\
+ Original MLP & $25.6237\pm0.8320$ & $79.7111\pm2.8260$ & $1.0387\pm0.2843$\\
+ Current-only & $28.8130\pm0.4688$ & $90.0481\pm1.5131$ & $0.8818\pm0.1827$\\
+ All-available & $25.3290\pm0.2945$ & $78.1212\pm0.7114$ & $1.1907\pm0.3542$\\
++\midrule
++\multicolumn{4}{l}{\textit{Intermittent}}\\
++Original MLP & $0.7005\pm0.0541$ & $1.6730\pm0.0819$ & $0.4971\pm0.2095$\\
++Current-only & $0.7357\pm0.0454$ & $1.7447\pm0.0346$ & $0.4648\pm0.1039$\\
++\midrule
++\multicolumn{4}{l}{\textit{RAF}}\\
++Original MLP & $9.2506\pm0.0855$ & $33.9507\pm0.0588$ & $3.5446\pm0.0669$\\
++Current-only & $9.3044\pm0.0806$ & $34.2076\pm0.2495$ & $3.4548\pm0.0954$\\
++All-available & $9.2522\pm0.1170$ & $33.9941\pm0.1202$ & $3.5249\pm0.0718$\\
+ \bottomrule
+ \end{tabular}
+ \end{table}
+@@ -818,44 +842,64 @@
+ 11.07\%/11.48\%, with lower quantity errors in every paired seed.
+ All-available improves mean MAE/RMSE over the original by 1.15\%/1.99\%,
+ but increases mean time NLL; its MAE and RMSE gains occur in one and two
+-of the three paired seeds, respectively. Together, these comparisons support
++of the three paired seeds, respectively. These comparisons support
+ explicit predecessor correction on Taxi and identify a quantity--timing
+ trade-off between branch-availability rules.
+ 
+-Table~\ref{tab:extension-seed42} reports the four completed structural
+-conditions outside Taxi alongside the corresponding original MLP results.
+-On Intermittent, the original MLP achieves lower MAE, RMSE, and time NLL than
+-both controls. Instacart favors current-only on MAE and RMSE, whereas
+-all-available slightly lowers RMSE and time NLL but increases MAE. Both
+-controls reduce Instacart RMSE by approximately 0.11\%. These single-seed
+-differences describe local outcomes, not three-seed estimates.
++On Intermittent, the original MLP reduces mean MAE/RMSE relative to
++current-only by 4.78\%/4.11\%. The quantity gains occur in seeds 42 and 52;
++seed 62 favors current-only on all three metrics. Current-only has lower
++mean time NLL. Thus the mean quantity benefit is less consistent across
++seeds than on Taxi, and the seed-62 comparison also differs in GPU type.
++
++On RAF, the original MLP reduces mean MAE/RMSE by 0.58\%/0.75\% relative
++to current-only, with lower RMSE in all three paired seeds. All-available
++has nearly the same mean quantity errors as the original: MAE is 0.02\%
++higher and RMSE is 0.13\% higher. Its RMSE is nevertheless lower in two
++paired seeds. Both controls have lower mean time NLL than the original.
++The RAF results indicate a small quantity benefit from the direct
++predecessor path and a metric-dependent comparison of availability rules.
+ 
+ \begin{table}[t]
+-\caption{Completed seed-42 structural comparisons on development validation
+-data. The four extension conditions have verified archived checkpoints;
+-original MLP results are reused at the same seed. Each row reports metrics
+-from one RMSE-selected checkpoint, without seed averaging.}
+-\label{tab:extension-seed42}\centering\small
++\caption{Completed runs from structural-control groups with seed 62 still
++pending at the observation cutoff. Individual development-validation
++results are paired with the original MLP at the same seed; no partial-group
++mean or standard deviation is reported. Intermittent current-only has a
++complete three-seed group and appears in Table~\ref{tab:extension}.}
++\label{tab:extension-partial}\centering\small
+ \begin{tabular}{lrrr}
+ \toprule
+ Configuration & MAE & RMSE & Time NLL\\
+ \midrule
+ \multicolumn{4}{l}{\textit{Intermittent, seed 42}}\\
+ Original MLP & 0.638480 & 1.578487 & 0.346835\\
+-Current-only & 0.745193 & 1.773053 & 0.352289\\
+ All-available & 0.675898 & 1.682415 & 0.358399\\
++\midrule
++\multicolumn{4}{l}{\textit{Intermittent, seed 52}}\\
++Original MLP & 0.737459 & 1.719204 & 0.408123\\
++All-available & 0.733308 & 1.694184 & 0.362791\\
+ \midrule
+ \multicolumn{4}{l}{\textit{Instacart, seed 42}}\\
+ Original MLP & 3.991502 & 5.878730 & 2.803218\\
+ Current-only & 3.990017 & 5.872238 & 2.803320\\
+ All-available & 3.992629 & 5.872499 & 2.803145\\
++\midrule
++\multicolumn{4}{l}{\textit{Instacart, seed 52}}\\
++Original MLP & 3.994202 & 5.881479 & 2.811469\\
++Current-only & 3.994152 & 5.873423 & 2.812281\\
++All-available & 3.991316 & 5.878511 & 2.811556\\
+ \bottomrule
+ \end{tabular}
+ \end{table}
+ 
+-At the stated cutoff, the seed-52/62 structural controls on Intermittent and
+-Instacart and all RAF structural groups were queued. Their three-seed comparisons remain
+-pending; Table~\ref{tab:main} retains the completed common-head panel.
++Intermittent's all-available control has higher errors than the original
++on all three metrics at seed 42 and lower errors at seed 52. Instacart's
++two controls reduce RMSE by 0.05--0.14\% at the completed seeds, with
++mixed changes in MAE and time NLL. At this cutoff, the Intermittent
++all-available seed-62 fit and the Instacart current-only seed-62 fit were
++in progress; Instacart all-available seed 62 was queued. Three-seed
++conclusions for these groups remain pending. Table~\ref{tab:main} retains
++the completed common-head panel.
+ 
+ 
+ \section{Data Definitions and Training Distributions}\label{app:data-characteristics}
+@@ -1324,8 +1368,9 @@
+ 
+ These profiles suggest an applicability hypothesis for history correction:
+ combining adjacent contextual states can be useful when recent quantities
+-carry substantial information within a series. The completed Taxi
+-parameter-matched control supports that architectural interpretation
++carry substantial information within a series. The completed
++parameter-matched controls provide stronger quantity gains on Taxi and
++Intermittent than on RAF, although the Intermittent ranking varies by seed
+ (Appendix~\ref{app:extension}). Data characteristics alone, however, do
+ not determine the error trade-off. Intermittent's last-quantity baseline
+ achieves lower MAE than \method, while \method\ achieves lower RMSE;

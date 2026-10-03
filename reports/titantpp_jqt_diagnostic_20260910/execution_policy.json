@@ -1,0 +1,85 @@
+{
+  "contract_id": "jqt_seed42_equal_exposure_execution_policy_v1",
+  "status": "scientific_design_and_budget_frozen_gpu_binding_pending",
+  "authorization": {
+    "new_research_training": false,
+    "gpu_experiment": false,
+    "source_sync": false,
+    "scheduler_status": "PAUSED",
+    "scheduler_id": "vnc-hard-lmm-5090-screening"
+  },
+  "scientific_design": {
+    "backbone": "static B only",
+    "track": "legacy_cap300_compatibility_diagnostic",
+    "objectives": [
+      "joint",
+      "quantity_only",
+      "time_only"
+    ],
+    "datasets": [
+      "intermittent_frozen_5000",
+      "yellow_trip_hourly",
+      "insta_market_basket"
+    ],
+    "seed": 42,
+    "epochs_per_arm": 120,
+    "batch_size": 128,
+    "early_stopping": false,
+    "quantity_comparison": "J raw_quantity_rmse selector vs Q raw_quantity_rmse selector",
+    "time_comparison": "J legacy_time_loss selector vs T legacy_time_loss selector",
+    "same_step_report": "all epoch/global-step exposures aligned before comparison; paired audit must pass",
+    "joint_checkpoint_policy": "two selector snapshots remain distinct; cannot claim combined simultaneous performance",
+    "validation_usage": "model selection and descriptive diagnosis only",
+    "held_out_test": "locked",
+    "repeat_seeds": "not included in this pilot budget; preregister separately before superiority claim"
+  },
+  "validated_execution": {
+    "server": "local Mac /Users/igwanhyeong/PycharmProjects/paper_research",
+    "device": "cpu",
+    "contracts": [
+      "contracts/jqt_cpu_insta_market_basket_v1.json",
+      "contracts/jqt_cpu_intermittent_frozen_5000_v1.json",
+      "contracts/jqt_cpu_yellow_trip_hourly_v1.json"
+    ],
+    "runtime_binding": "exact in each CPU contract; source closure is 62 Python files",
+    "cpu_full_training": "not executed or timed"
+  },
+  "intended_gpu_execution": {
+    "server": "5080",
+    "python": "/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python",
+    "source_target": "/home/leekwanhyeong/workspace/paper_research",
+    "artifact_target": "/home/leekwanhyeong/workspace/paper_research/search_artifacts/jqt_seed42_equal_exposure_v1",
+    "observed_runtime": "5080_runtime_readonly_v2.json",
+    "executable_now": false,
+    "requires_before_execution": [
+      "explicit authorization for new bounded GPU work",
+      "isolated source revision and checksum manifest binding; observed server directory has no Git checkout",
+      "strict CUDA deterministic runtime binding and continuous/resume synthetic replay qualification",
+      "separate GPU contract with actual runtime and source hashes; do not modify CPU contracts or bypass CPU guard",
+      "launcher enforcement of cumulative wall-time limits including retries; timeout cannot qualify unequal-budget arms"
+    ]
+  },
+  "cost_and_limits": {
+    "basis": "cost_basis.json",
+    "historical_5090_proxy_gpu_hours": 22.13518048688625,
+    "estimated_5080_gpu_hours": null,
+    "hard_ceiling_for_proposed_5080_pilot_gpu_hours": 72,
+    "max_concurrent_gpu_jobs": 1,
+    "max_research_arms": 9,
+    "max_epochs_per_arm": 120,
+    "max_optimizer_steps_all_arms": 6816240,
+    "retry_policy": "no automatic restart or budget extension; interrupted arm may resume only within original aggregate ceiling and explicit scope",
+    "timeout_policy": "abort comparison if equal fixed exposure not completed; retain evidence; no selecting reduced epochs after seeing performance",
+    "money_cost": "unmeasured; no billing rate or energy measurement",
+    "enforcement_status": "limit is frozen for approval; no GPU launcher or job created"
+  },
+  "decision_rule": {
+    "interpretation": "objective separation is a diagnostic, not established final architecture",
+    "gate": "repeatable Q/J quantity and T/J time gains at matched exposure and appropriate selectors required before structural promotion",
+    "controls_next": [
+      "capacity and end-to-end train/inference compute control for Q+T system",
+      "same separation treatment on RMTPP and THP",
+      "additional seeds, normalized observation-law track, and held-out lock before paper superiority claim"
+    ]
+  }
+}

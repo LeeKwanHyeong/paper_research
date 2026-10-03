@@ -1,0 +1,146 @@
+{
+  "contract_id": "instacart_dual_timescale_quantity_v1",
+  "status": "frozen_before_row_level_inference",
+  "frozen_at": "2026-09-09T22:54:45.166853+00:00",
+  "scope": {
+    "dataset": "insta_market_basket",
+    "seed": 42,
+    "splits": [
+      "validation",
+      "train"
+    ],
+    "held_out_test": false,
+    "training": false,
+    "checkpoint_selection": false,
+    "parameter_updates": false,
+    "calibration_fit": false,
+    "primary_contrast": "candidate_minus_rmtpp",
+    "secondary_contrasts": [
+      "candidate_minus_b",
+      "candidate_minus_thp"
+    ]
+  },
+  "models": {
+    "b": {
+      "checkpoint": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/hard_lmm_raw_rmse_checkpoint_alignment_seed42_5090_20260906_f752434/seed42_e300/insta_market_basket/quantile_checkpoint_alignment/runs/titantpp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_file_sha256": "e594f8df0dcd66249c3724063f44eee3de213bc83a780ca81fdf39a094bfed07",
+      "checkpoint_state_sha256": "a74e1f3055b03db5ac85adf2fdb63711890ea9d06449965e3ca749aefccc2f02",
+      "summary": "/Users/igwanhyeong/PycharmProjects/paper_research/paper/results/final_backbone_and_baselines_20260909/B_reference/insta_market_basket/summary.json",
+      "summary_file_sha256": "54bea72fefecb8b4d8637e39bd147048bb85b530becd7bf579a65d2197c67810",
+      "backbone": "titantpp",
+      "best_epoch": 72,
+      "checkpoint_selection": "best_validation_raw_quantity_rmse"
+    },
+    "candidate": {
+      "checkpoint": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/instacart_dual_timescale_quantity_diagnostic_20260910/checkpoints/candidate.pt",
+      "checkpoint_file_sha256": "a62f05ca648708672eed86cdaaa94ce6ac0748354436cf1bc4ca527f02f3f0c8",
+      "checkpoint_state_sha256": "8a1136a654f4de25d5e16e39183c0fb3ec4586e8c0227451d14f693defa5a6aa",
+      "summary": "/Users/igwanhyeong/PycharmProjects/paper_research/paper/results/final_backbone_and_baselines_20260909/5090/instacart_completed/jobs/seed42_screening_insta_market_basket/runs/titantpp_dual_timescale_memory/count_only_log_regression/seed_42/summary.json",
+      "summary_file_sha256": "e0e06aeff8164ce8368590ce105b4c992fa1dd36e34c61e8c8382ed3697d6f81",
+      "backbone": "titantpp_dual_timescale_memory",
+      "best_epoch": 72,
+      "checkpoint_selection": "best_validation_raw_quantity_rmse"
+    },
+    "rmtpp": {
+      "checkpoint": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/instacart_dual_timescale_quantity_diagnostic_20260910/checkpoints/rmtpp.pt",
+      "checkpoint_file_sha256": "64ec26afba13d3117e0d3cf0cc1c554d2a6de10b5a4181834dd0096fd290aacc",
+      "checkpoint_state_sha256": "2af7eb20d81c802096963c6301fa8dfd46cdb7ba44502d978ad124a4cfb4fd38",
+      "summary": "/Users/igwanhyeong/PycharmProjects/paper_research/paper/results/final_backbone_and_baselines_20260909/Instacart_existing/rmtpp/training/runs/rmtpp/count_only_log_regression/seed_42/summary.json",
+      "summary_file_sha256": "f9c3efe618ef6d3ac2f80599a9b27d933d33414fb35c4b5f01592800ee1856d2",
+      "backbone": "rmtpp",
+      "best_epoch": 40,
+      "checkpoint_selection": "best_validation_raw_quantity_rmse"
+    },
+    "thp": {
+      "checkpoint": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/instacart_dual_timescale_quantity_diagnostic_20260910/checkpoints/thp.pt",
+      "checkpoint_file_sha256": "f52310f70e19bc2a9e7f7b63d256e684b9aee7daa8711e5505e4521f3582df37",
+      "checkpoint_state_sha256": "6c9a686c27a89e0ded3ccc8ee2cb920a137a526081aa14e87d516e7343b9883b",
+      "summary": "/Users/igwanhyeong/PycharmProjects/paper_research/paper/results/final_backbone_and_baselines_20260909/Instacart_existing/thp/training/runs/thp/count_only_log_regression/seed_42/summary.json",
+      "summary_file_sha256": "61ca323560deaa39475a045a305687ac4fb557df67f315e5620158746b4c08a7",
+      "backbone": "thp",
+      "best_epoch": 50,
+      "checkpoint_selection": "best_validation_raw_quantity_rmse"
+    }
+  },
+  "data": {
+    "path": "/Users/igwanhyeong/PycharmProjects/paper_research/sample_data/insta_market_basket/instacart_marked_target_with_split.parquet",
+    "sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+    "split_manifest": "/Users/igwanhyeong/PycharmProjects/paper_research/sample_data/insta_market_basket/instacart_marked_target_split_manifest.json",
+    "split_manifest_sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d",
+    "lookback_weeks": 52,
+    "max_seq_len": 64,
+    "train_quantity_boundaries": [
+      8,
+      20,
+      25,
+      35
+    ]
+  },
+  "populations": {
+    "train": {
+      "count": 1991192,
+      "identity_sha256": "c361f5e9904c25f18c91007f6e1209518a02fb755799e81c8300ee759b2a1210",
+      "quantity_sha256": "07e98693d5ac26caeaeb3c60d6d31fad21ab8f1e40ac649f231ac299963817d8"
+    },
+    "validation": {
+      "count": 503733,
+      "identity_sha256": "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8",
+      "quantity_sha256": "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184"
+    }
+  },
+  "b_caches": {
+    "train": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/frozen_raw_affine_calibration_v1_1ba9a43_5080/full/train/insta_market_basket_B/train_predictions.npz",
+      "sha256": "bbe3cd5fe995ec15afc681c236c2ff0fc9b900197dff309c399ad3cb0f390d7d"
+    },
+    "validation": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/hard_lmm_bounded_qk_error_diagnostic_20260908/paired_validation_predictions.parquet",
+      "sha256": "98fa0e2fd514a60c59ee4aa66bb795efd32b097c11ebb009daae9a1af4fc2f0f"
+    }
+  },
+  "execution": {
+    "device": "cpu",
+    "batch_size": 128,
+    "threads": 4,
+    "shuffle": false,
+    "frozen_source_root": "/tmp/paper_research_dual_timescale",
+    "frozen_source_revision": "ca8823e688a510e64e7fb81c9dc9d158d4bdfc7c",
+    "source_file_sha256": {
+      "paper/scripts/count_aware_tpp_backbone/core.py": "025dfbe75a5a4e235466807f31873aa085f8ddffe680485fb4b9f4f7ef60c598",
+      "paper/scripts/run_matched_frozen_lognormal_duration.py": "edc060e778cca8ad2788e7fda18ec1119535b80d50779abf62feb1c0a02f2519",
+      "paper/scripts/run_hard_lmm_bounded_qk_error_diagnostic.py": "d7dcebf9659663843f8379941378cf877047504d46e333fd96f035c73ec9f44a",
+      "data_loader/event_seq_data_module.py": "7c11d9ace6c4e4d3bb03861aae92393aa946a38452d702dc7625210b339897ca",
+      "models/TPPs/CountAwareTitanDualTimescale.py": "0a38542bd4d92cf4dae6e45fc3c6f39915599072e6a2a85714d1ef1fb0137ede",
+      "models/TPPs/CountAwareFactory.py": "32813066edf00f1be05d10927ccca11802bd6f20519465c87ab3fde980fbc104"
+    },
+    "validation_metric_absolute_tolerance": 1e-05,
+    "validation_before_train": true,
+    "same_dataset_instance_for_every_model": true
+  },
+  "analysis": {
+    "history_bins": [
+      "1",
+      "2-3",
+      "4-7",
+      "8-15",
+      "16-31",
+      "32-63"
+    ],
+    "change_bins": [
+      "negative",
+      "zero",
+      "positive"
+    ],
+    "series_fold": "int(SHA256(UTF8(\"instacart_dual_timescale_quantity_v1:20260910|\"+str(series_id))),16)%2",
+    "fold_purpose": "Descriptive replication in disjoint training series partitions. Models saw both folds during fitting; not out-of-fold evidence.",
+    "decomposition": "MSE=bias^2+mean((error-bias)^2); group delta contributions weighted count/N",
+    "series_concentration_fractions": [
+      0.001,
+      0.01,
+      0.05
+    ],
+    "bootstrap_replicates": 1000,
+    "bootstrap_seed": 20260910,
+    "hypothesis_policy": "Fixed quantity/history/change cuts before inference. Narrow explanation on validation; freeze explanation before train comparison. Verify current candidate independently of earlier BOUNDED-QK findings; no causal claim from association."
+  }
+}

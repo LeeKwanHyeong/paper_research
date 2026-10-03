@@ -1,0 +1,666 @@
+{
+  "status": "complete",
+  "created_utc": "2026-10-03T04:25:16.949372+00:00",
+  "scope": "independent recomputation of MLP and S2P2 all seeds plus both deterministic references; not all108 learned vectors",
+  "learned_vectors": 24,
+  "deterministic_vectors": 8,
+  "comparisons": 8715,
+  "max_absolute_metric_difference": 7.389644451905042e-13,
+  "rtol": 1e-10,
+  "atol": 1e-10,
+  "algorithm": "PyArrow column reads; explicit upper time thresholds; boolean stratum masks; direct NumPy sum/dot; no analyzer imports",
+  "analysis_contract_sha256": "e40aad2d87c28974390870e7d367e1291b036862c5a9c513dec479a127005661",
+  "analysis_sha256": "6efb12296f526ee86c62dcdbaf125dee801c2df251bde029e172fb68b0ad5fec",
+  "oracle_script_sha256": "e17a33a5ddf52d4a5d7cab6ba1fa404e18f95cd5a15212667abb5e6ae3551e32",
+  "datasets": {
+    "yellow_trip_hourly": {
+      "learned_vectors": 6,
+      "deterministic_vectors": 2,
+      "target_count": 8327,
+      "cohort_descriptions": {
+        "all": {
+          "0": {
+            "count": 8327,
+            "entity_count": 131,
+            "site_count": 0,
+            "recorded_date_min": "20150124160000",
+            "recorded_date_max": "20150131230000"
+          }
+        },
+        "time": {
+          "0": {
+            "count": 199,
+            "entity_count": 49,
+            "site_count": 0,
+            "recorded_date_min": "20150124160000",
+            "recorded_date_max": "20150127000000"
+          },
+          "1": {
+            "count": 3627,
+            "entity_count": 131,
+            "site_count": 0,
+            "recorded_date_min": "20150127040000",
+            "recorded_date_max": "20150129130000"
+          },
+          "2": {
+            "count": 4501,
+            "entity_count": 130,
+            "site_count": 0,
+            "recorded_date_min": "20150129140000",
+            "recorded_date_max": "20150131230000"
+          }
+        },
+        "quantity": {
+          "0": {
+            "count": 4284,
+            "entity_count": 117,
+            "site_count": 0,
+            "recorded_date_min": "20150124160000",
+            "recorded_date_max": "20150131230000"
+          },
+          "1": {
+            "count": 3222,
+            "entity_count": 63,
+            "site_count": 0,
+            "recorded_date_min": "20150126170000",
+            "recorded_date_max": "20150131230000"
+          },
+          "2": {
+            "count": 400,
+            "entity_count": 13,
+            "site_count": 0,
+            "recorded_date_min": "20150127110000",
+            "recorded_date_max": "20150131230000"
+          },
+          "3": {
+            "count": 338,
+            "entity_count": 8,
+            "site_count": 0,
+            "recorded_date_min": "20150127160000",
+            "recorded_date_max": "20150131230000"
+          },
+          "4": {
+            "count": 83,
+            "entity_count": 4,
+            "site_count": 0,
+            "recorded_date_min": "20150128080000",
+            "recorded_date_max": "20150131230000"
+          }
+        },
+        "history": {
+          "0": {
+            "count": 1358,
+            "entity_count": 61,
+            "site_count": 0,
+            "recorded_date_min": "20150124160000",
+            "recorded_date_max": "20150131230000"
+          },
+          "1": {
+            "count": 1850,
+            "entity_count": 34,
+            "site_count": 0,
+            "recorded_date_min": "20150125150000",
+            "recorded_date_max": "20150131230000"
+          },
+          "2": {
+            "count": 5119,
+            "entity_count": 52,
+            "site_count": 0,
+            "recorded_date_min": "20150126130000",
+            "recorded_date_max": "20150131230000"
+          }
+        },
+        "history_detail": {
+          "0": {
+            "count": 0,
+            "entity_count": 0,
+            "site_count": 0,
+            "recorded_date_min": null,
+            "recorded_date_max": null
+          },
+          "1": {
+            "count": 0,
+            "entity_count": 0,
+            "site_count": 0,
+            "recorded_date_min": null,
+            "recorded_date_max": null
+          },
+          "2": {
+            "count": 0,
+            "entity_count": 0,
+            "site_count": 0,
+            "recorded_date_min": null,
+            "recorded_date_max": null
+          },
+          "3": {
+            "count": 19,
+            "entity_count": 4,
+            "site_count": 0,
+            "recorded_date_min": "20150126150000",
+            "recorded_date_max": "20150131200000"
+          },
+          "4": {
+            "count": 490,
+            "entity_count": 35,
+            "site_count": 0,
+            "recorded_date_min": "20150124160000",
+            "recorded_date_max": "20150131230000"
+          },
+          "5": {
+            "count": 809,
+            "entity_count": 35,
+            "site_count": 0,
+            "recorded_date_min": "20150125030000",
+            "recorded_date_max": "20150131230000"
+          },
+          "6": {
+            "count": 1807,
+            "entity_count": 34,
+            "site_count": 0,
+            "recorded_date_min": "20150125150000",
+            "recorded_date_max": "20150131230000"
+          },
+          "7": {
+            "count": 5202,
+            "entity_count": 52,
+            "site_count": 0,
+            "recorded_date_min": "20150126130000",
+            "recorded_date_max": "20150131230000"
+          }
+        }
+      }
+    },
+    "intermittent_frozen_5000": {
+      "learned_vectors": 6,
+      "deterministic_vectors": 2,
+      "target_count": 88019,
+      "cohort_descriptions": {
+        "all": {
+          "0": {
+            "count": 88019,
+            "entity_count": 5000,
+            "site_count": 50,
+            "recorded_date_min": "20210913",
+            "recorded_date_max": "20300318"
+          }
+        },
+        "time": {
+          "0": {
+            "count": 33847,
+            "entity_count": 3224,
+            "site_count": 50,
+            "recorded_date_min": "20210913",
+            "recorded_date_max": "20240715"
+          },
+          "1": {
+            "count": 37288,
+            "entity_count": 4239,
+            "site_count": 50,
+            "recorded_date_min": "20240722",
+            "recorded_date_max": "20270517"
+          },
+          "2": {
+            "count": 16884,
+            "entity_count": 1182,
+            "site_count": 50,
+            "recorded_date_min": "20270524",
+            "recorded_date_max": "20300318"
+          }
+        },
+        "quantity": {
+          "0": {
+            "count": 49170,
+            "entity_count": 3315,
+            "site_count": 50,
+            "recorded_date_min": "20210913",
+            "recorded_date_max": "20300318"
+          },
+          "1": {
+            "count": 33203,
+            "entity_count": 3186,
+            "site_count": 50,
+            "recorded_date_min": "20230828",
+            "recorded_date_max": "20300128"
+          },
+          "2": {
+            "count": 3480,
+            "entity_count": 898,
+            "site_count": 43,
+            "recorded_date_min": "20231002",
+            "recorded_date_max": "20280619"
+          },
+          "3": {
+            "count": 1923,
+            "entity_count": 261,
+            "site_count": 38,
+            "recorded_date_min": "20240101",
+            "recorded_date_max": "20271129"
+          },
+          "4": {
+            "count": 243,
+            "entity_count": 59,
+            "site_count": 12,
+            "recorded_date_min": "20240101",
+            "recorded_date_max": "20250113"
+          }
+        },
+        "history": {
+          "0": {
+            "count": 8103,
+            "entity_count": 1879,
+            "site_count": 50,
+            "recorded_date_min": "20220829",
+            "recorded_date_max": "20300204"
+          },
+          "1": {
+            "count": 41251,
+            "entity_count": 3754,
+            "site_count": 50,
+            "recorded_date_min": "20220207",
+            "recorded_date_max": "20300318"
+          },
+          "2": {
+            "count": 38665,
+            "entity_count": 1354,
+            "site_count": 50,
+            "recorded_date_min": "20210913",
+            "recorded_date_max": "20300121"
+          }
+        },
+        "history_detail": {
+          "0": {
+            "count": 0,
+            "entity_count": 0,
+            "site_count": 0,
+            "recorded_date_min": null,
+            "recorded_date_max": null
+          },
+          "1": {
+            "count": 0,
+            "entity_count": 0,
+            "site_count": 0,
+            "recorded_date_min": null,
+            "recorded_date_max": null
+          },
+          "2": {
+            "count": 0,
+            "entity_count": 0,
+            "site_count": 0,
+            "recorded_date_min": null,
+            "recorded_date_max": null
+          },
+          "3": {
+            "count": 0,
+            "entity_count": 0,
+            "site_count": 0,
+            "recorded_date_min": null,
+            "recorded_date_max": null
+          },
+          "4": {
+            "count": 307,
+            "entity_count": 77,
+            "site_count": 13,
+            "recorded_date_min": "20220829",
+            "recorded_date_max": "20300121"
+          },
+          "5": {
+            "count": 6105,
+            "entity_count": 1775,
+            "site_count": 50,
+            "recorded_date_min": "20220829",
+            "recorded_date_max": "20300204"
+          },
+          "6": {
+            "count": 42627,
+            "entity_count": 3761,
+            "site_count": 50,
+            "recorded_date_min": "20220207",
+            "recorded_date_max": "20300318"
+          },
+          "7": {
+            "count": 38980,
+            "entity_count": 1361,
+            "site_count": 50,
+            "recorded_date_min": "20210913",
+            "recorded_date_max": "20300121"
+          }
+        }
+      }
+    },
+    "insta_market_basket": {
+      "learned_vectors": 6,
+      "deterministic_vectors": 2,
+      "target_count": 578387,
+      "cohort_descriptions": {
+        "all": {
+          "0": {
+            "count": 578387,
+            "entity_count": 196615,
+            "site_count": 0,
+            "recorded_date_min": "3",
+            "recorded_date_max": "365"
+          }
+        },
+        "time": {
+          "0": {
+            "count": 125138,
+            "entity_count": 91110,
+            "site_count": 0,
+            "recorded_date_min": "3",
+            "recorded_date_max": "123"
+          },
+          "1": {
+            "count": 184652,
+            "entity_count": 79781,
+            "site_count": 0,
+            "recorded_date_min": "124",
+            "recorded_date_max": "244"
+          },
+          "2": {
+            "count": 268597,
+            "entity_count": 52773,
+            "site_count": 0,
+            "recorded_date_min": "245",
+            "recorded_date_max": "365"
+          }
+        },
+        "quantity": {
+          "0": {
+            "count": 274476,
+            "entity_count": 126853,
+            "site_count": 0,
+            "recorded_date_min": "3",
+            "recorded_date_max": "365"
+          },
+          "1": {
+            "count": 237246,
+            "entity_count": 115407,
+            "site_count": 0,
+            "recorded_date_min": "3",
+            "recorded_date_max": "365"
+          },
+          "2": {
+            "count": 33518,
+            "entity_count": 25345,
+            "site_count": 0,
+            "recorded_date_min": "7",
+            "recorded_date_max": "365"
+          },
+          "3": {
+            "count": 25299,
+            "entity_count": 17872,
+            "site_count": 0,
+            "recorded_date_min": "8",
+            "recorded_date_max": "365"
+          },
+          "4": {
+            "count": 7848,
+            "entity_count": 5678,
+            "site_count": 0,
+            "recorded_date_min": "10",
+            "recorded_date_max": "365"
+          }
+        },
+        "history": {
+          "0": {
+            "count": 0,
+            "entity_count": 0,
+            "site_count": 0,
+            "recorded_date_min": null,
+            "recorded_date_max": null
+          },
+          "1": {
+            "count": 151661,
+            "entity_count": 102967,
+            "site_count": 0,
+            "recorded_date_min": "3",
+            "recorded_date_max": "365"
+          },
+          "2": {
+            "count": 244473,
+            "entity_count": 103586,
+            "site_count": 0,
+            "recorded_date_min": "4",
+            "recorded_date_max": "365"
+          },
+          "3": {
+            "count": 153088,
+            "entity_count": 34091,
+            "site_count": 0,
+            "recorded_date_min": "11",
+            "recorded_date_max": "365"
+          },
+          "4": {
+            "count": 28154,
+            "entity_count": 3929,
+            "site_count": 0,
+            "recorded_date_min": "20",
+            "recorded_date_max": "365"
+          },
+          "5": {
+            "count": 1011,
+            "entity_count": 125,
+            "site_count": 0,
+            "recorded_date_min": "35",
+            "recorded_date_max": "354"
+          }
+        },
+        "history_detail": {
+          "0": {
+            "count": 0,
+            "entity_count": 0,
+            "site_count": 0,
+            "recorded_date_min": null,
+            "recorded_date_max": null
+          },
+          "1": {
+            "count": 151661,
+            "entity_count": 102967,
+            "site_count": 0,
+            "recorded_date_min": "3",
+            "recorded_date_max": "365"
+          },
+          "2": {
+            "count": 244473,
+            "entity_count": 103586,
+            "site_count": 0,
+            "recorded_date_min": "4",
+            "recorded_date_max": "365"
+          },
+          "3": {
+            "count": 153088,
+            "entity_count": 34091,
+            "site_count": 0,
+            "recorded_date_min": "11",
+            "recorded_date_max": "365"
+          },
+          "4": {
+            "count": 28154,
+            "entity_count": 3929,
+            "site_count": 0,
+            "recorded_date_min": "20",
+            "recorded_date_max": "365"
+          },
+          "5": {
+            "count": 1011,
+            "entity_count": 125,
+            "site_count": 0,
+            "recorded_date_min": "35",
+            "recorded_date_max": "354"
+          },
+          "6": {
+            "count": 0,
+            "entity_count": 0,
+            "site_count": 0,
+            "recorded_date_min": null,
+            "recorded_date_max": null
+          },
+          "7": {
+            "count": 0,
+            "entity_count": 0,
+            "site_count": 0,
+            "recorded_date_min": null,
+            "recorded_date_max": null
+          }
+        }
+      }
+    },
+    "raf_spare_parts": {
+      "learned_vectors": 6,
+      "deterministic_vectors": 2,
+      "target_count": 5226,
+      "cohort_descriptions": {
+        "all": {
+          "0": {
+            "count": 5226,
+            "entity_count": 3307,
+            "site_count": 0,
+            "recorded_date_min": "20011201",
+            "recorded_date_max": "20021201"
+          }
+        },
+        "time": {
+          "0": {
+            "count": 2112,
+            "entity_count": 1788,
+            "site_count": 0,
+            "recorded_date_min": "20011201",
+            "recorded_date_max": "20020401"
+          },
+          "1": {
+            "count": 1444,
+            "entity_count": 1290,
+            "site_count": 0,
+            "recorded_date_min": "20020501",
+            "recorded_date_max": "20020801"
+          },
+          "2": {
+            "count": 1670,
+            "entity_count": 1432,
+            "site_count": 0,
+            "recorded_date_min": "20020901",
+            "recorded_date_max": "20021201"
+          }
+        },
+        "quantity": {
+          "0": {
+            "count": 2684,
+            "entity_count": 1933,
+            "site_count": 0,
+            "recorded_date_min": "20011201",
+            "recorded_date_max": "20021201"
+          },
+          "1": {
+            "count": 2099,
+            "entity_count": 1547,
+            "site_count": 0,
+            "recorded_date_min": "20011201",
+            "recorded_date_max": "20021201"
+          },
+          "2": {
+            "count": 212,
+            "entity_count": 195,
+            "site_count": 0,
+            "recorded_date_min": "20011201",
+            "recorded_date_max": "20021201"
+          },
+          "3": {
+            "count": 192,
+            "entity_count": 160,
+            "site_count": 0,
+            "recorded_date_min": "20011201",
+            "recorded_date_max": "20021201"
+          },
+          "4": {
+            "count": 39,
+            "entity_count": 37,
+            "site_count": 0,
+            "recorded_date_min": "20011201",
+            "recorded_date_max": "20021201"
+          }
+        },
+        "history": {
+          "0": {
+            "count": 5226,
+            "entity_count": 3307,
+            "site_count": 0,
+            "recorded_date_min": "20011201",
+            "recorded_date_max": "20021201"
+          },
+          "1": {
+            "count": 0,
+            "entity_count": 0,
+            "site_count": 0,
+            "recorded_date_min": null,
+            "recorded_date_max": null
+          },
+          "2": {
+            "count": 0,
+            "entity_count": 0,
+            "site_count": 0,
+            "recorded_date_min": null,
+            "recorded_date_max": null
+          }
+        },
+        "history_detail": {
+          "0": {
+            "count": 0,
+            "entity_count": 0,
+            "site_count": 0,
+            "recorded_date_min": null,
+            "recorded_date_max": null
+          },
+          "1": {
+            "count": 131,
+            "entity_count": 129,
+            "site_count": 0,
+            "recorded_date_min": "20011201",
+            "recorded_date_max": "20021201"
+          },
+          "2": {
+            "count": 2128,
+            "entity_count": 1636,
+            "site_count": 0,
+            "recorded_date_min": "20011201",
+            "recorded_date_max": "20021201"
+          },
+          "3": {
+            "count": 2926,
+            "entity_count": 1824,
+            "site_count": 0,
+            "recorded_date_min": "20011201",
+            "recorded_date_max": "20021201"
+          },
+          "4": {
+            "count": 41,
+            "entity_count": 29,
+            "site_count": 0,
+            "recorded_date_min": "20020101",
+            "recorded_date_max": "20021201"
+          },
+          "5": {
+            "count": 0,
+            "entity_count": 0,
+            "site_count": 0,
+            "recorded_date_min": null,
+            "recorded_date_max": null
+          },
+          "6": {
+            "count": 0,
+            "entity_count": 0,
+            "site_count": 0,
+            "recorded_date_min": null,
+            "recorded_date_max": null
+          },
+          "7": {
+            "count": 0,
+            "entity_count": 0,
+            "site_count": 0,
+            "recorded_date_min": null,
+            "recorded_date_max": null
+          }
+        }
+      }
+    }
+  }
+}

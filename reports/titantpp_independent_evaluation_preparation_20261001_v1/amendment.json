@@ -1,0 +1,25 @@
+{
+  "created_utc": "2026-10-01T12:52:37.013377+00:00",
+  "status": "analysis_design_amendment_before_heldout_performance_access",
+  "parent_protocol": "reports/titantpp_independent_evaluation_protocol_20261001_v1/protocol.json",
+  "parent_protocol_sha256": "e73dd4d8b38be4563c374ec9aa10debf2cb7429d052409db5e42afd85c9484d3",
+  "authorization_scope": "User requested execution preparation; this is not held-out execution authorization.",
+  "evidence": {
+    "path": "lineage_review.json",
+    "sha256": "4d34928adccd5f9daac7210f72d9ae8297ac2b5c2bd2b953b684ad95b48fc555",
+    "entity_site_mapping_sha256": "95f2aedb9fcbadb053f01b28f62053fdd0b8d3295fe840324072934a0ac67e20"
+  },
+  "changes": [
+    {
+      "dataset": "intermittent_frozen_5000",
+      "old_primary_unit": "whole_oper_part_no_cluster",
+      "new_primary_unit": "whole_site_cd_cluster",
+      "sensitivity_unit": "whole_oper_part_no_cluster",
+      "reason": "Metadata confirms 5000 series nested within 50 sites; resample sites together to retain within-site dependence.",
+      "coverage_caveat": "Conditional intervals assume suitable independence across sampled sites and do not remove cross-site common shocks."
+    }
+  ],
+  "selection_model_checkpoint_metrics_changed": false,
+  "heldout_metrics_predictions_or_target_values_read": false,
+  "prior_protocol_preserved": true
+}

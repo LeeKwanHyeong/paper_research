@@ -1,0 +1,56 @@
+--- parent/paper/scripts/count_aware_tpp_backbone/constants.py
++++ mac_source/paper/scripts/count_aware_tpp_backbone/constants.py
+@@ -111,6 +111,7 @@
+ FROZEN_TAIL_LAMBDA = 0.09111380335463036
+ MODEL_ROLE_EXPERIMENTAL = "experimental"
+ MODEL_ROLE_OBSERVED_TIME_JOINT = "observed_time_joint_v1"
++MODEL_ROLE_OBSERVED_TIME_MAC = "observed_time_titans_mac_clip1_v1"
+ MODEL_ROLE_OBSERVED_TIME_PAIR = "observed_time_pair_message_v1"
+ MODEL_ROLE_OBSERVED_TIME_STATE = "observed_time_state_transport_v1"
+ MODEL_ROLE_OBSERVED_TIME_LOCAL_GATE = "observed_time_local_gate_v1"
+@@ -144,6 +145,7 @@
+ QUANTILE_ADAPTIVE_RAW_WEIGHTS = (1.0, 1.0, 1.5, 2.0, 3.0)
+ QUANTILE_ADAPTIVE_STRENGTH = 1.0
+ MODEL_ROLES = (
++    MODEL_ROLE_OBSERVED_TIME_MAC,
+     CORE_ROLE,
+     MODEL_ROLE_OBSERVED_TIME_JOINT,
+     MODEL_ROLE_OBSERVED_TIME_PAIR,
+@@ -253,9 +255,9 @@
+     lambda_tail: float,
+ ) -> None:
+     """Reject official-role runs that drift from the frozen baseline contract."""
+-    if model_role in (CORE_ROLE, MODEL_ROLE_OBSERVED_TIME_JOINT, MODEL_ROLE_OBSERVED_TIME_PAIR, MODEL_ROLE_OBSERVED_TIME_STATE, MODEL_ROLE_OBSERVED_TIME_MULTILAG, MODEL_ROLE_OBSERVED_TIME_LOCAL_GATE):
++    if model_role in (MODEL_ROLE_OBSERVED_TIME_MAC, CORE_ROLE, MODEL_ROLE_OBSERVED_TIME_JOINT, MODEL_ROLE_OBSERVED_TIME_PAIR, MODEL_ROLE_OBSERVED_TIME_STATE, MODEL_ROLE_OBSERVED_TIME_MULTILAG, MODEL_ROLE_OBSERVED_TIME_LOCAL_GATE):
+         from paper.scripts.count_aware_tpp_backbone.observed_time import BACKBONES, PAIR_BACKBONES, STATE_BACKBONES, MULTILAG_BACKBONES, LOCAL_GATE_BACKBONES as GATE_ARMS
+-        allowed = {CORE_ROLE: CORE_BACKBONES, MODEL_ROLE_OBSERVED_TIME_JOINT: BACKBONES,
++        allowed = {MODEL_ROLE_OBSERVED_TIME_MAC: ("titantpp_titans_mac",), CORE_ROLE: CORE_BACKBONES, MODEL_ROLE_OBSERVED_TIME_JOINT: BACKBONES,
+                    MODEL_ROLE_OBSERVED_TIME_PAIR: PAIR_BACKBONES,
+                    MODEL_ROLE_OBSERVED_TIME_STATE: STATE_BACKBONES,
+                    MODEL_ROLE_OBSERVED_TIME_MULTILAG: MULTILAG_BACKBONES,
+--- parent/paper/scripts/count_aware_tpp_backbone/observed_time.py
++++ mac_source/paper/scripts/count_aware_tpp_backbone/observed_time.py
+@@ -20,8 +20,10 @@
+ STATE_ROLE = "observed_time_state_transport_v1"
+ MULTILAG_ROLE = "observed_time_multilag_detail_v1"
+ LOCAL_GATE_ROLE = "observed_time_local_gate_v1"
++MAC_ROLE = "observed_time_titans_mac_clip1_v1"
++MAC_BACKBONES = ("titantpp_titans_mac",)
+ LOCAL_GATE_BACKBONES = ("titantpp", "titantpp_local_time_gate", "titantpp_local_quantity_gate")
+-ROLES = (CORE_ROLE, ROLE, PAIR_ROLE, STATE_ROLE, MULTILAG_ROLE, LOCAL_GATE_ROLE)
++ROLES = (CORE_ROLE, ROLE, PAIR_ROLE, STATE_ROLE, MULTILAG_ROLE, LOCAL_GATE_ROLE, MAC_ROLE)
+ MODE = "positive_integer_round_clamp_v1"
+ BACKBONES = ("titantpp", "rmtpp", "thp", "nhp", "sahp")
+ PAIR_BACKBONES = ("titantpp", "titantpp_pair_message_post_pool", "titantpp_pair_message_pre_pool")
+@@ -46,7 +48,10 @@
+     if getattr(args, "model_role", None) not in ROLES:
+         return
+     allowed = {CORE_ROLE: CORE_BACKBONES, ROLE: BACKBONES, PAIR_ROLE: PAIR_BACKBONES, STATE_ROLE: STATE_BACKBONES,
+-               MULTILAG_ROLE: MULTILAG_BACKBONES, LOCAL_GATE_ROLE: LOCAL_GATE_BACKBONES}[args.model_role]
++               MULTILAG_ROLE: MULTILAG_BACKBONES, LOCAL_GATE_ROLE: LOCAL_GATE_BACKBONES,
++               MAC_ROLE: MAC_BACKBONES}[args.model_role]
++    if args.model_role == MAC_ROLE and getattr(args, "titans_memory_gradient_clip", None) != 1.0:
++        raise ValueError("Observed-time MAC requires inner gradient clip1")
+     if not backbones or len(set(backbones)) != len(backbones) or set(backbones) - set(allowed):
+         raise ValueError("Observed-time joint role has unsupported or duplicate backbones")
+     if (args.time_head_mode != TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION

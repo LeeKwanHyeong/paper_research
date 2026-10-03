@@ -1,0 +1,120 @@
+{
+  "status": "completed_with_candidate_not_adopted",
+  "source_revision": "ca8823e688a510e64e7fb81c9dc9d158d4bdfc7c",
+  "contract_sha256": "4fdba2b5d2fc458eae923b7628b9e3a0dfcd72f0de6e79bf5cafb86a0b07cc8e",
+  "final_model": "TitanTPP(B)",
+  "reason": "Taxi legacy clamped time loss guardrail failed",
+  "baseline_completion": "4_of_4_audit_passed",
+  "held_out_test_evaluated": false,
+  "additional_seeds_executed": false,
+  "intermittent_candidate_full_fit_executed": false,
+  "rows": [
+    {
+      "dataset": "insta_market_basket",
+      "completed_epochs": 112,
+      "best_epoch": 72,
+      "execution_audit": "passed",
+      "performance_gate": {
+        "status": "passed",
+        "checks": {
+          "raw_rmse": true,
+          "overall_mae": true,
+          "body_mae": true,
+          "gt_p99_mae": true,
+          "clamped_time_loss": true
+        }
+      },
+      "metrics": {
+        "raw_rmse": {
+          "B": 5.872216930452246,
+          "candidate": 5.86805909849433,
+          "absolute_delta": -0.0041578319579160805,
+          "relative_change_percent": -0.07080514918231806
+        },
+        "overall_mae": {
+          "B": 3.9937810783167014,
+          "candidate": 3.98549719917371,
+          "absolute_delta": -0.008283879142991335,
+          "relative_change_percent": -0.20741945991898936
+        },
+        "body_mae": {
+          "B": 3.438601503150614,
+          "candidate": 3.4338327972285,
+          "absolute_delta": -0.0047687059221139805,
+          "relative_change_percent": -0.13868155172225283
+        },
+        "gt_p99_mae": {
+          "B": 21.91779476530588,
+          "candidate": 21.781940409290307,
+          "absolute_delta": -0.1358543560155745,
+          "relative_change_percent": -0.6198358797967263
+        },
+        "clamped_time_loss": {
+          "B": 3.2155228955007256,
+          "candidate": 3.214804606758436,
+          "absolute_delta": -0.00071828874228963,
+          "relative_change_percent": -0.02233816289396451
+        }
+      },
+      "audit_sha256": "327590c7584cd6e18ba1fe425c470ad2f7120cca6eebf9691c286da3a2bb3b03"
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "completed_epochs": 123,
+      "best_epoch": 83,
+      "execution_audit": "passed",
+      "performance_gate": {
+        "status": "failed",
+        "checks": {
+          "raw_rmse": true,
+          "overall_mae": true,
+          "body_mae": true,
+          "gt_p99_mae": true,
+          "clamped_time_loss": false
+        }
+      },
+      "metrics": {
+        "raw_rmse": {
+          "B": 88.19499665350457,
+          "candidate": 78.25542706791491,
+          "absolute_delta": -9.939569585589666,
+          "relative_change_percent": -11.269992587719768
+        },
+        "overall_mae": {
+          "B": 28.67402025115017,
+          "candidate": 25.048307621614565,
+          "absolute_delta": -3.625712629535606,
+          "relative_change_percent": -12.644591158751695
+        },
+        "body_mae": {
+          "B": 18.997478121185097,
+          "candidate": 15.738602683477058,
+          "absolute_delta": -3.2588754377080384,
+          "relative_change_percent": -17.15425287988037
+        },
+        "gt_p99_mae": {
+          "B": 332.76974448674844,
+          "candidate": 303.4513140328323,
+          "absolute_delta": -29.318430453916164,
+          "relative_change_percent": -8.81042550882617
+        },
+        "clamped_time_loss": {
+          "B": 1.473390626529593,
+          "candidate": 10.825869968628675,
+          "absolute_delta": 9.352479342099082,
+          "relative_change_percent": 634.758982017403
+        }
+      },
+      "audit_sha256": "5f6dca46db62bac0711a465962abdfa6339165f7df6808f55aac60a04a6cf98e"
+    }
+  ],
+  "taxi_time_reconstruction": 10.825869968628675,
+  "note": "Execution audit passed is distinct from the failed performance gate. Quantity improvements are single-seed validation observations.",
+  "automation": {
+    "id": "vnc-hard-lmm-5090-screening",
+    "status": "PAUSED",
+    "confirmed_at": "2026-09-10T07:11:16.368571+09:00"
+  },
+  "all_authorized_queues_terminal": true,
+  "remaining_authorized_training_jobs": 0
+}

@@ -66,7 +66,7 @@ GPU 수치 재현 성공으로 해석하지 않는다. 과거 계약의 runtime 
 
 ## master 통합 순서
 
-1. **현재 연구 변경 고정 — 진행 중:** `codex/hard-lmm-causal-qkv`에서 의존 소스,
+1. **현재 연구 변경 고정 — 완료:** `codex/hard-lmm-causal-qkv`에서 의존 소스,
    계약·테스트, 동결본, 연구 문서를 커밋한다. 실행 중인 remote bundle은 수정하지 않는다.
 2. **통합 범위 검토 — 다음 작업:** 로컬 master `567196e5` 대비 기존 94커밋과 이번
    정리를 검토한다. 현재 DAG상 fast-forward 가능하지만 원격 최신 여부는 fetch 전 미확인이다.

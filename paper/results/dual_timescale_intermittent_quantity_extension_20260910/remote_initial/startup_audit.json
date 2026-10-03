@@ -1,0 +1,108 @@
+{
+  "status": "passed",
+  "audit_scope": "read_only_remote_startup_after_first_epoch",
+  "captured_at_utc": "2026-09-09T22:41:08.715512+00:00",
+  "remote_output_root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/dual_timescale_intermittent_quantity_extension_ca8823e_20260910",
+  "runtime": {
+    "host": "RTX5090-server",
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "python": "3.12.13",
+    "torch": "2.11.0+cu130",
+    "cuda": "13.0",
+    "controller_pid": 1884726,
+    "child_pid": 1884755,
+    "gpu_observation_at_kst": "2026-09-10T07:39:57+09:00",
+    "gpu_utilization_percent": 84,
+    "gpu_memory_used_mib": 2930,
+    "gpu_memory_total_mib": 32607
+  },
+  "execution_identity": {
+    "source_revision": "ca8823e688a510e64e7fb81c9dc9d158d4bdfc7c",
+    "extension_contract_sha256": "acbcf70ea17ab6449fdd8469c39a6ff7df8bc2fd4d0ffda075daf507f0813ed2",
+    "runner_sha256": "86ad8d7f905eab67f4ed2dd6bae4c547a44488d006a62775ac52a8eb0fe7dc74",
+    "dataset": "intermittent_frozen_5000",
+    "seed": 42,
+    "epochs": 300,
+    "minimum_epochs": 40,
+    "patience": 40,
+    "selector": "validation_raw_quantity_rmse",
+    "evaluation_scope": "validation_only",
+    "held_out_test_evaluated": false,
+    "additional_jobs_authorized": false
+  },
+  "launch_contract": {
+    "status": "running",
+    "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+    "split_manifest_sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04",
+    "train_rows": 398824,
+    "expected_train_targets": 393824,
+    "validation_rows": 86285,
+    "validation_target_count": 86285,
+    "validation_target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+    "validation_target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385",
+    "batch_size": 128,
+    "learning_rate": 0.001,
+    "gradient_clip": 1.0,
+    "lookback_weeks": 520,
+    "max_sequence_length": 256
+  },
+  "first_epoch": {
+    "epoch": 1,
+    "train_all_finite": true,
+    "train_event_count": 393824,
+    "train_batch_count": 3077,
+    "train_joint_objective": 1.4846798722146628,
+    "train_time_nll": 1.4657916545560985,
+    "train_quantity_loss": 0.018888217783200132,
+    "train_time_slope": 1.1327463388442993,
+    "validation_joint_objective": 0.8187163565055502,
+    "validation_time_nll": 0.8121466091612147,
+    "validation_log_quantity_mse": 0.006569747352893503,
+    "validation_quantity_mae": 0.7599747908932589,
+    "validation_quantity_rmse": 1.828075446616577,
+    "history_sha256": "318af5c995ec49467604b9542a1a1d55f3bead52849084db7bfbc20663f03110"
+  },
+  "reused_e1_comparison": {
+    "status": "exact_match",
+    "history_sha256_equal": true,
+    "compared_fields": [
+      "validation_raw_quantity_rmse",
+      "validation_overall_mae",
+      "validation_log_quantity_mse",
+      "validation_time_nll",
+      "validation_joint_objective",
+      "train_event_count"
+    ],
+    "reused_e1_raw_rmse": 1.828075446616577,
+    "reused_e1_overall_mae": 0.7599747908932589,
+    "reused_e1_time_nll": 0.8121466091612147
+  },
+  "remote_file_receipts": {
+    "execution_contract.json": {
+      "bytes": 5283,
+      "sha256": "acbcf70ea17ab6449fdd8469c39a6ff7df8bc2fd4d0ffda075daf507f0813ed2"
+    },
+    "run_extension.py": {
+      "bytes": 10845,
+      "sha256": "86ad8d7f905eab67f4ed2dd6bae4c547a44488d006a62775ac52a8eb0fe7dc74"
+    },
+    "execution_plan.json": {
+      "bytes": 5105,
+      "sha256": "18e87fe5b547091d6152a273afd6dee650c37a58128673dad438c4df730e8b9e"
+    },
+    "status.json": {
+      "bytes": 1105,
+      "sha256": "5b278c751583237c2cd34e719fc1cd7071b891771ed307b94b750db43f47d02e"
+    },
+    "launch_contract.json": {
+      "bytes": 7284,
+      "sha256": "e9cad2b2fa0d7543ab7e2dcd6efc5c7928b63805a1e95c98fc25935f1a71c6bf"
+    },
+    "training.log": {
+      "bytes": 307,
+      "sha256": "c9ed76ff5d4a3757c8b2581df9a3c93c5c1a765b2cfc67e3972c19f750b7aa20"
+    }
+  },
+  "checkpoint_files_copied_or_loaded": false,
+  "remote_state_modified": false
+}

@@ -1,0 +1,49 @@
+{
+  "id": "titantpp-jqt-three-dataset-validation",
+  "title": "수량 단독 학습은 최적 RMSE를 개선하지 못했다",
+  "surface": "report",
+  "status": "reviewed",
+  "generatedAt": "2026-09-11T00:00:00Z",
+  "filters": [],
+  "report": {
+    "asOf": "2026-09-11",
+    "originalQuestion": "TitanTPP B에서 J/Q/T 세 학습 목적의 validation-only 결과를 세 데이터셋에 걸쳐 어떻게 해석해야 하는가?"
+  },
+  "queries": {
+    "primary_selector": {
+      "label": "데이터셋별 primary selector 비교",
+      "rows": [
+        {"dataset":"Intermittent","datasetId":"intermittent_frozen_5000","quantityJEpoch":77,"quantityQEpoch":24,"jointRawQuantityRmse":1.4995550721471174,"quantityOnlyRawQuantityRmse":1.5483892378684414,"rmseChangePercent":3.2565770092992663,"jointMaeAtSelector":0.6043404183562111,"quantityOnlyMaeAtSelector":0.5978500423048976,"maeChangePercent":-1.0739602803610526,"timeJEpoch":120,"timeTEpoch":120,"jointLegacyTimeLoss":-3.5662264926509413,"timeOnlyLegacyTimeLoss":-3.520814090278808,"timeSingleMinusJoint":0.045412402372133176},
+        {"dataset":"Taxi","datasetId":"yellow_trip_hourly","quantityJEpoch":116,"quantityQEpoch":97,"jointRawQuantityRmse":85.60696787283841,"quantityOnlyRawQuantityRmse":87.7893428375478,"rmseChangePercent":2.549295949777264,"jointMaeAtSelector":27.470006430320655,"quantityOnlyMaeAtSelector":27.941477889801547,"maeChangePercent":1.7163137610023027,"timeJEpoch":16,"timeTEpoch":4,"jointLegacyTimeLoss":1.3653333371367267,"timeOnlyLegacyTimeLoss":1.366590487189955,"timeSingleMinusJoint":0.0012571500532283508},
+        {"dataset":"Instacart","datasetId":"insta_market_basket","quantityJEpoch":72,"quantityQEpoch":72,"jointRawQuantityRmse":5.872216930452246,"quantityOnlyRawQuantityRmse":5.87740933623331,"rmseChangePercent":0.08842326233107212,"jointMaeAtSelector":3.9937810783167014,"quantityOnlyMaeAtSelector":3.992785558759715,"maeChangePercent":-0.0249285868218618,"timeJEpoch":59,"timeTEpoch":2,"jointLegacyTimeLoss":3.20641558754962,"timeOnlyLegacyTimeLoss":3.2045914735640064,"timeSingleMinusJoint":-0.0018241139856134403}
+      ],
+      "source": {
+        "label": "5090 완료 감사의 selector·paired comparison 결과",
+        "files": ["reports/titantpp_jqt_5090_20260910/monitor/20260910T233614Z_check.json"],
+        "metricDefinitions": [
+          {"field":"rmseChangePercent","label":"Q−J raw RMSE 변화율","definition":"각 arm의 raw quantity RMSE selector에서 (Q−J)/J × 100. 양수는 Q가 J보다 큰 RMSE임.","componentIds":["primary-table","quantity-selector-chart"],"sourceLineage":[{"files":["reports/titantpp_jqt_5090_20260910/monitor/20260910T233614Z_check.json"]}]},
+          {"field":"timeSingleMinusJoint","label":"T−J legacy time loss","definition":"각 arm의 legacy cap300 time loss selector에서 T 값에서 J 값을 뺀 값. 정규화된 Time NLL이 아님.","componentIds":["primary-table","time-selector-chart"],"sourceLineage":[{"files":["reports/titantpp_jqt_5090_20260910/monitor/20260910T233614Z_check.json"]}]},
+          {"field":"jointMaeAtSelector","label":"J MAE","definition":"각 수량 RMSE selector checkpoint에서 계산된 raw quantity MAE.","componentIds":["primary-table"],"sourceLineage":[{"files":["reports/titantpp_jqt_5090_20260910/monitor/20260910T233614Z_check.json"]}]}
+        ],
+        "evidenceFlow": [
+          {"title":"완료 증적","detail":"39개 JSON과 4개 log tail을 원격 SHA와 대조해 복원했다. 세 데이터셋 9개 arm이 각 120 epoch를 완료했고 held-out 평가는 수행하지 않았다."},
+          {"title":"Selector 범위","detail":"J의 수량 selector와 시간 selector는 서로 다른 checkpoint일 수 있어 하나의 동시 성능으로 합치지 않는다. Q는 수량, T는 시간만 비교한다."}
+        ]
+      }
+    },
+    "evidence_scope": {
+      "label": "실행 및 검증 범위",
+      "rows": [
+        {"sourceRevision":"76426fd981e624144947fd582f794c2832e9fe05","seed":42,"datasets":3,"arms":9,"epochsPerArm":120,"optimizer":"AdamW lr=0.001, weight_decay=0.01, clip=1","training":"static B; batch 128; quantity log-MSE weight 1; legacy cap300 time loss","evaluationScope":"validation-only"}
+      ],
+      "source": {
+        "label": "5090 완료 감사 및 suite 계약",
+        "files": ["reports/titantpp_jqt_5090_20260910/monitor/20260910T233614Z_check.json","reports/titantpp_jqt_5090_20260910/monitor/20260910T233614Z_terminal/collection_manifest.json"],
+        "metricDefinitions": [
+          {"field":"evaluationScope","label":"평가 범위","definition":"seed42 validation-only. held-out/test 평가는 이 결과에 포함되지 않는다.","componentIds":["methods-limitations"],"sourceLineage":[{"files":["reports/titantpp_jqt_5090_20260910/monitor/20260910T233614Z_check.json"]}]}
+        ],
+        "evidenceFlow": [{"title":"무결성 확인","detail":"source revision·65개 파일·runtime identity·계약·selector·paired comparison의 감사가 통과했다."}]
+      }
+    }
+  }
+}

@@ -1,0 +1,2848 @@
+{
+  "schema": "titan_followup_run_matrix_v1",
+  "counts": {
+    "mechanism_report_conditions": 54,
+    "historical_reused_fits": 12,
+    "historical_reused_endpoint_records": 24,
+    "new_mechanism_fits": 42,
+    "tuning_cells": 16,
+    "logical_seed42_tuning_candidates": 32,
+    "seed42_candidates_reused_from_phase_A": 6,
+    "new_seed42_tuning_fits": 26,
+    "confirmation_slots": 32,
+    "always_new_confirmation_fits": 20,
+    "conditional_confirmation_fits": 12,
+    "total_new_fits_if_all_jobs_complete_min": 88,
+    "total_new_fits_if_all_jobs_complete_max": 100,
+    "new_primary_endpoint_replays_min": 176,
+    "new_primary_endpoint_replays_max": 200,
+    "final_benchmark_report_conditions": 48,
+    "maximum_unique_trained_conditions_including_12_historical": 112,
+    "minimum_unique_trained_conditions_including_12_historical": 100,
+    "flex_selected_subset_decoder_diagnostic_passes": 12,
+    "historical_bridge_full_validation_passes": 12,
+    "maximum_new_full_validation_endpoint_passes_including_bridges": 212,
+    "synthetic_qualification_shape_cells": 28,
+    "synthetic_updates_per_cell": 60,
+    "maximum_synthetic_updates": 1680,
+    "note": "These are complete-plan counts, not promised completions under wall/cost caps. Epoch validation and latency microbenchmarks are separately logged, not counted as endpoint replays. Final table conditions overlap, so 54+48 is not a count of unique fits."
+  },
+  "dataset_order": [
+    "yellow_trip_hourly",
+    "intermittent_frozen_5000",
+    "insta_market_basket"
+  ],
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "queue": [
+    {
+      "id": "A__instacart__B__s42",
+      "phase": "A_mechanism",
+      "dataset": "insta_market_basket",
+      "model": "B",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 1,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/A__instacart__B__s42"
+    },
+    {
+      "id": "A__instacart__Full__s42",
+      "phase": "A_mechanism",
+      "dataset": "insta_market_basket",
+      "model": "Full",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 2,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/A__instacart__Full__s42"
+    },
+    {
+      "id": "A__instacart__B__s52",
+      "phase": "A_mechanism",
+      "dataset": "insta_market_basket",
+      "model": "B",
+      "seed": 52,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 3,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/A__instacart__B__s52"
+    },
+    {
+      "id": "A__instacart__Full__s52",
+      "phase": "A_mechanism",
+      "dataset": "insta_market_basket",
+      "model": "Full",
+      "seed": 52,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 4,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/A__instacart__Full__s52"
+    },
+    {
+      "id": "A__instacart__B__s62",
+      "phase": "A_mechanism",
+      "dataset": "insta_market_basket",
+      "model": "B",
+      "seed": 62,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 5,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/A__instacart__B__s62"
+    },
+    {
+      "id": "A__instacart__Full__s62",
+      "phase": "A_mechanism",
+      "dataset": "insta_market_basket",
+      "model": "Full",
+      "seed": 62,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 6,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/A__instacart__Full__s62"
+    },
+    {
+      "id": "A__taxi__B__s42",
+      "phase": "A_mechanism",
+      "dataset": "yellow_trip_hourly",
+      "model": "B",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "reuse_historical",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "reuse": {
+        "group": "seed42_reused",
+        "source": "search_artifacts/local_detail_benchmark_execution_20260922_v2/monitor/20260922T234557Z/taxi_complete/run/yellow_trip_hourly/runs/titantpp/count_only_log_regression/seed_42",
+        "contract_sha256": "0dfb94f82f6b3b88bce779deca3987fbc8cbb96ba9ef66c8b6247bbe7c5afca8",
+        "source_files_sha256": "8fa0727c84c338c76443471a3f8dd8416ba8837302489b72fdf067b9afdcab3d",
+        "initial_state_sha256": "b6d5a01163d44c3d7fa13ca537575ba87ed2f1c2a89607a0585e25d716e33e3a",
+        "completed_epochs": 86,
+        "best_epoch": 46,
+        "optimizer_steps": 25800,
+        "train_targets_per_epoch": 38393,
+        "validation_targets_per_replay": 8268,
+        "historical_host": "5080",
+        "endpoints": {
+          "selected": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_benchmark_seed42_e300_20260922_v2/run/yellow_trip_hourly/runs/titantpp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+            "state_sha256": "dbaa36612bced603b93d566c1dec777b825b550a055ad478d66c852ee6821efa",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          },
+          "last": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_benchmark_seed42_e300_20260922_v2/run/yellow_trip_hourly/runs/titantpp/count_only_log_regression/seed_42/last_epoch_state.pt",
+            "state_sha256": "39ea92dc0ce98a62c348d1a23cd97ef52f4b62b5b9dce34bd902be6161f6e649",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          }
+        }
+      },
+      "queue_order": 7,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": null
+    },
+    {
+      "id": "A__intermittent__B__s42",
+      "phase": "A_mechanism",
+      "dataset": "intermittent_frozen_5000",
+      "model": "B",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "reuse_historical",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "reuse": {
+        "group": "seed42_reused",
+        "source": "search_artifacts/local_detail_benchmark_intermittent_recovery_20260923_v4/monitor/20260923T235525Z/terminal_5080/run/intermittent_frozen_5000/runs/titantpp/count_only_log_regression/seed_42",
+        "contract_sha256": "45c8b03a23a2c2aa5f0889708c2a0f68d7f958636b5e8e5ebd12c0b327180da5",
+        "source_files_sha256": "2fdcdd066481e3447fba571dc8c16b224eff121b2a870099cc764376889e9337",
+        "initial_state_sha256": "4220b7f77b2211b598f9ce39bd665089c7166be7ca26929f33ce3754845978bd",
+        "completed_epochs": 111,
+        "best_epoch": 71,
+        "optimizer_steps": 341547,
+        "train_targets_per_epoch": 393824,
+        "validation_targets_per_replay": 86285,
+        "historical_host": "5080",
+        "endpoints": {
+          "selected": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_benchmark_intermittent_recovery_seed42_e300_20260923_v4/run/intermittent_frozen_5000/runs/titantpp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+            "state_sha256": "fe1d832029a397b81f1fc9c1968404c3ffad2c92245dbcc894bfb0745f06cf19",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          },
+          "last": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_benchmark_intermittent_recovery_seed42_e300_20260923_v4/run/intermittent_frozen_5000/runs/titantpp/count_only_log_regression/seed_42/last_epoch_state.pt",
+            "state_sha256": "e31f748a4ec1e96f535acf17fb21dd728ef02b58c13e1ecfacd1d3dc5627deb5",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          }
+        }
+      },
+      "queue_order": 8,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": null
+    },
+    {
+      "id": "A__taxi__B__s52",
+      "phase": "A_mechanism",
+      "dataset": "yellow_trip_hourly",
+      "model": "B",
+      "seed": 52,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "reuse_historical",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "reuse": {
+        "group": "5080_new",
+        "source": "search_artifacts/local_detail_replication_5080_20260924_v1/monitor/20260925T204245Z/terminal_5080/run/yellow_trip_hourly/seed_52/runs/titantpp/count_only_log_regression/seed_52",
+        "contract_sha256": "0e96e72970b244b4320809336f8e26286b8eecf7803897a2113ff27f3874ffc8",
+        "source_files_sha256": "e2288cfd2c9cb1763be415fb8af7158faac0cc2f289e76e3febe8248065a1039",
+        "initial_state_sha256": "549c29f5ab6ea1511eaedb40aa516bbfc2ddfcc95b55566d3aeb474e355375b1",
+        "completed_epochs": 59,
+        "best_epoch": 19,
+        "optimizer_steps": 17700,
+        "train_targets_per_epoch": 38393,
+        "validation_targets_per_replay": 8268,
+        "historical_host": "5080",
+        "endpoints": {
+          "selected": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_replication_seed52_62_5080_20260924_v1/run/yellow_trip_hourly/seed_52/runs/titantpp/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt",
+            "state_sha256": "c1debef569f1f867e4bd5df50fb3ef950c0118091e28c2cd960d2b027b8e4d6a",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          },
+          "last": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_replication_seed52_62_5080_20260924_v1/run/yellow_trip_hourly/seed_52/runs/titantpp/count_only_log_regression/seed_52/last_epoch_state.pt",
+            "state_sha256": "fb987d099373967959b4761c3bf67612d78089c0567820ab8961846253fef168",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          }
+        }
+      },
+      "queue_order": 9,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": null
+    },
+    {
+      "id": "A__intermittent__B__s52",
+      "phase": "A_mechanism",
+      "dataset": "intermittent_frozen_5000",
+      "model": "B",
+      "seed": 52,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "reuse_historical",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "reuse": {
+        "group": "5080_new",
+        "source": "search_artifacts/local_detail_replication_5080_20260924_v1/monitor/20260925T204245Z/terminal_5080/run/intermittent_frozen_5000/seed_52/runs/titantpp/count_only_log_regression/seed_52",
+        "contract_sha256": "0e96e72970b244b4320809336f8e26286b8eecf7803897a2113ff27f3874ffc8",
+        "source_files_sha256": "e2288cfd2c9cb1763be415fb8af7158faac0cc2f289e76e3febe8248065a1039",
+        "initial_state_sha256": "178571801381a22c4b05af62d1a1125b61f84e4a1d671531356d453b9fca3774",
+        "completed_epochs": 51,
+        "best_epoch": 11,
+        "optimizer_steps": 156927,
+        "train_targets_per_epoch": 393824,
+        "validation_targets_per_replay": 86285,
+        "historical_host": "5080",
+        "endpoints": {
+          "selected": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_replication_seed52_62_5080_20260924_v1/run/intermittent_frozen_5000/seed_52/runs/titantpp/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt",
+            "state_sha256": "a558d4420ed6dbac38cb7bdf38b4766cc3e0c0f63407da80e9f61c7cc77b4f4a",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          },
+          "last": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_replication_seed52_62_5080_20260924_v1/run/intermittent_frozen_5000/seed_52/runs/titantpp/count_only_log_regression/seed_52/last_epoch_state.pt",
+            "state_sha256": "a821673c56d137019a091f39b6a973347d4fe01b1c668afdfefc9419e4ecc262",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          }
+        }
+      },
+      "queue_order": 10,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": null
+    },
+    {
+      "id": "A__taxi__B__s62",
+      "phase": "A_mechanism",
+      "dataset": "yellow_trip_hourly",
+      "model": "B",
+      "seed": 62,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "reuse_historical",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "reuse": {
+        "group": "5080_new",
+        "source": "search_artifacts/local_detail_replication_5080_20260924_v1/monitor/20260925T204245Z/terminal_5080/run/yellow_trip_hourly/seed_62/runs/titantpp/count_only_log_regression/seed_62",
+        "contract_sha256": "0e96e72970b244b4320809336f8e26286b8eecf7803897a2113ff27f3874ffc8",
+        "source_files_sha256": "e2288cfd2c9cb1763be415fb8af7158faac0cc2f289e76e3febe8248065a1039",
+        "initial_state_sha256": "a2fc0a55362c128f692d7083ccbfb6815257598c76c5455edab957168278780b",
+        "completed_epochs": 67,
+        "best_epoch": 27,
+        "optimizer_steps": 20100,
+        "train_targets_per_epoch": 38393,
+        "validation_targets_per_replay": 8268,
+        "historical_host": "5080",
+        "endpoints": {
+          "selected": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_replication_seed52_62_5080_20260924_v1/run/yellow_trip_hourly/seed_62/runs/titantpp/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt",
+            "state_sha256": "5e5e831f311e96434a9118389f02cb3d4b9d30259a42bc2f6fea760a07d34003",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          },
+          "last": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_replication_seed52_62_5080_20260924_v1/run/yellow_trip_hourly/seed_62/runs/titantpp/count_only_log_regression/seed_62/last_epoch_state.pt",
+            "state_sha256": "b7e81e1647b6f7390834d1e36dfe79258658d61a754bd929fb7a7bccacfdb78f",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          }
+        }
+      },
+      "queue_order": 11,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": null
+    },
+    {
+      "id": "A__intermittent__B__s62",
+      "phase": "A_mechanism",
+      "dataset": "intermittent_frozen_5000",
+      "model": "B",
+      "seed": 62,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "reuse_historical",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "reuse": {
+        "group": "5080_new",
+        "source": "search_artifacts/local_detail_replication_5080_20260924_v1/monitor/20260925T204245Z/terminal_5080/run/intermittent_frozen_5000/seed_62/runs/titantpp/count_only_log_regression/seed_62",
+        "contract_sha256": "0e96e72970b244b4320809336f8e26286b8eecf7803897a2113ff27f3874ffc8",
+        "source_files_sha256": "e2288cfd2c9cb1763be415fb8af7158faac0cc2f289e76e3febe8248065a1039",
+        "initial_state_sha256": "f7db2db90fc34f53463a6bf5fac5535e73fe2987d4a70593ce2cf8cba9e4a8f6",
+        "completed_epochs": 83,
+        "best_epoch": 43,
+        "optimizer_steps": 255391,
+        "train_targets_per_epoch": 393824,
+        "validation_targets_per_replay": 86285,
+        "historical_host": "5080",
+        "endpoints": {
+          "selected": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_replication_seed52_62_5080_20260924_v1/run/intermittent_frozen_5000/seed_62/runs/titantpp/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt",
+            "state_sha256": "3ec232811df646001a84c341fc264913e80fc9ec87672e06ac71c549cd71b47e",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          },
+          "last": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_replication_seed52_62_5080_20260924_v1/run/intermittent_frozen_5000/seed_62/runs/titantpp/count_only_log_regression/seed_62/last_epoch_state.pt",
+            "state_sha256": "43c5a4c46e24e7ead0ee592f2285b84e85b4d5a4e16658c7a1bfe5e0472f8d95",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          }
+        }
+      },
+      "queue_order": 12,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": null
+    },
+    {
+      "id": "A__taxi__Full__s42",
+      "phase": "A_mechanism",
+      "dataset": "yellow_trip_hourly",
+      "model": "Full",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "reuse_historical",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "reuse": {
+        "group": "seed42_reused",
+        "source": "search_artifacts/local_detail_benchmark_execution_20260922_v2/monitor/20260922T234557Z/taxi_complete/run/yellow_trip_hourly/runs/titantpp_local_detail/count_only_log_regression/seed_42",
+        "contract_sha256": "0dfb94f82f6b3b88bce779deca3987fbc8cbb96ba9ef66c8b6247bbe7c5afca8",
+        "source_files_sha256": "8fa0727c84c338c76443471a3f8dd8416ba8837302489b72fdf067b9afdcab3d",
+        "initial_state_sha256": "2237e1d0a332bc71c95a6d12ea1d88694f5519dc7bba62411484f61a13ee67c7",
+        "completed_epochs": 215,
+        "best_epoch": 175,
+        "optimizer_steps": 64500,
+        "train_targets_per_epoch": 38393,
+        "validation_targets_per_replay": 8268,
+        "historical_host": "5080",
+        "endpoints": {
+          "selected": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_benchmark_seed42_e300_20260922_v2/run/yellow_trip_hourly/runs/titantpp_local_detail/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+            "state_sha256": "2f9c05a76e8b54dd7f8bbfa4c04517e0d9f671224ee792f4f8848c9a8a68c214",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          },
+          "last": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_benchmark_seed42_e300_20260922_v2/run/yellow_trip_hourly/runs/titantpp_local_detail/count_only_log_regression/seed_42/last_epoch_state.pt",
+            "state_sha256": "53dd9e07b2596b7b0e993677777ccf1240d9f615bb754c71eb4a45bff175d6ff",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          }
+        }
+      },
+      "queue_order": 13,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": null
+    },
+    {
+      "id": "A__intermittent__Full__s42",
+      "phase": "A_mechanism",
+      "dataset": "intermittent_frozen_5000",
+      "model": "Full",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "reuse_historical",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "reuse": {
+        "group": "seed42_reused",
+        "source": "search_artifacts/local_detail_benchmark_intermittent_recovery_20260923_v4/monitor/20260923T235525Z/terminal_5080/run/intermittent_frozen_5000/runs/titantpp_local_detail/count_only_log_regression/seed_42",
+        "contract_sha256": "45c8b03a23a2c2aa5f0889708c2a0f68d7f958636b5e8e5ebd12c0b327180da5",
+        "source_files_sha256": "2fdcdd066481e3447fba571dc8c16b224eff121b2a870099cc764376889e9337",
+        "initial_state_sha256": "5e817429a4ec76aec8b99ee849dbad198446635f22cd36527f00ee334d1e690b",
+        "completed_epochs": 45,
+        "best_epoch": 5,
+        "optimizer_steps": 138465,
+        "train_targets_per_epoch": 393824,
+        "validation_targets_per_replay": 86285,
+        "historical_host": "5080",
+        "endpoints": {
+          "selected": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_benchmark_intermittent_recovery_seed42_e300_20260923_v4/run/intermittent_frozen_5000/runs/titantpp_local_detail/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+            "state_sha256": "f230072efb41e120b4406d2378ae48ddde1424301e2a5de53ec3ab864ec75fa7",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          },
+          "last": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_benchmark_intermittent_recovery_seed42_e300_20260923_v4/run/intermittent_frozen_5000/runs/titantpp_local_detail/count_only_log_regression/seed_42/last_epoch_state.pt",
+            "state_sha256": "94339899ef21d3151ec311c263ffe00f6860138bbc59b2bcf1930b9062296bb0",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          }
+        }
+      },
+      "queue_order": 14,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": null
+    },
+    {
+      "id": "A__taxi__Full__s52",
+      "phase": "A_mechanism",
+      "dataset": "yellow_trip_hourly",
+      "model": "Full",
+      "seed": 52,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "reuse_historical",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "reuse": {
+        "group": "5080_new",
+        "source": "search_artifacts/local_detail_replication_5080_20260924_v1/monitor/20260925T204245Z/terminal_5080/run/yellow_trip_hourly/seed_52/runs/titantpp_local_detail/count_only_log_regression/seed_52",
+        "contract_sha256": "0e96e72970b244b4320809336f8e26286b8eecf7803897a2113ff27f3874ffc8",
+        "source_files_sha256": "e2288cfd2c9cb1763be415fb8af7158faac0cc2f289e76e3febe8248065a1039",
+        "initial_state_sha256": "52e0eb2e864114838adc3c9e20dfa00f1832f52e77947d42c6bc1787007b6066",
+        "completed_epochs": 195,
+        "best_epoch": 155,
+        "optimizer_steps": 58500,
+        "train_targets_per_epoch": 38393,
+        "validation_targets_per_replay": 8268,
+        "historical_host": "5080",
+        "endpoints": {
+          "selected": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_replication_seed52_62_5080_20260924_v1/run/yellow_trip_hourly/seed_52/runs/titantpp_local_detail/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt",
+            "state_sha256": "e542ec4404c46a8ee6aabb0b22c44faf1b66726b2bacca491077f1cd435cf234",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          },
+          "last": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_replication_seed52_62_5080_20260924_v1/run/yellow_trip_hourly/seed_52/runs/titantpp_local_detail/count_only_log_regression/seed_52/last_epoch_state.pt",
+            "state_sha256": "39bf2186320b5a3bb64872cd7f6a77b1d53ed7172896bd85904923b8f5d69fa0",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          }
+        }
+      },
+      "queue_order": 15,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": null
+    },
+    {
+      "id": "A__intermittent__Full__s52",
+      "phase": "A_mechanism",
+      "dataset": "intermittent_frozen_5000",
+      "model": "Full",
+      "seed": 52,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "reuse_historical",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "reuse": {
+        "group": "5080_new",
+        "source": "search_artifacts/local_detail_replication_5080_20260924_v1/monitor/20260925T204245Z/terminal_5080/run/intermittent_frozen_5000/seed_52/runs/titantpp_local_detail/count_only_log_regression/seed_52",
+        "contract_sha256": "0e96e72970b244b4320809336f8e26286b8eecf7803897a2113ff27f3874ffc8",
+        "source_files_sha256": "e2288cfd2c9cb1763be415fb8af7158faac0cc2f289e76e3febe8248065a1039",
+        "initial_state_sha256": "0a25b8fb3e9c49bf2e33116640def014236f413e9ecc53d46210d2f358a9f6a4",
+        "completed_epochs": 159,
+        "best_epoch": 119,
+        "optimizer_steps": 489243,
+        "train_targets_per_epoch": 393824,
+        "validation_targets_per_replay": 86285,
+        "historical_host": "5080",
+        "endpoints": {
+          "selected": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_replication_seed52_62_5080_20260924_v1/run/intermittent_frozen_5000/seed_52/runs/titantpp_local_detail/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt",
+            "state_sha256": "fc319b8a442f3126d76327719ad0c85b296808ebe8f6e574e2b97e4b8e797a89",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          },
+          "last": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_replication_seed52_62_5080_20260924_v1/run/intermittent_frozen_5000/seed_52/runs/titantpp_local_detail/count_only_log_regression/seed_52/last_epoch_state.pt",
+            "state_sha256": "1056f2c6db36902b9f80e5a807991bfe0505efe38e5484e65860ad64fff361bd",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          }
+        }
+      },
+      "queue_order": 16,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": null
+    },
+    {
+      "id": "A__taxi__Full__s62",
+      "phase": "A_mechanism",
+      "dataset": "yellow_trip_hourly",
+      "model": "Full",
+      "seed": 62,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "reuse_historical",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "reuse": {
+        "group": "5080_new",
+        "source": "search_artifacts/local_detail_replication_5080_20260924_v1/monitor/20260925T204245Z/terminal_5080/run/yellow_trip_hourly/seed_62/runs/titantpp_local_detail/count_only_log_regression/seed_62",
+        "contract_sha256": "0e96e72970b244b4320809336f8e26286b8eecf7803897a2113ff27f3874ffc8",
+        "source_files_sha256": "e2288cfd2c9cb1763be415fb8af7158faac0cc2f289e76e3febe8248065a1039",
+        "initial_state_sha256": "1952cc8735a3fabcdbb2171712289ca12d57fd647e825a3f3157ade712ce4037",
+        "completed_epochs": 135,
+        "best_epoch": 95,
+        "optimizer_steps": 40500,
+        "train_targets_per_epoch": 38393,
+        "validation_targets_per_replay": 8268,
+        "historical_host": "5080",
+        "endpoints": {
+          "selected": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_replication_seed52_62_5080_20260924_v1/run/yellow_trip_hourly/seed_62/runs/titantpp_local_detail/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt",
+            "state_sha256": "7ec30fa4fe37a561431276be53fb87f962e562742e0fe19c63eb3357d3d2e34c",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          },
+          "last": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_replication_seed52_62_5080_20260924_v1/run/yellow_trip_hourly/seed_62/runs/titantpp_local_detail/count_only_log_regression/seed_62/last_epoch_state.pt",
+            "state_sha256": "5b21d45761b00d93c3cca3bcd0edfd7b54d0da940f7b8732b7ddf446af5d6078",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          }
+        }
+      },
+      "queue_order": 17,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": null
+    },
+    {
+      "id": "A__intermittent__Full__s62",
+      "phase": "A_mechanism",
+      "dataset": "intermittent_frozen_5000",
+      "model": "Full",
+      "seed": 62,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "reuse_historical",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "reuse": {
+        "group": "5080_new",
+        "source": "search_artifacts/local_detail_replication_5080_20260924_v1/monitor/20260925T204245Z/terminal_5080/run/intermittent_frozen_5000/seed_62/runs/titantpp_local_detail/count_only_log_regression/seed_62",
+        "contract_sha256": "0e96e72970b244b4320809336f8e26286b8eecf7803897a2113ff27f3874ffc8",
+        "source_files_sha256": "e2288cfd2c9cb1763be415fb8af7158faac0cc2f289e76e3febe8248065a1039",
+        "initial_state_sha256": "178beeb96a081f302ea3dd150b0c6cdb443696a77bf6bc2d64dd0e000bb8674f",
+        "completed_epochs": 79,
+        "best_epoch": 39,
+        "optimizer_steps": 243083,
+        "train_targets_per_epoch": 393824,
+        "validation_targets_per_replay": 86285,
+        "historical_host": "5080",
+        "endpoints": {
+          "selected": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_replication_seed52_62_5080_20260924_v1/run/intermittent_frozen_5000/seed_62/runs/titantpp_local_detail/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt",
+            "state_sha256": "e8569bc6e548cd01bb2292a7cf84dd812885618314ba7b208d7a3374b5dba00b",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          },
+          "last": {
+            "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_replication_seed52_62_5080_20260924_v1/run/intermittent_frozen_5000/seed_62/runs/titantpp_local_detail/count_only_log_regression/seed_62/last_epoch_state.pt",
+            "state_sha256": "6343521fbaf8436320cb7360c48148115db9b8de1f5234a0b66793afaa30135e",
+            "evaluation_scope": "validation_only",
+            "held_out_test_evaluated": false
+          }
+        }
+      },
+      "queue_order": 18,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": null
+    },
+    {
+      "id": "A__taxi__MLP__s42",
+      "phase": "A_mechanism",
+      "dataset": "yellow_trip_hourly",
+      "model": "MLP",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 19,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/A__taxi__MLP__s42"
+    },
+    {
+      "id": "A__intermittent__MLP__s42",
+      "phase": "A_mechanism",
+      "dataset": "intermittent_frozen_5000",
+      "model": "MLP",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 20,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/A__intermittent__MLP__s42"
+    },
+    {
+      "id": "A__instacart__MLP__s42",
+      "phase": "A_mechanism",
+      "dataset": "insta_market_basket",
+      "model": "MLP",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 21,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/A__instacart__MLP__s42"
+    },
+    {
+      "id": "A__taxi__MLP__s52",
+      "phase": "A_mechanism",
+      "dataset": "yellow_trip_hourly",
+      "model": "MLP",
+      "seed": 52,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 22,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/A__taxi__MLP__s52"
+    },
+    {
+      "id": "A__intermittent__MLP__s52",
+      "phase": "A_mechanism",
+      "dataset": "intermittent_frozen_5000",
+      "model": "MLP",
+      "seed": 52,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 23,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/A__intermittent__MLP__s52"
+    },
+    {
+      "id": "A__instacart__MLP__s52",
+      "phase": "A_mechanism",
+      "dataset": "insta_market_basket",
+      "model": "MLP",
+      "seed": 52,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 24,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/A__instacart__MLP__s52"
+    },
+    {
+      "id": "A__taxi__MLP__s62",
+      "phase": "A_mechanism",
+      "dataset": "yellow_trip_hourly",
+      "model": "MLP",
+      "seed": 62,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 25,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/A__taxi__MLP__s62"
+    },
+    {
+      "id": "A__intermittent__MLP__s62",
+      "phase": "A_mechanism",
+      "dataset": "intermittent_frozen_5000",
+      "model": "MLP",
+      "seed": 62,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 26,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/A__intermittent__MLP__s62"
+    },
+    {
+      "id": "A__instacart__MLP__s62",
+      "phase": "A_mechanism",
+      "dataset": "insta_market_basket",
+      "model": "MLP",
+      "seed": 62,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 27,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/A__instacart__MLP__s62"
+    },
+    {
+      "id": "A__taxi__Level__s42",
+      "phase": "A_mechanism",
+      "dataset": "yellow_trip_hourly",
+      "model": "Level",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 28,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/A__taxi__Level__s42"
+    },
+    {
+      "id": "A__intermittent__Level__s42",
+      "phase": "A_mechanism",
+      "dataset": "intermittent_frozen_5000",
+      "model": "Level",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 29,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/A__intermittent__Level__s42"
+    },
+    {
+      "id": "A__instacart__Level__s42",
+      "phase": "A_mechanism",
+      "dataset": "insta_market_basket",
+      "model": "Level",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 30,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/A__instacart__Level__s42"
+    },
+    {
+      "id": "A__taxi__Level__s52",
+      "phase": "A_mechanism",
+      "dataset": "yellow_trip_hourly",
+      "model": "Level",
+      "seed": 52,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 31,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/A__taxi__Level__s52"
+    },
+    {
+      "id": "A__intermittent__Level__s52",
+      "phase": "A_mechanism",
+      "dataset": "intermittent_frozen_5000",
+      "model": "Level",
+      "seed": 52,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 32,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/A__intermittent__Level__s52"
+    },
+    {
+      "id": "A__instacart__Level__s52",
+      "phase": "A_mechanism",
+      "dataset": "insta_market_basket",
+      "model": "Level",
+      "seed": 52,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 33,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/A__instacart__Level__s52"
+    },
+    {
+      "id": "A__taxi__Level__s62",
+      "phase": "A_mechanism",
+      "dataset": "yellow_trip_hourly",
+      "model": "Level",
+      "seed": 62,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 34,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/A__taxi__Level__s62"
+    },
+    {
+      "id": "A__intermittent__Level__s62",
+      "phase": "A_mechanism",
+      "dataset": "intermittent_frozen_5000",
+      "model": "Level",
+      "seed": 62,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 35,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/A__intermittent__Level__s62"
+    },
+    {
+      "id": "A__instacart__Level__s62",
+      "phase": "A_mechanism",
+      "dataset": "insta_market_basket",
+      "model": "Level",
+      "seed": 62,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 36,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/A__instacart__Level__s62"
+    },
+    {
+      "id": "A__taxi__Change__s42",
+      "phase": "A_mechanism",
+      "dataset": "yellow_trip_hourly",
+      "model": "Change",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 37,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/A__taxi__Change__s42"
+    },
+    {
+      "id": "A__intermittent__Change__s42",
+      "phase": "A_mechanism",
+      "dataset": "intermittent_frozen_5000",
+      "model": "Change",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 38,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/A__intermittent__Change__s42"
+    },
+    {
+      "id": "A__instacart__Change__s42",
+      "phase": "A_mechanism",
+      "dataset": "insta_market_basket",
+      "model": "Change",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 39,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/A__instacart__Change__s42"
+    },
+    {
+      "id": "A__taxi__Change__s52",
+      "phase": "A_mechanism",
+      "dataset": "yellow_trip_hourly",
+      "model": "Change",
+      "seed": 52,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 40,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/A__taxi__Change__s52"
+    },
+    {
+      "id": "A__intermittent__Change__s52",
+      "phase": "A_mechanism",
+      "dataset": "intermittent_frozen_5000",
+      "model": "Change",
+      "seed": 52,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 41,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/A__intermittent__Change__s52"
+    },
+    {
+      "id": "A__instacart__Change__s52",
+      "phase": "A_mechanism",
+      "dataset": "insta_market_basket",
+      "model": "Change",
+      "seed": 52,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 42,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/A__instacart__Change__s52"
+    },
+    {
+      "id": "A__taxi__Change__s62",
+      "phase": "A_mechanism",
+      "dataset": "yellow_trip_hourly",
+      "model": "Change",
+      "seed": 62,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 43,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/A__taxi__Change__s62"
+    },
+    {
+      "id": "A__intermittent__Change__s62",
+      "phase": "A_mechanism",
+      "dataset": "intermittent_frozen_5000",
+      "model": "Change",
+      "seed": 62,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 44,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/A__intermittent__Change__s62"
+    },
+    {
+      "id": "A__instacart__Change__s62",
+      "phase": "A_mechanism",
+      "dataset": "insta_market_basket",
+      "model": "Change",
+      "seed": 62,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 45,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/A__instacart__Change__s62"
+    },
+    {
+      "id": "A__taxi__NoStaticLMM__s42",
+      "phase": "A_mechanism",
+      "dataset": "yellow_trip_hourly",
+      "model": "NoStaticLMM",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 46,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/A__taxi__NoStaticLMM__s42"
+    },
+    {
+      "id": "A__intermittent__NoStaticLMM__s42",
+      "phase": "A_mechanism",
+      "dataset": "intermittent_frozen_5000",
+      "model": "NoStaticLMM",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 47,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/A__intermittent__NoStaticLMM__s42"
+    },
+    {
+      "id": "A__instacart__NoStaticLMM__s42",
+      "phase": "A_mechanism",
+      "dataset": "insta_market_basket",
+      "model": "NoStaticLMM",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 48,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/A__instacart__NoStaticLMM__s42"
+    },
+    {
+      "id": "A__taxi__NoStaticLMM__s52",
+      "phase": "A_mechanism",
+      "dataset": "yellow_trip_hourly",
+      "model": "NoStaticLMM",
+      "seed": 52,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 49,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/A__taxi__NoStaticLMM__s52"
+    },
+    {
+      "id": "A__intermittent__NoStaticLMM__s52",
+      "phase": "A_mechanism",
+      "dataset": "intermittent_frozen_5000",
+      "model": "NoStaticLMM",
+      "seed": 52,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 50,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/A__intermittent__NoStaticLMM__s52"
+    },
+    {
+      "id": "A__instacart__NoStaticLMM__s52",
+      "phase": "A_mechanism",
+      "dataset": "insta_market_basket",
+      "model": "NoStaticLMM",
+      "seed": 52,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 51,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/A__instacart__NoStaticLMM__s52"
+    },
+    {
+      "id": "A__taxi__NoStaticLMM__s62",
+      "phase": "A_mechanism",
+      "dataset": "yellow_trip_hourly",
+      "model": "NoStaticLMM",
+      "seed": 62,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 52,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/A__taxi__NoStaticLMM__s62"
+    },
+    {
+      "id": "A__intermittent__NoStaticLMM__s62",
+      "phase": "A_mechanism",
+      "dataset": "intermittent_frozen_5000",
+      "model": "NoStaticLMM",
+      "seed": 62,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 53,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/A__intermittent__NoStaticLMM__s62"
+    },
+    {
+      "id": "A__instacart__NoStaticLMM__s62",
+      "phase": "A_mechanism",
+      "dataset": "insta_market_basket",
+      "model": "NoStaticLMM",
+      "seed": 62,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [],
+      "queue_order": 54,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/A__instacart__NoStaticLMM__s62"
+    },
+    {
+      "id": "B_tune__taxi__B__c1__s42",
+      "phase": "B_tuning",
+      "dataset": "yellow_trip_hourly",
+      "model": "B",
+      "seed": 42,
+      "config": "c1",
+      "lr": 0.0003,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 55,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/B_tune__taxi__B__c1__s42"
+    },
+    {
+      "id": "B_confirm__taxi__B__s52",
+      "phase": "B_confirmation",
+      "dataset": "yellow_trip_hourly",
+      "model": "B",
+      "seed": 52,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "conditional_reuse_or_fresh",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "A__taxi__B__s42",
+        "B_tune__taxi__B__c1__s42"
+      ],
+      "selector_cell": "taxi__B",
+      "reuse_if_selected_c0": "A__taxi__B__s52",
+      "queue_order": 56,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/B_confirm__taxi__B__s52"
+    },
+    {
+      "id": "B_confirm__taxi__B__s62",
+      "phase": "B_confirmation",
+      "dataset": "yellow_trip_hourly",
+      "model": "B",
+      "seed": 62,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "conditional_reuse_or_fresh",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "A__taxi__B__s42",
+        "B_tune__taxi__B__c1__s42"
+      ],
+      "selector_cell": "taxi__B",
+      "reuse_if_selected_c0": "A__taxi__B__s62",
+      "queue_order": 57,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/B_confirm__taxi__B__s62"
+    },
+    {
+      "id": "B_tune__intermittent__B__c1__s42",
+      "phase": "B_tuning",
+      "dataset": "intermittent_frozen_5000",
+      "model": "B",
+      "seed": 42,
+      "config": "c1",
+      "lr": 0.0003,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 58,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/B_tune__intermittent__B__c1__s42"
+    },
+    {
+      "id": "B_confirm__intermittent__B__s52",
+      "phase": "B_confirmation",
+      "dataset": "intermittent_frozen_5000",
+      "model": "B",
+      "seed": 52,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "conditional_reuse_or_fresh",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "A__intermittent__B__s42",
+        "B_tune__intermittent__B__c1__s42"
+      ],
+      "selector_cell": "intermittent__B",
+      "reuse_if_selected_c0": "A__intermittent__B__s52",
+      "queue_order": 59,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/B_confirm__intermittent__B__s52"
+    },
+    {
+      "id": "B_confirm__intermittent__B__s62",
+      "phase": "B_confirmation",
+      "dataset": "intermittent_frozen_5000",
+      "model": "B",
+      "seed": 62,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "conditional_reuse_or_fresh",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "A__intermittent__B__s42",
+        "B_tune__intermittent__B__c1__s42"
+      ],
+      "selector_cell": "intermittent__B",
+      "reuse_if_selected_c0": "A__intermittent__B__s62",
+      "queue_order": 60,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/B_confirm__intermittent__B__s62"
+    },
+    {
+      "id": "B_tune__instacart__B__c1__s42",
+      "phase": "B_tuning",
+      "dataset": "insta_market_basket",
+      "model": "B",
+      "seed": 42,
+      "config": "c1",
+      "lr": 0.0003,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 61,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/B_tune__instacart__B__c1__s42"
+    },
+    {
+      "id": "B_confirm__instacart__B__s52",
+      "phase": "B_confirmation",
+      "dataset": "insta_market_basket",
+      "model": "B",
+      "seed": 52,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "conditional_reuse_or_fresh",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "A__instacart__B__s42",
+        "B_tune__instacart__B__c1__s42"
+      ],
+      "selector_cell": "instacart__B",
+      "reuse_if_selected_c0": "A__instacart__B__s52",
+      "queue_order": 62,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/B_confirm__instacart__B__s52"
+    },
+    {
+      "id": "B_confirm__instacart__B__s62",
+      "phase": "B_confirmation",
+      "dataset": "insta_market_basket",
+      "model": "B",
+      "seed": 62,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "conditional_reuse_or_fresh",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "A__instacart__B__s42",
+        "B_tune__instacart__B__c1__s42"
+      ],
+      "selector_cell": "instacart__B",
+      "reuse_if_selected_c0": "A__instacart__B__s62",
+      "queue_order": 63,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/B_confirm__instacart__B__s62"
+    },
+    {
+      "id": "B_tune__taxi__Full__c1__s42",
+      "phase": "B_tuning",
+      "dataset": "yellow_trip_hourly",
+      "model": "Full",
+      "seed": 42,
+      "config": "c1",
+      "lr": 0.0003,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 64,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/B_tune__taxi__Full__c1__s42"
+    },
+    {
+      "id": "B_confirm__taxi__Full__s52",
+      "phase": "B_confirmation",
+      "dataset": "yellow_trip_hourly",
+      "model": "Full",
+      "seed": 52,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "conditional_reuse_or_fresh",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "A__taxi__Full__s42",
+        "B_tune__taxi__Full__c1__s42"
+      ],
+      "selector_cell": "taxi__Full",
+      "reuse_if_selected_c0": "A__taxi__Full__s52",
+      "queue_order": 65,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/B_confirm__taxi__Full__s52"
+    },
+    {
+      "id": "B_confirm__taxi__Full__s62",
+      "phase": "B_confirmation",
+      "dataset": "yellow_trip_hourly",
+      "model": "Full",
+      "seed": 62,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "conditional_reuse_or_fresh",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "A__taxi__Full__s42",
+        "B_tune__taxi__Full__c1__s42"
+      ],
+      "selector_cell": "taxi__Full",
+      "reuse_if_selected_c0": "A__taxi__Full__s62",
+      "queue_order": 66,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/B_confirm__taxi__Full__s62"
+    },
+    {
+      "id": "B_tune__intermittent__Full__c1__s42",
+      "phase": "B_tuning",
+      "dataset": "intermittent_frozen_5000",
+      "model": "Full",
+      "seed": 42,
+      "config": "c1",
+      "lr": 0.0003,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 67,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/B_tune__intermittent__Full__c1__s42"
+    },
+    {
+      "id": "B_confirm__intermittent__Full__s52",
+      "phase": "B_confirmation",
+      "dataset": "intermittent_frozen_5000",
+      "model": "Full",
+      "seed": 52,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "conditional_reuse_or_fresh",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "A__intermittent__Full__s42",
+        "B_tune__intermittent__Full__c1__s42"
+      ],
+      "selector_cell": "intermittent__Full",
+      "reuse_if_selected_c0": "A__intermittent__Full__s52",
+      "queue_order": 68,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/B_confirm__intermittent__Full__s52"
+    },
+    {
+      "id": "B_confirm__intermittent__Full__s62",
+      "phase": "B_confirmation",
+      "dataset": "intermittent_frozen_5000",
+      "model": "Full",
+      "seed": 62,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "conditional_reuse_or_fresh",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "A__intermittent__Full__s42",
+        "B_tune__intermittent__Full__c1__s42"
+      ],
+      "selector_cell": "intermittent__Full",
+      "reuse_if_selected_c0": "A__intermittent__Full__s62",
+      "queue_order": 69,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/B_confirm__intermittent__Full__s62"
+    },
+    {
+      "id": "B_tune__instacart__Full__c1__s42",
+      "phase": "B_tuning",
+      "dataset": "insta_market_basket",
+      "model": "Full",
+      "seed": 42,
+      "config": "c1",
+      "lr": 0.0003,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 70,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/B_tune__instacart__Full__c1__s42"
+    },
+    {
+      "id": "B_confirm__instacart__Full__s52",
+      "phase": "B_confirmation",
+      "dataset": "insta_market_basket",
+      "model": "Full",
+      "seed": 52,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "conditional_reuse_or_fresh",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "A__instacart__Full__s42",
+        "B_tune__instacart__Full__c1__s42"
+      ],
+      "selector_cell": "instacart__Full",
+      "reuse_if_selected_c0": "A__instacart__Full__s52",
+      "queue_order": 71,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/B_confirm__instacart__Full__s52"
+    },
+    {
+      "id": "B_confirm__instacart__Full__s62",
+      "phase": "B_confirmation",
+      "dataset": "insta_market_basket",
+      "model": "Full",
+      "seed": 62,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "conditional_reuse_or_fresh",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "A__instacart__Full__s42",
+        "B_tune__instacart__Full__c1__s42"
+      ],
+      "selector_cell": "instacart__Full",
+      "reuse_if_selected_c0": "A__instacart__Full__s62",
+      "queue_order": 72,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/B_confirm__instacart__Full__s62"
+    },
+    {
+      "id": "B_tune__taxi__S2P2__c0__s42",
+      "phase": "B_tuning",
+      "dataset": "yellow_trip_hourly",
+      "model": "S2P2",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 73,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/B_tune__taxi__S2P2__c0__s42"
+    },
+    {
+      "id": "B_tune__taxi__S2P2__c1__s42",
+      "phase": "B_tuning",
+      "dataset": "yellow_trip_hourly",
+      "model": "S2P2",
+      "seed": 42,
+      "config": "c1",
+      "lr": 0.0003,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 74,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/B_tune__taxi__S2P2__c1__s42"
+    },
+    {
+      "id": "B_confirm__taxi__S2P2__s52",
+      "phase": "B_confirmation",
+      "dataset": "yellow_trip_hourly",
+      "model": "S2P2",
+      "seed": 52,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "B_tune__taxi__S2P2__c0__s42",
+        "B_tune__taxi__S2P2__c1__s42"
+      ],
+      "selector_cell": "taxi__S2P2",
+      "queue_order": 75,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/B_confirm__taxi__S2P2__s52"
+    },
+    {
+      "id": "B_confirm__taxi__S2P2__s62",
+      "phase": "B_confirmation",
+      "dataset": "yellow_trip_hourly",
+      "model": "S2P2",
+      "seed": 62,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "B_tune__taxi__S2P2__c0__s42",
+        "B_tune__taxi__S2P2__c1__s42"
+      ],
+      "selector_cell": "taxi__S2P2",
+      "queue_order": 76,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/B_confirm__taxi__S2P2__s62"
+    },
+    {
+      "id": "B_tune__intermittent__S2P2__c0__s42",
+      "phase": "B_tuning",
+      "dataset": "intermittent_frozen_5000",
+      "model": "S2P2",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 77,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/B_tune__intermittent__S2P2__c0__s42"
+    },
+    {
+      "id": "B_tune__intermittent__S2P2__c1__s42",
+      "phase": "B_tuning",
+      "dataset": "intermittent_frozen_5000",
+      "model": "S2P2",
+      "seed": 42,
+      "config": "c1",
+      "lr": 0.0003,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 78,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/B_tune__intermittent__S2P2__c1__s42"
+    },
+    {
+      "id": "B_confirm__intermittent__S2P2__s52",
+      "phase": "B_confirmation",
+      "dataset": "intermittent_frozen_5000",
+      "model": "S2P2",
+      "seed": 52,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "B_tune__intermittent__S2P2__c0__s42",
+        "B_tune__intermittent__S2P2__c1__s42"
+      ],
+      "selector_cell": "intermittent__S2P2",
+      "queue_order": 79,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/B_confirm__intermittent__S2P2__s52"
+    },
+    {
+      "id": "B_confirm__intermittent__S2P2__s62",
+      "phase": "B_confirmation",
+      "dataset": "intermittent_frozen_5000",
+      "model": "S2P2",
+      "seed": 62,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "B_tune__intermittent__S2P2__c0__s42",
+        "B_tune__intermittent__S2P2__c1__s42"
+      ],
+      "selector_cell": "intermittent__S2P2",
+      "queue_order": 80,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/B_confirm__intermittent__S2P2__s62"
+    },
+    {
+      "id": "B_tune__instacart__S2P2__c0__s42",
+      "phase": "B_tuning",
+      "dataset": "insta_market_basket",
+      "model": "S2P2",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 81,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/B_tune__instacart__S2P2__c0__s42"
+    },
+    {
+      "id": "B_tune__instacart__S2P2__c1__s42",
+      "phase": "B_tuning",
+      "dataset": "insta_market_basket",
+      "model": "S2P2",
+      "seed": 42,
+      "config": "c1",
+      "lr": 0.0003,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 82,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/B_tune__instacart__S2P2__c1__s42"
+    },
+    {
+      "id": "B_confirm__instacart__S2P2__s52",
+      "phase": "B_confirmation",
+      "dataset": "insta_market_basket",
+      "model": "S2P2",
+      "seed": 52,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "B_tune__instacart__S2P2__c0__s42",
+        "B_tune__instacart__S2P2__c1__s42"
+      ],
+      "selector_cell": "instacart__S2P2",
+      "queue_order": 83,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/B_confirm__instacart__S2P2__s52"
+    },
+    {
+      "id": "B_confirm__instacart__S2P2__s62",
+      "phase": "B_confirmation",
+      "dataset": "insta_market_basket",
+      "model": "S2P2",
+      "seed": 62,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "B_tune__instacart__S2P2__c0__s42",
+        "B_tune__instacart__S2P2__c1__s42"
+      ],
+      "selector_cell": "instacart__S2P2",
+      "queue_order": 84,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/B_confirm__instacart__S2P2__s62"
+    },
+    {
+      "id": "B_tune__taxi__TimeMixer__c0__s42",
+      "phase": "B_tuning",
+      "dataset": "yellow_trip_hourly",
+      "model": "TimeMixer",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 85,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/B_tune__taxi__TimeMixer__c0__s42"
+    },
+    {
+      "id": "B_tune__taxi__TimeMixer__c1__s42",
+      "phase": "B_tuning",
+      "dataset": "yellow_trip_hourly",
+      "model": "TimeMixer",
+      "seed": 42,
+      "config": "c1",
+      "lr": 0.0003,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 86,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/B_tune__taxi__TimeMixer__c1__s42"
+    },
+    {
+      "id": "B_confirm__taxi__TimeMixer__s52",
+      "phase": "B_confirmation",
+      "dataset": "yellow_trip_hourly",
+      "model": "TimeMixer",
+      "seed": 52,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "B_tune__taxi__TimeMixer__c0__s42",
+        "B_tune__taxi__TimeMixer__c1__s42"
+      ],
+      "selector_cell": "taxi__TimeMixer",
+      "queue_order": 87,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/B_confirm__taxi__TimeMixer__s52"
+    },
+    {
+      "id": "B_confirm__taxi__TimeMixer__s62",
+      "phase": "B_confirmation",
+      "dataset": "yellow_trip_hourly",
+      "model": "TimeMixer",
+      "seed": 62,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "B_tune__taxi__TimeMixer__c0__s42",
+        "B_tune__taxi__TimeMixer__c1__s42"
+      ],
+      "selector_cell": "taxi__TimeMixer",
+      "queue_order": 88,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/B_confirm__taxi__TimeMixer__s62"
+    },
+    {
+      "id": "B_tune__intermittent__TimeMixer__c0__s42",
+      "phase": "B_tuning",
+      "dataset": "intermittent_frozen_5000",
+      "model": "TimeMixer",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 89,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/B_tune__intermittent__TimeMixer__c0__s42"
+    },
+    {
+      "id": "B_tune__intermittent__TimeMixer__c1__s42",
+      "phase": "B_tuning",
+      "dataset": "intermittent_frozen_5000",
+      "model": "TimeMixer",
+      "seed": 42,
+      "config": "c1",
+      "lr": 0.0003,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 90,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/B_tune__intermittent__TimeMixer__c1__s42"
+    },
+    {
+      "id": "B_confirm__intermittent__TimeMixer__s52",
+      "phase": "B_confirmation",
+      "dataset": "intermittent_frozen_5000",
+      "model": "TimeMixer",
+      "seed": 52,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "B_tune__intermittent__TimeMixer__c0__s42",
+        "B_tune__intermittent__TimeMixer__c1__s42"
+      ],
+      "selector_cell": "intermittent__TimeMixer",
+      "queue_order": 91,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/B_confirm__intermittent__TimeMixer__s52"
+    },
+    {
+      "id": "B_confirm__intermittent__TimeMixer__s62",
+      "phase": "B_confirmation",
+      "dataset": "intermittent_frozen_5000",
+      "model": "TimeMixer",
+      "seed": 62,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "B_tune__intermittent__TimeMixer__c0__s42",
+        "B_tune__intermittent__TimeMixer__c1__s42"
+      ],
+      "selector_cell": "intermittent__TimeMixer",
+      "queue_order": 92,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/B_confirm__intermittent__TimeMixer__s62"
+    },
+    {
+      "id": "B_tune__instacart__TimeMixer__c0__s42",
+      "phase": "B_tuning",
+      "dataset": "insta_market_basket",
+      "model": "TimeMixer",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 93,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/B_tune__instacart__TimeMixer__c0__s42"
+    },
+    {
+      "id": "B_tune__instacart__TimeMixer__c1__s42",
+      "phase": "B_tuning",
+      "dataset": "insta_market_basket",
+      "model": "TimeMixer",
+      "seed": 42,
+      "config": "c1",
+      "lr": 0.0003,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 94,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/B_tune__instacart__TimeMixer__c1__s42"
+    },
+    {
+      "id": "B_confirm__instacart__TimeMixer__s52",
+      "phase": "B_confirmation",
+      "dataset": "insta_market_basket",
+      "model": "TimeMixer",
+      "seed": 52,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "B_tune__instacart__TimeMixer__c0__s42",
+        "B_tune__instacart__TimeMixer__c1__s42"
+      ],
+      "selector_cell": "instacart__TimeMixer",
+      "queue_order": 95,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/B_confirm__instacart__TimeMixer__s52"
+    },
+    {
+      "id": "B_confirm__instacart__TimeMixer__s62",
+      "phase": "B_confirmation",
+      "dataset": "insta_market_basket",
+      "model": "TimeMixer",
+      "seed": 62,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "B_tune__instacart__TimeMixer__c0__s42",
+        "B_tune__instacart__TimeMixer__c1__s42"
+      ],
+      "selector_cell": "instacart__TimeMixer",
+      "queue_order": 96,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/B_confirm__instacart__TimeMixer__s62"
+    },
+    {
+      "id": "B_tune__taxi__FlexTPP__c0__s42",
+      "phase": "B_tuning",
+      "dataset": "yellow_trip_hourly",
+      "model": "FlexTPP",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.0008,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 97,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/B_tune__taxi__FlexTPP__c0__s42"
+    },
+    {
+      "id": "B_tune__taxi__FlexTPP__c1__s42",
+      "phase": "B_tuning",
+      "dataset": "yellow_trip_hourly",
+      "model": "FlexTPP",
+      "seed": 42,
+      "config": "c1",
+      "lr": 0.0003,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 98,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/B_tune__taxi__FlexTPP__c1__s42"
+    },
+    {
+      "id": "B_confirm__taxi__FlexTPP__s52",
+      "phase": "B_confirmation",
+      "dataset": "yellow_trip_hourly",
+      "model": "FlexTPP",
+      "seed": 52,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "B_tune__taxi__FlexTPP__c0__s42",
+        "B_tune__taxi__FlexTPP__c1__s42"
+      ],
+      "selector_cell": "taxi__FlexTPP",
+      "queue_order": 99,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/B_confirm__taxi__FlexTPP__s52"
+    },
+    {
+      "id": "B_confirm__taxi__FlexTPP__s62",
+      "phase": "B_confirmation",
+      "dataset": "yellow_trip_hourly",
+      "model": "FlexTPP",
+      "seed": 62,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 90000,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "B_tune__taxi__FlexTPP__c0__s42",
+        "B_tune__taxi__FlexTPP__c1__s42"
+      ],
+      "selector_cell": "taxi__FlexTPP",
+      "queue_order": 100,
+      "fit_wall_cap_hours": 3,
+      "fresh_output_relative_path": "run/B_confirm__taxi__FlexTPP__s62"
+    },
+    {
+      "id": "B_tune__intermittent__FlexTPP__c0__s42",
+      "phase": "B_tuning",
+      "dataset": "intermittent_frozen_5000",
+      "model": "FlexTPP",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.0008,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 101,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/B_tune__intermittent__FlexTPP__c0__s42"
+    },
+    {
+      "id": "B_tune__intermittent__FlexTPP__c1__s42",
+      "phase": "B_tuning",
+      "dataset": "intermittent_frozen_5000",
+      "model": "FlexTPP",
+      "seed": 42,
+      "config": "c1",
+      "lr": 0.0003,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 102,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/B_tune__intermittent__FlexTPP__c1__s42"
+    },
+    {
+      "id": "B_confirm__intermittent__FlexTPP__s52",
+      "phase": "B_confirmation",
+      "dataset": "intermittent_frozen_5000",
+      "model": "FlexTPP",
+      "seed": 52,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "B_tune__intermittent__FlexTPP__c0__s42",
+        "B_tune__intermittent__FlexTPP__c1__s42"
+      ],
+      "selector_cell": "intermittent__FlexTPP",
+      "queue_order": 103,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/B_confirm__intermittent__FlexTPP__s52"
+    },
+    {
+      "id": "B_confirm__intermittent__FlexTPP__s62",
+      "phase": "B_confirmation",
+      "dataset": "intermittent_frozen_5000",
+      "model": "FlexTPP",
+      "seed": 62,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "B_tune__intermittent__FlexTPP__c0__s42",
+        "B_tune__intermittent__FlexTPP__c1__s42"
+      ],
+      "selector_cell": "intermittent__FlexTPP",
+      "queue_order": 104,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/B_confirm__intermittent__FlexTPP__s62"
+    },
+    {
+      "id": "B_tune__instacart__FlexTPP__c0__s42",
+      "phase": "B_tuning",
+      "dataset": "insta_market_basket",
+      "model": "FlexTPP",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.0008,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 105,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/B_tune__instacart__FlexTPP__c0__s42"
+    },
+    {
+      "id": "B_tune__instacart__FlexTPP__c1__s42",
+      "phase": "B_tuning",
+      "dataset": "insta_market_basket",
+      "model": "FlexTPP",
+      "seed": 42,
+      "config": "c1",
+      "lr": 0.0003,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 106,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/B_tune__instacart__FlexTPP__c1__s42"
+    },
+    {
+      "id": "B_confirm__instacart__FlexTPP__s52",
+      "phase": "B_confirmation",
+      "dataset": "insta_market_basket",
+      "model": "FlexTPP",
+      "seed": 52,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "B_tune__instacart__FlexTPP__c0__s42",
+        "B_tune__instacart__FlexTPP__c1__s42"
+      ],
+      "selector_cell": "instacart__FlexTPP",
+      "queue_order": 107,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/B_confirm__instacart__FlexTPP__s52"
+    },
+    {
+      "id": "B_confirm__instacart__FlexTPP__s62",
+      "phase": "B_confirmation",
+      "dataset": "insta_market_basket",
+      "model": "FlexTPP",
+      "seed": 62,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 4667100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "B_tune__instacart__FlexTPP__c0__s42",
+        "B_tune__instacart__FlexTPP__c1__s42"
+      ],
+      "selector_cell": "instacart__FlexTPP",
+      "queue_order": 108,
+      "fit_wall_cap_hours": 32,
+      "fresh_output_relative_path": "run/B_confirm__instacart__FlexTPP__s62"
+    },
+    {
+      "id": "B_tune__intermittent__DeepRenewal__c0__s42",
+      "phase": "B_tuning",
+      "dataset": "intermittent_frozen_5000",
+      "model": "DeepRenewal",
+      "seed": 42,
+      "config": "c0",
+      "lr": 0.001,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 109,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/B_tune__intermittent__DeepRenewal__c0__s42"
+    },
+    {
+      "id": "B_tune__intermittent__DeepRenewal__c1__s42",
+      "phase": "B_tuning",
+      "dataset": "intermittent_frozen_5000",
+      "model": "DeepRenewal",
+      "seed": 42,
+      "config": "c1",
+      "lr": 0.0003,
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "phase_A_terminal_audit"
+      ],
+      "queue_order": 110,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/B_tune__intermittent__DeepRenewal__c1__s42"
+    },
+    {
+      "id": "B_confirm__intermittent__DeepRenewal__s52",
+      "phase": "B_confirmation",
+      "dataset": "intermittent_frozen_5000",
+      "model": "DeepRenewal",
+      "seed": 52,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "B_tune__intermittent__DeepRenewal__c0__s42",
+        "B_tune__intermittent__DeepRenewal__c1__s42"
+      ],
+      "selector_cell": "intermittent__DeepRenewal",
+      "queue_order": 111,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/B_confirm__intermittent__DeepRenewal__s52"
+    },
+    {
+      "id": "B_confirm__intermittent__DeepRenewal__s62",
+      "phase": "B_confirmation",
+      "dataset": "intermittent_frozen_5000",
+      "model": "DeepRenewal",
+      "seed": 62,
+      "config": "selected_on_seed42",
+      "lr": "selected_on_seed42",
+      "action": "fresh_fit",
+      "max_epochs": 300,
+      "max_steps": 923100,
+      "endpoint_replays_if_fresh": 2,
+      "requires": [
+        "B_tune__intermittent__DeepRenewal__c0__s42",
+        "B_tune__intermittent__DeepRenewal__c1__s42"
+      ],
+      "selector_cell": "intermittent__DeepRenewal",
+      "queue_order": 112,
+      "fit_wall_cap_hours": 16,
+      "fresh_output_relative_path": "run/B_confirm__intermittent__DeepRenewal__s62"
+    }
+  ],
+  "tuning_cells": [
+    {
+      "id": "taxi__B",
+      "dataset": "yellow_trip_hourly",
+      "model": "B",
+      "candidate_seed": 42,
+      "candidates": [
+        {
+          "config": "c0",
+          "lr": 0.001,
+          "run_id": "A__taxi__B__s42"
+        },
+        {
+          "config": "c1",
+          "lr": 0.0003,
+          "run_id": "B_tune__taxi__B__c1__s42"
+        }
+      ],
+      "confirmation_runs": [
+        "B_confirm__taxi__B__s52",
+        "B_confirm__taxi__B__s62"
+      ],
+      "reported_seed42": "reuse selected candidate; never refit",
+      "configuration_selection": "earliest completed finite validation raw-RMSE minimum; exact tie c0 before c1; both candidates must finish normally for a complete comparison cell"
+    },
+    {
+      "id": "intermittent__B",
+      "dataset": "intermittent_frozen_5000",
+      "model": "B",
+      "candidate_seed": 42,
+      "candidates": [
+        {
+          "config": "c0",
+          "lr": 0.001,
+          "run_id": "A__intermittent__B__s42"
+        },
+        {
+          "config": "c1",
+          "lr": 0.0003,
+          "run_id": "B_tune__intermittent__B__c1__s42"
+        }
+      ],
+      "confirmation_runs": [
+        "B_confirm__intermittent__B__s52",
+        "B_confirm__intermittent__B__s62"
+      ],
+      "reported_seed42": "reuse selected candidate; never refit",
+      "configuration_selection": "earliest completed finite validation raw-RMSE minimum; exact tie c0 before c1; both candidates must finish normally for a complete comparison cell"
+    },
+    {
+      "id": "instacart__B",
+      "dataset": "insta_market_basket",
+      "model": "B",
+      "candidate_seed": 42,
+      "candidates": [
+        {
+          "config": "c0",
+          "lr": 0.001,
+          "run_id": "A__instacart__B__s42"
+        },
+        {
+          "config": "c1",
+          "lr": 0.0003,
+          "run_id": "B_tune__instacart__B__c1__s42"
+        }
+      ],
+      "confirmation_runs": [
+        "B_confirm__instacart__B__s52",
+        "B_confirm__instacart__B__s62"
+      ],
+      "reported_seed42": "reuse selected candidate; never refit",
+      "configuration_selection": "earliest completed finite validation raw-RMSE minimum; exact tie c0 before c1; both candidates must finish normally for a complete comparison cell"
+    },
+    {
+      "id": "taxi__Full",
+      "dataset": "yellow_trip_hourly",
+      "model": "Full",
+      "candidate_seed": 42,
+      "candidates": [
+        {
+          "config": "c0",
+          "lr": 0.001,
+          "run_id": "A__taxi__Full__s42"
+        },
+        {
+          "config": "c1",
+          "lr": 0.0003,
+          "run_id": "B_tune__taxi__Full__c1__s42"
+        }
+      ],
+      "confirmation_runs": [
+        "B_confirm__taxi__Full__s52",
+        "B_confirm__taxi__Full__s62"
+      ],
+      "reported_seed42": "reuse selected candidate; never refit",
+      "configuration_selection": "earliest completed finite validation raw-RMSE minimum; exact tie c0 before c1; both candidates must finish normally for a complete comparison cell"
+    },
+    {
+      "id": "intermittent__Full",
+      "dataset": "intermittent_frozen_5000",
+      "model": "Full",
+      "candidate_seed": 42,
+      "candidates": [
+        {
+          "config": "c0",
+          "lr": 0.001,
+          "run_id": "A__intermittent__Full__s42"
+        },
+        {
+          "config": "c1",
+          "lr": 0.0003,
+          "run_id": "B_tune__intermittent__Full__c1__s42"
+        }
+      ],
+      "confirmation_runs": [
+        "B_confirm__intermittent__Full__s52",
+        "B_confirm__intermittent__Full__s62"
+      ],
+      "reported_seed42": "reuse selected candidate; never refit",
+      "configuration_selection": "earliest completed finite validation raw-RMSE minimum; exact tie c0 before c1; both candidates must finish normally for a complete comparison cell"
+    },
+    {
+      "id": "instacart__Full",
+      "dataset": "insta_market_basket",
+      "model": "Full",
+      "candidate_seed": 42,
+      "candidates": [
+        {
+          "config": "c0",
+          "lr": 0.001,
+          "run_id": "A__instacart__Full__s42"
+        },
+        {
+          "config": "c1",
+          "lr": 0.0003,
+          "run_id": "B_tune__instacart__Full__c1__s42"
+        }
+      ],
+      "confirmation_runs": [
+        "B_confirm__instacart__Full__s52",
+        "B_confirm__instacart__Full__s62"
+      ],
+      "reported_seed42": "reuse selected candidate; never refit",
+      "configuration_selection": "earliest completed finite validation raw-RMSE minimum; exact tie c0 before c1; both candidates must finish normally for a complete comparison cell"
+    },
+    {
+      "id": "taxi__S2P2",
+      "dataset": "yellow_trip_hourly",
+      "model": "S2P2",
+      "candidate_seed": 42,
+      "candidates": [
+        {
+          "config": "c0",
+          "lr": 0.001,
+          "run_id": "B_tune__taxi__S2P2__c0__s42"
+        },
+        {
+          "config": "c1",
+          "lr": 0.0003,
+          "run_id": "B_tune__taxi__S2P2__c1__s42"
+        }
+      ],
+      "confirmation_runs": [
+        "B_confirm__taxi__S2P2__s52",
+        "B_confirm__taxi__S2P2__s62"
+      ],
+      "reported_seed42": "reuse selected candidate; never refit",
+      "configuration_selection": "earliest completed finite validation raw-RMSE minimum; exact tie c0 before c1; both candidates must finish normally for a complete comparison cell"
+    },
+    {
+      "id": "intermittent__S2P2",
+      "dataset": "intermittent_frozen_5000",
+      "model": "S2P2",
+      "candidate_seed": 42,
+      "candidates": [
+        {
+          "config": "c0",
+          "lr": 0.001,
+          "run_id": "B_tune__intermittent__S2P2__c0__s42"
+        },
+        {
+          "config": "c1",
+          "lr": 0.0003,
+          "run_id": "B_tune__intermittent__S2P2__c1__s42"
+        }
+      ],
+      "confirmation_runs": [
+        "B_confirm__intermittent__S2P2__s52",
+        "B_confirm__intermittent__S2P2__s62"
+      ],
+      "reported_seed42": "reuse selected candidate; never refit",
+      "configuration_selection": "earliest completed finite validation raw-RMSE minimum; exact tie c0 before c1; both candidates must finish normally for a complete comparison cell"
+    },
+    {
+      "id": "instacart__S2P2",
+      "dataset": "insta_market_basket",
+      "model": "S2P2",
+      "candidate_seed": 42,
+      "candidates": [
+        {
+          "config": "c0",
+          "lr": 0.001,
+          "run_id": "B_tune__instacart__S2P2__c0__s42"
+        },
+        {
+          "config": "c1",
+          "lr": 0.0003,
+          "run_id": "B_tune__instacart__S2P2__c1__s42"
+        }
+      ],
+      "confirmation_runs": [
+        "B_confirm__instacart__S2P2__s52",
+        "B_confirm__instacart__S2P2__s62"
+      ],
+      "reported_seed42": "reuse selected candidate; never refit",
+      "configuration_selection": "earliest completed finite validation raw-RMSE minimum; exact tie c0 before c1; both candidates must finish normally for a complete comparison cell"
+    },
+    {
+      "id": "taxi__TimeMixer",
+      "dataset": "yellow_trip_hourly",
+      "model": "TimeMixer",
+      "candidate_seed": 42,
+      "candidates": [
+        {
+          "config": "c0",
+          "lr": 0.001,
+          "run_id": "B_tune__taxi__TimeMixer__c0__s42"
+        },
+        {
+          "config": "c1",
+          "lr": 0.0003,
+          "run_id": "B_tune__taxi__TimeMixer__c1__s42"
+        }
+      ],
+      "confirmation_runs": [
+        "B_confirm__taxi__TimeMixer__s52",
+        "B_confirm__taxi__TimeMixer__s62"
+      ],
+      "reported_seed42": "reuse selected candidate; never refit",
+      "configuration_selection": "earliest completed finite validation raw-RMSE minimum; exact tie c0 before c1; both candidates must finish normally for a complete comparison cell"
+    },
+    {
+      "id": "intermittent__TimeMixer",
+      "dataset": "intermittent_frozen_5000",
+      "model": "TimeMixer",
+      "candidate_seed": 42,
+      "candidates": [
+        {
+          "config": "c0",
+          "lr": 0.001,
+          "run_id": "B_tune__intermittent__TimeMixer__c0__s42"
+        },
+        {
+          "config": "c1",
+          "lr": 0.0003,
+          "run_id": "B_tune__intermittent__TimeMixer__c1__s42"
+        }
+      ],
+      "confirmation_runs": [
+        "B_confirm__intermittent__TimeMixer__s52",
+        "B_confirm__intermittent__TimeMixer__s62"
+      ],
+      "reported_seed42": "reuse selected candidate; never refit",
+      "configuration_selection": "earliest completed finite validation raw-RMSE minimum; exact tie c0 before c1; both candidates must finish normally for a complete comparison cell"
+    },
+    {
+      "id": "instacart__TimeMixer",
+      "dataset": "insta_market_basket",
+      "model": "TimeMixer",
+      "candidate_seed": 42,
+      "candidates": [
+        {
+          "config": "c0",
+          "lr": 0.001,
+          "run_id": "B_tune__instacart__TimeMixer__c0__s42"
+        },
+        {
+          "config": "c1",
+          "lr": 0.0003,
+          "run_id": "B_tune__instacart__TimeMixer__c1__s42"
+        }
+      ],
+      "confirmation_runs": [
+        "B_confirm__instacart__TimeMixer__s52",
+        "B_confirm__instacart__TimeMixer__s62"
+      ],
+      "reported_seed42": "reuse selected candidate; never refit",
+      "configuration_selection": "earliest completed finite validation raw-RMSE minimum; exact tie c0 before c1; both candidates must finish normally for a complete comparison cell"
+    },
+    {
+      "id": "taxi__FlexTPP",
+      "dataset": "yellow_trip_hourly",
+      "model": "FlexTPP",
+      "candidate_seed": 42,
+      "candidates": [
+        {
+          "config": "c0",
+          "lr": 0.0008,
+          "run_id": "B_tune__taxi__FlexTPP__c0__s42"
+        },
+        {
+          "config": "c1",
+          "lr": 0.0003,
+          "run_id": "B_tune__taxi__FlexTPP__c1__s42"
+        }
+      ],
+      "confirmation_runs": [
+        "B_confirm__taxi__FlexTPP__s52",
+        "B_confirm__taxi__FlexTPP__s62"
+      ],
+      "reported_seed42": "reuse selected candidate; never refit",
+      "configuration_selection": "earliest completed finite validation raw-RMSE minimum; exact tie c0 before c1; both candidates must finish normally for a complete comparison cell"
+    },
+    {
+      "id": "intermittent__FlexTPP",
+      "dataset": "intermittent_frozen_5000",
+      "model": "FlexTPP",
+      "candidate_seed": 42,
+      "candidates": [
+        {
+          "config": "c0",
+          "lr": 0.0008,
+          "run_id": "B_tune__intermittent__FlexTPP__c0__s42"
+        },
+        {
+          "config": "c1",
+          "lr": 0.0003,
+          "run_id": "B_tune__intermittent__FlexTPP__c1__s42"
+        }
+      ],
+      "confirmation_runs": [
+        "B_confirm__intermittent__FlexTPP__s52",
+        "B_confirm__intermittent__FlexTPP__s62"
+      ],
+      "reported_seed42": "reuse selected candidate; never refit",
+      "configuration_selection": "earliest completed finite validation raw-RMSE minimum; exact tie c0 before c1; both candidates must finish normally for a complete comparison cell"
+    },
+    {
+      "id": "instacart__FlexTPP",
+      "dataset": "insta_market_basket",
+      "model": "FlexTPP",
+      "candidate_seed": 42,
+      "candidates": [
+        {
+          "config": "c0",
+          "lr": 0.0008,
+          "run_id": "B_tune__instacart__FlexTPP__c0__s42"
+        },
+        {
+          "config": "c1",
+          "lr": 0.0003,
+          "run_id": "B_tune__instacart__FlexTPP__c1__s42"
+        }
+      ],
+      "confirmation_runs": [
+        "B_confirm__instacart__FlexTPP__s52",
+        "B_confirm__instacart__FlexTPP__s62"
+      ],
+      "reported_seed42": "reuse selected candidate; never refit",
+      "configuration_selection": "earliest completed finite validation raw-RMSE minimum; exact tie c0 before c1; both candidates must finish normally for a complete comparison cell"
+    },
+    {
+      "id": "intermittent__DeepRenewal",
+      "dataset": "intermittent_frozen_5000",
+      "model": "DeepRenewal",
+      "candidate_seed": 42,
+      "candidates": [
+        {
+          "config": "c0",
+          "lr": 0.001,
+          "run_id": "B_tune__intermittent__DeepRenewal__c0__s42"
+        },
+        {
+          "config": "c1",
+          "lr": 0.0003,
+          "run_id": "B_tune__intermittent__DeepRenewal__c1__s42"
+        }
+      ],
+      "confirmation_runs": [
+        "B_confirm__intermittent__DeepRenewal__s52",
+        "B_confirm__intermittent__DeepRenewal__s62"
+      ],
+      "reported_seed42": "reuse selected candidate; never refit",
+      "configuration_selection": "earliest completed finite validation raw-RMSE minimum; exact tie c0 before c1; both candidates must finish normally for a complete comparison cell"
+    }
+  ]
+}

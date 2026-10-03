@@ -1,0 +1,153 @@
+{
+  "schema": "titan_followup_budget_v1",
+  "currency_cost": null,
+  "currency_reason": "No hourly electricity/provider price supplied; no monetary cost fabricated.",
+  "resource": "one NVIDIA RTX 5080, dedicated owned jobs only",
+  "authorization": "proposed caps for future explicit permit; no current GPU authority",
+  "gpu_process_wall_hours_total": 480,
+  "phase_gpu_process_wall_hours": {
+    "A_training_and_epoch_validation": 192,
+    "B_training_and_epoch_validation": 264,
+    "qualification_endpoint_replay_bridge_and_benchmark": 24
+  },
+  "absolute_elapsed_hours_from_new_permit_first_gpu_qualification": 720,
+  "gpu_accounting": "Sum owned process wall-clock time during GPU qualification, training, epoch validation, endpoint evaluation and GPU benchmarks; simultaneous owned GPU processes forbidden. Waiting counts only toward 720-hour elapsed ceiling. Count failed/OOM/stalled work and partial attempts.",
+  "fit_wall_caps_hours": {
+    "yellow_trip_hourly": 3,
+    "intermittent_frozen_5000": 16,
+    "insta_market_basket": 32
+  },
+  "per_fit_wall_cap_scope": "model process from launch through final training epoch/epoch validation; endpoint replay billed to the 24-hour evaluation pool",
+  "qualification_per_model_dataset_shape_seconds": 1800,
+  "qualification_shape_cells": 28,
+  "qualification_synthetic_updates_per_cell": 60,
+  "start_min_free_gpu_gib": 12,
+  "max_allocated_gpu_gib": 14,
+  "max_reserved_gpu_gib": 15,
+  "start_min_disk_free_gib": 100,
+  "max_new_artifacts_gib": 80,
+  "max_checkpoint_file_mib": 256,
+  "no_progress_stack_seconds": 300,
+  "no_progress_abort_seconds": 1800,
+  "waiting_deadline_reset": false,
+  "pool_transfer": false,
+  "retry_resume_or_budget_extension": false,
+  "budget_failure_policy": "At first applicable cap, stop only owned process gracefully; capture incomplete/failed state; do not relabel as early stopping or add replacement fits. All unrun/failed conditions remain in report.",
+  "observed_epoch_evidence": [
+    {
+      "dataset": "yellow_trip_hourly",
+      "model": "titantpp",
+      "historical_host": "5080",
+      "n_seeds": 3,
+      "mean_completed_epoch_seconds": 12.309757545407683,
+      "mean_training_elapsed_seconds": 870.585224310557,
+      "completed_epochs": {
+        "42": 86,
+        "52": 59,
+        "62": 67
+      },
+      "source": "reports/local_detail_3seed_final_20260927_v1/three_seed_summary.json",
+      "split": "validation"
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "model": "titantpp_local_detail",
+      "historical_host": "5080",
+      "n_seeds": 3,
+      "mean_completed_epoch_seconds": 13.35298619455728,
+      "mean_training_elapsed_seconds": 2425.8253541787467,
+      "completed_epochs": {
+        "42": 215,
+        "52": 195,
+        "62": 135
+      },
+      "source": "reports/local_detail_3seed_final_20260927_v1/three_seed_summary.json",
+      "split": "validation"
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "model": "titantpp",
+      "historical_host": "5080",
+      "n_seeds": 3,
+      "mean_completed_epoch_seconds": 117.09089669766867,
+      "mean_training_elapsed_seconds": 9582.855160474777,
+      "completed_epochs": {
+        "42": 111,
+        "52": 51,
+        "62": 83
+      },
+      "source": "reports/local_detail_3seed_final_20260927_v1/three_seed_summary.json",
+      "split": "validation"
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "model": "titantpp_local_detail",
+      "historical_host": "5080",
+      "n_seeds": 3,
+      "mean_completed_epoch_seconds": 127.76579420430097,
+      "mean_training_elapsed_seconds": 12069.222245852152,
+      "completed_epochs": {
+        "42": 45,
+        "52": 159,
+        "62": 79
+      },
+      "source": "reports/local_detail_3seed_final_20260927_v1/three_seed_summary.json",
+      "split": "validation"
+    },
+    {
+      "dataset": "insta_market_basket",
+      "model": "titantpp",
+      "historical_host": "5090",
+      "n_seeds": 3,
+      "mean_completed_epoch_seconds": 206.4313876008864,
+      "mean_training_elapsed_seconds": 13786.306598027548,
+      "completed_epochs": {
+        "42": 70,
+        "52": 55,
+        "62": 75
+      },
+      "source": "reports/local_detail_3seed_final_20260927_v1/three_seed_summary.json",
+      "split": "validation"
+    },
+    {
+      "dataset": "insta_market_basket",
+      "model": "titantpp_local_detail",
+      "historical_host": "5090",
+      "n_seeds": 3,
+      "mean_completed_epoch_seconds": 250.40523708454353,
+      "mean_training_elapsed_seconds": 16548.86489534378,
+      "completed_epochs": {
+        "42": 68,
+        "52": 55,
+        "62": 75
+      },
+      "source": "reports/local_detail_3seed_final_20260927_v1/three_seed_summary.json",
+      "split": "validation"
+    }
+  ],
+  "mechanism_sensitivity_scenarios": [
+    {
+      "instacart_5080_vs_historical_5090_seconds_multiplier_assumption": 1,
+      "phase_A_hours_if_ablation_cost_and_stopping_equal_historical_Full": 128.75901789572504,
+      "phase_A_hours_if_every_fresh_fit_runs_300_epochs_at_proxy_speed": 505.73317365475936,
+      "forecast": false
+    },
+    {
+      "instacart_5080_vs_historical_5090_seconds_multiplier_assumption": 1.5,
+      "phase_A_hours_if_ablation_cost_and_stopping_equal_historical_Full": 168.9801141768694,
+      "phase_A_hours_if_every_fresh_fit_runs_300_epochs_at_proxy_speed": 688.0403702827097,
+      "forecast": false
+    },
+    {
+      "instacart_5080_vs_historical_5090_seconds_multiplier_assumption": 2,
+      "phase_A_hours_if_ablation_cost_and_stopping_equal_historical_Full": 209.20121045801375,
+      "phase_A_hours_if_every_fresh_fit_runs_300_epochs_at_proxy_speed": 870.3475669106601,
+      "forecast": false
+    }
+  ],
+  "external_model_epoch_measurements": null,
+  "external_cost_status": "unmeasured on 5080; no total completion ETA. 480 hours is a spending ceiling, not a completion guarantee.",
+  "maximum_fresh_steps_if_all_max_rows_run_300_epochs": 202101000,
+  "old_deadline_reused": false,
+  "old_campaign_deadline_context": "2026-10-02 21:28:48 KST belongs only to the previous campaign; no authority or spare hours transferred"
+}
