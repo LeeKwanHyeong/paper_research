@@ -145,6 +145,7 @@ class SharedTimeCountModel(nn.Module):
         time_initial_location: float | None = None,
         time_initial_scale: float | None = None,
         time_sigma_floor: float = 1e-3,
+        time_observation_contract: dict[str, Any] | None = None,
     ) -> None:
         super().__init__()
         if not math.isfinite(train_log_mean) or train_log_mean <= 0.0:
@@ -280,6 +281,19 @@ class SharedTimeCountModel(nn.Module):
         self.time_intercept_limit = float(time_intercept_limit)
         self.time_wd_safety_limit = float(time_wd_safety_limit)
         self.time_sigma_floor = float(time_sigma_floor)
+        self.time_observation_contract = None
+        if time_observation_contract is not None:
+            observation = dict(time_observation_contract)
+            if time_head_mode != TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION:
+                raise ValueError("Integer observation requires the heteroscedastic duration head")
+            if (set(observation) != {"mode", "top_code", "unit"}
+                    or observation["mode"] != "positive_integer_round_clamp_v1"
+                    or observation["unit"] not in {"week", "hour", "day", "month"}):
+                raise ValueError("Unsupported time observation contract")
+            code = observation["top_code"]
+            if code is not None and (type(code) is not int or code < 2):
+                raise ValueError("Time top_code must be an integer at least two")
+            self.time_observation_contract = observation
 
         self.v_t = nn.Linear(self.hidden_dim, 1, bias=False)
         if self.time_head_mode in TIME_HEAD_EXACT_MODES:
@@ -432,6 +446,18 @@ class SharedTimeCountModel(nn.Module):
             dim=-1,
         )
         return features * mask.unsqueeze(-1).to(dtype=features.dtype)
+
+    def log_observation_dt(self, hidden: torch.Tensor, dt_next: torch.Tensor) -> torch.Tensor:
+        """Evaluate the explicitly configured observation law or historical loss."""
+        if self.time_observation_contract is None:
+            return self.log_f_dt(hidden, dt_next)
+        from models.TPPs.positive_integer_time import positive_integer_log_mass
+
+        location, scale, _ = self._lognormal_time_terms(hidden, dt_next)
+        return positive_integer_log_mass(
+            dt_next, location, scale, time_scale=self.time_scale,
+            top_code=self.time_observation_contract["top_code"],
+        )
 
     def log_f_dt(self, hidden: torch.Tensor, dt_next: torch.Tensor) -> torch.Tensor:
         """Evaluate the shared RMTPP-style next-event time log density."""
@@ -608,8 +634,15 @@ class SharedTimeCountModel(nn.Module):
             )
         }
 
-    def time_head_contract(self) -> dict[str, float | str | bool]:
+    def time_head_contract(self) -> dict[str, Any]:
         """Return serializable time-head metadata for experiment manifests."""
+        contract = self._time_density_contract()
+        if self.time_observation_contract is not None:
+            contract["observation_likelihood"] = dict(self.time_observation_contract)
+            contract["reported_metric"] = "recorded_positive_integer_time_nll"
+        return contract
+
+    def _time_density_contract(self) -> dict[str, Any]:
         if self.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION:
             return {
                 "mode": self.time_head_mode,

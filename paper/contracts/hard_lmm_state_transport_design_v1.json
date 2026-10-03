@@ -1,0 +1,158 @@
+{
+  "schema": "hard_lmm_state_transport_design_v1",
+  "date": "2026-09-19",
+  "status": "design_selected_model_not_implemented",
+  "purpose": "기존 B의 두 encoder 층 사이에서 경과시간에 따른 상태 전파를 추가하여, 사건의 발생 간격과 관측 내용의 지속·변화를 함께 처리하는 Backbone 후보를 검증한다.",
+  "hypothesis": {
+    "claim_to_test": "Explicit elapsed-time state propagation adds useful inductive bias beyond giving the same observed duration features to attention and gates.",
+    "not_established": ["B cannot learn time effects", "shared retrieval caused previous failures", "longer context has been recovered", "performance improvement", "academic novelty"],
+    "example": "With state-write inputs held fixed, a longer observed gap retains less of the previous state. In a full model, gates and values also depend on duration-containing first-layer representations, so full predictions need not be monotone in the gap."
+  },
+  "scope": {
+    "authorized_now": ["local source and frozen validation-evidence review", "implementable design", "standard-library synthetic mathematical checks"],
+    "not_executed_by_this_contract": ["production model implementation", "real-data computation", "checkpoint loading", "SSH", "GPU qualification or training", "scheduler changes", "commit or push", "held-out evaluation"],
+    "previous_pair_message_candidate": "Additional seeds and Instacart extension remain on hold.",
+    "future_execution": "A new, concrete execution contract and user approval are required; previous approvals, server assignments and deadlines are not inherited."
+  },
+  "evidence": {
+    "current_B_and_previous_decision": "search_artifacts/pair_message_intermittent_layout_recovery_20260919_v1/integrated_interpretation_20260919.json",
+    "previous_execution_conditions": "paper/contracts/pair_message_observed_time_execution_v1.json",
+    "current_B_source": ["models/TPPs/CountAwareTPP.py", "models/Titan/backbone.py", "models/Titan/common/memory.py"],
+    "input_and_mask_sources": ["data_loader/event_seq_data_module.py", "paper/scripts/count_aware_tpp_backbone/core.py"],
+    "interpretation_boundary": "Previous results motivate a different hypothesis, but do not establish a missing elapsed-time mechanism as their cause. Historical experiments with different time likelihoods are not quantitative controls."
+  },
+  "design_twice": [
+    {
+      "candidate": "bounded elapsed-time state transport between encoder blocks",
+      "decision": "selected",
+      "information_processing": "Propagate a small learned state, decay retained content by observed time, and write current causal context before the second attention block.",
+      "reason": "One explicit transition-clock change has a same-capacity event-clock control; zero-initialized output preserves initial B behavior; masks and state bounds admit direct tests.",
+      "risk": "State may duplicate information already available to attention, lose useful long-gap context or add cost without benefit."
+    },
+    {
+      "candidate": "causal hierarchical block encoder",
+      "decision": "deferred",
+      "information_processing": "Process local event patterns at fine resolution and completed causal block summaries at coarse resolution.",
+      "reason": "Materially different topology, but block boundaries, compression, equal-capacity controls and initial B equivalence change several factors together. It is a distinct future alternative if this single-axis test fails."
+    }
+  ],
+  "distinction_from_prior_axes": [
+    {"axis": "surprise/fast-weight, Titans-MAC and circular memory", "source": "models/Titan/common/memory.py", "difference": "No inner gradient update, prediction-error write, learned parameter memory or circular slot search; this state is a bounded activation vector."},
+    {"axis": "dual-timescale transition compression", "source": "paper/results/final_backbone_and_baselines_20260909/contracts/hard_lmm_dual_timescale_v1.md", "difference": "No recent/old prefix banks or query-weighted hidden-difference retrieval; propagation uses an explicit elapsed clock."},
+    {"axis": "observed slots", "source": "paper/contracts/hard_lmm_observed_slot_memory_v1.json", "difference": "No slot-wise cumulative mean or content-addressed read; generic recurrent bottleneck was already listed as an alternative, so recurrence itself is not claimed new."},
+    {"axis": "successor and nonlinear episode values", "source": "paper/contracts/hard_lmm_nonlinear_episode_value_design_v1.json", "difference": "No predecessor-successor record bank or pre/post-pool value comparison."},
+    {"axis": "task-specific memory reads", "source": "paper/contracts/hard_lmm_task_routed_episode_design_v1.json", "difference": "Time and quantity retain one jointly trained shared representation and one state route."},
+    {"axis": "causal QKV convolution", "source": "paper/results/hard_lmm_causal_qkv_followup_20260908/final_result.md", "difference": "No fixed local convolution of Q/K/V; the new operation transports a recurrent activation between blocks."},
+    {"axis": "pair message pre/post pool", "source": "paper/contracts/hard_lmm_pair_message_design_v1.json", "difference": "No query-event pair gate; first-layer context determines affine state coefficients before second-layer attention."},
+    {"axis": "existing NHP continuous-time LSTM", "source": "models/TPPs/NeuralHawkesTPP.py", "difference": "NHP already uses temporal decay. Here coefficients depend on first-layer context, not the new previous state, enabling an affine scan within the Titan hybrid. This is not a claim to invent continuous-time recurrence."}
+  ],
+  "architecture": {
+    "baseline": "titantpp",
+    "control": "titantpp_event_state_transport",
+    "candidate": "titantpp_elapsed_state_transport",
+    "flow": "unchanged observed log1p(dt,quantity) inputs and positions -> first B encoder block -> state transport residual -> second B encoder block -> original static Hard-LMM -> unchanged shared time and quantity heads",
+    "hidden_dim": 64,
+    "state_dim": 8,
+    "equations": [
+      "u_i = LayerNorm_no_affine(h_i), epsilon=1e-5, over hidden channels only",
+      "v_i = tanh(V u_i)",
+      "g_i = sigmoid(G u_i + b)",
+      "lambda = softplus(rho)",
+      "delta_i = observed_loader_duration_i / frozen_train_time_scale",
+      "d_i = exp(-lambda * delta_i) for elapsed-clock candidate; exp(-lambda * 1) for event-clock control",
+      "A_i = (1 - g_i) * d_i; B_i = g_i * v_i",
+      "s_i = A_i * s_(i-1) + B_i; s_start = 0",
+      "h'_i = h_i + U s_i on observed positions; state correction is zero elsewhere"
+    ],
+    "coefficient_dependency": "V/G consume causal h_i, which can summarize earlier observations. They do not consume s_(i-1). All parameters, including original B, train jointly.",
+    "state_lifetime": "Rebuild from zero for every sample and forward call. No state across windows, series, batches or epochs.",
+    "excluded_changes": ["new head or objective", "task split", "gradient detach or raw auxiliary loss", "extra dropout", "new input features", "larger history window", "dynamic slot bank", "query-conditioned retrieval", "inner optimizer"]
+  },
+  "same_parameter_control": {
+    "only_intended_difference": "Explicit state transition clock: delta_i versus 1 on each observed event.",
+    "identical": ["observed dt and quantity inputs", "train-scale metadata", "B tensors", "V/G/b/U/rho initial tensors", "tensor shapes and trainable parameter count", "event masks", "state update form", "batches", "heads and losses"],
+    "time_information_available_to_control": "The control still sees duration through first-layer h and its learned gates/values. This is an explicit temporal-dynamics comparison, not time-information access versus no time information.",
+    "identity_case": "For identical inputs, parameters and masks, all observed delta_i=1 implies identical control/candidate state outputs.",
+    "not_promised": ["identical learned function classes", "identical measured runtime", "same optimizer trajectory as B"]
+  },
+  "initialization": {
+    "V": "Bias-free Linear(64,8), ordinary initialization inside an isolated RNG context.",
+    "G": "Linear(64,8) weight initialized exactly zero; trainable bias b=logit(1/16).",
+    "U": "Bias-free Linear(8,64), initialized exactly zero.",
+    "event_free_half_lives": [1, 2, 4, 8, 16, 32, 64, 128],
+    "rho": "Trainable vector of length 8, initialized inverse_softplus(log(2)/event_free_half_life). Values fixed before validation; no per-dataset search.",
+    "common_rng": "Construct/copy common B tensors and preserve caller RNG; added modules must not shift subsequent dropout or batch RNG. Added tensors equal between the two new arms.",
+    "B_equivalence": "On the runner's canonical right-padded observed-history layout, compare observed prediction outputs, objective and common-B preclip gradients before training.",
+    "staged_gradient_activation": "U should receive a gradient initially. V/G/b/rho may have zero gradients until U moves; test their gradients with nonzero U, nondegenerate observations and a nonzero previous state.",
+    "clipping_caveat": "New U gradients affect the full gradient norm; first clipped optimizer updates need not equal B even when common preclip gradients match.",
+    "retention_caveat": "c=1..128 is event-free time decay only. g=1/16 yields event-only retention half-life about 10.74 observations, and c=128 with delta=1 gives about 9.91 observations. This design does not guarantee long-term retention or extend the input window."
+  },
+  "time_scale": {
+    "definition": "Reuse the common observed-time-head's frozen train-only median of loader-transformed training target durations. Do not fit on validation or estimate anew in this design step.",
+    "derivation_source": "paper/scripts/run_count_aware_tpp_backbone_control.py::derive_train_time_contract uses train target_splits and np.quantile(target_dts, 0.50); paper/scripts/run_pair_message_execution.py::time_interface binds the frozen statistics and duration identity.",
+    "known_frozen_values": {"yellow_trip_hourly": 1.0, "intermittent_frozen_5000": 3.0},
+    "requirements": "Positive finite scalar bound to train data/target-duration checksums and source identity; candidate/control carry the same value. Implementation must reject invalid scale and invalid observed durations.",
+    "application": "Normalize only the new recurrence clock. Original B input features and head scaling remain unchanged.",
+    "invariance_scope": "Multiplying duration and scale by the same factor preserves the recurrence clock; this does not imply unit invariance of the entire B model."
+  },
+  "causality_and_masks": {
+    "observed": "original_valid_mask & memory_write_mask (or original_valid_mask if write mask absent)",
+    "sanitize_first": "Replace non-observed raw dt/quantity with finite zero before any log, projection or gate. Mask h before new projections; never multiply NaN by zero as sanitization.",
+    "observed_transition": "Use only duration of the current observed event, including its preceding observed interval as represented by the frozen loader. Never consume next-event target duration.",
+    "padding": "original_valid=false -> A=1,B=0; no state clock advance, zero correction.",
+    "withheld_event": "original_valid=true and observed=false -> A=0,B=0; reset only the added state path, zero correction. No hidden duration accumulation across this boundary.",
+    "reset_scope": "A state reset does not erase earlier observed history from first-layer attention. Withheld values must have no influence through either encoder block.",
+    "mask_plumbing": "Retain original_valid and observed separately through the helper. Both B blocks use the sanitized observed-token attention mask; do not copy a wrapper that discards original_valid before the recurrence can distinguish padding from withheld boundaries.",
+    "persistent_memory": "Existing persistent attention keys/values are not event rows and never advance this state.",
+    "positions": "Preserve canonical runner event order and position IDs. Padding-insertion invariance is a recurrence property; full-model tests must preserve observed position IDs.",
+    "target_selection": "Retain existing observed history-position selection; target dt/quantity are used only in supervised losses after prediction."
+  },
+  "math_and_cost": {
+    "state_bound": "For finite g in [0,1], d in [0,1], v in [-1,1] and s_start=0, every state channel remains in [-1,1]. This does not bound all hidden states or gradients.",
+    "affine_composition": "Earlier (a,b), later (c,d) compose to (c*a, c*b+d), elementwise. Floating-point implementations need tolerance-based agreement.",
+    "implementation_first": "Sequential affine scan is the correctness oracle. Select a production scan only after CPU gradient/restore checks and measured device cost.",
+    "work": "Added projections O(batch*length*hidden*state); sequential scan O(batch*length*state). Work-efficient parallel scan can have O(log length) depth; naive Hillis-Steele instead has O(length log length) work.",
+    "saved_state": "The state sequence itself uses O(batch*length*state). The selected out-of-place Hillis-Steele implementation may retain O(batch*length*state*log(length)) autograd intermediates across scan levels; no new query-event pair tensor. Overall backbone attention remains quadratic.",
+    "additional_parameter_formula": "3*hidden_dim*state_dim + 2*state_dim",
+    "additional_parameters_expected": 1552,
+    "reference_B_parameters": 89859,
+    "actual_parameters_and_cuda_cost": "unverified until implementation and device qualification",
+    "numerics": "Finite observed inputs and nonnegative durations required. Large-gap exponential underflow to zero is acceptable; NaN/Inf updates are failures. Existing float32 training is the initial target; mixed precision is not authorized by this design."
+  },
+  "implementation_map": {
+    "new_model_proposed": "models/TPPs/CountAwareTitanStateTransport.py",
+    "registry_changes_later": ["models/TPPs/CountAwareFactory.py", "paper/scripts/count_aware_tpp_backbone/constants.py"],
+    "integration": "Local subclass/helper: explicit first block -> state residual -> second block; reuse static Hard-LMM/shared head behavior. Preserve default B route. Add dedicated tests; do not modify frozen prior source bundles.",
+    "checkpoint_identity": ["design schema and checksum", "source file checksums, not Git revision alone", "arm and clock code", "hidden/state dimensions and initialization", "train time scale and provenance", "head/loss/loader contract", "V/G/b/U/rho and all B tensors", "optimizer/RNG/epoch/global-step/selector state"],
+    "load_policy": "Strictly reject clock, scale, architecture or source identity mismatch. Sample-local s is recomputed; it is not a persistent checkpoint memory."
+  },
+  "verification_required_before_gpu_contract": [
+    "Full-model initial B output/objective/common preclip gradient and RNG equality on canonical batches.",
+    "Future, target and padding value poisoning cannot affect earlier observed predictions; masked NaN/Inf sanitized before operations; target gradient zero.",
+    "Sequential and chosen scan forward/backward agreement; all-delta-one control/candidate agreement.",
+    "Every new parameter receives finite, nontrivial activated-path gradients; sequence reset and independent sample batching verified.",
+    "Exact state_dict, optimizer, RNG and next-update replay; mismatched clock/scale/source rejected.",
+    "Identical train/validation batch content and order; strict earliest finite raw-RMSE selector, stored metrics from that checkpoint, interrupted resume identity.",
+    "Measured CPU cost plus an explicit approved CUDA qualification plan; no runtime feasibility claim from asymptotic analysis alone."
+  ],
+  "future_comparison_proposal_not_execution_authorization": {
+    "arms": ["fresh titantpp B", "event-clock control", "elapsed-clock candidate"],
+    "initial_scope": "Intermittent and Taxi, seed42, same dataset on same host; concrete assignment and budget unfrozen. Instacart/additional seeds remain outside this design's execution scope.",
+    "preserve": "Recorded positive-integer lognormal time likelihood plus log-quantity MSE, shared heads, no auxiliary objective; same B initialization, train-only statistics, batches, optimizer, clipping, exposure and selectors across arms.",
+    "selector": "Strict earliest finite validation raw-RMSE minimum; report MAE, body/tail MAE and recorded-time NLL from that same checkpoint. Last30 epoch mean/SD are stability descriptors, not seed uncertainty.",
+    "thresholds_proposed_from_previous_contract": {"raw_rmse_ratio_strictly_less_than": 1.0, "mae_ratio_max": 1.01, "body_mae_ratio_max": 1.02, "tail_mae_ratio_max": 1.02, "recorded_time_nll_increase_max": 0.01, "last30_rmse_mean_ratio_max": 1.05, "last30_rmse_std_ratio_max": 1.05},
+    "body_tail": "Body target quantity <= all-train p95; tail > all-train p99. Preserve existing all-train strata without validation-based retuning.",
+    "decision": "Require all frozen gates against both B and event-clock control on both screening datasets. An improvement over B alone does not establish the explicit elapsed-clock contribution.",
+    "cost_gates_proposed": {"parameter_ratio_max": 1.05, "median_cuda_step_ratio_max": 2.5, "peak_cuda_allocated_ratio_max": 2.5, "device_memory_fraction_max": 0.8},
+    "later_evidence": "Only after useful repeatable evidence: component contribution including relation to static LMM, matched benchmark heads/objectives, further seeds, then locked held-out protocol. Single-seed reused validation is not universal superiority.",
+    "failure_action": "Do not expand seed/dataset scope or tune decay/gates on failure under the same claim; return to the stated hypothesis and the materially different deferred topology."
+  },
+  "prior_art_boundary": {
+    "statement": "Continuous-time recurrent state and state-space TPP architectures already exist. The project-specific candidate is a bounded affine interlayer residual with an explicit elapsed-versus-event clock control, not a new general recurrence algorithm.",
+    "primary_sources": [
+      {"title": "The Neural Hawkes Process: A Neurally Self-Modulating Multivariate Point Process", "url": "https://papers.nips.cc/paper_files/paper/2017/hash/6463c88460bd63bbe256e495c63aa40b-Abstract.html"},
+      {"title": "Mamba Hawkes Process", "url": "https://arxiv.org/abs/2407.05302"},
+      {"title": "Deep Continuous-Time State-Space Models for Marked Event Sequences", "version": "v2", "url": "https://arxiv.org/abs/2412.19634v2"}
+    ]
+  }
+}

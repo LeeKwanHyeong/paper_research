@@ -1,0 +1,79 @@
+{
+  "schema": "hard_lmm_local_gate_design_v1",
+  "date": "2026-09-22",
+  "status": "implemented_pending_integration_qualification",
+  "purpose": "관측 수량 수준·변화를 최근 이력 보정의 반영량에 명시적으로 연결하는 것이 시간 이력만 사용하는 gate보다 유용한지 확인한다.",
+  "baseline": "titantpp",
+  "ungated_reference": "titantpp_local_detail",
+  "new_arms": [
+    "titantpp_local_time_gate",
+    "titantpp_local_quantity_gate"
+  ],
+  "architecture": {
+    "insertion": "between B blocks at existing local-detail residual injection",
+    "residual": "exact existing MultiLagDetail(mode=local), eight repeated lag1 branches, unchanged availability [1,2,4,8,16,32,64,128], rank4, divisor8",
+    "features": {
+      "t": "log1p(observed_dt/frozen_train_time_scale)",
+      "q": "log1p(observed_quantity)/frozen_train_log_mean",
+      "delta_t": "t_i-t_previous_observed_in_segment",
+      "delta_q": "q_i-q_previous_observed_in_segment",
+      "first_event": "differences zero; existing residual zero"
+    },
+    "control": "g=2*sigmoid(b+w_t*t+w_dt*delta_t)",
+    "candidate": "g=2*sigmoid(b+w_t*t+w_dt*delta_t+w_q*q+w_dq*delta_q)",
+    "injection": "h_new=h+g*local_detail(h)",
+    "initialization": "all gate coefficients zero so multiplier1; original local output projections zero; preserve caller RNG, B outputs/common preclip gradients, and local initial U gradients",
+    "added_gate_parameters": {
+      "time": 3,
+      "quantity": 5
+    },
+    "mask": "sanitize before transforms; padding skipped; withheld valid row resets added predecessor segment, not existing B attention context",
+    "head_objective": "unchanged recorded-positive-integer heteroscedastic lognormal time and log-MSE quantity, jointly trained"
+  },
+  "options": {
+    "selected": "raw observed-feature scalar injection gate",
+    "rejected_hidden_gate": "hidden already mixes time and quantity, obscuring explicit quantity attribution",
+    "deferred_norm_cap": "would confound intervention limiting with gating; gate range does not bound residual norm"
+  },
+  "prior_distinction": {
+    "pair_message": "rank/channel gate acts inside attention message pooling, not raw-feature scalar residual injection",
+    "state_transport": "hidden-based gate controls recurrent writes, not completed local residual injection"
+  },
+  "interpretation": {
+    "primary": "quantity gate vs time gate; exactly two extra parameters, not perfectly equal capacity",
+    "secondary": "both vs same-host B and ungated references under verified initialization/source/exposure bridge",
+    "not_established": [
+      "quantity level versus change individually",
+      "all-quantity access versus no quantity access",
+      "bounded residual norm",
+      "causal explanation of prior late instability",
+      "benchmark superiority",
+      "publication novelty"
+    ]
+  },
+  "acceptance": {
+    "body_mae_ratio_max": 1.02,
+    "each_nonempty_middle_bin_mae_and_rmse_ratio_max": 1.02,
+    "last30_rmse_mean_ratio_max": 1.05,
+    "last30_rmse_sample_sd_ratio_max": 1.05,
+    "overall_mae_ratio_max": 1.01,
+    "overall_raw_rmse_ratio_strictly_less_than": 1.0,
+    "recorded_time_nll_increase_max": 0.01,
+    "tail_mae_ratio_max": 1.02,
+    "tail_rmse_ratio_strictly_less_than": 1.0
+  },
+  "guardrails": "candidate must pass against temporal gate, B and ungated local reference; reuse strict raw-RMSE selector, one checkpoint for all selected metrics, last30 mean/sd and train-derived bins; no posthoc gate or dataset exclusion",
+  "claims": "seed42 validation exploration only; no held-out, no universal claims",
+  "review": {
+    "agent": "/root/quantity_gate_design_review_0922",
+    "role_model": "gpt-6-astra/high",
+    "status": "read_only_recommendation_received",
+    "adopted": "2sigmoid option preserves ungated initial U gradients; two-parameter difference explicit; no norm cap"
+  },
+  "execution_intent": {
+    "user_instruction": "오케이 진행하자. 어차피 5090은 현재 돌고 있는데 이 부분은 정지하는게 나을까아니면 끝까지 보는게 나을까? 끝까지 봐야한다면 5080에서 먼저 진행할 내역 진행하고, 5090 끝나면 이어서 작업하는걸로",
+    "5080": "Taxi then Intermittent, two new arms each after own native qualification",
+    "5090": "finish existing Instacart; then own qualification and two new Instacart arms",
+    "existing_run_unchanged": true
+  }
+}

@@ -1,0 +1,466 @@
+{
+  "schema": "raw_aux_gradient_control_design_v1",
+  "status": "design_frozen_runner_and_gpu_qualification_pending",
+  "created_at_kst": "2026-09-13T20:20:08.732615+09:00",
+  "purpose": "B Backbone과 원래 출력·시간 head를 유지하고 raw 수량 보조항의 batch gradient 크기 제한이 구간별 손익을 개선하는지 비교한다.",
+  "scope": {
+    "dataset_id": "intermittent_frozen_5000",
+    "split": "train_and_validation_only",
+    "seed": 42,
+    "stage": "single_seed_exploratory_engineering_screen",
+    "held_out_allowed": false,
+    "benchmark_comparison_included": false,
+    "other_datasets_included": false
+  },
+  "authorization": {
+    "design_and_local_synthetic_checks": true,
+    "new_gpu_execution": false,
+    "new_training": false,
+    "remote_sync": false,
+    "scheduler_changes": false,
+    "commit_push": false,
+    "prior_checkpoint_diagnosis_approval_is_training_approval": false
+  },
+  "evidence": {
+    "previous_execution_contract": {
+      "path": "paper/contracts/mixed_quantity_execution_5090_v1.json",
+      "sha256": "8bbc5e6a505e0641e98b178230985332d56d2eadece04093041f887b1903d194"
+    },
+    "measurement_contract": {
+      "path": "paper/contracts/intermittent_mixed_cell_diagnosis_v1.json",
+      "sha256": "c3b5b227fe58d64d180e96e8627abf5c4ef2cf809e9d2b1e8234c86ed90cb6bc"
+    },
+    "previous_interpretation": {
+      "path": "search_artifacts/intermittent_cell_interpretation_20260913_v1/interpretation.json",
+      "sha256": "b1eb8de6d7fa718dd0482cd148b12397b8a61e757e12b7ab7cc0a557c535daac"
+    },
+    "inherited_acceptance_implementation": {
+      "path": "paper/scripts/mixed_quantity_acceptance.py",
+      "sha256": "0815e47ccf70d2886c960c5391e926b4a993d74c698863a6dfe9560a8f7d5b17"
+    }
+  },
+  "choice": {
+    "selected": "one_detached_scalar_from_global_active_parameter_gradient_norms",
+    "alternatives": [
+      {
+        "name": "smaller_constant_raw_coefficient",
+        "decision": "deferred",
+        "reason": "초기 계수 축소와 학습 중 gradient 제한을 이번 세 조건만으로 분리 입증하지 않는다. 적응적 규칙 자체의 우월성 주장은 하지 않는다."
+      },
+      {
+        "name": "per_parameter_group_limits",
+        "decision": "deferred",
+        "reason": "그룹마다 다른 계수는 raw gradient 방향까지 바꾸고, 최소 그룹 계수를 공통 적용하면 작은 한 그룹이 전체 raw 기여를 차단한다."
+      }
+    ],
+    "cap_ratio": 1.0,
+    "ratio_rationale": "raw 보조 gradient가 기존 joint 기준 gradient보다 크지 않게 한다는 직접적인 크기 기준. validation 또는 저장 train 재생 결과로 rho를 탐색하지 않는다."
+  },
+  "losses": {
+    "L_time": "mean original legacy clamped time loss, intercept cap300",
+    "L_log": "mean (pred_log_quantity - log1p(true_quantity))**2",
+    "L_raw_scaled": "mean ((pred_quantity - true_quantity)/raw_scale)**2",
+    "L_base": "L_time + L_log",
+    "L_raw": "alpha * L_raw_scaled",
+    "alpha": 1.769152228020146,
+    "raw_scale": 36.878211774114746,
+    "quantity_scale": 1.0,
+    "alpha_and_raw_scale_policy": "Reuse original train-only frozen coefficient receipt; verify identity without fitting validation or using later probe weights to recalibrate alpha.",
+    "original_alpha_calibration_policy": {
+      "rho": 0.25,
+      "max_samples": 8192,
+      "batch_size": 128,
+      "seed": 1042,
+      "aggregation": "mean_batch_head_gradient_squared_norms",
+      "calibration_head": "quantity_head",
+      "dropout_mode": "train",
+      "selection": "isolated_cpu_randperm_without_replacement"
+    },
+    "coefficient_refit_allowed": false,
+    "output": "Original log-softplus plus expm1 mapping, no new head, link, bias or quantity-bin weights"
+  },
+  "control": {
+    "parameter_universe": "ordered unique model named_parameters with requires_grad; include encoder, quantity_head, time_head; unused entries zero for norm calculations only",
+    "base_gradient": "grad(mean(time+log), all active parameters)",
+    "raw_gradient": "grad(mean(alpha*raw_scaled), same ordered active parameters)",
+    "norm": "Euclidean norm of concatenated parameter gradients, accumulated in float64 on the current device",
+    "cap_ratio": 1.0,
+    "denominator_epsilon": 1e-12,
+    "multiplier": "s = 1 if raw_norm==0; else min(1, cap_ratio*base_norm/(raw_norm+denominator_epsilon))",
+    "zero_base": "s=0 when base_norm==0 and raw_norm>0; do not add a base floor or moving average",
+    "nonfinite": "fail before optimizer step if component loss, component gradient, norm, multiplier, combined gradient or metric is nonfinite",
+    "effective_training_loss": "L_base + stop_gradient(s) * L_raw",
+    "expected_preclip_gradient": "g_base + s*g_raw",
+    "norm_bound": "norm(s*g_raw) <= cap_ratio*norm(g_base), within declared numeric tolerance",
+    "numeric_tolerances": {
+      "float64_reference_absolute": 1e-12,
+      "fp32_runtime_bound_relative": 1e-05,
+      "fp32_runtime_bound_absolute": 1e-08,
+      "fp32_gradient_reconstruction_relative": 1e-05,
+      "fp32_gradient_reconstruction_absolute": 1e-07
+    },
+    "training_batch_only": true,
+    "uses_quantity_bin_or_history_bin": false,
+    "higher_order_gradients": false,
+    "stateful_controller": false,
+    "warmup_or_schedule": false,
+    "amplification_allowed": false,
+    "groupwise_bound_claim": false,
+    "base_cancellation": "Time and log gradient cancellation can make the reference small and strongly suppress raw. Record cancellation diagnostics; do not claim either task gradient is individually protected."
+  },
+  "arms": [
+    {
+      "id": "B_log_original",
+      "role": "primary_control",
+      "loss": "L_base",
+      "controller": "disabled",
+      "alpha": 0.0
+    },
+    {
+      "id": "mixed_original",
+      "role": "direct_unbounded_auxiliary_control",
+      "loss": "L_base + L_raw",
+      "controller": "disabled",
+      "alpha": 1.769152228020146
+    },
+    {
+      "id": "mixed_raw_capped_original",
+      "role": "single_candidate",
+      "loss": "L_base + stop_gradient(s)*L_raw",
+      "controller": "global_base_norm_ratio_v1",
+      "alpha": 1.769152228020146
+    }
+  ],
+  "initialization_and_exposure": {
+    "initial_state_sha256": "2d054932a1b9f1fe8f3342242cb496c362a20c02eaca888d342ce03909a3ae9b",
+    "fresh_arms": true,
+    "resume_from_previous_trained_checkpoints": false,
+    "data_identity": {
+      "data": {
+        "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+        "sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f"
+      },
+      "split_manifest": {
+        "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/intermittent_v2/intermittent_frozen_5000_split_manifest.json",
+        "sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04"
+      },
+      "populations": {
+        "train": {
+          "target_count": 393824,
+          "target_identity_sha256": "fb8737489bc18e528adc322e2e55e26fcc5793aa6ff8021d93ceac98d7768aed",
+          "target_quantity_sha256": "c4a9c3721d3861c190e81abe35156488f545b00c8ddbbed4022a9a82a4b3a215"
+        },
+        "validation": {
+          "target_count": 86285,
+          "target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+          "target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385"
+        }
+      }
+    },
+    "statistics": {
+      "train_log_mean": 1.821123902075507,
+      "train_log_std": 1.2853917394914367,
+      "raw_scale": 36.878211774114746,
+      "recomputation_absolute_tolerance": 1e-12,
+      "initialization_policy": "use original frozen B mu/std after verifying recalculation; no refitted replacement",
+      "all_train_quantity_sha256": "785526474507af840bc5a7e7f4baef1322c4e61b9d0cfa24be109f25efb55be5"
+    },
+    "loader": {
+      "num_workers": 0,
+      "drop_last": false,
+      "train_shuffle": true,
+      "validation_shuffle": false,
+      "batch_size": 128,
+      "lookback_weeks": 520,
+      "max_seq_len": 256
+    },
+    "model": {
+      "backbone": "titantpp",
+      "hidden_dim": 64,
+      "quantity_variant": "count_only_log_regression",
+      "time_head_mode": "legacy_clamped_rmtpp",
+      "time_intercept_limit": 300.0,
+      "time_scale": 3.0,
+      "time_w_max": 3.3333333333333335,
+      "lambda_tail": 0.0
+    },
+    "optimizer": {
+      "name": "AdamW",
+      "lr": 0.001,
+      "weight_decay": 0.01,
+      "grad_clip": 1.0
+    },
+    "epochs": 120,
+    "steps_per_epoch": 3077,
+    "steps_per_arm": 369240,
+    "total_optimizer_steps": 1107720,
+    "train_target_exposures_per_arm": 47258880,
+    "same_initial_weights_batch_order_dropout_and_optimizer_state_across_arms": true,
+    "gradient_accumulation_steps": 1,
+    "distributed_training": false,
+    "amp": false,
+    "fairness": "Equal data exposure and optimizer steps; additional gradient measurements make this unequal compute. Log measured wall time, memory and autograd work; do not claim same compute."
+  },
+  "backward_contract": {
+    "forward_calls_per_train_batch": 1,
+    "candidate_order": [
+      "zero_grad(set_to_none=True)",
+      "one original causal forward; form mean L_base and alpha-weighted L_raw from the same graph",
+      "autograd.grad(L_base, active_params, retain_graph=True, create_graph=False, allow_unused=True)",
+      "autograd.grad(L_raw, same active_params, retain_graph=True, create_graph=False, allow_unused=True)",
+      "compute detached scalar s from finite component gradients; release extra vector references after scalar diagnostics",
+      "backward(L_base + s.detach()*L_raw), preserving existing None-vs-zero .grad semantics",
+      "finite gradient check then the unchanged global clip_grad_norm_(all model parameters,max_norm=1)",
+      "one original AdamW optimizer.step()"
+    ],
+    "extra_gradient_queries_per_candidate_batch": 2,
+    "ordinary_backward_calls_per_candidate_batch": 1,
+    "no_extra_forward_or_rng_consumption": "Gradient measurement must not rerun forward, consume RNG, mutate recurrent/memory context or write .grad. Check on actual model before GPU launch.",
+    "inactive_parameters": "Unused/inactive head .grad must remain None for AdamW compatibility; norm-only zero materialization is not an assignment to parameter.grad.",
+    "global_clipping": {
+      "norm_type": 2,
+      "max_norm": 1.0,
+      "epsilon": 1e-06,
+      "coefficient": "k=min(1,1/(norm(g_base+s*g_raw)+1e-6))",
+      "application": "existing common clip_grad_norm_ across all model parameters after composition; one subsequent original AdamW step",
+      "optimizer_updates_per_training_batch": 1
+    },
+    "global_clip_semantics": "Apply existing clip only after composition. Preclip time/log coefficients remain1; common clipping and AdamW can change actual time/log parameter updates. No learning-rate-preservation claim."
+  },
+  "evaluation": {
+    "validation_gradients_allowed": false,
+    "training_controller_on_validation": false,
+    "metrics": [
+      "raw_quantity_rmse",
+      "quantity_mae",
+      "legacy_clamped_time_loss",
+      "log_quantity_mse",
+      "raw_scaled_mse",
+      "reference_uncapped_joint_loss"
+    ],
+    "adaptive_training_loss_on_validation": "undefined; do not synthesize s from validation. Log the uncapped reference loss separately, not as the adaptive training objective.",
+    "primary_selector": "strict earliest minimum validation raw_quantity_rmse over120 epochs",
+    "secondary_selector": "strict earliest minimum legacy_clamped_time_loss; retained for identity, not substituted into quality gate",
+    "checkpoint_scopes": [
+      "raw_quantity_rmse_selected",
+      "last120"
+    ],
+    "checkpoint_replays": 6,
+    "comparison_rules": "Each primary state is its own raw-RMSE selected epoch; last120 is the equal-step comparison. Report all metrics from the same checkpoint within each scope; never combine two J selectors.",
+    "legacy_time_meaning": "original clamped loss, not normalized Time NLL"
+  },
+  "partitions": {
+    "threshold_source": "existing whole-train frozen boundaries, unchanged after viewing validation",
+    "quantity_boundaries": [
+      2,
+      31,
+      46,
+      187
+    ],
+    "quantity_bins": [
+      "q<=2",
+      "2<q<=31",
+      "31<q<=46",
+      "46<q<=187",
+      "q>187"
+    ],
+    "history_boundaries": [
+      64,
+      128
+    ],
+    "history_bins": [
+      "history<=64",
+      "64<history<=128",
+      "history>128"
+    ],
+    "history_target_excluded": true,
+    "cross_cells": 15,
+    "aggregate_cells": {
+      "body": "q<=46",
+      "lowest": "q<=2",
+      "tail": "q>187"
+    },
+    "metrics_for_all_partitions": [
+      "count",
+      "SSE",
+      "raw_quantity_rmse",
+      "absolute_error_sum",
+      "MAE",
+      "mean_signed_error",
+      "underprediction_count",
+      "overprediction_count",
+      "underprediction_absolute_error_sum",
+      "overprediction_absolute_error_sum",
+      "delta_SSE_vs_B",
+      "delta_SSE_divided_by_total_N_vs_B"
+    ],
+    "SSE_accounting": "Each partition independently sums to overall count/SSE/absolute error. Quantity/history/cross partitions overlap; do not add them together. DeltaSSE/N is additive MSE, not RMSE.",
+    "sparse_cross_cells": "Report every cell, including zero and small counts. No cell-specific controller or data-fitted thresholds; cross-cell relative ratios are descriptive, not individual pass gates."
+  },
+  "acceptance": {
+    "kind": "engineering_gate_not_statistical_significance",
+    "baseline": "fresh B from same runtime/initialization/exposure contract",
+    "numeric_absolute_tolerance": 1e-07,
+    "inheritance": "Retain all existing Intermittent quality gates; add all five quantity-bin RMSE and MAE gates in both scopes. Do not import three-dataset candidate selection logic.",
+    "primary": {
+      "raw_quantity_rmse_max_ratio": 1.0,
+      "overall_mae_max_ratio": 1.01,
+      "body_mae_max_ratio": 1.01,
+      "lowest_mae_max_ratio": 1.01,
+      "tail_mae_max_ratio": 1.01,
+      "each_of_five_quantity_bin_mae_max_ratio": 1.01,
+      "each_of_five_quantity_bin_rmse_max_ratio": 1.01
+    },
+    "last120": {
+      "raw_quantity_rmse_max_ratio": 1.01,
+      "overall_mae_max_ratio": 1.01,
+      "body_mae_max_ratio": 1.01,
+      "lowest_mae_max_ratio": 1.01,
+      "tail_mae_max_ratio": 1.01,
+      "each_of_five_quantity_bin_mae_max_ratio": 1.01,
+      "each_of_five_quantity_bin_rmse_max_ratio": 1.01
+    },
+    "both_scopes_time": "candidate <= B + 0.01*max(1,abs(B)) + 1e-7 at corresponding raw-selected orlast120 state",
+    "missing_nonfinite_or_empty_required_bin": "indeterminate; candidate cannot pass",
+    "rule": "All required gates must pass. Reduced clipping alone never passes the candidate.",
+    "comparison_with_uncapped_mixed": "Report same-scope global and all partition deltas; improvement over uncapped mixed does not replace B gates.",
+    "benefit_classification": {
+      "gate_pass_only": "eligible for follow-up, not evidence of benefit or superiority",
+      "strict_primary_rmse_gain": "candidate_RMSE < B_RMSE - 1e-7, report absolute and relative size; not statistical significance",
+      "tradeoff": "any required MAE/time/stability gate failure prevents promotion even with lower RMSE"
+    },
+    "no_retuning_after_observation": true,
+    "quantity_bin_rmse_gate": "Require same positive n and finite nonnegative SSE. sqrt(candidate_SSE/n) <= 1.01*sqrt(B_SSE/n)+1e-7. Exact SSE equivalent is candidate_SSE <= n*(1.01*sqrt(B_SSE/n)+1e-7)**2; do not add RMSE tolerance directly to SSE.",
+    "strictness": "Deliberately strict engineering bound on harm in each of five prespecified train-defined quantity bins. Not statistical noninferiority, an optimal tradeoff, or a significance threshold. Failure remains a tradeoff result; do not relax gates after observing candidate results."
+  },
+  "required_train_diagnostics": {
+    "each_batch": [
+      "count",
+      "global_step",
+      "base_norm",
+      "weighted_raw_norm",
+      "s",
+      "effective_alpha",
+      "composed_joint_norm_preclip",
+      "common_clip_factor",
+      "s_less_than_one",
+      "norm_bound_passed"
+    ],
+    "each_epoch": "sample-weighted s/alpha summaries and norms; unweighted batch clip/rate counts separately, min/max, nonfinite count, wall time and peak memory",
+    "controlled_probe": "If a later execution contract includes train-only gradient audits, keep original fixed8192 identities and existing q/history bins. Additional component/group autograd work and checkpoint evaluations must be budgeted explicitly.",
+    "components_and_groups": "In qualification or approved bounded probes record time/log norm, time-log cosine, base/(time_norm+log_norm), encoder/quantity_head/time_head raw/base ratios before/after same global s. Do not claim per-group guarantee."
+  },
+  "source_and_runtime": {
+    "historical_base": {
+      "remote_root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/mixed_quantity_seed42_v1/source",
+      "local_root": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/mixed_quantity_preparation_v1/snapshots/3ac65c42b35a329ede32ad95862c594579dfca9c3ae4ebf6458560cec1d0cbd8/source",
+      "files_sha256": "3ac65c42b35a329ede32ad95862c594579dfca9c3ae4ebf6458560cec1d0cbd8",
+      "identity_authority": "content-addressed 70-file frozen import closure, including originally uncommitted code",
+      "git_head_provenance_only": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+      "frozen_source_modification_allowed": false
+    },
+    "historical_source_manifest_reference": {
+      "path": "paper/contracts/intermittent_mixed_cell_diagnosis_v1.json",
+      "sha256": "c3b5b227fe58d64d180e96e8627abf5c4ef2cf809e9d2b1e8234c86ed90cb6bc"
+    },
+    "implementation_overlay_sha256": null,
+    "runtime_reference_only": {
+      "cuda": "13.0",
+      "cuda_matmul_tf32": false,
+      "cudnn": 92000,
+      "cudnn_benchmark": false,
+      "cudnn_deterministic": true,
+      "cudnn_tf32": false,
+      "default_dtype": "torch.float32",
+      "deterministic_algorithms": true,
+      "deterministic_warn_only": false,
+      "device": "cuda:0",
+      "device_type": "cuda",
+      "environment": {
+        "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+        "CUDA_DEVICE_ORDER": null,
+        "CUDA_VISIBLE_DEVICES": "0",
+        "MKL_NUM_THREADS": "4",
+        "NVIDIA_TF32_OVERRIDE": "0",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "PYTHONHASHSEED": "42"
+      },
+      "float32_matmul_precision": "highest",
+      "gpu": {
+        "compute_capability": [
+          12,
+          0
+        ],
+        "driver_version": "595.84",
+        "logical_index": 0,
+        "multiprocessor_count": 170,
+        "name": "NVIDIA GeForce RTX 5090",
+        "pci_bus_id": "00000000:02:00.0",
+        "total_memory_bytes": 33670758400,
+        "uuid": "GPU-c9adc246-ef66-7906-bc07-6e152fa9952f",
+        "visible_device_count": 1
+      },
+      "interop_threads": 1,
+      "machine": "x86_64",
+      "numpy": "2.1.3",
+      "platform": "Linux-7.0.0-28-generic-x86_64-with-glibc2.39",
+      "polars": "1.39.3",
+      "python": "3.12.13",
+      "reduced_precision_reduction": {
+        "allow_bf16_reduced_precision_reduction": false,
+        "allow_fp16_reduced_precision_reduction": false
+      },
+      "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+      "schema": "jqt_strict_runtime_v2",
+      "threads": 4,
+      "torch": "2.11.0+cu130"
+    },
+    "target_server_for_later_contract": "5090",
+    "require_fresh_runtime_identity_check_and_cuda_qualification": true,
+    "previous_gpu_approval_reused": false
+  },
+  "required_pre_execution_checks": [
+    "actual frozen B and uncapped mixed gradients and one-step optimizer equivalence with controller disabled",
+    "same causal forward, target/padding invariance, no extra RNG/memory state mutation from component probes",
+    "detached controller gradient composition and raw norm bound, including zero/nonfinite/unused parameters",
+    "same init/batch/dropout/step exposure and no early stop",
+    "strict earliest tie for both selectors; full-vs-split resume restores model/optimizer/RNG/selectors and rejects any controller/source identity mismatch",
+    "validation metrics and six replay outputs preserve split and selector identity; no validation gradient for s",
+    "extend evaluator to five quantity bins plus all15 quantity/history cells; verify additive errors and under/over accounting",
+    "new source hash, measured CUDA overhead/memory, finite resource/time ceilings and explicit execution approval"
+  ],
+  "execution_readiness": {
+    "runner_connected": false,
+    "cpu_actual_model_qualification_passed": false,
+    "cuda_qualification_passed": false,
+    "execution_contract_frozen": false,
+    "wall_time_limit_seconds": null,
+    "resource_budget_frozen": false,
+    "approved": false
+  },
+  "interpretation_limits": [
+    "Existing train summary arithmetic is a same-checkpoint diagnostic, not the future capped trajectory or validation result.",
+    "The global bound is neither a per-example nor a per-group bound, and does not remove raw outliers from a batch.",
+    "Norm limiting does not project away conflicting gradient directions and is not a guarantee of AdamW descent or validation improvement.",
+    "Changing s also changes average raw weight; these three arms do not isolate adaptive limiting versus a suitably smaller constant coefficient.",
+    "Previously inspected seed42 validation remains exploratory. No held-out or benchmark superiority claim."
+  ],
+  "output_policy": {
+    "user_delivery": "Korean text in current session",
+    "machine_evidence": "small JSON and local Python verification only",
+    "webapp_html_markdown_report": false
+  },
+  "implementation_map": {
+    "training_only_insertion": "paper/scripts/quantity_comparison_engine.py after single batch objective and before metric accumulation/backward",
+    "preserve_common_objective": "paper/scripts/mixed_quantity_objective.py is also used under validation no_grad; do not unconditionally compute gradient controls there",
+    "condition_and_identity": "new experimental condition/controller specification in engine contract, source closure and resume identity; existing B and uncapped paths retain original operations",
+    "diagnostic_extra_cost": "The original runner already has bounded diagnostic autograd calls on selected batches; the execution budget must count those in addition to 2 new component queries, not replace their count implicitly."
+  },
+  "design_frozen_at_kst": "2026-09-13T20:26:32.915058+09:00",
+  "local_verification": {
+    "synthetic_reference_check_script": "search_artifacts/raw_aux_gradient_control_design_v1/verify_design.py",
+    "stored_train_gradient_replay_script": "search_artifacts/raw_aux_gradient_control_design_v1/train_replay.py",
+    "scope": "Design mathematics, frozen metadata and recorded train gradient arithmetic only; does not qualify the actual runner or authorize execution."
+  }
+}

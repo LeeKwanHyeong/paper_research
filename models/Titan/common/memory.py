@@ -119,7 +119,8 @@ class MemoryAttention(nn.Module):
         mask: Optional[torch.Tensor] = None,
         *,
         event_attention_bias: Optional[torch.Tensor] = None,
-    ) -> torch.Tensor:
+        return_event_attention: bool = False,
+    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         """
         x: [B, L, D]
         is_causal: True for Autoregressive tasks (RMTPPs), False for Seq2Seq Encoder
@@ -209,6 +210,10 @@ class MemoryAttention(nn.Module):
             scores = scores.masked_fill(~full_mask, float("-inf"))
 
         att = F.softmax(scores, dim=-1)
+        # The opt-in pair-message route reads these very same probabilities.
+        # Slice memory columns without renormalization and before dropout;
+        # the legacy path keeps its original draws and arithmetic unchanged.
+        event_attention = att[..., n_mem:].mean(dim=1) if return_event_attention else None
         att = self.drop(att)
 
         out = torch.matmul(att, vh)  # [B, H, L, Hd]
@@ -216,6 +221,8 @@ class MemoryAttention(nn.Module):
         out = self.out_proj(out)
         if mask is not None:
             out = out * mask.to(device=out.device, dtype=out.dtype).unsqueeze(-1)
+        if return_event_attention:
+            return out, event_attention
         return out
 
 

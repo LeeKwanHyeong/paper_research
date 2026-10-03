@@ -1,0 +1,1080 @@
+{
+  "actual_steps": "sum(completed_epochs * steps_per_epoch); early stopping permits unequal epoch counts",
+  "approval_required": true,
+  "approved": false,
+  "architecture": {
+    "additional_gate": false,
+    "availability_lags": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64,
+      128
+    ],
+    "baseline": "titantpp",
+    "candidate": "titantpp_local_detail",
+    "hidden_dim": 64,
+    "lags": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "parameter_matched": false,
+    "rank": 4,
+    "residual_divisor": 8
+  },
+  "arms": [
+    "titantpp",
+    "titantpp_local_detail",
+    "rmtpp",
+    "thp",
+    "nhp",
+    "sahp"
+  ],
+  "comparison": {
+    "acceptance": {
+      "body_mae_ratio_max": 1.02,
+      "each_nonempty_middle_bin_mae_and_rmse_ratio_max": 1.02,
+      "last30_rmse_mean_ratio_max": 1.05,
+      "last30_rmse_sample_sd_ratio_max": 1.05,
+      "overall_mae_ratio_max": 1.01,
+      "overall_raw_rmse_ratio_strictly_less_than": 1.0,
+      "recorded_time_nll_increase_max": 0.01,
+      "tail_mae_ratio_max": 1.02,
+      "tail_rmse_ratio_strictly_less_than": 1.0
+    },
+    "batch_rule": "identical train batch prefix through the minimum completed epoch of each pair",
+    "capacity": "report parameters/memory/step time; B/local contrast alone does not isolate extra capacity",
+    "failed_gates": "retain each dataset/metric failure; do not exclude datasets or revise thresholds",
+    "historical_results": "exploratory context only; legacy head and 120-epoch runs not final-table rows",
+    "initialization": "B/local shared tensors and post-build RNG equal; other encoders seeded separately, not tensor-matched",
+    "primary": "local detail versus B; benchmark encoder comparisons under shared heads",
+    "scope": "seed42 validation; neither native full-model benchmark nor universal superiority",
+    "selector": "all selected quantity/time/stratum metrics use the SAME raw-RMSE-selected checkpoint",
+    "stability": "last30 separately plus fixed first40-epoch window; differing stop epochs disclosed",
+    "tuning": "no model-specific hyperparameter search in this controlled comparison"
+  },
+  "cost_estimate": {
+    "deadline_is_estimate": false,
+    "limits": "excludes qualification, deployment, validation replays, queue waiting and filesystem slowdown; runtimes/hardware and head implementations changed; early stopping unknown",
+    "method": "Two sensitivity scenarios: legacy per-epoch cost plus current-proxy minus legacy-Titan cost; or legacy cost scaled by current-proxy/legacy-Titan. B/local use nearby measured local-gate cost. These are scenarios, NOT confidence intervals or measured new-backbone ETA.",
+    "native_current_head_benchmark_timing_measured": false,
+    "native_qualification_required_before_training": true,
+    "proposed_deadline_hours": 240,
+    "rows": [
+      {
+        "arm": "titantpp",
+        "dataset": "yellow_trip_hourly",
+        "historical_seconds_per_epoch": null,
+        "host": "5080",
+        "hours_if_all_300_epochs": [
+          1.1226281872226131,
+          1.1226281872226131
+        ],
+        "projected_seconds_per_epoch_high": 13.471538246671358,
+        "projected_seconds_per_epoch_low": 13.471538246671358,
+        "proxy_seconds_per_epoch": 13.471538246671358
+      },
+      {
+        "arm": "titantpp_local_detail",
+        "dataset": "yellow_trip_hourly",
+        "historical_seconds_per_epoch": null,
+        "host": "5080",
+        "hours_if_all_300_epochs": [
+          1.1226281872226131,
+          1.1226281872226131
+        ],
+        "projected_seconds_per_epoch_high": 13.471538246671358,
+        "projected_seconds_per_epoch_low": 13.471538246671358,
+        "proxy_seconds_per_epoch": 13.471538246671358
+      },
+      {
+        "arm": "rmtpp",
+        "dataset": "yellow_trip_hourly",
+        "historical_seconds_per_epoch": 3.356655770657109,
+        "host": "5080",
+        "hours_if_all_300_epochs": [
+          0.32471285945524286,
+          0.43527036439123046
+        ],
+        "projected_seconds_per_epoch_high": 5.223244372694765,
+        "projected_seconds_per_epoch_low": 3.896554313462915,
+        "proxy_seconds_per_epoch": 13.471538246671358
+      },
+      {
+        "arm": "thp",
+        "dataset": "yellow_trip_hourly",
+        "historical_seconds_per_epoch": 6.520093987538265,
+        "host": "5080",
+        "hours_if_all_300_epochs": [
+          0.6307344295229966,
+          0.6988902157979933
+        ],
+        "projected_seconds_per_epoch_high": 8.38668258957592,
+        "projected_seconds_per_epoch_low": 7.5688131542759605,
+        "proxy_seconds_per_epoch": 13.471538246671358
+      },
+      {
+        "arm": "nhp",
+        "dataset": "yellow_trip_hourly",
+        "historical_seconds_per_epoch": 56.04911253890213,
+        "host": "5080",
+        "hours_if_all_300_epochs": [
+          4.826308428411649,
+          5.4220238373959795
+        ],
+        "projected_seconds_per_epoch_high": 65.06428604875175,
+        "projected_seconds_per_epoch_low": 57.91570114093979,
+        "proxy_seconds_per_epoch": 13.471538246671358
+      },
+      {
+        "arm": "sahp",
+        "dataset": "yellow_trip_hourly",
+        "historical_seconds_per_epoch": 6.318498668216524,
+        "host": "5080",
+        "hours_if_all_300_epochs": [
+          0.6112327001046892,
+          0.6820906058545149
+        ],
+        "projected_seconds_per_epoch_high": 8.18508727025418,
+        "projected_seconds_per_epoch_low": 7.334792401256271,
+        "proxy_seconds_per_epoch": 13.471538246671358
+      },
+      {
+        "arm": "titantpp",
+        "dataset": "intermittent_frozen_5000",
+        "historical_seconds_per_epoch": null,
+        "host": "5080",
+        "hours_if_all_300_epochs": [
+          10.653243614816004,
+          10.653243614816004
+        ],
+        "projected_seconds_per_epoch_high": 127.83892337779204,
+        "projected_seconds_per_epoch_low": 127.83892337779204,
+        "proxy_seconds_per_epoch": 127.83892337779204
+      },
+      {
+        "arm": "titantpp_local_detail",
+        "dataset": "intermittent_frozen_5000",
+        "historical_seconds_per_epoch": null,
+        "host": "5080",
+        "hours_if_all_300_epochs": [
+          10.653243614816004,
+          10.653243614816004
+        ],
+        "projected_seconds_per_epoch_high": 127.83892337779204,
+        "projected_seconds_per_epoch_low": 127.83892337779204,
+        "proxy_seconds_per_epoch": 127.83892337779204
+      },
+      {
+        "arm": "rmtpp",
+        "dataset": "intermittent_frozen_5000",
+        "historical_seconds_per_epoch": 21.578814165782084,
+        "host": "5080",
+        "hours_if_all_300_epochs": [
+          2.3077021751350126,
+          4.150133804976208
+        ],
+        "projected_seconds_per_epoch_high": 49.80160565971449,
+        "projected_seconds_per_epoch_low": 27.692426101620146,
+        "proxy_seconds_per_epoch": 127.83892337779204
+      },
+      {
+        "arm": "thp",
+        "dataset": "intermittent_frozen_5000",
+        "historical_seconds_per_epoch": 53.86960781028128,
+        "host": "5080",
+        "hours_if_all_300_epochs": [
+          5.76097510096661,
+          6.8410332753511405
+        ],
+        "projected_seconds_per_epoch_high": 82.09239930421369,
+        "projected_seconds_per_epoch_low": 69.13170121159932,
+        "proxy_seconds_per_epoch": 127.83892337779204
+      },
+      {
+        "arm": "nhp",
+        "dataset": "intermittent_frozen_5000",
+        "historical_seconds_per_epoch": 197.70163500207101,
+        "host": "5080",
+        "hours_if_all_300_epochs": [
+          18.82703554133362,
+          21.142797264804756
+        ],
+        "projected_seconds_per_epoch_high": 253.71356717765707,
+        "projected_seconds_per_epoch_low": 225.92442649600343,
+        "proxy_seconds_per_epoch": 127.83892337779204
+      },
+      {
+        "arm": "sahp",
+        "dataset": "intermittent_frozen_5000",
+        "historical_seconds_per_epoch": 65.22862567496915,
+        "host": "5080",
+        "hours_if_all_300_epochs": [
+          6.975742049342506,
+          7.787618097408464
+        ],
+        "projected_seconds_per_epoch_high": 93.45141716890156,
+        "projected_seconds_per_epoch_low": 83.70890459211007,
+        "proxy_seconds_per_epoch": 127.83892337779204
+      },
+      {
+        "arm": "titantpp",
+        "dataset": "insta_market_basket",
+        "historical_seconds_per_epoch": null,
+        "host": "5090",
+        "hours_if_all_300_epochs": [
+          21.636256010002562,
+          21.636256010002562
+        ],
+        "projected_seconds_per_epoch_high": 259.6350721200307,
+        "projected_seconds_per_epoch_low": 259.6350721200307,
+        "proxy_seconds_per_epoch": 259.6350721200307
+      },
+      {
+        "arm": "titantpp_local_detail",
+        "dataset": "insta_market_basket",
+        "historical_seconds_per_epoch": null,
+        "host": "5090",
+        "hours_if_all_300_epochs": [
+          21.636256010002562,
+          21.636256010002562
+        ],
+        "projected_seconds_per_epoch_high": 259.6350721200307,
+        "projected_seconds_per_epoch_low": 259.6350721200307,
+        "proxy_seconds_per_epoch": 259.6350721200307
+      },
+      {
+        "arm": "rmtpp",
+        "dataset": "insta_market_basket",
+        "historical_seconds_per_epoch": 88.81779439309064,
+        "host": "5090",
+        "hours_if_all_300_epochs": [
+          12.035453595326999,
+          15.732018665717035
+        ],
+        "projected_seconds_per_epoch_high": 188.78422398860442,
+        "projected_seconds_per_epoch_low": 144.42544314392399,
+        "proxy_seconds_per_epoch": 259.6350721200307
+      },
+      {
+        "arm": "thp",
+        "dataset": "insta_market_basket",
+        "historical_seconds_per_epoch": 135.66515707502177,
+        "host": "5090",
+        "hours_if_all_300_epochs": [
+          18.383610104668303,
+          19.63596555587796
+        ],
+        "projected_seconds_per_epoch_high": 235.63158667053554,
+        "projected_seconds_per_epoch_low": 220.60332125601965,
+        "proxy_seconds_per_epoch": 259.6350721200307
+      },
+      {
+        "arm": "nhp",
+        "dataset": "insta_market_basket",
+        "historical_seconds_per_epoch": 759.0493895972477,
+        "host": "5090",
+        "hours_if_all_300_epochs": [
+          71.58465159939679,
+          102.85668280195024
+        ],
+        "projected_seconds_per_epoch_high": 1234.280193623403,
+        "projected_seconds_per_epoch_low": 859.0158191927615,
+        "proxy_seconds_per_epoch": 259.6350721200307
+      },
+      {
+        "arm": "sahp",
+        "dataset": "insta_market_basket",
+        "historical_seconds_per_epoch": 145.29616296525094,
+        "host": "5090",
+        "hours_if_all_300_epochs": [
+          19.688681067758907,
+          20.438549380063726
+        ],
+        "projected_seconds_per_epoch_high": 245.26259256076472,
+        "projected_seconds_per_epoch_low": 236.2641728131069,
+        "proxy_seconds_per_epoch": 259.6350721200307
+      }
+    ],
+    "scenarios": [
+      {
+        "completed_epochs_assumed_per_arm": 41,
+        "host_hours": {
+          "5080": [
+            8.721545541407773,
+            9.66391881290786
+          ],
+          "5090": [
+            22.54520414624467,
+            27.59788288456059
+          ]
+        },
+        "parallel_wall_hours": [
+          22.54520414624467,
+          27.59788288456059
+        ]
+      },
+      {
+        "completed_epochs_assumed_per_arm": 100,
+        "host_hours": {
+          "5080": [
+            21.27206229611652,
+            23.57053369001917
+          ],
+          "5090": [
+            54.98830279571871,
+            67.31190947453803
+          ]
+        },
+        "parallel_wall_hours": [
+          54.98830279571871,
+          67.31190947453803
+        ]
+      },
+      {
+        "completed_epochs_assumed_per_arm": 300,
+        "host_hours": {
+          "5080": [
+            63.81618688834956,
+            70.71160107005753
+          ],
+          "5090": [
+            164.96490838715613,
+            201.93572842361408
+          ]
+        },
+        "parallel_wall_hours": [
+          164.96490838715613,
+          201.93572842361408
+        ]
+      }
+    ],
+    "schema": "local_detail_benchmark_cost_estimate_v1",
+    "sources": {
+      "paper/results/intermittent_log_backbone_control_20260811/source_5080_baselines/run_summaries.csv": {
+        "scope": "historical validation-only timing; old source/runtime",
+        "sha256": "bee985888f1e3c8f97bd2a49ce285b0ef38371a344a5ecfcb60bc476e544a58a"
+      },
+      "search_artifacts/count_aware_external_t0_nhp_sahp_e300_20260820/runs/nhp/count_only_log_regression/seed_42/summary.json": {
+        "completed_epochs": 234,
+        "elapsed_seconds": 46262.18259048462,
+        "old_head": "legacy_clamped_rmtpp",
+        "seconds_per_epoch": 197.70163500207101,
+        "sha256": "12eddd23faea58d23e751ae32cb1dce2dea479256d5ee56e0a91a96b057ed3fb"
+      },
+      "search_artifacts/count_aware_external_t0_sahp_all_e300_20260821_5090/runs/sahp/count_only_log_regression/seed_42/summary.json": {
+        "completed_epochs": 271,
+        "elapsed_seconds": 17676.95755791664,
+        "old_head": "legacy_clamped_rmtpp",
+        "seconds_per_epoch": 65.22862567496915,
+        "sha256": "4035d85917bf766938f396954951b28451674712a5183057c312a9707acd05b3"
+      },
+      "search_artifacts/count_aware_instacart_t0_e300_20260824_recovery1/insta_market_basket/t0_common_control/runs/nhp/count_only_log_regression/seed_42/summary.json": {
+        "completed_epochs": 68,
+        "elapsed_seconds": 51615.35849261284,
+        "old_head": "legacy_clamped_rmtpp",
+        "seconds_per_epoch": 759.0493895972477,
+        "sha256": "bbd0c39188e9a8297beaf9cb19ae2d57b943467d6faceefdd8db483e755c9a2b"
+      },
+      "search_artifacts/count_aware_instacart_t0_e300_20260824_recovery1/insta_market_basket/t0_common_control/runs/rmtpp/count_only_log_regression/seed_42/summary.json": {
+        "completed_epochs": 51,
+        "elapsed_seconds": 4529.707514047623,
+        "old_head": "legacy_clamped_rmtpp",
+        "seconds_per_epoch": 88.81779439309064,
+        "sha256": "dda105029efbbe2454a3d2ed759b2eebc980eb66d2a67da7d699db074b68053c"
+      },
+      "search_artifacts/count_aware_instacart_t0_e300_20260824_recovery1/insta_market_basket/t0_common_control/runs/sahp/count_only_log_regression/seed_42/summary.json": {
+        "completed_epochs": 51,
+        "elapsed_seconds": 7410.1043112277985,
+        "old_head": "legacy_clamped_rmtpp",
+        "seconds_per_epoch": 145.29616296525094,
+        "sha256": "471d68b4f669a20776127cce2b9368afc0380a3bc755d9daee9bd57890ca853e"
+      },
+      "search_artifacts/count_aware_instacart_t0_e300_20260824_recovery1/insta_market_basket/t0_common_control/runs/thp/count_only_log_regression/seed_42/summary.json": {
+        "completed_epochs": 51,
+        "elapsed_seconds": 6918.923010826111,
+        "old_head": "legacy_clamped_rmtpp",
+        "seconds_per_epoch": 135.66515707502177,
+        "sha256": "0ad81e35664d875aaa422ce806df62a5834d080f8d0fb51684d65dcaa6c48f50"
+      },
+      "search_artifacts/count_aware_instacart_t0_e300_20260824_recovery1/insta_market_basket/t0_common_control/runs/titantpp/count_only_log_regression/seed_42/summary.json": {
+        "completed_epochs": 66,
+        "elapsed_seconds": 10538.130406618118,
+        "old_head": "legacy_clamped_rmtpp",
+        "seconds_per_epoch": 159.66864252451694,
+        "sha256": "f6fc651d7ccea6773235162f6e05d9e5f2d160749adde6c742c9af4e4f8a3ed2"
+      },
+      "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control/runs/nhp/count_only_log_regression/seed_42/summary.json": {
+        "completed_epochs": 49,
+        "elapsed_seconds": 2746.406514406204,
+        "old_head": "legacy_clamped_rmtpp",
+        "seconds_per_epoch": 56.04911253890213,
+        "sha256": "802fe4c3fe66ce4d266ecfddb37ac583b70655742a50a5846ae4bd7f90313ab4"
+      },
+      "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control/runs/rmtpp/count_only_log_regression/seed_42/summary.json": {
+        "completed_epochs": 51,
+        "elapsed_seconds": 171.18944430351257,
+        "old_head": "legacy_clamped_rmtpp",
+        "seconds_per_epoch": 3.356655770657109,
+        "sha256": "706eded62b64c3a766af6b4e27aab15db0850c20a3d494313f4f3ec568137d7d"
+      },
+      "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control/runs/sahp/count_only_log_regression/seed_42/summary.json": {
+        "completed_epochs": 42,
+        "elapsed_seconds": 265.376944065094,
+        "old_head": "legacy_clamped_rmtpp",
+        "seconds_per_epoch": 6.318498668216524,
+        "sha256": "166a4418e38afb16ef51870ea63d4c4938ebdb743829d0efbb293c8b95f8e7e2"
+      },
+      "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control/runs/thp/count_only_log_regression/seed_42/summary.json": {
+        "completed_epochs": 65,
+        "elapsed_seconds": 423.8061091899872,
+        "old_head": "legacy_clamped_rmtpp",
+        "seconds_per_epoch": 6.520093987538265,
+        "sha256": "37509c6503896d88ac3b789f69ec6efc5b44055081f20a93144a1beb4a3df386"
+      },
+      "search_artifacts/count_aware_taxi_t0_t1_e300_20260824/yellow_trip_hourly/t0_common_control/runs/titantpp/count_only_log_regression/seed_42/summary.json": {
+        "completed_epochs": 42,
+        "elapsed_seconds": 487.4078850746155,
+        "old_head": "legacy_clamped_rmtpp",
+        "seconds_per_epoch": 11.604949644633702,
+        "sha256": "771bc13643ad71e21c7533586dbb457ff043a57a12804c77355fcffb192a8c44"
+      },
+      "search_artifacts/count_aware_titan_memory_backbone_screening_e300_20260818/runs/titantpp/count_only_log_regression/seed_42/summary.json": {
+        "completed_epochs": 240,
+        "elapsed_seconds": 23907.871652126312,
+        "old_head": "legacy_clamped_rmtpp",
+        "seconds_per_epoch": 99.61613188385964,
+        "sha256": "24451a80e9f2d407d50a25cb6530d449c1f767f6b4caf289bb8e51e47640436c"
+      },
+      "search_artifacts/local_gate_execution_20260922_v1/monitor/20260922T094459Z/terminal_5080/run/intermittent_frozen_5000/runs/titantpp_local_quantity_gate/count_only_log_regression/seed_42/summary.json": {
+        "completed_epochs": 120,
+        "elapsed_seconds": 15441.513599157333,
+        "head": "current_recorded_positive_integer",
+        "scope": "nearby local-gate runtime proxy, not exact B/local measurement",
+        "sha256": "692df4c6aa0c4f4f2872e858b6c32623d3b763d1c518cd126004698724fb32b8"
+      },
+      "search_artifacts/local_gate_execution_20260922_v1/monitor/20260922T094459Z/terminal_5080/run/intermittent_frozen_5000/runs/titantpp_local_time_gate/count_only_log_regression/seed_42/summary.json": {
+        "completed_epochs": 120,
+        "elapsed_seconds": 15239.828011512756,
+        "head": "current_recorded_positive_integer",
+        "scope": "nearby local-gate runtime proxy, not exact B/local measurement",
+        "sha256": "2d13f3ee61b7bf73fe7b6144607bbe250c5bddd75e1b879634040c0cc1a2c7ba"
+      },
+      "search_artifacts/local_gate_execution_20260922_v1/monitor/20260922T094459Z/terminal_5080/run/yellow_trip_hourly/runs/titantpp_local_quantity_gate/count_only_log_regression/seed_42/summary.json": {
+        "completed_epochs": 120,
+        "elapsed_seconds": 1618.1494009494781,
+        "head": "current_recorded_positive_integer",
+        "scope": "nearby local-gate runtime proxy, not exact B/local measurement",
+        "sha256": "adb3ab3888087b6160c5cc59cf8c5416c8f1383b3ab2ea1b3f3b642ed2c2a91f"
+      },
+      "search_artifacts/local_gate_execution_20260922_v1/monitor/20260922T094459Z/terminal_5080/run/yellow_trip_hourly/runs/titantpp_local_time_gate/count_only_log_regression/seed_42/summary.json": {
+        "completed_epochs": 120,
+        "elapsed_seconds": 1615.019778251648,
+        "head": "current_recorded_positive_integer",
+        "scope": "nearby local-gate runtime proxy, not exact B/local measurement",
+        "sha256": "4663ceab8c8e920a788e625603ce7ea2ff34ffc335fc57eeee7f88938e0be5b0"
+      },
+      "search_artifacts/local_gate_execution_20260922_v1/monitor/20260922T110622Z/5090.json": {
+        "field": "datasets.insta_market_basket.arms.titantpp_local_time_gate.summary.json",
+        "scope": "completed current-head nearby local-gate runtime proxy",
+        "sha256": "ad0d1c15836c231b7c084dcbabf2e9c5d7fde9ba113ae481390a8ad3a645ca42"
+      }
+    }
+  },
+  "datasets": [
+    {
+      "additional_history_boundaries": [
+        64,
+        128
+      ],
+      "dataset_id": "yellow_trip_hourly",
+      "epochs": 300,
+      "expected_global_steps": 90000,
+      "history_boundaries": [
+        64,
+        128
+      ],
+      "inherited_data_identity": {
+        "data": {
+          "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+          "sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46"
+        },
+        "populations": {
+          "train": {
+            "target_count": 38393,
+            "target_identity_sha256": "fc6453af5a9a34c93dd3f299cd545c9ab946be11752ee001f38055e52cc9e637",
+            "target_quantity_sha256": "bbabe4e040831f05bc96680afdb4c45a1856673e418bdd1db9495cda3f693680"
+          },
+          "validation": {
+            "target_count": 8268,
+            "target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+            "target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd"
+          }
+        },
+        "split_manifest": {
+          "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/new_york_taxi/yellow_trip_hourly_split_manifest.json",
+          "sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85"
+        }
+      },
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 168,
+        "max_seq_len": 256,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "model": {
+        "hidden_dim": 64,
+        "lambda_log_qty": 1.0,
+        "lambda_tail": 0.0,
+        "quantity_variant": "count_only_log_regression",
+        "time_head_lr_multiplier": 1.0,
+        "time_head_mode": "heteroscedastic_lognormal_duration",
+        "time_initial_location": 0.2357508697949888,
+        "time_initial_scale": 0.5898045019331329,
+        "time_observation_contract": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "hour"
+        },
+        "time_scale": 1.0,
+        "time_sigma_floor": 0.001
+      },
+      "optimizer": {
+        "grad_clip": 1.0,
+        "lr": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.01
+      },
+      "potentially_active_lags": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        32,
+        64,
+        128
+      ],
+      "quantity_boundaries_all_train_rows": [
+        7,
+        686,
+        1562,
+        3449
+      ],
+      "statistics": {
+        "all_train_quantity_sha256": "b6090245dd4b69e5b23bfde51a64bbecea3030245760ddd355b333714fdeab53",
+        "initialization_policy": "use original frozen B mu/std after verifying recalculation; no refitted replacement",
+        "raw_scale": 685.6777796861172,
+        "recomputation_absolute_tolerance": 1e-12,
+        "train_log_mean": 2.837734592747447,
+        "train_log_std": 2.1840596349132664
+      },
+      "steps_per_epoch": 300,
+      "time_statistics": {
+        "expected_train_target_dt_sha256": "3fb47361f8fa9a9edcf01cbb8d95cd0ee105024f1f0cd614f2d2fbe292d3f9aa",
+        "expected_train_targets": 38393,
+        "expected_validation_target_dt_sha256": "8a008bf3b74cd4e39128908cc358c1d482f4a499388234461c0c772f84c222bf",
+        "expected_validation_targets": 8268,
+        "recompute_absolute_tolerance": 1e-12,
+        "recompute_before_training": true,
+        "train_log_scaled_mean": 0.2357508697949888,
+        "train_log_scaled_std": 0.5898045019331329,
+        "train_time_scale": 1.0
+      },
+      "window_limitation": "Existing maximum sequence includes the target. Availability still depends on each actual observed history; unavailable branches remain inactive in BOTH new arms."
+    },
+    {
+      "additional_history_boundaries": [
+        64,
+        128
+      ],
+      "dataset_id": "intermittent_frozen_5000",
+      "epochs": 300,
+      "expected_global_steps": 923100,
+      "history_boundaries": [
+        64,
+        128
+      ],
+      "inherited_data_identity": {
+        "data": {
+          "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+          "sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f"
+        },
+        "populations": {
+          "train": {
+            "target_count": 393824,
+            "target_identity_sha256": "fb8737489bc18e528adc322e2e55e26fcc5793aa6ff8021d93ceac98d7768aed",
+            "target_quantity_sha256": "c4a9c3721d3861c190e81abe35156488f545b00c8ddbbed4022a9a82a4b3a215"
+          },
+          "validation": {
+            "target_count": 86285,
+            "target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+            "target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385"
+          }
+        },
+        "split_manifest": {
+          "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/intermittent_v2/intermittent_frozen_5000_split_manifest.json",
+          "sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04"
+        }
+      },
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 520,
+        "max_seq_len": 256,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "model": {
+        "hidden_dim": 64,
+        "lambda_log_qty": 1.0,
+        "lambda_tail": 0.0,
+        "quantity_variant": "count_only_log_regression",
+        "time_head_lr_multiplier": 1.0,
+        "time_head_mode": "heteroscedastic_lognormal_duration",
+        "time_initial_location": -0.21389036220110552,
+        "time_initial_scale": 0.6816420108412236,
+        "time_observation_contract": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "week"
+        },
+        "time_scale": 3.0,
+        "time_sigma_floor": 0.001
+      },
+      "optimizer": {
+        "grad_clip": 1.0,
+        "lr": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.01
+      },
+      "potentially_active_lags": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        32,
+        64,
+        128
+      ],
+      "quantity_boundaries_all_train_rows": [
+        2,
+        31,
+        46,
+        187
+      ],
+      "statistics": {
+        "all_train_quantity_sha256": "785526474507af840bc5a7e7f4baef1322c4e61b9d0cfa24be109f25efb55be5",
+        "initialization_policy": "use original frozen B mu/std after verifying recalculation; no refitted replacement",
+        "raw_scale": 36.878211774114746,
+        "recomputation_absolute_tolerance": 1e-12,
+        "train_log_mean": 1.821123902075507,
+        "train_log_std": 1.2853917394914367
+      },
+      "steps_per_epoch": 3077,
+      "time_statistics": {
+        "expected_train_target_dt_sha256": "2f4a67cff3706611e45a1855a50efa21aa7e75b1b9dda05c6bae04fdbbe3e684",
+        "expected_train_targets": 393824,
+        "expected_validation_target_dt_sha256": "5ac9547d2fcbcb8f9e5394a88fc379d1c895683db8ea96b7ed6009d374eddea7",
+        "expected_validation_targets": 86285,
+        "recompute_absolute_tolerance": 1e-12,
+        "recompute_before_training": true,
+        "train_log_scaled_mean": -0.21389036220110552,
+        "train_log_scaled_std": 0.6816420108412236,
+        "train_time_scale": 3.0
+      },
+      "window_limitation": "Existing maximum sequence includes the target. Availability still depends on each actual observed history; unavailable branches remain inactive in BOTH new arms."
+    },
+    {
+      "additional_history_boundaries": [
+        1,
+        3,
+        7,
+        15,
+        31
+      ],
+      "dataset_id": "insta_market_basket",
+      "epochs": 300,
+      "expected_global_steps": 4667100,
+      "history_boundaries": [
+        64,
+        128
+      ],
+      "inherited_data_identity": {
+        "data": {
+          "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/insta_market_basket/instacart_marked_target_with_split.parquet",
+          "sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2"
+        },
+        "populations": {
+          "train": {
+            "target_count": 1991192,
+            "target_identity_sha256": "c361f5e9904c25f18c91007f6e1209518a02fb755799e81c8300ee759b2a1210",
+            "target_quantity_sha256": "07e98693d5ac26caeaeb3c60d6d31fad21ab8f1e40ac649f231ac299963817d8"
+          },
+          "validation": {
+            "target_count": 503733,
+            "target_identity_sha256": "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8",
+            "target_quantity_sha256": "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184"
+          }
+        },
+        "split_manifest": {
+          "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/insta_market_basket/instacart_marked_target_split_manifest.json",
+          "sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d"
+        }
+      },
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 52,
+        "max_seq_len": 64,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "model": {
+        "hidden_dim": 64,
+        "lambda_log_qty": 1.0,
+        "lambda_tail": 0.0,
+        "quantity_variant": "count_only_log_regression",
+        "time_head_lr_multiplier": 1.0,
+        "time_head_mode": "heteroscedastic_lognormal_duration",
+        "time_initial_location": 0.07012359239272,
+        "time_initial_scale": 0.885319372563578,
+        "time_observation_contract": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": 30,
+          "unit": "day"
+        },
+        "time_scale": 7.0,
+        "time_sigma_floor": 0.001
+      },
+      "optimizer": {
+        "grad_clip": 1.0,
+        "lr": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.01
+      },
+      "potentially_active_lags": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        32
+      ],
+      "quantity_boundaries_all_train_rows": [
+        8,
+        20,
+        25,
+        35
+      ],
+      "statistics": {
+        "all_train_quantity_sha256": "e6e224976a591f6f9cc90d58e6c70153f20d2fada9903638068d5fb4ac94b92f",
+        "initialization_policy": "use original frozen B mu/std after verifying recalculation; no refitted replacement",
+        "raw_scale": 12.620737951818787,
+        "recomputation_absolute_tolerance": 1e-12,
+        "train_log_mean": 2.185918026533729,
+        "train_log_std": 0.6878440815807482
+      },
+      "steps_per_epoch": 15557,
+      "time_statistics": {
+        "expected_train_target_dt_sha256": "a331a7f7f4788aea9bca26e604c85b25179a33b44bac1a72e301bf3d91edade4",
+        "expected_train_targets": 1991192,
+        "expected_validation_target_dt_sha256": "422ab4522ae761662cd03c7c2cc8df54d38f9fb9185eb482ed95b77366f1c34d",
+        "expected_validation_targets": 503733,
+        "recompute_absolute_tolerance": 1e-12,
+        "recompute_before_training": true,
+        "train_log_scaled_mean": 0.07012359239272,
+        "train_log_scaled_std": 0.885319372563578,
+        "train_time_scale": 7.0
+      },
+      "window_limitation": "Existing maximum sequence includes the target. Availability still depends on each actual observed history; unavailable branches remain inactive in BOTH new arms."
+    }
+  ],
+  "design_sha256": "0fe1bbcdd7f0a378fd20f0bac6860252e37084da06c3e8f082c3d057d68f0cf1",
+  "endpoint_replays": 36,
+  "evidence_sha256": {
+    "cost": "3cfead51017ea80650c8d85df72f7bee8905e2a24174de9ec46cc0f72de4579a",
+    "verification": "ef14f71d478df97be95c57c384e82e09f695c1a3c724f9b3dd69b5522cacb303"
+  },
+  "hosts": {
+    "5080": {
+      "assigned_datasets": [
+        "yellow_trip_hourly",
+        "intermittent_frozen_5000"
+      ],
+      "environment": {
+        "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+        "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+        "CUDA_VISIBLE_DEVICES": "0",
+        "MKL_NUM_THREADS": "4",
+        "NVIDIA_TF32_OVERRIDE": "0",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "PYTHONHASHSEED": "42"
+      },
+      "gpu_uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+      "output_dir": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_benchmark_seed42_e300_20260922_v2/run",
+      "python": "/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python3.12",
+      "root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_benchmark_seed42_e300_20260922_v2",
+      "runtime_expected": {
+        "cuda": "13.0",
+        "cudnn": 91900,
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "torch": "2.11.0+cu130"
+      },
+      "source_root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_benchmark_seed42_e300_20260922_v2/source",
+      "tmux": "local_detail_benchmark_seed42_e300_20260922_v2_5080",
+      "tmux_binary": "/usr/bin/tmux"
+    },
+    "5090": {
+      "assigned_datasets": [
+        "insta_market_basket"
+      ],
+      "environment": {
+        "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+        "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+        "CUDA_VISIBLE_DEVICES": "0",
+        "MKL_NUM_THREADS": "4",
+        "NVIDIA_TF32_OVERRIDE": "0",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "PYTHONHASHSEED": "42"
+      },
+      "gpu_uuid": "GPU-c9adc246-ef66-7906-bc07-6e152fa9952f",
+      "output_dir": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_benchmark_seed42_e300_20260922_v2/run",
+      "python": "/opt/miniconda3/envs/ai_env/bin/python3.12",
+      "root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_benchmark_seed42_e300_20260922_v2",
+      "runtime_expected": {
+        "cuda": "13.0",
+        "cudnn": 92000,
+        "numpy": "2.1.3",
+        "polars": "1.39.3",
+        "torch": "2.11.0+cu130"
+      },
+      "source_root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_benchmark_seed42_e300_20260922_v2/source",
+      "tmux": "local_detail_benchmark_seed42_e300_20260922_v2_5090",
+      "tmux_binary": "/opt/miniconda3/envs/ai_env/bin/tmux"
+    }
+  },
+  "launch": {
+    "clock_origin": "one signed start permit immediately before first native qualification",
+    "deadline_action": "stop only this campaign's owned worker group; preserve files; no automatic retry",
+    "fixed_deadline_unix": null,
+    "fixed_started_at_unix": null,
+    "old_5090_dependency_contract_sha256": "958467da6d55b362fe7965c01056abe2532e8ffba4dede996b46a6162f8ead22",
+    "old_5090_dependency_root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_gate_observed_time_seed42_20260922_v1",
+    "preserve_existing_experiments": true,
+    "qualification_scope": "each host must pass its own qualification before its assigned training",
+    "requires_both_native_qualifications": false,
+    "root_must_be_new": true,
+    "staggered_start": "5080 first;5090 after its existing experiment completes; same common deadline"
+  },
+  "library_sha256": {
+    "5080": {
+      "/home/leekwanhyeong/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libnvrtc-builtins.so.13.0": "91dcd944d01da9c0f08fff5d779db136a47f6d62bdb63bae900d2f481e92c3a2",
+      "/home/leekwanhyeong/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libnvrtc.so.13": "a49e67e8e74590f1e98de55c39c6287efd3f59e3c3797464d7bbe0fe01349b11"
+    },
+    "5090": {
+      "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libnvrtc-builtins.so.13.0": "91dcd944d01da9c0f08fff5d779db136a47f6d62bdb63bae900d2f481e92c3a2",
+      "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libnvrtc.so.13": "a49e67e8e74590f1e98de55c39c6287efd3f59e3c3797464d7bbe0fe01349b11"
+    }
+  },
+  "limits": {
+    "max_concurrent_gpu_jobs_per_host": 1,
+    "max_file_bytes": 67108864,
+    "max_gpu_hours_aggregate": 480,
+    "min_free_bytes": 21474836480,
+    "per_arm_wall_seconds": 432000,
+    "per_host_output_bytes": 17179869184,
+    "qualification_seconds_per_host": 1800,
+    "total_wall_seconds": 864000
+  },
+  "maximum_optimizer_steps": 34081200,
+  "model_role": "per_arm_observed_time_roles",
+  "parent_contract_sha256": "958467da6d55b362fe7965c01056abe2532e8ffba4dede996b46a6162f8ead22",
+  "policy": {
+    "additional_seeds": false,
+    "budget_extension": false,
+    "commit_push": false,
+    "held_out": false,
+    "other_gpu_processes": "observe_without_stopping",
+    "resume": false,
+    "retry": false,
+    "runtime_mutation": false,
+    "scheduler_changes": false,
+    "server_transfer": false,
+    "startup_min_free_gpu_bytes": 2147483648
+  },
+  "process_environment": {
+    "5080": {
+      "LD_LIBRARY_PATH": "/home/leekwanhyeong/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib",
+      "XDG_CACHE_HOME": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_benchmark_seed42_e300_20260922_v2/cache"
+    },
+    "5090": {
+      "LD_LIBRARY_PATH": "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib",
+      "XDG_CACHE_HOME": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_detail_benchmark_seed42_e300_20260922_v2/cache"
+    }
+  },
+  "schema": "local_detail_benchmark_observed_time_v2",
+  "seed": 42,
+  "source": {
+    "base_git_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+    "files": {
+      "data_loader/event_seq_data_module.py": "7c11d9ace6c4e4d3bb03861aae92393aa946a38452d702dc7625210b339897ca",
+      "models/TPPs/CountAwareFactory.py": "228e1cb527b27e4799a3dffe4f63adeb60197e585aac3009910b1e4baf41097e",
+      "models/TPPs/CountAwareTHPStaticMemory.py": "44fcc1717ca5f19eef36386e8531a3423d7a3444d39f4e462e12c14f98c4b8ee",
+      "models/TPPs/CountAwareTPP.py": "d8439b3e86f5304471d0e70265ab3da9c362b2a1f7fd12d423ed8a3d33f52a2a",
+      "models/TPPs/CountAwareTitanBoundedQK.py": "b0139d409801c4bf184954f393f15d2f3d06f725009621c3e5b95b5ef2aed2a0",
+      "models/TPPs/CountAwareTitanCausalQKV.py": "402f48187658401371ccadf0bf6ba2dc3413e1442a94d837562dac6b5d5bba68",
+      "models/TPPs/CountAwareTitanInterLayerMemory.py": "0f78c8919e11e9efa1d5402bc46c23074d2cf8833cf9cc90c104c8c6b122637a",
+      "models/TPPs/CountAwareTitanLevelHistoryQKV.py": "f4398a442c7872b158039f2346bc18ce5df5b89de97ec4c1c4a0f9291ad136e0",
+      "models/TPPs/CountAwareTitanLocalGate.py": "3f235b761b33f7367cfbc5303f320d23b0cd97bad121903a67ae06de358f7b30",
+      "models/TPPs/CountAwareTitanMemoryFiLM.py": "fdcdea9cf6fc1b7b47c0afa88609c1af4575ebf98f7eb2fcecb431ff8c3ecbfd",
+      "models/TPPs/CountAwareTitanMultiLagDetail.py": "4bcbecdadf921df21a4e7fb379962eb4ecec2cfeb2f8ff1edccbb6b418807eae",
+      "models/TPPs/CountAwareTitanNonlinearEpisodeMemory.py": "990665850a4d0367da1b82fcc7ddb8e53babdeff864d48df11083f450fa19cdc",
+      "models/TPPs/CountAwareTitanPairMessage.py": "79c1e7f1da3b22f6a3bbaf606e5e915ff1eab39e2adc849c472c58f1a562508e",
+      "models/TPPs/CountAwareTitanSlotMemory.py": "e9868579089adf9d47d7483bf2a6b912dad8beb8b5b6936ce0e0af85f10d7c32",
+      "models/TPPs/CountAwareTitanStateTransport.py": "9e6e1d7ef30af63f993fb005bfe18c7146288981a1179ce9ede2ea79521c48a0",
+      "models/TPPs/CountAwareTitanSuccessorMemory.py": "0616885eb8318f1823734b91563f2d261a9916f0d33ea9b7d57d6e1f0ae60ffb",
+      "models/TPPs/CountAwareTitanTaskRoutedMemory.py": "c94ce1c29de676af5d5655ba4f05fc238b991052eeaaffd74af23b58d6c0a333",
+      "models/TPPs/CountAwareTitanValueNorm.py": "1de961d90d771737ce7e5d1e81bfa7e1487b7540a90ee2af1bfc2109e946844a",
+      "models/TPPs/NeuralHawkesTPP.py": "75162651b5d0ad87f7418805df0d7b743fe77d256225351b68e02cfbf7c5cbdd",
+      "models/TPPs/RMTPP.py": "e4160e45c588d9af5eba2ee5c27ef58f0311716555786198c332cc77cb5886ea",
+      "models/TPPs/SelfAttentiveHawkesTPP.py": "91360a0c2e1ffde346bc90803beabaa88e909db7d05161062170d6de87b4bde6",
+      "models/TPPs/TitanTPP.py": "5381faad10d7782af40abf028aa0b79894e224d61c82af9680a0d9bac410c37c",
+      "models/TPPs/TransformerHawkesTPP.py": "a74cbb43bd1d47d541bb903dfcdf336ef8647ec489fd5b776da27aa2a7eb3f77",
+      "models/TPPs/__init__.py": "2909671196619588e5ab66b1913a319643a03dad4487397647d6939526b22e15",
+      "models/TPPs/config.py": "6a3cb4d1bbb9f6fab62a2e3bbc4bd87d05a7b8f240e9a82b8ff7534f8632d840",
+      "models/TPPs/magnitude_normalization.py": "c665e3d93ca2dee07d4d5454e6265decd3f9dfa7f13a0208e39dbd9af90c57d4",
+      "models/TPPs/marker_losses.py": "e53308193868191783f8ab5cecb85c024eb668895d6239d8b289c6aacd3ab08d",
+      "models/TPPs/positive_integer_time.py": "783113642d897aaed3da1213fc91fb993ee71af380f953a1159142a1cda8ae59",
+      "models/TPPs/value_conditioning.py": "00548cd6b0f30e44f39fe9ac4c3ec110a056d20bc13aefeeb8e659fc7d89cd3a",
+      "models/Titan/Titans.py": "2efda26d97492f43bf19dc9778ff4d4fcbf24ccf010645b90a5396c324c8183f",
+      "models/Titan/__init__.py": "a8147804206ab500c7adeeeaf194c82447ead4d332b2959f8ed8e3692793c1a7",
+      "models/Titan/backbone.py": "f3531234235a9f50de05cf36c80b0a742a45709145d49555440249c814a20e98",
+      "models/Titan/common/__init__.py": "f301d6cf6edcc7804363d3c9e1c5ef22ec6fbead856aac7d4ec2bcef0508dc88",
+      "models/Titan/common/configs.py": "6a0d804214639629e05320cded343368f83e95f34935fc71588bafc45a5027e7",
+      "models/Titan/common/decoder.py": "361d17156c7f8a0596df4857657a46bd4d79eb88d34eaa0f871abffa730a9354",
+      "models/Titan/common/elapsed_age.py": "fb04e96ea180974e306c5688ef4b51c5b615a516d671edd472c0049d3f1e651d",
+      "models/Titan/common/key_value_memory.py": "a0360ed1e18cc89da2de0f08852b6ca980b5fd05bf4fe5559163e685ed4598de",
+      "models/Titan/common/memory.py": "405ccbfa900b877250c6f1c5a4c6652f46e0a500303cea35a5c6cc7cac02af36",
+      "models/Titan/common/titans_mac.py": "9436fea650c66025fceb7aebb820941176f2c10c80e47d61c55555d8430e0ab1",
+      "models/Titan/common/titans_memory_stability.py": "d7681b65e65f239377d174596b970d5509de075a9f03a5d34c001c7801031e86",
+      "models/Titan/common/tpp_gated_memory.py": "4d77851c904a46117eb5968c602c6e91c87f7bc061f90816b9f941775b818263",
+      "models/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "models/common_layers/RevIN.py": "f20fb6a9664568a5715ece23ed4f745435b30e60c69557afa8baae8255154a89",
+      "models/common_layers/__init__.py": "8fd4cb66926a1cd633c3201645f8dbc63e02a53d91bcec893c6d8b4930244f35",
+      "paper/contracts/hard_lmm_multilag_detail_design_v1.json": "0fe1bbcdd7f0a378fd20f0bac6860252e37084da06c3e8f082c3d057d68f0cf1",
+      "paper/contracts/local_gate_observed_time_execution_v1.json": "8b8ba7b5f8ab85157e7500be8e66cdc74fde8d6da453992d35fb8c1b1fab8dad",
+      "paper/scripts/count_aware_tpp_backbone/__init__.py": "cd25af65061351f0ca7c46d143361bbe9528ea755c6a3f09dbffdd5f188412bb",
+      "paper/scripts/count_aware_tpp_backbone/constants.py": "711a39d5369dcd628824cfae040a1f3c370877816372c725562d38390745ed1c",
+      "paper/scripts/count_aware_tpp_backbone/core.py": "c5cc72a265a05199868332c9beaa32ce9568afaf5f4cfa0930b836215ab36084",
+      "paper/scripts/count_aware_tpp_backbone/datasets.py": "0a2982d92a21d6dd0518adba5e631d40cf2222c9eb9ee476d861b27211623274",
+      "paper/scripts/count_aware_tpp_backbone/observed_time.py": "86a4a17ee4568319ece3e0170b569ef64830e23f77d3933631c33abb57552a95",
+      "paper/scripts/count_aware_tpp_backbone/reporting.py": "4764b790352b6a84a4efa9df9b17e3ad948534779539bf87422af7d8c06825c6",
+      "paper/scripts/count_aware_tpp_backbone/thp_static_contract.py": "96919909906c1fec5b447234dfc77612a43f6b62ab64bca31185a6480f0fc490",
+      "paper/scripts/count_aware_tpp_backbone/training.py": "964ed6fb569acad9d1da0887398da7c770724623277ed688a4e841af4285f6ab",
+      "paper/scripts/local_detail_benchmark_contract.py": "af5a6429bd0032e715b63fa2708ea84210216d0e0a199941ee7ce0f4328bd159",
+      "paper/scripts/mixed_quantity_objective.py": "f52a7fb8050479990c951ccbe4ac3548988a560049cf528731ed6672fc052396",
+      "paper/scripts/observed_slot_parallel_common.py": "5e624ba8ba457fb89a42c159969aada36f8c1e2b83a7073ee27409966b6a21ba",
+      "paper/scripts/prepare_multilag_detail_execution.py": "583d0bc5452843751385a674336a048de83addccb171f8363bfc136460dee76c",
+      "paper/scripts/quantity_comparison_data.py": "8adb418f1417625a23e5af7f247bfce10cf5fdd3c947ad0b17d7a4b8b79b76b1",
+      "paper/scripts/quantity_comparison_engine.py": "a4eb605d7f4f3c27bbc87fd10facb9b3393b44075342c2f1ea55545275fde5fc",
+      "paper/scripts/quantity_comparison_runtime.py": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+      "paper/scripts/quantity_objective_comparison.py": "8c89aba1a3c9f410aa9f14144240fb5a19b2fb5912ebfbf4bd9f053308c4782f",
+      "paper/scripts/raw_aux_gradient_control.py": "97115734829f4200ea61eae6c9bba9367d46c10789a15703ab51b55dbedfea2c",
+      "paper/scripts/run_count_aware_tpp_backbone_control.py": "016d6ae1e5d4bcc77065e7a6b856b14ee1e1dc2acb4ecfbe2ab266e851a2b36c",
+      "paper/scripts/run_hard_lmm_frozen_lognormal_duration.py": "c3bb9a6afb87dfa21c9b49af50a7a4b38b640871ec0bd8ba28ef1f098cf984e6",
+      "paper/scripts/run_hard_lmm_time_head_refit.py": "a1b7774266649bf4204e279147cdc5cb6801abec96ab75e65efaad1718eff65f",
+      "paper/scripts/run_intermittent_log_backbone_control.py": "eb8fd2aba200a48963efc22bf03f2c66f87a9def59a99c0a0261abf133b98ad4",
+      "paper/scripts/run_local_detail_benchmark.py": "d7a987fcb7cf6be66335651a97582d9d481a7026115509bbe7ce46fe88985c27",
+      "paper/scripts/run_multilag_detail_execution.py": "1083e19d7076a45668b2d447f2cb76f5cbcbfe01904bfda3d3e0582a1e263aea",
+      "paper/scripts/run_observed_slot_partition.py": "bade0da82038c68564c2543eb18536531bc614fcd6808aaa69a1fa0a20fddb56",
+      "paper/scripts/run_quantity_comparison.py": "56fc8303e55893a5295daf78767552fa91d4a9a9df2280a8f6977617ae62288d",
+      "paper/scripts/run_taxi_log_backbone_control.py": "7d3003455eb8aee97eff0120a2c043f93a74981cc0de0a81d9a95f93a99e1767",
+      "paper/scripts/run_taxi_quantity_interface_ablation.py": "32630140f939b1e8e2287893b7705b1d3ec6e9f67644c5f9477c0ef979890801",
+      "paper/scripts/run_time_quantity_diagnostic.py": "01287ef81df060228cf821d181545581dda4184f5c85aaaa74b74e1e35c39309",
+      "paper/scripts/time_quantity_diagnostic.py": "b0dc1deecc47c016846dc4475b6bde78b0da90ae6c7bca4e522896567d0d9006",
+      "paper/scripts/verify_local_detail_benchmark.py": "361ce38dd220b76bfeac8388e07c01a17ff596a7ddb894329aa9dc9cb10dea35",
+      "paper/scripts/verify_multilag_detail_cost.py": "17a6750a74e7033badc0933965dfafddbc1cbed1ef8b0148353d09fae63b4000",
+      "simple_lab_test/__init__.py": "dc0691a4d210ba2dafdde7391d031f36d1dede90787b3aeb337996d685b13018",
+      "simple_lab_test/common/__init__.py": "60dc453d86fcb7bd779a57630d905cdec8cabbb5f1724fec6f4f3e12fcb2eaf2",
+      "simple_lab_test/common/pathing.py": "f3e6e8832f12bd0fef0fd9b7a23a4f5d16626581e54ebeeb10f4f965f8e2f1c1",
+      "simple_lab_test/search/__init__.py": "5dd6d1d5f3d9e15602c88db89d67fc8677bdd43ef78b61a016db6ff5b881f80c",
+      "simple_lab_test/search/common/__init__.py": "e2eb9c6b87702fc16abfcd51e691074277ee278f66b6c674ec54d6e882726541",
+      "simple_lab_test/search/common/benchmark_utils.py": "b3c089da98df5205b36e6aa021b03e8b9b13f6b26281e07d957a0237864ffe7f",
+      "simple_lab_test/search/common/configs.py": "eb241c11d765c66d86aa3f58a0a72d907769a905fe6c3a923e5f8c70abd793f3",
+      "simple_lab_test/search/common/experiment_utils.py": "a06e45ea43e722f55ecaec1ad5915b96fbd47926afbce617c1bb22114fe4836e",
+      "simple_lab_test/search/common/models.py": "71ccb45b17cf64b0a9641a7f75d27279324dbe7a5b095221ad4bac6cc6761c7b",
+      "simple_lab_test/search/common/runner.py": "a1fc687455b768ed454878cda55cf2d1b43cdb13817880a4cf3fbca9c7db8739",
+      "utils/magnitude_pipeline.py": "f18450b89a386501c88d6a99b55ef72ff0b50cc7c4a16fef9d713744e2100f98",
+      "utils/mark_utils.py": "945a7bfb98f0dcd7af0911d7d4b06f43268116b72a3786d8a5b6e1a572e5599b",
+      "utils/tpp_simulation.py": "5e01d477d77388e3686bcaf972644548b6d0c0735e3cc6e9a7618ba5ae2f984b",
+      "utils/training.py": "22c79c91cb672200057f1e80a6ca995c816b3722dd253d4b90f1ccd5795e276e"
+    },
+    "files_sha256": "8fa0727c84c338c76443471a3f8dd8416ba8837302489b72fdf067b9afdcab3d",
+    "working_tree": "isolated content-hashed closure; existing dirty worktree preserved"
+  },
+  "status": "frozen_pending_execution_approval_and_native_qualification",
+  "total_arms": 18,
+  "training": {
+    "batch_size": 128,
+    "early_stopping": "epoch >= 40 and epoch - earliest_best_epoch >= 40",
+    "maximum_epochs": 300,
+    "minimum_epochs": 40,
+    "monitor": "validation_raw_quantity_rmse",
+    "patience": 40,
+    "seed": 42,
+    "tie": "strict_earliest_finite_minimum",
+    "warm_start": false
+  },
+  "verification": {
+    "changes_from_prepared_v1": "Host-local CUDA qualification and permit; 5080 first,5090 later; unchanged research conditions and shared duration ceiling",
+    "checks": [
+      "shared_head_objective",
+      "same_batch_prefix",
+      "earliest_tie_and_early_stop",
+      "model_optimizer_rng_selector_resume",
+      "18_arm_production_adapter",
+      "36_replays",
+      "local_host_receipt_required",
+      "cannot_borrow_other_host_qualification",
+      "delayed_host_preserves_common_deadline",
+      "expired_permit_rejected"
+    ],
+    "cpu_cost_sha256": "6a9997b7545b848fd07f55d378cb79754112c580ffe7f36eb585a0265826810a",
+    "failed": 0,
+    "gpu_executed": false,
+    "held_out_evaluated": false,
+    "native_cuda_pending": true,
+    "passed": 59,
+    "production_integration": {
+      "arms_per_dataset": 6,
+      "datasets": 3,
+      "endpoint_replays": 36,
+      "epochs_per_arm": 40,
+      "real_data": false
+    },
+    "status": "passed_synthetic_cpu",
+    "synthetic_optimizer_updates_cost_probe": 60,
+    "test_file_sha256": "085b5832bb5b17f1e62cb69b30b28d30383a6b0b1b476f7c6f73519ad0a4e0f2",
+    "test_xml_sha256": "3b44b2439e178a36fe972bdc1d5e55b2fd77a2708bbe056379fe4d51a6cebe36",
+    "tested_source_files_sha256": "8fa0727c84c338c76443471a3f8dd8416ba8837302489b72fdf067b9afdcab3d"
+  }
+}

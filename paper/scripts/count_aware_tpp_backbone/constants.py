@@ -1,6 +1,12 @@
 """Experiment identifiers shared by the count-aware runner components."""
 
 import math
+from models.TPPs.CountAwareTitanMLPCandidates import ARMS as MLP_CANDIDATE_BACKBONES, ROLE as MLP_CANDIDATE_ROLE
+from models.TPPs.CountAwareTitanHistoryControls import ARMS as HISTORY_CONTROL_BACKBONES, ROLE as HISTORY_CONTROL_ROLE
+from models.TPPs.DeepRenewalEvent import ARM as RENEWAL_ARM, ROLE as RENEWAL_ROLE, VARIANT as RENEWAL_VARIANT, TIME_MODE as RENEWAL_TIME_MODE
+from models.TPPs.CountAwareTitanActiveBranchNorm import ARMS as NORM_BACKBONES, ROLE as NORM_ROLE
+from models.TPPs.CountAwareTitanCoreAblation import ARMS as CORE_BACKBONES, ROLE as CORE_ROLE
+from models.TPPs.CountAwareAdditionalTPP import ARMS as ADDITIONAL_BACKBONES, ROLE as ADDITIONAL_ROLE
 
 from models.Titan.common.key_value_memory import KEY_VALUE_BACKBONE, KEY_VALUE_ROLE
 from models.Titan.common.elapsed_age import ELAPSED_AGE_BACKBONE, ELAPSED_AGE_ROLE
@@ -31,6 +37,22 @@ from models.TPPs.CountAwareTitanLevelHistoryQKV import (
 from models.TPPs.CountAwareTitanValueNorm import (
     VALUE_NORM_BACKBONE,
     VALUE_NORM_ROLE,
+)
+from models.TPPs.CountAwareTitanSlotMemory import (
+    SLOT_MEMORY_BACKBONE,
+    SLOT_MEMORY_ROLE,
+)
+from models.TPPs.CountAwareTitanSuccessorMemory import (
+    SAME_EVENT_MEMORY_BACKBONE, SAME_EVENT_MEMORY_ROLE,
+    SUCCESSOR_MEMORY_BACKBONE, SUCCESSOR_MEMORY_ROLE,
+)
+from models.TPPs.CountAwareTitanNonlinearEpisodeMemory import (
+    PRE_POOL_MEMORY_BACKBONE, PRE_POOL_MEMORY_ROLE,
+    POST_POOL_MEMORY_BACKBONE, POST_POOL_MEMORY_ROLE,
+)
+from models.TPPs.CountAwareTitanTaskRoutedMemory import (
+    TASK_SHARED_MEMORY_BACKBONE, TASK_SHARED_MEMORY_ROLE,
+    TASK_SPLIT_MEMORY_BACKBONE, TASK_SPLIT_MEMORY_ROLE,
 )
 
 from models.TPPs.CountAwareTPP import (
@@ -77,11 +99,27 @@ TITAN_MEMORY_BACKBONES = (
     BOUNDED_QK_BACKBONE,
     LEVEL_HISTORY_QKV_BACKBONE,
     VALUE_NORM_BACKBONE,
+    SLOT_MEMORY_BACKBONE,
+    SAME_EVENT_MEMORY_BACKBONE,
+    SUCCESSOR_MEMORY_BACKBONE,
+    PRE_POOL_MEMORY_BACKBONE,
+    POST_POOL_MEMORY_BACKBONE,
+    TASK_SHARED_MEMORY_BACKBONE,
+    TASK_SPLIT_MEMORY_BACKBONE,
 )
-SUPPORTED_BACKBONES = (*BACKBONES, *TITAN_MEMORY_BACKBONES, THP_STATIC_MEMORY_BACKBONE)
+PAIR_MESSAGE_BACKBONES = ("titantpp_pair_message_post_pool", "titantpp_pair_message_pre_pool")
+STATE_TRANSPORT_BACKBONES = ("titantpp_event_state_transport", "titantpp_elapsed_state_transport")
+MULTILAG_DETAIL_BACKBONES = ("titantpp_local_detail", "titantpp_multilag_detail")
+LOCAL_GATE_BACKBONES = ("titantpp_local_time_gate", "titantpp_local_quantity_gate")
+SUPPORTED_BACKBONES = (*NORM_BACKBONES, *CORE_BACKBONES, *LOCAL_GATE_BACKBONES, *MULTILAG_DETAIL_BACKBONES, *BACKBONES, *TITAN_MEMORY_BACKBONES, THP_STATIC_MEMORY_BACKBONE, *PAIR_MESSAGE_BACKBONES, *STATE_TRANSPORT_BACKBONES)
 VARIANT = LOG_MSE_VARIANT
 FROZEN_TAIL_LAMBDA = 0.09111380335463036
 MODEL_ROLE_EXPERIMENTAL = "experimental"
+MODEL_ROLE_OBSERVED_TIME_JOINT = "observed_time_joint_v1"
+MODEL_ROLE_OBSERVED_TIME_PAIR = "observed_time_pair_message_v1"
+MODEL_ROLE_OBSERVED_TIME_STATE = "observed_time_state_transport_v1"
+MODEL_ROLE_OBSERVED_TIME_LOCAL_GATE = "observed_time_local_gate_v1"
+MODEL_ROLE_OBSERVED_TIME_MULTILAG = "observed_time_multilag_detail_v1"
 MODEL_ROLE_T0_COMMON_CONTROL = "t0_common_control"
 MODEL_ROLE_T1_INCUMBENT = "t1_incumbent"
 MODEL_ROLE_T1_BACKBONE_COMPARISON = "t1_backbone_comparison"
@@ -97,6 +135,13 @@ MODEL_ROLE_CAUSAL_QKV = CAUSAL_QKV_ROLE
 MODEL_ROLE_BOUNDED_QK = BOUNDED_QK_ROLE
 MODEL_ROLE_LEVEL_HISTORY_QKV = LEVEL_HISTORY_QKV_ROLE
 MODEL_ROLE_VALUE_NORM = VALUE_NORM_ROLE
+MODEL_ROLE_SLOT_MEMORY = SLOT_MEMORY_ROLE
+MODEL_ROLE_SAME_EVENT_MEMORY = SAME_EVENT_MEMORY_ROLE
+MODEL_ROLE_SUCCESSOR_MEMORY = SUCCESSOR_MEMORY_ROLE
+MODEL_ROLE_NONLINEAR_PRE_POOL = PRE_POOL_MEMORY_ROLE
+MODEL_ROLE_NONLINEAR_POST_POOL = POST_POOL_MEMORY_ROLE
+MODEL_ROLE_TASK_SHARED_MEMORY = TASK_SHARED_MEMORY_ROLE
+MODEL_ROLE_TASK_SPLIT_MEMORY = TASK_SPLIT_MEMORY_ROLE
 CHECKPOINT_MONITOR_JOINT = "validation_joint_objective"
 CHECKPOINT_MONITOR_RAW_QUANTITY_RMSE = "validation_raw_quantity_rmse"
 CHECKPOINT_HISTORY_RAW_QUANTITY_RMSE = "val_qty_rmse"
@@ -104,6 +149,17 @@ QUANTILE_ADAPTIVE_QUANTILES = (0.5, 0.9, 0.95, 0.99)
 QUANTILE_ADAPTIVE_RAW_WEIGHTS = (1.0, 1.0, 1.5, 2.0, 3.0)
 QUANTILE_ADAPTIVE_STRENGTH = 1.0
 MODEL_ROLES = (
+    MLP_CANDIDATE_ROLE,
+    HISTORY_CONTROL_ROLE,
+    RENEWAL_ROLE,
+    NORM_ROLE,
+    ADDITIONAL_ROLE,
+    CORE_ROLE,
+    MODEL_ROLE_OBSERVED_TIME_JOINT,
+    MODEL_ROLE_OBSERVED_TIME_PAIR,
+    MODEL_ROLE_OBSERVED_TIME_STATE,
+    MODEL_ROLE_OBSERVED_TIME_MULTILAG,
+    MODEL_ROLE_OBSERVED_TIME_LOCAL_GATE,
     ELAPSED_AGE_ROLE,
     KEY_VALUE_ROLE,
     MODEL_ROLE_EXPERIMENTAL,
@@ -122,6 +178,13 @@ MODEL_ROLES = (
     MODEL_ROLE_BOUNDED_QK,
     MODEL_ROLE_LEVEL_HISTORY_QKV,
     MODEL_ROLE_VALUE_NORM,
+    MODEL_ROLE_SLOT_MEMORY,
+    MODEL_ROLE_SAME_EVENT_MEMORY,
+    MODEL_ROLE_SUCCESSOR_MEMORY,
+    MODEL_ROLE_NONLINEAR_PRE_POOL,
+    MODEL_ROLE_NONLINEAR_POST_POOL,
+    MODEL_ROLE_TASK_SHARED_MEMORY,
+    MODEL_ROLE_TASK_SPLIT_MEMORY,
     THP_STATIC_MEMORY_ROLE,
 )
 T0_COMMON_BACKBONES = ("rmtpp", "thp", "nhp", "sahp", "titantpp")
@@ -143,6 +206,21 @@ QUANTITY_VARIANT_ALIASES = {
     TAIL_HEAD_ONLY_VARIANT: TAIL_HEAD_ONLY_VARIANT,
 }
 BACKBONE_LABELS = {
+    **{k: k for k in HISTORY_CONTROL_BACKBONES},
+    **{k: k for k in MLP_CANDIDATE_BACKBONES},
+    RENEWAL_ARM: 'Deep Renewal native interval-size adapter',
+    "s2p2_matched_head": "S2P2 (matched heads)",
+    "attnhp_matched_head": "AttNHP (matched heads)",
+    **{k: k for k in CORE_BACKBONES},
+    **{k: k for k in NORM_BACKBONES},
+    "titantpp_pair_message_post_pool": "Hard-LMM Query-conditioned Pooled Message Control",
+    "titantpp_pair_message_pre_pool": "Hard-LMM Query-conditioned Per-event Message",
+    "titantpp_local_detail": "Hard-LMM Local Level/Detail Control",
+    "titantpp_local_time_gate": "Hard-LMM Local Detail Temporal Gate",
+    "titantpp_local_quantity_gate": "Hard-LMM Local Detail Quantity-aware Gate",
+    "titantpp_multilag_detail": "Hard-LMM Multi-lag Level/Detail",
+    "titantpp_event_state_transport": "Hard-LMM Event-clock State Transport Control",
+    "titantpp_elapsed_state_transport": "Hard-LMM Elapsed-time State Transport",
     ELAPSED_AGE_BACKBONE: "TitanTPP-HardLMM Elapsed-Age Encoder",
     KEY_VALUE_BACKBONE: "TitanTPP-HardLMM Separate-Key Sparse Retrieval",
     THP_STATIC_MEMORY_BACKBONE: "Count-aware THP + Static Hard Memory",
@@ -172,6 +250,13 @@ BACKBONE_LABELS = {
     BOUNDED_QK_BACKBONE: "Hard-LMM Bounded QK with Causal V",
     LEVEL_HISTORY_QKV_BACKBONE: "Hard-LMM Level-preserving History-confidence QKV",
     VALUE_NORM_BACKBONE: "Hard-LMM Prototype Value-Norm Consistency",
+    SLOT_MEMORY_BACKBONE: "Hard-LMM Observed-state Slot Memory",
+    SAME_EVENT_MEMORY_BACKBONE: "Hard-LMM Same-event Episode Memory Control",
+    SUCCESSOR_MEMORY_BACKBONE: "Hard-LMM Successor Episode Memory",
+    PRE_POOL_MEMORY_BACKBONE: "Hard-LMM Nonlinear Episode Values Before Pooling",
+    POST_POOL_MEMORY_BACKBONE: "Hard-LMM Nonlinear Episode Values After Pooling Control",
+    TASK_SHARED_MEMORY_BACKBONE: "Hard-LMM Shared Mixture of Task Episode Reads",
+    TASK_SPLIT_MEMORY_BACKBONE: "Hard-LMM Task-specific Episode Reads",
 }
 
 
@@ -184,6 +269,50 @@ def validate_model_role_contract(
     lambda_tail: float,
 ) -> None:
     """Reject official-role runs that drift from the frozen baseline contract."""
+    if model_role == MLP_CANDIDATE_ROLE:
+        if (not backbones or len(set(backbones)) != len(backbones) or set(backbones) - set(MLP_CANDIDATE_BACKBONES)
+                or quantity_variants != (VARIANT,) or time_head_mode != 'heteroscedastic_lognormal_duration'
+                or lambda_tail != 0.):
+            raise ValueError('MLP candidate role requires its prescribed model/head/loss')
+        return
+    if set(backbones) & set(MLP_CANDIDATE_BACKBONES):
+        raise ValueError('MLP candidates require their explicit role')
+    if model_role in (HISTORY_CONTROL_ROLE, RENEWAL_ROLE):
+        native = model_role == RENEWAL_ROLE
+        allowed = (RENEWAL_ARM,) if native else HISTORY_CONTROL_BACKBONES
+        if (not backbones or len(set(backbones)) != len(backbones) or set(backbones) - set(allowed)
+                or quantity_variants != ((RENEWAL_VARIANT,) if native else (VARIANT,))
+                or time_head_mode != (RENEWAL_TIME_MODE if native else 'heteroscedastic_lognormal_duration')
+                or lambda_tail != 0.):
+            raise ValueError('PAKDD extension role requires its prescribed model/head/loss')
+        return
+    if set(backbones) & set((*HISTORY_CONTROL_BACKBONES, RENEWAL_ARM)):
+        raise ValueError('PAKDD extension models require their explicit role')
+    if model_role in (NORM_ROLE, ADDITIONAL_ROLE, CORE_ROLE, MODEL_ROLE_OBSERVED_TIME_JOINT, MODEL_ROLE_OBSERVED_TIME_PAIR, MODEL_ROLE_OBSERVED_TIME_STATE, MODEL_ROLE_OBSERVED_TIME_MULTILAG, MODEL_ROLE_OBSERVED_TIME_LOCAL_GATE):
+        from paper.scripts.count_aware_tpp_backbone.observed_time import BACKBONES, PAIR_BACKBONES, STATE_BACKBONES, MULTILAG_BACKBONES, LOCAL_GATE_BACKBONES as GATE_ARMS
+        allowed = {NORM_ROLE: NORM_BACKBONES, ADDITIONAL_ROLE: ADDITIONAL_BACKBONES, CORE_ROLE: CORE_BACKBONES, MODEL_ROLE_OBSERVED_TIME_JOINT: BACKBONES,
+                   MODEL_ROLE_OBSERVED_TIME_PAIR: PAIR_BACKBONES,
+                   MODEL_ROLE_OBSERVED_TIME_STATE: STATE_BACKBONES,
+                   MODEL_ROLE_OBSERVED_TIME_MULTILAG: MULTILAG_BACKBONES,
+                   MODEL_ROLE_OBSERVED_TIME_LOCAL_GATE: GATE_ARMS}[model_role]
+        if (not backbones or len(set(backbones)) != len(backbones) or set(backbones) - set(allowed)
+                or quantity_variants != (VARIANT,)
+                or time_head_mode != "heteroscedastic_lognormal_duration"
+                or lambda_tail != 0.0):
+            raise ValueError("Observed-time joint role has an incompatible backbone, head or objective")
+        return
+    if set(backbones) & set(NORM_BACKBONES):
+        raise ValueError("Active normalization requires its observed-time role")
+    if set(backbones) & set(CORE_BACKBONES):
+        raise ValueError("Core ablation requires its observed-time role")
+    if set(backbones) & set(LOCAL_GATE_BACKBONES):
+        raise ValueError("Local gate backbones require their observed-time role")
+    if set(backbones) & set(MULTILAG_DETAIL_BACKBONES):
+        raise ValueError("Multi-lag detail backbones require their observed-time role")
+    if set(backbones) & set(PAIR_MESSAGE_BACKBONES):
+        raise ValueError("Pair-message backbones require their observed-time role")
+    if set(backbones) & set(STATE_TRANSPORT_BACKBONES):
+        raise ValueError("State-transport backbones require their observed-time role")
     if model_role == ELAPSED_AGE_ROLE or ELAPSED_AGE_BACKBONE in backbones:
         if model_role != ELAPSED_AGE_ROLE or backbones != (ELAPSED_AGE_BACKBONE,):
             raise ValueError("Elapsed-age memory requires its dedicated single-backbone role")
@@ -198,6 +327,13 @@ def validate_model_role_contract(
         MODEL_ROLE_BOUNDED_QK: BOUNDED_QK_BACKBONE,
         MODEL_ROLE_LEVEL_HISTORY_QKV: LEVEL_HISTORY_QKV_BACKBONE,
         MODEL_ROLE_VALUE_NORM: VALUE_NORM_BACKBONE,
+        MODEL_ROLE_SLOT_MEMORY: SLOT_MEMORY_BACKBONE,
+        MODEL_ROLE_SAME_EVENT_MEMORY: SAME_EVENT_MEMORY_BACKBONE,
+        MODEL_ROLE_SUCCESSOR_MEMORY: SUCCESSOR_MEMORY_BACKBONE,
+        MODEL_ROLE_NONLINEAR_PRE_POOL: PRE_POOL_MEMORY_BACKBONE,
+        MODEL_ROLE_NONLINEAR_POST_POOL: POST_POOL_MEMORY_BACKBONE,
+        MODEL_ROLE_TASK_SHARED_MEMORY: TASK_SHARED_MEMORY_BACKBONE,
+        MODEL_ROLE_TASK_SPLIT_MEMORY: TASK_SPLIT_MEMORY_BACKBONE,
     }
     matched_candidate_roles = [
         role
@@ -360,6 +496,10 @@ __all__ = [
     "LOGNORMAL_VARIANT",
     "MODEL_ROLES",
     "MODEL_ROLE_EXPERIMENTAL",
+    "MODEL_ROLE_OBSERVED_TIME_JOINT",
+    "MODEL_ROLE_OBSERVED_TIME_PAIR",
+    "MODEL_ROLE_OBSERVED_TIME_STATE",
+    "MODEL_ROLE_OBSERVED_TIME_MULTILAG",
     "MODEL_ROLE_T0_COMMON_CONTROL",
     "MODEL_ROLE_T1_BACKBONE_COMPARISON",
     "MODEL_ROLE_T1_INCUMBENT",
@@ -371,6 +511,13 @@ __all__ = [
     "MODEL_ROLE_BOUNDED_QK",
     "MODEL_ROLE_LEVEL_HISTORY_QKV",
     "MODEL_ROLE_VALUE_NORM",
+    "MODEL_ROLE_SLOT_MEMORY",
+    "MODEL_ROLE_SAME_EVENT_MEMORY",
+    "MODEL_ROLE_SUCCESSOR_MEMORY",
+    "MODEL_ROLE_NONLINEAR_PRE_POOL",
+    "MODEL_ROLE_NONLINEAR_POST_POOL",
+    "MODEL_ROLE_TASK_SHARED_MEMORY",
+    "MODEL_ROLE_TASK_SPLIT_MEMORY",
     "MODEL_ROLE_TIME_HEAD_DIAGNOSTIC",
     "QUANTITY_VARIANT_ALIASES",
     "QUANTILE_ADAPTIVE_QUANTILES",

@@ -1,0 +1,167 @@
+{
+  "schema": "hard_lmm_nonlinear_episode_value_design_v1",
+  "date": "2026-09-15",
+  "status": "approved_for_local_implementation",
+  "purpose_ko": "후속 사건을 평균내기 전에 비선형 표현으로 바꾸어, 같은 평균을 가진 서로 다른 관측 이력이 다음 사건 예측에 기여할 수 있는지 검증한다.",
+  "scope": {
+    "design_authorized": true,
+    "model_implementation_completed": false,
+    "new_gpu_execution_authorized": false,
+    "current_training_or_scheduler_changed": false,
+    "held_out_accessed": false,
+    "commit_push": false,
+    "user_delivery": "current_session_Korean_text; machine_contract_JSON_only",
+    "local_implementation_authorized": true
+  },
+  "repository": {
+    "branch": "codex/hard-lmm-causal-qkv",
+    "base_git_provenance_only": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+    "preexisting_dirty_worktree_preserved": true
+  },
+  "evidence": {
+    "current_execution_contract": "paper/contracts/successor_episode_parallel_execution_v1.json",
+    "current_source_files_sha256": "609caf2b68443d72944833c0bfda3b3ab53e45cd4972cb5dc6d098f27be61b66",
+    "completed_5080_audit": "search_artifacts/successor_episode_parallel_20260914_v1/monitor/20260915T015615Z/terminal_5080_audit.json",
+    "as_of_kst": "2026-09-15 15:52 KST",
+    "scope": "all three datasets complete; seed42 validation; current successor candidate fails common gates",
+    "facts": [
+      "Intermittent candidate RMSE/MAE are 28.5185%/24.6405% above same-run B.",
+      "Taxi candidate RMSE/MAE are 0.7906%/1.7704% below same-run B; legacy time guard fails.",
+      "Current additional memory path pools two log event features before a linear 2-to-H map.",
+      "With latent states and addressing weights fixed, equal weighted feature means imply identical current memory corrections. The correction lies in a subspace of dimension at most two.",
+      "Instacart successor RMSE/MAE changes vs B are +0.1909279%/-0.0373912%; same-event control has lower RMSE than both."
+    ],
+    "not_established": [
+      "The rank/aggregation restriction caused either observed performance failure.",
+      "The entire B encoder cannot distinguish the compared histories.",
+      "A richer value representation fixes time loss or raw-RMSE objective mismatch."
+    ],
+    "completed_suite_audit": "search_artifacts/successor_episode_parallel_20260914_v1/monitor/20260915T065156Z/completion_integration.json"
+  },
+  "alternatives": [
+    {
+      "name": "nonlinear_individual_outcome_values",
+      "decision": "recommended",
+      "reason": "One explicit representation change with a same-parameter pooling-order control; preserves existing causal records and addressing."
+    },
+    {
+      "name": "task_specific_internal_memory_addresses",
+      "decision": "defer",
+      "reason": "May allow time and quantity to retrieve different histories, but shared-address failure is unproven and disentangling added routing capacity requires more controls. Head-only separation is not this proposal."
+    },
+    {
+      "name": "null_retrieval_or_content_dependent_forgetting",
+      "decision": "defer",
+      "reason": "Absolute support gating and content-dependent retention already exist in prior project variants; poor-match retrieval has not been established as the present failure cause."
+    }
+  ],
+  "architecture": {
+    "baseline": "fresh titantpp B; existing encoder and final static Hard-LMM",
+    "features": "x_k = existing [log1p(max(dt_k,0)),log1p(max(quantity_k,0))]",
+    "records_and_addressing": "exact successor completed-pair adjacency, observed masks, predecessor keys, query projection, affine-free LayerNorm and rank16 softmax from current successor design",
+    "value_width": 16,
+    "value_map": "phi(x)=GELU(V*x+b), V:[16,2], b:[16]; exact GELU approximate=none",
+    "candidate": "c_t=sum_available a_tk*phi(x_k); z_t=z_B,t+U*c_t",
+    "capacity_control": "mu_t=sum_available a_tk*x_k; c_t=phi(mu_t); z_t=z_B,t+U*c_t",
+    "output_projection": "U:[H,16], bias=false, initialized to zero",
+    "shared_task_state": "return(z,z); original quantity softplus/head and legacy time head unchanged",
+    "empty_or_unobserved_query": "force c_t and correction to exact zero in BOTH routes, including after phi in control; phi(0) is not generally zero because b is trainable",
+    "invalid_record": "sanitize unobserved/padded values before nonlinear operations and exclude them from weighted reduction; never rely on zero times NaN",
+    "state_lifetime": "per sample, reconstructed per forward; same history cap; no cross-batch or external cache",
+    "structural_defaults": "address rank16 and value width16 fixed across datasets; no validation-dependent widths, gates, quantile rules, clipping changes or loss changes",
+    "additional_parameters_each_new_arm": "2*H*16 + 2*16 + 16 + 16*H",
+    "additional_parameters_H64": 3120,
+    "current_successor_additional_parameters_H64": 2176,
+    "difference_from_current_successor_parameters_H64": 944
+  },
+  "distinctions": {
+    "current_successor": "Changes nonlinear transformation order relative to outcome pooling, not the predecessor-successor addressing rule.",
+    "observed_slot": "Slot memory aggregates encoder hidden states into learned slots between layers. This design preserves individual completed event pairs and transforms their observed outcomes before final retrieval.",
+    "dual_timescale": "Does not use hidden innovations, recent/old compressed stores, write confidence or support gates.",
+    "memory_film": "No new scale/shift or query-conditioned fusion path.",
+    "novelty": "Nonlinear pooling is established prior art. This proposal is a project-specific, unvalidated architecture hypothesis, not an established novel contribution."
+  },
+  "initialization_and_training_contract_requirements": {
+    "shared_B": "Exact same fresh baseline state and original RNG/dropout/data order; B parameters remain trainable in all arms.",
+    "new_parameters": "Same Q/K/V/b/U tensors in control and candidate, created with isolated RNG; U=zeros; V uses nn.Linear default weight initialization, b=zeros. Record exact generator state and constructor order at implementation freeze.",
+    "initial_guarantee": "Predictions/objective/shared B gradients agree before global clipping. New U gradients may differ, so first clipped optimizer steps need not agree.",
+    "gradient_check": "Nonzero U and nondegenerate unequal records are required when checking Q/K/V/b gradients and mechanism dependence.",
+    "comparison": "B, post-pool control, pre-pool candidate; proposed seed42/batch128/120epochs/noearlystop with identical split, target population and batch order per dataset. This is not an execution permit.",
+    "selection": "earliest strict finite validation raw-RMSE minimum; all selected metrics at the same checkpoint; epoch120 and last30 statistics reported separately",
+    "additional_association_control": "A nonlinear same-event control is required before attributing any gain to predecessor-successor association itself; pooling-order comparison alone cannot support that claim."
+  },
+  "acceptance_proposal": {
+    "scope": "Inherit current seven gates against BOTH fresh B and post-pool control; do not relax after results. Final execution contract still required.",
+    "raw_rmse_ratio_strictly_less_than": 1.0,
+    "mae_ratio_max": 1.01,
+    "body_mae_ratio_max": 1.02,
+    "tail_mae_ratio_max": 1.02,
+    "legacy_time_loss_increase_max": 0.01,
+    "last30_rmse_mean_ratio_max": 1.05,
+    "last30_rmse_std_ratio_max": 1.05,
+    "time_interpretation": "Legacy clamped time loss is a provisional structural comparison guard, not normalized Time NLL.",
+    "reject_or_defer": "No mechanism claim if candidate does not beat capacity control; no common candidate adoption if a dataset fails; no superiority claim from this reused single-seed validation."
+  },
+  "cost": {
+    "parameter_counts_equal_between_new_arms": true,
+    "exact_compute_equal": false,
+    "projection_and_activation": "Both evaluate the same 2-to-16 map on B*L rows in the full-sequence API; autograd workload can still differ.",
+    "weighted_value_read": "candidate O(B*L^2*16), control O(B*L^2*2); score attention remains O(B*L^2*16) in both",
+    "measurement_required": "actual forward/backward/clip/AdamW step time and peak memory for B/control/candidate at batch128 and L64/L256; CPU before separately authorized native CUDA",
+    "inherited_cost_gates_proposed": {
+      "parameter_ratio_max": 1.05,
+      "step_ratio_max": 2.5,
+      "peak_allocated_ratio_max": 2.5,
+      "peak_device_fraction_max": 0.8
+    },
+    "training_hours": null,
+    "servers_or_deadline_assigned": false,
+    "prior_execution_deadline_or_budget_reused": false
+  },
+  "implementation_map_proposed": {
+    "new_module": "models/TPPs/CountAwareTitanNonlinearEpisodeMemory.py",
+    "reuse": "completed_pairs and causal addressing semantics; keep current frozen successor source unchanged",
+    "integration": [
+      "models/TPPs/CountAwareFactory.py",
+      "paper/scripts/count_aware_tpp_backbone/constants.py",
+      "paper/scripts/run_count_aware_tpp_backbone_control.py",
+      "dedicated experimental runner and validators"
+    ],
+    "checkpoint_identity": "distinct pre-pool/post-pool IDs; bind activation, widths, association, mask semantics, source and optimizer/selector/RNG state; reject cross-route relabeling",
+    "candidate_id": "titantpp_nonlinear_episode_pre_pool",
+    "control_id": "titantpp_nonlinear_episode_post_pool"
+  },
+  "validation_before_execution": [
+    "Equal feature means but different outcome composition: distinguish with pre-pool nonlinear map at fixed latent/addressing/nonzero U.",
+    "Single record, identical values and affine-map replacement: both pooling orders agree in the valid cases.",
+    "Empty/unobserved row with nonzero b and U: exact zero correction in both routes.",
+    "Independent scalar causal-prefix oracle; future target dt/quantity, masks and no unobserved bridge; test with nonzero U.",
+    "Same initial B outputs/objective/shared preclip gradients and RNG; nondegenerate new-parameter gradients.",
+    "Same batch exposure; strict earliest ties; exact checkpoint/optimizer/RNG/loader/selector resume and route identity rejection.",
+    "Measured cost within frozen limits; no real-data inference or training is performed by design sanity checks."
+  ],
+  "limitations": [
+    "Finite nonlinear feature averages still discard information and cannot represent every outcome distribution.",
+    "Richer values may overfit; one shared address and shared correction remain.",
+    "No guarantee of preserving or improving Taxi time performance or Intermittent quantity errors.",
+    "Current validation has been reused for architecture selection; later multi-seed validation and a separately authorized final held-out assessment remain necessary."
+  ],
+  "literature": [
+    {
+      "title": "Deep Sets",
+      "url": "https://arxiv.org/abs/1703.06114",
+      "role": "prior art for nonlinear per-element representation before aggregation; not TPP performance evidence"
+    },
+    {
+      "title": "Set Transformer",
+      "url": "https://arxiv.org/abs/1810.00825",
+      "role": "prior art for attention-based set representation; not a novelty or performance claim for this candidate"
+    }
+  ],
+  "next_decision": "Complete the authorized local implementation and synthetic verification, then prepare a separate GPU execution contract. Frozen design records do not claim implementation completion; use the separate implementation receipt for current status.",
+  "implementation_authorization": {
+    "user_instruction": "진행하자.",
+    "scope": "candidate/control implementation, synthetic CPU integration tests and cost measurements; no new GPU execution",
+    "date": "2026-09-15"
+  }
+}

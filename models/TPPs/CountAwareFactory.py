@@ -31,6 +31,10 @@ from models.TPPs.CountAwareTPP import (
     TITAN_QUANTITY_GRADIENT_SHARED,
 )
 from models.TPPs.NeuralHawkesTPP import CountAwareNHP
+from models.TPPs.CountAwareAdditionalTPP import (
+    ARMS as ADDITIONAL_TPP_ARMS, CountAwareS2P2, CountAwareAttNHP,
+    metadata as additional_tpp_metadata, validate_checkpoint as validate_additional_tpp_checkpoint,
+)
 from models.TPPs.SelfAttentiveHawkesTPP import CountAwareSAHP
 from models.TPPs.CountAwareTHPStaticMemory import (
     CountAwareTHPStaticMemory,
@@ -73,6 +77,55 @@ from models.TPPs.CountAwareTitanValueNorm import (
     VALUE_NORM_BACKBONE,
     validate_value_norm_checkpoint,
     value_norm_metadata,
+)
+from models.TPPs.CountAwareTitanSlotMemory import (
+    CountAwareTitanSlotMemoryTPP,
+    SLOT_MEMORY_BACKBONE,
+    slot_memory_metadata,
+    validate_slot_memory_checkpoint,
+)
+from models.TPPs.CountAwareTitanSuccessorMemory import (
+    CountAwareTitanSameEventMemoryTPP,
+    CountAwareTitanSuccessorMemoryTPP,
+    SAME_EVENT_MEMORY_BACKBONE,
+    SUCCESSOR_MEMORY_BACKBONE,
+    episode_memory_metadata,
+    validate_episode_memory_checkpoint,
+)
+from models.TPPs.CountAwareTitanNonlinearEpisodeMemory import (
+    CountAwareTitanNonlinearPrePoolTPP,
+    CountAwareTitanNonlinearPostPoolTPP,
+    PRE_POOL_MEMORY_BACKBONE,
+    POST_POOL_MEMORY_BACKBONE,
+    nonlinear_episode_metadata,
+    validate_nonlinear_episode_checkpoint,
+)
+from models.TPPs.CountAwareTitanTaskRoutedMemory import (
+    CountAwareTitanTaskSharedMemoryTPP,
+    CountAwareTitanTaskSplitMemoryTPP,
+    TASK_SHARED_MEMORY_BACKBONE,
+    TASK_SPLIT_MEMORY_BACKBONE,
+    task_routed_memory_metadata,
+    validate_task_routed_memory_checkpoint,
+)
+from models.TPPs.CountAwareTitanPairMessage import (
+    CountAwareTitanPairMessagePrePoolTPP, CountAwareTitanPairMessagePostPoolTPP,
+    PAIR_MESSAGE_PRE_POOL_BACKBONE, PAIR_MESSAGE_POST_POOL_BACKBONE,
+    pair_message_metadata, validate_pair_message_checkpoint,
+)
+from models.TPPs.CountAwareTitanStateTransport import (
+    CountAwareTitanStateTransport, EVENT_STATE_BACKBONE, ELAPSED_STATE_BACKBONE,
+    state_transport_metadata, validate_state_transport_checkpoint,
+)
+from models.TPPs.CountAwareTitanLocalGate import (CountAwareTitanLocalGate, LOCAL_GATE_BACKBONES, TIME_GATE_BACKBONE, gate_metadata, validate_local_gate_checkpoint)
+from models.TPPs.CountAwareTitanCoreAblation import (CountAwareTitanCoreAblation, MODES as CORE_MODES, metadata as core_metadata, validate_checkpoint as validate_core_checkpoint)
+from models.TPPs.CountAwareTitanActiveBranchNorm import (CountAwareTitanActiveBranchNorm, ARM as ACTIVE_NORM_ARM, metadata as active_norm_metadata, validate_checkpoint as validate_active_norm_checkpoint)
+from models.TPPs.CountAwareTitanMLPCandidates import (CountAwareTitanMLPCandidate, MODES as MLP_CANDIDATE_MODES, metadata as mlp_candidate_metadata, validate_checkpoint as validate_mlp_candidate_checkpoint)
+from models.TPPs.CountAwareTitanHistoryControls import (CountAwareTitanHistoryControl, MODES as HISTORY_CONTROL_MODES, metadata as history_control_metadata, validate_checkpoint as validate_history_control_checkpoint)
+from models.TPPs.DeepRenewalEvent import (DeepRenewalEvent, ARM as RENEWAL_ARM, VARIANT as RENEWAL_VARIANT, TIME_MODE as RENEWAL_TIME_MODE, metadata as renewal_metadata, validate_checkpoint as validate_renewal_checkpoint)
+from models.TPPs.CountAwareTitanMultiLagDetail import (
+    CountAwareTitanMultiLagDetail, LOCAL_DETAIL_BACKBONE, MULTILAG_DETAIL_BACKBONE,
+    multilag_detail_metadata, validate_multilag_detail_checkpoint,
 )
 from models.Titan.common.key_value_memory import (
     KEY_VALUE_BACKBONE,
@@ -191,6 +244,34 @@ def validate_key_value_checkpoint(payload: dict[str, Any], expected_backbone: st
 
 def validate_checkpoint_route(payload: dict[str, Any], expected_backbone: str) -> None:
     """Validate explicit candidate identity; compatible tensor shapes are not enough."""
+    if validate_mlp_candidate_checkpoint(payload, expected_backbone):
+        return
+    if validate_history_control_checkpoint(payload, expected_backbone):
+        return
+    if validate_renewal_checkpoint(payload, expected_backbone):
+        return
+    if validate_active_norm_checkpoint(payload, expected_backbone):
+        return
+    if validate_additional_tpp_checkpoint(payload, expected_backbone):
+        return
+    if validate_local_gate_checkpoint(payload, expected_backbone):
+        return
+    if validate_core_checkpoint(payload, expected_backbone):
+        return
+    if validate_multilag_detail_checkpoint(payload, expected_backbone):
+        return
+    if validate_state_transport_checkpoint(payload, expected_backbone):
+        return
+    if validate_pair_message_checkpoint(payload, expected_backbone):
+        return
+    if validate_task_routed_memory_checkpoint(payload, expected_backbone):
+        return
+    if validate_nonlinear_episode_checkpoint(payload, expected_backbone):
+        return
+    if validate_episode_memory_checkpoint(payload, expected_backbone):
+        return
+    if validate_slot_memory_checkpoint(payload, expected_backbone):
+        return
     if validate_value_norm_checkpoint(payload, expected_backbone):
         return
     if validate_level_history_qkv_checkpoint(payload, expected_backbone):
@@ -279,9 +360,16 @@ def build_count_aware_model(
     time_initial_location: float | None = None,
     time_initial_scale: float | None = None,
     time_sigma_floor: float = 1e-3,
+    time_observation_contract: dict[str, Any] | None = None,
     titans_memory_gradient_clip: float | None = None,
 ) -> tuple[SharedTimeCountModel, dict[str, Any]]:
     """Construct one controlled backbone and its serializable metadata."""
+    if backbone == RENEWAL_ARM:
+        if (hidden_dim != 64 or quantity_variant != RENEWAL_VARIANT or time_head_mode != RENEWAL_TIME_MODE
+                or time_observation_contract is None or lambda_tail != 0.):
+            raise ValueError('Deep Renewal requires its native distribution and recorded-time contract')
+        model = DeepRenewalEvent(time_observation_contract=time_observation_contract)
+        return with_time_metadata(model, {**renewal_metadata(), 'max_len': max_seq_len})
     if backbone == ELAPSED_AGE_BACKBONE and (
         quantity_variant != LOG_MSE_VARIANT or time_head_mode != TIME_HEAD_MODE_LEGACY_CLAMPED
         or lambda_tail != 0.0
@@ -329,7 +417,120 @@ def build_count_aware_model(
         "time_initial_scale": time_initial_scale,
         "time_sigma_floor": time_sigma_floor,
     }
+    if time_observation_contract is not None:
+        quantity_kwargs["time_observation_contract"] = time_observation_contract
+    if backbone in ADDITIONAL_TPP_ARMS:
+        if (hidden_dim != 64 or quantity_variant != LOG_MSE_VARIANT
+                or time_head_mode != TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION
+                or time_observation_contract is None or lambda_tail != 0.):
+            raise ValueError("Additional TPP requires frozen common heads, width64 and recorded-time law")
+        cls = CountAwareS2P2 if backbone == ADDITIONAL_TPP_ARMS[0] else CountAwareAttNHP
+        return with_time_metadata(cls(hidden_dim, train_log_mean, **quantity_kwargs),
+                                  additional_tpp_metadata(backbone, hidden_dim, max_seq_len))
+    if backbone in LOCAL_GATE_BACKBONES:
+        mode = 'time' if backbone == TIME_GATE_BACKBONE else 'quantity'
+        model = CountAwareTitanLocalGate(hidden_dim, train_log_mean, max_seq_len,
+            local_gate_mode=mode, **quantity_kwargs)
+        metadata = gate_metadata(hidden_dim, mode, time_scale, train_log_mean)
+        metadata['max_len'] = max_seq_len
+        return with_time_metadata(model, metadata)
+    if backbone == ACTIVE_NORM_ARM:
+        model = CountAwareTitanActiveBranchNorm(hidden_dim, train_log_mean, max_seq_len, **quantity_kwargs)
+        metadata = active_norm_metadata(hidden_dim)
+        metadata['max_len'] = max_seq_len
+        return with_time_metadata(model, metadata)
+    if backbone in CORE_MODES:
+        model = CountAwareTitanCoreAblation(hidden_dim, train_log_mean, max_seq_len, core_mode=CORE_MODES[backbone], **quantity_kwargs)
+        metadata = core_metadata(hidden_dim, CORE_MODES[backbone])
+        metadata["max_len"] = max_seq_len
+        return with_time_metadata(model, metadata)
+    if backbone in MLP_CANDIDATE_MODES:
+        if (hidden_dim != 64 or quantity_variant != LOG_MSE_VARIANT
+                or time_head_mode != TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION
+                or time_observation_contract is None or lambda_tail != 0.):
+            raise ValueError('MLP candidates require frozen common heads and width64')
+        mode = MLP_CANDIDATE_MODES[backbone]
+        model = CountAwareTitanMLPCandidate(hidden_dim, train_log_mean, max_seq_len, candidate_mode=mode, **quantity_kwargs)
+        return with_time_metadata(model, {**mlp_candidate_metadata(hidden_dim, mode), 'max_len': max_seq_len})
+    if backbone in HISTORY_CONTROL_MODES:
+        if (hidden_dim != 64 or quantity_variant != LOG_MSE_VARIANT
+                or time_head_mode != TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION
+                or time_observation_contract is None or lambda_tail != 0.):
+            raise ValueError('History controls require frozen common heads and width64')
+        mode = HISTORY_CONTROL_MODES[backbone]
+        model = CountAwareTitanHistoryControl(hidden_dim, train_log_mean, max_seq_len, control_mode=mode, **quantity_kwargs)
+        return with_time_metadata(model, {**history_control_metadata(hidden_dim, mode), 'max_len': max_seq_len})
+    if backbone in (LOCAL_DETAIL_BACKBONE, MULTILAG_DETAIL_BACKBONE):
+        mode = "local" if backbone == LOCAL_DETAIL_BACKBONE else "multilag"
+        model = CountAwareTitanMultiLagDetail(
+            hidden_dim=hidden_dim, train_log_mean=train_log_mean,
+            max_seq_len=max_seq_len, multilag_detail_mode=mode,
+            multilag_detail_rank=4, **quantity_kwargs,
+        )
+        metadata = multilag_detail_metadata(hidden_dim, mode, rank=4)
+        metadata["max_len"] = max_seq_len
+        return with_time_metadata(model, metadata)
+    if backbone in (EVENT_STATE_BACKBONE, ELAPSED_STATE_BACKBONE):
+        clock = "event" if backbone == EVENT_STATE_BACKBONE else "elapsed"
+        model = CountAwareTitanStateTransport(
+            hidden_dim=hidden_dim, train_log_mean=train_log_mean,
+            max_seq_len=max_seq_len, state_transport_clock=clock,
+            state_transport_rank=8, state_transport_scan="parallel", **quantity_kwargs,
+        )
+        metadata = state_transport_metadata(
+            hidden_dim, clock, rank=8, scan="parallel", time_scale=time_scale,
+        )
+        metadata["max_len"] = max_seq_len
+        return with_time_metadata(model, metadata)
+    pair_candidates = {
+        PAIR_MESSAGE_POST_POOL_BACKBONE: (CountAwareTitanPairMessagePostPoolTPP, "post_pool"),
+        PAIR_MESSAGE_PRE_POOL_BACKBONE: (CountAwareTitanPairMessagePrePoolTPP, "pre_pool"),
+    }
+    if backbone in pair_candidates:
+        model_type, routing = pair_candidates[backbone]
+        model = model_type(hidden_dim=hidden_dim, train_log_mean=train_log_mean,
+                           max_seq_len=max_seq_len, **quantity_kwargs)
+        metadata = pair_message_metadata(hidden_dim, routing)
+        metadata["max_len"] = max_seq_len
+        return with_time_metadata(model, metadata)
+    task_routed_candidates = {
+        TASK_SHARED_MEMORY_BACKBONE: (CountAwareTitanTaskSharedMemoryTPP, "shared"),
+        TASK_SPLIT_MEMORY_BACKBONE: (CountAwareTitanTaskSplitMemoryTPP, "split"),
+    }
+    if backbone in task_routed_candidates:
+        model_type, routing = task_routed_candidates[backbone]
+        model = model_type(hidden_dim=hidden_dim, train_log_mean=train_log_mean,
+                           max_seq_len=max_seq_len, **quantity_kwargs)
+        metadata = task_routed_memory_metadata(hidden_dim, routing)
+        metadata["max_len"] = max_seq_len
+        return with_time_metadata(model, metadata)
+    nonlinear_episode_candidates = {
+        PRE_POOL_MEMORY_BACKBONE: (CountAwareTitanNonlinearPrePoolTPP, "pre"),
+        POST_POOL_MEMORY_BACKBONE: (CountAwareTitanNonlinearPostPoolTPP, "post"),
+    }
+    if backbone in nonlinear_episode_candidates:
+        model_type, pooling = nonlinear_episode_candidates[backbone]
+        model = model_type(hidden_dim=hidden_dim, train_log_mean=train_log_mean,
+                           max_seq_len=max_seq_len, **quantity_kwargs)
+        metadata = nonlinear_episode_metadata(hidden_dim, pooling)
+        metadata["max_len"] = max_seq_len
+        return with_time_metadata(model, metadata)
+    episode_candidates = {
+        SAME_EVENT_MEMORY_BACKBONE: (CountAwareTitanSameEventMemoryTPP, "same_event"),
+        SUCCESSOR_MEMORY_BACKBONE: (CountAwareTitanSuccessorMemoryTPP, "successor"),
+    }
+    if backbone in episode_candidates:
+        model_type, association = episode_candidates[backbone]
+        model = model_type(hidden_dim=hidden_dim, train_log_mean=train_log_mean,
+                           max_seq_len=max_seq_len, **quantity_kwargs)
+        metadata = episode_memory_metadata(hidden_dim, association)
+        metadata["max_len"] = max_seq_len
+        return with_time_metadata(model, metadata)
     intermediate_candidates = {
+        SLOT_MEMORY_BACKBONE: (
+            CountAwareTitanSlotMemoryTPP,
+            slot_memory_metadata,
+        ),
         VALUE_NORM_BACKBONE: (
             CountAwareTitanValueNormTPP,
             value_norm_metadata,
@@ -382,6 +583,8 @@ def build_count_aware_model(
             **quantity_kwargs,
         )
         encoder_metadata = metadata_factory(hidden_dim)
+        if backbone == SLOT_MEMORY_BACKBONE:
+            encoder_metadata["max_len"] = max_seq_len
         if backbone in (
             CAUSAL_QKV_BACKBONE,
             BOUNDED_QK_BACKBONE,

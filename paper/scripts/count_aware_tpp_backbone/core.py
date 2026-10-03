@@ -84,7 +84,7 @@ def target_outputs(
     quantity_hidden = quantity_encoded[batch_ids, history_positions]
     true_dt = dts[batch_ids, target_positions].float()
     true_qty = quantities[batch_ids, target_positions].float()
-    time_loss = -model.log_f_dt(time_hidden, true_dt)
+    time_loss = -model.log_observation_dt(time_hidden, true_dt)
     quantity = model.quantity_outputs(quantity_hidden, true_qty)
     return {
         "joint_loss": time_loss + float(lambda_log_qty) * quantity["train_loss"],

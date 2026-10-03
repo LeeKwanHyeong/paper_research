@@ -1,0 +1,82 @@
+{
+  "contract_id": "hard_lmm_observed_slot_memory_v1",
+  "scope": "backbone_implementation_and_local_synthetic_verification",
+  "gpu_execution_authorized": false,
+  "real_dataset_evaluation_authorized": false,
+  "baseline": "titantpp",
+  "candidate": "titantpp_observed_slot_memory",
+  "model_role": "hard_lmm_observed_slot_memory_candidate",
+  "status": "experimental_not_performance_qualified",
+  "architecture": {
+    "placement": "between_existing_encoder_layers_1_and_2",
+    "slots": 8,
+    "address_rank": 8,
+    "write_assignment": "softmax(project(layer_norm(h)) @ learned_addresses.T / sqrt(8))",
+    "write_values": "unmodified_first_layer_hidden_states",
+    "accumulation": "per_sample_observed_prefix_weighted_sum_and_mass",
+    "slot_content": "prefix_weighted_sum / prefix_mass for mass > 1e-8; otherwise zero and excluded from read",
+    "numerical_support_mass_epsilon": 1e-8,
+    "read": "query_from_current_hidden_attends_to_keys_from_dynamic_slot_content",
+    "fusion": "h + tanh(alpha) * (read_context - h)",
+    "alpha_initialization": 0.0,
+    "at_most_one_observation": "exact_zero_correction",
+    "state_lifetime": "one_forward_one_sample; no_external_or_cross_series_state",
+    "observed_current_event_may_write": true,
+    "target_padding_persistent_tokens_may_write": false,
+    "shared_initial_parameters_and_cpu_rng_match_b": true,
+    "additional_trainable_parameters": "3 * hidden_dim * 8 + 8 * 8 + 1"
+  },
+  "preserved": {
+    "persistent_memory_tokens": 16,
+    "final_static_prototypes": 64,
+    "final_static_top_k": 4,
+    "quantity_variant": "count_only_log_regression",
+    "quantity_objective": "direct_log1p_mse",
+    "quantity_weight": 1.0,
+    "tail_auxiliary_weight": 0.0,
+    "time_head": "legacy_clamped_rmtpp",
+    "time_intercept_limit_for_b_comparison": 300.0,
+    "model_default_routes": "unchanged"
+  },
+  "implementation_checks": [
+    "independent_sequential_prefix_oracle",
+    "same_seed_b_parameters_rng_outputs_objective_shared_gradients",
+    "nonzero_gate_parameter_and_input_gradient_flow",
+    "future_target_time_quantity_and_padding_causality",
+    "zero_one_observation_and_noncontiguous_masks",
+    "batch_isolation_and_forward_state_preservation",
+    "actual_training_runner_synthetic_batches_and_checkpoint_replay",
+    "optimizer_rng_loader_and_selector_resume_identity",
+    "checkpoint_relabelling_and_metadata_rejection",
+    "parameter_count_and_bounded_local_cpu_cost_measurement"
+  ],
+  "design_choice": {
+    "selected": "observed_state_slot_memory",
+    "alternative": "bottleneck_recurrent_memory_between_encoder_layers",
+    "selection_reason": "parallel_prefix_accumulation_and_small_parameter_addition; no_inner_optimizer",
+    "distinction_from_dual_timescale": "absolute_states_and_content_based_slot_read; no_transition_difference_values_or_recent_old_partition",
+    "distinction_from_static_retrieval": "values_are_built_from_this_sample_observations",
+    "distinction_from_transition_error": "no_output_error_correction_or_static_top4_write_buckets"
+  },
+  "evidence_paths": [
+    "reports/titantpp_jqt_5090_20260910/three_dataset_validation_v1/validation_report.md",
+    "paper/results/hard_lmm_transition_error_probe_20260906/evidence_decision.json",
+    "paper/results/final_backbone_and_baselines_20260909/contracts/hard_lmm_dual_timescale_v1.md",
+    "paper/reviews/hard_lmm_after_causal_qkv_20260908.md"
+  ],
+  "unresolved": [
+    "slot_collapse_and_loss_of_temporal_order_in_averages",
+    "time_head_sensitivity_after_gate_activation",
+    "cuda_step_time_and_peak_memory",
+    "dataset_performance_and_benchmark_advantage",
+    "academic_novelty"
+  ],
+  "next_execution_contract_must_fix": [
+    "source_and_runtime_identity",
+    "train_and_validation_files_and_shared_batch_order",
+    "initialization_seed_and_learning_budget",
+    "earliest_strict_raw_rmse_selector_and_same_checkpoint_metrics",
+    "resource_deadline_and_cost_limits",
+    "acceptance_criteria_and_explicit_gpu_authorization"
+  ]
+}

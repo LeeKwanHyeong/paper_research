@@ -1,0 +1,207 @@
+{
+  "schema": "hard_lmm_multilag_detail_design_v1",
+  "date": "2026-09-21",
+  "status": "design_selected_not_model_implemented",
+  "purpose": "B의 두 encoder block 사이에서 여러 사건 간격의 수준과 변화 정보를 각각 처리하여, 중간 수량의 정확도를 보존하면서 큰 수량과 후반 안정성을 개선할 수 있는지 검증한다.",
+  "scope": {
+    "authorized_this_step": ["local source and preserved validation-evidence review", "candidate and control design", "standard-library synthetic algebra and mask checks", "local JSON evidence"],
+    "not_performed": ["production model implementation", "real-data computation", "checkpoint loading", "SSH or GPU work", "scheduler changes", "held-out access", "commit or push", "WebApp or Markdown report"],
+    "future_execution": "Requires an implementation-qualified, separately approved execution contract. Previous server allocations, deadlines and GPU approvals are not inherited."
+  },
+  "current_reference": {
+    "baseline": "titantpp with static Hard-LMM and recorded-duration joint objective",
+    "source_revision_context": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+    "branch_context": "codex/hard-lmm-causal-qkv",
+    "worktree": "dirty; current relevant file hashes, not HEAD alone, identify the reviewed source",
+    "previous_candidate": "titantpp_elapsed_state_transport remains unadopted; additional seeds and its Instacart extension are not scheduled",
+    "evidence": "search_artifacts/state_transport_intermittent_metadata_recovery_20260920_v1/integrated_interpretation_20260921.json",
+    "confirmed": [
+      "Previous selected quantity RMSE improved against B on Taxi and Intermittent, but the frozen joint acceptance gates failed on both datasets.",
+      "Taxi tail MAE and time NLL deteriorated; Intermittent had middle-quantity losses and greater late RMSE variability.",
+      "The previous comparison has one seed and two datasets; it contains no Instacart result for that structure.",
+      "B already has full-prefix causal attention and attention/FFN residual paths within its existing input window."
+    ],
+    "not_established": ["History compression caused the observed errors", "B lacks access to detailed history", "The previous state-path gain transfers to this design", "The proposed design improves any metric", "Academic novelty or benchmark superiority"]
+  },
+  "hypothesis": {
+    "claim_to_test": "Explicitly transforming level and signed change at multiple fixed event distances before combining them provides a useful inductive bias beyond an equally parameterized recent-change adapter.",
+    "why_consider": [
+      "Distinct lag branches can represent a recent departure from an older level without first averaging all these relations into one recurrent state or retrieved summary.",
+      "Short-lag paths can represent local changes while longer-lag paths can represent changes relative to earlier context; none is assigned to a target-quantity bin.",
+      "The original B path remains, and added output projections start at zero. This preserves initial behavior but does not guarantee preservation after optimization."
+    ],
+    "stability_boundary": "There is no new recurrent decay product or retrieval softmax. This simplifies the new path but neither bounds learned output projections nor proves stable training. Late-epoch stability must be measured.",
+    "quantity_boundary": "This is a shared time/quantity Backbone candidate using existing observed inputs, not a new quantity head or proof of a quantity-specific contribution."
+  },
+  "alternatives": [
+    {
+      "name": "multilag level/detail residual",
+      "decision": "selected",
+      "information_flow": "Keep lag-specific current/past level and signed change separate through nonlinear maps, then combine their corrections between the existing blocks.",
+      "tradeoff": "Small explicit module and matched recent-change control; sparse fixed lags and rank bottlenecks may miss useful patterns or duplicate attention."
+    },
+    {
+      "name": "separate event/detail token streams for the second attention block",
+      "decision": "deferred",
+      "information_flow": "Represent original events and causal detail tokens as separately addressable keys/values.",
+      "tradeoff": "More flexible access to details, but token count, position semantics and attention normalization change together. A naive full doubled-token attention has approximately four times the event-event attention matrix entries for that block, not four times whole-model runtime. Zero-initialized value output alone does not neutralize extra softmax keys."
+    },
+    {
+      "name": "completed-block summaries plus fine tokens",
+      "decision": "deferred",
+      "source": "paper/contracts/hard_lmm_state_transport_design_v1.json",
+      "tradeoff": "Previously identified distinct topology; block boundaries, summary compression and fine/coarse fusion still introduce more coupled choices than the selected test."
+    }
+  ],
+  "architecture": {
+    "baseline": "titantpp",
+    "control_proposed_id": "titantpp_local_detail",
+    "candidate_proposed_id": "titantpp_multilag_detail",
+    "proposed_role": "observed_time_multilag_detail_v1",
+    "registration_status": "names reserved by this design only; not registered or executable",
+    "flow": "existing observed log1p(dt,quantity) features and positions -> first B block -> level/detail residual -> second B block -> original static Hard-LMM -> unchanged shared time/quantity heads",
+    "hidden_dim": 64,
+    "branch_rank": 4,
+    "candidate_lags": [1, 2, 4, 8, 16, 32, 64, 128],
+    "control_reference_lags": [1, 1, 1, 1, 1, 1, 1, 1],
+    "branch_count": 8,
+    "parameters_per_branch": "independent bias-free L_s,D_s: H->4 and U_s:4->H",
+    "equations": [
+      "h_i is the first B block's causal hidden state at observed event i.",
+      "j(i,d_s) is the d_s-th preceding observed event in the same permitted segment.",
+      "a_is = 1 if that candidate lag exists, otherwise 0; use this same availability in candidate and control.",
+      "candidate j_s=j(i,d_s); control j_s=j(i,1) for every available branch s.",
+      "level_is = (h_i + h_j_s) / 2; detail_is = h_i - h_j_s.",
+      "f_is = GELU(L_s level_is) + GELU(D_s detail_is), using exact-erf GELU (approximate='none').",
+      "correction_i = (1/8) * sum_s a_is * U_s f_is.",
+      "h'_i = h_i + correction_i; correction is exactly zero for unavailable branches and unobserved queries."
+    ],
+    "normalization": "Fixed 1/8, not division by the number of available branches; no new LayerNorm, learned gate, bias, clipping or dropout in this module.",
+    "rationale_for_no_new_layernorm": "Avoid inserting another normalization of level/detail magnitude. Existing B block normalizations remain; magnitude preservation or numerical stability is not thereby guaranteed.",
+    "distance": "Observed event count, not physical elapsed time. Existing duration features remain available through h; no new duration scale or decay parameter.",
+    "lifetime": "Reconstruct references within each input sample and forward call; no cross-window, cross-series, cross-batch or persistent external state.",
+    "not_lossless": "For a selected pair, level/detail can reconstruct its two h vectors before projection. The full module uses sparse lags, rank-4 projections and nonlinear maps; it is not a lossless representation of history.",
+    "unchanged": ["two B attention blocks", "input window", "persistent attention memory", "static Hard-LMM prototype retrieval", "time and quantity heads", "joint objective", "all original parameters trainable"]
+  },
+  "control_interpretation": {
+    "identical": ["trainable parameter count and tensor shapes", "all initial parameter tensors", "number of branches", "candidate-lag availability masks", "nonlinearities and fixed residual scale", "heads/objective", "batch exposure"],
+    "only_intended_change": "For each available branch, replace its distant source with the immediately preceding observed source.",
+    "why_not_zero_detail": "A zero-detail control would leave detail projection weights inactive. The recent-change control has nonzero detail on nonconstant histories and can train every L/D/U branch.",
+    "identity_cases": ["All U_s=0 reproduces the initial B output at canonical observed prediction positions", "When only lag1 is available, candidate and control modules agree for identical tensors", "Constant first-block hidden states within a segment give equal candidate/control corrections; constant raw inputs alone are insufficient because B uses position embeddings"],
+    "limitations": ["Repeated lag1 sources reduce input diversity; equal parameter count does not mean equal expressive capacity", "First-block states already contain older context in both arms; this is not access to history versus no access", "Candidate versus B alone cannot attribute a gain to multiple distances rather than extra capacity", "This control does not isolate the level/detail decomposition from all other ways of encoding lags"]
+  },
+  "causality_and_masks": {
+    "observed": "valid_mask & memory_write_mask; use valid_mask alone only when write mask is absent",
+    "sanitize_first": "Use where(observed, value, finite_zero) before raw feature transforms or hidden projections; reject nonfinite or negative observed raw inputs. Never mask NaN by multiplication.",
+    "indexing": "Padding does not consume an observed-event index. A valid-but-unobserved event ends the added lag segment; no new lag pair may bridge it. Reference availability depends only on masks and past positions.",
+    "reset_scope": "Resetting this lag segment does not remove earlier observed context from B attention. Do not describe it as a whole-model forgetting boundary.",
+    "encoder_mask": "For both new arms, sanitize raw inputs and pass the observed-token mask to both B blocks. Persistent attention vectors are not observed events or lag sources.",
+    "B_equivalence_scope": "Canonical runner layout: right-padded observed history followed by its single withheld target, prediction at the preceding history position. Existing B uses valid mask for attention and does not generally enforce arbitrary interior write-mask holes; initial equivalence outside the canonical layout is not claimed.",
+    "target": "Next-event duration/quantity never enters this module; use existing target_outputs predecessor selection. Target values may change the supervised loss, but must not change predictor states or predicted distribution parameters.",
+    "positions": "Keep B position IDs and canonical event order. Padding-insertion invariance of the lag helper is distinct from full-model invariance with learned position embeddings.",
+    "edge_cases": "Empty or single-observation segments have zero correction; suffix future perturbations cannot change earlier states; unavailable references must be sanitized before projections."
+  },
+  "initialization_and_training": {
+    "common_B": "Construct/copy exactly the same common B tensors, head initialization and caller RNG state for all three arms.",
+    "L_D": "Independent ordinary bias-free Linear initializations inside an isolated RNG context; exact same new tensors in candidate and control.",
+    "U": "Exactly zero for all eight branches; keep the zero-output computation in the graph, do not skip it.",
+    "gradient_expectation": "At initialization U receives gradients on nondegenerate eligible samples; L/D may initially have zero gradients. After a controlled nonzero-U step, verify each active L/D/U path receives finite nonzero gradients with sufficient history and nonconstant inputs.",
+    "equivalence_checks": "Initial observed predictions, joint objective and common-B preclip gradients must match. Total gradient norms and clipped optimizer updates need not match B because new U gradients exist.",
+    "optimization": "Joint training of all original and new parameters; no detach, raw auxiliary loss, task separation, validation-dependent lag selection or per-quantity-bin routing."
+  },
+  "objective": {
+    "contract": "paper/contracts/observed_time_joint_training_v1.json",
+    "formula": "recorded_positive_integer_time_nll + log1p_quantity_mse",
+    "quantity_variant": "count_only_log_regression",
+    "lambda_log_qty": 1.0,
+    "time_head_mode": "heteroscedastic_lognormal_duration",
+    "time_observation_mode": "positive_integer_round_clamp_v1",
+    "train_statistics": "Reuse derivation method, not historical scalar values by assumption; freeze source/data-bound train-only duration and quantity statistics for each new dataset comparison.",
+    "interpretation": "Recorded-code probability NLL under the existing observation model, not historical clamped loss or continuous density NLL. The observation model is a modeling choice; physical rounding provenance has not been established."
+  },
+  "prospective_comparison": {
+    "datasets": ["intermittent_frozen_5000", "yellow_trip_hourly", "insta_market_basket"],
+    "dataset_scope": "All three datasets are in the planned scope before any new outcome. Instacart may be scheduled later for resources but is not optional after seeing earlier results.",
+    "arms_each_dataset": ["titantpp", "titantpp_local_detail", "titantpp_multilag_detail"],
+    "first_stage": "fresh seed42 exploratory validation, 120 epochs, batch128, same per-dataset loader/window, AdamW lr0.001 weight_decay0.01 and global clipping1.0; exact data/source/exposure/resource identity is still to be frozen in the execution contract",
+    "host_rule": "Keep all three arms of each dataset on the same qualified host. Servers and start time have not been assigned. Cross-host comparisons need explicit qualification and labeling.",
+    "Instacart": "Use existing recorded-day top_code=30 observation specification; derive and freeze its train statistics and actual workload before execution. No current result for this new structure is claimed.",
+    "selector": "Strict earliest finite validation raw-quantity RMSE minimum. All selected RMSE/MAE/time/stratum values must come from that same checkpoint; last epoch is reported separately.",
+    "quantity_strata": "Five disjoint bins using frozen all-train-row p50,p90,p95,p99 boundaries. Middle coverage is each of p50-p90,p90-p95,p95-p99 separately. Also report <=p50, body<=p95 and tail>p99. Boundaries are evaluation definitions, never model inputs.",
+    "history_strata": "Retain existing <=64,64-128,>128 history-length reports; overlaps with quantity bins must not be added as independent contributions.",
+    "accounting": "Each bin reports count, raw MAE, raw RMSE and SSE; verify sums of disjoint counts and SSE against the overall population. Empty/repeated-quantile bins are explicit unavailable, not automatic successes.",
+    "stability": "Mean and sample SD of validation RMSE across epochs91-120; report full histories and last-checkpoint metrics. Epoch variability is not seed uncertainty.",
+    "screening_against_each_of_B_and_local_control_on_each_dataset": {
+      "overall_raw_rmse_ratio_strictly_less_than": 1.0,
+      "overall_mae_ratio_max": 1.01,
+      "body_mae_ratio_max": 1.02,
+      "each_nonempty_middle_bin_mae_and_rmse_ratio_max": 1.02,
+      "tail_mae_ratio_max": 1.02,
+      "tail_rmse_ratio_strictly_less_than": 1.0,
+      "recorded_time_nll_increase_max": 0.01,
+      "last30_rmse_mean_ratio_max": 1.05,
+      "last30_rmse_sample_sd_ratio_max": 1.05
+    },
+    "gate_provenance": "Carry previous overall/time/body/tail-MAE/late guardrail tolerances forward; add disjoint middle-bin RMSE+MAE checks and strict tail-RMSE improvement for the new stated goal. These are prospective new-design criteria, not a retrospective regrading of state transport.",
+    "ratio_edge_rule": "Where a reference error/SD is zero, use the corresponding direct inequality instead of division; strict improvement requires a strictly smaller value. Missing counts or nonfinite values leave the decision unverified.",
+    "goal_fully_met": "A screen pass only permits guardrail tolerances. Claim middle accuracy was preserved and variability reduced only if each middle-bin MAE/RMSE is no worse than B, tail RMSE is lower, late mean is no worse and late SD is strictly lower than B, in addition to the complete screen against both references. Otherwise describe the exact partial benefit and regression.",
+    "failure_rule": "Report failed gates and keep B as reference. Do not retune lags, change selectors, remove datasets or rebrand the old result as a pass. Any revised design gets a new version before future results.",
+    "claim_limits": "One seed on repeatedly used validation is exploratory. Multi-seed validation, matched benchmark controls, component ablations and later held-out evaluation are required before broad paper claims."
+  },
+  "cost_design": {
+    "additional_parameters_formula": "3*K*H*r",
+    "additional_parameters_H64_K8_r4": 6144,
+    "historical_current_B_parameters": 89859,
+    "expected_total_if_B_is_unchanged": 96003,
+    "additional_parameter_percent_approx": 6.84,
+    "count_status": "Analytical estimate; exact implemented count is not yet measured.",
+    "forward_projection_MAC_per_token": 6144,
+    "complexity": "Extra projection work O(N*L*K*H*r); no new L-by-L attention tensor or recurrence. B's existing attention cost remains.",
+    "implementation_hint": "Because L/D have no bias, project h once per branch, gather projected lag values, then form projected averages/differences. This avoids materializing N*L*K*H histories; verify against the direct formula within numerical tolerance. Do not move GELU after summation.",
+    "provisional_qualification_limits": {"total_parameter_ratio_max": 1.10, "median_train_step_ratio_vs_B_max": 1.5, "peak_allocated_memory_ratio_vs_B_max": 1.25},
+    "budget_boundary": "These are new-design qualification targets, not inherited approval. The previous state-transport 1.05 parameter cap would reject this design; no old contract is amended. Measured CPU/CUDA costs, VRAM occupancy, per-arm and total time caps must be frozen before launch.",
+    "wall_time": "Unmeasured. Do not present historical state-transport durations or the parameter ratio as a training-time estimate for this module or Instacart."
+  },
+  "implementation_map_next_step": {
+    "new_model": "models/TPPs/CountAwareTitanMultiLagDetail.py (not created)",
+    "existing_interfaces": ["models/TPPs/CountAwareFactory.py", "paper/scripts/count_aware_tpp_backbone/constants.py", "paper/scripts/count_aware_tpp_backbone/core.py"],
+    "runner": "Reuse observed-duration and exposure/selector/endpoint-audit behavior in a new explicit role; do not alter existing completed experiment identities.",
+    "checkpoint_identity": ["role and candidate/control name", "lag vector and availability vector", "rank and branch count", "GELU mode and residual divisor", "mask/index semantics", "same common-head observation contract and train statistics", "source/data checksums"],
+    "restore": "Validate architecture and interface identity before mutating model/optimizer; restore model, optimizer, CPU/CUDA RNG, loader RNG, selector, global step and exposure history. Reject cross-arm or incomplete bare-state substitution."
+  },
+  "required_model_verification_not_yet_run": [
+    "Canonical B zero-init output/objective/common-preclip-gradient and caller-RNG equality in eval and matched-dropout train modes",
+    "Prefix/next-target/padding poison and arbitrary withheld-boundary checks; changing supervision changes losses, not predictor outputs",
+    "Sequential reference versus projected-gather production module, including empty/short segments and masks",
+    "Finite nonzero gradient for every active L/D/U branch after staged zero-U initialization",
+    "Candidate/control lag1 equality and deliberate multi-lag distinction with the same tensors",
+    "Full state and optimizer roundtrip, exact interrupted resume, wrong-identity rejection before mutation",
+    "Same train/validation batches and strict earliest selector ties across all arms",
+    "Exact parameter count, CPU cost, then separately approved native CUDA qualification"
+  ],
+  "distinction_from_prior_work": [
+    {"source": "paper/contracts/hard_lmm_causal_qkv_v1.md", "difference": "Prior operation was a zero-init linear depthwise three-tap Q/K/V convolution in the first block. This uses branch-specific cross-channel nonlinear level/change processing at dyadic lags between blocks and an explicit matched recent-change control. Both belong to causal event-order filtering; no fundamentally new convolution principle is claimed."},
+    {"source": "paper/contracts/hard_lmm_observed_slot_memory_v1.json", "difference": "No cumulative slot means or content-addressed slot read."},
+    {"source": "paper/contracts/hard_lmm_nonlinear_episode_value_design_v1.json", "difference": "No predecessor-successor bank and weighted pooling of successor values; fixed current/past hidden pairs retain branch identity until nonlinear processing."},
+    {"source": "paper/contracts/hard_lmm_task_routed_episode_design_v1.json", "difference": "No task-specific read; time and quantity keep one jointly trained state."},
+    {"source": "paper/contracts/hard_lmm_pair_message_design_v1.json", "difference": "No query-event gate over second-attention probabilities. The added branches encode explicit event distances and level/change without another attention aggregation."},
+    {"source": "paper/contracts/hard_lmm_state_transport_design_v1.json", "difference": "No rank8 recurrent state, elapsed/event decay or write gate. Existing first-block context plus explicit lag comparisons replace that candidate path; state-transport improvement is not assumed to transfer."}
+  ],
+  "design_checks": {
+    "reference_probe": "search_artifacts/multilag_detail_design_20260921_v1/verify_design_math.py",
+    "receipt": "search_artifacts/multilag_detail_design_20260921_v1/design_verification.json",
+    "boundary": "Standard-library toy-vector algebra and indexing only. This is not PyTorch model, autograd, real-data, CUDA, runtime or performance validation."
+  },
+  "independent_review": {
+    "reviewer": "/root/backbone_design_review",
+    "mode": "read_only",
+    "result": "No blocking inconsistency found in equations, matched control, masks, initialization, parameter accounting, current time objective or prospective interpretation rules.",
+    "clarification_applied": "Constant-state identity now explicitly means first-block hidden states, not raw input constancy.",
+    "limitations": "Design review only; production implementation and measured behavior remain unverified."
+  },
+  "remaining_order": [
+    {"status": "next", "task": "Implement the candidate and recent-change control; verify initialization, causal masks, gradients and restore on synthetic CPU inputs."},
+    {"status": "next_after_implementation", "task": "Integrate identical batches/selection, measure cost and freeze three-dataset data/source identities, qualified server allocation and resource/time limits."},
+    {"status": "approval_required_after_contract", "task": "Run native CUDA qualification and the approved new comparison; do not reuse old execution authorization."}
+  ]
+}

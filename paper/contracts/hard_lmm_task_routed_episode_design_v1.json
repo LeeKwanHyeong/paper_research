@@ -1,0 +1,107 @@
+{
+  "schema": "hard_lmm_task_routed_episode_design_v1",
+  "date": "2026-09-16",
+  "status": "approved_for_local_implementation",
+  "user_instruction": "시간·수량별 메모리 검색 구조 설계 및 후보 구현과 비교 조건 검증 진행하자",
+  "scope": {
+    "local_design_implementation_synthetic_cpu": true,
+    "new_gpu_execution": false,
+    "real_data_or_checkpoint_diagnosis": false,
+    "held_out": false,
+    "scheduler_changes": false,
+    "commit_push": false,
+    "user_delivery": "current_session_Korean_text; machine-readable JSON evidence"
+  },
+  "hypothesis": "With one shared observed episode bank, assigning different retrieval distributions to time and quantity can outperform giving both tasks the same mixture of those distributions. Shared addressing has not been established as the cause of previous failures.",
+  "baseline": "fresh unchanged titantpp B; all base parameters jointly trainable",
+  "evidence": "search_artifacts/nonlinear_episode_parallel_20260915_v1/monitor/20260916T031513Z/completion_audit.json",
+  "arms": {
+    "baseline": "titantpp",
+    "control": "titantpp_task_shared_episode_memory",
+    "candidate": "titantpp_task_split_episode_memory"
+  },
+  "roles": {
+    "control": "hard_lmm_task_shared_episode_control",
+    "candidate": "hard_lmm_task_split_episode_candidate"
+  },
+  "architecture": {
+    "base": "unchanged two-layer encoder then original static Hard-LMM gives z_B",
+    "query_input": "affine-free LayerNorm of observed base encoder hidden before final static Hard-LMM",
+    "records": "existing adjacent-valid completed predecessor->successor pairs; no bridge across unobserved valid events",
+    "key": "one shared K projection of predecessor hidden",
+    "value": "one shared phi(x)=GELU(V*x+b), x=existing successor log1p dt/log1p quantity, width16",
+    "address_rank": 8,
+    "value_width": 16,
+    "attention": "two independently parameterized queries Qt,Qq; softmax(Qtask*shared_K/sqrt(8)) over completed records whose successor is at or before the observed query",
+    "contexts": "ct=sum a_time*phi(x); cq=sum a_quantity*phi(x)",
+    "control": "both task contexts equal (ct+cq)/2",
+    "candidate": "time context=ct; quantity context=cq",
+    "fusion": "zt=z_B+Ut(context_time); zq=z_B+Uq(context_quantity)",
+    "output_projections": "independent bias-free 16->H Ut,Uq; both zero initialized",
+    "empty_unobserved": "both reads and corrections exactly zero despite trained value bias",
+    "invalid_padding": "sanitize unobserved features/hidden before nonlinear operations; unavailable records excluded",
+    "state_lifetime": "per sample, reconstructed on each forward; no cross-batch state",
+    "head_objective": "original softplus log1p quantity head/direct log-MSE and legacy clamped time head; jointly trained; no new loss or gradient detach"
+  },
+  "control_interpretation": {
+    "same_parameters_and_major_ops": true,
+    "both_queries_used_by_control": true,
+    "not_single_query_control": true,
+    "not_equal_function_class_claim": true,
+    "comparison_scope": "task assignment versus shared mixture with symmetric per-task fusion; does not separately establish predecessor-successor association benefit"
+  },
+  "initialization": {
+    "shared_B": "same seed gives exact B state and caller CPU RNG; new-module construction inside fork_rng(devices=[])",
+    "new_parameters": "Qt then Qq then K then V then Ut then Uq; nn.Linear defaults; V bias zero; Ut/Uq weights zero",
+    "within_model": "Qt and Qq sampled sequentially and distinct to avoid symmetric-query trap",
+    "between_models": "all named trainable tensors exactly equal for same caller RNG; only routing_code int64 buffer differs",
+    "guarantees": "initial outputs/objective/common-B preclip gradients match; added output-projection gradients affect total clipping so first clipped optimizer step need not match B",
+    "quantity_path_tests": "activate quantity-head weights and both output projections when testing gradient flow; default quantity head weights are zero"
+  },
+  "capacity": {
+    "additional_parameters_formula": "3*H*8 + 2*H*16 + (2*16+16)",
+    "additional_parameters_H64": 3632,
+    "B_parameters_H64_maxlen256": 89795,
+    "new_parameters_H64_maxlen256": 93427,
+    "rank_choice": "fixed8 for all datasets to keep added parameters under5% for both actual max_len64 and256 while retaining value width16; not a matched comparison to earlier rank16 models",
+    "time_memory_cost": "both conditions compute two score matrices and reads; shared mixture adds arithmetic; measure actual CPU step and peak RSS, do not assert identical wall time",
+    "B_parameters_H64_maxlen64": 77507,
+    "new_parameters_H64_maxlen64": 81139
+  },
+  "comparison_contract_requirements": {
+    "same_init_batches_optimizer_budget": true,
+    "planned_seed": 42,
+    "planned_batch_size": 128,
+    "planned_epochs": 120,
+    "selector": "strict earliest finite validation raw-RMSE minimum",
+    "reported_metrics": "same selected checkpoint RMSE/MAE/body/tail/legacy time; last120 and last30 mean/sampleSD separately",
+    "proposed_gates_against_B_and_control": {
+      "raw_rmse_ratio_strictly_less_than": 1.0,
+      "mae_ratio_max": 1.01,
+      "body_mae_ratio_max": 1.02,
+      "tail_mae_ratio_max": 1.02,
+      "legacy_time_loss_increase_max": 0.01,
+      "last30_rmse_mean_ratio_max": 1.05,
+      "last30_rmse_std_ratio_max": 1.05
+    },
+    "gpu_execution_contract_status": "not issued; resource assignment/native CUDA/cost/time ceiling require later contract and approval"
+  },
+  "verification": [
+    "independent scalar causal-prefix oracle for both query routes and mixture",
+    "different task reads for unequal Qt/Qq with fixed bank; equal queries/single record collapse as expected",
+    "future target, padded/unobserved values, mask gaps, batch independence",
+    "B initial outputs/objective/common gradients/RNG preserved",
+    "both Qt/Qq/K/V/b/Ut/Uq receive gradients after activation",
+    "time-only and quantity-only gradients reach correct query in split; both queries in shared; shared K/V get either task",
+    "exact model/optimizer/RNG restore and next-update equality",
+    "checkpoint route identity prevents relabeling shared/split/B and foreign payloads",
+    "shared training entrypoint synthetic same batches, strict earliest tie and saved/last selected state",
+    "synthetic CPU step and memory costs with activated paths at batch128 lengths64/256"
+  ],
+  "limitations": [
+    "Design is an unvalidated mechanism hypothesis, not a proven performance improvement or novel contribution.",
+    "Whole base encoder remains jointly trainable; task-specific retrieval does not eliminate shared-gradient interaction.",
+    "Current legacy time loss is a provisional comparison metric; normalized common time likelihood remains separate future work.",
+    "No validation-target quantity thresholds or dataset-specific routing rules."
+  ]
+}

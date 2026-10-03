@@ -1,0 +1,223 @@
+{
+  "schema": "hard_lmm_successor_episode_memory_design_v1",
+  "status": "design_selected_implementation_pending",
+  "user_purpose": "세 데이터셋에서 시간·수량 예측을 개선하는 TitanTPP Backbone 후보를 설계한다.",
+  "decision_date": "2026-09-14",
+  "scope": {
+    "design": true,
+    "model_implementation": false,
+    "real_data_training": false,
+    "gpu_execution_authorized": false,
+    "remote_mutation": false,
+    "scheduler_changes": false,
+    "held_out": false,
+    "commit_push": false
+  },
+  "repository": {
+    "name": "paper_research",
+    "branch": "codex/hard-lmm-causal-qkv",
+    "git_head_provenance_only": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+    "worktree": "preexisting_dirty_changes_preserved",
+    "new_executable_source_frozen": false
+  },
+  "selected": {
+    "candidate": "titantpp_successor_episode_memory",
+    "name_ko": "후속 사건을 검색하는 메모리",
+    "hypothesis": "현재 문맥과 비슷한 과거 문맥 이후에 실제 관측된 시간 간격·수량을 개별 기록에서 검색하면, 일반적인 동일 사건 검색보다 다음 사건 예측을 개선할 수 있다.",
+    "hypothesis_status": "unvalidated",
+    "causal_failure_of_previous_slot_identified": false,
+    "academic_novelty_verified": false
+  },
+  "alternatives": [
+    {
+      "name": "compressed_overwrite_memory",
+      "decision": "defer",
+      "reason": "SurpriseGatedMemory already uses prediction-error outer-product updates; dual-timescale and Titans-MAC are prior related paths. Overwrite alone is not a distinct contribution; recurrence/scan complexity is higher."
+    },
+    {
+      "name": "same_event_explicit_memory",
+      "decision": "required_capacity_and_attention_control",
+      "reason": "Same outcome values, valid records, parameter shapes and initialization as candidate; keys use successor context rather than predecessor context."
+    },
+    {
+      "name": "explicit_predecessor_successor_memory",
+      "decision": "selected",
+      "reason": "Retains individual completed event associations, reads existing log event values, and adds the read after the existing encoder/static memory. No compressed innovation store or interlayer modification."
+    }
+  ],
+  "architecture": {
+    "baseline": "titantpp, static_hard_lmm",
+    "context": "h = B._encode_base(dts,history_quantities,mask,memory_write_mask=observed)",
+    "baseline_state": "z_B = B.lmm(h) * valid",
+    "features": "x_i = B.continuous_features(...)[i] = [log1p(max(dt_i,0)),log1p(max(q_i,0))]; exact existing float/mask semantics; no new centering, scaling, quantization or auxiliary target",
+    "placement": "after unchanged two-layer encoder and original final static Hard-LMM; before both existing heads",
+    "key_query_rank": 16,
+    "normalization": {
+      "kind": "layer_norm",
+      "elementwise_affine": false,
+      "eps": 1e-05
+    },
+    "projections": {
+      "query": "W_Q [16,H], bias=false",
+      "key": "W_K [16,H], bias=false",
+      "output": "U [H,2], bias=false, zeros",
+      "value": "none; existing two-channel observed event features"
+    },
+    "query": "q_t = W_Q LN(h_t)",
+    "candidate_key": "k_(j,k) = W_K LN(h_j)",
+    "control_key": "k_(j,k) = W_K LN(h_k)",
+    "score": "dot(q_t,k_(j,k))/sqrt(16)",
+    "read": "a = stable masked softmax over available individual records; c_t = sum_(j,k) a_(t,j,k) x_k",
+    "fusion": "z_t = (z_B,t + U c_t) * valid_t; return (z,z)",
+    "residual_for_unobserved_or_invalid_query": "zero correction; preserve baseline masking",
+    "no_new_dropout": true,
+    "shared_weights_trainable": true,
+    "state_lifetime": "rebuild from each sample on each forward; no cross-batch, cross-series or external persistent cache",
+    "historical_window": "same current loader history cap; does not extend effective context beyond supplied window",
+    "additional_parameter_formula": "2*H*16+2*H",
+    "additional_parameters_H64": 2176,
+    "removed_redundant_factorization": "Wv:2->16 followed by Wo:16->H would have rank at most2; direct U has the same linear value-map family with different optimization parameterization."
+  },
+  "causality": {
+    "prediction": "query t is an observed event; next event is the target",
+    "valid": "mask",
+    "observed": "mask & memory_write_mask; default memory_write_mask=mask only when all valid tokens are observed",
+    "adjacency": "Enumerate adjacent valid-event indices in original order, skipping padding. Keep a pair only when BOTH endpoints are observed. Do not bridge an interior valid-but-nonwritable token.",
+    "record": "(j,k), j<k, key from predecessor j, observed outcome value from successor k",
+    "available_to_query": "query valid and observed; pair observed at both endpoints; k<=t",
+    "empty_record_row": "return c_t=[0,0] before softmax; never evaluate softmax on an all -inf row",
+    "one_record": "ordinary defined read; query/key gradient can be zero because weight is1",
+    "zero_or_one_observation": "no completed pair -> zero correction",
+    "persistent_tokens": "never records",
+    "runner_target_dt": "target_outputs masks target quantity but keeps target dt in input. Causal encoder plus completed-pair mask must prevent that target dt from reaching history queries.",
+    "padding_scope": "memory operator must be invariant under masked padding with fixed latent states; full encoder invariance only after existing right_pad_batch canonicalization because B has absolute positions"
+  },
+  "initialization": {
+    "shared": "B and both memory arms share exact baseline parameter tensors and source/runtime/data conditions",
+    "new": "Both memory arms share W_Q,W_K,U initial tensors; create random new projections under isolated RNG, U=zeros",
+    "guarantee": "Initial predictions, objective and loss gradients of shared B parameters match B before global clipping; memory output-map gradients are allowed.",
+    "limit": "No equality claimed after first optimizer step: added U gradient may change global clipping; Q/K receive loss gradients only after U activates in a nondegenerate fixture.",
+    "no_extra_forward_or_rng_for_control": "same dropout path and isolated loader generators"
+  },
+  "comparison": {
+    "arms": [
+      "B",
+      "same_event_memory",
+      "successor_event_memory"
+    ],
+    "same_event_control": "Same pairs, x_k values, query, masks, parameters, parameter initial values, residual route and data budget; only key h_j versus h_k changes. Control includes current k=t where valid; its key observation time differs by design.",
+    "exposure": "same dataset split/targets, seed42, batch128,120epochs,noearlystop,sharedbatchorder; source/runtime identity to freeze after implementation",
+    "datasets": [
+      "intermittent_frozen_5000",
+      "yellow_trip_hourly",
+      "insta_market_basket"
+    ],
+    "same_architecture_all_datasets": true,
+    "objectives": "existing direct log1p quantity MSE plus existing legacy clamped time loss; no raw auxiliary loss or new quantity head",
+    "selection": "earliest strict finite validation raw-RMSE minimum; RMSE,MAE,body,tail,time all at each arm's same selected checkpoint",
+    "endpoints": "selected and epoch120, plus last30 RMSE mean/sampleSD; no mixing optimal checkpoints",
+    "engineering_gate_source": "paper/contracts/observed_slot_parallel_execution_v2.json#/acceptance",
+    "inherited_gates": {
+      "raw_rmse_ratio_strictly_less_than": 1,
+      "mae_ratio_max": 1.01,
+      "body_mae_ratio_max": 1.02,
+      "tail_mae_ratio_max": 1.02,
+      "legacy_time_loss_increase_max": 0.01,
+      "last30_rmse_mean_ratio_max": 1.05,
+      "last30_rmse_std_ratio_max": 1.05
+    },
+    "mechanism_claim": "Candidate must improve raw RMSE over the same-event control with the same guard criteria before attributing gain to predecessor-successor association. Gain over B alone only supports adding this module.",
+    "later_paper_evidence": "component controls, measured compute, shared-head benchmark comparison and3seeds; final fixed model only then separately authorized held-out; current reused validation remains exploratory",
+    "gpu_contract": "not created or approved by this design; future contract fixes exact source/runtime/server assignments/resources/deadline and authorization"
+  },
+  "cost": {
+    "full_query_implementation": "O(B*L*H*r) for projections plus O(B*L^2*r) attention and O(B*L^2*2) value read; ordinary attention storage O(B*L^2)",
+    "single_fp32_score_matrix_MiB": {
+      "batch128_length64": 2,
+      "batch128_length256": 32
+    },
+    "memory_limit_of_estimate": "score matrix only; not total peak memory or autograd cost",
+    "fast_final_query_path": "deferred; keeping one full causal API initially reduces equivalence risk",
+    "measured_cpu_model_cost_available": false,
+    "measured_cuda_cost_available": false,
+    "training_hours_estimate": null
+  },
+  "implementation_map": {
+    "planned_model": "models/TPPs/CountAwareTitanSuccessorMemory.py",
+    "integration": [
+      "models/TPPs/CountAwareFactory.py",
+      "paper/scripts/count_aware_tpp_backbone/constants.py",
+      "paper/scripts/run_count_aware_tpp_backbone_control.py"
+    ],
+    "boundary": "new explicit subclass encode_task_states; original default titantpp behavior unchanged",
+    "runtime_methods": "existing forward/output/head contracts; no online inference optimizer",
+    "future_checkpoint_identity": "separate candidate/control IDs and association mode, rank/normalization/feature/adjacency/fusion/source digests; reject relabeling"
+  },
+  "verification_required_before_gpu": [
+    "independent completed-pair index oracle; padding skip and no bridging unobserved valid tokens",
+    "empty-row finite behavior; invalid query and zero/one observation",
+    "fixed latent keys+value sets+mask with pairing permutation changes nonzero read; do not use U=0 output as pair-dependence evidence",
+    "actual runner target dt/quantity future invariance under nonzero U, not loss invariance when target itself changes",
+    "initial B prediction/objective/shared preclip gradient and RNG equality",
+    "nondegenerate U then Q/K gradient flow; global clipping norm and AdamW update differences explicit",
+    "same init, batches, selector strict ties, inactive metadata rejection, optimizer/RNG/loader/selector save-restore",
+    "batch/sample/call isolation and exact streaming-prefix versus full causal reference",
+    "CPU actual model forward/backward cost followed by separately authorized CUDA qualification; no hypothetical runtime estimate"
+  ],
+  "evidence": {
+    "observed_slot_snapshot": "search_artifacts/observed_slot_memory_parallel_20260914_v2/monitor/20260914T190641_KST/status_summary.json",
+    "observed_slot_design": "paper/contracts/hard_lmm_observed_slot_memory_v1.json",
+    "dual_timescale_contract": "paper/results/final_backbone_and_baselines_20260909/contracts/hard_lmm_dual_timescale_v1.json",
+    "dual_timescale_complete_results": "paper/results/dual_timescale_intermittent_quantity_extension_20260910/integration/comparison.json",
+    "source_code": [
+      "models/TPPs/CountAwareTPP.py",
+      "models/TPPs/CountAwareTitanSlotMemory.py",
+      "models/Titan/common/memory.py",
+      "paper/scripts/count_aware_tpp_backbone/core.py"
+    ],
+    "bounds": "Previous failure mechanisms not established; differing historical selectors/budgets/reference B are not pooled numerically."
+  },
+  "literature": [
+    {
+      "title": "In-context Learning and Induction Heads",
+      "url": "https://arxiv.org/abs/2209.11895",
+      "role": "prior art for predecessor-match then successor-retrieval; LM findings are not evidence of TPP improvement"
+    },
+    {
+      "title": "Gated Delta Networks: Improving Mamba2 with Delta Rule",
+      "url": "https://arxiv.org/html/2412.06464v3",
+      "role": "alternative compression/update tradeoff; no novelty claim for overwrite"
+    },
+    {
+      "title": "Titans: Learning to Memorize at Test Time",
+      "url": "https://arxiv.org/html/2501.00663v1",
+      "role": "prior associative-memory architectures; project's B static prototypes differ from paper's neural memory"
+    }
+  ],
+  "review": {
+    "reviewer": "successor_memory_design_review",
+    "role_config": "gpt-6-astra/high",
+    "status": "design_ready_with_refinements_incorporated",
+    "refinements": [
+      "remove redundant value factorization",
+      "explicit valid adjacency and target masking",
+      "affine-free LN/bias-free projections",
+      "preclip initialization guarantee only",
+      "fixed-latent association oracle",
+      "control includes same currently available outcome values"
+    ]
+  },
+  "completion": {
+    "design_complete": true,
+    "mathematical_sanity_checks": "passed_8_groups_stdlib_only_not_actual_model_tests",
+    "model_code_implemented": false,
+    "actual_model_tests_passed": false,
+    "new_gpu_execution_started": false,
+    "performance_qualified": false
+  },
+  "output_policy": {
+    "user_delivery": "Korean text in current session",
+    "machine_contract": "JSON only",
+    "webapp_html_markdown_report": false
+  }
+}

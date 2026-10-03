@@ -1,0 +1,932 @@
+{
+  "schema": "titantpp_followup_validation_scientific_contract_v1",
+  "contract_id": "titantpp_followup_5080_20260927_v1",
+  "status": "scientific_design_frozen_execution_preparation_pending",
+  "created_at_utc": "2026-09-27T14:40:48.703707+00:00",
+  "evaluation_scope": "validation_only",
+  "approved_for_gpu_execution": false,
+  "launch_enabled": false,
+  "objective": "Test whether constrained level/change residuals help next-event quantity prediction beyond an equal-parameter history MLP, characterize memory contribution, and compare bounded-budget modern/event-quantity adapters without claiming unconditional SOTA.",
+  "current_request_scope": [
+    "read-only evidence and 5080 metadata verification",
+    "scientific comparison design",
+    "run-count and cost-cap contract",
+    "held-out historical usage provenance metadata only"
+  ],
+  "repository": {
+    "local_root": "/Users/igwanhyeong/PycharmProjects/paper_research",
+    "branch": "codex/hard-lmm-causal-qkv",
+    "head": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+    "working_tree": "dirty pre-existing work preserved; HEAD alone is not the experiment source revision",
+    "baseline_evidence_sha256": {
+      "models/TPPs/CountAwareTitanMultiLagDetail.py": "4bcbecdadf921df21a4e7fb379962eb4ecec2cfeb2f8ff1edccbb6b418807eae",
+      "models/TPPs/CountAwareTPP.py": "d8439b3e86f5304471d0e70265ab3da9c362b2a1f7fd12d423ed8a3d33f52a2a",
+      "models/Titan/common/memory.py": "405ccbfa900b877250c6f1c5a4c6652f46e0a500303cea35a5c6cc7cac02af36",
+      "paper/contracts/local_detail_benchmark_replication_v1.json": "bffbd3645216a8d4c312319e44ea1c6c9538a2bda8d78a8094ce2c7a895fbec8",
+      "paper/contracts/local_detail_instacart_remaining_recovery_v1.json": "0676a79a566f2abff763638185ddb19e1a4d0e7a329edb9aed6e981892c9f1b1",
+      "reports/titantpp_contribution_scope_20260927_v1/research_decision.md": "976fb2996da1b66a5d44fe8b8a6d7254ac5be7d22477118b8603dfd285a78b16",
+      "reports/titantpp_contribution_scope_20260927_v1/source_register.md": "41c4800fa7d211c3cd2a73955f9e967695efff3b4ed36e92c9c1185e87f38f4d",
+      "reports/local_detail_3seed_final_20260927_v1/final_report.md": "25e2888ce1e3e4d18f3024e24f2a3238d3b8ca60856fbc3b3cf844ec32507ce1",
+      "reports/local_detail_3seed_final_20260927_v1/terminal_audit.json": "8e0b86ad828e9af0e5792d8c009566563faf0f3b1df44e8948f8cff68330ea8f",
+      "reports/local_detail_3seed_final_20260927_v1/condition_results.json": "24b280639842a7522683323874adf96ac20f96b023f8358808dd10af2006b97b",
+      "reports/local_detail_3seed_final_20260927_v1/three_seed_summary.json": "7cc0b50b41e64ad68064cadfa75c3ee421282a62bdc2ef90ebfd8f1028651009"
+    },
+    "future_adapter_source_closure_sha256": null,
+    "dispatch_sha256": null
+  },
+  "host": {
+    "ssh_alias": "5080",
+    "gpu_index": 0,
+    "gpu_uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+    "other_hosts_allowed": false,
+    "proposed_root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_followup_5080_20260927_v1",
+    "proposed_source_root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_followup_5080_20260927_v1/source",
+    "proposed_python": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_followup_5080_20260927_v1/runtime/bin/python3.12",
+    "base_python_observed": "/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python3.12",
+    "proposed_tmux": "titantpp_followup_5080_20260927_v1",
+    "tmux_binary": "/usr/bin/tmux",
+    "new_runtime_policy": "isolated fully locked runtime, never pip install into or redeploy existing ai_env; exact dependency closure finalized in step 3",
+    "expected_core_runtime": {
+      "cuda": "13.0",
+      "cudnn": 91900,
+      "numpy": "2.4.4",
+      "polars": "1.39.3",
+      "torch": "2.11.0+cu130"
+    },
+    "runtime_lock_sha256": null,
+    "environment": {
+      "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+      "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+      "CUDA_VISIBLE_DEVICES": "0",
+      "MKL_NUM_THREADS": "4",
+      "NVIDIA_TF32_OVERRIDE": "0",
+      "OMP_NUM_THREADS": "4",
+      "OPENBLAS_NUM_THREADS": "4",
+      "PYTHONHASHSEED": "per_fit_seed",
+      "XDG_CACHE_HOME": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_followup_5080_20260927_v1/cache"
+    },
+    "current_snapshot": "reports/titantpp_followup_contract_5080_20260927_v1/host_snapshot_5080_verified.json",
+    "snapshot_is_reservation": false
+  },
+  "datasets": [
+    {
+      "additional_history_boundaries": [
+        64,
+        128
+      ],
+      "dataset_id": "yellow_trip_hourly",
+      "history_boundaries": [
+        64,
+        128
+      ],
+      "inherited_data_identity": {
+        "data": {
+          "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+          "sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46"
+        },
+        "populations": {
+          "train": {
+            "target_count": 38393,
+            "target_identity_sha256": "fc6453af5a9a34c93dd3f299cd545c9ab946be11752ee001f38055e52cc9e637",
+            "target_quantity_sha256": "bbabe4e040831f05bc96680afdb4c45a1856673e418bdd1db9495cda3f693680"
+          },
+          "validation": {
+            "target_count": 8268,
+            "target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+            "target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd"
+          }
+        },
+        "split_manifest": {
+          "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/new_york_taxi/yellow_trip_hourly_split_manifest.json",
+          "sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85"
+        }
+      },
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 168,
+        "max_seq_len": 256,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "model": {
+        "hidden_dim": 64,
+        "lambda_log_qty": 1.0,
+        "lambda_tail": 0.0,
+        "quantity_variant": "count_only_log_regression",
+        "time_head_lr_multiplier": 1.0,
+        "time_head_mode": "heteroscedastic_lognormal_duration",
+        "time_initial_location": 0.2357508697949888,
+        "time_initial_scale": 0.5898045019331329,
+        "time_observation_contract": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "hour"
+        },
+        "time_scale": 1.0,
+        "time_sigma_floor": 0.001
+      },
+      "quantity_boundaries_all_train_rows": [
+        7,
+        686,
+        1562,
+        3449
+      ],
+      "statistics": {
+        "all_train_quantity_sha256": "b6090245dd4b69e5b23bfde51a64bbecea3030245760ddd355b333714fdeab53",
+        "initialization_policy": "use original frozen B mu/std after verifying recalculation; no refitted replacement",
+        "raw_scale": 685.6777796861172,
+        "recomputation_absolute_tolerance": 1e-12,
+        "train_log_mean": 2.837734592747447,
+        "train_log_std": 2.1840596349132664
+      },
+      "steps_per_epoch": 300,
+      "time_statistics": {
+        "expected_train_target_dt_sha256": "3fb47361f8fa9a9edcf01cbb8d95cd0ee105024f1f0cd614f2d2fbe292d3f9aa",
+        "expected_train_targets": 38393,
+        "expected_validation_target_dt_sha256": "8a008bf3b74cd4e39128908cc358c1d482f4a499388234461c0c772f84c222bf",
+        "expected_validation_targets": 8268,
+        "recompute_absolute_tolerance": 1e-12,
+        "recompute_before_training": true,
+        "train_log_scaled_mean": 0.2357508697949888,
+        "train_log_scaled_std": 0.5898045019331329,
+        "train_time_scale": 1.0
+      },
+      "max_observed_history_events": 255,
+      "evaluation_split": "validation",
+      "max_optimizer_steps_per_fresh_fit": 90000,
+      "historical_fixed_recipe_optimizer": {
+        "grad_clip": 1.0,
+        "lr": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.01
+      }
+    },
+    {
+      "additional_history_boundaries": [
+        64,
+        128
+      ],
+      "dataset_id": "intermittent_frozen_5000",
+      "history_boundaries": [
+        64,
+        128
+      ],
+      "inherited_data_identity": {
+        "data": {
+          "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+          "sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f"
+        },
+        "populations": {
+          "train": {
+            "target_count": 393824,
+            "target_identity_sha256": "fb8737489bc18e528adc322e2e55e26fcc5793aa6ff8021d93ceac98d7768aed",
+            "target_quantity_sha256": "c4a9c3721d3861c190e81abe35156488f545b00c8ddbbed4022a9a82a4b3a215"
+          },
+          "validation": {
+            "target_count": 86285,
+            "target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+            "target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385"
+          }
+        },
+        "split_manifest": {
+          "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/intermittent_v2/intermittent_frozen_5000_split_manifest.json",
+          "sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04"
+        }
+      },
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 520,
+        "max_seq_len": 256,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "model": {
+        "hidden_dim": 64,
+        "lambda_log_qty": 1.0,
+        "lambda_tail": 0.0,
+        "quantity_variant": "count_only_log_regression",
+        "time_head_lr_multiplier": 1.0,
+        "time_head_mode": "heteroscedastic_lognormal_duration",
+        "time_initial_location": -0.21389036220110552,
+        "time_initial_scale": 0.6816420108412236,
+        "time_observation_contract": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "week"
+        },
+        "time_scale": 3.0,
+        "time_sigma_floor": 0.001
+      },
+      "quantity_boundaries_all_train_rows": [
+        2,
+        31,
+        46,
+        187
+      ],
+      "statistics": {
+        "all_train_quantity_sha256": "785526474507af840bc5a7e7f4baef1322c4e61b9d0cfa24be109f25efb55be5",
+        "initialization_policy": "use original frozen B mu/std after verifying recalculation; no refitted replacement",
+        "raw_scale": 36.878211774114746,
+        "recomputation_absolute_tolerance": 1e-12,
+        "train_log_mean": 1.821123902075507,
+        "train_log_std": 1.2853917394914367
+      },
+      "steps_per_epoch": 3077,
+      "time_statistics": {
+        "expected_train_target_dt_sha256": "2f4a67cff3706611e45a1855a50efa21aa7e75b1b9dda05c6bae04fdbbe3e684",
+        "expected_train_targets": 393824,
+        "expected_validation_target_dt_sha256": "5ac9547d2fcbcb8f9e5394a88fc379d1c895683db8ea96b7ed6009d374eddea7",
+        "expected_validation_targets": 86285,
+        "recompute_absolute_tolerance": 1e-12,
+        "recompute_before_training": true,
+        "train_log_scaled_mean": -0.21389036220110552,
+        "train_log_scaled_std": 0.6816420108412236,
+        "train_time_scale": 3.0
+      },
+      "max_observed_history_events": 255,
+      "evaluation_split": "validation",
+      "max_optimizer_steps_per_fresh_fit": 923100,
+      "historical_fixed_recipe_optimizer": {
+        "grad_clip": 1.0,
+        "lr": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.01
+      }
+    },
+    {
+      "additional_history_boundaries": [
+        1,
+        3,
+        7,
+        15,
+        31
+      ],
+      "dataset_id": "insta_market_basket",
+      "history_boundaries": [
+        64,
+        128
+      ],
+      "inherited_data_identity": {
+        "data": {
+          "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/insta_market_basket/instacart_marked_target_with_split.parquet",
+          "sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2"
+        },
+        "populations": {
+          "train": {
+            "target_count": 1991192,
+            "target_identity_sha256": "c361f5e9904c25f18c91007f6e1209518a02fb755799e81c8300ee759b2a1210",
+            "target_quantity_sha256": "07e98693d5ac26caeaeb3c60d6d31fad21ab8f1e40ac649f231ac299963817d8"
+          },
+          "validation": {
+            "target_count": 503733,
+            "target_identity_sha256": "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8",
+            "target_quantity_sha256": "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184"
+          }
+        },
+        "split_manifest": {
+          "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/insta_market_basket/instacart_marked_target_split_manifest.json",
+          "sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d"
+        }
+      },
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 52,
+        "max_seq_len": 64,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "model": {
+        "hidden_dim": 64,
+        "lambda_log_qty": 1.0,
+        "lambda_tail": 0.0,
+        "quantity_variant": "count_only_log_regression",
+        "time_head_lr_multiplier": 1.0,
+        "time_head_mode": "heteroscedastic_lognormal_duration",
+        "time_initial_location": 0.07012359239272,
+        "time_initial_scale": 0.885319372563578,
+        "time_observation_contract": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": 30,
+          "unit": "day"
+        },
+        "time_scale": 7.0,
+        "time_sigma_floor": 0.001
+      },
+      "quantity_boundaries_all_train_rows": [
+        8,
+        20,
+        25,
+        35
+      ],
+      "statistics": {
+        "all_train_quantity_sha256": "e6e224976a591f6f9cc90d58e6c70153f20d2fada9903638068d5fb4ac94b92f",
+        "initialization_policy": "use original frozen B mu/std after verifying recalculation; no refitted replacement",
+        "raw_scale": 12.620737951818787,
+        "recomputation_absolute_tolerance": 1e-12,
+        "train_log_mean": 2.185918026533729,
+        "train_log_std": 0.6878440815807482
+      },
+      "steps_per_epoch": 15557,
+      "time_statistics": {
+        "expected_train_target_dt_sha256": "a331a7f7f4788aea9bca26e604c85b25179a33b44bac1a72e301bf3d91edade4",
+        "expected_train_targets": 1991192,
+        "expected_validation_target_dt_sha256": "422ab4522ae761662cd03c7c2cc8df54d38f9fb9185eb482ed95b77366f1c34d",
+        "expected_validation_targets": 503733,
+        "recompute_absolute_tolerance": 1e-12,
+        "recompute_before_training": true,
+        "train_log_scaled_mean": 0.07012359239272,
+        "train_log_scaled_std": 0.885319372563578,
+        "train_time_scale": 7.0
+      },
+      "max_observed_history_events": 63,
+      "evaluation_split": "validation",
+      "max_optimizer_steps_per_fresh_fit": 4667100,
+      "historical_fixed_recipe_optimizer": {
+        "grad_clip": 1.0,
+        "lr": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.01
+      }
+    }
+  ],
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "models": {
+    "B": {
+      "label": "TitanTPP B",
+      "role": "fixed-recipe mechanism anchor and bounded-tuning benchmark reference",
+      "historical_model": "titantpp",
+      "family": "common_head",
+      "hidden_dim": 64,
+      "encoder_layers": 2,
+      "persistent_memory_slots": 16,
+      "static_lmm_slots": 64,
+      "lmm_topk": 4,
+      "history_residual": false,
+      "extra_residual_parameters": 0
+    },
+    "Full": {
+      "label": "TitanTPP local level/change residual",
+      "role": "candidate",
+      "historical_model": "titantpp_local_detail",
+      "family": "common_head",
+      "hidden_dim": 64,
+      "encoder_layers": 2,
+      "persistent_memory_slots": 16,
+      "static_lmm_slots": 64,
+      "lmm_topk": 4,
+      "history_residual": true,
+      "branch_count": 8,
+      "rank": 4,
+      "lags": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "availability_thresholds": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        32,
+        64,
+        128
+      ],
+      "divisor": 8,
+      "formula": "h + sum_b a_b U_b (GELU(L_b*(h+hprev)/2) + GELU(D_b*(h-hprev)))/8",
+      "bias": false,
+      "extra_residual_parameters": 6144
+    },
+    "MLP": {
+      "label": "equal-parameter adjacent-history MLP",
+      "role": "parameter-capacity control",
+      "family": "common_head",
+      "inherits": "Full",
+      "replacement": "h + sum_b a_b V_b GELU(W_b concat(h,hprev))/8",
+      "width_per_branch": 4,
+      "bias": false,
+      "W_shape": [
+        4,
+        128
+      ],
+      "V_shape": [
+        64,
+        4
+      ],
+      "extra_residual_parameters": 6144,
+      "flops_matched": false,
+      "note": "Full has 2r activations and shared output U; MLP has r activations. Report actual cost; parameter matching alone is not FLOP matching."
+    },
+    "Level": {
+      "label": "level only",
+      "role": "remove change path",
+      "family": "common_head",
+      "inherits": "Full",
+      "formula": "h + sum_b a_b U_b GELU(L_b*(h+hprev)/2)/8",
+      "rank": 4,
+      "extra_residual_parameters": 4096,
+      "dummy_parameters": false
+    },
+    "Change": {
+      "label": "change only",
+      "role": "remove level path",
+      "family": "common_head",
+      "inherits": "Full",
+      "formula": "h + sum_b a_b U_b GELU(D_b*(h-hprev))/8",
+      "rank": 4,
+      "extra_residual_parameters": 4096,
+      "dummy_parameters": false
+    },
+    "NoStaticLMM": {
+      "label": "local residual without static Hard-LMM",
+      "role": "memory contribution conditional on the residual being present",
+      "family": "common_head",
+      "inherits": "Full",
+      "static_lmm_slots": 0,
+      "removed": "static prototype top-k retrieval module only; its forward becomes identity",
+      "persistent_memory_slots": 16,
+      "extra_residual_parameters": 6144,
+      "dead_trainable_parameters": false,
+      "interaction_identified": false,
+      "removed_static_parameters": 4096
+    },
+    "S2P2": {
+      "label": "S2P2-matched-head-event",
+      "role": "modern state-space encoder comparator under shared heads",
+      "family": "common_head",
+      "upstream": "s2p2",
+      "config": {
+        "hidden_dim": 64,
+        "layers": 2,
+        "state_dim_P": 16,
+        "dropout": 0.1,
+        "activation": "gelu",
+        "parallel_scan": true,
+        "pre_norm": false,
+        "post_norm": true,
+        "relative_time": true,
+        "complex_state": true,
+        "int_forward_variant": false,
+        "int_backward_variant": true
+      },
+      "input": "linear projection of past [log1p(dt),log1p(q)]; replace categorical mark embedding; mask-aware causal scan",
+      "prediction_state": "right-limit state immediately after last observed event; never evolve to ground-truth next time",
+      "original_recipe_reproduction": false
+    },
+    "FlexTPP": {
+      "label": "FlexTPP-native-family-event",
+      "role": "joint attribute distribution comparator with observed-time adaptation",
+      "family": "native_family_adapter",
+      "upstream": "flextpp",
+      "config": {
+        "dim_m": 64,
+        "dim_k": 16,
+        "n_head": 4,
+        "dim_ff": 256,
+        "depth": 2,
+        "normalize": true,
+        "non_linearity": "GELU",
+        "dropout": 0.1,
+        "monotonic_bins": 128,
+        "param_nets_n_hidden_layer": 1,
+        "param_nets_hidden_dim_factor": 2,
+        "max_num_classes": 2,
+        "conditioning_network": null
+      },
+      "attribute_order": [
+        "time",
+        "quantity"
+      ],
+      "input": "past event pairs flattened into causal attribute tokens; observed-history masks; no categorical IDs; attribute/event positions only",
+      "positive_transforms": {
+        "time": "dt = time_scale * exp(z_t)",
+        "quantity": "q_cont + 1 = raw_scale * softplus(z_q); observed q>=0 remains unchanged; decode q_hat samples=max(0,q_cont) before raw averaging"
+      },
+      "loss": "recorded positive-integer time bin NLL + conditional continuous raw-quantity density NLL given recorded target dt; density at q uses q+1 positive transform and its Jacobian; final target pair only",
+      "point_forecast": "mean raw quantity from 256 fixed scrambled Sobol ancestral (u_t,u_q) pairs; sample latent dt, apply recorded-time round/clamp/top-code, then sample conditional q; never insert true next dt",
+      "quadrature_rng": "SHA256(dataset id, target identity, fit seed, constant flex_quadrature_v1); independent of epoch/config/checkpoint",
+      "quadrature_chunk_pairs": 16,
+      "diagnostic": "selected checkpoint only: compare 256 vs 512 pairs on first min(4096,Nval) canonical targets; relative raw-RMSE difference <=0.001; otherwise numerical-evaluation failure, no automatic decoder change",
+      "training_time_mass": "CDF bin integration with fixed observation map, not continuous density substitution",
+      "original_recipe_reproduction": false,
+      "implementation_gate": "verify flow CDF/inverse-CDF, positivity, Jacobians, censoring, masks and reference equality; unavailable API requires faithful tested adapter, never silently substitute another distribution",
+      "quantity_support_note": "Continuous density has q_cont > -1; +1 shift supports observed zero quantities without data clipping. Point decoder clips negative generated q_cont to 0 before averaging. Native continuous density is diagnostic, not a discrete count PMF."
+    },
+    "TimeMixer": {
+      "label": "TimeMixer-event quantity forecast",
+      "role": "quantity-specialist comparator on the same event targets",
+      "family": "quantity_only_adapter",
+      "upstream": "timemixer",
+      "config": {
+        "task_name": "short_term_forecast",
+        "d_model": 64,
+        "d_ff": 128,
+        "e_layers": 2,
+        "dropout": 0.1,
+        "moving_avg": 25,
+        "down_sampling_layers": 2,
+        "down_sampling_window": 2,
+        "down_sampling_method": "avg",
+        "channel_independence": 0,
+        "decomp_method": "moving_avg",
+        "use_norm": true,
+        "pred_len": 1,
+        "input_channels": 2,
+        "output_channels": 1,
+        "future_temporal_feature": false
+      },
+      "input": "past [dt/time_scale, q/raw_scale]; event-index sequence; left pad to 256/64 from the same 255/63 observed events; padding-aware normalization, pooling and decomposition",
+      "quantity_head": "q_hat=raw_scale*softplus(output); raw_scale from frozen train statistics",
+      "loss": "mean((q_hat-q)/raw_scale)^2 on the one target",
+      "time_metrics": "not_applicable; no artificial time head",
+      "original_recipe_reproduction": false,
+      "claim_limit": "not a regular-calendar multi-horizon demand benchmark; cannot establish full intermittent-demand SOTA"
+    },
+    "DeepRenewal": {
+      "label": "DeepRenewal-PyTorch-event",
+      "role": "mandatory intermittent-event quantity control",
+      "family": "native_family_adapter",
+      "upstream": "deep_renewal",
+      "datasets": [
+        "intermittent_frozen_5000"
+      ],
+      "config": {
+        "num_cells": 64,
+        "num_layers": 2,
+        "dropout_rate": 0.1,
+        "interval_distribution": "1+NegativeBinomial(mu_interval, alpha_interval)",
+        "size_distribution": "1+NegativeBinomial(mu_size, alpha_size)",
+        "dense_bias_init": 5,
+        "alpha_bias_init": 2,
+        "positive_eps": 1e-05
+      },
+      "input": "past positive integer (interval,size) pairs; skip padding recurrent updates; same event target population/history",
+      "loss": "sum of shifted-NB interval and size NLL, final target only",
+      "quantity_point": "1 + mu_size, analytic conditional mean",
+      "time_score": "shifted-NB mass on recorded weekly duration",
+      "native_initialization": "pinned MXNet estimator/network initialization translated explicitly; shared dimensions initialized reproducibly, not identical to TitanTPP",
+      "original_recipe_reproduction": false,
+      "implementation_gate": "equation port from MXNet source; verify shifted support, NB moments/log-probability and LSTM gate ordering on synthetic fixtures; no MXNet GPU install",
+      "support_gate": "Before qualification verify every admitted train/validation interval and size is a positive integer. If not, mark fixed DeepRenewal adapter incompatible; do not filter targets or change support without a revised contract."
+    }
+  },
+  "upstream_reference_commits": {
+    "s2p2": {
+      "repo": "UCIDataLab/state_space_point_process",
+      "commit": "c3933240f16a22b43d80d09bda272475526ff24b",
+      "commit_date": "2026-03-03T00:49:03Z"
+    },
+    "flextpp": {
+      "repo": "czi-ai/FlexTPP",
+      "commit": "e2c77088392ae62b75be440fb0cfb33547c046c2",
+      "commit_date": "2026-03-25T23:44:53Z"
+    },
+    "timemixer": {
+      "repo": "kwuking/TimeMixer",
+      "commit": "e24610583b36fdd8c76cc17a8df4e65759a5f460",
+      "commit_date": "2025-10-05T00:30:08Z"
+    },
+    "deep_renewal": {
+      "repo": "awslabs/gluonts",
+      "commit": "889a3df86a89a365880b4bc1488bcf4c039f265e",
+      "commit_date": "2026-07-31T11:26:21Z"
+    }
+  },
+  "shared_input_information": {
+    "available": "only completed observed (duration,quantity) events, their order and availability/padding mask; same frozen lookback and target populations",
+    "forbidden": [
+      "next-event duration as prediction input",
+      "next-event quantity",
+      "category/item/user IDs",
+      "future calendar/weather/known-future covariates",
+      "test rows as history or statistics",
+      "validation gradient updates"
+    ],
+    "validation_history_policy": "strictly causal online observation protocol: earlier validation observations may enter later histories only if the inherited frozen loader does so; identical target-prefix hashes across all adapters; no test segment access",
+    "training_target_scope": "one final target per frozen training window; native all-token training disabled to match target exposure",
+    "same_information_not_same_transform": true
+  },
+  "training": {
+    "maximum_epochs": 300,
+    "minimum_epochs": 40,
+    "patience": 40,
+    "early_stopping": "after completed epoch >= 40 and epoch - earliest_best_epoch >= 40",
+    "batch_size": 128,
+    "drop_last": false,
+    "num_workers": 0,
+    "shuffle_train": true,
+    "shuffle_validation": false,
+    "precision": "float32; no AMP/TF32/torch.compile",
+    "optimizer": "AdamW",
+    "weight_decay": 0.01,
+    "grad_clip_norm": 1.0,
+    "lr_scheduler": "none",
+    "phase_A_lr": 0.001,
+    "phase_B_lr_grids": {
+      "B": [
+        {
+          "id": "c0",
+          "lr": 0.001
+        },
+        {
+          "id": "c1",
+          "lr": 0.0003
+        }
+      ],
+      "Full": [
+        {
+          "id": "c0",
+          "lr": 0.001
+        },
+        {
+          "id": "c1",
+          "lr": 0.0003
+        }
+      ],
+      "S2P2": [
+        {
+          "id": "c0",
+          "lr": 0.001
+        },
+        {
+          "id": "c1",
+          "lr": 0.0003
+        }
+      ],
+      "TimeMixer": [
+        {
+          "id": "c0",
+          "lr": 0.001
+        },
+        {
+          "id": "c1",
+          "lr": 0.0003
+        }
+      ],
+      "DeepRenewal": [
+        {
+          "id": "c0",
+          "lr": 0.001
+        },
+        {
+          "id": "c1",
+          "lr": 0.0003
+        }
+      ],
+      "FlexTPP": [
+        {
+          "id": "c0",
+          "lr": 0.0008
+        },
+        {
+          "id": "c1",
+          "lr": 0.0003
+        }
+      ]
+    },
+    "warm_start": false,
+    "parameter_search": "no architecture, batch, optimizer or seed search beyond enumerated LR candidates",
+    "batch_order": "separate loader RNG per dataset/seed; same canonical target permutations across models/LRs, epoch batch-prefix digest recorded",
+    "initialization": "core shared tensors copied from matching B initial seed state; added residual outputs zero, input projections generated in forked RNG. Native adapters follow documented native-family initialization; do not assert cross-family weight equality.",
+    "common_head": "unchanged CountAwareTPP log-MSE quantity head + recorded positive-integer heteroscedastic lognormal duration head; quantity coefficient 1, tail coefficient 0; use inherited train statistics",
+    "loss_comparability": "only common-head track supports controlled encoder/structure attribution; native-family heads/losses differ and are separately labeled"
+  },
+  "checkpoint_and_evaluation": {
+    "selection": "strict earliest finite minimum validation raw-quantity RMSE at epoch end; same checkpoint for every reported metric",
+    "ties": "earliest epoch; exact LR candidate tie c0 before c1",
+    "endpoints": [
+      "selected_raw_rmse",
+      "last_completed_epoch"
+    ],
+    "replay_each_new_fit": 2,
+    "reuse_equal_endpoint": "evaluate both endpoint roles even if tensor digest is identical; do not claim independent models",
+    "primary_metrics": [
+      "raw_quantity_RMSE",
+      "raw_quantity_MAE"
+    ],
+    "secondary_metrics": [
+      "recorded_positive_integer_time_NLL_when_defined",
+      "train_epochs",
+      "optimizer_steps",
+      "actual_target_exposures",
+      "parameter_count_total_and_active",
+      "seconds_per_completed_epoch",
+      "total_training_wall_seconds",
+      "inference_latency_with_decoder",
+      "GPU_peak_allocated_and_reserved_bytes"
+    ],
+    "time_observation": "positive_integer_round_clamp_v1; first bin [0,1.5), k>=2 bin [k-.5,k+.5), Instacart k=30 bin [29.5,infinity); use per-dataset units/scales",
+    "native_continuous_quantity_nll": "within-model diagnostic only; do not rank against deterministic quantity heads or discrete NB NLL",
+    "time_model_missing": "TimeMixer reports N/A; never use zero or exclude it from quantity table",
+    "time_guardrail": "report Full-reference delta with seed-wise direction; no Pareto/joint-superiority claim if time worsens. A tolerance was not prevalidated, so do not invent a passing margin after results.",
+    "reporting": "3 seed arithmetic mean and sample SD ddof=1 plus every seed; do not pool heterogeneous dataset RMSE into a raw mean; no 3-seed confidence claim from target count",
+    "paired_contrasts": [
+      "Full-B",
+      "Full-MLP",
+      "Full-Level",
+      "Full-Change",
+      "Full-NoStaticLMM"
+    ],
+    "strata": "Frozen train quantity and observed-history boundaries; train-only quartile cuts for target duration, mean of last up-to-8 observed log1p quantities, and absolute difference of last two observed log1p quantities. With <2 history events mark change unavailable, not zero. Compute/hash cuts before first fit; deduplicate ties and show N=0/low-N bins. No test statistics.",
+    "new_strata_on_reused_anchors": "12 selected-checkpoint full-validation bridge passes under identical frozen source; reconcile aggregate metrics and target identities before adding duration strata; do not count bridges as new conditions",
+    "bootstrap": {
+      "replicates": 1000,
+      "rng_seed": 20260927,
+      "Taxi": "circular moving blocks of 168 consecutive validation targets within each oper_part_no, ordered by seq; keep observed entity mix fixed; wrap within same series only",
+      "Intermittent_and_Instacart": "resample whole oper_part_no entities with replacement; keep all validation targets of each selected entity; require at least two clusters or flag uncertainty unavailable",
+      "pairing": "use same resampled targets across every compared model and all three seeds; statistic = arithmetic mean of per-seed RMSE differences",
+      "interval": "2.5/97.5 percentile descriptive sensitivity interval; no p-value, no significance claim, no independent-event resampling; report seed-wise deltas separately",
+      "limitation": "already-used validation; does not establish causal mechanism or final-test generalization; 168 is fixed event-block length, not asserted elapsed-calendar length"
+    },
+    "replay_tolerance": {
+      "raw_metric_absolute": 1e-05,
+      "raw_metric_relative": 1e-06,
+      "population_hash": "exact",
+      "checkpoint_sha": "exact"
+    },
+    "cpu_metric_reference": "FP64 sums for SSE/SAE and sample SD; reconcile partitions to global sums",
+    "cost_measurement_protocol": {
+      "timing_cells": "all 28 model/dataset shapes, use phase-A c0 seed42 for six mechanism models and selected phase-B seed42 for external models; no best-speed seed selection",
+      "inputs": "first min(1024,Nval) targets in canonical order; same observed prefixes, batch sizes 1 and 128; reuse admitted validation, no test",
+      "iterations": {
+        "warmup": 10,
+        "measured": 50
+      },
+      "timing": "torch.cuda.synchronize before/after timed prediction; median and p95; reset and capture peak allocated/reserved memory; report transfers/collation excluded and optional end-to-end separately",
+      "include": "all preprocessing on GPU and full 256-pair Flex decoder needed for prediction, not encoder only",
+      "training": "report complete epoch wall times including validation separately from optimizer-only throughput; every final epoch/stop/step/exposure logged",
+      "flops": "record supported operator FLOPs and omissions; do not invent an exact whole-model FLOP count for unsupported flow/scan ops",
+      "bill_to": "24-hour common evaluation budget"
+    }
+  },
+  "mechanism_claim_limits": {
+    "same_parameter_MLP": "required; if equivalent/better at lower cost, specific level/change structural-advantage claim unsupported",
+    "invertible_coordinate_change": "level/change uses no additional information beyond the adjacent pair; value must come from constrained nonlinear parameterization, not information creation",
+    "level_change_single_path": "capacity differs; reduced performance alone does not prove semantic necessity independent of capacity",
+    "memory": "Full vs NoStaticLMM identifies conditional necessity/cost only, not interaction synergy",
+    "deferred_not_authorized": [
+      "both-residual-and-LMM-removed factorial arm",
+      "history-threshold control",
+      "new backbone search",
+      "additional datasets/seeds",
+      "calendar-horizon demand forecasting",
+      "held-out evaluation"
+    ]
+  },
+  "reuse_rules": {
+    "eligible": 12,
+    "source": "reports/local_detail_3seed_final_20260927_v1/condition_results.json",
+    "requirements": [
+      "same 5080 host and data identity",
+      "same heads/loss/optimizer/batch-order/init recipe",
+      "historical frozen source closure retained",
+      "exact checkpoint digests and selected/last exposure audit",
+      "no silent re-evaluation with current changed defaults",
+      "Distinguish tensor state_sha256 from serialized checkpoint file SHA; resolve and verify both before bridge. Current matrix carries historical state digests, not a claim that serialized checkpoint bytes were read this turn."
+    ],
+    "on_mismatch": "mark bridge/reuse invalid and stop dependent comparisons; no automatic replacement training or extra budget",
+    "instacart": "six B/Full conditions newly train on 5080; original 5090 outcomes retained as prior context and never overwritten/pooled into the new same-host average"
+  },
+  "tuning_rules": {
+    "candidate_seed": 42,
+    "confirmation_seeds": [
+      52,
+      62
+    ],
+    "number_candidates_per_cell": 2,
+    "cells": 16,
+    "selection_before_confirmation": true,
+    "confirmation_does_not_retune": true,
+    "all_trials_and_failures_retained": true,
+    "both_candidates_normal_completion_required": true,
+    "selected_seed42_reused": true,
+    "common_anchor_c0_reused": true,
+    "scope_of_fairness": "equal new two-LR candidate grid per cell under stated architecture; not equal lifetime researcher tuning budget or native published SOTA reproduction; seed42 is tuning data and three-seed validation summary is descriptive"
+  },
+  "run_matrix": {
+    "path": "reports/titantpp_followup_contract_5080_20260927_v1/run_matrix.json",
+    "sha256": "e96093e4b2101a1599d2e9b68832bd9320f40a7d13f74cad6ca5fa385ff3c2cb",
+    "counts": {
+      "mechanism_report_conditions": 54,
+      "historical_reused_fits": 12,
+      "historical_reused_endpoint_records": 24,
+      "new_mechanism_fits": 42,
+      "tuning_cells": 16,
+      "logical_seed42_tuning_candidates": 32,
+      "seed42_candidates_reused_from_phase_A": 6,
+      "new_seed42_tuning_fits": 26,
+      "confirmation_slots": 32,
+      "always_new_confirmation_fits": 20,
+      "conditional_confirmation_fits": 12,
+      "total_new_fits_if_all_jobs_complete_min": 88,
+      "total_new_fits_if_all_jobs_complete_max": 100,
+      "new_primary_endpoint_replays_min": 176,
+      "new_primary_endpoint_replays_max": 200,
+      "final_benchmark_report_conditions": 48,
+      "maximum_unique_trained_conditions_including_12_historical": 112,
+      "minimum_unique_trained_conditions_including_12_historical": 100,
+      "flex_selected_subset_decoder_diagnostic_passes": 12,
+      "historical_bridge_full_validation_passes": 12,
+      "maximum_new_full_validation_endpoint_passes_including_bridges": 212,
+      "synthetic_qualification_shape_cells": 28,
+      "synthetic_updates_per_cell": 60,
+      "maximum_synthetic_updates": 1680,
+      "note": "These are complete-plan counts, not promised completions under wall/cost caps. Epoch validation and latency microbenchmarks are separately logged, not counted as endpoint replays. Final table conditions overlap, so 54+48 is not a count of unique fits."
+    }
+  },
+  "cost_contract": {
+    "path": "reports/titantpp_followup_contract_5080_20260927_v1/budget.json",
+    "sha256": "508b6a9b91f35ee016c00ea10305945281022886b44661eeee14fb136206704e",
+    "total_gpu_process_wall_hours_cap": 480,
+    "elapsed_hours_cap": 720,
+    "completion_guaranteed": false
+  },
+  "heldout_provenance": {
+    "path": "reports/titantpp_followup_contract_5080_20260927_v1/heldout_provenance_audit.json",
+    "sha256": "caf4a185c740896d5927cc08dfab17bb70e2ceb5e3a4bb186649a53cc8369207",
+    "test_evaluation_allowed": false,
+    "untouched_test_status": "not established; historical generated test artifact paths exist, especially same manifest paths for Taxi/Instacart; exact historical bytes and use in decisions unconfirmed",
+    "current_step_model_test_performance_opened": false,
+    "metadata_preview_limitation": "one initial split-manifest preview exposed aggregate target-distribution fields; excluded from choices, later reads allowlisted; no test prediction/metric files opened",
+    "future_test_gate": "separate provenance and final-test contract; seek genuinely unused later/external data if necessary; no moving old test rows into validation"
+  },
+  "failure_policy": {
+    "fresh_process_per_fit": true,
+    "resume": false,
+    "retry": false,
+    "clear_claims": false,
+    "auto_model_substitution": false,
+    "failed_seed_exclusion": false,
+    "loss_nonfinite_or_oom": "capture error and stop that cell; do not shrink batch/change architecture; independent prelisted cells can run within fixed caps",
+    "contract_data_or_runtime_mismatch": "stop entire dispatch before further fits",
+    "stall": "stack after 300s without completed batch/eval progress; terminate owned process after 1800s",
+    "checkpoint_replay_or_decoder_failure": "preserve trained model but mark evaluation invalid; no performance pass",
+    "SSH_failure": "unknown status; inspect owned claim/tmux/PID; never infer failure or relaunch from missing response"
+  },
+  "launch_gates": [
+    {
+      "id": "implemented_adapters_and_frozen_source_closure",
+      "status": "pending"
+    },
+    {
+      "id": "exact_isolated_runtime_wheels_and_license_inventory",
+      "status": "pending"
+    },
+    {
+      "id": "synthetic_CPU_leakage_padding_initialization_loss_and_checkpoint_tests",
+      "status": "pending"
+    },
+    {
+      "id": "train_validation_support_and_stratum_cut_hashes_without_test_materialization",
+      "status": "pending"
+    },
+    {
+      "id": "12_historical_lineage_and_checkpoint_availability_checks",
+      "status": "pending"
+    },
+    {
+      "id": "exact_dispatch_hash_and_resource_watchdog_tests",
+      "status": "pending"
+    },
+    {
+      "id": "concrete_GPU_execution_permit_for_this_contract_only",
+      "status": "pending"
+    },
+    {
+      "id": "one_time_5080_CUDA_qualification_under_that_permit",
+      "status": "pending"
+    }
+  ],
+  "prohibited_now": [
+    "GPU training or qualification",
+    "remote package installation/deployment",
+    "new tmux dispatch",
+    "changing previous contracts/artifacts",
+    "held-out predictions/scores",
+    "commit/push/MR",
+    "external publication"
+  ],
+  "audit_outputs": [
+    "per_fit_status_history_selected_last_exposure_and_batch_prefixes",
+    "all_LR_trials_and_configuration_selection_receipts",
+    "source_runtime_data_checkpoint_SHA_lineage",
+    "all_conditions_including_failed_and_unrun",
+    "paired_3seed_means_sample_SD_and_counterexample_strata",
+    "separate_execution_integrity_and_scientific_claim_verdicts"
+  ]
+}

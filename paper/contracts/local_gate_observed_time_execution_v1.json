@@ -1,0 +1,719 @@
+{
+  "acceptance": {
+    "body_mae_ratio_max": 1.02,
+    "each_nonempty_middle_bin_mae_and_rmse_ratio_max": 1.02,
+    "last30_rmse_mean_ratio_max": 1.05,
+    "last30_rmse_sample_sd_ratio_max": 1.05,
+    "overall_mae_ratio_max": 1.01,
+    "overall_raw_rmse_ratio_strictly_less_than": 1.0,
+    "recorded_time_nll_increase_max": 0.01,
+    "tail_mae_ratio_max": 1.02,
+    "tail_rmse_ratio_strictly_less_than": 1.0
+  },
+  "approval_required": true,
+  "approved": false,
+  "architecture": {
+    "additional_gate_parameters": [
+      3,
+      5
+    ],
+    "availability_lags": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64,
+      128
+    ],
+    "gate": "2sigmoid",
+    "hidden_dim": 64,
+    "initial_multiplier": 1.0,
+    "local_lags": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "rank": 4,
+    "residual_divisor": 8
+  },
+  "arms": [
+    "titantpp",
+    "titantpp_local_time_gate",
+    "titantpp_local_quantity_gate"
+  ],
+  "comparison": {
+    "primary": "quantity_gate versus time_gate, exact2-parameter difference",
+    "reference_bridge": "same frozen data/settings and current source vs original source CPU initialization/forward/loss/preclip gradients/next optimizer update/RNG; historical wall-time not isolated",
+    "scope": "single_seed_validation_exploration",
+    "secondary": "same-host audited B and ungated local references; actual batch exposure must match",
+    "selector": "strict earliest validation raw-RMSE minimum; all selected metrics same checkpoint"
+  },
+  "cost_gates": {
+    "device_memory_fraction_max": 0.8,
+    "median_cuda_step_ratio_max": 1.5,
+    "parameter_ratio_max": 1.1,
+    "peak_cuda_allocated_ratio_max": 1.25
+  },
+  "datasets": [
+    {
+      "additional_history_boundaries": [
+        64,
+        128
+      ],
+      "dataset_id": "yellow_trip_hourly",
+      "epochs": 120,
+      "expected_global_steps": 36000,
+      "history_boundaries": [
+        64,
+        128
+      ],
+      "inherited_data_identity": {
+        "data": {
+          "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+          "sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46"
+        },
+        "populations": {
+          "train": {
+            "target_count": 38393,
+            "target_identity_sha256": "fc6453af5a9a34c93dd3f299cd545c9ab946be11752ee001f38055e52cc9e637",
+            "target_quantity_sha256": "bbabe4e040831f05bc96680afdb4c45a1856673e418bdd1db9495cda3f693680"
+          },
+          "validation": {
+            "target_count": 8268,
+            "target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+            "target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd"
+          }
+        },
+        "split_manifest": {
+          "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/new_york_taxi/yellow_trip_hourly_split_manifest.json",
+          "sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85"
+        }
+      },
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 168,
+        "max_seq_len": 256,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "model": {
+        "hidden_dim": 64,
+        "lambda_log_qty": 1.0,
+        "lambda_tail": 0.0,
+        "quantity_variant": "count_only_log_regression",
+        "time_head_lr_multiplier": 1.0,
+        "time_head_mode": "heteroscedastic_lognormal_duration",
+        "time_initial_location": 0.2357508697949888,
+        "time_initial_scale": 0.5898045019331329,
+        "time_observation_contract": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "hour"
+        },
+        "time_scale": 1.0,
+        "time_sigma_floor": 0.001
+      },
+      "optimizer": {
+        "grad_clip": 1.0,
+        "lr": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.01
+      },
+      "potentially_active_lags": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        32,
+        64,
+        128
+      ],
+      "quantity_boundaries_all_train_rows": [
+        7,
+        686,
+        1562,
+        3449
+      ],
+      "statistics": {
+        "all_train_quantity_sha256": "b6090245dd4b69e5b23bfde51a64bbecea3030245760ddd355b333714fdeab53",
+        "initialization_policy": "use original frozen B mu/std after verifying recalculation; no refitted replacement",
+        "raw_scale": 685.6777796861172,
+        "recomputation_absolute_tolerance": 1e-12,
+        "train_log_mean": 2.837734592747447,
+        "train_log_std": 2.1840596349132664
+      },
+      "time_statistics": {
+        "expected_train_target_dt_sha256": "3fb47361f8fa9a9edcf01cbb8d95cd0ee105024f1f0cd614f2d2fbe292d3f9aa",
+        "expected_train_targets": 38393,
+        "expected_validation_target_dt_sha256": "8a008bf3b74cd4e39128908cc358c1d482f4a499388234461c0c772f84c222bf",
+        "expected_validation_targets": 8268,
+        "recompute_absolute_tolerance": 1e-12,
+        "recompute_before_training": true,
+        "train_log_scaled_mean": 0.2357508697949888,
+        "train_log_scaled_std": 0.5898045019331329,
+        "train_time_scale": 1.0
+      },
+      "window_limitation": "Existing maximum sequence includes the target. Availability still depends on each actual observed history; unavailable branches remain inactive in BOTH new arms."
+    },
+    {
+      "additional_history_boundaries": [
+        64,
+        128
+      ],
+      "dataset_id": "intermittent_frozen_5000",
+      "epochs": 120,
+      "expected_global_steps": 369240,
+      "history_boundaries": [
+        64,
+        128
+      ],
+      "inherited_data_identity": {
+        "data": {
+          "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+          "sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f"
+        },
+        "populations": {
+          "train": {
+            "target_count": 393824,
+            "target_identity_sha256": "fb8737489bc18e528adc322e2e55e26fcc5793aa6ff8021d93ceac98d7768aed",
+            "target_quantity_sha256": "c4a9c3721d3861c190e81abe35156488f545b00c8ddbbed4022a9a82a4b3a215"
+          },
+          "validation": {
+            "target_count": 86285,
+            "target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+            "target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385"
+          }
+        },
+        "split_manifest": {
+          "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/intermittent_v2/intermittent_frozen_5000_split_manifest.json",
+          "sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04"
+        }
+      },
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 520,
+        "max_seq_len": 256,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "model": {
+        "hidden_dim": 64,
+        "lambda_log_qty": 1.0,
+        "lambda_tail": 0.0,
+        "quantity_variant": "count_only_log_regression",
+        "time_head_lr_multiplier": 1.0,
+        "time_head_mode": "heteroscedastic_lognormal_duration",
+        "time_initial_location": -0.21389036220110552,
+        "time_initial_scale": 0.6816420108412236,
+        "time_observation_contract": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "week"
+        },
+        "time_scale": 3.0,
+        "time_sigma_floor": 0.001
+      },
+      "optimizer": {
+        "grad_clip": 1.0,
+        "lr": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.01
+      },
+      "potentially_active_lags": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        32,
+        64,
+        128
+      ],
+      "quantity_boundaries_all_train_rows": [
+        2,
+        31,
+        46,
+        187
+      ],
+      "statistics": {
+        "all_train_quantity_sha256": "785526474507af840bc5a7e7f4baef1322c4e61b9d0cfa24be109f25efb55be5",
+        "initialization_policy": "use original frozen B mu/std after verifying recalculation; no refitted replacement",
+        "raw_scale": 36.878211774114746,
+        "recomputation_absolute_tolerance": 1e-12,
+        "train_log_mean": 1.821123902075507,
+        "train_log_std": 1.2853917394914367
+      },
+      "time_statistics": {
+        "expected_train_target_dt_sha256": "2f4a67cff3706611e45a1855a50efa21aa7e75b1b9dda05c6bae04fdbbe3e684",
+        "expected_train_targets": 393824,
+        "expected_validation_target_dt_sha256": "5ac9547d2fcbcb8f9e5394a88fc379d1c895683db8ea96b7ed6009d374eddea7",
+        "expected_validation_targets": 86285,
+        "recompute_absolute_tolerance": 1e-12,
+        "recompute_before_training": true,
+        "train_log_scaled_mean": -0.21389036220110552,
+        "train_log_scaled_std": 0.6816420108412236,
+        "train_time_scale": 3.0
+      },
+      "window_limitation": "Existing maximum sequence includes the target. Availability still depends on each actual observed history; unavailable branches remain inactive in BOTH new arms."
+    },
+    {
+      "additional_history_boundaries": [
+        1,
+        3,
+        7,
+        15,
+        31
+      ],
+      "dataset_id": "insta_market_basket",
+      "epochs": 120,
+      "expected_global_steps": 1866840,
+      "history_boundaries": [
+        64,
+        128
+      ],
+      "inherited_data_identity": {
+        "data": {
+          "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/insta_market_basket/instacart_marked_target_with_split.parquet",
+          "sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2"
+        },
+        "populations": {
+          "train": {
+            "target_count": 1991192,
+            "target_identity_sha256": "c361f5e9904c25f18c91007f6e1209518a02fb755799e81c8300ee759b2a1210",
+            "target_quantity_sha256": "07e98693d5ac26caeaeb3c60d6d31fad21ab8f1e40ac649f231ac299963817d8"
+          },
+          "validation": {
+            "target_count": 503733,
+            "target_identity_sha256": "28356570163221aa3eb13735076452886bdb471451e834e784afc3ad5c54bde8",
+            "target_quantity_sha256": "28ba2447505201e312d5049d20c0a2eeba109cb33be0c4413a0f69192c539184"
+          }
+        },
+        "split_manifest": {
+          "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/insta_market_basket/instacart_marked_target_split_manifest.json",
+          "sha256": "6c6cdd41f847878fbb405b73dfa038fbb7a88ad53df6843b0cc9e64531a8b71d"
+        }
+      },
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 52,
+        "max_seq_len": 64,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "model": {
+        "hidden_dim": 64,
+        "lambda_log_qty": 1.0,
+        "lambda_tail": 0.0,
+        "quantity_variant": "count_only_log_regression",
+        "time_head_lr_multiplier": 1.0,
+        "time_head_mode": "heteroscedastic_lognormal_duration",
+        "time_initial_location": 0.07012359239272,
+        "time_initial_scale": 0.885319372563578,
+        "time_observation_contract": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": 30,
+          "unit": "day"
+        },
+        "time_scale": 7.0,
+        "time_sigma_floor": 0.001
+      },
+      "optimizer": {
+        "grad_clip": 1.0,
+        "lr": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.01
+      },
+      "potentially_active_lags": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        32
+      ],
+      "quantity_boundaries_all_train_rows": [
+        8,
+        20,
+        25,
+        35
+      ],
+      "statistics": {
+        "all_train_quantity_sha256": "e6e224976a591f6f9cc90d58e6c70153f20d2fada9903638068d5fb4ac94b92f",
+        "initialization_policy": "use original frozen B mu/std after verifying recalculation; no refitted replacement",
+        "raw_scale": 12.620737951818787,
+        "recomputation_absolute_tolerance": 1e-12,
+        "train_log_mean": 2.185918026533729,
+        "train_log_std": 0.6878440815807482
+      },
+      "time_statistics": {
+        "expected_train_target_dt_sha256": "a331a7f7f4788aea9bca26e604c85b25179a33b44bac1a72e301bf3d91edade4",
+        "expected_train_targets": 1991192,
+        "expected_validation_target_dt_sha256": "422ab4522ae761662cd03c7c2cc8df54d38f9fb9185eb482ed95b77366f1c34d",
+        "expected_validation_targets": 503733,
+        "recompute_absolute_tolerance": 1e-12,
+        "recompute_before_training": true,
+        "train_log_scaled_mean": 0.07012359239272,
+        "train_log_scaled_std": 0.885319372563578,
+        "train_time_scale": 7.0
+      },
+      "window_limitation": "Existing maximum sequence includes the target. Availability still depends on each actual observed history; unavailable branches remain inactive in BOTH new arms."
+    }
+  ],
+  "date": "2026-09-22",
+  "dependency": {
+    "5090": {
+      "arm_epochs": 120,
+      "contract_sha256": "c55416f59386645b64cdaa3515ba8f7c9f3b91811225a274be674370ad840d86",
+      "own_worker_pid": 633975,
+      "required_status": "complete",
+      "root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/multilag_detail_instacart_shared_resume_20260921_v2",
+      "tmux": "multilag_detail_instacart_shared_resume_20260921_v2_5090_train"
+    }
+  },
+  "design_sha256": "108470a31f413c5f68e913ab6cc3b6ed72d9689a1a4144520c0a605042eea570",
+  "endpoint_replays": 12,
+  "epochs": 120,
+  "evidence": {
+    "cpu_cost_sha256": "7083c5f00acfeb73dcd92bf64bdd99ea0e9e55feeed27b3ad538ebcec4ced9c8",
+    "host_readiness_sha256": "6ab834326920e1270904cbf0549e14097918cec76783d932f33e63eba222117f",
+    "implementation_sha256": "736536d38aadd2f018cccf689f1a08604077a679a370adc0e6d576aaa4373529"
+  },
+  "hosts": {
+    "5080": {
+      "assigned_datasets": [
+        "yellow_trip_hourly",
+        "intermittent_frozen_5000"
+      ],
+      "environment": {
+        "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+        "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+        "CUDA_VISIBLE_DEVICES": "0",
+        "MKL_NUM_THREADS": "4",
+        "NVIDIA_TF32_OVERRIDE": "0",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "PYTHONHASHSEED": "42"
+      },
+      "gpu_uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+      "output_dir": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_gate_observed_time_seed42_20260922_v1/run",
+      "python": "/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python3.12",
+      "root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_gate_observed_time_seed42_20260922_v1",
+      "runtime_expected": {
+        "cuda": "13.0",
+        "cudnn": 91900,
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "torch": "2.11.0+cu130"
+      },
+      "source_root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_gate_observed_time_seed42_20260922_v1/source",
+      "tmux": "local_gate_observed_time_seed42_20260922_v1_5080",
+      "tmux_binary": "/usr/bin/tmux"
+    },
+    "5090": {
+      "assigned_datasets": [
+        "insta_market_basket"
+      ],
+      "environment": {
+        "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+        "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+        "CUDA_VISIBLE_DEVICES": "0",
+        "MKL_NUM_THREADS": "4",
+        "NVIDIA_TF32_OVERRIDE": "0",
+        "OMP_NUM_THREADS": "4",
+        "OPENBLAS_NUM_THREADS": "4",
+        "PYTHONHASHSEED": "42"
+      },
+      "gpu_uuid": "GPU-c9adc246-ef66-7906-bc07-6e152fa9952f",
+      "output_dir": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_gate_observed_time_seed42_20260922_v1/run",
+      "python": "/opt/miniconda3/envs/ai_env/bin/python3.12",
+      "root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_gate_observed_time_seed42_20260922_v1",
+      "runtime_expected": {
+        "cuda": "13.0",
+        "cudnn": 92000,
+        "numpy": "2.1.3",
+        "polars": "1.39.3",
+        "torch": "2.11.0+cu130"
+      },
+      "source_root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_gate_observed_time_seed42_20260922_v1/source",
+      "tmux": "local_gate_observed_time_seed42_20260922_v1_5090",
+      "tmux_binary": "/opt/miniconda3/envs/ai_env/bin/tmux"
+    }
+  },
+  "launch": {
+    "budget_origin": "frozen launch origin for this new six-fit gate comparison; shared48h ceiling including CPU preflight, qualification and5090 waiting; previous experiment clocks unchanged",
+    "deadline_action": "stop only owned new worker; preserve outputs; no auto retry or extension",
+    "estimated_completion_hours": null,
+    "fixed_deadline_unix": 1790205302.26831,
+    "fixed_started_at_unix": 1790032502.26831,
+    "root_must_be_new": true,
+    "server_assignment": {
+      "5080": [
+        "yellow_trip_hourly",
+        "intermittent_frozen_5000"
+      ],
+      "5090": [
+        "insta_market_basket"
+      ]
+    }
+  },
+  "library_sha256": {
+    "5080": {
+      "/home/leekwanhyeong/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libnvrtc-builtins.so.13.0": "91dcd944d01da9c0f08fff5d779db136a47f6d62bdb63bae900d2f481e92c3a2",
+      "/home/leekwanhyeong/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libnvrtc.so.13": "a49e67e8e74590f1e98de55c39c6287efd3f59e3c3797464d7bbe0fe01349b11"
+    },
+    "5090": {
+      "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libnvrtc-builtins.so.13.0": "91dcd944d01da9c0f08fff5d779db136a47f6d62bdb63bae900d2f481e92c3a2",
+      "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib/libnvrtc.so.13": "a49e67e8e74590f1e98de55c39c6287efd3f59e3c3797464d7bbe0fe01349b11"
+    }
+  },
+  "limits": {
+    "max_concurrent_gpu_jobs_per_host": 1,
+    "max_gpu_hours_aggregate": 96,
+    "min_free_bytes": 10737418240,
+    "per_arm_wall_seconds": 86400,
+    "per_host_output_bytes": 8589934592,
+    "qualification_seconds_per_host": 900,
+    "total_wall_seconds": 172800
+  },
+  "model_role": "observed_time_local_gate_v1",
+  "new_training_arms": [
+    "titantpp_local_time_gate",
+    "titantpp_local_quantity_gate"
+  ],
+  "parent_contract_sha256": "b69ddb960ccacb65d987428e1b40cdbfb8f3a7493dd18138f1da2836c0588800",
+  "policy": {
+    "additional_seeds": false,
+    "automatic_start_after_successful_dependency": true,
+    "budget_extension": false,
+    "commit_push": false,
+    "held_out": false,
+    "other_gpu_processes": "observe_without_stopping",
+    "qualification_per_host_before_its_training": true,
+    "resume": false,
+    "retry": false,
+    "runtime_mutation": false,
+    "startup_min_free_gpu_bytes": 2147483648
+  },
+  "process_environment": {
+    "5080": {
+      "LD_LIBRARY_PATH": "/home/leekwanhyeong/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib",
+      "XDG_CACHE_HOME": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_gate_observed_time_seed42_20260922_v1/cache"
+    },
+    "5090": {
+      "LD_LIBRARY_PATH": "/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib",
+      "XDG_CACHE_HOME": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/local_gate_observed_time_seed42_20260922_v1/cache"
+    }
+  },
+  "references": {
+    "5080": {
+      "intermittent_frozen_5000": {
+        "titantpp": {
+          "completed_epochs": 120,
+          "files": {
+            "best_val_qty_rmse_model.pt": "9515b6a2950f7638f61bb88cae56d6b15b65149af843805b3bd8ed458cbd6bcf",
+            "endpoint_replays.json": "4f1f65d05eeeb7d9be755ec259c07c6649dcbd14a0e92d7e620bff91375d89fb",
+            "exposure.json": "84322e684ea5e13826ef7eac2d25b1f6ff15ec08e4a073f39150e206a239ccd8",
+            "history.json": "53b2d037a381e5d53478ea3edc5c6a5f7049e71f417775a348b7362a551fb0c1",
+            "last_epoch_state.pt": "a6e13ba0b358290a1024c21b31bf35bb0770265b99b43f0ac9c7ff499275aa0c",
+            "summary.json": "b4494c4fb3fd3c0ca5b0000f18f96753607677491be55134292eed6098d6a68d"
+          },
+          "initial_state_sha256": "4220b7f77b2211b598f9ce39bd665089c7166be7ca26929f33ce3754845978bd",
+          "path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/multilag_detail_observed_time_seed42_20260921_data_v3/run/intermittent_frozen_5000/runs/titantpp/count_only_log_regression/seed_42"
+        },
+        "titantpp_local_detail": {
+          "completed_epochs": 120,
+          "files": {
+            "best_val_qty_rmse_model.pt": "eda8ecf9c1f215ef11af2c71a71a83fe61ccaba6afc4c3cb47183e26a3a10254",
+            "endpoint_replays.json": "b614dfe5a3df6f4d269ee0f72f8cedc8ecc3c747197c93fbc720445bd2b2cf30",
+            "exposure.json": "84322e684ea5e13826ef7eac2d25b1f6ff15ec08e4a073f39150e206a239ccd8",
+            "history.json": "7066fd78c952a1abd37558837e2b278360293d7ec7bbb166a8a0beba8bbf9489",
+            "last_epoch_state.pt": "ab96497b11605596bba640c7661c1286f5d02c22623551379560cf992cbf1a63",
+            "summary.json": "7ee1688cc71c459ed0db18e38ceecfdae6e54fa59115a26131289685b3d10990"
+          },
+          "initial_state_sha256": "5e817429a4ec76aec8b99ee849dbad198446635f22cd36527f00ee334d1e690b",
+          "path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/multilag_detail_observed_time_seed42_20260921_data_v3/run/intermittent_frozen_5000/runs/titantpp_local_detail/count_only_log_regression/seed_42"
+        }
+      },
+      "yellow_trip_hourly": {
+        "titantpp": {
+          "completed_epochs": 120,
+          "files": {
+            "best_val_qty_rmse_model.pt": "b021dde2ca1cdc9aaf4b035f3373ed662597e2156f581363fc2dc55b01638e52",
+            "endpoint_replays.json": "1cf8e44d8b7a4b461393ca2929bb68aaba73d698f5cc8212dc212dfaa3a29d9a",
+            "exposure.json": "451b403d1caee1dc27ebbe7e3498516bbfe59c8e91fd2b975887044e623a137e",
+            "history.json": "4a5eb9fb4f1781e01f5780679a7d1773eb3258995c1564a5af4881fdb526fa73",
+            "last_epoch_state.pt": "cb80fdbcc2abca1ca71002ab605a8ce72ac36a3e288f0e5da9eadfba1d982cf8",
+            "summary.json": "fb2674e829513294ed78901460d7748fb49b9e0413f5c546819e5895c961734c"
+          },
+          "initial_state_sha256": "b6d5a01163d44c3d7fa13ca537575ba87ed2f1c2a89607a0585e25d716e33e3a",
+          "path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/multilag_detail_observed_time_seed42_20260921_data_v3/run/yellow_trip_hourly/runs/titantpp/count_only_log_regression/seed_42"
+        },
+        "titantpp_local_detail": {
+          "completed_epochs": 120,
+          "files": {
+            "best_val_qty_rmse_model.pt": "456e703ae63b49d17fa5d7df13fc9d85b9eff46daca95f641799892299c0f451",
+            "endpoint_replays.json": "394c5cc5e3f4bfb0b8b068a7f9a148d9de8cc817392a0f71a3232e330f0cdca4",
+            "exposure.json": "451b403d1caee1dc27ebbe7e3498516bbfe59c8e91fd2b975887044e623a137e",
+            "history.json": "baf1d27e5f952af699de017bb26eab41fcb45240b8ba2c34d8977edfd1e8e900",
+            "last_epoch_state.pt": "b0a6da26e30600ce7e2512dfc6c20465e59f1e4c81c28d4632e4613f7ada3203",
+            "summary.json": "1e67a50437cf033b7142e65464ed77251c5fdb4a3b442302cf0e2d506e7870fe"
+          },
+          "initial_state_sha256": "2237e1d0a332bc71c95a6d12ea1d88694f5519dc7bba62411484f61a13ee67c7",
+          "path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/multilag_detail_observed_time_seed42_20260921_data_v3/run/yellow_trip_hourly/runs/titantpp_local_detail/count_only_log_regression/seed_42"
+        }
+      }
+    },
+    "5090": {
+      "insta_market_basket": {
+        "titantpp": {
+          "completed_epochs": 120,
+          "files": {
+            "best_val_qty_rmse_model.pt": "89b4de2a5d2695923a9fb5633cca1c42fe3adaf61ff08e9cf419dcfbc53cd1d2",
+            "endpoint_replays.json": "0968a49a409e343c2899d3be86b0a41c49718d1d2c64ba9c492bd6a89fd6d2b1",
+            "exposure.json": "1bcaf56c3a0c6ded5fa7295fdf04524795b5ae9f56c07e56125a1528ee842663",
+            "history.json": "3646a0b85f2b8cdfb5ae9853a938c8b5d4056b04db1647766d512d4974008e3c",
+            "last_epoch_state.pt": "45c330d1297f6ee0d84c81eb49d72cc9c7135cdb3639ae597d0c00f877f38382",
+            "summary.json": "208df0fb1c6fb02bc78811951f96ccec28dd7845e29f119cf165f74a8e864d73"
+          },
+          "initial_state_sha256": "e392c98dde16e57c0b833a7c6d9dc044130e25099d782653436fb14c7d4378d1",
+          "path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/multilag_detail_instacart_resume_20260921_v1/run/insta_market_basket/runs/titantpp/count_only_log_regression/seed_42"
+        },
+        "titantpp_local_detail": {
+          "completed_epochs": 120,
+          "files": {
+            "best_val_qty_rmse_model.pt": "1cc4ebb744e4aed7c49960720a23dd2aa106b301867545e4b0002a3dd7c85c4a",
+            "endpoint_replays.json": "5b12777a502bd4eefe498b2b996824a2be2f8792bde0f4600677bd5a5855ba7b",
+            "exposure.json": "1bcaf56c3a0c6ded5fa7295fdf04524795b5ae9f56c07e56125a1528ee842663",
+            "history.json": "af4fc9f712f106321ba3ae98774401867f5f8ae6abd640aa5b8633ba505b687e",
+            "last_epoch_state.pt": "45faba163cd6d85d3d876d9dc6e200f4f65d8ea34a0d0a7c1ba095317e58b5a3",
+            "summary.json": "e22fe21da0d6800d19c091bf871f7b34e2ef6e370a20793d8dc396e52f5e7fb7"
+          },
+          "initial_state_sha256": "6731826e397a77decc951f592d66470944fb8630b727d405628c4b945205df82",
+          "path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/multilag_detail_instacart_shared_resume_20260921_v2/run/insta_market_basket/runs/titantpp_local_detail/count_only_log_regression/seed_42"
+        }
+      }
+    }
+  },
+  "reused_arms": [
+    "titantpp",
+    "titantpp_local_detail"
+  ],
+  "reused_reference_arms": 6,
+  "reused_reference_replays": 12,
+  "schema": "local_gate_observed_time_execution_v1",
+  "seed": 42,
+  "source": {
+    "base_git_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+    "files": {
+      "data_loader/event_seq_data_module.py": "7c11d9ace6c4e4d3bb03861aae92393aa946a38452d702dc7625210b339897ca",
+      "models/TPPs/CountAwareFactory.py": "228e1cb527b27e4799a3dffe4f63adeb60197e585aac3009910b1e4baf41097e",
+      "models/TPPs/CountAwareTHPStaticMemory.py": "44fcc1717ca5f19eef36386e8531a3423d7a3444d39f4e462e12c14f98c4b8ee",
+      "models/TPPs/CountAwareTPP.py": "d8439b3e86f5304471d0e70265ab3da9c362b2a1f7fd12d423ed8a3d33f52a2a",
+      "models/TPPs/CountAwareTitanBoundedQK.py": "b0139d409801c4bf184954f393f15d2f3d06f725009621c3e5b95b5ef2aed2a0",
+      "models/TPPs/CountAwareTitanCausalQKV.py": "402f48187658401371ccadf0bf6ba2dc3413e1442a94d837562dac6b5d5bba68",
+      "models/TPPs/CountAwareTitanInterLayerMemory.py": "0f78c8919e11e9efa1d5402bc46c23074d2cf8833cf9cc90c104c8c6b122637a",
+      "models/TPPs/CountAwareTitanLevelHistoryQKV.py": "f4398a442c7872b158039f2346bc18ce5df5b89de97ec4c1c4a0f9291ad136e0",
+      "models/TPPs/CountAwareTitanLocalGate.py": "3f235b761b33f7367cfbc5303f320d23b0cd97bad121903a67ae06de358f7b30",
+      "models/TPPs/CountAwareTitanMemoryFiLM.py": "fdcdea9cf6fc1b7b47c0afa88609c1af4575ebf98f7eb2fcecb431ff8c3ecbfd",
+      "models/TPPs/CountAwareTitanMultiLagDetail.py": "4bcbecdadf921df21a4e7fb379962eb4ecec2cfeb2f8ff1edccbb6b418807eae",
+      "models/TPPs/CountAwareTitanNonlinearEpisodeMemory.py": "990665850a4d0367da1b82fcc7ddb8e53babdeff864d48df11083f450fa19cdc",
+      "models/TPPs/CountAwareTitanPairMessage.py": "79c1e7f1da3b22f6a3bbaf606e5e915ff1eab39e2adc849c472c58f1a562508e",
+      "models/TPPs/CountAwareTitanSlotMemory.py": "e9868579089adf9d47d7483bf2a6b912dad8beb8b5b6936ce0e0af85f10d7c32",
+      "models/TPPs/CountAwareTitanStateTransport.py": "9e6e1d7ef30af63f993fb005bfe18c7146288981a1179ce9ede2ea79521c48a0",
+      "models/TPPs/CountAwareTitanSuccessorMemory.py": "0616885eb8318f1823734b91563f2d261a9916f0d33ea9b7d57d6e1f0ae60ffb",
+      "models/TPPs/CountAwareTitanTaskRoutedMemory.py": "c94ce1c29de676af5d5655ba4f05fc238b991052eeaaffd74af23b58d6c0a333",
+      "models/TPPs/CountAwareTitanValueNorm.py": "1de961d90d771737ce7e5d1e81bfa7e1487b7540a90ee2af1bfc2109e946844a",
+      "models/TPPs/NeuralHawkesTPP.py": "75162651b5d0ad87f7418805df0d7b743fe77d256225351b68e02cfbf7c5cbdd",
+      "models/TPPs/RMTPP.py": "e4160e45c588d9af5eba2ee5c27ef58f0311716555786198c332cc77cb5886ea",
+      "models/TPPs/SelfAttentiveHawkesTPP.py": "91360a0c2e1ffde346bc90803beabaa88e909db7d05161062170d6de87b4bde6",
+      "models/TPPs/TitanTPP.py": "5381faad10d7782af40abf028aa0b79894e224d61c82af9680a0d9bac410c37c",
+      "models/TPPs/TransformerHawkesTPP.py": "a74cbb43bd1d47d541bb903dfcdf336ef8647ec489fd5b776da27aa2a7eb3f77",
+      "models/TPPs/__init__.py": "2909671196619588e5ab66b1913a319643a03dad4487397647d6939526b22e15",
+      "models/TPPs/config.py": "6a3cb4d1bbb9f6fab62a2e3bbc4bd87d05a7b8f240e9a82b8ff7534f8632d840",
+      "models/TPPs/magnitude_normalization.py": "c665e3d93ca2dee07d4d5454e6265decd3f9dfa7f13a0208e39dbd9af90c57d4",
+      "models/TPPs/marker_losses.py": "e53308193868191783f8ab5cecb85c024eb668895d6239d8b289c6aacd3ab08d",
+      "models/TPPs/positive_integer_time.py": "783113642d897aaed3da1213fc91fb993ee71af380f953a1159142a1cda8ae59",
+      "models/TPPs/value_conditioning.py": "00548cd6b0f30e44f39fe9ac4c3ec110a056d20bc13aefeeb8e659fc7d89cd3a",
+      "models/Titan/Titans.py": "2efda26d97492f43bf19dc9778ff4d4fcbf24ccf010645b90a5396c324c8183f",
+      "models/Titan/__init__.py": "a8147804206ab500c7adeeeaf194c82447ead4d332b2959f8ed8e3692793c1a7",
+      "models/Titan/backbone.py": "f3531234235a9f50de05cf36c80b0a742a45709145d49555440249c814a20e98",
+      "models/Titan/common/__init__.py": "f301d6cf6edcc7804363d3c9e1c5ef22ec6fbead856aac7d4ec2bcef0508dc88",
+      "models/Titan/common/configs.py": "6a0d804214639629e05320cded343368f83e95f34935fc71588bafc45a5027e7",
+      "models/Titan/common/decoder.py": "361d17156c7f8a0596df4857657a46bd4d79eb88d34eaa0f871abffa730a9354",
+      "models/Titan/common/elapsed_age.py": "fb04e96ea180974e306c5688ef4b51c5b615a516d671edd472c0049d3f1e651d",
+      "models/Titan/common/key_value_memory.py": "a0360ed1e18cc89da2de0f08852b6ca980b5fd05bf4fe5559163e685ed4598de",
+      "models/Titan/common/memory.py": "405ccbfa900b877250c6f1c5a4c6652f46e0a500303cea35a5c6cc7cac02af36",
+      "models/Titan/common/titans_mac.py": "9436fea650c66025fceb7aebb820941176f2c10c80e47d61c55555d8430e0ab1",
+      "models/Titan/common/titans_memory_stability.py": "d7681b65e65f239377d174596b970d5509de075a9f03a5d34c001c7801031e86",
+      "models/Titan/common/tpp_gated_memory.py": "4d77851c904a46117eb5968c602c6e91c87f7bc061f90816b9f941775b818263",
+      "models/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "models/common_layers/RevIN.py": "f20fb6a9664568a5715ece23ed4f745435b30e60c69557afa8baae8255154a89",
+      "models/common_layers/__init__.py": "8fd4cb66926a1cd633c3201645f8dbc63e02a53d91bcec893c6d8b4930244f35",
+      "paper/contracts/hard_lmm_local_gate_design_v1.json": "108470a31f413c5f68e913ab6cc3b6ed72d9689a1a4144520c0a605042eea570",
+      "paper/contracts/multilag_detail_observed_time_execution_data_v3.json": "d5e99bbc1c5315b7719c8ee92f8cc1151a4a1f749b61cbc1929eae8cc289df38",
+      "paper/scripts/count_aware_tpp_backbone/__init__.py": "cd25af65061351f0ca7c46d143361bbe9528ea755c6a3f09dbffdd5f188412bb",
+      "paper/scripts/count_aware_tpp_backbone/constants.py": "711a39d5369dcd628824cfae040a1f3c370877816372c725562d38390745ed1c",
+      "paper/scripts/count_aware_tpp_backbone/core.py": "c5cc72a265a05199868332c9beaa32ce9568afaf5f4cfa0930b836215ab36084",
+      "paper/scripts/count_aware_tpp_backbone/datasets.py": "0a2982d92a21d6dd0518adba5e631d40cf2222c9eb9ee476d861b27211623274",
+      "paper/scripts/count_aware_tpp_backbone/observed_time.py": "86a4a17ee4568319ece3e0170b569ef64830e23f77d3933631c33abb57552a95",
+      "paper/scripts/count_aware_tpp_backbone/reporting.py": "4764b790352b6a84a4efa9df9b17e3ad948534779539bf87422af7d8c06825c6",
+      "paper/scripts/count_aware_tpp_backbone/thp_static_contract.py": "96919909906c1fec5b447234dfc77612a43f6b62ab64bca31185a6480f0fc490",
+      "paper/scripts/count_aware_tpp_backbone/training.py": "964ed6fb569acad9d1da0887398da7c770724623277ed688a4e841af4285f6ab",
+      "paper/scripts/local_gate_reference_bridge.py": "a3c2b9af59f6ba5ac24e8d9bd4cb86f5f3aef95d768227f1e0135fa03c7f1d2e",
+      "paper/scripts/mixed_quantity_objective.py": "f52a7fb8050479990c951ccbe4ac3548988a560049cf528731ed6672fc052396",
+      "paper/scripts/observed_slot_parallel_common.py": "5e624ba8ba457fb89a42c159969aada36f8c1e2b83a7073ee27409966b6a21ba",
+      "paper/scripts/prepare_local_gate_execution.py": "1c527968f3ecaa86ccb36d59a6f46ecc49bdf26486579066189a0fd93d3fa92c",
+      "paper/scripts/quantity_comparison_data.py": "8adb418f1417625a23e5af7f247bfce10cf5fdd3c947ad0b17d7a4b8b79b76b1",
+      "paper/scripts/quantity_comparison_engine.py": "a4eb605d7f4f3c27bbc87fd10facb9b3393b44075342c2f1ea55545275fde5fc",
+      "paper/scripts/quantity_comparison_runtime.py": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+      "paper/scripts/quantity_objective_comparison.py": "8c89aba1a3c9f410aa9f14144240fb5a19b2fb5912ebfbf4bd9f053308c4782f",
+      "paper/scripts/raw_aux_gradient_control.py": "97115734829f4200ea61eae6c9bba9367d46c10789a15703ab51b55dbedfea2c",
+      "paper/scripts/run_count_aware_tpp_backbone_control.py": "016d6ae1e5d4bcc77065e7a6b856b14ee1e1dc2acb4ecfbe2ab266e851a2b36c",
+      "paper/scripts/run_hard_lmm_frozen_lognormal_duration.py": "c3bb9a6afb87dfa21c9b49af50a7a4b38b640871ec0bd8ba28ef1f098cf984e6",
+      "paper/scripts/run_hard_lmm_time_head_refit.py": "a1b7774266649bf4204e279147cdc5cb6801abec96ab75e65efaad1718eff65f",
+      "paper/scripts/run_intermittent_log_backbone_control.py": "eb8fd2aba200a48963efc22bf03f2c66f87a9def59a99c0a0261abf133b98ad4",
+      "paper/scripts/run_local_gate_execution.py": "0215c7bfa8a39ba88e1b8d0d6fe310220927f0a22f223935e387274a00ec9b32",
+      "paper/scripts/run_observed_slot_partition.py": "bade0da82038c68564c2543eb18536531bc614fcd6808aaa69a1fa0a20fddb56",
+      "paper/scripts/run_quantity_comparison.py": "56fc8303e55893a5295daf78767552fa91d4a9a9df2280a8f6977617ae62288d",
+      "paper/scripts/run_taxi_log_backbone_control.py": "7d3003455eb8aee97eff0120a2c043f93a74981cc0de0a81d9a95f93a99e1767",
+      "paper/scripts/run_taxi_quantity_interface_ablation.py": "32630140f939b1e8e2287893b7705b1d3ec6e9f67644c5f9477c0ef979890801",
+      "paper/scripts/run_time_quantity_diagnostic.py": "01287ef81df060228cf821d181545581dda4184f5c85aaaa74b74e1e35c39309",
+      "paper/scripts/time_quantity_diagnostic.py": "b0dc1deecc47c016846dc4475b6bde78b0da90ae6c7bca4e522896567d0d9006",
+      "paper/scripts/verify_local_gate_cost.py": "2745b515cc07a5e14d471bf490de9d7655891dad8a02cf51658bc77bbf4f1e27",
+      "search_artifacts/local_gate_preparation_20260922_v1/host_readiness.json": "6ab834326920e1270904cbf0549e14097918cec76783d932f33e63eba222117f",
+      "simple_lab_test/__init__.py": "dc0691a4d210ba2dafdde7391d031f36d1dede90787b3aeb337996d685b13018",
+      "simple_lab_test/common/__init__.py": "60dc453d86fcb7bd779a57630d905cdec8cabbb5f1724fec6f4f3e12fcb2eaf2",
+      "simple_lab_test/common/pathing.py": "f3e6e8832f12bd0fef0fd9b7a23a4f5d16626581e54ebeeb10f4f965f8e2f1c1",
+      "simple_lab_test/search/__init__.py": "5dd6d1d5f3d9e15602c88db89d67fc8677bdd43ef78b61a016db6ff5b881f80c",
+      "simple_lab_test/search/common/__init__.py": "e2eb9c6b87702fc16abfcd51e691074277ee278f66b6c674ec54d6e882726541",
+      "simple_lab_test/search/common/benchmark_utils.py": "b3c089da98df5205b36e6aa021b03e8b9b13f6b26281e07d957a0237864ffe7f",
+      "simple_lab_test/search/common/configs.py": "eb241c11d765c66d86aa3f58a0a72d907769a905fe6c3a923e5f8c70abd793f3",
+      "simple_lab_test/search/common/experiment_utils.py": "a06e45ea43e722f55ecaec1ad5915b96fbd47926afbce617c1bb22114fe4836e",
+      "simple_lab_test/search/common/models.py": "71ccb45b17cf64b0a9641a7f75d27279324dbe7a5b095221ad4bac6cc6761c7b",
+      "simple_lab_test/search/common/runner.py": "a1fc687455b768ed454878cda55cf2d1b43cdb13817880a4cf3fbca9c7db8739",
+      "utils/magnitude_pipeline.py": "f18450b89a386501c88d6a99b55ef72ff0b50cc7c4a16fef9d713744e2100f98",
+      "utils/mark_utils.py": "945a7bfb98f0dcd7af0911d7d4b06f43268116b72a3786d8a5b6e1a572e5599b",
+      "utils/tpp_simulation.py": "5e01d477d77388e3686bcaf972644548b6d0c0735e3cc6e9a7618ba5ae2f984b",
+      "utils/training.py": "22c79c91cb672200057f1e80a6ca995c816b3722dd253d4b90f1ccd5795e276e"
+    },
+    "files_sha256": "4962dea39f5cb470da523cb35d5e79640a94aec37ace2931a5e46c2a86275239",
+    "working_tree": "dirty; isolated file closure authoritative"
+  },
+  "status": "frozen_pending_native_qualification",
+  "total_arms": 6,
+  "total_optimizer_steps": 4544160
+}

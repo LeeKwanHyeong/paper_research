@@ -29,6 +29,10 @@ from paper.scripts.count_aware_tpp_backbone.constants import (
     VARIANT,
 )
 from paper.scripts.count_aware_tpp_backbone.core import evaluate, target_outputs
+from paper.scripts.count_aware_tpp_backbone.observed_time import (
+    ROLES as OBSERVED_TIME_ROLES, time_model_kwargs, validate_training_identity,
+    validate_recorded_grid,
+)
 from paper.scripts.run_taxi_quantity_interface_ablation import (
     clone_state_dict,
     make_loader,
@@ -633,6 +637,9 @@ def train_one(
     quantity_variant: str,
     seed: int,
 ) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+    validate_training_identity(args, interface_meta, backbone, quantity_variant)
+    if getattr(args, "model_role", None) in OBSERVED_TIME_ROLES:
+        validate_recorded_grid(frame, args.dataset_contract)
     monitor = _checkpoint_monitor(args)
     monitor_spec = checkpoint_monitor_spec(monitor)
     monitor_history_key = monitor_spec["history_key"]
@@ -754,6 +761,7 @@ def train_one(
             "time_initial_scale"
         ),
         time_sigma_floor=args.time_sigma_floor,
+        **time_model_kwargs(interface_meta),
         titans_memory_gradient_clip=getattr(args, "titans_memory_gradient_clip", None),
         **_quantity_variant_model_kwargs(quantity_variant, interface_meta),
     )

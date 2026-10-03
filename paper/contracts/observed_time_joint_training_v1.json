@@ -1,0 +1,91 @@
+{
+  "schema": "observed_time_joint_training_v1",
+  "date": "2026-09-17",
+  "status": "implemented_and_synthetic_cpu_verified_not_gpu_qualified",
+  "purpose": "Train every compared Backbone through the same normalized probability law for recorded duration codes and the same existing quantity objective.",
+  "scope": {
+    "local_implementation_and_synthetic_cpu": true,
+    "real_data_evaluation": false,
+    "held_out_access": false,
+    "new_gpu_execution": false,
+    "existing_remote_training_or_scheduler_changes": false,
+    "commit_push_external_publication": false,
+    "delivery": "Korean session text and machine-readable local JSON"
+  },
+  "entrypoint": "paper/scripts/run_count_aware_tpp_backbone_control.py",
+  "model_role": "observed_time_joint_v1",
+  "supported_backbones": ["titantpp", "rmtpp", "thp", "nhp", "sahp"],
+  "time_head_mode": "heteroscedastic_lognormal_duration",
+  "observation_model": {
+    "mode": "positive_integer_round_clamp_v1",
+    "latent_duration": "T = train_time_scale * exp(N(mu(hidden), sigma(hidden)))",
+    "location": "linear(hidden) + bias",
+    "sigma": "softplus(linear(hidden) + bias) + time_sigma_floor",
+    "default_sigma_floor": 0.001,
+    "recorded_code": "D = max(1, round(T)); when top-coded D = min(top_code, D)",
+    "first_bin": "P(D=1) = P(0<T<=1.5)",
+    "regular_bin": "P(D=d) = P(d-0.5<T<=d+0.5)",
+    "top_bin": "P(D=top_code) = P(T>top_code-0.5)",
+    "probability_mass_sum": 1,
+    "reported_metric": "recorded_positive_integer_time_nll",
+    "metric_unit": "negative natural log of dimensionless recorded-code probability",
+    "not_comparable_as_same_metric": ["legacy clamped time loss", "continuous density NLL"],
+    "numerics": "float64 log-CDF/log-survival differences with indexed active branches; differentiable to model parameters; no probability floor or loss clamp",
+    "unresolved_probability": "fail explicitly, never silently change the objective"
+  },
+  "dataset_observations": {
+    "intermittent_frozen_5000": {"unit": "week", "top_code": null},
+    "yellow_trip_hourly": {"unit": "hour", "top_code": null},
+    "insta_market_basket": {"unit": "day", "top_code": 30}
+  },
+  "data_boundary": {
+    "materialization": "lazy filter to train and validation before collection",
+    "before_loader_cast": "finite nonnegative integers; Instacart values no greater than 30; reject other split labels in direct training input",
+    "zero_policy": "existing loader merges raw zero into code one",
+    "interpretation": "The round/clamp latent law is a modeling choice for transformed records, not a verified account of how physical event times were recorded. Raw zero gaps are not separately modeled.",
+    "future_target": "use hidden state at preceding observed event; target quantity is masked and target event cannot write memory"
+  },
+  "initialization": {
+    "population": "exact train-target population under the existing lookback and maximum sequence-length loader",
+    "time_scale": "median of loader-transformed train durations",
+    "initial_location": "population mean of log(train_duration / time_scale)",
+    "initial_sigma": "population standard deviation of log(train_duration / time_scale), strictly greater than sigma floor",
+    "sigma_hidden_weight": "zero",
+    "restriction": "Top-coded observations are used only for initialization statistics; these are not asserted to be unbiased latent distribution estimates.",
+    "validation_usage": "selection only; no fitting of time scale or initialization statistics"
+  },
+  "joint_objective": {
+    "formula": "recorded_positive_integer_time_nll + log1p_quantity_mse",
+    "quantity_variant": "count_only_log_regression",
+    "lambda_log_qty": 1.0,
+    "lambda_tail": 0.0,
+    "quantile_adaptive_strength": 0.0,
+    "optimization": "both tasks update the encoder; no detach or task-separated training",
+    "gpu_contract_must_freeze": ["optimizer and learning rate", "time-head learning-rate multiplier", "gradient clipping", "batch order", "seed", "epochs and resource limits"]
+  },
+  "checkpoint_contract": {
+    "selector": "strict earliest finite validation raw-quantity RMSE minimum",
+    "reporting": "RMSE, MAE, quantity strata and recorded-time NLL from the same selected checkpoint; any last-epoch metrics labeled separately",
+    "identity": "source revision, training arguments and interface metadata including observation law and train statistics",
+    "restore": "model, optimizer, RNG, train-loader generator, selection state and history",
+    "legacy_cache": "new role cannot accept the historical no-identity cache fallback",
+    "bare_state_dict": "Insufficient to select an observation law; consumers must restore and validate checkpoint metadata as the supported trainer does."
+  },
+  "compatibility": {
+    "opt_in_only": true,
+    "without_observation_contract": "log_observation_dt delegates exactly to historical log_f_dt",
+    "old_roles_and_active_candidates": "remain on their existing objective; not silently migrated",
+    "new_parameters_for_observation_layer": 0,
+    "old_default_rng_and_state_keys": "unchanged"
+  },
+  "verification": {
+    "receipt": "search_artifacts/observed_time_joint_20260917_v1/implementation_receipt.json",
+    "synthetic_cpu": ["probability mass normalization and top-code boundary", "finite gradients in narrow bins and extreme tails", "five-Backbone time and quantity encoder gradients", "target and padding causality", "same batch traces across five Backbones", "strict earliest tie", "cached checkpoint and exact interrupted resume", "train-only initialization", "three dataset contracts through the production CLI using fabricated Parquet"]
+  },
+  "remaining": [
+    "Implement the selected new Backbone and its capacity-matched control, then bind both to this same objective in an explicit role.",
+    "Freeze real train-only statistics, source bundle, evaluation gates, server assignment and resource/time limits in a separate GPU execution contract.",
+    "After execution approval, qualify native CUDA numerical behavior and actual step/memory costs before comparison training.",
+    "Treat scientific suitability and generalization as unverified until the approved real-data comparisons complete."
+  ]
+}

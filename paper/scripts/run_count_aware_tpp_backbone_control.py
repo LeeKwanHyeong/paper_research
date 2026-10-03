@@ -28,6 +28,7 @@ from models.TPPs.CountAwareTPP import (
     TIME_HEAD_EXACT_MODES,
     TIME_HEAD_MODE_LEGACY_CLAMPED,
     TIME_HEAD_MODE_LOGNORMAL_DURATION,
+    TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION,
     TIME_HEAD_MODE_SCALED_EXACT,
     TIME_HEAD_MODE_SCALED_EXACT_STABLE,
 )
@@ -56,6 +57,13 @@ from paper.scripts.count_aware_tpp_backbone.constants import (
     MODEL_ROLE_BOUNDED_QK,
     MODEL_ROLE_LEVEL_HISTORY_QKV,
     MODEL_ROLE_VALUE_NORM,
+    MODEL_ROLE_SLOT_MEMORY,
+    MODEL_ROLE_SAME_EVENT_MEMORY,
+    MODEL_ROLE_SUCCESSOR_MEMORY,
+    MODEL_ROLE_NONLINEAR_PRE_POOL,
+    MODEL_ROLE_NONLINEAR_POST_POOL,
+    MODEL_ROLE_TASK_SHARED_MEMORY,
+    MODEL_ROLE_TASK_SPLIT_MEMORY,
     QUANTILE_ADAPTIVE_QUANTILES,
     QUANTILE_ADAPTIVE_RAW_WEIGHTS,
     QUANTILE_ADAPTIVE_VARIANT,
@@ -90,6 +98,7 @@ from paper.scripts.count_aware_tpp_backbone.training import (
     early_stopping_exhausted,
     train_one,
 )
+from paper.scripts.count_aware_tpp_backbone import observed_time
 from paper.scripts.count_aware_tpp_backbone.thp_static_contract import (
     record_static_memory_failure,
     validate_static_memory_data,
@@ -391,7 +400,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--tail-huber-delta", type=float, default=1.0)
     parser.add_argument(
         "--time-head-mode",
-        choices=JOINT_TRAINING_TIME_HEAD_MODES,
+        choices=(*JOINT_TRAINING_TIME_HEAD_MODES, TIME_HEAD_MODE_HETEROSCEDASTIC_LOGNORMAL_DURATION),
         default=TIME_HEAD_MODE_LEGACY_CLAMPED,
     )
     parser.add_argument("--time-scale", type=float, default=3.0)
@@ -435,7 +444,26 @@ def main() -> None:
 
 
 def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None = None) -> None:
-    if args.time_head_mode not in JOINT_TRAINING_TIME_HEAD_MODES:
+    # This experiment's shared trainer is entered only by its bounded native
+    # supervisor. Reject the general CLI before touching CUDA or real data.
+    requested_backbones = parse_str_tuple(args.backbones)
+    if (args.model_role == observed_time.LOCAL_GATE_ROLE
+            or set(requested_backbones) & set(observed_time.LOCAL_GATE_BACKBONES[1:])):
+        raise ValueError("Local gate training requires its approved dedicated supervisor paper/scripts/run_local_gate_execution.py")
+    if (args.model_role == observed_time.MULTILAG_ROLE
+            or set(requested_backbones) & set(observed_time.MULTILAG_BACKBONES[1:])):
+        raise ValueError(
+            "Multi-lag detail training requires the approved dedicated supervisor "
+            "paper/scripts/run_multilag_detail_execution.py"
+        )
+    if (args.model_role == observed_time.STATE_ROLE
+            or set(requested_backbones) & set(observed_time.STATE_BACKBONES[1:])):
+        raise ValueError(
+            "State-transport training requires the approved dedicated supervisor "
+            "paper/scripts/run_state_transport_execution.py"
+        )
+    observed_joint = args.model_role in observed_time.ROLES
+    if args.time_head_mode not in JOINT_TRAINING_TIME_HEAD_MODES and not observed_joint:
         raise ValueError(
             "This joint-training runner does not support the frozen "
             "heteroscedastic duration head; use its dedicated runner"
@@ -447,6 +475,7 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
     backbones = parse_str_tuple(args.backbones)
     seeds = parse_int_tuple(args.seeds)
     quantity_variants = normalize_quantity_variants(args.quantity_variants)
+    observed_time.validate_launch(args, backbones, quantity_variants)
     validate_model_role_contract(
         model_role=args.model_role,
         backbones=backbones,
@@ -486,6 +515,13 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
         MODEL_ROLE_BOUNDED_QK,
         MODEL_ROLE_LEVEL_HISTORY_QKV,
         MODEL_ROLE_VALUE_NORM,
+        MODEL_ROLE_SLOT_MEMORY,
+        MODEL_ROLE_SAME_EVENT_MEMORY,
+        MODEL_ROLE_SUCCESSOR_MEMORY,
+        MODEL_ROLE_NONLINEAR_PRE_POOL,
+        MODEL_ROLE_NONLINEAR_POST_POOL,
+        MODEL_ROLE_TASK_SHARED_MEMORY,
+        MODEL_ROLE_TASK_SPLIT_MEMORY,
     }
     if args.model_role == MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT:
         if args.checkpoint_monitor != "validation_raw_quantity_rmse":
@@ -615,12 +651,20 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
                 MODEL_ROLE_BOUNDED_QK,
                 MODEL_ROLE_LEVEL_HISTORY_QKV,
                 MODEL_ROLE_VALUE_NORM,
+                MODEL_ROLE_SLOT_MEMORY,
+                MODEL_ROLE_SAME_EVENT_MEMORY,
+                MODEL_ROLE_SUCCESSOR_MEMORY,
+                MODEL_ROLE_NONLINEAR_PRE_POOL,
+                MODEL_ROLE_NONLINEAR_POST_POOL,
+                MODEL_ROLE_TASK_SHARED_MEMORY,
+                MODEL_ROLE_TASK_SPLIT_MEMORY,
             }
             or args.model_role == KEY_VALUE_ROLE
             or args.model_role == ELAPSED_AGE_ROLE
             or args.model_role == THP_STATIC_MEMORY_ROLE
             or args.model_role == MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT
-            or args.model_role == MODEL_ROLE_RAW_RMSE_BASELINE_ALIGNMENT):
+            or args.model_role == MODEL_ROLE_RAW_RMSE_BASELINE_ALIGNMENT
+            or observed_joint):
         # Dedicated prospective roles keep held-out rows outside materialized memory.
         raw_frame = load_train_validation_frame(args.data)
     else:
@@ -635,6 +679,8 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
     missing = sorted(required - set(raw_frame.columns))
     if missing:
         raise ValueError(f"Fixed split is missing columns: {missing}")
+    if observed_joint:
+        observed_time.validate_recorded_grid(raw_frame, args.dataset_contract)
     if args.max_series is not None:
         raw_frame = filter_top_series(
             raw_frame,
@@ -652,6 +698,7 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
             max_seq_len=args.max_seq_len,
         )
     if args.model_role in {
+        *observed_time.ROLES,
         MODEL_ROLE_QUANTILE_CHECKPOINT_ALIGNMENT,
         MODEL_ROLE_RAW_RMSE_BASELINE_ALIGNMENT,
         MODEL_ROLE_INTERLAYER_MEMORY,
@@ -660,6 +707,13 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
         MODEL_ROLE_BOUNDED_QK,
         MODEL_ROLE_LEVEL_HISTORY_QKV,
         MODEL_ROLE_VALUE_NORM,
+        MODEL_ROLE_SLOT_MEMORY,
+        MODEL_ROLE_SAME_EVENT_MEMORY,
+        MODEL_ROLE_SUCCESSOR_MEMORY,
+        MODEL_ROLE_NONLINEAR_PRE_POOL,
+        MODEL_ROLE_NONLINEAR_POST_POOL,
+        MODEL_ROLE_TASK_SHARED_MEMORY,
+        MODEL_ROLE_TASK_SPLIT_MEMORY,
     }:
         _, validation_target_population = exact_target_population(
             frame,
@@ -679,7 +733,7 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
             time_w_max=args.time_w_max,
             train_time_contract=train_time_contract,
         )
-    elif args.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION:
+    elif args.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION or observed_joint:
         expected_scale = float(train_time_contract["time_scale"])
         if not math.isclose(
             args.time_scale,
@@ -698,7 +752,7 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
     elif args.time_head_mode == TIME_HEAD_MODE_SCALED_EXACT:
         time_initial_intercept = math.log(args.time_scale)
         time_intercept_transform = "hard_clamp"
-    elif args.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION:
+    elif args.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION or observed_joint:
         time_initial_intercept = 0.0
         time_intercept_transform = "not_applicable"
     else:
@@ -706,16 +760,16 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
         time_intercept_transform = "legacy_upper_clamp"
     time_initial_location = (
         float(train_time_contract["target_log_scaled_mean"])
-        if args.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION
+        if args.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION or observed_joint
         else None
     )
     time_initial_scale = (
         float(train_time_contract["target_log_scaled_std"])
-        if args.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION
+        if args.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION or observed_joint
         else None
     )
     if (
-        args.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION
+        (args.time_head_mode == TIME_HEAD_MODE_LOGNORMAL_DURATION or observed_joint)
         and time_initial_scale is not None
         and time_initial_scale <= args.time_sigma_floor
     ):
@@ -756,6 +810,10 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
             "train_time_statistics": train_time_contract,
         },
     }
+    if observed_joint:
+        shared_interface["time_head"]["observation_likelihood"] = observed_time.observation_contract(args.dataset_contract)
+        shared_interface["time_head"]["reported_metric"] = "recorded_positive_integer_time_nll"
+        shared_interface["time_head"]["loader_zero_policy"] = "integer_grid_verified_then_zero_merged_into_one"
     interface_by_variant = {
         VARIANT: {
             **shared_interface,
@@ -912,6 +970,11 @@ def run(args: argparse.Namespace, *, output_created: Callable[[], None] | None =
         "execution_role": args.execution_role,
         "partial_smoke": args.max_train_batches is not None or args.max_val_batches is not None,
     }
+    if observed_joint:
+        contract["time_head"]["observation_likelihood"] = observed_time.observation_contract(args.dataset_contract)
+        contract["time_head"]["density_unit"] = "dimensionless_recorded_positive_integer_probability_mass"
+        contract["time_head"]["reported_metric"] = "recorded_positive_integer_time_nll"
+        contract["time_head"]["loader_zero_policy"] = "integer_grid_verified_then_zero_merged_into_one"
     if static_memory_reference is not None:
         contract.update(validate_static_memory_data(contract, frame, static_memory_reference))
     args.output_dir.mkdir(parents=True, exist_ok=static_memory_reference is None)

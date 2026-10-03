@@ -1,0 +1,75 @@
+{
+  "schema": "hard_lmm_pair_message_design_v1",
+  "date": "2026-09-17",
+  "status": "design_selected_not_implemented",
+  "purpose": "Improve the information each past event contributes inside the encoder, conditional on the current state, before aggregating events.",
+  "hypothesis": "A history record can require a different channel-wise transformation for different current contexts; scalar retrieval weights over fixed values may not express that interaction efficiently.",
+  "hypothesis_status": "untested; current experiments do not establish fixed values as the cause of failure",
+  "baseline": "fresh TitanTPP B with two encoder blocks and original static Hard-LMM",
+  "architecture": {
+    "insertion": "inside the second encoder attention block, before its existing residual and feed-forward path",
+    "input": "u_i is the existing second-block pre-attention normalized first-block hidden state",
+    "rank": 8,
+    "projections": "bias-free R,S,V:H->r and U:r->H",
+    "query": "q_i = R u_i",
+    "key": "k_j = S u_j",
+    "value": "v_j = V u_j",
+    "weights": "w_ij is the head mean of existing second-attention probabilities before attention dropout; use only observed causal event columns j<=i; exclude persistent token columns without renormalizing remaining mass",
+    "candidate": "c_i = sum_j w_ij * (2*sigmoid(q_i+k_j) elementwise-multiplied by v_j)",
+    "injection": "add U c_i to the existing attention output, then preserve the original residual, feed-forward, static Hard-LMM and shared time/quantity state",
+    "zero_cases": "no observed event mass or an unobserved query gives exactly zero correction",
+    "causality": "exclude future, padding and unobserved records; sanitize invalid features before nonlinear transforms",
+    "state_lifetime": "per-forward causal history only; no persistent cross-batch state",
+    "training": "all original and added parameters jointly trainable; no new dropout, detach, task split, auxiliary loss or dataset-specific thresholds"
+  },
+  "same_parameter_control": {
+    "mass": "s_i = sum_j w_ij",
+    "pooled_values": "kbar_i = sum_j w_ij*k_j/s_i; vbar_i = sum_j w_ij*v_j/s_i",
+    "control": "c_i = s_i * (2*sigmoid(q_i+kbar_i) elementwise-multiplied by vbar_i)",
+    "empty_branch": "return zero without dividing by zero",
+    "controlled_difference": "nonlinear query/event interaction before aggregation versus after aggregation",
+    "capacity": "identical trainable tensor names/shapes and initial values; both routes use R,S,V,U",
+    "not_claimed": "equal function class or equal runtime"
+  },
+  "initialization": {
+    "U": "exact zero",
+    "R_S_V": "standard Linear initialization inside fork_rng so added initialization does not consume caller RNG",
+    "base": "identical common B parameters for the same seed",
+    "verification_required": "initial outputs, objective and common-B pre-clipping gradients match B; same caller RNG",
+    "clipping_limit": "Added U gradients enter total gradient clipping, so the first clipped optimizer update need not equal B."
+  },
+  "objective": {
+    "common_contract": "paper/contracts/observed_time_joint_training_v1.json",
+    "planned": "fresh B, control and candidate all use the same recorded-duration probability and existing log-MSE quantity objective",
+    "attribution": "Only compare fresh arms within this common condition; historical legacy-time runs are context, not controls for the new architecture effect.",
+    "status": "candidate/control integration not implemented"
+  },
+  "distinction_from_previous_candidates": [
+    {"family": "task-routed/shared episode retrieval", "difference": "Those candidates change reads and add corrections after the base encoder; this candidate changes each event message inside the encoder while retaining one joint representation."},
+    {"family": "nonlinear episode values", "difference": "Broadly related nonlinear-before-pooling family, but previous values transformed query-independent successor time/quantity features; this design transforms hidden event vectors conditional on each query inside attention."},
+    {"family": "QKV and elapsed-age retrieval", "difference": "Those modify address/score geometry; this design keeps existing scalar attention probabilities and adds channel-wise message transformation."},
+    {"family": "frozen H1/H2 linear adapters", "difference": "Prior negative first-order linear probe results neither validate nor directly rule out this nonlinear pairwise operation."},
+    {"family": "surprise/fast-weight and recurrent memory", "difference": "Already represented in prior project implementations; not presented as a new direction here."}
+  ],
+  "cost": {
+    "added_parameters": "4*H*r",
+    "added_parameters_H64_r8": 2048,
+    "pairwise_compute": "O(batch*sequence_length^2*r) in addition to projection work",
+    "one_dense_pair_tensor_float32_B128_L256_r8_MiB": 256,
+    "caveat": "Autograd may retain several tensors; this is not peak GPU memory. Chunked implementation must match dense forward and gradients.",
+    "measurement": "actual forward/backward time and memory at lengths64/256 before fixing a GPU budget"
+  },
+  "verification_required": [
+    "Scalar oracle distinguishing the two nonlinear aggregation orders; q=0, w=(0.5,0.5), k=(-2,2), v=(-1,1) gives candidate=tanh(1), control=0.",
+    "One record, equal event keys and zero event mass reduce consistently to the control.",
+    "B initial output/objective/common gradient/RNG equivalence and identical base parameters.",
+    "Strict future-target/padding/mask-gap causality and batch independence.",
+    "After activating U, gradients reach R,S,V,U and the base encoder from both prediction objectives.",
+    "No recomputation of stochastic attention; exposing pre-dropout weights preserves existing dropout draws.",
+    "Saved routing identity, model/optimizer/RNG/selector restoration and next-update equality.",
+    "Shared runner identical batches, strict earliest raw-RMSE selection and same-checkpoint metrics."
+  ],
+  "decision_rule_for_next_stage": "Implementation must pass the causal, gradient, initialization and restore contracts and have a measured feasible cost. Performance gates must be frozen before GPU runs; no improvement or novelty claim follows from these engineering checks.",
+  "scope": {"real_data_or_checkpoint_execution": false, "new_gpu_execution": false, "performance_verified": false, "novelty_verified": false},
+  "future_artifacts": ["candidate/control implementation", "synthetic CPU verification and cost receipt", "separate GPU execution contract requiring user approval"]
+}

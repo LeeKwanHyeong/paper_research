@@ -1,0 +1,78 @@
+from copy import deepcopy
+from pathlib import Path
+import json
+import numpy as np
+import pytest
+import torch
+from models.TPPs.DeepRenewalEvent import ARM as DRP, nb_log_survival
+from models.TPPs.CountAwareFactory import validate_checkpoint_route
+from paper.scripts import run_titantpp_mlp_candidates as r
+from paper.scripts.verify_titantpp_mlp_candidates import check
+from simple_lab_test.search.tests.test_multilag_detail_execution import admitted_contract, cpu_training
+
+def test_synthetic_model_paths(cpu_training):
+    assert check()['status']=='passed'
+
+@pytest.mark.parametrize('arm',r.ARMS)
+@pytest.mark.parametrize('dataset',['yellow_trip_hourly','intermittent_frozen_5000','raf_spare_parts'])
+def test_real_trainer_and_replays(cpu_training,admitted_contract,tmp_path,arm,dataset):
+    c=deepcopy(admitted_contract);c.update(design_sha256='synthetic',architecture={})
+    data=next(d for d in c['datasets'] if d['dataset_id']==('intermittent_frozen_5000' if dataset=='raf_spare_parts' else dataset))
+    if dataset=='raf_spare_parts':
+        data['dataset_id']=dataset
+        data['model']['time_observation_contract']['unit']='month'
+    data['steps_per_epoch']=(data['inherited_data_identity']['populations']['train']['target_count']+127)//128
+    frame,_=r.base.prepare_admitted_data(data);interface=r.time_interface(data,frame,c,arm)
+    args=r.training_args(c,data,tmp_path/'train',arm);args.device='cpu';args.epochs=args.min_epochs=args.early_stopping_patience=3
+    q={'boundaries':data['quantity_boundaries_all_train_rows'],'strata':[{'label':f'bin{i}'} for i in range(5)]}
+    from paper.scripts.count_aware_tpp_backbone import training
+    with r.shared.audited_training(training,data,lambda:None,lambda *_:None) as exposure:
+        summary,_,_=training.train_one(args=args,frame=frame,quantity_contract=q,interface_meta=interface,backbone=arm,quantity_variant=r.variant_for(arm),seed=42)
+    run=args.output_dir/'runs'/arm/r.variant_for(arm)/'seed_42'
+    history=r.read(run/'history.json')['history']
+    r.prior.audit_arm(history,summary,exposure,data,{'minimum_epochs':3,'maximum_epochs':3,'patience':3})
+    identity=training._resume_identity(args=args,backbone=arm,quantity_variant=r.variant_for(arm),seed=42,monitor=args.checkpoint_monitor,quantity_contract=q,interface_meta=interface)
+    for file,epoch in [('best_val_qty_rmse_model.pt',summary['best_epoch']),('last_epoch_state.pt',3)]:
+        ep=r.replay_checkpoint(run/file,data,frame,lambda:None,device='cpu',expected_arm=arm,expected_identity=identity,expected_initial=summary['initial_state_sha256'],expected_epoch=epoch)
+        for key in ('qty_rmse','qty_mae','time_nll'):assert ep[key]==pytest.approx(history[epoch-1]['val_'+key],abs=1e-8)
+        p=torch.load(run/file,weights_only=False);validate_checkpoint_route(p,arm)
+        with pytest.raises(ValueError):validate_checkpoint_route(p,'titantpp_history_mlp')
+        p['variant']='foreign'
+        with pytest.raises(ValueError):validate_checkpoint_route(p,arm)
+
+@pytest.mark.parametrize('arm',r.ARMS)
+def test_actual_epoch_resume_model_optimizer_rng_shuffle(cpu_training,admitted_contract,tmp_path,monkeypatch,arm):
+    from paper.scripts.count_aware_tpp_backbone import training
+    c=deepcopy(admitted_contract);c.update(design_sha256='synthetic',architecture={})
+    data=c['datasets'][0];frame,_=r.base.prepare_admitted_data(data);interface=r.time_interface(data,frame,c,arm)
+    q={'boundaries':data['quantity_boundaries_all_train_rows'],'strata':[{'label':f'bin{i}'} for i in range(5)]}
+    def args_for(folder):
+        a=r.training_args(c,data,folder,arm);a.device='cpu';a.epochs=a.min_epochs=a.early_stopping_patience=3;return a
+    a=args_for(tmp_path/'continuous');b=args_for(tmp_path/'resumed')
+    def fit(a):return training.train_one(args=a,frame=frame,quantity_contract=q,interface_meta=interface,backbone=arm,quantity_variant=r.variant_for(arm),seed=42)
+    fit(a)
+    original=training.atomic_torch_save
+    class InjectedStop(Exception):pass
+    def stop_after_saved(payload,path):
+        original(payload,path)
+        if Path(path).name=='last_epoch_state.pt' and payload['epoch']==2:raise InjectedStop()
+    monkeypatch.setattr(training,'atomic_torch_save',stop_after_saved)
+    with pytest.raises(InjectedStop):fit(b)
+    monkeypatch.setattr(training,'atomic_torch_save',original);fit(b)
+    def payload(a):return torch.load(a.output_dir/'runs'/arm/r.variant_for(arm)/'seed_42/last_epoch_state.pt',weights_only=False)
+    x,y=payload(a),payload(b)
+    def eq(x,y):
+        if isinstance(x,torch.Tensor):assert torch.equal(x,y)
+        elif isinstance(x,np.ndarray):assert np.array_equal(x,y)
+        elif isinstance(x,dict):
+            assert x.keys()==y.keys()
+            for k in x:eq(x[k],y[k])
+        elif isinstance(x,(tuple,list)):
+            assert len(x)==len(y)
+            for xx,yy in zip(x,y):eq(xx,yy)
+        else:assert x==y
+    for key in ('model_state_dict','best_state_dict','optimizer_state_dict','rng_state','train_loader_generator_state'):
+        eq(x[key],y[key])
+    for xx,yy in zip(x['history'],y['history']):
+        for k in xx:
+            if k.startswith(('val_','train_joint','train_time','train_quantity')):assert xx[k]==yy[k],k
