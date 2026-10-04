@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "route": "retrospective_locked_test_reevaluation",
+  "not_independent_untouched_data": true,
+  "approval": {
+    "test_inference_authorized": true,
+    "allowed_splits": [
+      "validation",
+      "test"
+    ],
+    "retraining_authorized": false,
+    "new_paid_resources_authorized": false,
+    "transfer_host": "5080",
+    "prior_explicit_transfer_approval": "5080 전용 폴더로 해당 자료 전송 승인",
+    "datasets": [
+      "yellow_trip_hourly",
+      "raf_spare_parts",
+      "intermittent_frozen_5000"
+    ],
+    "models": [
+      "titantpp_history_cross_product",
+      "titantpp_history_post_block",
+      "titantpp_history_recent4_attention",
+      "titantpp_history_recent4_mean"
+    ],
+    "seeds": [
+      42
+    ]
+  },
+  "scope_and_approval_sha256": "a1f510ab02250ff0215cc47a68b829f2876fc20b216b03b1ac165f570434abbe",
+  "registry_sha256": "4ce5ed262b031ee5fa4d211090a85da0c22a10a8059f92b11e0e27d824495126",
+  "selected_binding_sha256": "81eaf764c4167fe2eecd962c199b92b354d3a41e9683b901cf12b5243ae272b5",
+  "comparison_binding_sha256": "8fb6c66a427b533df8e8f7b39e455a90a976457d97bdd7c0e3c95bb3a4d86bb6",
+  "dataset_manifest_sha256": "db9e448be65215044cfdc88851c1dbc41f979b656ea3c3dd72003262a634d9a2",
+  "dataset_sha256": {
+    "yellow_trip_hourly": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+    "intermittent_frozen_5000": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+    "insta_market_basket": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+    "raf_spare_parts": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d"
+  },
+  "resources": {
+    "host": "5080",
+    "root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_completed_validation_test_20261004_v1/a100_workspace",
+    "python": "/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python3.12",
+    "gpu_uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+    "concurrent_workers": 1,
+    "gpu_memory_limit_gib": 12,
+    "rss_limit_gib": 32,
+    "output_limit_gib": 15,
+    "condition_timeout_seconds": 10800,
+    "campaign_timeout_seconds": 86400,
+    "new_rental_cost_usd": 0,
+    "shared_runtime_changes": false
+  },
+  "source_training_gpu": "A100 SXM",
+  "evaluation_gpu": "RTX 5080; cross-device replay qualification, not native A100 runtime reproduction",
+  "validation_gate": {
+    "rtol": 1e-05,
+    "atol": 1e-05,
+    "all_12_full_validation_pass_before_any_test": true,
+    "metrics": [
+      "qty_mae",
+      "qty_rmse",
+      "time_nll"
+    ]
+  },
+  "tail_rule": "raw_quantity > frozen all-train quantity_boundaries[3]",
+  "prediction_protocol": {
+    "mode": "chronological_one_step_next_observed_event",
+    "validation_selected_checkpoint_only": true,
+    "selection_updates": false,
+    "parameter_updates": false,
+    "new_splits": false,
+    "target_or_future_in_input": false,
+    "test_fitted_preprocessing": false,
+    "test_access_status": "previously accessed legacy split, not independent untouched evaluation"
+  },
+  "evaluator": {
+    "path": "reports/titantpp_completed_validation_test_20261004_v1/a100/evaluate.py",
+    "sha256": "ee450eac24af999aa81e19af6866f63b16a3eed3c9483283ca27ce19156cb0cc",
+    "parent_path": "reports/titantpp_legacy_evaluation_20261003_v1/evaluate.py",
+    "byte_identical": true
+  },
+  "code_sha256": {
+    "prepare.py": "480731124e7137b798a5eff5df14a6f010b4e75db83d3ef0a9cb924aa86b9dd0",
+    "run_all.py": "2bc2f405a2a272c0510e7abc19be50ec2a1ebaf8cb351322fd4b895958bc31ee",
+    "verify.py": "849ad5d7d1c86e4abd1c4b8c327bc1883a66a6ce6cb331c99f922a736340cf6e"
+  },
+  "interpretation": "Exploratory seed42-only existing-split reevaluation; no 3seed SD or efficiency claim."
+}
