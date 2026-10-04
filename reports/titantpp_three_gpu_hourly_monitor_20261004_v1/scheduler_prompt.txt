@@ -1,0 +1,29 @@
+paper_research의 5080·5090·RunPod A100 실험을 매시간 읽기 전용으로 확인한다. 사용자가 2026-10-04 “5080/5090/A100 한시간 스케쥴러 만들어두자”라고 요청했다. 기존 A100 heartbeat를 세 GPU의 통합 모니터로 확장한 것이며 같은 회차에 중복 관측하지 않는다. 매회 각 서버의 실제 KST 관측시각, 완료·실패·진행·대기·미확정 수, 현재 데이터·모델·seed, 저장/best epoch 및 조건부 종료 예상을 짧은 한국어 표로 알린다.
+
+대상과 계약
+프로젝트 root는 /Users/igwanhyeong/PycharmProjects/paper_research이다. TEST_SESSION_PROTOCOL.md 0·1·9·12절과 reports/titantpp_three_gpu_hourly_monitor_20261004_v1/SCHEDULER.md를 먼저 읽는다. 두 캠페인을 별도 집계한다. 현재 포인터·소유 Pod·계약·과학 소스가 다르면 해당 캠페인을 과거 대상으로 관측하지 말고 변경 이유를 확인한다. 한쪽의 조회 실패가 다른 서버 관측을 막지 않도록 독립 실행한다.
+
+5080·5090은 search_artifacts/titantpp_history_width8_12_dual_20261004_v1의 current.json·README.md·execution_contract.json 및 reports/titantpp_history_capacity_launch_20261004_v1의 대상별 승인·qualification·기록을 읽는다. 계약 canonical SHA8434041a6a301995a8d22baa77d5ca0da4eb2cd942d091a8aa8cef379406c48d, 동결114소스 closure41a4a4ff79e5e17d907b9ee8966723004516ee2e42608d31c7f1a871f0acd3e1이다. source revision3bec316f2eb0319cf52e062dcf17b3f9518dcb7a다. 5080은 Taxi·RAF × 폭8/12 × seed42/52/62 총12조건, 5090은 Intermittent × 폭8/12 × seed42/52/62 총6조건이며 각 서버 단독 worker다. 원격 root는 각각 /home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_history_width8_12_dual_20261004_v1_5080 및 _5090이다. Python/GPU UUID/tmux/Runtime은 해당 동결 계약을 따른다. 기존 폭4·16은 재사용하며 Instacart는 후속이다. 기존 두 서버의 학습·프로세스·Runtime을 변경하지 않는다.
+
+A100은 search_artifacts/titantpp_cnn_gru_a100_seed42_20261004_v1의 README.md·current.json·execution_contract.json·user_authorization.json·approval.json·launch_receipt.json·launch_confirmation.json·control/allocation.json·hourly_monitor/latest.json을 읽는다. 소유 Pod는 okbl76hxfr7a9d, A100 SXM80GB 한 장, UUID GPU-92df247f-f64b-6118-bdaa-0d5d21e63add다. 계약 canonical SHA46a0eb48d5207df800553f5d3508016ce9063d1dec9be2c5e84bfa87a1b1fdae, 동결117소스 closure40184c7ff418f35b191ebfa309e462b9e88889443f36e4722cc5d06988d182cd, worker4 closure7d961867f612f86e1b78346630764d7624472532f596aba133a3bf3d24da2f26이다. Taxi·Intermittent·RAF × CNN+MLP16·GRU54·CNN+GRU54 × seed42 신규9조건이며 검증된 최대3병렬이다. 기존 MLP16 checkpoint3개의 full Validation replay와 native 초기화·결정성·인과성·메모리 검증은 통과했다. 과거 종료한 routing/placement, cross-product/recent-four-mean, 후속36조건 및 삭제된Pod는 관측 대상이 아니다.
+
+회차당 관측 명령
+프로젝트 root에서 다음 세 명령을 각각 한 번만 실행한다. 독립 호출로 실패를 분리하고 필요한 읽기 전용 네트워크 권한을 사용한다.
+/usr/local/bin/python3 paper/scripts/observe_titantpp_history_capacity_hourly.py --host 5080
+/usr/local/bin/python3 paper/scripts/observe_titantpp_history_capacity_hourly.py --host 5090
+/usr/local/bin/python3 search_artifacts/titantpp_cnn_gru_a100_seed42_20261004_v1/control/hourly_once.py
+각 명령은 미종료 대상에 읽기 전용 SSH를 한 번 수행하고 UTC별 snapshot·analysis·report·latest를 로컬에 남긴다. 별도 SSH·control observe·observe.py·terminal_observer.py·manage.py 호출 또는 반복 polling을 추가하지 않는다. 종료가 검증된 5080/5090은 보존된 terminal 관측을 재사용해 불필요한 접속을 끝내며 원래 실제 관측시각을 유지한다. A100은 삭제 receipt가 확인되면 회수된 terminal snapshot을 재사용한다. 조회 실패는 이번 관측 실패이며 학습 실패가 아니다. 과거 snapshot을 새 관측으로 표시하지 않는다.
+
+진행·완료 판정
+저장된 running JSON만 믿지 말고 소유 supervisor/controller·worker 명령과 실제 PID, GPU UUID·GPU PID, checkpoint receipt·history·epoch timing·실제 저장 epoch를 함께 확인한다. 소유 프로세스 부재나 불일치는 미확정 또는 사용자 조치 필요로 보고하고 자동 재시작하지 않는다. terminal scientific_success, 소형 기록 원본 SHA와 selected/last 전체 Validation replay가 모두 확인된 조건만 검증된 완료로 집계한다. 서버가 선언한 완료와 직접 확인한 완료 증거를 구분한다. binary 원본 SHA 회수와 CPU 재추론 감사는 별도로 표시한다. 실패·미시작·불리한 결과를 누락하지 않는다.
+진행 성능은 최초 최소 raw 수량 RMSE epoch의 전체 RMSE·MAE·Time NLL을 같은 epoch에서 best-so-far로 읽는다. 큰 수량 경계는 원래 Train 기준 Taxi3449·Intermittent187·RAF200 초과이다. full Validation과 N/n 가중 고정 Train 표본 진단을 구분한다. Test 행·예측·성능 및 validation/test 혼합 결과를 열지 않는다. 3seed가 모두 검증되기 전에 3seed 결론을 내리지 않는다. A1009조건은 단일seed·이종GPU 탐색이며 논문 효율 측정이나 3seed 확정 결과와 혼합하지 않는다. CNN 경로와 GRU 전체 보정 구조 변경을 순환/attention 연산 하나의 독립 효과로 단정하지 않는다.
+
+조건부 종료 예상
+각 fit 자체 최근 최대10개 실제 완료 epoch 시간의 중앙값을 사용한다. best 미갱신과 현재 병렬 수·속도 유지 가정에서 종료epoch=min(300,max(40,best_epoch+40))까지 남은 epoch를 계산한다. best 갱신/병렬 수 변화 시 ETA도 변한다고 표시한다. 300epoch 시나리오는 별도이며 완료 보장·통계적 예측구간이 아니다. 미시작 모델의 속도를 다른GPU·다른모델에서 복사하지 않는다. 자체 실측이나 슬롯 대기시간이 불확실하면 전체 큐 ETA는 미확정으로 둔다. 병렬 fit 시간을 단순 합산하지 않는다. endpoint replay·원본 회수·CPU 감사 시간은 학습 ETA와 별도다. deadline은 ETA로 쓰지 않는다. 5080/5090의 조건별36시간·전체168시간과 실제 저장된 lease 마감을 유지한다. A100 첫2epoch300epoch 비용 projection은 경고만이며 중단 gate나 학습 실패가 아니다.
+
+A100 비용·회수 제어
+이번 A100 캠페인 승인 총상한은 $100(작업80·회수정리20), 자동충전 없음이다. 초기 잔액 $53.0050935159에서 회수20을 남기므로 실제 작업상한은 $33.0050935159다. 계정 잔액/충전 차이를 Pod 개별 요금으로 해석하지 않는다. GPU$1.59/h, 저장 포함 보수요율$1.5969444444/h, 실제 로컬 마감2026-10-05 15:17:45KST를 따른다. provider compute-stop 요청10/5 16:17:45KST의 적용/readback은 미확인이다. 더 엄격한 allocation·잔액·비용 상한을 유지하며 예산·인증·계정 자동결제 설정을 바꾸지 않는다.
+기존 소유 manager가 원본 manifest SHA 회수 후 이 Pod만 stop/delete하고 목록부재를 확인한다. 저장된 manager 관측시각·실제 소유 PID/명령, retrieval·cleanup·cost 증거를 함께 확인한다. 첫 소유 manager PID48709는 당시 실제 명령이 일치했고 starts_training=false였다. Mac 절전·통신장애 중 provider API 과금종료는 보장되지 않는다. manager 부재·비용/회수 실패는 원인과 필요한 사용자 조치를 알린다. heartbeat는 새 manager·학습·qualification·replay·retry·resume·임대·프로세스 종료·claim 삭제를 하지 않는다. 미회수 원본이 있으면 Pod를 삭제하지 않는다.
+
+통합 모니터 종료
+한 서버가 종료되면 그 서버의 terminal 증거를 보존해 반복 SSH를 끝내고 나머지 서버 관측을 유지한다. 폭8/12의18조건과 A1009조건 및 각 서버 terminal이 모두 검증되면 각 캠페인 완료·실패·미시작을 빠짐없이 최종 관측 보고서로 남긴다. A100 원본 SHA 회수·비용보고·Pod 삭제/목록부재까지 확인한 뒤 이 통합 heartbeat만 삭제하고 종료를 알린다. 어떤 대상이든 실행 중이거나 상태/회수/비용/종료가 미확정이면 유지한다. 미회수 binary나 CPU 감사는 별도 미완료로 명시하고 전체 연구 감사 완료라고 하지 않는다. 다른 자동화, 기존 PAUSED 모니터, 다른 서버 작업/Pod, 채팅 archive 상태를 변경하지 않는다.
