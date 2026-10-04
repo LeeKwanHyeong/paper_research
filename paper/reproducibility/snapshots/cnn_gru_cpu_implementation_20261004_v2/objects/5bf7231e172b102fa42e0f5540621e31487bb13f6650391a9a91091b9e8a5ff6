@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "status": "design_specified_not_implemented_or_launched",
+  "date": "2026-10-04",
+  "problem": "Separate event-local QKV filtering and recurrent correction-module effects relative to width16 MLP",
+  "baseline": "titantpp_history_mlp_width16",
+  "historical_comparator": "titantpp_history_mlp",
+  "datasets": [
+    "taxi",
+    "intermittent",
+    "raf"
+  ],
+  "deferred_datasets": [
+    "instacart"
+  ],
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "execution": {
+    "training_authorization_conveyed_by_this_file": false,
+    "launched": false,
+    "new_fits_if_full_design_executed": 27,
+    "reused_baseline_fits": 9,
+    "depends_on": [
+      "width8_12_comparison",
+      "train_validation_time_diagnostic",
+      "implementation_and_qualification"
+    ]
+  },
+  "common": {
+    "main_hidden_dim": 64,
+    "evaluation_scope": "train_validation_only",
+    "head_loss_selector_change": false,
+    "checkpoint_selector": "first_minimum_finite_full_validation_raw_quantity_rmse",
+    "min_epochs": 40,
+    "max_epochs": 300,
+    "patience": 40,
+    "quantity_metrics": [
+      "raw_rmse",
+      "raw_mae",
+      "train_defined_tail_raw_rmse"
+    ],
+    "time_metric": "positive_integer_round_clamp_time_nll",
+    "same_selected_epoch_for_all_metrics": true,
+    "test_based_selection": false,
+    "full_source_data_optimizer_config_binding": "required_before_launch",
+    "baseline_availability_lags": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64,
+      128
+    ],
+    "dataset_id_mapping": {
+      "taxi": "yellow_trip_hourly",
+      "intermittent": "intermittent_frozen_5000",
+      "raf": "raf_spare_parts"
+    }
+  },
+  "cnn": {
+    "placement": "first_encoder_event_qkv_after_projection_before_persistent_kv_concat",
+    "kernel_size": 3,
+    "channels": 64,
+    "groups": 64,
+    "bias": false,
+    "independent_qkv_kernels": true,
+    "parameter_count": 576,
+    "initialization": "all_zero_added_kernel",
+    "combination": "identity_plus_convolution",
+    "lags": "current_and_two_previous_observed_events_in_segment",
+    "padding": "skip_no_event_count",
+    "withheld_valid": "reset_adapter_segment",
+    "persistent_tokens_filtered": false,
+    "attention_reference_scope_changed": false,
+    "mutable_batch_cache": false
+  },
+  "gru": {
+    "chosen_latent_width": 54,
+    "input_projection": "64_to_54_bias_false",
+    "output_projection": "54_to_64_bias_false",
+    "layers": 1,
+    "unidirectional": true,
+    "bias": true,
+    "dropout": 0,
+    "parameter_count": 24732,
+    "fixed_alpha": 1,
+    "state_scope": "within_sample_prefix_correction_segment",
+    "prefix_initial_state": "zero",
+    "padding": "no_state_update_no_count_increment_zero_correction",
+    "withheld_valid": "reset_state_and_count_zero_correction",
+    "first_observed": "update_state_no_correction",
+    "correction_eligibility": "observed_and_segment_count_at_least_two",
+    "up_initialization": "zero",
+    "other_initialization": "nonzero_default_with_forked_common_rng",
+    "cross_sample_state": false,
+    "added_layer_norm_or_decay": false
+  },
+  "parameter_options": {
+    "gru16": 3680,
+    "gru24": 6672,
+    "gru53": 23956,
+    "gru54": 24732,
+    "mlp16": 24576,
+    "chosen_difference": 156,
+    "chosen_difference_percent": 0.634765625,
+    "exact_parameter_matching": false,
+    "full_model_counts_require_instantiation": true
+  },
+  "arms": [
+    {
+      "id": "baseline_mlp16",
+      "cnn": false,
+      "correction": "mlp16",
+      "correction_plus_cnn_parameters": 24576,
+      "status": "reuse_existing"
+    },
+    {
+      "id": "cnn_mlp16",
+      "cnn": true,
+      "correction": "mlp16",
+      "correction_plus_cnn_parameters": 25152,
+      "status": "not_implemented"
+    },
+    {
+      "id": "gru54",
+      "cnn": false,
+      "correction": "gru54",
+      "correction_plus_cnn_parameters": 24732,
+      "status": "not_implemented"
+    },
+    {
+      "id": "cnn_gru54",
+      "cnn": true,
+      "correction": "gru54",
+      "correction_plus_cnn_parameters": 25308,
+      "status": "not_implemented"
+    }
+  ],
+  "interpretation": {
+    "cnn_contrast": "CNN effect within each correction type",
+    "gru_contrast": "whole correction-module replacement including context gating and scale",
+    "pure_recurrence_claim_supported": false,
+    "interaction_per_seed": "combined-cnn_only-gru_only+baseline",
+    "novelty_or_superiority_confirmed": false
+  },
+  "required_tests": [
+    "future_and_target_invariance",
+    "padding_skip_at_module_input",
+    "withheld_segment_reset",
+    "sample_and_batch_independence",
+    "persistent_tokens_unfiltered",
+    "zero_initial_identity",
+    "gradient_after_output_projection_update",
+    "checkpoint_identity_relabel_rejection",
+    "same_frozen_head_loss_selector",
+    "actual_parameter_count",
+    "deterministic_gpu_qualification",
+    "speed_memory_latency_measurement"
+  ],
+  "artifacts": [
+    "README.md",
+    "design.json",
+    "verify_design.py",
+    "verification.json"
+  ],
+  "role_configuration": {
+    "project_file": ".codex/agents/architecture-reviewer.toml",
+    "configured_model": "gpt-6-astra",
+    "configured_effort": "high",
+    "runtime_model_independently_verified": false
+  },
+  "risks": [
+    "time_NLL_cause_unproven",
+    "GRU_serial_latency",
+    "module_gating_context_scale_confound",
+    "54_dimension_not_small16_latent",
+    "same_count_does_not_equal_same_capacity",
+    "legacy_CNN_wrapper_head_incompatible"
+  ],
+  "historical_comparator_width": 4
+}

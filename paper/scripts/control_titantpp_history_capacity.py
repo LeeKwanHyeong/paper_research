@@ -149,7 +149,9 @@ for f in sorted((p/'run').glob('*/status.json')):
  result['files'][str(f.relative_to(p))]=json.loads(f.read_text())
 for f in sorted((p/'run').glob('*/runs/*/*/seed_*/history.json')):
  data=json.loads(f.read_text());rows=data.get('history',[])
- result['files'][str(f.relative_to(p))]={'count':len(rows),'last':rows[-1:]}
+ finite=[r for r in rows if isinstance(r.get('val_qty_rmse'),(int,float)) and __import__('math').isfinite(r['val_qty_rmse'])]
+ best=min(finite,key=lambda r:r['val_qty_rmse']) if finite else None
+ result['files'][str(f.relative_to(p))]={'count':len(rows),'last':rows[-1:],'best':best}
 for pattern in ['*/two_epoch_cost_receipt.json','*/runs/*/*/seed_*/server_checkpoint_receipt.json','*/runs/*/*/seed_*/epoch_timing.json']:
  for f in sorted((p/'run').glob(pattern)):
   data=json.loads(f.read_text())
@@ -166,9 +168,94 @@ print(json.dumps(result))
     print(json.dumps({"host": host, "path": str(path), "status": result["files"].get("status.json"), "gpu": result["gpu"]}), flush=True)
 
 
+def retrieve(c, host):
+    """Copy only immutable, supervisor-confirmed terminal fits; verify every byte."""
+    observations = sorted((B / "observations").glob("*/" + host + ".json"))
+    common.require(bool(observations), "No actual observation for this host")
+    snapshot = read(observations[-1])
+    completed = snapshot["files"].get("status.json", {}).get("completed", {})
+    allowed = {j["id"]: j for j in c["jobs"] if j["host"] == host}
+    common.require(set(completed) <= set(allowed), "Foreign completed condition")
+    destination = B / "retrieved" / host / "run"
+    pending = {}
+    for job, proof in completed.items():
+        path = destination / job
+        if path.exists():
+            common.require(common.sha_file(path / "terminal_manifest.json") == proof["terminal_manifest_sha256"],
+                           "Previously retrieved terminal changed")
+            manifest = read(path / "terminal_manifest.json")
+            for rel, digest in manifest["files"].items():
+                common.require(common.sha_file(path / rel) == digest, "Previously retrieved original changed")
+        else:
+            pending[job] = proof
+    if not pending:
+        print(json.dumps({"host": host, "newly_retrieved": 0, "completed": len(completed)}), flush=True)
+        return
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    stage = B / "retrieval_staging" / (stamp + "_" + host)
+    stage.mkdir(parents=True, exist_ok=False)
+    script = """import hashlib,json,sys,tarfile
+from pathlib import Path
+root=Path(REMOTE_ROOT)
+pending=PENDING
+contract_sha=CONTRACT_SHA
+with tarfile.open(fileobj=sys.stdout.buffer,mode='w|gz') as archive:
+ for job,proof in pending.items():
+  folder=root/'run'/job
+  manifest_path=folder/'terminal_manifest.json'
+  assert hashlib.sha256(manifest_path.read_bytes()).hexdigest()==proof['terminal_manifest_sha256']
+  manifest=json.loads(manifest_path.read_text())
+  assert manifest['scientific_success'] is True and manifest['status']=='complete'
+  assert manifest['contract_sha256']==contract_sha and manifest['job']['id']==job
+  for rel,digest in list(manifest['files'].items())+[('terminal_manifest.json',proof['terminal_manifest_sha256'])]:
+   assert not Path(rel).is_absolute() and '..' not in Path(rel).parts
+   path=folder/rel
+   assert path.is_file() and not path.is_symlink() and path.stat().st_size<64*1024*1024
+   assert hashlib.sha256(path.read_bytes()).hexdigest()==digest
+   archive.add(path,arcname=job+'/'+rel,recursive=False)
+   assert hashlib.sha256(path.read_bytes()).hexdigest()==digest
+""".replace("REMOTE_ROOT", repr(c["hosts"][host]["root"])).replace("PENDING", repr(pending)).replace("CONTRACT_SHA", repr(common.sha_json(c)))
+    archive_path = stage / "terminal_originals.tar.gz"
+    with archive_path.open("xb") as stream:
+        result = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15", host, "python3 -"],
+                                input=script.encode(), stdout=stream, stderr=subprocess.PIPE, timeout=180)
+    common.require(result.returncode == 0, "Terminal retrieval failed: " + result.stderr.decode())
+    unpacked = stage / "verified"
+    unpacked.mkdir()
+    with tarfile.open(archive_path) as archive:
+        for member in archive.getmembers():
+            common.require(member.isfile() and not Path(member.name).is_absolute()
+                           and ".." not in Path(member.name).parts and member.name.split("/")[0] in pending,
+                           "Unsafe retrieved member")
+        archive.extractall(unpacked, filter="data")
+    receipts = {}
+    for job, proof in pending.items():
+        folder = unpacked / job
+        common.require(common.sha_file(folder / "terminal_manifest.json") == proof["terminal_manifest_sha256"],
+                       "Copied terminal manifest SHA mismatch")
+        manifest = read(folder / "terminal_manifest.json")
+        common.require(manifest["scientific_success"] is True and manifest["job"] == allowed[job]
+                       and manifest["contract_sha256"] == common.sha_json(c), "Foreign terminal manifest")
+        for rel, digest in manifest["files"].items():
+            common.require(not Path(rel).is_absolute() and ".." not in Path(rel).parts,
+                           "Unsafe terminal reference")
+            common.require(common.sha_file(folder / rel) == digest, "Copied original SHA mismatch: " + rel)
+        receipts[job] = {"terminal_manifest_sha256": proof["terminal_manifest_sha256"],
+                         "verified_files": len(manifest["files"]), "original_binary_retrieved": True,
+                         "cpu_endpoint_replay_completed": False}
+    destination.mkdir(parents=True, exist_ok=True)
+    for job in pending:
+        common.require(not (destination / job).exists(), "Retrieval destination appeared")
+        (unpacked / job).rename(destination / job)
+    common.write_json(stage / "receipt.json", {"host": host, "contract_sha256": common.sha_json(c),
+        "observation": str(observations[-1].relative_to(B)), "copied_at_unix": time.time(), "conditions": receipts,
+        "archive_sha256": common.sha_file(archive_path), "held_out_test_accessed": False}, exclusive=True)
+    print(json.dumps({"host": host, "newly_retrieved": len(pending), "receipt": str(stage / "receipt.json")}), flush=True)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=("deploy", "qualify", "launch", "observe"))
+    parser.add_argument("action", choices=("deploy", "qualify", "launch", "observe", "retrieve"))
     parser.add_argument("--host", choices=("5080", "5090"), required=True)
     args = parser.parse_args()
     globals()[args.action](load(), args.host)

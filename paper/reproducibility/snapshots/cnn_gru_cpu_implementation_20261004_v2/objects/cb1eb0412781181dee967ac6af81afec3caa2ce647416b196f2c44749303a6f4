@@ -1,0 +1,347 @@
+"""Four fresh width16 fits; frozen width4 baselines; two owned native servers."""
+from __future__ import annotations
+import argparse
+from copy import deepcopy
+import fcntl
+import gc
+import json
+import math
+import os
+from pathlib import Path
+import shutil
+import signal
+import statistics
+import subprocess
+import sys
+import time
+import traceback
+ROOT=Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:sys.path.insert(0,str(ROOT))
+from paper.scripts import observed_slot_parallel_common as common
+from paper.scripts import run_titantpp_core_ablation as core
+from paper.scripts import run_local_detail_benchmark as prior
+from paper.scripts import run_multilag_detail_execution as base
+from paper.scripts import run_observed_slot_partition as shared
+from paper.scripts import run_titantpp_history_width as width
+from paper.scripts import evaluate_titantpp_history_width as diagnostic
+width.install_hooks()
+from models.TPPs.CountAwareTitanHistoryWidth import ARM, ROLE
+CONTROL_ARMS=(ARM,)
+CONTROL_ROLE=ROLE
+from models.TPPs.DeepRenewalEvent import ARM as DRP, ROLE as DRP_ROLE, VARIANT as DRP_VARIANT, TIME_MODE as DRP_TIME
+ARMS=(ARM,)
+ASSIGNMENTS={'5080':['yellow_trip_hourly','raf_spare_parts','intermittent_frozen_5000'],'5090':['insta_market_basket']}
+def variant_for(arm):return DRP_VARIANT if arm==DRP else 'count_only_log_regression'
+def role_for(arm):return DRP_ROLE if arm==DRP else CONTROL_ROLE
+def qualification_lengths(data):
+    maximum=data['loader']['max_seq_len']
+    return (min(64,maximum//2),maximum)
+read=lambda p:json.loads(Path(p).read_text())
+require=common.require
+VARIANT='count_only_log_regression'
+TIME_METRIC=prior.TIME_METRIC
+ALL_ARMS=ARMS
+audit_replay_accounting=prior.audit_replay_accounting
+SCHEMA='titantpp_history_width16_dual_20261003_v1'
+
+
+def validate(c):
+    require(c['schema']==SCHEMA and c['arms']==list(ARMS),'Foreign comparison')
+    require(c['training']=={'batch_size':128,'maximum_epochs':300,'minimum_epochs':40,'patience':40,
+        'monitor':'validation_raw_quantity_rmse','tie':'strict_earliest_finite_minimum','warm_start':False},'Training drift')
+    require(c['limits']['total_wall_seconds']==168*3600 and c['limits']['per_condition_seconds']==36*3600,'Budget drift')
+    expected=[{'id':f'{d}__{s}__{a}','host':h,'dataset':d,'seed':s,'arm':a}
+        for h,ds in ASSIGNMENTS.items()
+        for d in ds for s in (42,) for a in ARMS]
+    require(c['jobs']==expected,'Scope/order changed')
+    require(c['evaluation_scope']=='validation_only' and c['held_out_test_evaluated'] is False,'Split drift')
+    require(c['limits']['workers_per_host']==1 and c['limits']['automatic_retry'] is False,'Execution drift')
+    require(c['source']['files_sha256']==common.sha_json(c['source']['files']),'Invalid source closure')
+    for p,s in c['source']['files'].items():require(common.sha_file(ROOT/p)==s,'Source drift '+p)
+    for d in c['datasets']:
+        require(common.sha_json(d)==c['dataset_sha256'][d['dataset_id']],'Dataset contract drift')
+    return c
+
+
+def authorization(c,root):
+    validate(c);approval=read(root/'approval.json');start=read(root/'start_permit.json')
+    require(approval['approved'] is True and approval['contract_sha256']==common.sha_json(c)
+        and approval['hosts']==['5080','5090'] and approval['user_instruction'],'Missing approval')
+    require(start['contract_sha256']==common.sha_json(c) and start['approval_sha256']==common.sha_json(approval),'Foreign start')
+    require(start['deadline_unix']-start['started_at_unix']==168*3600
+        and start['started_at_unix']<=time.time()<start['deadline_unix'],'Expired or enlarged budget')
+    return start
+
+
+def build_model(data,arm):
+    return width.build_model(data,arm)
+
+def initial_states(data,seed):
+    import torch
+    from simple_lab_test.search.common.runner import canonical_state_dict_sha256
+    result={};states={};rngs={}
+    with torch.random.fork_rng(devices=[]):
+        for arm in (*ARMS,'titantpp_history_mlp'):
+            torch.manual_seed(seed);model,_=build_model(data,arm)
+            states[arm]=model.state_dict();rngs[arm]=torch.get_rng_state().clone()
+            result[arm]=canonical_state_dict_sha256(states[arm])
+        for arm in ARMS:
+            require(torch.equal(rngs[arm],rngs['titantpp_history_mlp']),'Width changed outer initialization RNG')
+            baseline=states['titantpp_history_mlp']
+            for k,v in baseline.items():
+                if k.startswith('multilag_detail.') or k=='core_ablation_identity':continue
+                require(k in states[arm] and torch.equal(v,states[arm][k]),'Common initial tensor changed '+k)
+    return result
+
+def training_args(c,data,output,arm):
+    return width.training_args(c,data,output,arm)
+
+def time_interface(data,frame,c,arm=None):
+    interface=base.time_interface(data,frame,c)
+    interface['backbone_design']={'schema':SCHEMA,'design_sha256':c['design_sha256'],
+        'architecture':c['architecture'],'train_time_scale':data['model']['time_scale'],
+        'time_statistics':data['time_statistics']}
+    if arm==DRP:
+        interface['time_head'].update(mode=DRP_TIME,native_distribution='shifted_negative_binomial',
+            initialization='Xavier_uniform;zero_LSTM_bias;dense_bias5;global_alpha_bias2')
+    return interface
+
+
+class PulseBudget:
+    def __init__(self,root,digest,job,deadline,lease=False):
+        self.root,self.digest,self.job,self.deadline,self.lease=root,digest,job,deadline,lease
+        self.last=0.;self.monotonic_deadline=time.monotonic()+max(0,deadline-time.time())
+    def __call__(self):
+        now=time.time()
+        require(now<self.deadline and time.monotonic()<self.monotonic_deadline,'Absolute time budget exhausted')
+        if now-self.last<2:return
+        if self.lease:
+            r=read(self.root/'server_lease.json')
+            require(r['contract_sha256']==self.digest and r['job']==self.job and now<r['expires_unix']<=self.deadline,
+                'Server-owned supervisor lease expired')
+        require(shutil.disk_usage(self.root).free>5*1024**3,'Server free disk below5GiB')
+        common.write_json(self.root/'progress.json',{'job':self.job,'pid':os.getpid(),'updated_unix':now,
+            'deadline_unix':self.deadline,'source':'genuine_phase_or_batch_progress','mac_required':False})
+        self.last=now
+
+
+def qualify(c,host,root):
+    import torch
+    from paper.scripts.count_aware_tpp_backbone.core import target_outputs
+    from simple_lab_test.search.common.runner import torch_load_checkpoint
+    start=authorization(c,root)
+    require(not common.gpu_pids(c['hosts'][host]),'GPU is occupied')
+    common.write_json(root/'qualification.claim',{'pid':os.getpid(),'time':time.time(),'contract_sha256':common.sha_json(c)},exclusive=True)
+    runtime=common.runtime_check(c,host)
+    budget=PulseBudget(root,common.sha_json(c),'qualification',min(start['deadline_unix'],time.time()+5400))
+    result={'status':'checking','host':host,'runtime':runtime,'contract_sha256':common.sha_json(c),
+        'source_files_sha256':c['source']['files_sha256'],'initialization':{},'inputs':{},'baselines':{},'measurements':{}}
+    # Real candidate synthetic training only; discarded after finite-gradient and memory checks.
+    result['correctness']=width.synthetic_check('cuda:0')
+    updates=result['correctness']['synthetic_optimizer_updates']
+    for data in c['datasets']:
+        d=data['dataset_id']
+        if d not in ASSIGNMENTS[host]:continue
+        budget();frame,receipt=base.prepare_admitted_data(data)
+        result['inputs'][d]={'receipt':receipt,'interface_sha256':common.sha_json(time_interface(data,frame,c))}
+        initial=initial_states(data,42);result['initialization'][d]={'42':initial}
+        ref=c['baseline_replays'][d];path=Path(ref['checkpoint'])
+        require(common.sha_file(path)==ref['checkpoint_sha256'],'Baseline checkpoint changed')
+        payload=torch_load_checkpoint(path,map_location='cpu')
+        require(payload['initial_state_sha256']==initial['titantpp_history_mlp'],'Historical baseline initialization differs')
+        del payload
+        endpoint=core.replay_checkpoint(path,data,frame,budget)
+        require(all(math.isclose(endpoint[k],ref['metrics'][k],rel_tol=1e-10,abs_tol=1e-8)
+            for k in ('qty_rmse','qty_mae','time_nll')),'Frozen MLP replay mismatch')
+        diag=diagnostic.evaluate_checkpoint(data,path,frame,device='cuda:0',budget_check=budget,
+            validation_replay=endpoint,train_sample_contract=c['diagnostic']['train_sampling'])
+        common.write_json(root/'qualification'/f'{d}_baseline_diagnostic.json',diag,exclusive=True)
+        result['baselines'][d]={'status':'passed','checkpoint_sha256':ref['checkpoint_sha256'],
+            'initial_state_sha256':initial['titantpp_history_mlp'],
+            'diagnostic_sha256':common.sha_file(root/'qualification'/f'{d}_baseline_diagnostic.json'),
+            'metrics':{k:endpoint[k] for k in ('qty_rmse','qty_mae','time_nll')}}
+        length=data['loader']['max_seq_len'];budget();torch.manual_seed(42)
+        model,_=build_model(data,ARM);model=model.cuda().train()
+        optimizer=torch.optim.AdamW(model.parameters(),lr=.001,weight_decay=.01)
+        dts=torch.ones((128,length),device='cuda:0');qty=torch.randint(1,15,dts.shape,device='cuda:0').float()
+        mask=torch.ones_like(dts,dtype=torch.bool);mask[:32,:length//3]=False
+        torch.cuda.reset_peak_memory_stats();times=[]
+        for step in range(5):
+            budget();torch.cuda.synchronize();t=time.perf_counter();optimizer.zero_grad(set_to_none=True)
+            loss=target_outputs(model,dts,mask,qty,lambda_log_qty=1.)['joint_loss'].mean()
+            require(torch.isfinite(loss).item(),'Nonfinite synthetic loss');loss.backward()
+            norm=torch.nn.utils.clip_grad_norm_(model.parameters(),1.)
+            require(torch.isfinite(norm).item(),'Nonfinite synthetic gradient');optimizer.step()
+            require(all(torch.isfinite(p).all().item() for p in model.parameters()),'Nonfinite synthetic parameter')
+            torch.cuda.synchronize();times.append(time.perf_counter()-t);updates+=1
+        peak=torch.cuda.max_memory_allocated();total=torch.cuda.get_device_properties(0).total_memory
+        require(0<peak<.8*total,'Native memory exceeds80%')
+        result['measurements'][d]={'batch_size':128,'sequence_length':length,'synthetic_steps':5,
+            'seconds':times,'median_last3_seconds':statistics.median(times[-3:]),'peak_allocated_bytes':peak,
+            'total_memory_bytes':total,'parameters':sum(p.numel() for p in model.parameters()),
+            'correction_parameters':sum(p.numel() for p in model.multilag_detail.parameters())}
+        require(result['measurements'][d]['correction_parameters']==24576,'Width16 parameter mismatch')
+        del model,optimizer,frame,diag;gc.collect();torch.cuda.empty_cache()
+    result.update(status='passed',completed_unix=time.time(),synthetic_optimizer_updates=updates,
+        held_out_test_evaluated=False)
+    common.write_json(root/'qualification/receipt.json',result,exclusive=True)
+    print(json.dumps({'status':'passed','host':host,'qualification':str(root/'qualification/receipt.json')}),flush=True)
+
+def run_fit(c,host,root,job,deadline):
+    import torch
+    from paper.scripts.count_aware_tpp_backbone import training
+    start=authorization(c,root);q=read(root/'qualification/receipt.json');verify_training_permit(c,root)
+    require(q['status']=='passed' and q['runtime']==common.runtime_check(c,host),'Qualified runtime drift')
+    require(job in c['jobs'] and job['host']==host,'Unapproved fit')
+    budget=PulseBudget(root,common.sha_json(c),job['id'],min(deadline,start['deadline_unix']),lease=True)
+    budget();data=next(d for d in c['datasets'] if d['dataset_id']==job['dataset'])
+    arm,seed=job['arm'],job['seed']
+    frame,receipt=base.prepare_admitted_data(data);interface=time_interface(data,frame,c,arm)
+    initial=initial_states(data,seed)
+    require(initial==q['initialization'][data['dataset_id']][str(seed)],'Native initialization changed')
+    folder=root/'run'/job['id'];folder.mkdir(parents=True,exist_ok=False)
+    args=training_args(c,data,folder,arm)
+    args.epochs=300;args.min_epochs=40;args.early_stopping_patience=40;args.seeds=str(seed)
+    args.execution_role='fresh_history_width16_validation'
+    common.write_json(folder/'input_receipt.json',receipt,exclusive=True)
+    common.write_json(folder/'initialization.json',initial,exclusive=True)
+    run=folder/'runs'/arm/variant_for(arm)/f'seed_{seed}'
+    quantity={'boundaries':data['quantity_boundaries_all_train_rows'],'strata':[{'label':f'frozen_quantity_bin_{i}'} for i in range(5)]}
+    def status(epoch,records):
+        budget();common.write_json(run/'exposure.json',records)
+        names=('last_epoch_state.pt','history.json','exposure.json','epoch_timing.json','train.log')
+        common.write_json(run/'server_checkpoint_receipt.json',{'epoch':epoch,'contract_sha256':common.sha_json(c),
+            'files':{n:common.sha_file(run/n) for n in names},'mac_ack_required':False,'time':time.time()})
+        common.write_json(folder/'status.json',{'status':'training','epoch':epoch,'global_steps':sum(x['batches'] for x in records['train']),
+            'job':job,'updated_unix':time.time(),'deadline_unix':deadline})
+        if epoch==2:
+            times=[x['elapsed_seconds'] for x in read(run/'epoch_timing.json')['epochs']]
+            remaining=max(times)*298*1.2+600
+            require(remaining<deadline-time.time(),'Full-epoch projected300-epoch cost exceeds condition budget')
+            common.write_json(folder/'two_epoch_cost_receipt.json',{'status':'passed','same_scientific_fit':True,
+                'measured_epoch_seconds':times,'projected_remaining_seconds':remaining,'not_a_completion_guarantee':True})
+    with shared.audited_training(training,data,budget,status) as exposure:
+        summary,_,_=training.train_one(args=args,frame=frame,quantity_contract=quantity,interface_meta=interface,
+            backbone=arm,quantity_variant=variant_for(arm),seed=seed)
+    history=read(run/'history.json')['history'];steps=prior.audit_arm(history,summary,exposure,data,c['training'])
+    require(summary['initial_state_sha256']==initial[arm],'Initial tensor identity mismatch')
+    identity=training._resume_identity(args=args,backbone=arm,quantity_variant=variant_for(arm),seed=seed,
+        monitor='validation_raw_quantity_rmse',interface_meta=interface,quantity_contract=quantity)
+    endpoints={}
+    for label,path in (('selected',Path(summary['checkpoint_path'])),('last',run/'last_epoch_state.pt')):
+        epoch=summary['best_epoch'] if label=='selected' else len(history)
+        endpoints[label]=replay_checkpoint(path,data,frame,budget,expected_arm=arm,expected_identity=identity,
+            expected_initial=initial[arm],expected_epoch=epoch,expected_seed=seed)
+        prior.audit_replay_accounting(endpoints[label])
+        require(all(math.isclose(endpoints[label][k],history[epoch-1][v],rel_tol=1e-10,abs_tol=1e-8)
+            for k,v in (('qty_mae','val_qty_mae'),('qty_rmse','val_qty_rmse'),('time_nll','val_time_nll'))),'Endpoint replay mismatch')
+    # Compare exposure with completed reference B/Full, preserving the exact batch prefix.
+    for ref in c['reuse']:
+        if ref['host']==host and ref['dataset']==data['dataset_id'] and ref['seed']==seed:
+            require(common.sha_file(Path(ref['remote_run'])/'exposure.json')==ref['file_sha256']['exposure.json'],
+                'Reference exposure changed')
+    core.check_baseline_prefix(c,host,data['dataset_id'],seed,exposure)
+    selected_diag=diagnostic.evaluate_checkpoint(data,Path(summary['checkpoint_path']),frame,device='cuda:0',
+        budget_check=budget,validation_replay=endpoints['selected'],train_sample_contract=c['diagnostic']['train_sampling'])
+    baseline_path=root/'qualification'/f"{data['dataset_id']}_baseline_diagnostic.json"
+    require(common.sha_file(baseline_path)==q['baselines'][data['dataset_id']]['diagnostic_sha256'],'Baseline diagnostic changed')
+    baseline_diag=read(baseline_path)
+    comparison=diagnostic.compare_evaluations(baseline_diag,selected_diag)
+    common.write_json(run/'selected_train_validation_diagnostic.json',selected_diag,exclusive=True)
+    common.write_json(run/'width4_width16_comparison.json',comparison,exclusive=True)
+    result={**endpoints,'status':'complete','job':job,'best_epoch':summary['best_epoch'],'completed_epochs':len(history),
+        'global_steps':steps,'initial_state_sha256':initial[arm],'parameter_count':summary['parameter_count'],
+        'elapsed_seconds':summary['elapsed_seconds'],'last30':shared.last30_summary(history),
+        'first40':{'mean':statistics.mean(x['val_qty_rmse'] for x in history[:40]),
+            'sd':statistics.stdev(x['val_qty_rmse'] for x in history[:40]),'count':40},
+        'evaluation_scope':'validation_only','held_out_test_evaluated':False}
+    common.write_json(run/'endpoint_replays.json',result,exclusive=True);common.write_json(run/'exposure.json',exposure)
+    common.write_json(folder/'status.json',{'status':'complete','job':job,'updated_unix':time.time()})
+    files={str(p.relative_to(folder)):common.sha_file(p) for p in sorted(folder.rglob('*')) if p.is_file()}
+    common.write_json(folder/'terminal_manifest.json',{'status':'complete','scientific_success':True,'files':files,
+        'contract_sha256':common.sha_json(c),'job':job,'completed_unix':time.time()},exclusive=True)
+
+
+def verify_training_permit(c,root):
+    p=read(root/'training_permit.json');start=read(root/'start_permit.json')
+    require(p['contract_sha256']==common.sha_json(c) and p['start_permit_sha256']==common.sha_json(start),'Foreign training permit')
+    require(set(p['qualifications'])==set(c['hosts']),'Both native qualifications required')
+    for h,r in p['qualifications'].items():
+        require(r['status']=='passed' and r['host']==h and r['contract_sha256']==common.sha_json(c)
+            and r['source_files_sha256']==c['source']['files_sha256'],'Native qualification not passed')
+    return p
+
+
+def stop_owned(child):
+    if child.poll() is not None:return
+    require(os.getpgid(child.pid)==child.pid,'Owned child process-group identity changed')
+    os.killpg(child.pid,signal.SIGTERM)
+    try:child.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        os.killpg(child.pid,signal.SIGKILL);child.wait(timeout=10)
+
+
+def dispatch(c,host,root):
+    start=authorization(c,root);permit=verify_training_permit(c,root)
+    require(read(root/'qualification/receipt.json')==permit['qualifications'][host],'Local qualification changed')
+    require(not common.gpu_pids(c['hosts'][host]),'GPU occupied before launch')
+    require(shutil.which('timeout') is not None,'Independent native timeout guard unavailable')
+    with (root/'supervisor.lock').open('a+') as lock:
+        fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        common.write_json(root/'supervisor.claim',{'pid':os.getpid(),'started_unix':time.time(),'contract_sha256':common.sha_json(c)},exclusive=True)
+        results={};child=None;job=None
+        try:
+            # Historical nonlearned baselines are reused; no redundant evaluation.
+            for job in (j for j in c['jobs'] if j['host']==host):
+                validate(c);require(time.time()<start['deadline_unix'],'Campaign budget expired')
+                require(not common.gpu_pids(c['hosts'][host]),'Other GPU owner detected')
+                require(not (root/'run'/job['id']).exists(),'Run exists; no implicit restart')
+                deadline=min(start['deadline_unix'],time.time()+36*3600,
+                    c.get('retained_condition_deadlines',{}).get(job['id'],float('inf')))
+                common.write_json(root/'claims'/f"{job['id']}.json",{'job':job,'contract_sha256':common.sha_json(c),'deadline_unix':deadline},exclusive=True)
+                def pulse():
+                    now=time.time();require(now<deadline,'Absolute deadline reached')
+                    common.write_json(root/'server_lease.json',{'job':job['id'],'contract_sha256':common.sha_json(c),
+                        'issued_unix':now,'expires_unix':min(now+90,deadline),'supervisor_pid':os.getpid()})
+                    common.write_json(root/'status.json',{'status':'running','active_job':job,'supervisor_pid':os.getpid(),
+                        'worker_group_pid':None if child is None else child.pid,'completed':results,'updated_unix':now,
+                        'deadline_unix':start['deadline_unix'],'condition_deadline_unix':deadline,'mac_required':False})
+                pulse();log=root/'logs'/f"{job['id']}.log";log.parent.mkdir(exist_ok=True)
+                command=['timeout','--signal=TERM','--kill-after=15s',str(max(1,int(deadline-time.time()))),
+                    sys.executable,str(Path(__file__).resolve()),'--contract',str(root/'execution_contract.json'),
+                    '--host',host,'--mode','fit','--job',job['id'],'--deadline',str(deadline)]
+                with log.open('xb') as stream:
+                    child=subprocess.Popen(command,cwd=ROOT,env=os.environ.copy(),stdout=stream,stderr=subprocess.STDOUT,start_new_session=True)
+                    while child.poll() is None:pulse();time.sleep(5)
+                    require(child.returncode==0,'Worker exited '+str(child.returncode)+'; no automatic retry')
+                manifest=read(root/'run'/job['id']/'terminal_manifest.json')
+                require(manifest['scientific_success'] is True,'Missing successful terminal receipt')
+                for p,s in manifest['files'].items():require(common.sha_file(root/'run'/job['id']/p)==s,'Terminal integrity mismatch')
+                results[job['id']]={'terminal_manifest_sha256':common.sha_file(root/'run'/job['id']/'terminal_manifest.json')}
+                child=None
+            common.write_json(root/'status.json',{'status':'complete','completed':results,'completed_conditions':len(results),
+                'endpoint_roles':len(results)*2,'updated_unix':time.time(),'mac_required':False})
+        except BaseException as exc:
+            if child is not None:stop_owned(child)
+            failure={'status':'failed','type':type(exc).__name__,'message':str(exc),'active_job':job,
+                'traceback':traceback.format_exc(),'completed':results,'updated_unix':time.time(),'automatic_retry':False}
+            common.write_json(root/'failure.json',failure,exclusive=True);common.write_json(root/'status.json',failure)
+            raise
+
+
+def main():
+    p=argparse.ArgumentParser();p.add_argument('--contract',required=True);p.add_argument('--host',choices=('5080','5090'),required=True)
+    p.add_argument('--mode',choices=('qualify','fit','dispatch'),required=True);p.add_argument('--job');p.add_argument('--deadline',type=float)
+    a=p.parse_args();c=read(a.contract);root=Path(c['hosts'][a.host]['root'])
+    require(Path(a.contract).resolve()==root/'execution_contract.json','Wrong contract root')
+    require(Path.cwd().resolve()==Path(c['hosts'][a.host]['source_root']),'Wrong pinned checkout')
+    for k,v in c['hosts'][a.host]['environment'].items():require(os.environ.get(k)==v,'Process environment mismatch '+k)
+    if a.mode=='qualify':qualify(c,a.host,root)
+    elif a.mode=='dispatch':dispatch(c,a.host,root)
+    else:run_fit(c,a.host,root,next(j for j in c['jobs'] if j['id']==a.job),a.deadline)
+
+# Existing frozen endpoint evaluation, copied unchanged; build_model routes new encoders.
+def replay_checkpoint(path,data,frame,budget,**kwargs):
+    return width.replay_checkpoint(path,data,frame,budget,**kwargs)
+
+if __name__=="__main__":main()
