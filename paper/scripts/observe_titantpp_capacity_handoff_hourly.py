@@ -74,17 +74,23 @@ def analyse_source(snapshot, parent, c, q):
         old.require(snapshot['files'].get(name) == item['claim'] and
                     snapshot['file_sha256'].get(name) == item['claim_sha256'], 'Live source claim differs')
         raw = next(r for r in snapshot['runs'] if r['job']['id'] == item['job_id'])
-        old.require(not any(raw.get(k) for k in ('status', 'manifest', 'history', 'checkpoint')), 'Transferred source fit exists')
+        old.require(snapshot.get('transferred_run_folder_exists', {}).get(item['job_id']) is False and
+                    not any(raw.get(k) for k in ('status', 'manifest', 'history', 'checkpoint', 'timing', 'endpoints', 'diagnostic')), 'Transferred source fit exists')
     view = deepcopy(parent)
     view['jobs'] = [j for j in parent['jobs'] if j['id'] not in selected]
     filtered = deepcopy(snapshot)
     filtered['runs'] = [r for r in snapshot['runs'] if r['job']['id'] not in selected]
     result = old.analyse(filtered, view, '5090')
     failure = snapshot['files'].get('failure.json') or {}
-    message = str(failure.get('error', '')) + str(failure.get('traceback', ''))
-    boundary = (failure.get('status') == 'failed' and 'FileExistsError' in message and
-                any(job in message for job in selected) and result['status_counts']['completed'] == 4 and
+    first = handoff.target_jobs(parent)[0]
+    expected_claim = parent['hosts']['5090']['root'] + '/claims/' + first['id'] + '.json'
+    boundary = (failure.get('status') == 'failed' and failure.get('type') == 'FileExistsError' and
+                failure.get('active_job') == first and expected_claim in failure.get('message', '') and result['status_counts']['completed'] == 4 and
                 result['GPU_UUID_verified'] and not result['actual_owned_worker_pids'] and not result['supervisor_pids'])
+    for row in result['rows']:
+        if row['state'] == 'unstarted_terminal':
+            result['status_counts']['unknown'] += 1
+            row['issue'] = 'Source stopped before this owned condition started; user action required; no retry'
     if boundary:
         result['server_terminal_verified'] = True
         result['server_status'] = 'approved_handoff_boundary'
@@ -99,6 +105,7 @@ def analyse_source(snapshot, parent, c, q):
 def source_script(parent):
     script = old.remote_script(parent, '5090')
     extra = "\nfor name in ('handoff_seed62/reservation.json', " + ', '.join(repr('claims/' + j['id'] + '.json') for j in handoff.target_jobs(parent)) + "):\n out['files'][name]=read_record(root/name)\n"
+    extra += "out['transferred_run_folder_exists']={j:(root/'run'/j).exists() for j in " + repr([j['id'] for j in handoff.target_jobs(parent)]) + "}\n"
     return script.replace('print(json.dumps(out,allow_nan=False))', extra + 'print(json.dumps(out,allow_nan=False))')
 
 

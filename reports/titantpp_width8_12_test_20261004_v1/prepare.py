@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from copy import deepcopy
 import hashlib
 import json
 import math
@@ -43,6 +44,18 @@ def scientific_job(job):
     return job['dataset'], job['arm'], job['seed']
 
 
+def dataset_science(datasets):
+    """Drop only operational input paths; preserve bytes, split, population, and model."""
+    values = deepcopy(datasets)
+    for spec in values:
+        for key in ('inherited_data_identity', 'parent_data_identity'):
+            for identity in ('data', 'split_manifest'):
+                value = spec.get(key, {}).get(identity, {})
+                if 'path' in value:
+                    value['path'] = '<operational-path>'
+    return values
+
+
 def first_minimum(history):
     rows = history['history']
     require(bool(rows) and [row['epoch'] for row in rows] == list(range(1, len(rows) + 1)), 'History epochs are not contiguous from one')
@@ -67,7 +80,7 @@ def prepare(args):
     for value in contracts.values():
         require(value['source']['files'] == parent['source']['files'], 'Training source closure differs from parent')
         require(value['source']['files_sha256'] == parent['source']['files_sha256'], 'Training closure digest differs')
-        require(value['datasets'] == parent['datasets'] and value['training'] == parent['training']
+        require(dataset_science(value['datasets']) == dataset_science(parent['datasets']) and value['training'] == parent['training']
                 and value['quantity_variants'] == parent['quantity_variants'], 'Derived training scientific contract changed')
     source = TRAINING / 'frozen_source'
     for relative, digest in parent['source']['files'].items():

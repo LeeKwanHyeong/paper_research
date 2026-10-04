@@ -83,6 +83,24 @@ def test_first_minimum_keeps_earliest_tie_and_rejects_nonfinite_history():
         pre.first_minimum(history)
 
 
+def test_derived_contract_path_rebase_preserves_science_and_rejects_metric_changes():
+    from copy import deepcopy
+    parent = [{'dataset_id': 'synthetic', 'inherited_data_identity': {
+        'data': {'path': '/parent/data.parquet', 'sha256': 'fixed_bytes'},
+        'split_manifest': {'path': '/parent/split.json', 'sha256': 'fixed_split'},
+        'populations': {'validation': {'target_count': 10}}}, 'model': {'hidden_dim': 64}}]
+    moved = deepcopy(parent)
+    moved[0]['inherited_data_identity']['data']['path'] = '/derived/data.parquet'
+    moved[0]['inherited_data_identity']['split_manifest']['path'] = '/derived/split.json'
+    assert pre.dataset_science(parent) == pre.dataset_science(moved)
+    assert parent[0]['inherited_data_identity']['data']['path'] == '/parent/data.parquet'
+    moved[0]['model']['hidden_dim'] = 65
+    assert pre.dataset_science(parent) != pre.dataset_science(moved)
+    moved[0]['model']['hidden_dim'] = 64
+    moved[0]['inherited_data_identity']['data']['sha256'] = 'changed_bytes'
+    assert pre.dataset_science(parent) != pre.dataset_science(moved)
+
+
 def test_test_requires_identity_bound_contract():
     kwargs = {'split': 'test', 'dataset': 'synthetic', 'model': 'model', 'seed': 42,
               'registry_sha': 'registry', 'manifest_sha': 'manifest', 'data_sha': 'data'}

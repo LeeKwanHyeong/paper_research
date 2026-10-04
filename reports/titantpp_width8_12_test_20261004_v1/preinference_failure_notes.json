@@ -1,0 +1,28 @@
+{
+  "schema": "titantpp_width8_12_test_preinference_failures_v1",
+  "scientific_code_or_checkpoint_changed": false,
+  "Test_started_in_failed_attempts": false,
+  "failures": [
+    {
+      "attempt": "taxi_raf",
+      "cause": "Dataset path bound to prior dedicated source/ directory without the full parquet",
+      "failure": "FileNotFoundError",
+      "phase": "preflight before population loading",
+      "Test_calls": 0,
+      "resolution": "New immutable attempt2 contract binds verified original /home/leekwanhyeong/workspace/paper_research full parquet paths"
+    },
+    {
+      "attempt": "taxi_raf_attempt2",
+      "cause": "Project-root detection requires models/utils/sample_data directories; deployment omitted ancillary frozen_source/sample_data/.keep",
+      "failure": "RuntimeError: Could not locate paper_research project root",
+      "phase": "frozen module import before population loading and inference",
+      "Test_calls": 0,
+      "original_preflight_snapshot": "reports/titantpp_width8_12_test_20261004_v1/taxi_raf_attempt2/original_preflight_snapshot.py",
+      "snapshot_sha256": "13a45f7035de943a9325b2378fffc53b83b82dde4471e787a8cb7ace83396be3",
+      "resolution": "New immutable attempt3 includes the exact ancillary marker and passed staged frozen-import smoke"
+    }
+  ],
+  "evidence_source": "Root session remote failure observations; original attempt folders and deployment contracts retained",
+  "attempt3": "taxi_raf_attempt3",
+  "114_frozen_scientific_source_files_unchanged": true
+}

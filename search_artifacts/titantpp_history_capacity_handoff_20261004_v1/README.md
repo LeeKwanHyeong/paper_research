@@ -23,7 +23,7 @@ python -m py_compile paper/scripts/capacity_handoff_runtime.py search_artifacts/
 
 경합, 부분 예약, 중복 시작, Runtime/소스/학습 변경, 원본 terminal SHA, 절대 마감, 두 조건만 실행, 읽기 전용 관측을 로컬에서 검증한다. 원격 qualification과 이관 실행은 별도 증적이 있기 전에는 미확인이다.
 
-**전용 5080 패키지 배치와 native qualification — 다음 작업**
+**전용 5080 패키지 배치와 native qualification — 완료**
 
 로컬 생성기는 SSH나 GPU 호출을 하지 않는다. 이미 생성된 파일은 내용이 같아야 재사용한다.
 
@@ -40,7 +40,7 @@ timeout --signal=TERM --kill-after=15s 5400 env CUBLAS_WORKSPACE_CONFIG=:4096:8 
 
 Native qualification은 원래 seed62 width4 checkpoint의 역사적 initialization, 동일 입력/Train·Validation population, 원래 전체 Validation replay, 각 width의 synthetic gradient·메모리 검증을 실행한다. 이 관문이 통과하기 전에 source 예약이나 destination permit을 만들지 않는다.
 
-**5090 두 조건 예약과 5080 실행 허가 — 다음 작업**
+**5090 두 조건 예약과 5080 실행 허가 — 완료**
 
 5090의 원래 root 아래 `handoff_seed62/prepared/`에 제어 JSON 8개, `control/capacity_handoff_runtime.py`, 새 5080의 `qualification/receipt.json` 및 `qualification/intermittent_frozen_5000__62_baseline_diagnostic.json`을 SHA 확인 후 복사한다. 원래 114 source는 새 staging에 복사하지 않으며 예약 검증은 원래 5090 source를 읽는다.
 
@@ -58,7 +58,7 @@ python3 /home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titant
 
 허가는 5080 자신의 native receipt와 두 source claim의 원본 SHA에 결합한다. 위 qualification과 같은 cwd/interpreter/environment에서 `--mode dispatch`를 실행한다. 외부 `timeout`은 부모 절대 마감까지의 남은 초로 제한하고, 별도 tmux 이름 `titantpp_history_capacity_handoff_20261004_v1_5080`을 사용한다. dispatcher는 지정된 두 조건만 실행하며 각 fit은 별도 process group·native timeout·90초 server lease를 가진다. 자동 retry/resume은 없다.
 
-**관측과 증적 통합 — 다음 작업**
+**관측과 증적 통합 — 진행 중**
 
 ```sh
 python3 NEW_ROOT/control/capacity_handoff_runtime.py --bundle NEW_ROOT --mode observe
@@ -68,3 +68,9 @@ python3 SOURCE_ROOT/handoff_seed62/prepared/control/capacity_handoff_runtime.py 
 `observe`는 기존 snapshot과 호환되는 `host/root/contract_sha256/source_closure_sha256/files/file_sha256/runs/gpu/compute/ps_returncode/processes`를 반환하며, 새 두 조건만 포함한다. named Validation JSON과 binary 존재/크기만 읽고 binary SHA나 CPU replay는 실행하지 않는다. 마감 뒤에도 읽을 수 있다. fit argv는 pinned 5080 Python + `NEW_ROOT/control/capacity_handoff_runtime.py --bundle NEW_ROOT --mode fit --job ID --deadline UNIX`이다.
 
 `observe-source`는 기존 5090 SSH 관측 안에서 호출할 수 있는 보충 함수다. 예약 receipt와 두 claim을 실제 내용·원본 SHA로 검증하고, 네 source terminal manifest admission과 정확한 예약 `FileExistsError`가 확인되었을 때만 `intentional_queue_stop_verified/source_effective_complete`를 true로 기록한다. 실제 fit failure를 행정 종료로 바꾸지 않는다. 부모의 기존 5080 완료 12조건 증적은 보존하되 새 두 조건 때문에 시간별 monitor에서 과거 완료 cache만으로 5080 전체 완료를 선언하면 안 된다. root가 전체 18개의 canonical job ID를 한 번씩 집계하도록 monitor를 갱신한다.
+
+**현재 실행 증거 — 진행 중**
+
+2026-10-04 배치132파일 SHA와5080 native qualification을 확인했습니다. `qualification/receipt.json`·`source_reservation.json`·`training_permit.json`·`launch_receipt.json`을 보존했습니다. 원래5090 실행 중 학습을 유지한 채 전용5080 tmux에 seed62 두 조건을 연결했습니다.20:16:29KST 관측에서5080 seed62 폭8 실제supervisor/worker/GPU PID와 저장4/best4 checkpoint가 일치했습니다. `launch_checkpoint_confirmation.json`에 실제 저장 이후 학습 진행 증거를 보존했습니다. 원본 학습 조건·선택·deadline은 유지합니다.
+
+새 observer는 `paper/scripts/observe_titantpp_capacity_handoff_hourly.py --host 5080|5090`입니다. 원래12완료와 이관2·5090네를 겹치지 않게 집계합니다. 원본 회수·최종 Test 후속 처리는18 terminal 검증 이후 `paper/scripts/finalize_titantpp_capacity_test.py`로 연결합니다. [승인과 결과 기록](../../reports/titantpp_capacity_test_handoff_20261004_v1/README.md)·[시간별 모니터](../../reports/titantpp_three_gpu_hourly_monitor_20261004_v1/SCHEDULER.md)를 따릅니다.

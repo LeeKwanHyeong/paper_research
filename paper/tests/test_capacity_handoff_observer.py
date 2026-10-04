@@ -12,7 +12,7 @@ import observe_titantpp_capacity_handoff_hourly as observer
 
 
 def contracts():
-    parent = json.loads((observer.PARENT / 'execution_contract.json').read_text())
+    parent = json.loads((observer.B / 'parent_execution_contract.json').read_text())
     return parent, observer.handoff.derive_contract(parent)
 
 
@@ -26,7 +26,8 @@ def reserved_snapshot():
                      'checkpoint': None, 'endpoints': None, 'diagnostic': None, 'binary_sizes': {}}
                     for j in parent['jobs'] if j['host'] == '5090'],
            'processes': [], 'ps_returncode': 0, 'gpu': {'returncode': 0, 'stdout': gpu + ', RTX 5090'},
-           'compute': {'returncode': 0, 'stdout': ''}}
+           'compute': {'returncode': 0, 'stdout': ''},
+           'transferred_run_folder_exists': {j['id']: False for j in observer.handoff.target_jobs(parent)}}
     q = {'native_qualification': 'fixture'}
     items = []
     for job in observer.handoff.target_jobs(parent):
@@ -86,7 +87,9 @@ def test_unrelated_failure_is_not_expected_handoff_boundary(monkeypatch):
     raw['files']['failure.json'] = {'status': 'failed', 'traceback': 'RuntimeError: unrelated'}
     monkeypatch.setattr(observer.old, 'analyse', lambda *a: {
         'status_counts': {'completed': 4}, 'GPU_UUID_verified': True,
-        'actual_owned_worker_pids': [], 'supervisor_pids': [], 'server_terminal_verified': False})
+        'actual_owned_worker_pids': [], 'supervisor_pids': [], 'server_terminal_verified': False, 'rows': []})
     assert observer.analyse_source(raw, parent, c, q)['approved_handoff_boundary_verified'] is False
-    raw['files']['failure.json']['traceback'] = 'FileExistsError: ' + observer.handoff.target_jobs(parent)[0]['id']
+    first = observer.handoff.target_jobs(parent)[0]
+    raw['files']['failure.json'].update(type='FileExistsError', active_job=first,
+        message='File exists: ' + parent['hosts']['5090']['root'] + '/claims/' + first['id'] + '.json')
     assert observer.analyse_source(raw, parent, c, q)['approved_handoff_boundary_verified'] is True
