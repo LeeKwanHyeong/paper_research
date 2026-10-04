@@ -1,0 +1,129 @@
+{
+  "scope": "Inventory of preserved selected Validation/Test results; newly completed width16 and A100 candidates are handled by the parent orchestration.",
+  "models": [
+    {
+      "family": "matched_head_main_comparison",
+      "models": [
+        "titantpp_history_mlp",
+        "rmtpp",
+        "thp",
+        "nhp",
+        "sahp",
+        "s2p2_matched_head",
+        "attnhp_matched_head",
+        "titantpp_all_available_history_mlp",
+        "titantpp_current_only_param_matched"
+      ],
+      "datasets": [
+        "yellow_trip_hourly",
+        "intermittent_frozen_5000",
+        "insta_market_basket",
+        "raf_spare_parts"
+      ],
+      "seeds": [
+        42,
+        52,
+        62
+      ],
+      "validation_conditions": 108,
+      "test_conditions": 108
+    },
+    {
+      "family": "historical_TitanTPP_B",
+      "models": [
+        "titantpp"
+      ],
+      "datasets": [
+        "yellow_trip_hourly",
+        "intermittent_frozen_5000",
+        "insta_market_basket"
+      ],
+      "seeds": [
+        42,
+        52,
+        62
+      ],
+      "validation_conditions": 9,
+      "test_conditions": 9,
+      "raf_status": "not an existing trained condition in the bound B registry"
+    },
+    {
+      "family": "simple_quantity_reference",
+      "models": [
+        "last_observed_quantity",
+        "mean_quantity_in_same_observed_window"
+      ],
+      "datasets": 4,
+      "seed": null,
+      "validation_conditions": 8,
+      "test_conditions": 8,
+      "time_nll": "not applicable"
+    },
+    {
+      "family": "native_deep_renewal_research_only",
+      "models": [
+        "deep_renewal_event_native_nb"
+      ],
+      "datasets": 4,
+      "seeds": [
+        42,
+        52,
+        62
+      ],
+      "validation_conditions": 12,
+      "test_conditions": 0,
+      "manuscript_comparison_included": false,
+      "cpu_audit_prior": 11,
+      "cpu_audit_not_recorded": [
+        "intermittent_frozen_5000__62__deep_renewal_event_native_nb"
+      ]
+    },
+    {
+      "family": "history_width16",
+      "models": [
+        "titantpp_history_mlp_width16"
+      ],
+      "datasets": 4,
+      "seeds": [
+        42,
+        52,
+        62
+      ],
+      "validation_conditions": 12,
+      "test_conditions_preserved_before_new_campaign": 2,
+      "existing_test_rows": [
+        "yellow_trip_hourly__42",
+        "raf_spare_parts__42"
+      ],
+      "remaining_test_conditions": 10
+    }
+  ],
+  "population_counts": {
+    "yellow_trip_hourly": {
+      "validation": 8268,
+      "test": 8327
+    },
+    "intermittent_frozen_5000": {
+      "validation": 86285,
+      "test": 88019
+    },
+    "insta_market_basket": {
+      "validation": 503733,
+      "test": 578387
+    },
+    "raf_spare_parts": {
+      "validation": 6690,
+      "test": 5226
+    }
+  },
+  "reused_metrics_path": "reports/titantpp_completed_validation_test_20261004_v1/existing/metrics_per_seed.csv",
+  "deep_validation_metrics_path": "reports/titantpp_completed_validation_test_20261004_v1/deep_renewal/validation_metrics_with_tail.csv",
+  "cautions": [
+    "Old completed_external_comparison selected_conditions.csv lacks Instacart S2P2/AttNHP seed62; use final selected registry and verified source endpoints.",
+    "analysis.json.validation in existing Test bundles records Test population validation, not Validation split metrics.",
+    "The fixed Test has already been reviewed; all new analysis is retrospective/exploratory and is not an independent untouched final test.",
+    "Quantity tail boundaries are train-derived frozen thresholds: Taxi3449/Intermittent187/Instacart35/RAF200, strict raw_quantity > threshold.",
+    "Simple references have no training seed or time likelihood and must not be triplicated into three-seed summaries.",
+    "Historical core-ablation alternate arms (local_detail/level_only/change_only/no_static_lmm) have selected Validation rows in final_conditions.csv but are not among bound108 Test comparators; do not label them Test-complete."
+  ]
+}

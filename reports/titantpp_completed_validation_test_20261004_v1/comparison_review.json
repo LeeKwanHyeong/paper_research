@@ -1,0 +1,181 @@
+{
+  "status": "complete",
+  "created_utc": "2026-10-04T05:52:13.785425+00:00",
+  "summary_path": "reports/titantpp_completed_validation_test_20261004_v1/summarize.py",
+  "summary_sha256": "098f1b0a56b12b8fa77d336337766360d7dc1fd28e25aacb1abe58522d957a52",
+  "test_path": "reports/titantpp_completed_validation_test_20261004_v1/test_summary.py",
+  "test_sha256": "531b48524e8a0dd732fe36718f7dbf019251e54e0d9c078a415c7b16e8a4e924",
+  "focused_tests": {
+    "passed": 7,
+    "failed": 0,
+    "seconds": 0.32,
+    "command": "PYTHONDONTWRITEBYTECODE=1 python3 -m pytest reports/titantpp_completed_validation_test_20261004_v1/test_summary.py -q -p no:cacheprovider"
+  },
+  "scope": {
+    "expected_selected_learned_conditions": 153,
+    "available_selected_learned_conditions": 153,
+    "expected_condition_split_view_rows": 644,
+    "available_condition_split_view_rows": 644,
+    "missing_rows": [],
+    "duplicate_rows": false,
+    "unexpected_rows": false,
+    "expected_simple_reference_rows": 32,
+    "overall_rows": 322,
+    "tail_rows": 322,
+    "A100_condition_split_view_rows": 48,
+    "final_aggregated_rows": 268
+  },
+  "inputs": [
+    {
+      "path": "reports/titantpp_completed_validation_test_20261004_v1/existing/metrics_per_seed.csv",
+      "sha256": "2b18975a1e11eb97f42b79324ae8883d9106ee4ab07dfdfce7ab224437d4fd23"
+    },
+    {
+      "path": "reports/titantpp_completed_validation_test_20261004_v1/width16/metrics.csv",
+      "sha256": "3a39469db0c8690bd2e70e74c47b79182126be2f379cb3390fcc71ce0f31dd69"
+    },
+    {
+      "path": "reports/titantpp_completed_validation_test_20261004_v1/deep_renewal/comparison_input.csv",
+      "sha256": "de690214cee1b8236cf111783558b19d0b1d7afcbcd27ea33521c4bf622bd8f1"
+    },
+    {
+      "path": "reports/titantpp_completed_validation_test_20261004_v1/a100_attempt2/metrics_per_seed.csv",
+      "sha256": "80e3fcf82d82eebe9a929091e212945a4d8d74e4fe8aa2ca5da5c5afe3bf774c"
+    }
+  ],
+  "checks": {
+    "all_available_input_source_SHA_verified": true,
+    "selected_epoch_and_state_bound_to_original_registry": true,
+    "recorded_population_target_truth_history_data_loader_bindings_match": true,
+    "whole_and_tail_counts_match_across_all_available_models": true,
+    "all_quantity_thresholds_match_frozen_train_thresholds": {
+      "yellow_trip_hourly": 3449,
+      "intermittent_frozen_5000": 187,
+      "insta_market_basket": 35,
+      "raf_spare_parts": 200
+    },
+    "tail_rule": "strict raw_quantity > frozen TRAIN threshold; equality excluded from tail",
+    "units_and_positive_integer_topcode_support_match": true,
+    "time_metrics": "round/clamp lognormal probability mass; native shifted-NB probability mass; same recorded support within dataset and split",
+    "three_seed_mean_and_sample_SD_independently_recalculated_groups": 268,
+    "three_seed_metric_mean_not_prediction_ensemble_or_raw_pool": true,
+    "single_seed_SD_absent": true,
+    "deterministic_seed_count_zero_and_time_NLL_absent": true,
+    "worse_seed_and_candidate_results_retained": true,
+    "no_model_selection_or_checkpoint_update": true,
+    "DeepRenewal_manuscript_exclusion_preserved": true,
+    "single_seed_A100_panels_and_tail_panels_present_in_summary_code": true,
+    "missing_full_input_scope_is_rejected": true,
+    "A100_24_prediction_receipts_parquet_SHA_and_independent_raw_metrics_recomputed": true,
+    "A100_all_48_overall_tail_values_match_stored_predictions": true,
+    "A100_only_seed42_and_paired_against_MLP_seed42": true,
+    "final_per_seed_CSV_exactly_matches_all_normalized_inputs": true,
+    "final_aggregate_CSV_exactly_matches_independent_means_sample_SD": true,
+    "all_vs_width4_delta_rows_verified": 220,
+    "A100_paired42_delta_rows_verified": 48,
+    "width16_overall_three_seed_delta_rows_verified": 8,
+    "width16_same_seed_delta_rows_verified": 48,
+    "markdown_panels_verified": 8,
+    "markdown_numeric_cells_and_visible_model_sets_match_independent_calculations": true,
+    "no_favorable_outcome_filter_and_no_omitted_unfavorable_candidate": true,
+    "actual_complete_scope_accepted_and_omissions_duplicates_population_changes_rejected": true
+  },
+  "width16_minus_width4_descriptive_deltas": [
+    {
+      "dataset": "yellow_trip_hourly",
+      "split": "validation",
+      "qty_rmse": -1.8851626734664677,
+      "qty_mae": -0.4460049673081059,
+      "time_nll": -0.04375933017393063
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "split": "test",
+      "qty_rmse": -5.231023458396692,
+      "qty_mae": -1.1610150934196213,
+      "time_nll": -0.04884996523311991
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "split": "validation",
+      "qty_rmse": 0.013663777997237059,
+      "qty_mae": 0.013002050362284301,
+      "time_nll": -0.09263877683935962
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "split": "test",
+      "qty_rmse": 0.17451150317764386,
+      "qty_mae": 0.08923177194898169,
+      "time_nll": 30.411241492338778
+    },
+    {
+      "dataset": "insta_market_basket",
+      "split": "validation",
+      "qty_rmse": -0.008981988204395996,
+      "qty_mae": -0.0022247999488436143,
+      "time_nll": 0.0001523014028284031
+    },
+    {
+      "dataset": "insta_market_basket",
+      "split": "test",
+      "qty_rmse": -0.010197931109455993,
+      "qty_mae": -0.002834356263123894,
+      "time_nll": 0.0007129066830504627
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "split": "validation",
+      "qty_rmse": 0.13235872018100991,
+      "qty_mae": 0.013438341566502032,
+      "time_nll": -0.0454212875610045
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "split": "test",
+      "qty_rmse": 0.4527228229815421,
+      "qty_mae": 0.09267040406247773,
+      "time_nll": -0.16031537623368441
+    }
+  ],
+  "limitations": [],
+  "writes_performed": [
+    "test_summary.py",
+    "comparison_review.partial_before_a100.json",
+    "comparison_review.json"
+  ],
+  "new_inference_calls": 0,
+  "remote_calls": 0,
+  "other_source_or_artifact_modified": false,
+  "comparison_receipt": {
+    "path": "reports/titantpp_completed_validation_test_20261004_v1/comparison_receipt.json",
+    "sha256": "05bad775adcf6f94853182f8c8aa28dd374ab097633b556ab524ef3cf42c2065"
+  },
+  "verified_output_hashes": {
+    "results/all_vs_width4.csv": "bc26ecb1403ae0350c19774bb6e3acb34f1de5b28b38b1e17e1b92efd6dd1a73",
+    "results/metrics_aggregated.csv": "a68fd96e67bb18adb62c4f8a991debdee2abddffbc62cc8c10632acd05d63565",
+    "results/metrics_per_seed.csv": "1d3c61d22759e82bc3caf9bdc4047e15f0600499c18e660760b40acb5680714b",
+    "results/width16_vs_width4.csv": "ef496d5a827e389172f31c121e1e3424d36b4430b45f106df71e1aac77256fe5",
+    "results/width16_vs_width4_per_seed.csv": "12ba68bfd186822c2d69645b832a5cbc5c1175d2700eb48692ad258f8434534c"
+  },
+  "verified_table_hashes": {
+    "TEST_SEED42_TABLES.md": "ac640ad00a864aea043a969b904b47a57de136aed6e91aae2ffad7be1fb05531",
+    "TEST_SEED42_TAIL_TABLES.md": "f099faf62ee503346dfb9beccf3105e383a8c55b9267a996f1c2319f077d4877",
+    "TEST_TABLES.md": "d485bb2632736d842395879fe850cb431854c8a324e67d9da62072068c0270d1",
+    "TEST_TAIL_TABLES.md": "ef5b09fde6723dbcbef5fd3c2406c920f2016b0ce71d83259230128f96d465ad",
+    "VALIDATION_SEED42_TABLES.md": "510e49ddfc2a69aa9a9e93866fb24c1002770392b8ecc751dc0784e2fd626c94",
+    "VALIDATION_SEED42_TAIL_TABLES.md": "6c67d824864c7d5ff25f1291139e41566b147d0a182be5f3eccf2d4dc4366e09",
+    "VALIDATION_TABLES.md": "26307d1a467102b51d47fec5d899fdfe0e67ecbe59cd59955587461c80626e69",
+    "VALIDATION_TAIL_TABLES.md": "0ed5f1c74198ce8aa91e34f2f1aaf947a6f63e924fd412418a02f4609b460bcc"
+  },
+  "prior_partial_review": {
+    "path": "reports/titantpp_completed_validation_test_20261004_v1/comparison_review.partial_before_a100.json",
+    "sha256": "80a286d559763dc90320d10d074e396759973127686cffaf29a930e734313085"
+  },
+  "interpretation_limits": [
+    "Retrospective previously accessed Test split; not an untouched independent final test.",
+    "A100 candidates are seed42-only and are paired with the baseline seed42; no inference about three-seed variability.",
+    "Deep Renewal uses a native shifted-NB head on the same recorded-time support; its score difference is not a common-head-controlled backbone effect.",
+    "This comparison audit does not claim the separate original last-checkpoint CPU audits are complete."
+  ]
+}
