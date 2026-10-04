@@ -1,0 +1,227 @@
+"""Synthetic/pure worker regression checks; no local research-data analysis or GPU."""
+from copy import deepcopy
+from pathlib import Path
+import sys
+
+import pytest
+
+WORKER = Path(__file__).resolve().parents[1]
+BUNDLE = WORKER.parent
+SOURCE = BUNDLE / 'source'
+sys.path.insert(0, str(WORKER))
+sys.path.insert(0, str(SOURCE))
+import runtime as r
+import dispatch
+import qualify
+
+
+@pytest.fixture
+def contract():
+    c = r.read(BUNDLE / 'execution_contract.draft.json')
+    c['initialization_policy'] = 'native_historical_baseline_and_common_state_v1'
+    c['worker'] = {'files': {str(p.relative_to(BUNDLE)): r.sha_file(p) for p in WORKER.glob('*.py')}}
+    c['worker']['files_sha256'] = r.sha_json(c['worker']['files'])
+    return c
+
+
+def test_exact_nine_candidate_scope_admitted(contract):
+    assert r.validate_scope(contract) is contract
+    assert len(contract['jobs']) == 9
+    assert {j['seed'] for j in contract['jobs']} == {42}
+    assert r.BASELINE not in {j['arm'] for j in contract['jobs']}
+
+
+@pytest.mark.parametrize('mutation', ['test', 'instacart', 'baseline_fit', 'second_seed', 'duplicate',
+    'warm_start', 'batch', 'selector', 'retry', 'resume', 'four_workers', 'memory', 'optimizer'])
+def test_scope_and_reproducibility_drift_rejected(contract, mutation):
+    if mutation == 'test':
+        contract['held_out_test_evaluated'] = True
+    elif mutation == 'instacart':
+        contract['datasets'][0]['dataset_id'] = 'insta_market_basket'
+    elif mutation == 'baseline_fit':
+        contract['jobs'][0]['arm'] = r.BASELINE
+    elif mutation == 'second_seed':
+        contract['jobs'][0]['seed'] = 52
+    elif mutation == 'duplicate':
+        contract['jobs'][-1] = deepcopy(contract['jobs'][0])
+    elif mutation == 'warm_start':
+        contract['training']['warm_start'] = True
+    elif mutation == 'batch':
+        contract['training']['batch_size'] = 64
+    elif mutation == 'selector':
+        contract['training']['monitor'] = 'val_time_nll'
+    elif mutation == 'retry':
+        contract['limits']['automatic_retry'] = True
+    elif mutation == 'resume':
+        contract['limits']['resume'] = True
+    elif mutation == 'four_workers':
+        contract['limits']['max_workers'] = 4
+    elif mutation == 'memory':
+        contract['limits']['max_device_memory_fraction'] = .95
+    else:
+        contract['datasets'][0]['optimizer']['lr'] = .01
+        d = contract['datasets'][0]
+        contract['dataset_sha256'][d['dataset_id']] = r.sha_json(d)
+    with pytest.raises(ValueError):
+        r.validate_scope(contract)
+
+
+def test_source_and_worker_freeze_rejects_mutation(contract, tmp_path):
+    root = tmp_path
+    source = root / 'source'
+    source.mkdir()
+    (source / 'engine.py').write_text('frozen source\n')
+    contract['hosts']['a100']['source_root'] = str(source)
+    contract['source']['files'] = {'engine.py': r.sha_file(source / 'engine.py')}
+    contract['source']['files_sha256'] = r.sha_json(contract['source']['files'])
+    worker = root / 'worker'
+    worker.mkdir()
+    for name in ('runtime.py', 'dispatch.py', 'qualify.py', 'diagnostics.py'):
+        (worker / name).write_text('# frozen\n')
+    contract['worker']['files'] = {str(p.relative_to(root)): r.sha_file(p) for p in worker.glob('*.py')}
+    contract['worker']['files_sha256'] = r.sha_json(contract['worker']['files'])
+    r.write_json(root / 'expected_initialization.json', {'synthetic': True})
+    contract['expected_initialization_sha256'] = r.sha_file(root / 'expected_initialization.json')
+    r.verify_files(contract, root)
+    (worker / 'qualify.py').write_text('# changed\n')
+    with pytest.raises(ValueError, match='Worker drift'):
+        r.verify_files(contract, root)
+    (worker / 'qualify.py').write_text('# frozen\n')
+    (source / 'engine.py').write_text('changed source\n')
+    with pytest.raises(ValueError, match='Source drift'):
+        r.verify_files(contract, root)
+
+
+def test_three_requires_passed_native_measurements_and_speedup():
+    one = {'status': 'passed', 'measured_work_seconds': 100.}
+    assert qualify.select_concurrency({'1': one, '3': {'status': 'failed'}}) == 1
+    assert qualify.select_concurrency({'1': one, '3': {'status': 'passed', 'measured_work_seconds': 97.}}) == 1
+    assert qualify.select_concurrency({'1': one, '3': {'status': 'passed', 'measured_work_seconds': 90.}}) == 3
+    with pytest.raises(ValueError, match='Sequential'):
+        qualify.select_concurrency({'1': {'status': 'failed'}})
+
+
+@pytest.mark.parametrize('concurrency', [0, 2, 4, True])
+def test_training_permit_rejects_unqualified_concurrency(contract, tmp_path, concurrency):
+    receipt = {'status': 'passed', 'contract_sha256': r.sha_json(contract),
+        'source_files_sha256': contract['source']['files_sha256'],
+        'worker_files_sha256': contract['worker']['files_sha256'], 'selected_concurrency': concurrency,
+        'parallel_measurements': {'1': {'status': 'passed'}, '3': {'status': 'passed'}}}
+    start = {'contract_sha256': r.sha_json(contract)}
+    r.write_json(tmp_path / 'start_permit.json', start)
+    r.write_json(tmp_path / 'qualification/receipt.json', receipt)
+    permit = {'contract_sha256': r.sha_json(contract), 'start_permit_sha256': r.sha_json(start),
+        'qualification_sha256': r.sha_file(tmp_path / 'qualification/receipt.json')}
+    r.write_json(tmp_path / 'training_permit.json', permit)
+    with pytest.raises(ValueError, match='Unqualified'):
+        r.verify_training_permit(contract, tmp_path)
+
+
+def test_three_training_requires_native_three_probe(contract, tmp_path):
+    receipt = {'status': 'passed', 'contract_sha256': r.sha_json(contract),
+        'source_files_sha256': contract['source']['files_sha256'], 'worker_files_sha256': contract['worker']['files_sha256'],
+        'selected_concurrency': 3, 'parallel_measurements': {'1': {'status': 'passed'}, '3': {'status': 'failed'}}}
+    start = {'contract_sha256': r.sha_json(contract)}
+    r.write_json(tmp_path / 'start_permit.json', start)
+    r.write_json(tmp_path / 'qualification/receipt.json', receipt)
+    r.write_json(tmp_path / 'training_permit.json', {'contract_sha256': r.sha_json(contract),
+        'start_permit_sha256': r.sha_json(start), 'qualification_sha256': r.sha_file(tmp_path / 'qualification/receipt.json')})
+    with pytest.raises(ValueError, match='Three workers'):
+        r.verify_training_permit(contract, tmp_path)
+
+
+def test_terminal_sha_and_path_escape_rejected(contract, tmp_path):
+    job = contract['jobs'][0]
+    folder = tmp_path / job['id']
+    folder.mkdir()
+    (folder / 'metric.json').write_text('{}\n')
+    manifest = {'status': 'complete', 'scientific_success': True, 'job': job,
+        'contract_sha256': r.sha_json(contract), 'held_out_test_evaluated': False,
+        'files': {'metric.json': r.sha_file(folder / 'metric.json')}}
+    r.write_json(folder / 'terminal_manifest.json', manifest)
+    assert dispatch.verify_terminal(folder, contract, job)['status'] == 'complete'
+    (folder / 'metric.json').write_text('changed\n')
+    with pytest.raises(ValueError, match='Terminal SHA'):
+        dispatch.verify_terminal(folder, contract, job)
+    outside = tmp_path / 'outside.json'
+    outside.write_text('outside')
+    manifest['files'] = {'../outside.json': r.sha_file(outside)}
+    r.write_json(folder / 'terminal_manifest.json', manifest)
+    with pytest.raises(ValueError, match='Terminal SHA'):
+        dispatch.verify_terminal(folder, contract, job)
+
+
+def test_exposure_reference_is_explicitly_width4_only(tmp_path):
+    data = {'dataset_id': 'synthetic'}
+    exposure = {'train': [{'epoch': 1, 'batch_order_sha256': 'fixed'}],
+        'validation': [{'epoch': 1, 'batch_order_sha256': 'val'}]}
+    r.write_json(tmp_path / 'references/width4/synthetic/exposure.json', exposure)
+    c = {'reuse': [{'dataset': 'synthetic', 'seed': 42, 'arm': 'titantpp_history_mlp',
+        'remote_run': 'references/width4/synthetic', 'file_sha256': {'exposure.json':
+            r.sha_file(tmp_path / 'references/width4/synthetic/exposure.json')}}]}
+    receipt = dispatch.compare_exposure(c, tmp_path, data, exposure)
+    assert receipt['purpose'] == 'batch exposure identity only'
+    assert receipt['reference_arm'] == 'titantpp_history_mlp'
+    altered = deepcopy(exposure)
+    altered['train'][0]['batch_order_sha256'] = 'changed'
+    with pytest.raises(ValueError, match='train batch prefix'):
+        dispatch.compare_exposure(c, tmp_path, data, altered)
+
+
+@pytest.fixture(scope='module')
+def engine():
+    import torch
+    from paper.scripts import run_titantpp_cnn_gru as runner
+    assert Path(runner.__file__).resolve().is_relative_to(SOURCE)
+    torch.set_num_threads(1)
+    torch.use_deterministic_algorithms(True, warn_only=False)
+    runner.install_hooks()
+    return runner
+
+
+@pytest.mark.parametrize('arm', r.ARMS)
+def test_actual_synthetic_joint_repetition_and_nonzero_module_causality(engine, arm):
+    # Fabricated input only. Native qualification separately mandates B128 × L256/L84.
+    data = qualify.synthetic_data(16)
+    first = qualify.synthetic_repeat(engine, data, arm, lambda: None, device='cpu', batch_size=2)
+    second = qualify.synthetic_repeat(engine, data, arm, lambda: None, device='cpu', batch_size=2)
+    assert first['fingerprint'] == second['fingerprint']
+    assert first['actual_joint_gradient_finite'] is True
+    assert first['real_data_loaded'] is False
+    assert qualify.causality_check(engine, arm, lambda: None, device='cpu')['status'] == 'passed'
+
+
+def test_causality_rejects_missing_actual_trainer_output(engine, monkeypatch):
+    from paper.scripts.count_aware_tpp_backbone import core
+    original = core.target_outputs
+    def broken(*args, **kwargs):
+        result = original(*args, **kwargs)
+        result.pop('pred_qty')
+        return result
+    monkeypatch.setattr(core, 'target_outputs', broken)
+    with pytest.raises(ValueError, match='Actual quantity/time outputs missing'):
+        qualify.causality_check(engine, r.ARMS[0], lambda: None, device='cpu')
+
+
+def test_historical_initialization_mismatch_is_fatal_and_CPU_is_only_diagnostic():
+    initial = {arm: arm + '_native' for arm in (r.BASELINE, *r.ARMS)}
+    diagnostic = {arm: arm + '_other_CPU' for arm in initial}
+    reference = {'initial_state_sha256': initial[r.BASELINE]}
+    proof = r.verify_native_initialization(initial, deepcopy(initial), reference, diagnostic)
+    assert proof['status'] == 'passed' and proof['local_CPU_equals_native'] is False
+    wrong_history = {'initial_state_sha256': 'different_historical_baseline'}
+    with pytest.raises(ValueError, match='Historical/native MLP16'):
+        r.verify_native_initialization(initial, deepcopy(initial), wrong_history, diagnostic)
+    repeated = deepcopy(initial)
+    repeated[r.ARMS[1]] += '_changed'
+    with pytest.raises(ValueError, match='Repeated native'):
+        r.verify_native_initialization(initial, repeated, reference, diagnostic)
+
+
+def test_fit_rejects_any_modified_native_qualified_candidate():
+    initial = {arm: arm + '_native' for arm in (r.BASELINE, *r.ARMS)}
+    qualification = {'initialization': {'synthetic': {'42': deepcopy(initial)}}}
+    assert r.verify_fit_initialization(qualification, 'synthetic', initial)
+    initial[r.ARMS[2]] += '_changed'
+    with pytest.raises(ValueError, match='Qualified initial tensors changed'):
+        r.verify_fit_initialization(qualification, 'synthetic', initial)

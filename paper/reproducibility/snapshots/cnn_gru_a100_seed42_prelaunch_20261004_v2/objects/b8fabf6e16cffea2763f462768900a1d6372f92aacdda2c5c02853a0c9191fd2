@@ -1,0 +1,85 @@
+"""One campaign-authorized allocation. An uncertain result requires reconciliation, never retry."""
+import argparse
+import subprocess
+import sys
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+from provider import B, api, budget_limits, canonical, read, require, write
+from graphql import gql
+from prepare import verify_bundle
+
+
+def allocate(start_manager=True):
+    require(not (B / 'control/allocation.json').exists() and not (B / 'control/allocation_intent.json').exists(), 'Allocation already attempted; reconcile instead of retry')
+    authorization = read(B / 'user_authorization.json')
+    c = verify_bundle()
+    require(read(B / 'preparation_receipt.json')['status'] == 'CPU_tests_and_data_admission_passed', 'Preparation not passed')
+    require(read(B / 'verification/cpu_data_admission.json')['status'] == 'passed', 'Data admission not passed')
+    max_gpu_rate = authorization.get('max_gpu_rate_usd_hour', 1.59)
+    storage_rate = (30 + 20) * .1 / (30 * 24)
+    now = time.time()
+    limits = budget_limits(authorization, max_gpu_rate + storage_rate, now)
+    user = api('user')
+    balance = float(user['clientBalance'])
+    available_work = min(limits['work_cap_usd'], balance - limits['retrieval_cleanup_reserve_usd'])
+    require(available_work > (max_gpu_rate + storage_rate) * 1.5, 'Insufficient existing balance for setup and preserved reserve; no recharge')
+    require(user.get('isAutoPayEnabled') is not True, 'Account autopay enabled; explicit review required, never modify it')
+    effective_authorization = dict(authorization, work_cap_usd=available_work)
+    limits = budget_limits(effective_authorization, max_gpu_rate + storage_rate, now)
+    stop_at = limits['deadline_unix'] + min(3600, limits['retrieval_cleanup_reserve_usd'] / limits['running_rate_usd_hour'] * 3600)
+    request = {'name': B.name, 'cloudType': 'SECURE', 'gpuTypeId': 'NVIDIA A100-SXM4-80GB', 'gpuCount': 1,
+        'templateId': 'runpod-torch-v280', 'imageName': 'runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404',
+        'containerDiskInGb': 30, 'volumeInGb': 20, 'volumeMountPath': '/workspace', 'ports': '22/tcp',
+        'startSsh': True, 'startJupyter': False, 'minVcpuCount': 12, 'minMemoryInGb': 64, 'minCudaVersion': '13.0',
+        'stopAfter': datetime.fromtimestamp(stop_at, timezone.utc).isoformat(),
+        'env': [{'key': 'PUBLIC_KEY', 'value': (Path.home() / '.runpod/ssh/runpodctl-ssh-key.pub').read_text().strip()}]}
+    write(B / 'control/allocation_intent.json', {'time': now, 'request': {k: v for k, v in request.items() if k != 'env'},
+        'authorization_sha256': canonical(authorization), 'total_cap_usd': limits['total_cap_usd'],
+        'provider_stop_requested': True, 'provider_stop_guaranteed': False, 'automatic_recharge': False}, True)
+    try:
+        pod = gql('mutation($input:PodFindAndDeployOnDemandInput) { podFindAndDeployOnDemand(input:$input) { id name costPerHr createdAt gpuCount memoryInGb vcpuCount desiredStatus } }', {'input': request})['podFindAndDeployOnDemand']
+    except Exception as error:
+        write(B / 'control/allocation_error.json', {'type': type(error).__name__, 'time': time.time(),
+              'outcome_requires_reconciliation_before_retry': True}, True)
+        raise RuntimeError('Allocation failed or outcome uncertain; reconcile owned Pod before retry') from None
+    require(pod and pod.get('id') and pod.get('name') == B.name, 'Unknown allocation outcome; reconcile before retry')
+    write(B / 'control/creation_response.json', pod, True)
+    rate = float(pod['costPerHr']) + storage_rate
+    actual = budget_limits(effective_authorization, rate, now)
+    # The earlier independent provider request may be stricter than actual-price runtime.
+    actual['deadline_unix'] = min(actual['deadline_unix'], stop_at - 120)
+    allocation = dict(actual, pod_id=pod['id'], name=B.name, remote_root='/workspace/' + B.name,
+        created_unix=now, provider_createdAt=pod.get('createdAt'), gpu_rate_usd_hour=float(pod['costPerHr']),
+        storage_rate_usd_hour=storage_rate, initial_balance_usd=user['clientBalance'],
+        provider_stop_requested_unix=stop_at, provider_stop_requested_iso=request['stopAfter'],
+        provider_stop_readback_status='not_exposed_by_creation_response', provider_stop_guaranteed=False,
+        memoryInGb=pod['memoryInGb'], vcpuCount=pod['vcpuCount'],
+        authorized_work_cap_usd=authorization.get('work_cap_usd', authorization['total_cap_usd'] - authorization['retrieval_cleanup_reserve_usd']),
+        account_autopay_readback='unknown' if user.get('isAutoPayEnabled') is None else False,
+        account_balance_is_not_Pod_billing=True, automatic_manager_started=start_manager)
+    write(B / 'control/allocation.json', allocation, True)
+    write(B / 'current.json', {'bundle': str(B), 'pod_id': pod['id'], 'draft_contract_sha256': canonical(c),
+          'contract_sha256': None, 'authorization_sha256': canonical(authorization)}, True)
+    manager_pid = None
+    if start_manager:
+        log = (B / 'control/manager.log').open('x')
+        process = subprocess.Popen([sys.executable, str(B / 'control/manage.py')], stdin=subprocess.DEVNULL,
+            stdout=log, stderr=subprocess.STDOUT, start_new_session=True, close_fds=True)
+        log.close()
+        manager_pid = process.pid
+        write(B / 'control/manager_started.json', {'pid': manager_pid, 'time': time.time(), 'starts_training': False}, True)
+    if pod['gpuCount'] != 1 or float(pod['costPerHr']) > max_gpu_rate:
+        from provider import stop
+        stop(allocation, 'Unexpected GPU count or price; no payload deployed, retain for reconciliation')
+        raise RuntimeError('Unexpected allocation stopped; deletion requires verified recovery receipt')
+    print({'pod_id': pod['id'], 'GPU_rate': pod['costPerHr'], 'running_rate_with_storage': rate,
+           'deadline_unix': allocation['deadline_unix'], 'manager_started': start_manager, 'manager_pid': manager_pid, 'provider_stop_guaranteed': False})
+    return allocation
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--no-start-manager', action='store_true', help='For separately supervised allocation only')
+    args = parser.parse_args()
+    allocate(start_manager=not args.no_start_manager)

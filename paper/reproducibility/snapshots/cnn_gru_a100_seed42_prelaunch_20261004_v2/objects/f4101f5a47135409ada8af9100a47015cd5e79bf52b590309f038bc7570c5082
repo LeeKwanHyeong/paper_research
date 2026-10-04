@@ -1,0 +1,39 @@
+#!/bin/bash
+set -euo pipefail
+B=/workspace/titantpp_cnn_gru_a100_seed42_20261004_v1
+trap 'exit 124' TERM
+record_failure() {
+  local rc=$?
+  if [ "$rc" -ne 0 ]; then
+    python3 - "$B" "$rc" <<'PY'
+import json,sys,time
+from pathlib import Path
+p=Path(sys.argv[1])/"pipeline_failure.json"
+if not p.exists():p.write_text(json.dumps({"status":"failed","phase":"bootstrap","returncode":int(sys.argv[2]),"updated_unix":time.time(),"automatic_retry":False}))
+PY
+  fi
+  return "$rc"
+}
+trap record_failure EXIT
+# Verify all source/data/worker bytes before installing or qualifying any model.
+python3 - "$B" <<'PY'
+import hashlib,json,sys
+from pathlib import Path
+b=Path(sys.argv[1]); m=json.loads((b/'package_manifest.json').read_text())
+for name,digest in m['files'].items():
+ p=Path(name); assert not p.is_absolute() and '..' not in p.parts
+ assert hashlib.sha256((b/p).read_bytes()).hexdigest()==digest,name
+(b/'deployment_verified.json').write_text(json.dumps({'status':'passed','files':len(m['files'])}))
+PY
+mkdir -p "$B/cache/mpl" /tmp/xdg_cache_paper_research/torch/kernels
+export DEBIAN_FRONTEND=noninteractive
+if ! /usr/bin/python3.12 -m venv /opt/titantpp-cnn-gru-a100-venv; then
+  apt-get update -qq
+  apt-get install -y -qq python3.12-venv
+  /usr/bin/python3.12 -m venv /opt/titantpp-cnn-gru-a100-venv
+fi
+ln -s /opt/titantpp-cnn-gru-a100-venv "$B/venv"
+"$B/venv/bin/python" -m pip install --no-cache-dir 'torch==2.11.0' --index-url https://download.pytorch.org/whl/cu130
+"$B/venv/bin/python" -m pip install --no-cache-dir 'numpy==2.4.4' 'polars==1.39.3' 'matplotlib==3.10.8'
+command -v tmux >/dev/null || { apt-get update -qq; apt-get install -y -qq tmux; }
+tmux new-session -d -s titantpp_cnn_gru_a100_seed42_20261004_v1 "exec $B/venv/bin/python $B/control/training_pipeline.py > $B/pipeline.log 2>&1"

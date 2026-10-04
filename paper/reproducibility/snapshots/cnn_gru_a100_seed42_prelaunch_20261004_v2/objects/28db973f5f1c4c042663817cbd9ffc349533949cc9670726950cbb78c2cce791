@@ -1,0 +1,248 @@
+"""Dispatch exactly nine approved seed42 fits after native qualification; no retry."""
+from __future__ import annotations
+
+import fcntl
+import math
+import os
+from pathlib import Path
+import shutil
+import statistics
+import subprocess
+import sys
+import time
+import traceback
+
+import runtime as r
+
+
+def verify_terminal(folder, c, job):
+    folder = Path(folder).resolve()
+    manifest = r.read(folder / 'terminal_manifest.json')
+    r.require(manifest['status'] == 'complete' and manifest['scientific_success'] is True
+        and manifest['job'] == job and manifest['contract_sha256'] == r.sha_json(c), 'Missing/foreign terminal receipt')
+    for name, digest in manifest['files'].items():
+        path = (folder / name).resolve()
+        r.require(path.is_relative_to(folder) and r.sha_file(path) == digest, 'Terminal SHA mismatch ' + name)
+    r.require(manifest['held_out_test_evaluated'] is False, 'Held-out terminal forbidden')
+    return {'status': 'complete', 'terminal_manifest_sha256': r.sha_file(folder / 'terminal_manifest.json')}
+
+
+def compare_exposure(c, root, data, exposure):
+    references = [ref for ref in c['reuse'] if ref['dataset'] == data['dataset_id'] and ref['seed'] == 42]
+    r.require(len(references) == 1, 'Missing/ambiguous historical exposure reference')
+    reference = references[0]
+    # Width4 is used only for fixed batch exposure identity, never for MLP16 metric labels.
+    r.require(reference['arm'] == 'titantpp_history_mlp', 'Unexpected exposure reference arm')
+    path = r.resolve(root, reference['remote_run']) / 'exposure.json'
+    r.require(r.sha_file(path) == reference['file_sha256']['exposure.json'], 'Width4 exposure changed')
+    original = r.read(path)
+    n = min(len(exposure['train']), len(original['train']))
+    r.require(n > 0 and exposure['train'][:n] == original['train'][:n], 'Frozen train batch prefix differs')
+    r.require(exposure['validation'][0] == original['validation'][0], 'Frozen validation population/order differs')
+    return {'reference_arm': reference['arm'], 'purpose': 'batch exposure identity only',
+        'reference_sha256': reference['file_sha256']['exposure.json'], 'compared_train_epochs': n,
+        'train_prefix_identical': True, 'validation_exposure_identical': True}
+
+
+def run_fit(c, root, job, deadline):
+    from diagnostics import evaluate
+    start = r.authorization(c, root)
+    r.verify_training_permit(c, root)
+    qualification = r.read(root / 'qualification/receipt.json')
+    r.require(job in c['jobs'] and job['host'] == 'a100', 'Unapproved fit')
+    claim = r.read(root / 'claims' / (job['id'] + '.json'))
+    r.require(claim['job'] == job and claim['contract_sha256'] == r.sha_json(c)
+        and claim['deadline_unix'] == deadline and deadline <= start['deadline_unix'], 'Foreign/enlarged fit deadline')
+    r.require(qualification['runtime'] == r.runtime_check(c), 'Qualified runtime drift')
+    engine = r.load_engine(c)
+    from paper.scripts.count_aware_tpp_backbone import training
+    from paper.scripts import evaluate_titantpp_history_width as fixed
+    budget = r.PulseBudget(root, r.sha_json(c), job['id'], deadline, lease=True)
+    budget()
+    data = next(d for d in c['datasets'] if d['dataset_id'] == job['dataset'])
+    frame, receipt = engine.base.prepare_admitted_data(data)
+    interface = engine.time_interface(data, frame, c, arm=job['arm'])
+    expected_interface = qualification['inputs'][data['dataset_id']]['interface_sha256'][job['arm']]
+    r.require(r.sha_json(interface) == expected_interface, 'Native-qualified time/interface changed')
+    initial = engine.initial_states(data, 42)
+    r.verify_fit_initialization(qualification, data['dataset_id'], initial)
+    folder = root / 'run' / job['id']
+    folder.mkdir(parents=True, exist_ok=False)
+    arm = job['arm']
+    args = engine.training_args(c, data, folder, arm)
+    args.seeds = '42'
+    run = folder / 'runs' / arm / r.VARIANT / 'seed_42'
+    r.write_json(folder / 'input_receipt.json', receipt, exclusive=True)
+    r.write_json(folder / 'initialization.json', initial, exclusive=True)
+    quantity = {'boundaries': data['quantity_boundaries_all_train_rows'],
+        'strata': [{'label': f'frozen_quantity_bin_{i}'} for i in range(5)]}
+
+    def status(epoch, records):
+        budget()
+        r.write_json(run / 'exposure.json', records)
+        names = ('last_epoch_state.pt', 'history.json', 'exposure.json', 'epoch_timing.json', 'train.log')
+        r.write_json(run / 'server_checkpoint_receipt.json', {'epoch': epoch, 'contract_sha256': r.sha_json(c),
+            'files': {name: r.sha_file(run / name) for name in names}, 'mac_ack_required': False, 'time': time.time()})
+        r.write_json(folder / 'status.json', {'status': 'training', 'epoch': epoch, 'job': job,
+            'global_steps': sum(row['batches'] for row in records['train']), 'deadline_unix': deadline,
+            'updated_unix': time.time()})
+        if epoch == 2:
+            times = [row['elapsed_seconds'] for row in r.read(run / 'epoch_timing.json')['epochs']]
+            projected = max(times) * 298 * 1.2 + 600
+            r.write_json(folder / 'two_epoch_cost_receipt.json', {'status': 'recorded', 'same_scientific_fit': True,
+                'measured_epoch_seconds': times, 'projected_remaining_seconds': projected,
+                'available_seconds': deadline - time.time(), 'full_300_epoch_projection_fits': projected < deadline - time.time(),
+                'not_a_completion_guarantee': True, 'policy': 'projection only; immutable native deadline remains enforced'})
+
+    with engine.shared.audited_training(training, data, budget, status) as exposure:
+        summary, _, _ = training.train_one(args=args, frame=frame, quantity_contract=quantity,
+            interface_meta=interface, backbone=arm, quantity_variant=r.VARIANT, seed=42)
+    history = r.read(run / 'history.json')['history']
+    from paper.scripts.run_local_detail_benchmark import audit_arm
+    steps = audit_arm(history, summary, exposure, data, c['training'])
+    r.require(summary['initial_state_sha256'] == initial[arm], 'Fresh fit initial tensor identity mismatch')
+    identity = training._resume_identity(args=args, backbone=arm, quantity_variant=r.VARIANT, seed=42,
+        monitor='validation_raw_quantity_rmse', interface_meta=interface, quantity_contract=quantity)
+    endpoints = {}
+    for label, path in (('selected', Path(summary['checkpoint_path'])), ('last', run / 'last_epoch_state.pt')):
+        epoch = summary['best_epoch'] if label == 'selected' else len(history)
+        endpoints[label] = engine.replay_checkpoint(path, data, frame, budget, expected_arm=arm,
+            expected_identity=identity, expected_initial=initial[arm], expected_epoch=epoch, expected_seed=42)
+        r.require(all(math.isclose(endpoints[label][metric], history[epoch - 1][key], rel_tol=1e-10, abs_tol=1e-8)
+            for metric, key in (('qty_mae', 'val_qty_mae'), ('qty_rmse', 'val_qty_rmse'), ('time_nll', 'val_time_nll'))),
+            'Selected/last full-Val replay differs from fit history')
+    exposure_receipt = compare_exposure(c, root, data, exposure)
+    selected_diagnostic = evaluate(engine, data, Path(summary['checkpoint_path']), frame, budget,
+        endpoints['selected'], c['diagnostic']['train_sampling'])
+    baseline_path = root / 'qualification' / (data['dataset_id'] + '__42_baseline_diagnostic.json')
+    r.require(r.sha_file(baseline_path) == qualification['baselines'][data['dataset_id']]['diagnostic_sha256'],
+        'Existing MLP16 diagnostic changed')
+    comparison = fixed.compare_evaluations(r.read(baseline_path), selected_diagnostic)
+    r.write_json(run / 'selected_train_validation_diagnostic.json', selected_diagnostic, exclusive=True)
+    r.write_json(run / 'width16_candidate_comparison.json', comparison, exclusive=True)
+    r.write_json(run / 'batch_exposure_comparison.json', exposure_receipt, exclusive=True)
+    result = {**endpoints, 'status': 'complete', 'job': job, 'best_epoch': summary['best_epoch'],
+        'completed_epochs': len(history), 'global_steps': steps, 'initial_state_sha256': initial[arm],
+        'parameter_count': summary['parameter_count'], 'elapsed_seconds': summary['elapsed_seconds'],
+        'last30': engine.shared.last30_summary(history),
+        'first40': {'mean': statistics.mean(x['val_qty_rmse'] for x in history[:40]),
+            'sd': statistics.stdev(x['val_qty_rmse'] for x in history[:40]), 'count': 40},
+        'evaluation_scope': 'validation_only', 'held_out_test_evaluated': False}
+    r.write_json(run / 'endpoint_replays.json', result, exclusive=True)
+    r.write_json(run / 'exposure.json', exposure)
+    budget()
+    r.write_json(folder / 'status.json', {'status': 'complete', 'job': job, 'updated_unix': time.time()})
+    files = {str(p.relative_to(folder)): r.sha_file(p) for p in sorted(folder.rglob('*')) if p.is_file()}
+    r.write_json(folder / 'terminal_manifest.json', {'status': 'complete', 'scientific_success': True,
+        'files': files, 'contract_sha256': r.sha_json(c), 'job': job, 'held_out_test_evaluated': False,
+        'completed_unix': time.time()}, exclusive=True)
+
+
+def dispatch(c, root):
+    start = r.authorization(c, root)
+    r.verify_training_permit(c, root)
+    qualification = r.read(root / 'qualification/receipt.json')
+    concurrency = qualification['selected_concurrency']
+    r.require(not r.gpu_pids(c), 'GPU occupied before nine-condition dispatch')
+    r.require(shutil.which('timeout') is not None, 'Independent native timeout guard unavailable')
+    running, pending, outcomes = {}, list(c['jobs']), {}
+    deadline = start['deadline_unix']
+    with (root / 'supervisor.lock').open('a+') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        r.write_json(root / 'supervisor.claim', {'pid': os.getpid(), 'contract_sha256': r.sha_json(c),
+            'started_unix': time.time()}, exclusive=True)
+
+        def record():
+            r.write_json(root / 'status.json', {'status': 'running', 'completed': outcomes, 'outcomes': outcomes,
+                'active_jobs': [v['job'] for v in running.values()],
+                'worker_pids': [v['child'].pid for v in running.values()], 'pending_jobs': pending,
+                'supervisor_pid': os.getpid(), 'deadline_unix': deadline, 'concurrency': concurrency,
+                'updated_unix': time.time(), 'mac_required_for_training': False})
+
+        def lease(job, limit):
+            now = time.time()
+            r.write_json(root / 'leases' / (job['id'] + '.json'), {'job': job['id'], 'contract_sha256': r.sha_json(c),
+                'issued_unix': now, 'expires_unix': min(now + 90, limit), 'supervisor_pid': os.getpid()})
+
+        try:
+            while pending or running:
+                now = time.time()
+                r.require(now < deadline, 'Campaign deadline reached')
+                while pending and len(running) < concurrency:
+                    # The contract is immutable throughout all nine conditions.
+                    r.authorization(c, root)
+                    job = pending.pop(0)
+                    identity = job['id']
+                    r.require(not (root / 'run' / identity).exists(), 'Run exists; implicit retry/resume forbidden')
+                    limit = min(deadline, time.time() + c['limits']['per_condition_seconds'])
+                    r.write_json(root / 'claims' / (identity + '.json'), {'job': job, 'deadline_unix': limit,
+                        'contract_sha256': r.sha_json(c)}, exclusive=True)
+                    lease(job, limit)
+                    log_path = root / 'logs' / (identity + '.log')
+                    log_path.parent.mkdir(exist_ok=True)
+                    stream = log_path.open('x')
+                    command = ['timeout', '--signal=TERM', '--kill-after=15s', str(max(1, int(limit - time.time()))),
+                        sys.executable, str(Path(__file__).resolve()), '--contract', str(root / 'execution_contract.json'),
+                        '--host', 'a100', '--mode', 'fit', '--job', identity, '--deadline', str(limit)]
+                    try:
+                        child = subprocess.Popen(command, cwd=c['hosts']['a100']['source_root'], stdout=stream,
+                            stderr=subprocess.STDOUT, start_new_session=True)
+                    except BaseException:
+                        stream.close()
+                        raise
+                    running[identity] = {'child': child, 'job': job, 'deadline': limit, 'log': stream}
+                for identity, entry in list(running.items()):
+                    now = time.time()
+                    r.require(now < entry['deadline'], 'Condition deadline reached: ' + identity)
+                    child = entry['child']
+                    if child.poll() is not None:
+                        entry['log'].close()
+                        if child.returncode != 0:
+                            outcomes[identity] = {'status': 'failed', 'returncode': child.returncode,
+                                'reason': 'worker_failed', 'automatic_retry': False}
+                            del running[identity]
+                            raise ValueError('Worker exited ' + str(child.returncode) + ': ' + identity)
+                        outcomes[identity] = verify_terminal(root / 'run' / identity, c, entry['job'])
+                        del running[identity]
+                    else:
+                        lease(entry['job'], entry['deadline'])
+                record()
+                if running:
+                    time.sleep(5)
+            r.require(len(outcomes) == 9, 'Incomplete nine-condition terminal coverage')
+            r.write_json(root / 'status.json', {'status': 'complete', 'outcomes': outcomes, 'completed': outcomes,
+                'completed_conditions': 9, 'total_conditions': 9, 'updated_unix': time.time(),
+                'automatic_retry': False, 'held_out_test_evaluated': False, 'binary_cpu_audit': 'pending'})
+        except BaseException as exc:
+            for identity, entry in running.items():
+                r.stop_owned(entry['child'])
+                entry['log'].close()
+                outcomes[identity] = {'status': 'interrupted', 'reason': 'supervisor_failure', 'automatic_retry': False}
+            for job in pending:
+                outcomes[job['id']] = {'status': 'not_started', 'reason': 'supervisor_failure'}
+            failure = {'status': 'failed', 'type': type(exc).__name__, 'message': str(exc),
+                'traceback': traceback.format_exc(), 'outcomes': outcomes, 'updated_unix': time.time(),
+                'automatic_retry': False, 'held_out_test_evaluated': False}
+            r.write_json(root / 'failure.json', failure, exclusive=True)
+            r.write_json(root / 'status.json', failure)
+            raise
+
+
+def main():
+    args, c, root = r.cli(__doc__, modes=('dispatch', 'fit'))
+    if args.mode == 'dispatch':
+        dispatch(c, root)
+    else:
+        r.require(args.job and args.deadline is not None, 'Fit job/deadline missing')
+        job = next(j for j in c['jobs'] if j['id'] == args.job)
+        try:
+            run_fit(c, root, job, args.deadline)
+        except BaseException as exc:
+            r.write_json(root / 'run' / job['id'] / 'failure.json', {'status': 'failed', 'job': job,
+                'type': type(exc).__name__, 'message': str(exc), 'traceback': traceback.format_exc(),
+                'automatic_retry': False, 'updated_unix': time.time()})
+            raise
+
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,93 @@
+"""Validate the separately frozen scientific bundle and build an immutable payload."""
+import argparse
+import tarfile
+from pathlib import Path
+from provider import B, canonical, read, require, sha, write
+
+DATASETS = {'yellow_trip_hourly', 'intermittent_frozen_5000', 'raf_spare_parts'}
+
+
+def verify_bundle(bundle=B, contract=None):
+    bundle = Path(bundle)
+    c = contract or read(bundle / 'execution_contract.draft.json')
+    require(c['evaluation_scope'] == 'validation_only' and c['held_out_test_evaluated'] is False, 'Validation-only contract required')
+    arms = c['arms']
+    require(len(arms) == len(set(arms)) == 3, 'Three independent arms required')
+    expected = {(dataset, arm, 42, 'a100') for dataset in DATASETS for arm in arms}
+    jobs = c['jobs']
+    require(len(jobs) == len({j['id'] for j in jobs}) == 9, 'Nine unique seed42 jobs required')
+    require({(j['dataset'], j['arm'], j['seed'], j['host']) for j in jobs} == expected, 'Foreign dataset/arm/seed/host')
+    require(c['hosts']['a100']['root'] == '/workspace/' + bundle.name, 'Foreign host root')
+    require(canonical(c['source']['files']) == c['source']['files_sha256'], 'Source closure changed')
+    for name, digest in c['source']['files'].items():
+        path = Path(name)
+        require(not path.is_absolute() and '..' not in path.parts, 'Unsafe source path')
+        require(sha(bundle / 'source' / path) == digest, 'Source SHA mismatch: ' + name)
+    worker = c.get('worker', {'files': c.get('worker_files', {})})
+    if 'files_sha256' in worker:
+        require(canonical(worker['files']) == worker['files_sha256'], 'Worker closure changed')
+    for name, digest in worker['files'].items():
+        require(Path(name).parts[0] == 'worker' and '..' not in Path(name).parts, 'Unsafe worker path')
+        require(sha(bundle / name) == digest, 'Worker SHA mismatch: ' + name)
+    require({d['dataset_id'] for d in c['datasets']} == DATASETS, 'Unexpected data admission')
+    for data in c['datasets']:
+        for key in ('data', 'split_manifest'):
+            identity = data['inherited_data_identity'][key]
+            named_path = Path(identity['path'])
+            if named_path.is_absolute():
+                relative = named_path.relative_to(c['hosts']['a100']['root'])
+                path = (bundle / relative).resolve()
+            else:
+                path = (bundle / 'source' / named_path).resolve()
+            require(path.is_relative_to((bundle / 'data').resolve()), 'Foreign data path')
+            require(sha(path) == identity['sha256'], 'Data SHA mismatch: ' + data['dataset_id'])
+    for replay in c.get('baseline_replays', {}).values():
+        for key in ('checkpoint', 'exposure'):
+            if key == 'exposure' and key not in replay:
+                require('exposure_sha256' not in replay, 'Exposure hash without an original exposure')
+                continue
+            name = replay[key]
+            require(Path(name).parts[0] == 'baselines' and '..' not in Path(name).parts, 'Foreign baseline path')
+            require(sha(bundle / name) == replay[key + '_sha256'], 'Baseline SHA mismatch')
+    for reuse in c.get('reuse', []):
+        remote = Path(reuse['remote_run'])
+        relative = remote.relative_to(c['hosts']['a100']['root'])
+        require(relative.parts[0] == 'references' and '..' not in relative.parts, 'Foreign reuse path')
+        for name, digest in reuse['file_sha256'].items():
+            require(sha(bundle / relative / name) == digest, 'Reference SHA mismatch')
+    return c
+
+
+def package(bundle=B):
+    bundle = Path(bundle)
+    c = verify_bundle(bundle, read(bundle / 'execution_contract.json'))
+    require(read(bundle / 'verification/cpu_data_admission.json')['status'] == 'passed', 'CPU/data admission not passed')
+    require(not (bundle / 'deployment.tar.gz').exists(), 'Never overwrite a deployment archive')
+    files = {}
+    for folder in ('source', 'data', 'baselines', 'references', 'worker'):
+        for p in sorted((bundle / folder).rglob('*')):
+            if p.is_file() and '__pycache__' not in p.parts:
+                require(not p.is_symlink(), 'Payload symlink forbidden')
+                files[str(p.relative_to(bundle))] = sha(p)
+    for name in ('execution_contract.json', 'approval.json', 'start_permit.json', 'expected_initialization.json',
+                 'control/bootstrap.sh', 'control/training_pipeline.py', 'control/terminal_observer.py'):
+        files[name] = sha(bundle / name)
+    require(any(n.startswith('worker/') for n in files), 'Missing worker package')
+    write(bundle / 'package_manifest.json', {'files': files, 'contract_sha256': canonical(c),
+          'evaluation_scope': 'validation_only', 'held_out_test_evaluated': False}, True)
+    with tarfile.open(bundle / 'deployment.tar.gz', 'w:gz') as archive:
+        for name in [*files, 'package_manifest.json']:
+            archive.add(bundle / name, arcname=name, recursive=False)
+    write(bundle / 'package_receipt.json', {'status': 'sha_verified', 'files': len(files),
+          'archive_sha256': sha(bundle / 'deployment.tar.gz'), 'contract_sha256': canonical(c)}, True)
+    return files
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--build-package', action='store_true')
+    args = parser.parse_args()
+    if args.build_package:
+        print({'packaged_files': len(package())})
+    else:
+        print({'status': 'frozen_source_data_SHA_passed', 'jobs': len(verify_bundle()['jobs'])})

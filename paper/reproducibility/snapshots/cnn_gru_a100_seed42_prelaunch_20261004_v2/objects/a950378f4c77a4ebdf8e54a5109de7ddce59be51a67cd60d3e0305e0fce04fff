@@ -1,0 +1,40 @@
+"""Reuse fixed full-Val endpoints and original weighted TRAIN samples for CNN/GRU."""
+from pathlib import Path
+
+from runtime import ARMS, BASELINE, VARIANT, require
+
+
+def evaluate(engine, data, path, frame, budget, validation_replay, sampling, *, device='cuda:0'):
+    """No fitting or prediction export; target split is train/validation only."""
+    from models.TPPs.CountAwareFactory import validate_checkpoint_route
+    from paper.scripts import evaluate_titantpp_history_width as fixed
+    from paper.scripts.count_aware_tpp_backbone.training import checkpoint_monitor_spec
+    from simple_lab_test.search.common.runner import canonical_state_dict_sha256, torch_load_checkpoint
+    budget()
+    payload = torch_load_checkpoint(Path(path), map_location='cpu')
+    arm = payload['backbone']
+    require(arm in (BASELINE, *ARMS) and payload['seed'] == 42, 'Foreign diagnostic checkpoint')
+    validate_checkpoint_route(payload, arm)
+    require(payload['evaluation_scope'] == 'validation_only' and payload['held_out_test_evaluated'] is False,
+        'Held-out checkpoint forbidden')
+    selector = checkpoint_monitor_spec('validation_raw_quantity_rmse')
+    require(payload['variant'] == VARIANT and payload['checkpoint_monitor'] == 'validation_raw_quantity_rmse'
+        and payload['checkpoint_monitor_history_key'] == selector['history_key']
+        and payload['checkpoint_selection'] == selector['selection'], 'Diagnostic selector changed')
+    require(payload['interface_meta']['time_head']['observation_likelihood'] == data['model']['time_observation_contract'],
+        'Diagnostic observation likelihood changed')
+    state = canonical_state_dict_sha256(payload['model_state_dict'])
+    require(payload['model_state_sha256'] == state, 'Diagnostic checkpoint tensor SHA changed')
+    loader = fixed._loader(data, frame, 'validation')
+    q, population = fixed.population_identity(loader.dataset, 'validation',
+        data['inherited_data_identity']['populations']['validation'])
+    validation = fixed.reuse_validation_replay(validation_replay, data, population, state, q)
+    del loader, q
+    train = fixed._train_sample(payload, state, path, data, frame, budget, device, sampling, engine.build_model)
+    budget()
+    return {'schema': 'titantpp_cnn_gru_train_validation_metrics_v1', 'dataset': data['dataset_id'],
+        'model': arm, 'seed': payload['seed'], 'epoch': payload.get('epoch', payload.get('best_epoch')),
+        'validation': validation, 'train_sample': train,
+        'provenance': {'checkpoint_path': str(path), 'state_sha256': state, 'device': device,
+            'checkpoint_monitor': payload['checkpoint_monitor'], 'selection_unchanged': True,
+            'new_training': False, 'held_out_test_evaluated': False, 'raw_predictions_written': False}}

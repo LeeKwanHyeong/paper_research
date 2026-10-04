@@ -1,0 +1,354 @@
+"""Read-only, one-shot observer for the CNN/GRU A100 campaign.
+
+This wrapper calls observe.py once, or reuses the preserved terminal snapshot after
+verified deletion. It never invokes manage.py, a provider API, or a training entry.
+Only validation records are inspected; binary retrieval/CPU audit stays separate.
+"""
+import hashlib
+import json
+import math
+import os
+import shlex
+import statistics
+import subprocess
+import sys
+import time
+from collections import Counter
+from datetime import datetime, timezone, timedelta
+from pathlib import Path
+
+B = Path(__file__).resolve().parents[1]
+KST = timezone(timedelta(hours=9))
+
+
+def read(path):
+    return json.loads(Path(path).read_text())
+
+
+def write(path, value):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + '.tmp')
+    temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False) + '\n')
+    os.replace(temporary, path)
+
+
+def canonical(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()).hexdigest()
+
+
+def timestamp(value):
+    return datetime.fromtimestamp(value, KST).strftime('%Y-%m-%d %H:%M:%S KST') if value is not None else None
+
+
+def finite(value):
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+
+
+def verify_contract(bundle):
+    pointer = read(bundle / 'current.json')
+    contract = read(bundle / 'execution_contract.json')
+    allocation = read(bundle / 'control/allocation.json')
+    assert Path(pointer['bundle']).resolve() == bundle.resolve(), 'current bundle changed'
+    assert canonical(contract) == pointer['contract_sha256'], 'contract changed'
+    assert canonical(contract['source']['files']) == contract['source']['files_sha256'] == pointer['source_closure_sha256'], 'source closure changed'
+    assert pointer['pod_id'] == allocation['pod_id'] and allocation['name'] == bundle.name, 'owned Pod changed'
+    assert contract['hosts']['a100']['root'] == allocation['remote_root'], 'remote root changed'
+    assert contract['evaluation_scope'] == 'validation_only' and contract['held_out_test_evaluated'] is False
+    assert len(contract['jobs']) == len({j['id'] for j in contract['jobs']}) == 9
+    for name, digest in contract['source']['files'].items():
+        path = bundle / 'source' / name
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == digest, 'frozen source mismatch'
+    return contract, allocation
+
+
+def manager_records(bundle, now):
+    """Read existing local receipts; only the receipt PID is inspected, never restarted."""
+    names = ('control/manager_started.json', 'control/manager_receipt.json',
+             'control/manager_error.json', 'control/manager_failure.json',
+             'control/cleanup_error.json', 'control/cleanup_receipt.json',
+             'control/stop_receipt.json', 'cost_report.json', 'control/cost_report.json',
+             'retrieved/retrieval_receipt.json', 'monitor/latest.json')
+    records = {}
+    for name in names:
+        path = bundle / name
+        if path.exists():
+            value = read(path)
+            if name == 'monitor/latest.json':
+                # Avoid copying account balance, unrelated account deltas, or raw logs.
+                value = {k: value[k] for k in ('observed_unix', 'pod_id', 'own_elapsed_rate_cost_usd',
+                         'desiredStatus', 'runtimeStatus', 'state', 'observation') if k in value}
+            records[name] = value
+    receipt = records.get('control/manager_receipt.json', records.get('control/manager_started.json', {}))
+    pid = receipt.get('pid')
+    process = {'pid': pid, 'owned_command_matches': False, 'checked_unix': now}
+    if isinstance(pid, int) and pid > 0:
+        try:
+            result = subprocess.run(['ps', '-p', str(pid), '-o', 'command='], capture_output=True, text=True, timeout=10)
+            expected = str(bundle / 'control/manage.py')
+            command = result.stdout.strip()
+            words = shlex.split(command)
+            matches = len(words) >= 2 and expected in words and Path(words[0]).name.lower().startswith('python')
+            process.update(present=bool(command), owned_command_matches=matches,
+                           owned_command=('python ' + expected) if matches else None)
+        except (OSError, subprocess.TimeoutExpired, ValueError) as error:
+            process.update(present=None, owned_command_matches=None, query_error_type=type(error).__name__)
+    observed = records.get('monitor/latest.json', {}).get('observed_unix')
+    return {'records': records, 'local_manager_process': process,
+            'last_manager_observation_age_seconds': max(0, now - observed) if finite(observed) else None,
+            'mac_sleep_or_network_can_prevent_provider_cleanup': True}
+
+
+def process_evidence(snapshot, contract):
+    processes = []
+    host = contract['hosts']['a100']
+    for line in snapshot.get('owned_processes', []):
+        parts = line.split(None, 4)
+        if len(parts) != 5:
+            continue
+        try:
+            words = shlex.split(parts[4])
+            pid = int(parts[0])
+        except (ValueError, TypeError):
+            continue
+        if not words or words[0] != host['python']:
+            continue
+        if '--mode' not in words or '--job' not in words:
+            continue
+        try:
+            if words[words.index('--mode') + 1] != 'fit':
+                continue
+            job_id = words[words.index('--job') + 1]
+        except IndexError:
+            continue
+        processes.append({'pid': pid, 'job_id': job_id})
+    gpu = snapshot.get('compute') or {}
+    pids = set()
+    if gpu.get('returncode') == 0:
+        for line in gpu.get('stdout', '').splitlines():
+            try:
+                pids.add(int(line.split(',')[0].strip()))
+            except ValueError:
+                pass
+    return processes, pids, gpu.get('returncode') == 0
+
+
+def analyse(snapshot, contract, observed_unix, *, reused=False):
+    assert snapshot.get('root') == contract['hosts']['a100']['root'], 'snapshot remote root mismatch'
+    assert finite(observed_unix) and observed_unix == snapshot.get('observed_unix')
+    processes, gpu_pids, gpu_available = process_evidence(snapshot, contract)
+    by_id = {r['job']['id']: r for r in snapshot.get('runs', [])}
+    assert len(by_id) == len(snapshot.get('runs', [])), 'duplicate run identity'
+    assert set(by_id) == {j['id'] for j in contract['jobs']}, 'missing/unexpected observed jobs'
+    assert not snapshot.get('resume_runs'), 'unexpected resume requires contract review'
+    contract_sha = canonical(contract)
+    source_sha = contract['source']['files_sha256']
+    status = snapshot.get('files', {}).get('status.json') or {}
+    rows = []
+    for job in contract['jobs']:
+        raw = by_id[job['id']]
+        assert raw['job'] == job, 'job identity mismatch'
+        run_status = raw.get('status') or {}
+        manifest = raw.get('terminal_manifest') or {}
+        endpoints = raw.get('endpoints') or {}
+        receipt = raw.get('checkpoint_receipt') or {}
+        history = (raw.get('history') or {}).get('history', [])
+        timing = (raw.get('timing') or {}).get('epochs', [])
+        worker_pids = [p['pid'] for p in processes if p['job_id'] == job['id']]
+        active_pids = sorted(set(worker_pids) & gpu_pids)
+        saved = receipt.get('epoch')
+        history_epochs = [x.get('epoch') for x in history]
+        timing_epochs = [x.get('epoch') for x in timing]
+        prefix = f"run/{job['id']}/runs/{job['arm']}/{contract['quantity_variants'][job['arm']]}/seed_{job['seed']}/"
+        checkpoint_checks = {name: receipt.get('files', {}).get(name) == snapshot.get('file_sha256', {}).get(prefix + name)
+                             and bool(receipt.get('files', {}).get(name))
+                             for name in ('history.json', 'epoch_timing.json')}
+        checkpoint_consistent = (receipt.get('contract_sha256') == contract_sha
+                                 and isinstance(saved, int) and saved > 0
+                                 and history_epochs == timing_epochs == list(range(1, saved + 1))
+                                 and all(checkpoint_checks.values())
+                                 and (raw.get('last_checkpoint_bytes') or 0) > 0)
+        eligible = [x for x in history if finite(x.get('val_qty_rmse'))]
+        best = min(eligible, key=lambda x: (x['val_qty_rmse'], x['epoch'])) if eligible else None
+        best_epoch = best['epoch'] if best else None
+        metrics = {k: best.get('val_' + k) for k in ('qty_mae', 'qty_rmse', 'time_nll')} if best else None
+        manifest_identity = manifest.get('contract_sha256') == contract_sha and manifest.get('job') == job
+        required = ('history.json', 'epoch_timing.json', 'server_checkpoint_receipt.json', 'endpoint_replays.json')
+        small_ok = raw.get('small_record_SHA_passed') is True and all(
+            any(n.endswith('/' + name) and value is True for n, value in raw.get('small_record_checks', {}).items())
+            for name in required)
+        replay_ok = (endpoints.get('status') == 'complete' and endpoints.get('evaluation_scope') == 'validation_only'
+                     and endpoints.get('held_out_test_evaluated') is False and endpoints.get('job') == job
+                     and endpoints.get('best_epoch') == best_epoch and endpoints.get('completed_epochs') == saved
+                     and all(isinstance(endpoints.get(role), dict)
+                             and endpoints[role].get('evaluation_scope') == 'validation_only'
+                             and endpoints[role].get('held_out_test_evaluated') is False
+                             and all(finite(endpoints[role].get(k)) for k in ('qty_mae', 'qty_rmse', 'time_nll'))
+                             and bool(endpoints[role].get('state_sha256')) for role in ('selected', 'last')))
+        verified = (manifest_identity and manifest.get('status') == 'complete'
+                    and manifest.get('scientific_success') is True and small_ok and replay_ok and checkpoint_consistent)
+        reasons = []
+        if verified:
+            state = 'completed'
+        elif manifest_identity and manifest.get('status') == 'failed' and raw.get('small_record_SHA_passed') is True:
+            state = 'failed'
+        elif manifest or run_status.get('status') in ('complete', 'failed'):
+            state = 'terminal_unverified'
+            reasons.append('terminal scientific success/SHA/replay/checkpoint agreement is not fully verified')
+        elif worker_pids and active_pids and checkpoint_consistent:
+            state = 'training'
+        elif worker_pids and (not saved) and gpu_available:
+            state = 'preparing'
+        elif not run_status and not history and not worker_pids:
+            state = 'unstarted_terminal' if status.get('status') in ('complete', 'failed') else 'pending'
+        else:
+            state = 'unknown'
+            if not worker_pids:
+                reasons.append('saved training status without a matching owned worker; do not restart automatically')
+            if worker_pids and not active_pids:
+                reasons.append('owned worker is not confirmed among current GPU PIDs')
+            if not checkpoint_consistent:
+                reasons.append('checkpoint/history/timing evidence incomplete or changed during observation')
+        recent = [x for x in timing if x.get('epoch') in history_epochs and finite(x.get('elapsed_seconds')) and x['elapsed_seconds'] > 0][-10:]
+        median = statistics.median(x['elapsed_seconds'] for x in recent) if recent else None
+        eta = None
+        if state == 'training' and median and best_epoch:
+            stop_epoch = min(contract['training']['maximum_epochs'], max(contract['training']['minimum_epochs'], best_epoch + contract['training']['patience']))
+            remain = max(0, stop_epoch - saved)
+            eta = {'assumption': 'no further best RMSE improvement; present A100 concurrency/speed persists',
+                   'target_epoch': stop_epoch, 'remaining_epochs': remain,
+                   'remaining_seconds': remain * median,
+                   'conditional_finish_unix': observed_unix + remain * median,
+                   'conditional_finish_kst': timestamp(observed_unix + remain * median),
+                   'max300_scenario_unix': observed_unix + max(0, contract['training']['maximum_epochs'] - saved) * median,
+                   'max300_scenario_kst': timestamp(observed_unix + max(0, contract['training']['maximum_epochs'] - saved) * median),
+                   'partial_epoch_credit': 'none; conservative whole-epoch estimate from observation',
+                   'excludes': ['endpoint replay', 'original retrieval', 'CPU audit'],
+                   'not_completion_guarantee': True}
+        cost_warning = (raw.get('two_epoch_cost') or {}).get('full_300_epoch_projection_fits') is False
+        rows.append({'job': job, 'state': state, 'saved_epoch': saved, 'best_epoch': best_epoch,
+                     'validation_best_same_epoch': metrics, 'history_epochs': len(history),
+                     'checkpoint_record_consistent': checkpoint_consistent,
+                     'checkpoint_small_SHA_checks': checkpoint_checks, 'worker_pids': worker_pids,
+                     'confirmed_gpu_pids': active_pids, 'terminal_verified': bool(verified or state == 'failed'),
+                     'small_record_SHA_verified': bool(small_ok), 'selected_last_validation_replay_verified': bool(replay_ok),
+                     'recent_epoch_seconds_median': median, 'recent_epoch_count': len(recent), 'eta': eta,
+                     'two_epoch_projection_warning_not_failure': cost_warning,
+                     'original_binary_CPU_audit': 'separate_not_performed_by_monitor', 'issues': reasons})
+    counts = Counter(r['state'] for r in rows)
+    progress = counts['training'] + counts['preparing']
+    uncertain = counts['unknown'] + counts['terminal_unverified']
+    terminal = all(r['terminal_verified'] or r['state'] == 'unstarted_terminal' for r in rows)
+    active_ids = {p['job_id'] for p in processes}
+    claimed_ids = {j['id'] for j in status.get('active_jobs', [])}
+    full_eta = None
+    if not counts['pending'] and not uncertain and progress and all(r['eta'] for r in rows if r['state'] in ('training', 'preparing')):
+        finish = max(r['eta']['conditional_finish_unix'] for r in rows if r['eta'])
+        full_eta = {'conditional_finish_unix': finish, 'conditional_finish_kst': timestamp(finish),
+                    'assumption': 'all active best epochs unchanged; current concurrency/speeds persist',
+                    'excludes': ['endpoint replay', 'original retrieval', 'CPU audit']}
+    return {'schema': 'cnn_gru_seed42_hourly_v1', 'evaluation_scope': 'validation_only',
+            'held_out_test_evaluated': False, 'contract_sha256': contract_sha, 'source_closure_sha256': source_sha,
+            'pod_id': snapshot.get('pod_id'), 'observed_unix': observed_unix, 'observed_kst': timestamp(observed_unix),
+            'reused_terminal_evidence': reused, 'status_counts': {'completed': counts['completed'],
+            'failed': counts['failed'], 'in_progress': progress, 'pending': counts['pending'],
+            'unstarted_terminal': counts['unstarted_terminal'], 'unknown': uncertain},
+            'state_counts': dict(counts), 'rows': rows, 'actual_owned_fit_count': len(active_ids),
+            'actual_owned_GPU_fit_count': len({p['job_id'] for p in processes if p['pid'] in gpu_pids}),
+            'declared_concurrency': status.get('concurrency'), 'declared_active_job_ids': sorted(claimed_ids),
+            'actual_active_job_ids': sorted(active_ids), 'declared_active_jobs_match_processes': claimed_ids == active_ids,
+            'server_status': status.get('status'), 'all_conditions_terminal_verified': terminal,
+            'server_terminal_verified': terminal and (status.get('status') == 'failed' or
+                (status.get('status') == 'complete' and counts['completed'] == len(contract['jobs'])))
+                and gpu_available and not processes and not gpu_pids,
+            'queue_eta': full_eta, 'queue_eta_reason': 'conditional estimate' if full_eta else '미확정: 대기 슬롯/미시작 모델 실측 또는 실행 증거 부족' if not terminal else '학습 종료',
+            'binary_CPU_audit': 'separate; this monitor verifies small records only',
+            'pipeline_failure': snapshot.get('files', {}).get('pipeline_failure.json')}
+
+
+def failure_analysis(contract, error):
+    return {'schema': 'cnn_gru_seed42_hourly_v1', 'evaluation_scope': 'validation_only',
+            'held_out_test_evaluated': False, 'pod_id': None, 'observed_unix': None,
+            'status': 'observation_failed_not_training_failure', 'error_type': type(error).__name__,
+            'status_counts': {'completed': 0, 'failed': 0, 'in_progress': 0, 'pending': 0,
+                              'unstarted_terminal': 0, 'unknown': len(contract.get('jobs', []))},
+            'rows': [{'job': j, 'state': 'unknown_this_observation'} for j in contract.get('jobs', [])],
+            'all_conditions_terminal_verified': False, 'server_terminal_verified': False,
+            'queue_eta': None, 'binary_CPU_audit': 'separate_not_performed_by_monitor'}
+
+
+def report(analysis):
+    if analysis.get('status') == 'observation_failed_not_training_failure':
+        return '# A100 시간별 관측\n\n이번 관측 실패. 학습 실패로 집계하지 않으며 과거 snapshot을 새 관측으로 표시하지 않습니다.\n'
+    lines = ['# A100 CNN/GRU 시간별 관측', '', f"실제 관측: {analysis['observed_kst']}. 보존 종료 증거 재사용: {analysis['reused_terminal_evidence']}.",
+             f"Validation-only, seed42. 실제 GPU 학습 병렬 수: {analysis['actual_owned_GPU_fit_count']}. 완료 집계: {analysis['status_counts']}.", '',
+             '| 데이터 | 모델 | 상태 | 저장 / best epoch | 현재 조건부 종료 KST |', '|---|---|---|---:|---|']
+    issues = []
+    for row in analysis['rows']:
+        j = row['job']
+        lines.append(f"| {j['dataset']} | {j['arm']} | {row['state']} | {row['saved_epoch']} / {row['best_epoch']} | {(row['eta'] or {}).get('conditional_finish_kst', '—')} |")
+        for reason in row['issues']:
+            issues.append(f"{j['id']}: {reason}")
+    if not analysis['declared_active_jobs_match_processes']:
+        issues.append('저장된 active_jobs와 실제 소유 worker 목록이 다릅니다. 실행 상태는 PID·GPU·checkpoint 근거로 구분하며 자동 재시작하지 않습니다.')
+    lines += [''] + issues
+    lines += ['', '전체 큐: ' + (analysis['queue_eta']['conditional_finish_kst'] if analysis['queue_eta'] else analysis['queue_eta_reason']),
+              '', 'ETA는 같은 조건의 최근 최대 10개 완료 epoch 중앙값을 사용하고 best 추가 개선이 없다는 가정입니다. 동시 실행 수가 바뀌면 속도도 달라집니다. 대기시간을 임의로 0으로 두지 않습니다.',
+              '최대 300epoch 시나리오는 analysis.json에 별도로 남기며 완료 보장이 아닙니다. Endpoint 재평가·원본 회수·CPU 감사는 별도입니다.',
+              '첫 2epoch의 비용 전망 경고는 실패가 아닙니다. 중단·재시작·재임대·예산 변경을 수행하지 않았습니다.']
+    return '\n'.join(lines) + '\n'
+
+
+def run_once(bundle=B, observer_runner=subprocess.run):
+    requested = time.time()
+    dest = bundle / 'hourly_monitor' / datetime.fromtimestamp(requested, timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
+    receipt = {'requested_unix': requested, 'requested_kst': timestamp(requested), 'pod_id': None,
+               'contract_sha256': None, 'fresh_observation': False, 'reused_terminal_evidence': False,
+               'snapshot': None, 'observe_py_invocations': 0}
+    contract = {}
+    try:
+        contract, allocation = verify_contract(bundle)
+        receipt.update(pod_id=allocation['pod_id'], contract_sha256=canonical(contract))
+        cleanup_path = bundle / 'control/cleanup_receipt.json'
+        if cleanup_path.exists():
+            cleanup = read(cleanup_path)
+            assert cleanup.get('pod_id') == allocation['pod_id'] and cleanup.get('deleted_and_absent') is True, 'cleanup identity/status unverified'
+            snapshot_path = bundle / 'retrieved/terminal_snapshot.json'
+            snapshot = read(snapshot_path)
+            receipt.update(reused_terminal_evidence=True, cleanup_receipt=str(cleanup_path))
+        else:
+            receipt['observe_py_invocations'] = 1
+            result = observer_runner([sys.executable, str(bundle / 'control/observe.py')], capture_output=True, text=True, timeout=80)
+            if result.returncode:
+                raise RuntimeError('read-only observation failed; output suppressed')
+            pointer = read(bundle / 'observations/latest.json')
+            snapshot_path = (bundle / pointer['path'] / 'snapshot.json').resolve()
+            assert snapshot_path.is_relative_to((bundle / 'observations').resolve()), 'unexpected snapshot path'
+            snapshot = read(snapshot_path)
+            assert requested - 120 <= snapshot['observed_unix'] <= time.time() + 120, 'stale snapshot returned'
+            receipt['fresh_observation'] = True
+        snapshot['pod_id'] = allocation['pod_id']
+        analysis = analyse(snapshot, contract, snapshot['observed_unix'], reused=receipt['reused_terminal_evidence'])
+        receipt.update(status='observed', snapshot=str(snapshot_path), snapshot_sha256=hashlib.sha256(snapshot_path.read_bytes()).hexdigest(),
+                       observed_unix=snapshot['observed_unix'], observed_kst=timestamp(snapshot['observed_unix']))
+    except Exception as error:
+        analysis = failure_analysis(contract, error)
+        receipt.update(status='observation_failed_not_training_failure', error_type=type(error).__name__,
+                       fresh_observation=False, observed_unix=None, observed_kst=None)
+    try:
+        local = manager_records(bundle, time.time())
+    except Exception as error:
+        local = {'local_record_read_error': type(error).__name__}
+    write(dest / 'provider_manager_records.json', local)
+    write(dest / 'analysis.json', analysis)
+    write(dest / 'observation.json', receipt)
+    (dest / 'report.md').write_text(report(analysis))
+    latest = dict(receipt, path=str(dest), analysis=str(dest / 'analysis.json'), report=str(dest / 'report.md'),
+                  status_counts=analysis['status_counts'], server_terminal_verified=analysis['server_terminal_verified'])
+    write(bundle / 'hourly_monitor/latest.json', latest)
+    print(json.dumps(latest, ensure_ascii=False))
+    return 0 if receipt['status'] == 'observed' else 1
+
+
+if __name__ == '__main__':
+    raise SystemExit(run_once())

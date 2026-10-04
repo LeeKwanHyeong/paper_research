@@ -1,0 +1,413 @@
+"""Native A100 checks on synthetic inputs and three existing MLP16 checkpoints."""
+from __future__ import annotations
+
+import argparse
+import gc
+import math
+from pathlib import Path
+import statistics
+import subprocess
+import sys
+import time
+import traceback
+
+import runtime as r
+
+
+def synthetic_data(max_length):
+    return {'model': {'hidden_dim': 64, 'quantity_variant': r.VARIANT,
+        'time_head_mode': 'heteroscedastic_lognormal_duration', 'time_scale': 7.,
+        'time_initial_location': .2, 'time_initial_scale': .8,
+        'time_observation_contract': {'mode': 'positive_integer_round_clamp_v1', 'unit': 'week', 'top_code': None}},
+        'statistics': {'train_log_mean': 1.2, 'train_log_std': .8}, 'loader': {'max_seq_len': max_length}}
+
+
+def synthetic_repeat(engine, data, arm, budget, *, device='cuda:0', batch_size=128, steps=3):
+    """Actual joint loss/gradients and AdamW; fabricated targets only."""
+    import torch
+    from paper.scripts.count_aware_tpp_backbone.core import target_outputs
+    from simple_lab_test.search.common.runner import canonical_state_dict_sha256
+    torch.manual_seed(42)
+    if str(device).startswith('cuda'):
+        torch.cuda.manual_seed_all(42)
+    model, _ = engine.build_model(data, arm)
+    model = model.to(device).train()
+    optimizer = torch.optim.AdamW(model.parameters(), lr=.001, weight_decay=.01)
+    length = data['loader']['max_seq_len']
+    # Data RNG is explicit and consumes no model/dropout RNG stream.
+    generator = torch.Generator(device=device).manual_seed(20261004)
+    dt = torch.randint(1, 8, (batch_size, length), device=device, generator=generator).float()
+    qty = torch.randint(1, 20, dt.shape, device=device, generator=generator).float()
+    mask = torch.ones_like(dt, dtype=torch.bool)
+    mask[:max(1, batch_size // 4), :length // 3] = False
+    if str(device).startswith('cuda'):
+        torch.cuda.synchronize()
+        torch.cuda.reset_peak_memory_stats()
+    times, losses, gradient_digests, new_module_gradients = [], [], [], {}
+    for step in range(steps):
+        budget()
+        if str(device).startswith('cuda'):
+            torch.cuda.synchronize()
+        started = time.perf_counter()
+        optimizer.zero_grad(set_to_none=True)
+        outputs = target_outputs(model, dt, mask, qty, lambda_log_qty=1.)
+        loss = outputs['joint_loss'].mean()
+        r.require(bool(torch.isfinite(loss)), 'Nonfinite actual synthetic joint loss')
+        loss.backward()
+        gradients = {name: p.grad.detach().cpu() for name, p in model.named_parameters() if p.grad is not None}
+        r.require(gradients and all(bool(torch.isfinite(value).all()) for value in gradients.values()),
+            'Nonfinite actual synthetic gradient')
+        norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.)
+        r.require(bool(torch.isfinite(norm)) and float(norm) > 0., 'Invalid actual joint gradient norm')
+        gradient_digests.append(canonical_state_dict_sha256(gradients))
+        for name, value in gradients.items():
+            if name.startswith('multilag_detail.') or name.endswith('_kernel') and 'causal_' in name:
+                new_module_gradients[name] = new_module_gradients.get(name, False) or bool(value.abs().sum() > 0)
+        optimizer.step()
+        r.require(all(bool(torch.isfinite(p).all()) for p in model.parameters()), 'Nonfinite synthetic parameter')
+        if str(device).startswith('cuda'):
+            torch.cuda.synchronize()
+        times.append(time.perf_counter() - started)
+        losses.append(float(loss.detach().cpu()))
+    r.require(new_module_gradients and any(new_module_gradients.values()), 'Correction lacks active joint gradients')
+    if arm in engine.GRU_ARMS:
+        r.require(all(active for name, active in new_module_gradients.items() if name.startswith('multilag_detail.')),
+            'GRU parameters lack active gradients after three updates')
+    if arm in engine.CNN_ARMS:
+        kernels = [active for name, active in new_module_gradients.items() if name.endswith('_kernel') and 'causal_' in name]
+        r.require(len(kernels) == 3 and all(kernels), 'CNN Q/K/V kernels lack active joint gradients')
+    model.eval()
+    with torch.no_grad():
+        output = target_outputs(model, dt, mask, qty, lambda_log_qty=1.)
+    fingerprint = {'losses': losses, 'gradient_sha256': gradient_digests,
+        'final_state_sha256': canonical_state_dict_sha256(model.state_dict()),
+        'output_sha256': canonical_state_dict_sha256(output)}
+    result = {'arm': arm, 'batch_size': batch_size, 'sequence_length': length, 'synthetic_steps': steps,
+        'fingerprint': fingerprint, 'step_seconds': times, 'median_step_seconds': statistics.median(times),
+        'parameter_count': sum(p.numel() for p in model.parameters()),
+        'active_new_module_gradients': new_module_gradients, 'actual_joint_gradient_finite': True,
+        'real_data_loaded': False, 'held_out_test_evaluated': False}
+    if str(device).startswith('cuda'):
+        result.update(peak_allocated_bytes=torch.cuda.max_memory_allocated(),
+            peak_reserved_bytes=torch.cuda.max_memory_reserved(),
+            total_memory_bytes=torch.cuda.get_device_properties(0).total_memory)
+    del model, optimizer, gradients, output, outputs, loss
+    gc.collect()
+    if str(device).startswith('cuda'):
+        torch.cuda.empty_cache()
+    return result
+
+
+def prediction_outputs(model, dt, qty, valid):
+    """Expose actual shared head predictions; these are not target-dependent losses."""
+    import torch
+    from paper.scripts.count_aware_tpp_backbone.core import right_pad_batch, target_outputs
+    expected_keys = ('pred_qty', 'pred_log_qty', 'pred_time_mu', 'pred_time_sigma')
+    ordinary = target_outputs(model, dt, valid, qty, lambda_log_qty=1.)
+    r.require('pred_qty' in ordinary and 'time_loss' in ordinary, 'Actual quantity/time outputs missing')
+    dt, qty, valid, lengths = right_pad_batch(dt, qty, valid)
+    batch_ids = torch.arange(dt.size(0), device=dt.device)
+    targets, histories = lengths - 1, lengths - 2
+    history_qty = qty.clone()
+    history_qty[batch_ids, targets] = 0.
+    observed = valid.clone()
+    observed[batch_ids, targets] = False
+    time_states, quantity_states = model.encode_task_states(dt, history_qty, valid, memory_write_mask=observed)
+    time_hidden = time_states[batch_ids, histories]
+    quantity_hidden = quantity_states[batch_ids, histories]
+    log_qty, raw_qty = model.predict_quantity(quantity_hidden)
+    result = {'pred_qty': raw_qty, 'pred_log_qty': log_qty,
+        'pred_time_mu': model.time_location(time_hidden),
+        'pred_time_sigma': model.positive_time_sigma(time_hidden)}
+    r.require(set(result) == set(expected_keys) and torch.equal(result['pred_qty'], ordinary['pred_qty']),
+        'Shared forecast head/ordinary trainer prediction differs')
+    r.require(all(bool(torch.isfinite(result[key]).all()) for key in expected_keys)
+        and bool((result['pred_time_sigma'] > 0).all()), 'Invalid shared forecast prediction')
+    return result
+
+
+def causality_check(engine, arm, budget, *, device='cuda:0'):
+    """Exercise nonzero modules: target, future, padding, prefix and call-local state."""
+    import torch
+    from paper.scripts.count_aware_tpp_backbone.core import target_outputs
+    torch.manual_seed(62)
+    model, _ = engine.build_model(synthetic_data(256), arm)
+    model = model.to(device).eval()
+    for name, parameter in model.named_parameters():
+        if name.endswith('_kernel') and 'causal_' in name:
+            torch.nn.init.normal_(parameter, std=.015)
+    correction = model.multilag_detail
+    if hasattr(correction, 'output_projection'):
+        torch.nn.init.normal_(correction.output_projection.weight, std=.02)
+    else:
+        for projection in correction.output_projections:
+            torch.nn.init.normal_(projection.weight, std=.02)
+    generator = torch.Generator(device=device).manual_seed(62)
+    dt = torch.randint(1, 8, (2, 14), device=device, generator=generator).float()
+    qty = torch.randint(1, 20, dt.shape, device=device, generator=generator).float()
+    valid = torch.ones_like(dt, dtype=torch.bool)
+    observed = valid.clone()
+    observed[:, -1] = False
+    with torch.no_grad():
+        budget()
+        original = prediction_outputs(model, dt, qty, valid)
+        changed_dt, changed_qty = dt.clone(), qty.clone()
+        changed_dt[:, -1], changed_qty[:, -1] = 999., 4000.
+        changed = prediction_outputs(model, changed_dt, changed_qty, valid)
+        expected_keys = ('pred_qty', 'pred_log_qty', 'pred_time_mu', 'pred_time_sigma')
+        r.require(set(original) == set(changed) == set(expected_keys), 'Mandatory forecast outputs missing')
+        for key in expected_keys:
+            r.require(torch.equal(original[key], changed[key]), 'Target leakage ' + key)
+        states = model.encode_task_states(dt, qty, valid, memory_write_mask=observed)
+        changed_states = model.encode_task_states(changed_dt, changed_qty, valid, memory_write_mask=observed)
+        r.require(all(torch.equal(a, b) for a, b in zip(states, changed_states)), 'Withheld target leakage')
+        future_dt, future_qty = dt.clone(), qty.clone()
+        future_dt[:, 8:12] += 400.
+        future_qty[:, 8:12] += 400.
+        future = model.encode_task_states(future_dt, future_qty, valid, memory_write_mask=observed)
+        prefix = model.encode_task_states(dt[:, :8], qty[:, :8], valid[:, :8], memory_write_mask=observed[:, :8])
+        for old, changed, shortened in zip(states, future, prefix):
+            torch.testing.assert_close(old[:, :8], changed[:, :8], rtol=1e-5, atol=1e-5)
+            torch.testing.assert_close(old[:, :8], shortened, rtol=1e-5, atol=1e-5)
+        padding = torch.full((2, 2), float('nan'), device=device)
+        padded = prediction_outputs(model, torch.cat((padding, dt), 1), torch.cat((padding, qty), 1),
+            torch.cat((torch.zeros((2, 2), device=device, dtype=torch.bool), valid), 1))
+        r.require(set(padded) == set(expected_keys), 'Mandatory padded forecast outputs missing')
+        for key in expected_keys:
+            torch.testing.assert_close(original[key], padded[key], rtol=1e-5, atol=1e-5)
+        # Intermediate unrelated calls cannot retain a recurrent state.
+        model.encode_task_states(future_dt, future_qty, valid, memory_write_mask=observed)
+        repeated = model.encode_task_states(dt, qty, valid, memory_write_mask=observed)
+        r.require(all(torch.equal(a, b) for a, b in zip(states, repeated)), 'Cross-call state leakage')
+    budget()
+    del model
+    gc.collect()
+    if str(device).startswith('cuda'):
+        torch.cuda.empty_cache()
+    return {'status': 'passed', 'nonzero_modules': True, 'target_invariance': True, 'future_invariance': True,
+        'padding_invariance': True, 'prefix_invariance': True, 'call_local_state': True,
+        'mandatory_forecast_keys': list(expected_keys), 'quantity_and_time_heads_checked': True,
+        'comparison_tolerance': {'rtol': 1e-5, 'atol': 1e-5}, 'real_data_loaded': False}
+
+
+def probe(c, root, job, directory, deadline):
+    """Short synchronized synthetic workload; no research fit or checkpoint."""
+    import torch
+    from paper.scripts.count_aware_tpp_backbone.core import target_outputs
+    r.authorization(c, root)
+    engine = r.load_engine(c)
+    r.runtime_check(c)
+    directory = Path(directory).resolve()
+    r.require(directory.is_relative_to(root / 'qualification'), 'Escaped probe directory')
+    budget = r.PulseBudget(root, r.sha_json(c), 'probe_' + directory.parent.name + '_' + job['id'], deadline)
+    data = next(d for d in c['datasets'] if d['dataset_id'] == job['dataset'])
+    torch.manual_seed(42)
+    torch.cuda.manual_seed_all(42)
+    model, _ = engine.build_model(data, job['arm'])
+    model = model.cuda().train()
+    optimizer = torch.optim.AdamW(model.parameters(), lr=.001, weight_decay=.01)
+    generator = torch.Generator(device='cuda:0').manual_seed(20261004)
+    dt = torch.randint(1, 8, (128, data['loader']['max_seq_len']), device='cuda:0', generator=generator).float()
+    qty = torch.randint(1, 20, dt.shape, device='cuda:0', generator=generator).float()
+    mask = torch.ones_like(dt, dtype=torch.bool)
+    def step():
+        budget()
+        optimizer.zero_grad(set_to_none=True)
+        loss = target_outputs(model, dt, mask, qty, lambda_log_qty=1.)['joint_loss'].mean()
+        r.require(bool(torch.isfinite(loss)), 'Nonfinite concurrency loss')
+        loss.backward()
+        norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.)
+        r.require(bool(torch.isfinite(norm)), 'Nonfinite concurrency gradient')
+        optimizer.step()
+        r.require(all(bool(torch.isfinite(p).all()) for p in model.parameters()), 'Nonfinite concurrency parameter')
+    for _ in range(2):
+        step()
+    torch.cuda.synchronize()
+    r.write_json(directory / (job['id'] + '.ready.json'), {'pid': __import__('os').getpid()}, exclusive=True)
+    while not (directory / 'go.json').exists():
+        budget()
+        time.sleep(.1)
+    torch.cuda.reset_peak_memory_stats()
+    started = time.time()
+    times = []
+    for _ in range(3):
+        torch.cuda.synchronize()
+        tick = time.perf_counter()
+        step()
+        torch.cuda.synchronize()
+        times.append(time.perf_counter() - tick)
+    r.write_json(directory / (job['id'] + '.result.json'), {'job': job, 'steps': 3, 'warmup_steps': 2,
+        'started_unix': started, 'finished_unix': time.time(), 'step_seconds': times,
+        'peak_allocated_bytes': torch.cuda.max_memory_allocated(),
+        'peak_reserved_bytes': torch.cuda.max_memory_reserved(), 'real_data_loaded': False}, exclusive=True)
+
+
+def parallel_trial(c, root, concurrency, budget, deadline):
+    total, groups = 0., []
+    peak_device = 0
+    memory_total = None
+    for number, offset in enumerate(range(0, len(c['jobs']), concurrency)):
+        budget()
+        jobs = c['jobs'][offset:offset + concurrency]
+        directory = root / 'qualification' / f'parallel_{concurrency}' / str(number)
+        directory.mkdir(parents=True, exist_ok=False)
+        children, streams = [], []
+        until = min(deadline, time.time() + c['limits'].get('qualification_probe_group_seconds', 480))
+        try:
+            for job in jobs:
+                stream = (directory / (job['id'] + '.log')).open('x')
+                streams.append(stream)
+                command = [sys.executable, str(Path(__file__).resolve()), '--contract', str(root / 'execution_contract.json'),
+                    '--probe-job', job['id'], '--probe-dir', str(directory), '--deadline', str(until)]
+                children.append(subprocess.Popen(command, cwd=c['hosts']['a100']['source_root'],
+                    stdout=stream, stderr=subprocess.STDOUT, start_new_session=True))
+            while not all((directory / (job['id'] + '.ready.json')).exists() for job in jobs):
+                budget()
+                r.require(time.time() < until and all(child.poll() is None for child in children), 'Probe failed before barrier')
+                memory = r.device_used_bytes(c)
+                memory_total = memory['total']
+                peak_device = max(peak_device, memory['used'])
+                r.require(memory['used'] < c['limits'].get('max_device_memory_fraction', .8) * memory['total'],
+                    'Concurrency exceeds native device memory gate')
+                time.sleep(.5)
+            r.write_json(directory / 'go.json', {'released_unix': time.time()}, exclusive=True)
+            while any(child.poll() is None for child in children):
+                budget()
+                r.require(time.time() < until, 'Probe group wall ceiling')
+                memory = r.device_used_bytes(c)
+                memory_total = memory['total']
+                peak_device = max(peak_device, memory['used'])
+                r.require(memory['used'] < c['limits'].get('max_device_memory_fraction', .8) * memory['total'],
+                    'Concurrency exceeds native device memory gate')
+                time.sleep(.5)
+            r.require(all(child.returncode == 0 for child in children), 'Concurrency probe worker failed')
+            rows = [r.read(directory / (job['id'] + '.result.json')) for job in jobs]
+            wall = max(x['finished_unix'] for x in rows) - min(x['started_unix'] for x in rows)
+            total += wall
+            r.require(sum(x['peak_reserved_bytes'] for x in rows) < c['limits'].get('max_device_memory_fraction', .8) * memory_total,
+                'Combined native reserved memory exceeds gate')
+            groups.append({'group': number, 'wall_seconds': wall, 'rows': rows})
+        finally:
+            for child in children:
+                r.stop_owned(child)
+            for stream in streams:
+                stream.close()
+    return {'status': 'passed', 'measured_work_seconds': total, 'groups': groups, 'measured_steps': 27,
+        'synthetic_optimizer_updates_including_warmup': 45, 'peak_device_used_bytes': peak_device,
+        'total_device_memory_bytes': memory_total, 'equal_nine_job_workload': True, 'real_data_loaded': False}
+
+
+def select_concurrency(measurements):
+    r.require(measurements['1']['status'] == 'passed', 'Sequential native probe failed')
+    three = measurements.get('3', {})
+    if three.get('status') == 'passed' and three['measured_work_seconds'] < measurements['1']['measured_work_seconds'] / 1.05:
+        return 3
+    return 1
+
+
+def qualification(c, root):
+    import torch
+    from diagnostics import evaluate
+    from simple_lab_test.search.common.runner import torch_load_checkpoint
+    start = r.authorization(c, root)
+    r.require(not r.gpu_pids(c), 'GPU occupied before isolated qualification')
+    r.write_json(root / 'qualification.claim', {'pid': __import__('os').getpid(), 'started_unix': time.time(),
+        'contract_sha256': r.sha_json(c)}, exclusive=True)
+    runtime = r.runtime_check(c)
+    engine = r.load_engine(c)
+    deadline = min(start['deadline_unix'], time.time() + c['limits'].get('qualification_seconds', 5400))
+    budget = r.PulseBudget(root, r.sha_json(c), 'qualification', deadline)
+    result = {'status': 'checking', 'host': 'a100', 'runtime': runtime, 'contract_sha256': r.sha_json(c),
+        'source_files_sha256': c['source']['files_sha256'], 'worker_files_sha256': c['worker']['files_sha256'],
+        'initialization': {}, 'initialization_provenance': {}, 'inputs': {}, 'baselines': {},
+        'native_checks': {}, 'parallel_measurements': {}}
+    # Shared initial output parity plus real joint loss roundtrip, synthetic only.
+    result['initial_output_parity'] = engine.synthetic_check('cuda:0')
+    for arm in r.ARMS:
+        result['native_checks'][arm] = {'causality': causality_check(engine, arm, budget), 'lengths': {}}
+        for length in (256, 84):
+            repetitions = [synthetic_repeat(engine, synthetic_data(length), arm, budget) for _ in range(2)]
+            r.require(repetitions[0]['fingerprint'] == repetitions[1]['fingerprint'], 'Repeated strict synthetic execution differs')
+            for row in repetitions:
+                r.require(0 < row['peak_allocated_bytes'] <= row['peak_reserved_bytes']
+                    < c['limits'].get('max_device_memory_fraction', .8) * row['total_memory_bytes'], 'Native memory gate failed')
+            result['native_checks'][arm]['lengths'][str(length)] = {'status': 'passed',
+                'identical_repetitions': True, 'repetitions': repetitions}
+    expected = r.read(root / 'expected_initialization.json')
+    for data in c['datasets']:
+        budget()
+        dataset = data['dataset_id']
+        frame, receipt = engine.base.prepare_admitted_data(data)
+        initial = engine.initial_states(data, 42)
+        repeated = engine.initial_states(data, 42)
+        reference = c['baseline_replays'][dataset]
+        provenance = r.verify_native_initialization(initial, repeated, reference, expected[dataset])
+        result['initialization_provenance'][dataset] = provenance
+        r.write_json(root / 'qualification' / ('initialization_' + dataset + '.json'), provenance, exclusive=True)
+        result['initialization'][dataset] = {'42': initial}
+        result['inputs'][dataset] = {'receipt': receipt, 'interface_sha256': {arm: r.sha_json(
+            engine.time_interface(data, frame, c, arm=arm)) for arm in r.ARMS}}
+        path = r.resolve(root, reference['checkpoint'])
+        r.require(r.sha_file(path) == reference['checkpoint_sha256'], 'Existing MLP16 checkpoint changed')
+        payload = torch_load_checkpoint(path, map_location='cpu')
+        r.require(payload['backbone'] == r.BASELINE and payload['seed'] == 42
+            and payload['initial_state_sha256'] == initial[r.BASELINE]
+            and payload.get('epoch', payload.get('best_epoch')) == reference['selected_epoch'], 'Foreign MLP16 selected checkpoint')
+        del payload
+        endpoint = engine.replay_checkpoint(path, data, frame, budget)
+        r.require(all(math.isclose(endpoint[k], reference['metrics'][k], rel_tol=1e-6, abs_tol=1e-8)
+            for k in ('qty_rmse', 'qty_mae', 'time_nll')), 'Cross-GPU full-Val MLP16 replay differs')
+        diagnostic = evaluate(engine, data, path, frame, budget, endpoint, c['diagnostic']['train_sampling'])
+        diagnostic_path = root / 'qualification' / (dataset + '__42_baseline_diagnostic.json')
+        r.write_json(diagnostic_path, diagnostic, exclusive=True)
+        r.write_json(root / 'qualification' / (dataset + '__42_baseline_validation_replay.json'), endpoint, exclusive=True)
+        result['baselines'][dataset] = {'status': 'passed', 'checkpoint_sha256': reference['checkpoint_sha256'],
+            'diagnostic_sha256': r.sha_file(diagnostic_path), 'initial_state_sha256': initial[r.BASELINE],
+            'metrics': {k: endpoint[k] for k in ('qty_rmse', 'qty_mae', 'time_nll')},
+            'full_validation_replay': True, 'new_training': False}
+        del frame, diagnostic, endpoint
+        r.release_gpu()
+    result['parallel_measurements']['1'] = parallel_trial(c, root, 1, budget, deadline)
+    try:
+        result['parallel_measurements']['3'] = parallel_trial(c, root, 3, budget, deadline)
+    except Exception as exc:
+        # Optional increase is refused; failed GPU correctness above is fatal.
+        result['parallel_measurements']['3'] = {'status': 'failed', 'type': type(exc).__name__,
+            'reason': str(exc), 'fallback_concurrency': 1, 'automatic_retry': False}
+    budget()
+    result.update(status='passed', selected_concurrency=select_concurrency(result['parallel_measurements']),
+        completed_unix=time.time(), held_out_test_evaluated=False, scientific_training_launched=False,
+        selection_rule='one by default; three only with passed measured memory gate and >5 percent equal-nine-job synthetic speedup')
+    r.write_json(root / 'qualification/receipt.json', result, exclusive=True)
+    print(__import__('json').dumps({'status': 'passed', 'selected_concurrency': result['selected_concurrency']}), flush=True)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--contract', required=True)
+    parser.add_argument('--host', choices=('a100',), default='a100')
+    parser.add_argument('--probe-job')
+    parser.add_argument('--probe-dir')
+    parser.add_argument('--deadline', type=float)
+    args = parser.parse_args()
+    c = r.read(args.contract)
+    root = Path(c['hosts']['a100']['root']).resolve()
+    r.require(Path(args.contract).resolve() == root / 'execution_contract.json', 'Wrong contract root')
+    r.require(Path(__file__).resolve().parents[1] == root, 'Worker outside admitted bundle')
+    r.authorization(c, root)
+    if args.probe_job:
+        r.require(args.probe_dir and args.deadline is not None, 'Probe directory/deadline missing')
+        job = next(j for j in c['jobs'] if j['id'] == args.probe_job)
+        probe(c, root, job, args.probe_dir, args.deadline)
+    else:
+        try:
+            qualification(c, root)
+        except BaseException as exc:
+            r.write_json(root / 'qualification/failure.json', {'status': 'failed', 'type': type(exc).__name__,
+                'message': str(exc), 'traceback': traceback.format_exc(), 'automatic_retry': False,
+                'updated_unix': time.time()}, exclusive=True)
+            raise
+
+
+if __name__ == '__main__':
+    main()

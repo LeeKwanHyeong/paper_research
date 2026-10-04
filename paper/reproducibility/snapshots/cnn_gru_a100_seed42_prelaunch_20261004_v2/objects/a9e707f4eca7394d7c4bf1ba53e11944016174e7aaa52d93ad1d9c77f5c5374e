@@ -1,0 +1,83 @@
+"""Bind this owned A100, seal the contract, verify the transfer and start bounded bootstrap."""
+import argparse
+import json
+import shlex
+import subprocess
+import time
+from provider import B, allocation_identity, api, canonical, owned, read, require, sha, write
+from prepare import package, verify_bundle
+from manage import sshcmd
+
+
+def deploy():
+    a = read(B / 'control/allocation.json')
+    pointer = allocation_identity(a)
+    owned(a)
+    require(not (B / 'deployment_receipt.json').exists() and not (B / 'control/bootstrap_requested.json').exists(), 'Deployment already attempted; no automatic retry')
+    transfer = read(B / 'transfer_authorization.json')
+    require(transfer.get('approved') is True and transfer['pod_id'] == a['pod_id'], 'Missing current Pod transfer approval')
+    require(transfer['total_cap_usd'] == a['total_cap_usd'] and transfer.get('automatic_recharge') is False, 'Transfer cost scope changed')
+    require(a['deadline_unix'] > time.time(), 'Native deadline elapsed')
+    info = api('ssh', 'info', a['pod_id'])
+    require(info.get('ip') and info.get('port') and info.get('ssh_key', {}).get('path'), 'SSH not ready')
+    a['ssh'] = {'key': info['ssh_key']['path'], 'ip': info['ip'], 'port': info['port']}
+    write(B / 'control/allocation.json', a)
+    inventory = sshcmd(a, 'nvidia-smi --query-gpu=name,uuid,driver_version,memory.total --format=csv,noheader; /usr/bin/python3.12 --version', 30).decode()
+    rows = inventory.splitlines()
+    require(rows and rows[0].startswith('NVIDIA A100-SXM4-80GB,') and len([row for row in rows if row.startswith('NVIDIA ')]) == 1, 'Unexpected native GPU')
+    write(B / 'verification/native_inventory.json', {'pod_id': a['pod_id'], 'output': inventory}, True)
+    c = verify_bundle()
+    require(canonical(c) == pointer['draft_contract_sha256'], 'Draft changed after allocation')
+    c['hosts']['a100']['gpu_uuid'] = rows[0].split(',')[1].strip()
+    c['hosts']['a100']['environment']['SOURCE_REVISION'] = c['source']['base_git_revision']
+    c['hosts']['a100']['environment']['PYTHONPATH'] = c['hosts']['a100']['source_root']
+    for key in ('total_cap_usd', 'work_cap_usd', 'retrieval_cleanup_reserve_usd', 'prior_attempt_cost_usd', 'running_rate_usd_hour', 'automatic_recharge'):
+        c['cost'][key] = a[key]
+    c['cost'].update(authorized_work_cap_usd=a['authorized_work_cap_usd'], budget_authorization='explicit_new_campaign_user_authorization',
+        provider_stop_requested_iso=a['provider_stop_requested_iso'], provider_stop_requested_unix=a['provider_stop_requested_unix'],
+        provider_stop_readback_status=a['provider_stop_readback_status'], provider_stop_guaranteed=False,
+        account_autopay_readback=a['account_autopay_readback'], account_balance_is_not_Pod_billing=True)
+    c['limits']['total_wall_seconds'] = a['deadline_unix'] - a['created_unix']
+    c['limits']['per_condition_seconds'] = min(36 * 3600, c['limits']['total_wall_seconds'])
+    write(B / 'execution_contract.json', c, True)
+    approval = {'approved': True, 'contract_sha256': canonical(c), 'hosts': ['a100'],
+        'authorization_sha256': pointer['authorization_sha256'], 'user_instruction': read(B / 'user_authorization.json').get('scope'),
+        'nine_fresh_seed42_fits': True, 'evaluation_scope': 'validation_only', 'held_out_test_evaluated': False}
+    write(B / 'approval.json', approval, True)
+    write(B / 'start_permit.json', {'contract_sha256': canonical(c), 'approval_sha256': canonical(approval),
+        'started_at_unix': a['created_unix'], 'deadline_unix': a['deadline_unix'], 'work_cap_usd': a['work_cap_usd'],
+        'total_cap_usd': a['total_cap_usd'], 'prior_attempt_cost_usd': a.get('prior_attempt_cost_usd', 0)}, True)
+    pointer['contract_sha256'] = canonical(c)
+    pointer['source_closure_sha256'] = c['source']['files_sha256']
+    write(B / 'current.json', pointer)
+    files = package()
+    remote = a['remote_root']
+    sshcmd(a, 'test ! -e ' + shlex.quote(remote), 30)
+    write(B / 'control/deployment_intent.json', {'pod_id': a['pod_id'], 'remote_root': remote,
+          'archive_sha256': sha(B / 'deployment.tar.gz'), 'time': time.time(), 'automatic_retry': False}, True)
+    copied = subprocess.run(['scp', '-i', a['ssh']['key'], '-P', str(a['ssh']['port']), '-o', 'BatchMode=yes',
+        '-o', 'StrictHostKeyChecking=accept-new', '-o', 'UserKnownHostsFile=' + str(B / 'control/known_hosts'),
+        str(B / 'deployment.tar.gz'), 'root@' + a['ssh']['ip'] + ':/workspace/' + B.name + '.tar.gz'],
+        capture_output=True, timeout=180)
+    require(copied.returncode == 0, 'Transfer failed; raw output suppressed, reconcile before retry')
+    verified = sshcmd(a, 'mkdir ' + shlex.quote(remote) + ' && tar --no-same-owner --no-same-permissions --touch -xzf ' +
+        shlex.quote(remote + '.tar.gz') + ' -C ' + shlex.quote(remote) + ' && sha256sum ' + shlex.quote(remote + '.tar.gz'), 90).decode()
+    require(verified.split()[0] == sha(B / 'deployment.tar.gz'), 'Remote deployment archive SHA mismatch')
+    write(B / 'deployment_receipt.json', {'pod_id': a['pod_id'], 'archive_sha256': verified.split()[0],
+          'status': 'verified', 'time': time.time(), 'source_data_worker_SHA_before_training_required': True}, True)
+    remaining = int(min(a['deadline_unix'], a['setup_deadline_unix']) - time.time())
+    require(remaining > 0, 'Setup deadline elapsed before bootstrap')
+    code = 'import subprocess;from pathlib import Path;b=Path(' + repr(remote) + ');(b/"bootstrap.claim").open("x").close();log=(b/"bootstrap.log").open("xb");p=subprocess.Popen(["timeout","--signal=TERM","--kill-after=15s",' + repr(str(remaining)) + ',"bash",str(b/"control/bootstrap.sh")],stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,close_fds=True);print(p.pid)'
+    pid = int(sshcmd(a, 'python3 -c ' + shlex.quote(code), 30).decode().strip())
+    write(B / 'control/bootstrap_requested.json', {'pod_id': a['pod_id'], 'pid': pid, 'time': time.time(),
+          'qualification_then_nine_authorized_fits': True, 'training_permit_created': False, 'bootstrap_timeout_seconds': remaining}, True)
+    write(B / 'launch_receipt.json', {'pod_id': a['pod_id'], 'bootstrap_pid': pid,
+          'contract_sha256': canonical(c), 'started_unix': time.time(), 'training_entry_confirmed': False}, True)
+    print(json.dumps({'uploaded_files': len(files), 'bootstrap_pid': pid, 'contract_sha256': canonical(c),
+          'gpu_uuid': c['hosts']['a100']['gpu_uuid'], 'actual_training_not_yet_confirmed': True}))
+    return c
+
+
+if __name__ == '__main__':
+    argparse.ArgumentParser(description=__doc__).parse_args()
+    deploy()

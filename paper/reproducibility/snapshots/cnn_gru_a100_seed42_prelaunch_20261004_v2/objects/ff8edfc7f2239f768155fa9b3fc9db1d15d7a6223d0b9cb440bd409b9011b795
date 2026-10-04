@@ -1,0 +1,33 @@
+"""One read-only snapshot, or saved terminal evidence after verified deletion."""
+import json
+import time
+from datetime import datetime, timezone
+from provider import B, allocation_identity, read, require, write
+from manage import remote_snapshot
+
+
+def observe():
+    a = read(B / 'control/allocation.json')
+    allocation_identity(a)
+    cleanup = B / 'control/cleanup_receipt.json'
+    if cleanup.exists():
+        receipt = read(cleanup)
+        require(receipt['pod_id'] == a['pod_id'] and receipt.get('deleted_and_absent') is True, 'Foreign cleanup receipt')
+        snapshot = read(B / 'retrieved/terminal_snapshot.json')
+        reused = True
+    else:
+        snapshot = remote_snapshot(a)
+        reused = False
+    require(snapshot['root'] == a['remote_root'], 'Foreign snapshot root')
+    stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
+    folder = B / 'observations' / stamp
+    write(folder / 'snapshot.json', snapshot)
+    write(B / 'observations/latest.json', {'path': str(folder.relative_to(B)), 'observed_unix': snapshot['observed_unix'],
+          'requested_unix': time.time(), 'terminal_snapshot_reused': reused})
+    print(json.dumps({'observed_unix': snapshot['observed_unix'], 'terminal_snapshot_reused': reused,
+          'status': snapshot['files'].get('status.json'), 'runs': len(snapshot['runs'])}))
+    return snapshot
+
+
+if __name__ == '__main__':
+    observe()
