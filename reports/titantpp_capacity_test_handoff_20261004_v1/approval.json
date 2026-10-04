@@ -1,0 +1,38 @@
+{
+  "schema": "titantpp_capacity_test_handoff_authorization_v1",
+  "approved": true,
+  "user_instruction": "그리고 실제로 Test까지 먼저 뽑아놓자. 이후 Intermittent 실험이 끝나면 맞춰서 Test도 돌리고. 또한 5080이 Idle상태이니 5090에서 진행하는 절반을 5080에서 작업할 수 있도록 하자.",
+  "parent_bundle": "search_artifacts/titantpp_history_width8_12_dual_20261004_v1",
+  "parent_contract_sha256": "8434041a6a301995a8d22baa77d5ca0da4eb2cd942d091a8aa8cef379406c48d",
+  "frozen_source_closure_sha256": "41a4a4ff79e5e17d907b9ee8966723004516ee2e42608d31c7f1a871f0acd3e1",
+  "evaluation": {
+    "initial_datasets": ["yellow_trip_hourly", "raf_spare_parts"],
+    "deferred_until_training_complete": ["intermittent_frozen_5000"],
+    "widths": [8, 12],
+    "seeds": [42, 52, 62],
+    "splits": ["validation", "test"],
+    "checkpoint_selection": "reuse earliest finite minimum full Validation raw quantity RMSE",
+    "new_training": false,
+    "new_independent_test_claim": false,
+    "raw_predictions_written": false,
+    "primary_metrics": ["raw_quantity_rmse", "raw_quantity_mae", "train_defined_tail_rmse", "positive_integer_time_nll"]
+  },
+  "handoff": {
+    "source_host": "5090",
+    "target_host": "5080",
+    "selected_jobs": [
+      "intermittent_frozen_5000__62__titantpp_history_mlp_width8",
+      "intermittent_frozen_5000__62__titantpp_history_mlp_width12"
+    ],
+    "selection_reason": "two of four pending fits; keep both widths of the same seed on the same GPU",
+    "running_fit_moved_or_stopped": false,
+    "new_scientific_conditions": 0,
+    "automatic_retry": false,
+    "deadline_or_budget_extension": false,
+    "cross_GPU_efficiency_claim": false
+  },
+  "baseline_width16_changed": false,
+  "Instacart_included": false,
+  "A100_campaign_changed": false,
+  "manuscript_edited": false
+}

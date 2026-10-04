@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-02T22:30:51.010621+00:00",
+  "route": "retrospective_locked_test_reevaluation",
+  "datasets": [
+    {
+      "dataset": "yellow_trip_hourly",
+      "path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_history_width8_12_dual_20261004_v1_5080/source/sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+      "sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+      "split_manifest": {
+        "path": "sample_data/new_york_taxi/yellow_trip_hourly_split_manifest.json",
+        "sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85",
+        "operation": "byte_hash_only"
+      },
+      "populations": {
+        "train": {
+          "target_count": 38393,
+          "entity_count": 131,
+          "ordered_entity_seq_recorded_date_sha256": "92360d7e554ac813f4d641cda99c15565fa8bd08baf7cb1c74d6f323e0975640",
+          "recorded_date_min": 20150101010000,
+          "recorded_date_max": 20150125210000
+        },
+        "validation": {
+          "target_count": 8268,
+          "entity_count": 131,
+          "ordered_entity_seq_recorded_date_sha256": "f5d96661147256b95d990e0be08b51603e577d7e4b67bf344740cf3569dbb12e",
+          "recorded_date_min": 20150119090000,
+          "recorded_date_max": 20150129050000
+        },
+        "test": {
+          "target_count": 8327,
+          "entity_count": 131,
+          "ordered_entity_seq_recorded_date_sha256": "a9a130a6e1afbd442d3c742a071041edb7db072a961cf239b2266e64c7f4c0b8",
+          "recorded_date_min": 20150124160000,
+          "recorded_date_max": 20150131230000
+        }
+      },
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 168,
+        "max_seq_len": 256,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "selection": "all existing noninitial targets of each frozen split; no new entity/date filtering"
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_history_width8_12_dual_20261004_v1_5080/source/benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_with_split.parquet",
+      "sha256": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d",
+      "split_manifest": {
+        "path": "benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_split_manifest.json",
+        "sha256": "cd2458aa3809014aa74b8a121572a74e3d86dc520a690335d79a1e5150899e27",
+        "operation": "byte_hash_only"
+      },
+      "populations": {
+        "train": {
+          "target_count": 25779,
+          "entity_count": 5000,
+          "ordered_entity_seq_recorded_date_sha256": "0db0b80972614d083b31a4b1eff3398afd1ec6f6819d4c5502e5e89654ab8309",
+          "recorded_date_min": 19960201,
+          "recorded_date_max": 20001001
+        },
+        "validation": {
+          "target_count": 6690,
+          "entity_count": 4121,
+          "ordered_entity_seq_recorded_date_sha256": "aa817d4aefca1920e3fd40193fb5fd5cb2f035d9d99c05d09d7127ba1df44352",
+          "recorded_date_min": 20001101,
+          "recorded_date_max": 20011101
+        },
+        "test": {
+          "target_count": 5226,
+          "entity_count": 3307,
+          "ordered_entity_seq_recorded_date_sha256": "46072671c0ef3cc125ebdd0f0e47b97a033edb04b13b758fc0074abb2679a4d4",
+          "recorded_date_min": 20011201,
+          "recorded_date_max": 20021201
+        }
+      },
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 84,
+        "max_seq_len": 84,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "selection": "all existing noninitial targets of each frozen split; no new entity/date filtering",
+      "prior_train_validation_file": {
+        "path": "search_artifacts/titantpp_raf_5080_20260930_v1/data/raf_spare_parts/train_validation.parquet",
+        "sha256": "d805cad0242078fedfbb87eed18bde9b73d37bfc9b93c6b75aac49087244efa2",
+        "scope": "train_validation_only"
+      },
+      "full_file_train_validation_rows_equal_deployed": true
+    }
+  ],
+  "target_definition": "canonical frozen loader next observed event after at least one history event",
+  "date_shift": {
+    "dataset": "intermittent_frozen_5000",
+    "status": "user_confirmed_constant_offset_for_security_and_deidentification",
+    "evidence": "reports/titantpp_intermittent_date_shift_note_20261003_v1/confirmation.json"
+  },
+  "not_independent_untouched_data": true
+}
