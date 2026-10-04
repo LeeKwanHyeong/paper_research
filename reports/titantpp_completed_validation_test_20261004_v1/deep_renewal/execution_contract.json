@@ -1,0 +1,335 @@
+{
+  "schema_version": 1,
+  "approval": {
+    "test_inference_authorized": true,
+    "allowed_splits": [
+      "validation",
+      "test"
+    ],
+    "retraining_authorized": false,
+    "new_paid_resources_authorized": false,
+    "transfer_host": "5080",
+    "prior_explicit_transfer_approval": "5080 \uc804\uc6a9 \ud3f4\ub354\ub85c \ud574\ub2f9 \uc790\ub8cc \uc804\uc1a1 \uc2b9\uc778",
+    "datasets": [
+      "yellow_trip_hourly",
+      "raf_spare_parts",
+      "intermittent_frozen_5000",
+      "insta_market_basket"
+    ],
+    "models": [
+      "deep_renewal_event_native_nb"
+    ],
+    "seeds": [
+      42,
+      52,
+      62
+    ]
+  },
+  "common_scope_path": "reports/titantpp_completed_validation_test_20261004_v1/scope_and_approval.json",
+  "common_scope_sha256": "a1f510ab02250ff0215cc47a68b829f2876fc20b216b03b1ac165f570434abbe",
+  "registry_sha256": "e8ac9de2dbfb06fd50f85c5f2d732a2ff1a3e3713e5f81ccdf79592291a69a8d",
+  "dataset_manifest_sha256": "53e1f98defbdc31fc0d1b71b4a5d14f5bda09f9f1893988736b6b9c34268dcf3",
+  "dataset_sha256": {
+    "yellow_trip_hourly": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+    "intermittent_frozen_5000": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+    "insta_market_basket": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+    "raf_spare_parts": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d"
+  },
+  "evaluator_sha256": "e89f650c237e37377043ff99d6dd70e470f84f85b95ffb5199db2b6b92c5cfa6",
+  "resources": {
+    "host": "5080",
+    "root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_completed_validation_test_20261004_v1/deep_renewal_workspace",
+    "python": "/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python3.12",
+    "gpu_uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+    "concurrent_workers": 1,
+    "gpu_memory_limit_gib": 12,
+    "rss_limit_gib": 32,
+    "output_limit_gib": 15,
+    "condition_timeout_seconds": 10800,
+    "campaign_timeout_seconds": 86400,
+    "new_rental_cost_usd": 0,
+    "shared_runtime_changes": false
+  },
+  "environment": {
+    "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+    "CUDA_VISIBLE_DEVICES": "0",
+    "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+    "NVIDIA_TF32_OVERRIDE": "0",
+    "OMP_NUM_THREADS": "4",
+    "MKL_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "PYTHONHASHSEED": "42",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "LD_LIBRARY_PATH": "/home/leekwanhyeong/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib"
+  },
+  "reuse_conditions": [],
+  "validation_references": {
+    "insta_market_basket__deep_renewal_event_native_nb__seed42": {
+      "count": 503733,
+      "qty_mae": 4.024149979306466,
+      "qty_rmse": 5.779986966666695,
+      "time_nll": 2.8489539880540073,
+      "state_sha256": "90e7c24a203527c6165d3cf6a300136c621307ad5c8b5fc6722edb7fd9ffb693",
+      "evaluation_scope": "validation_only",
+      "held_out_test_evaluated": false
+    },
+    "insta_market_basket__deep_renewal_event_native_nb__seed52": {
+      "count": 503733,
+      "qty_mae": 4.005653574144514,
+      "qty_rmse": 5.783440767184901,
+      "time_nll": 2.850244565949013,
+      "state_sha256": "697b359827238a122f14cddc97f04f2aba68324ab12b333da585dc71b5d58159",
+      "evaluation_scope": "validation_only",
+      "held_out_test_evaluated": false
+    },
+    "insta_market_basket__deep_renewal_event_native_nb__seed62": {
+      "count": 503733,
+      "qty_mae": 4.014112496280288,
+      "qty_rmse": 5.778649846387987,
+      "time_nll": 2.8460770059578606,
+      "state_sha256": "2d3be0c9f1875bbf7df51cb7857d29e993ed84a7f794630075cc0804ad0c7ae3",
+      "evaluation_scope": "validation_only",
+      "held_out_test_evaluated": false
+    },
+    "intermittent_frozen_5000__deep_renewal_event_native_nb__seed42": {
+      "count": 86285,
+      "qty_mae": 0.5723267092906207,
+      "qty_rmse": 2.3791054454199316,
+      "time_nll": 1.075625703466939,
+      "state_sha256": "868c344c02fc28fd5331e8733d197b342908059c30a663677da3f7e8c245dd53",
+      "evaluation_scope": "validation_only",
+      "held_out_test_evaluated": false
+    },
+    "intermittent_frozen_5000__deep_renewal_event_native_nb__seed52": {
+      "count": 86285,
+      "qty_mae": 0.5696903174588168,
+      "qty_rmse": 2.4511999981555475,
+      "time_nll": 1.0575930258845632,
+      "state_sha256": "c64490f4ac1bb92f8f3f90015a73b7d7c2debb1e2cb9cd70d5cceb83ef905028",
+      "evaluation_scope": "validation_only",
+      "held_out_test_evaluated": false
+    },
+    "intermittent_frozen_5000__deep_renewal_event_native_nb__seed62": {
+      "count": 86285,
+      "qty_mae": 0.6053783262951001,
+      "qty_rmse": 2.6868478504121978,
+      "time_nll": 1.0830066370257894,
+      "state_sha256": "8cd8d449e6e116e0ea33135216f1ec9b2267d487bea688ac3bc4693984052e93",
+      "evaluation_scope": "validation_only",
+      "held_out_test_evaluated": false
+    },
+    "raf_spare_parts__deep_renewal_event_native_nb__seed42": {
+      "count": 6690,
+      "qty_mae": 10.333440643807341,
+      "qty_rmse": 34.59935708924545,
+      "time_nll": 6.396625657178145,
+      "state_sha256": "d0ef02ca36e569fd3419f62d5938e3a6aa51f730b9382b8f4e7bf8d7bf863efb",
+      "evaluation_scope": "validation_only",
+      "held_out_test_evaluated": false
+    },
+    "raf_spare_parts__deep_renewal_event_native_nb__seed52": {
+      "count": 6690,
+      "qty_mae": 10.210654255645336,
+      "qty_rmse": 34.78028254862189,
+      "time_nll": 7.02705158824541,
+      "state_sha256": "5343ad2e2fe24ae2837b485664900f9878a9c1be6adb3d648afec06fa386b472",
+      "evaluation_scope": "validation_only",
+      "held_out_test_evaluated": false
+    },
+    "raf_spare_parts__deep_renewal_event_native_nb__seed62": {
+      "count": 6690,
+      "qty_mae": 10.241154475490074,
+      "qty_rmse": 34.58190276953553,
+      "time_nll": 6.528931166371719,
+      "state_sha256": "fad094d8bd2067f85ab5a21eba4c300ee02b0d6a4459f7d26c6b154f0bf46275",
+      "evaluation_scope": "validation_only",
+      "held_out_test_evaluated": false
+    },
+    "yellow_trip_hourly__deep_renewal_event_native_nb__seed42": {
+      "count": 8268,
+      "qty_mae": 90.33784725750247,
+      "qty_rmse": 402.4982889511315,
+      "time_nll": 0.785984095204676,
+      "state_sha256": "76b67af293d89cd63e9975d490d044c7b52a4e358a72c14e5cd08cdbee3d4e4b",
+      "evaluation_scope": "validation_only",
+      "held_out_test_evaluated": false
+    },
+    "yellow_trip_hourly__deep_renewal_event_native_nb__seed52": {
+      "count": 8268,
+      "qty_mae": 91.68788427222623,
+      "qty_rmse": 403.7068176441176,
+      "time_nll": 0.7768735736203696,
+      "state_sha256": "2a5bea6a74065456f89755ea30ac6b518ad5c273d5b8c572ca5588b72587c46f",
+      "evaluation_scope": "validation_only",
+      "held_out_test_evaluated": false
+    },
+    "yellow_trip_hourly__deep_renewal_event_native_nb__seed62": {
+      "count": 8268,
+      "qty_mae": 92.39835409706897,
+      "qty_rmse": 408.15395451080525,
+      "time_nll": 0.8078827507418492,
+      "state_sha256": "11d45f7ee64f963fb23e10f4c3074a83c09c415a8d1418a23556d48ce8231a4e",
+      "evaluation_scope": "validation_only",
+      "held_out_test_evaluated": false
+    }
+  },
+  "population_references": {
+    "yellow_trip_hourly": {
+      "validation": {
+        "target_identity_sha256": "eda89719ccc7c44c34c769134a06d3633c54d935617f233f4d1398908cae2563",
+        "truth_sha256": "776cb3cd5d6b78fa123d8aff0cf19954df835b6ae6c5e7325aa386c492b64368",
+        "loader": {
+          "batch_size": 128,
+          "drop_last": false,
+          "lookback_weeks": 168,
+          "max_seq_len": 256,
+          "num_workers": 0,
+          "train_shuffle": true,
+          "validation_shuffle": false
+        },
+        "data_file_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+        "expected_target_count": 8268,
+        "source_receipt": "reports/titantpp_legacy_evaluation_20261003_v1/runs/validation_full/attempt1/yellow_trip_hourly__titantpp_history_mlp__seed42/receipt.json",
+        "source_receipt_sha256": "fb2025fe8ae84f3ab82a99e2db0fc08f8f6bcefb9e3afdac38d5178ee2917d0c"
+      },
+      "test": {
+        "target_identity_sha256": "71300a7a20460c3d80a06fb47c9cc4b873a52d032109cd2fc090334a19baa172",
+        "truth_sha256": "216e037733caa3c406e7d74d82f109f8928a05e8ee54a3f661e1387303b155dd",
+        "loader": {
+          "batch_size": 128,
+          "drop_last": false,
+          "lookback_weeks": 168,
+          "max_seq_len": 256,
+          "num_workers": 0,
+          "train_shuffle": true,
+          "validation_shuffle": false
+        },
+        "data_file_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+        "expected_target_count": 8327,
+        "source_receipt": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/yellow_trip_hourly__titantpp_history_mlp__seed42/receipt.json",
+        "source_receipt_sha256": "17cb75989ec224380189997dd7c957ab96f714218978f7a051186768ebc8f079"
+      }
+    },
+    "raf_spare_parts": {
+      "validation": {
+        "target_identity_sha256": "97f2c71da401d22dd3124aaaadb9c96c5874f0bacb592a500ca7261289017dfd",
+        "truth_sha256": "f5a2222e2fdb263e1caecb243bb84bb0e282c2da05fab0bb76106b0ce7cfa7d7",
+        "loader": {
+          "batch_size": 128,
+          "drop_last": false,
+          "lookback_weeks": 84,
+          "max_seq_len": 84,
+          "num_workers": 0,
+          "train_shuffle": true,
+          "validation_shuffle": false
+        },
+        "data_file_sha256": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d",
+        "expected_target_count": 6690,
+        "source_receipt": "reports/titantpp_legacy_evaluation_20261003_v1/runs/validation_full/attempt1/raf_spare_parts__titantpp_history_mlp__seed42/receipt.json",
+        "source_receipt_sha256": "734cfbfab644b6570ef594916bdff2ad36b75d07cd2a5f05660562bdc88ecc78"
+      },
+      "test": {
+        "target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+        "truth_sha256": "108685c1dd684e00940b315b341bbc36c0a6b7c41efa91609c1f0f6535daec62",
+        "loader": {
+          "batch_size": 128,
+          "drop_last": false,
+          "lookback_weeks": 84,
+          "max_seq_len": 84,
+          "num_workers": 0,
+          "train_shuffle": true,
+          "validation_shuffle": false
+        },
+        "data_file_sha256": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d",
+        "expected_target_count": 5226,
+        "source_receipt": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__titantpp_history_mlp__seed42/receipt.json",
+        "source_receipt_sha256": "f52e49a2c00241d71e108c15f2eee1b6b95d1bc92b9da60c87b7ba8c481437b6"
+      }
+    },
+    "intermittent_frozen_5000": {
+      "validation": {
+        "target_identity_sha256": "9219cbca56f3512bb4e7d41e6a63d85c426b6d655e0f97bef4c195bb03986372",
+        "truth_sha256": "034052573a3ac86426ac9d6624e7b412fa7e79b2e6dc96bd2e020ac50bac78c5",
+        "loader": {
+          "batch_size": 128,
+          "drop_last": false,
+          "lookback_weeks": 520,
+          "max_seq_len": 256,
+          "num_workers": 0,
+          "train_shuffle": true,
+          "validation_shuffle": false
+        },
+        "data_file_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+        "expected_target_count": 86285,
+        "source_receipt": "reports/titantpp_legacy_evaluation_20261003_v1/runs/validation_full/attempt1/intermittent_frozen_5000__titantpp_history_mlp__seed42/receipt.json",
+        "source_receipt_sha256": "c60c62fa6307d463c7bcf74f3b74ecbba61105da42c55eaa86c7d0c7b039bf4b"
+      },
+      "test": {
+        "target_identity_sha256": "292519011bd00dd099c4ea0a02d77a544c9cdd6065ccd5934456e319f77bc2a0",
+        "truth_sha256": "9003d5e79b149a593f676a3c97f680690b79079fe2b223d7a68e0ad459b37510",
+        "loader": {
+          "batch_size": 128,
+          "drop_last": false,
+          "lookback_weeks": 520,
+          "max_seq_len": 256,
+          "num_workers": 0,
+          "train_shuffle": true,
+          "validation_shuffle": false
+        },
+        "data_file_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+        "expected_target_count": 88019,
+        "source_receipt": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/intermittent_frozen_5000__titantpp_history_mlp__seed42/receipt.json",
+        "source_receipt_sha256": "609602501f8bd16867ba989ea407f451c886c24e7d581ff6df6e5877bcde606d"
+      }
+    },
+    "insta_market_basket": {
+      "validation": {
+        "target_identity_sha256": "372f23e33227cc5ca03d4b471caea532a6ba1c9112a5b1aab33a565abe939d85",
+        "truth_sha256": "f124cfc774335a4d338f6befb96ec80848a268b3416390052e5d478136e92913",
+        "loader": {
+          "batch_size": 128,
+          "drop_last": false,
+          "lookback_weeks": 52,
+          "max_seq_len": 64,
+          "num_workers": 0,
+          "train_shuffle": true,
+          "validation_shuffle": false
+        },
+        "data_file_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+        "expected_target_count": 503733,
+        "source_receipt": "reports/titantpp_legacy_evaluation_20261003_v1/runs/validation_full/attempt1/insta_market_basket__titantpp_history_mlp__seed42/receipt.json",
+        "source_receipt_sha256": "bee6f6efce4a6c62133466f99c411767e230a9af546a29802fc14caef4b5cb61"
+      },
+      "test": {
+        "target_identity_sha256": "b9307d50bb322dfa5ef474bc1e6bd32a81cbac72861dab0221514175293903f6",
+        "truth_sha256": "274f169320c1dbe9ed400e0f5350ec87e032d8fdb75dae1c904dee7d21ab5753",
+        "loader": {
+          "batch_size": 128,
+          "drop_last": false,
+          "lookback_weeks": 52,
+          "max_seq_len": 64,
+          "num_workers": 0,
+          "train_shuffle": true,
+          "validation_shuffle": false
+        },
+        "data_file_sha256": "06296e48f5ca6c7e0c849f4b4a3c6d54a968ef892754f59369caf1d378424ef2",
+        "expected_target_count": 578387,
+        "source_receipt": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/insta_market_basket__titantpp_history_mlp__seed42/receipt.json",
+        "source_receipt_sha256": "9e184fe5389eec4856ff8687d737e7ab3f7ac90ccfdfbe11bee8d084fb8c98c5"
+      }
+    }
+  },
+  "selection": "First finite full Validation raw quantity RMSE minimum from original history; selected checkpoint immutable",
+  "validation_gate": {
+    "new_conditions": 12,
+    "rtol": 1e-05,
+    "atol": 1e-05,
+    "all_required_before_test": true
+  },
+  "new_test_conditions": 12,
+  "reuse_split_count": 0,
+  "automatic_retry": false,
+  "comparison_family": "native_deep_renewal_research_only",
+  "time_nll_definition": "Same recorded positive integer gap and top-coded survival support: native shifted-NB probability-mass NLL; common-head comparators use round/clamp lognormal probability-mass NLL. Within-dataset/split log scores can be compared, but differences are not controlled common-head backbone effects.",
+  "manuscript_comparison_included": false
+}
