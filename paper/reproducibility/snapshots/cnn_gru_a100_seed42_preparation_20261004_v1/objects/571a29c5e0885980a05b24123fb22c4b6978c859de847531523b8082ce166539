@@ -1,0 +1,151 @@
+"""Campaign-bound provider operations; credentials remain in the existing local CLI setup."""
+import hashlib
+import json
+import math
+import os
+import subprocess
+import time
+from pathlib import Path
+
+B = Path(__file__).resolve().parents[1]
+CLI = '/private/tmp/paper-runpodctl-v2.14.0'
+CLI_SHA = '5818914c30e5a2bfa5d0f0d54a2b2fbeceac7880e785c972475afc34524e764d'
+read = lambda p: json.loads(Path(p).read_text())
+sha = lambda p: hashlib.sha256(Path(p).read_bytes()).hexdigest()
+canonical = lambda x: hashlib.sha256(json.dumps(x, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()).hexdigest()
+
+
+def require(condition, message):
+    if not condition:
+        raise RuntimeError(message)
+
+
+def write(p, data, exclusive=False):
+    p = Path(p)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    body = json.dumps(data, ensure_ascii=False, indent=2, allow_nan=False) + '\n'
+    if exclusive:
+        with p.open('x') as f:
+            f.write(body)
+    else:
+        tmp = p.with_suffix(p.suffix + '.tmp')
+        tmp.write_text(body)
+        os.replace(tmp, p)
+
+
+def api(*args, timeout=40):
+    require(sha(CLI) == CLI_SHA, 'Unverified provider CLI')
+    p = subprocess.run([CLI, *args], capture_output=True, text=True, timeout=timeout)
+    if p.returncode:
+        # Never retain arbitrary provider output or credential-bearing errors.
+        raise RuntimeError('Provider operation failed; raw output suppressed')
+    try:
+        return json.loads(p.stdout) if p.stdout.strip() else {}
+    except ValueError:
+        raise RuntimeError('Provider non-JSON response; raw output suppressed') from None
+
+
+def allocation_identity(a, bundle=None):
+    bundle = Path(bundle or B)
+    saved = read(bundle / 'control/allocation.json')
+    pointer = read(bundle / 'current.json')
+    require(Path(pointer['bundle']).resolve() == bundle.resolve(), 'Foreign campaign pointer')
+    require(a['pod_id'] == saved['pod_id'] == pointer['pod_id'], 'Foreign Pod ID')
+    require(a['name'] == saved['name'] == bundle.name, 'Foreign campaign name')
+    require(a['remote_root'] == saved['remote_root'] == '/workspace/' + bundle.name, 'Foreign remote root')
+    for key in ('created_unix', 'deadline_unix', 'total_cap_usd', 'work_cap_usd', 'running_rate_usd_hour'):
+        require(a[key] == saved[key], 'Allocation guard changed: ' + key)
+    return pointer
+
+
+def owned(a):
+    allocation_identity(a)
+    p = api('pod', 'get', a['pod_id'])
+    require(p['id'] == a['pod_id'] and p['name'] == a['name'], 'Foreign Pod')
+    return p
+
+
+def budget_limits(authorization, rate, now):
+    """No inherited budget: the total cap and recovery reserve must be supplied."""
+    require(authorization.get('approved') is True, 'Missing explicit campaign approval')
+    require(authorization.get('automatic_recharge') is False, 'Automatic recharge forbidden')
+    require(authorization.get('gpu_count') == 1, 'One GPU only')
+    total = authorization.get('total_cap_usd')
+    reserve = authorization.get('retrieval_cleanup_reserve_usd')
+    prior = authorization.get('prior_attempt_cost_usd', 0)
+    for value in (total, reserve, prior, rate):
+        require(isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value), 'Explicit finite cost values required')
+    require(total > reserve > 0 and prior >= 0 and rate > 0, 'Invalid cost cap/reserve/rate')
+    available = total - reserve - prior
+    work = authorization.get('work_cap_usd', total - reserve)
+    require(prior < work <= total - reserve and available > 0, 'No authorized compute budget')
+    seconds = min(48 * 3600, (work - prior) / rate * 3600)
+    require(seconds > 0, 'No authorized runtime')
+    return {'total_cap_usd': total, 'work_cap_usd': work,
+            'retrieval_cleanup_reserve_usd': reserve, 'prior_attempt_cost_usd': prior,
+            'running_rate_usd_hour': rate, 'deadline_unix': now + seconds,
+            'setup_deadline_unix': now + min(5400, seconds), 'automatic_recharge': False}
+
+
+def verify_originals(a, bundle=None):
+    """Deletion requires the current Pod's full archive and every manifest file."""
+    bundle = Path(bundle or B)
+    allocation_identity(a, bundle)
+    receipt = read(bundle / 'retrieved/retrieval_receipt.json')
+    require(receipt.get('pod_id') == a['pod_id'] and receipt.get('remote_root') == a['remote_root'], 'Foreign retrieval receipt')
+    require(receipt.get('status') == 'sha_verified' and receipt.get('complete_originals') is True, 'Original retrieval incomplete')
+    archive = bundle / 'retrieved/original.tar.gz'
+    require(archive.is_file() and sha(archive) == receipt['archive_sha256'], 'Original archive SHA mismatch')
+    original = bundle / 'retrieved/original'
+    manifest = read(original / 'retrieval_manifest.json')
+    require(canonical(manifest['files']) == receipt['manifest_files_sha256'], 'Original manifest changed')
+    require(len(manifest['files']) == receipt['files'] and bool(manifest['files']), 'Empty or incomplete originals')
+    require('execution_contract.json' in manifest['files'] and 'package_manifest.json' in manifest['files'], 'Required originals absent')
+    package = read(original / 'package_manifest.json')
+    require(set(package['files']).issubset(manifest['files']), 'Packaged originals omitted from retrieval')
+    for name, digest in manifest['files'].items():
+        relative = Path(name)
+        require(not relative.is_absolute() and '..' not in relative.parts, 'Unsafe retrieval path')
+        path = original / relative
+        require(path.is_file() and not path.is_symlink() and sha(path) == digest, 'Original file SHA mismatch: ' + name)
+    return receipt
+
+
+def stop(a, reason):
+    owned(a)
+    api('pod', 'stop', a['pod_id'])
+    after = owned(a)
+    write(B / 'control/stop_receipt.json', {'pod_id': a['pod_id'], 'reason': reason,
+          'observed_unix': time.time(), 'desiredStatus': after.get('desiredStatus'),
+          'runtimeStatus': after.get('runtimeStatus'), 'persistent_volume_retained': True})
+
+
+def cost_receipt(a, ended):
+    estimate = max(0, ended - a['created_unix']) / 3600 * a['running_rate_usd_hour']
+    return {'pod_id': a['pod_id'], 'total_cap_usd': a['total_cap_usd'],
+            'retrieval_cleanup_reserve_usd': a['retrieval_cleanup_reserve_usd'],
+            'elapsed_upper_bound_seconds': max(0, ended - a['created_unix']),
+            'running_rate_with_storage_usd_hour': a['running_rate_usd_hour'],
+            'prior_attempt_cost_usd': a.get('prior_attempt_cost_usd', 0),
+            'elapsed_rate_upper_estimate_usd': estimate,
+            'combined_attempts_estimate_usd': a.get('prior_attempt_cost_usd', 0) + estimate,
+            'individual_final_invoice': False,
+            'account_balance_delta_not_attributed_to_this_Pod': True,
+            'automatic_recharge': False,
+            'provider_stop_requested_iso': a.get('provider_stop_requested_iso'),
+            'provider_stop_guaranteed': False}
+
+
+def teardown(a, reason):
+    verify_originals(a)
+    owned(a)
+    stop(a, reason)
+    api('pod', 'delete', a['pod_id'])
+    rows = api('pod', 'list')
+    rows = rows.get('pods', rows) if isinstance(rows, dict) else rows
+    require(isinstance(rows, list), 'Pod list absence could not be checked')
+    require(not any(p.get('id') == a['pod_id'] for p in rows), 'Owned Pod still listed')
+    ended = time.time()
+    write(B / 'control/cleanup_receipt.json', {'pod_id': a['pod_id'], 'deleted_and_absent': True,
+          'originals_sha_verified': True, 'reason': reason, 'time': ended})
+    write(B / 'cost_report.json', cost_receipt(a, ended))

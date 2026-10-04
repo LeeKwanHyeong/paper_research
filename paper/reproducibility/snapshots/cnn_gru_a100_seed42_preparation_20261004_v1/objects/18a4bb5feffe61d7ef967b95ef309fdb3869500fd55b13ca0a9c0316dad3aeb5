@@ -1,0 +1,36 @@
+# CNN/GRU A100 캠페인 제어
+
+이 디렉터리는 `titantpp_cnn_gru_a100_seed42_20261004_v1` 전용입니다. 기존 캠페인,
+공용 Runtime, 인증 설정을 변경하지 않습니다. 명령 예시는 실행 승인이 아닙니다.
+
+**로컬 준비와 계약 고정 — 완료 기준**
+- `python control/prepare.py`는 draft 계약의 9개 seed42 조건과 source/data/baseline/reference SHA만 검사합니다.
+- 과학 계약과 source/worker closure는 캠페인 준비 담당자가 먼저 고정합니다.
+- `user_authorization.json`의 이번 승인 금액, 회수·정리 예비 금액, GPU 1개,
+  `automatic_recharge: false`가 있어야 임대할 수 있습니다. 이전 예산을 상속하지 않습니다.
+
+**승인된 전용 Pod 임대 — 별도 실행 단계**
+- `python control/allocate.py`는 1회 임대 후 `allocation.json`과 `current.json`으로 소유권을 묶고,
+  학습을 시작하지 않는 로컬 manager를 바로 분리 실행합니다.
+- 기존 잔액에서 예비 금액을 남기고 실제 GPU·스토리지 요금으로 최대 48시간을 줄입니다.
+- 임대 결과가 불확실하면 재시도하지 않습니다. `allocation_intent.json`을 기준으로 확인합니다.
+- 제공자의 `stopAfter` 요청, readback 가능 여부, 실제 중지는 각각 별도 사실입니다.
+
+**승인된 전송과 native 실행 — 별도 실행 단계**
+- `transfer_authorization.json`의 승인 대상 Pod ID·금액·충전 금지가 일치해야 `python control/deploy.py`가 동작합니다.
+- GPU UUID와 비용 상한을 계약에 묶고 source/data/reference/worker 파일을 SHA로 봉인합니다.
+- bootstrap 자체에도 setup timeout이 있고, 학습 pipeline은 전체 SHA 검증과 자격 검증을 거쳐야 허가를 만듭니다.
+- 자격 검증 이후 9개 fit은 worker/dispatch.py가 수행합니다. 각 fit은 최대 36시간과 전체 기한 중 작은 값으로 제한됩니다.
+- 초기화, setup, 자격 검증 또는 학습이 실패하면 원본을 보존하고 자동 재시도하지 않습니다.
+
+**관측과 원본 회수 — 독립 절차**
+- `python control/observe.py`와 `python control/hourly_once.py`는 단발 관측입니다. 학습이나 manager를 시작하지 않습니다.
+- `python control/manage.py --once`는 승인된 관리 동작 1회를 수행합니다. `--once`가 없으면 60초 간격입니다.
+- 원본 전체 archive와 manifest의 모든 파일 SHA, 현재 Pod ID가 검증돼야 stop/delete/list-absence를 수행합니다.
+- 회수에 실패하거나 학습 프로세스가 종료되지 않으면 compute를 중지하고 volume을 보존합니다.
+- 삭제 확인 후에는 원래 종료 시각의 snapshot을 재사용합니다. 새 SSH 관측으로 표시하지 않습니다.
+- 비용 보고는 시간×요금의 상한 추정이며, 계정 잔액 변화는 이 Pod의 청구액으로 귀속하지 않습니다.
+
+**검증**
+- `python -m pytest search_artifacts/titantpp_cnn_gru_a100_seed42_20261004_v1/control/tests/test_control.py -q`
+- 로컬 mock 검증이며 provider·SSH·GPU·held-out 데이터에 접근하지 않습니다.

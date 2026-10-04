@@ -1,0 +1,82 @@
+"""Prepare source/data/baseline identities without renting or scientific training."""
+from pathlib import Path
+import json,hashlib,shutil,csv,sys,os,subprocess
+B=Path(__file__).resolve().parent;P=B.parents[1]
+OLD=P/'search_artifacts/titantpp_routing_placement_a100_20261003_v1'
+ARCH=P/'paper/reproducibility/snapshots/cnn_gru_cpu_implementation_20261004_v2'
+read=lambda p:json.loads(Path(p).read_text())
+sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest()
+canon=lambda x:hashlib.sha256(json.dumps(x,sort_keys=True,separators=(',',':'),ensure_ascii=False,allow_nan=False).encode()).hexdigest()
+def save(p,v):
+ p.parent.mkdir(parents=True,exist_ok=True)
+ if p.exists():assert read(p)==v,'Refuse different prior preparation: '+str(p)
+ else:p.write_text(json.dumps(v,indent=2,ensure_ascii=False)+'\n')
+def copy(src,dst,digest):
+ assert sha(src)==digest,str(src)
+ dst.parent.mkdir(parents=True,exist_ok=True)
+ if dst.exists():assert sha(dst)==digest,str(dst)
+ else:shutil.copy2(src,dst)
+seal=read(P/'reports/titantpp_cnn_gru_implementation_20261004_v1/source_seal.json')
+for rel,digest in seal['source_files_sha256'].items():copy(ARCH/'objects'/digest,B/'source'/rel,digest)
+assert canon(seal['source_files_sha256'])==seal['source_closure_sha256']
+(B/'source/sample_data').mkdir(exist_ok=True)
+(B/'source/sample_data/.keep').write_text('Frozen root marker; admitted train/validation data in sibling data/.\n')
+for p in (OLD/'data').rglob('*'):
+ if p.is_file():copy(p,B/'data'/p.relative_to(OLD/'data'),sha(p))
+sys.path.insert(0,str(B/'source'))
+from paper.scripts import run_titantpp_cnn_gru as r
+from models.TPPs.CountAwareTitanCNNGRU import ARMS,metadata,role_for_arm
+c=read(OLD/'execution_contract.json');remote='/workspace/'+B.name
+c.update(schema='titantpp_cnn_gru_a100_seed42_v1',arms=list(ARMS),architecture={a:metadata(arm=a) for a in ARMS},
+ approved_scope='User: A100 SXM; exclude Instacart; Intermittent RAF Taxi; single seed42; later5080continuation separately',
+ deferred_datasets=['insta_market_basket'],reference_baseline='titantpp_history_mlp_width16',
+ roles={a:role_for_arm(a) for a in ARMS},quantity_variants={a:r.VARIANT for a in ARMS},
+ jobs=[{'id':f'{d}__42__{a}','host':'a100','dataset':d,'seed':42,'arm':a} for a in ARMS for d in ['yellow_trip_hourly','raf_spare_parts','intermittent_frozen_5000']],
+ expected_initialization_sha256=None,baseline_replays={},reuse=[],
+ diagnostic={'sample_reference':'reports/titantpp_train_validation_tail_diagnostic_20261003_v1/contract.json','selected_and_last_validation':True,'selected_train_sample':True,'tail_definition':'raw target quantity strictly greater than original train upper boundary','tail_thresholds':{'yellow_trip_hourly':3449,'intermittent_frozen_5000':187,'raf_spare_parts':200},'train_sampling':{'max_per_bin':2048,'train_sampling_seed':20261003},'train_weights':'N_bin/n_bin','validation':'complete original validation population'},
+ reporting={'single_seed_exploratory':True,'three_seed_conclusion':False,'heterogeneous_gpu_provenance':True,'efficiency_claim':False,'primary':'full_validation_raw_quantity_RMSE_at_first_minimum','secondary_same_epoch':['quantity_MAE','tail_raw_quantity_RMSE','time_NLL'],'unfavorable_results_preserved':True})
+c['source']={'base_git_revision':subprocess.check_output(['git','rev-parse','HEAD'],cwd=P,text=True).strip(),'files':seal['source_files_sha256'],'files_sha256':seal['source_closure_sha256'],'CPU_implementation_manifest_sha256':seal['manifest_sha256'],'parent_campaign':'titantpp_history_width8_12_dual_20261004_v1','active_campaigns_modified':False}
+h=c['hosts']['a100']
+for k in ('root','source_root','output_dir','python','tmux'):h[k]=h[k].replace(OLD.name,B.name)
+h['gpu_uuid']='BIND_AFTER_ALLOCATION';h['assigned_datasets']=['yellow_trip_hourly','raf_spare_parts','intermittent_frozen_5000']
+h['environment']={k:v.replace(OLD.name,B.name) for k,v in h['environment'].items()}
+c['limits'].update(total_wall_seconds=48*3600,per_condition_seconds=36*3600,qualification_seconds=5400,max_workers=3,initial_workers=1,concurrency_candidates=[1,3],max_device_memory_fraction=.8,automatic_retry=False,
+ first_two_epochs='Same-fit first2epoch full300 projection is warning only; frozen36h perfit and allocation48h/cost deadlines are actual stops. No retry/resume or budget expansion.')
+c['cost']={'total_cap_usd':None,'work_cap_usd':None,'retrieval_cleanup_reserve_usd':None,'automatic_recharge':False,'prior_attempt_cost_usd':0,'running_rate_usd_hour':None,'budget_authorization':'pending_new_campaign_cap','provider_stop':'compute-stop request with persistent volume retained; owner manager SHA-retrieves originals before owned Pod stop/delete; request/readback/actual are distinct'}
+registry=read(P/'reports/titantpp_completed_validation_test_20261004_v1/width16/evaluation_registry.json')
+metrics=list(csv.DictReader((P/'reports/titantpp_width_time_adoption_20261004_v1/full_validation_metrics.csv').open()))
+bindings=read(P/'reports/titantpp_width_time_adoption_20261004_v1/validation_source_bindings.json')['rows']
+initial={};admission={};baseline={}
+os.chdir(B/'source')
+for data in c['datasets']:
+ d=data['dataset_id'];identity=data['inherited_data_identity']
+ for k in ('data','split_manifest'):
+  oldrel=identity[k]['path'];rel=Path(oldrel.removeprefix('../'));local=B/rel
+  assert sha(local)==identity[k]['sha256'],str(local)
+  identity[k]['path']=str(Path(remote)/rel)
+ data['prepared_train_validation_path']=identity['data']['path'];data['data_sha256']=identity['data']['sha256']
+ localdata=json.loads(json.dumps(data))
+ for k in ('data','split_manifest'):localdata['inherited_data_identity'][k]['path']=str(B/Path(identity[k]['path']).relative_to(remote))
+ frame,receipt=r.base.prepare_admitted_data(localdata)
+ assert set(frame['chronological_split'].unique()) <= {'train','validation'} and receipt['held_out_materialized'] is False
+ admission[d]=receipt;del frame
+ initial[d]=r.initial_states(localdata,42)
+ row=next(x for x in registry['rows'] if x['dataset']==d and x['seed']==42)
+ binding=next(x for x in bindings if x['dataset']==d and x['seed']==42 and x['width']==16)
+ cp=P/row['checkpoint_path'];copy(cp,B/'baselines'/d/'selected.pt',row['checkpoint_file_sha256'])
+ originalinit=read(cp.parents[4]/'initialization.json')
+ met=next(x for x in metrics if x['dataset']==d and x['seed']=='42' and x['width']=='16')
+ ref={'checkpoint':'baselines/'+d+'/selected.pt','checkpoint_sha256':row['checkpoint_file_sha256'],'initial_state_sha256':originalinit['titantpp_history_mlp_width16'],'metrics':{k:float(met[k]) for k in ('qty_rmse','qty_mae','time_nll')},'selected_epoch':row['selected_epoch'],'origin_checkpoint':row['checkpoint_path'],'origin_replay':binding['endpoint_path'],'origin_replay_sha256':binding['endpoint_sha256'],'origin_source_bundle':row['evaluator_source_bundle'],'seed':42,'baseline_backbone':'titantpp_history_mlp_width16'}
+ assert sha(P/binding['endpoint_path'])==binding['endpoint_sha256']
+ exposure=cp.parent/'exposure.json'
+ if exposure.exists():copy(exposure,B/'baselines'/d/'exposure.json',sha(exposure));ref.update(exposure='baselines/'+d+'/exposure.json',exposure_sha256=sha(exposure))
+ c['baseline_replays'][d]=ref;baseline[d]={'checkpoint_SHA':'passed','original_validation_replay_SHA':'passed','selected_epoch':row['selected_epoch']}
+ old4=read(OLD/'execution_contract.json')['baseline_replays'][d];oldex=OLD/old4['exposure'];rel='references/width4/'+d+'/exposure.json';copy(oldex,B/rel,old4['exposure_sha256']);c['reuse'].append({'dataset':d,'arm':'titantpp_history_mlp','seed':42,'remote_run':str(Path(remote)/Path(rel).parent),'file_sha256':{'exposure.json':old4['exposure_sha256']}})
+c['dataset_sha256']={d['dataset_id']:canon(d) for d in c['datasets']}
+save(B/'expected_initialization.json',initial);c['expected_initialization_sha256']=sha(B/'expected_initialization.json')
+design={'schema':c['schema'],'arms':c['architecture'],'baseline':c['reference_baseline'],'datasets':h['assigned_datasets'],'seed':42,'new_fits':9,'baseline_retraining':False,'evaluation_scope':'train_and_validation_only','test_access':False,'training':c['training'],'diagnostic':c['diagnostic'],'GRU_intervention':'whole correction replacement includes context/eligibility/divisor; not pure recurrence operator effect','CNN_intervention':'firstencoder eventQKVobservedcausal residualkernel3; persistentKV unchanged'}
+save(B/'design.json',design);c['design_sha256']=sha(B/'design.json')
+save(B/'execution_contract.draft.json',c)
+save(B/'verification/cpu_data_admission.json',{'status':'passed','datasets':admission,'held_out_materialized':False})
+save(B/'preparation_science_receipt.json',{'status':'CPU_source_data_baseline_preparation_passed','source_files':len(c['source']['files']),'closure_sha256':c['source']['files_sha256'],'baseline_SHA_checks':baseline,'native_qualification':'pending','scientific_training_started':False,'budget_approved':False})
+print(json.dumps({'source_files':len(c['source']['files']),'source_closure':c['source']['files_sha256'],'jobs':len(c['jobs']),'admission':'passed','budget':'pending','GPU':'not_rented'}))

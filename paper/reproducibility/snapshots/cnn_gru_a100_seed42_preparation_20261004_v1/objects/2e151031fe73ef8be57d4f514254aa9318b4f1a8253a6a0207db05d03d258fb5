@@ -1,0 +1,79 @@
+"""Native bounded pipeline; qualification and payload SHA precede every authorized fit."""
+import hashlib
+import json
+import os
+import subprocess
+import time
+import traceback
+from pathlib import Path
+
+B = Path(__file__).resolve().parents[1]
+read = lambda p: json.loads(Path(p).read_text())
+sha = lambda p: hashlib.sha256(Path(p).read_bytes()).hexdigest()
+canonical = lambda x: hashlib.sha256(json.dumps(x, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()).hexdigest()
+
+
+def write(path, value):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open('x') as stream:
+        json.dump(value, stream, indent=2, allow_nan=False)
+        stream.write('\n')
+
+
+def verify_payload():
+    c = read(B / 'execution_contract.json')
+    manifest = read(B / 'package_manifest.json')
+    assert manifest['contract_sha256'] == canonical(c)
+    assert c['evaluation_scope'] == 'validation_only' and c['held_out_test_evaluated'] is False
+    assert len(c['jobs']) == 9 and all(j['seed'] == 42 and j['host'] == 'a100' for j in c['jobs'])
+    assert canonical(c['source']['files']) == c['source']['files_sha256']
+    for name, expected in manifest['files'].items():
+        relative = Path(name)
+        assert not relative.is_absolute() and '..' not in relative.parts
+        assert sha(B / relative) == expected, 'Payload SHA changed: ' + name
+    for name, expected in c['source']['files'].items():
+        assert sha(B / 'source' / name) == expected, 'Frozen source SHA changed'
+    approval, start = read(B / 'approval.json'), read(B / 'start_permit.json')
+    assert approval['approved'] is True and approval['contract_sha256'] == canonical(c)
+    assert start['contract_sha256'] == canonical(c) and start['approval_sha256'] == canonical(approval)
+    assert start['total_cap_usd'] == c['cost']['total_cap_usd'] and start['work_cap_usd'] == c['cost']['work_cap_usd']
+    assert start['deadline_unix'] <= start['started_at_unix'] + 48 * 3600
+    assert start['deadline_unix'] > time.time(), 'Native deadline elapsed'
+    return c, start
+
+
+def main():
+    phase = 'payload_verification'
+    try:
+        c, start = verify_payload()
+        host = c['hosts']['a100']
+        env = {**os.environ, **host['environment'], 'SOURCE_REVISION': c['source']['base_git_revision']}
+        write(B / 'pipeline.claim', {'pid': os.getpid(), 'started_unix': time.time(), 'contract_sha256': canonical(c)})
+        phase = 'qualification'
+        available = int(start['deadline_unix'] - time.time())
+        seconds = min(c['limits']['qualification_seconds'], available)
+        assert seconds > 0
+        command = [host['python'], str(B / 'worker/qualify.py'), '--contract', str(B / 'execution_contract.json'), '--host', 'a100']
+        with (B / 'qualification.log').open('x') as log:
+            subprocess.run(['timeout', '--signal=TERM', '--kill-after=15s', str(seconds), *command],
+                cwd=B / 'source', env=env, stdout=log, stderr=subprocess.STDOUT, check=True)
+        verify_payload()
+        q = read(B / 'qualification/receipt.json')
+        assert q['status'] == 'passed' and q['selected_concurrency'] in c['limits']['concurrency_candidates']
+        assert q['contract_sha256'] == canonical(c) and q['source_files_sha256'] == c['source']['files_sha256'], 'Foreign qualification'
+        write(B / 'training_permit.json', {'contract_sha256': canonical(c), 'start_permit_sha256': canonical(start),
+              'qualification_sha256': sha(B / 'qualification/receipt.json')})
+        phase = 'training'
+        remaining = int(start['deadline_unix'] - time.time())
+        assert remaining > 0
+        command = [host['python'], str(B / 'worker/dispatch.py'), '--contract', str(B / 'execution_contract.json'), '--host', 'a100', '--mode', 'dispatch']
+        subprocess.run(['timeout', '--signal=TERM', '--kill-after=15s', str(remaining), *command],
+                       cwd=B / 'source', env=env, check=True)
+    except BaseException as error:
+        write(B / 'pipeline_failure.json', {'status': 'failed', 'phase': phase, 'type': type(error).__name__,
+              'message': str(error), 'traceback': traceback.format_exc(), 'updated_unix': time.time(), 'automatic_retry': False})
+        raise
+
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,194 @@
+"""Local provider manager: retrieve complete originals before campaign-owned deletion."""
+import argparse
+import fcntl
+import json
+import os
+import shlex
+import subprocess
+import tarfile
+import time
+from pathlib import Path
+from provider import B, allocation_identity, api, canonical, owned, read, require, sha, stop, teardown, write
+
+
+def sshcmd(a, command, timeout=30):
+    allocation_identity(a, B)
+    p = subprocess.run(['ssh', '-i', a['ssh']['key'], '-p', str(a['ssh']['port']), '-o', 'BatchMode=yes',
+        '-o', 'ConnectTimeout=15', '-o', 'StrictHostKeyChecking=accept-new',
+        '-o', 'UserKnownHostsFile=' + str(B / 'control/known_hosts'), 'root@' + a['ssh']['ip'], command],
+        capture_output=True, timeout=timeout)
+    if p.returncode:
+        raise RuntimeError('SSH observation failed; raw output suppressed, not a training failure')
+    return p.stdout
+
+
+def remote_snapshot(a):
+    code = (B / 'control/terminal_observer.py').read_text()
+    return json.loads(sshcmd(a, 'python3 -c ' + shlex.quote(code) + ' --root ' + shlex.quote(a['remote_root']), 60))
+
+
+def terminal(snapshot):
+    files = snapshot.get('files', {})
+    state = (files.get('status.json') or {}).get('status')
+    ended = state in ('complete', 'failed') or bool(files.get('pipeline_failure.json'))
+    compute = snapshot.get('compute') or {}
+    gpu_clear = compute.get('returncode') == 0 and not compute.get('stdout', '').strip()
+    workers = [line for line in snapshot.get('owned_processes', [])
+               if ('--mode fit' in line or '/worker/dispatch.py' in line or '/worker/qualify.py' in line or '/control/training_pipeline.py' in line)]
+    return ended and gpu_clear and not workers
+
+
+def extract_verified(archive, destination):
+    """Reject links, traversal, duplicate entries and special files before extraction."""
+    with tarfile.open(archive) as tar:
+        names = set()
+        for member in tar.getmembers():
+            path = Path(member.name)
+            require(member.isfile() and not path.is_absolute() and '..' not in path.parts, 'Unsafe original archive member')
+            require(member.name not in names, 'Duplicate original archive member')
+            names.add(member.name)
+        tar.extractall(destination, filter='data')
+
+
+def retrieve(a, snapshot=None):
+    allocation_identity(a, B)
+    snapshot = snapshot or remote_snapshot(a)
+    require(snapshot['root'] == a['remote_root'] and terminal(snapshot), 'Terminal process/receipt verification required before retrieval')
+    write(B / 'retrieved/terminal_snapshot.json', snapshot)
+    script = '''import json,hashlib,tarfile
+from pathlib import Path
+b=Path(%r)
+package=json.loads((b/'package_manifest.json').read_text())
+files={}
+for root in ('run','source','data','baselines','references','worker','qualification','claims','leases','progress','logs','control'):
+ for p in sorted((b/root).rglob('*')):
+  if p.is_file() and '__pycache__' not in p.parts:
+   assert not p.is_symlink(), 'Original symlink forbidden'
+   if root=='run':assert not p.name.startswith(('test_','held_out_')), 'Unexpected held-out artifact; preserve without reading'
+   files[str(p.relative_to(b))]=hashlib.sha256(p.read_bytes()).hexdigest()
+for p in sorted(b.iterdir()):
+ if p.is_file() and p.name not in ('retrieval_manifest.json','retrieval.tar.gz'):
+  assert not p.is_symlink(), 'Root original symlink forbidden'
+  files[p.name]=hashlib.sha256(p.read_bytes()).hexdigest()
+assert set(package['files']).issubset(files), 'Required packaged original missing'
+(b/'retrieval_manifest.json').write_text(json.dumps({'files':files,'complete_originals':True}))
+with tarfile.open(b/'retrieval.tar.gz','w:gz') as t:
+ for p in [*files,'retrieval_manifest.json']:t.add(b/p,arcname=p,recursive=False)
+print(hashlib.sha256((b/'retrieval.tar.gz').read_bytes()).hexdigest())
+''' % a['remote_root']
+    digest = sshcmd(a, 'python3 -c ' + shlex.quote(script), 180).decode().strip()
+    require(len(digest) == 64 and all(c in '0123456789abcdef' for c in digest), 'Invalid remote archive digest')
+    target = B / 'retrieved'
+    target.mkdir(exist_ok=True)
+    archive = target / 'original.tar.gz'
+    temporary = target / 'original.tar.gz.part'
+    p = subprocess.run(['scp', '-i', a['ssh']['key'], '-P', str(a['ssh']['port']), '-o', 'BatchMode=yes',
+        '-o', 'StrictHostKeyChecking=accept-new', '-o', 'UserKnownHostsFile=' + str(B / 'control/known_hosts'),
+        'root@' + a['ssh']['ip'] + ':' + a['remote_root'] + '/retrieval.tar.gz', str(temporary)],
+        capture_output=True, timeout=300)
+    require(p.returncode == 0, 'Original transfer failed; preserve Pod volume')
+    require(sha(temporary) == digest, 'Original archive SHA mismatch')
+    os.replace(temporary, archive)
+    original = target / 'original'
+    require(not original.exists(), 'Never overwrite retrieved originals')
+    extract_verified(archive, original)
+    manifest = read(original / 'retrieval_manifest.json')
+    require(manifest.get('complete_originals') is True, 'Incomplete remote manifest')
+    package = read(original / 'package_manifest.json')
+    require(set(package['files']).issubset(manifest['files']), 'Required originals omitted')
+    for name, expected in manifest['files'].items():
+        require(sha(original / name) == expected, 'Original SHA mismatch: ' + name)
+    write(target / 'retrieval_receipt.json', {'status': 'sha_verified', 'complete_originals': True,
+        'pod_id': a['pod_id'], 'remote_root': a['remote_root'], 'files': len(manifest['files']),
+        'manifest_files_sha256': canonical(manifest['files']), 'archive_sha256': digest,
+        'observed_unix': time.time(), 'binary_cpu_audit': 'pending'})
+    return True
+
+
+def once():
+    a = read(B / 'control/allocation.json')
+    allocation_identity(a, B)
+    if (B / 'control/cleanup_receipt.json').exists():
+        receipt = read(B / 'control/cleanup_receipt.json')
+        require(receipt['pod_id'] == a['pod_id'] and receipt['deleted_and_absent'] is True, 'Foreign cleanup receipt')
+        return True
+    now = time.time()
+    pod = owned(a)
+    spent = a.get('prior_attempt_cost_usd', 0) + max(0, now - a['created_unix']) / 3600 * a['running_rate_usd_hour']
+    row = {'observed_unix': now, 'pod_id': a['pod_id'], 'own_elapsed_rate_cost_usd': spent,
+           'desiredStatus': pod.get('desiredStatus'), 'runtimeStatus': pod.get('runtimeStatus'),
+           'provider_stop_requested_iso': a.get('provider_stop_requested_iso'), 'provider_stop_guaranteed': False}
+    balance = api('user').get('clientBalance')
+    row['available_account_balance_usd'] = balance
+    row['account_balance_is_not_Pod_billing'] = True
+    available_credit_low = isinstance(balance, (int, float)) and balance <= a['retrieval_cleanup_reserve_usd']
+    expired = spent >= a['work_cap_usd'] or now >= a['deadline_unix'] or available_credit_low
+    setup_expired = now >= a['setup_deadline_unix']
+    if 'ssh' not in a or not (B / 'deployment_receipt.json').exists():
+        row['state'] = 'allocated_pending_deployment'
+        write(B / 'monitor/latest.json', row)
+        if expired or setup_expired:
+            stop(a, 'Setup/compute deadline; payload recovery unverified, preserve volume')
+            write(B / 'control/cleanup_error.json', {'phase': 'originals_not_verified', 'recovery_required': True, 'observed_unix': now})
+            return True
+        return False
+    try:
+        snapshot = remote_snapshot(a)
+    except Exception as error:
+        row.update(state='observation_failed_not_training_failure', error_type=type(error).__name__)
+        write(B / 'monitor/latest.json', row)
+        if expired or setup_expired:
+            stop(a, 'Deadline with inaccessible originals; preserve volume for recovery')
+            write(B / 'control/cleanup_error.json', {'phase': 'terminal_observation_failed', 'recovery_required': True, 'observed_unix': now})
+            return True
+        return False
+    setup_expired = setup_expired and not snapshot['files'].get('pipeline.claim')
+    row['remote'] = snapshot['files']
+    if terminal(snapshot):
+        try:
+            retrieve(a, snapshot)
+            teardown(a, 'Terminal originals completely SHA verified')
+            row['state'] = 'retrieved_deleted_and_absent'
+        except Exception as error:
+            write(B / 'control/cleanup_error.json', {'phase': 'retrieve_before_delete', 'type': type(error).__name__, 'recovery_required': True, 'observed_unix': now})
+            stop(a, 'Terminal retrieval/cleanup incomplete; preserve volume')
+            row['state'] = 'recovery_required'
+        write(B / 'monitor/latest.json', row)
+        return True
+    if expired or setup_expired:
+        limit = a['deadline_unix'] if expired else a['setup_deadline_unix']
+        if now < limit + 120 and not available_credit_low:
+            row['state'] = 'deadline_wait_for_native_timeout'
+            write(B / 'monitor/latest.json', row)
+            return False
+        stop(a, 'Native deadline reached without terminal originals; preserve volume')
+        row['state'] = 'recovery_required'
+        write(B / 'monitor/latest.json', row)
+        write(B / 'control/cleanup_error.json', {'phase': 'terminal_state_missing', 'recovery_required': True, 'observed_unix': now})
+        return True
+    row['state'] = 'observed'
+    write(B / 'monitor/latest.json', row)
+    return False
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--once', action='store_true')
+    args = parser.parse_args()
+    with (B / 'control/manager.lock').open('a+') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        write(B / 'control/manager_receipt.json', {'pid': os.getpid(), 'started_unix': time.time(),
+              'mac_sleep_limit_acknowledged': True, 'manager_does_not_start_training': True})
+        while True:
+            try:
+                if once():
+                    break
+            except Exception as error:
+                write(B / 'control/manager_error.json', {'type': type(error).__name__, 'observed_unix': time.time()})
+            if args.once:
+                break
+            time.sleep(60)
+
+
+if __name__ == '__main__':
+    main()
