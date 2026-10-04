@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "route": "retrospective_locked_test_reevaluation",
+  "user_request": "완료된걸갖고 지금 Validation Test 결과까지 전부 산출해서 기존 TitanTPP MLP 그리고 비교군 모델까지 전부 비교해보자. 그 이후 작업 순서 재정렬해보자.",
+  "approval": {
+    "test_inference_authorized": true,
+    "allowed_splits": ["validation", "test"],
+    "retraining_authorized": false,
+    "new_paid_resources_authorized": false,
+    "transfer_host": "5080",
+    "prior_explicit_transfer_approval": "5080 전용 폴더로 해당 자료 전송 승인"
+  },
+  "scope": {
+    "width16": "12 validation-selected conditions; reuse four verified split outputs and evaluate the remaining 20 splits",
+    "A100": "Both completed six-condition candidate campaigns; original source closure per campaign; seed42-only comparison",
+    "existing_comparators": "Reuse verified 108 common-head conditions, nine comparable TitanTPP B conditions, and deterministic quantity references",
+    "deep_renewal": "Preserve all 12 native NB conditions in a separate research comparison; manuscript exclusion remains unchanged"
+  },
+  "prediction_protocol": {
+    "mode": "chronological_one_step_next_observed_event",
+    "validation_selected_checkpoint_only": true,
+    "selection_updates": false,
+    "parameter_updates": false,
+    "new_splits": false,
+    "target_or_future_in_input": false,
+    "test_fitted_preprocessing": false,
+    "test_access_status": "previously accessed legacy split, not independent untouched evaluation"
+  },
+  "resources": {
+    "host": "5080",
+    "root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_completed_validation_test_20261004_v1",
+    "python": "/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python3.12",
+    "gpu_uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+    "concurrent_workers": 1,
+    "gpu_memory_limit_gib": 12,
+    "rss_limit_gib": 32,
+    "output_limit_gib": 15,
+    "condition_timeout_seconds": 10800,
+    "campaign_timeout_seconds": 86400,
+    "new_rental_cost_usd": 0,
+    "shared_runtime_changes": false
+  },
+  "release_gate": "Each evaluator verifies frozen source, checkpoint file and tensor SHA, full validation replay, target masking, state immutability, and complete target/truth/loader/data identities before Test comparison.",
+  "aggregation": "Within seed event-weighted metrics; across three seeds arithmetic mean and sample SD (ddof1); A100 single seed reported separately and compared to seed42 only; no cross-dataset raw pooling."
+}
