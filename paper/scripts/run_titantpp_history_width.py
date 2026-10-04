@@ -1,4 +1,4 @@
-"""Opt-in process-local width16 routing; operational permissions live in the campaign.
+"""Opt-in process-local width8/12/16 routing; permissions live in the campaign.
 
 No shared Factory or training-engine source is modified. Importing this module
 does not install hooks, load research data, or execute a scientific fit.
@@ -18,13 +18,15 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from models.TPPs.CountAwareTitanHistoryWidth import (
-    ARM, ARMS, ROLE, CountAwareTitanHistoryWidth, metadata, validate_checkpoint,
+    ARM, ARMS, ROLE, ROLE_BY_ARM, CountAwareTitanHistoryWidth, metadata,
+    role_for_arm, width_for_arm, validate_checkpoint,
 )
 from models.TPPs.CountAwareTitanCoreAblation import ROLE as BASE_ROLE
 from paper.scripts import run_titantpp_core_ablation as core
 
 BASELINE = "titantpp_history_mlp"
 ALL_ARMS = (BASELINE, ARM)
+SUPPORTED_ARMS = (BASELINE, *ARMS)
 VARIANT = "count_only_log_regression"
 SCHEMA = "titantpp_history_width_v1"
 base, shared, common = core.base, core.shared, core.common
@@ -34,7 +36,7 @@ _installed = False
 
 
 def install_hooks():
-    """Register only the explicit new model in this interpreter, idempotently."""
+    """Register only explicit width candidates in this interpreter, idempotently."""
     global _installed
     if _installed:
         return
@@ -47,7 +49,7 @@ def install_hooks():
     original_role = constants.validate_model_role_contract
 
     def build(backbone, **kwargs):
-        if backbone != ARM:
+        if backbone not in ARMS:
             return original_build(backbone, **kwargs)
         bound = signature.bind(backbone, **kwargs)
         bound.apply_defaults()
@@ -55,9 +57,10 @@ def install_hooks():
         values.pop("backbone")
         if values.pop("titans_memory_gradient_clip") is not None:
             raise ValueError("Width intervention does not change memory gradient clipping")
-        model = CountAwareTitanHistoryWidth(**values)
+        candidate_width = width_for_arm(backbone)
+        model = CountAwareTitanHistoryWidth(**values, history_mlp_width=candidate_width)
         return factory.with_time_metadata(model, {
-            **metadata(values["hidden_dim"]), "max_len": values["max_seq_len"]})
+            **metadata(values["hidden_dim"], width=candidate_width), "max_len": values["max_seq_len"]})
 
     def route(payload, expected_backbone):
         if validate_checkpoint(payload, expected_backbone):
@@ -65,18 +68,21 @@ def install_hooks():
         return original_route(payload, expected_backbone)
 
     def launch(args, backbones, variants):
-        if getattr(args, "model_role", None) == ROLE or ARM in backbones:
-            if getattr(args, "model_role", None) != ROLE or backbones != (ARM,):
-                raise ValueError("Width16 requires its explicit single-arm role")
+        if getattr(args, "model_role", None) in ROLE_BY_ARM.values() or any(arm in ARMS for arm in backbones):
+            if (len(backbones) != 1 or backbones[0] not in ARMS
+                    or getattr(args, "model_role", None) != role_for_arm(backbones[0])):
+                raise ValueError("History width requires its matching explicit single-arm role")
             old_args = copy(args)
             old_args.model_role = BASE_ROLE
             return original_launch(old_args, (BASELINE,), variants)
         return original_launch(args, backbones, variants)
 
     def role_contract(**kwargs):
-        if kwargs["model_role"] == ROLE or ARM in kwargs["backbones"]:
-            if kwargs["model_role"] != ROLE or kwargs["backbones"] != (ARM,):
-                raise ValueError("Width16 requires its explicit single-arm role")
+        backbones = kwargs["backbones"]
+        if kwargs["model_role"] in ROLE_BY_ARM.values() or any(arm in ARMS for arm in backbones):
+            if (len(backbones) != 1 or backbones[0] not in ARMS
+                    or kwargs["model_role"] != role_for_arm(backbones[0])):
+                raise ValueError("History width requires its matching explicit single-arm role")
             return original_role(**{**kwargs, "model_role": BASE_ROLE, "backbones": (BASELINE,)})
         return original_role(**kwargs)
 
@@ -84,20 +90,21 @@ def install_hooks():
     factory.validate_checkpoint_route = route
     training.build_count_aware_model = training.build_model = build
     training.validate_checkpoint_route = route
-    observed_time.ROLES = (*observed_time.ROLES, ROLE)
+    observed_time.ROLES = (*observed_time.ROLES, *ROLE_BY_ARM.values())
     observed_time.validate_launch = launch
     training.OBSERVED_TIME_ROLES = observed_time.ROLES
     constants.validate_model_role_contract = role_contract
-    constants.BACKBONE_LABELS[ARM] = "TitanTPP History MLP width16"
-    constants.MODEL_ROLES = (*constants.MODEL_ROLES, ROLE)
-    constants.SUPPORTED_BACKBONES = (*constants.SUPPORTED_BACKBONES, ARM)
+    for arm in ARMS:
+        constants.BACKBONE_LABELS[arm] = f"TitanTPP History MLP width{width_for_arm(arm)}"
+    constants.MODEL_ROLES = (*constants.MODEL_ROLES, *ROLE_BY_ARM.values())
+    constants.SUPPORTED_BACKBONES = (*constants.SUPPORTED_BACKBONES, *ARMS)
     _installed = True
 
 
 def build_model(data, arm):
     install_hooks()
     from models.TPPs.CountAwareFactory import build_count_aware_model
-    require(arm in ALL_ARMS, "Width comparison model changed")
+    require(arm in SUPPORTED_ARMS, "Width comparison model changed")
     config = {k: v for k, v in data["model"].items()
               if k not in ("backbone", "lambda_log_qty", "lambda_tail", "time_head_lr_multiplier")}
     return build_count_aware_model(
@@ -105,21 +112,30 @@ def build_model(data, arm):
         train_log_std=data["statistics"]["train_log_std"], max_seq_len=data["loader"]["max_seq_len"])
 
 
-def initial_states(data, seed):
+def _comparison_arms(arms):
+    arms = tuple(arms)
+    require(BASELINE in arms and len(arms) >= 2 and len(set(arms)) == len(arms)
+            and all(arm in SUPPORTED_ARMS for arm in arms), "Invalid width comparison arms")
+    return arms
+
+
+def initial_states(data, seed, *, arms=ALL_ARMS):
     import torch
     from simple_lab_test.search.common.runner import canonical_state_dict_sha256
+    arms = _comparison_arms(arms)
     states, rngs = {}, {}
     with torch.random.fork_rng(devices=[]):
-        for arm in ALL_ARMS:
+        for arm in arms:
             torch.manual_seed(seed)
             model, _ = build_model(data, arm)
             states[arm] = model.state_dict()
             rngs[arm] = torch.get_rng_state().clone()
-        require(torch.equal(rngs[BASELINE], rngs[ARM]), "Width changed common-model RNG")
-        for name, value in states[BASELINE].items():
-            if name.startswith("multilag_detail."):
-                continue
-            require(torch.equal(value, states[ARM][name]), "Common initial tensor changed: " + name)
+        for arm in arms:
+            require(torch.equal(rngs[BASELINE], rngs[arm]), "Width changed common-model RNG")
+            for name, value in states[BASELINE].items():
+                if name.startswith("multilag_detail."):
+                    continue
+                require(torch.equal(value, states[arm][name]), "Common initial tensor changed: " + name)
     return {arm: canonical_state_dict_sha256(state) for arm, state in states.items()}
 
 
@@ -128,23 +144,24 @@ initialization = initial_states
 
 def training_args(c, data, output, arm):
     install_hooks()
-    require(arm == ARM, "Only the width16 candidate is a new fit")
-    args = base.training_args({**c, "model_role": ROLE}, data, output)
+    require(arm in ARMS, "Only an explicit width candidate is a new fit")
+    args = base.training_args({**c, "model_role": role_for_arm(arm)}, data, output)
     args.epochs, args.min_epochs, args.early_stopping_patience = 300, 40, 40
     args.execution_role = "fresh_history_width_validation"
     return args
 
 
-def time_interface(data, frame, c):
+def time_interface(data, frame, c, *, arm=ARM):
+    candidate_width = width_for_arm(arm)
     interface = base.time_interface(data, frame, c)
     interface["backbone_design"] = {
-        "schema": SCHEMA, "intervention": "history_mlp_bottleneck_width_4_to_16",
-        "model_metadata": metadata(), "training": c["training"],
+        "schema": SCHEMA, "intervention": f"history_mlp_bottleneck_width_4_to_{candidate_width}",
+        "model_metadata": metadata(width=candidate_width), "training": c["training"],
     }
     return interface
 
 
-def synthetic_check(device="cpu"):
+def synthetic_check(device="cpu", *, arms=ALL_ARMS):
     """Small fabricated-input update/identity check; no research dataset access."""
     import torch
     from paper.scripts.count_aware_tpp_backbone.core import target_outputs
@@ -155,14 +172,15 @@ def synthetic_check(device="cpu"):
                                           "unit": "week", "top_code": None}},
             "statistics": {"train_log_mean": 1.2, "train_log_std": .8},
             "loader": {"max_seq_len": 256}}
-    initial = initial_states(data, 42)
+    arms = _comparison_arms(arms)
+    initial = initial_states(data, 42, arms=arms)
     counts, corrections, outputs = {}, {}, {}
     with torch.random.fork_rng(devices=[] if str(device) == "cpu" else [torch.device(device)]):
         torch.manual_seed(42)
         dt = torch.randint(1, 8, (2, 12), device=device).float()
         quantity = torch.randint(1, 20, dt.shape, device=device).float()
         mask = torch.ones_like(dt, dtype=torch.bool)
-        for arm in ALL_ARMS:
+        for arm in arms:
             torch.manual_seed(42)
             model, _ = build_model(data, arm)
             counts[arm] = sum(p.numel() for p in model.parameters())
@@ -182,15 +200,18 @@ def synthetic_check(device="cpu"):
                 optimizer.step()
             restored, _ = build_model(data, arm)
             restored.load_state_dict({k: v.cpu() for k, v in model.state_dict().items()}, strict=True)
-        for key in outputs[BASELINE]:
-            require(torch.equal(outputs[BASELINE][key], outputs[ARM][key]), "Initial outputs differ: " + key)
-    require(corrections == {BASELINE: 6144, ARM: 24576}, "Correction parameter count drift")
-    require(counts[ARM] - counts[BASELINE] == 18432, "Common parameter count drift")
+        for arm in arms:
+            for key in outputs[BASELINE]:
+                require(torch.equal(outputs[BASELINE][key], outputs[arm][key]), "Initial outputs differ: " + key)
+    require(corrections == {arm: 1536 * (4 if arm == BASELINE else width_for_arm(arm))
+                            for arm in arms}, "Correction parameter count drift")
+    require(all(counts[arm] - counts[BASELINE] == corrections[arm] - 6144 for arm in arms),
+            "Common parameter count drift")
     return {"status": "passed", "device": str(device), "checks": {
         "common_initial_tensors_and_rng": True, "zero_correction_initial_output_identity": True,
         "finite_synthetic_optimizer_updates": True, "strict_checkpoint_roundtrip": True},
         "initial_state_sha256": initial, "parameter_count": counts,
-        "correction_parameter_count": corrections, "synthetic_optimizer_updates": 4,
+        "correction_parameter_count": corrections, "synthetic_optimizer_updates": 2 * len(arms),
         "real_data_loaded": False, "held_out_test_evaluated": False}
 
 
@@ -233,7 +254,7 @@ def _replay_validation(payload, path, data, frame, budget_check, *, device="cuda
     from paper.scripts.count_aware_tpp_backbone.core import target_outputs
     from paper.scripts.run_taxi_quantity_interface_ablation import make_loader
     from simple_lab_test.search.common.runner import canonical_state_dict_sha256
-    require(payload.get("backbone") in ALL_ARMS, "Unexpected endpoint backbone")
+    require(payload.get("backbone") in SUPPORTED_ARMS, "Unexpected endpoint backbone")
     validate_checkpoint_route(payload, payload["backbone"])
     require(payload["evaluation_scope"] == "validation_only"
             and payload["held_out_test_evaluated"] is False, "Replay split changed")
@@ -299,5 +320,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--synthetic-check", action="store_true", required=True)
     parser.add_argument("--device", default="cpu")
+    parser.add_argument("--arms", nargs="+", choices=SUPPORTED_ARMS, default=ALL_ARMS)
     args = parser.parse_args()
-    print(json.dumps(synthetic_check(args.device), indent=2))
+    print(json.dumps(synthetic_check(args.device, arms=args.arms), indent=2))

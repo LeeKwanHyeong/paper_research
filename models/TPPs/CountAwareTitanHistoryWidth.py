@@ -16,21 +16,36 @@ from models.TPPs.CountAwareTitanMultiLagDetail import (
 )
 
 ARM = "titantpp_history_mlp_width16"
-ARMS = (ARM,)
 ROLE = "observed_time_history_mlp_width16_v1"
 WIDTH = 16
+WIDTH_BY_ARM = {f"titantpp_history_mlp_width{width}": width for width in (8, 12, 16)}
+ARMS = tuple(WIDTH_BY_ARM)
+ROLE_BY_ARM = {arm: f"observed_time_history_mlp_width{width}_v1"
+               for arm, width in WIDTH_BY_ARM.items()}
 
 
-def metadata(hidden_dim=64):
-    if hidden_dim != 64:
-        raise ValueError("History width comparison fixes hidden_dim=64")
+def width_for_arm(arm):
+    if arm not in WIDTH_BY_ARM:
+        raise ValueError("Unsupported History MLP width candidate")
+    return WIDTH_BY_ARM[arm]
+
+
+def role_for_arm(arm):
+    width_for_arm(arm)
+    return ROLE_BY_ARM[arm]
+
+
+def metadata(hidden_dim=64, *, width=WIDTH):
+    if hidden_dim != 64 or type(width) is not int or width not in WIDTH_BY_ARM.values():
+        raise ValueError("History width comparison fixes hidden_dim=64 and width8/12/16")
+    arm = f"titantpp_history_mlp_width{width}"
     result = base_metadata(hidden_dim, "mlp")
     result.update(
-        candidate_name=ARM, backbone_contract_id="titantpp_history_width_v1",
-        model_role=ROLE, history_mlp_width=WIDTH, bottleneck_width=WIDTH,
-        multilag_detail_rank=WIDTH,
-        multilag_detail_projections="concat_current_previous_bias_free_mlp_width16",
-        additional_parameter_count=8 * (2 * hidden_dim * WIDTH + WIDTH * hidden_dim),
+        candidate_name=arm, backbone_contract_id="titantpp_history_width_v1",
+        model_role=role_for_arm(arm), history_mlp_width=width, bottleneck_width=width,
+        multilag_detail_rank=width,
+        multilag_detail_projections=f"concat_current_previous_bias_free_mlp_width{width}",
+        additional_parameter_count=8 * (2 * hidden_dim * width + width * hidden_dim),
         branch_availability="original_thresholds", residual_divisor=8,
         history_context="immediate_predecessor",
         initialization="default_Linear_input_zero_output_forked_cpu_rng",
@@ -38,8 +53,8 @@ def metadata(hidden_dim=64):
     return result
 
 
-def identity(hidden_dim=64):
-    encoded = json.dumps(metadata(hidden_dim), sort_keys=True).encode()
+def identity(hidden_dim=64, *, width=WIDTH):
+    encoded = json.dumps(metadata(hidden_dim, width=width), sort_keys=True).encode()
     return torch.tensor(list(hashlib.sha256(encoded).digest()), dtype=torch.uint8)
 
 
@@ -47,8 +62,8 @@ class HistoryWidthCorrection(nn.Module):
     """Preserve the width4 operation order, branch masks and fixed divisor."""
     def __init__(self, hidden_dim=64, *, width=WIDTH):
         super().__init__()
-        if hidden_dim != 64 or width not in (4, WIDTH):
-            raise ValueError("Only hidden_dim64 and diagnostic width4/candidate16 are supported")
+        if hidden_dim != 64 or type(width) is not int or width not in (4, 8, 12, 16):
+            raise ValueError("Only hidden_dim64 and correction width4/8/12/16 are supported")
         self.hidden_dim, self.width = hidden_dim, width
         # Includes Linear's discarded output initialization: preserve the prior
         # initialization procedure while leaving the common-model RNG unchanged.
@@ -81,15 +96,17 @@ class HistoryWidthCorrection(nn.Module):
 
 
 class CountAwareTitanHistoryWidth(CountAwareTitanCoreAblation):
-    def __init__(self, hidden_dim, train_log_mean, max_seq_len, **kwargs):
-        metadata(hidden_dim)
+    def __init__(self, hidden_dim, train_log_mean, max_seq_len, *, history_mlp_width=WIDTH, **kwargs):
+        metadata(hidden_dim, width=history_mlp_width)
         super().__init__(hidden_dim, train_log_mean, max_seq_len, core_mode="mlp", **kwargs)
-        self.multilag_detail = HistoryWidthCorrection(hidden_dim)
-        self.register_buffer("history_width_identity", identity(hidden_dim))
+        self.history_mlp_width = history_mlp_width
+        self.multilag_detail = HistoryWidthCorrection(hidden_dim, width=history_mlp_width)
+        self.register_buffer("history_width_identity", identity(hidden_dim, width=history_mlp_width))
 
     def load_state_dict(self, state_dict, strict=True, assign=False):
         value = state_dict.get("history_width_identity")
-        if not isinstance(value, torch.Tensor) or not torch.equal(value.cpu(), identity(self.core_hidden_dim)):
+        if not isinstance(value, torch.Tensor) or not torch.equal(
+                value.cpu(), identity(self.core_hidden_dim, width=self.history_mlp_width)):
             raise ValueError("History width checkpoint identity mismatch")
         _complete_state(self, state_dict)
         return super().load_state_dict(state_dict, strict=strict, assign=assign)
@@ -98,35 +115,36 @@ class CountAwareTitanHistoryWidth(CountAwareTitanCoreAblation):
 def validate_checkpoint(payload, expected_backbone):
     meta = payload.get("encoder_config", {})
     states = [payload[k] for k in ("model_state_dict", "best_state_dict") if k in payload]
-    identified = (payload.get("backbone") == ARM or "history_mlp_width" in meta
+    identified = (payload.get("backbone") in ARMS or "history_mlp_width" in meta
                   or any("history_width_identity" in state for state in states))
-    if expected_backbone != ARM:
+    if expected_backbone not in ARMS:
         if identified:
             raise ValueError("History width candidate cannot be relabelled")
         return False
-    expected = metadata(meta.get("d_model"))
+    width = width_for_arm(expected_backbone)
+    expected = metadata(meta.get("d_model"), width=width)
     interface, resume = payload.get("interface_meta", {}), payload.get("resume_identity", {})
     head = meta.get("time_head", {})
-    if (payload.get("backbone") != ARM or any(meta.get(k) != v for k, v in expected.items())
+    if (payload.get("backbone") != expected_backbone or any(meta.get(k) != v for k, v in expected.items())
             or payload.get("evaluation_scope") != "validation_only"
             or payload.get("held_out_test_evaluated") is not False
             or payload.get("variant") != "count_only_log_regression"
-            or resume.get("backbone") != ARM or resume.get("interface_meta") != interface
+            or resume.get("backbone") != expected_backbone or resume.get("interface_meta") != interface
             or resume.get("checkpoint_monitor") != "validation_raw_quantity_rmse"
-            or resume.get("arguments", {}).get("model_role") != ROLE
+            or resume.get("arguments", {}).get("model_role") != role_for_arm(expected_backbone)
             or head.get("mode") != "heteroscedastic_lognormal_duration"
             or not isinstance(head.get("observation_likelihood"), dict)
             or head["observation_likelihood"].get("mode") != "positive_integer_round_clamp_v1"
             or head["observation_likelihood"] != interface.get("time_head", {}).get("observation_likelihood")):
         raise ValueError("History width metadata, split, head, selector or role mismatch")
     for state in states:
-        for key, expected_value in (("history_width_identity", identity()),
+        for key, expected_value in (("history_width_identity", identity(width=width)),
                                     ("core_ablation_identity", base_identity(64, "mlp"))):
             value = state.get(key)
             if not isinstance(value, torch.Tensor) or not torch.equal(value.cpu(), expected_value):
                 raise ValueError("History width state identity mismatch")
         for branch in range(8):
-            for name, shape in (("input", (WIDTH, 128)), ("output", (64, WIDTH))):
+            for name, shape in (("input", (width, 128)), ("output", (64, width))):
                 value = state.get(f"multilag_detail.{name}_projections.{branch}.weight")
                 if not isinstance(value, torch.Tensor) or tuple(value.shape) != shape:
                     raise ValueError("History width projection shape mismatch")

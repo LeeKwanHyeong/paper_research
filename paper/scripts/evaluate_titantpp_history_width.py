@@ -148,11 +148,12 @@ class QuantityMetrics:
 
 
 def _payload(path, data):
+    from paper.scripts.run_titantpp_history_width import SUPPORTED_ARMS
     from models.TPPs.CountAwareFactory import validate_checkpoint_route
     from paper.scripts.count_aware_tpp_backbone.training import checkpoint_monitor_spec
     from simple_lab_test.search.common.runner import canonical_state_dict_sha256, torch_load_checkpoint
     payload = torch_load_checkpoint(Path(path), map_location="cpu")
-    require(payload.get("backbone") in ("titantpp_history_mlp", "titantpp_history_mlp_width16"),
+    require(payload.get("backbone") in SUPPORTED_ARMS,
             "Checkpoint is outside the width comparison")
     validate_checkpoint_route(payload, payload["backbone"])
     require(payload.get("evaluation_scope") == "validation_only"

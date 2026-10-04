@@ -9,7 +9,8 @@ import torch
 from torch.nn import functional as F
 
 from models.TPPs.CountAwareTitanHistoryWidth import (
-    ARM, ROLE, WIDTH, HistoryWidthCorrection, metadata, validate_checkpoint,
+    ARM, ARMS, ROLE, WIDTH, HistoryWidthCorrection, identity, metadata,
+    role_for_arm, width_for_arm, validate_checkpoint,
 )
 from models.TPPs.CountAwareTitanCoreAblation import HistoryCorrection
 from models.TPPs.CountAwareTitanMultiLagDetail import lag_source_indices
@@ -33,14 +34,14 @@ def data():
         "statistics": {"train_log_mean": 1.2, "train_log_std": .8}, "loader": {"max_seq_len": 256}}
 
 
-def payload():
-    model, meta = runner.build_model(data(), ARM)
+def payload(arm=ARM):
+    model, meta = runner.build_model(data(), arm)
     interface = {"time_head": meta["time_head"]}
-    return {"backbone": ARM, "encoder_config": meta, "model_state_dict": model.state_dict(),
+    return {"backbone": arm, "encoder_config": meta, "model_state_dict": model.state_dict(),
         "evaluation_scope": "validation_only", "held_out_test_evaluated": False,
         "variant": runner.VARIANT, "interface_meta": interface,
-        "resume_identity": {"backbone": ARM, "interface_meta": interface,
-            "checkpoint_monitor": "validation_raw_quantity_rmse", "arguments": {"model_role": ROLE}}}
+        "resume_identity": {"backbone": arm, "interface_meta": interface,
+            "checkpoint_monitor": "validation_raw_quantity_rmse", "arguments": {"model_role": role_for_arm(arm)}}}
 
 
 def test_width4_reference_bitwise_outputs_gradients_and_rng():
@@ -62,9 +63,10 @@ def test_width4_reference_bitwise_outputs_gradients_and_rng():
     assert torch.equal(torch.autograd.grad(a.sum(), hidden)[0], torch.autograd.grad(b.sum(), hidden)[0])
 
 
-def test_width16_manual_formula_mask_reset_padding_and_causality():
+@pytest.mark.parametrize("candidate_width", [8, 12, 16])
+def test_width_manual_formula_mask_reset_padding_and_causality(candidate_width):
     torch.manual_seed(42)
-    layer = HistoryWidthCorrection()
+    layer = HistoryWidthCorrection(width=candidate_width)
     hidden = torch.randn(2, 18, 64, requires_grad=True)
     valid = torch.ones(2, 18, dtype=torch.bool); valid[0, [2, 7]] = False
     write = valid.clone(); write[1, 6] = False
@@ -107,30 +109,35 @@ def test_width16_manual_formula_mask_reset_padding_and_causality():
 def test_common_initialization_rng_full_outputs_and_parameter_counts(seed):
     from paper.scripts.count_aware_tpp_backbone.core import target_outputs
     states, rngs, models, sizes = {}, {}, {}, {}
-    for arm in runner.ALL_ARMS:
+    for arm in runner.SUPPORTED_ARMS:
         torch.manual_seed(seed); models[arm], meta = runner.build_model(data(), arm)
         states[arm] = models[arm].state_dict(); rngs[arm] = torch.get_rng_state().clone()
         sizes[arm] = sum(p.numel() for p in models[arm].parameters())
-    assert torch.equal(rngs[runner.BASELINE], rngs[ARM])
-    for key, value in states[runner.BASELINE].items():
-        if not key.startswith("multilag_detail."):
-            assert torch.equal(value, states[ARM][key])
-    assert sizes[ARM] - sizes[runner.BASELINE] == 18432
-    assert sum(p.numel() for p in models[ARM].multilag_detail.parameters()) == 24576
+    for arm in ARMS:
+        assert torch.equal(rngs[runner.BASELINE], rngs[arm])
+        for key, value in states[runner.BASELINE].items():
+            if not key.startswith("multilag_detail."):
+                assert torch.equal(value, states[arm][key])
+        correction_count = 1536 * width_for_arm(arm)
+        assert sizes[arm] - sizes[runner.BASELINE] == correction_count - 6144
+        assert sum(p.numel() for p in models[arm].multilag_detail.parameters()) == correction_count
+        assert metadata(width=width_for_arm(arm))["additional_parameter_count"] == correction_count
     assert metadata()["additional_parameter_count"] == 24576
     dt = torch.randint(1, 8, (2, 12)).float(); quantity = torch.randint(1, 20, dt.shape).float()
     mask = torch.ones_like(dt, dtype=torch.bool)
     with torch.no_grad():
         outputs = {arm: target_outputs(model.eval(), dt, mask, quantity, lambda_log_qty=1.)
                    for arm, model in models.items()}
-    assert all(torch.equal(outputs[runner.BASELINE][k], outputs[ARM][k]) for k in outputs[ARM])
-    initial = runner.initial_states(data(), seed)
-    assert initial[ARM] != initial[runner.BASELINE]
+    for arm in ARMS:
+        assert all(torch.equal(outputs[runner.BASELINE][k], outputs[arm][k]) for k in outputs[arm])
+    initial = runner.initial_states(data(), seed, arms=runner.SUPPORTED_ARMS)
+    assert len(set(initial.values())) == 4
 
 
-def test_full_model_nonzero_correction_hides_target_and_padding():
+@pytest.mark.parametrize("arm", ARMS)
+def test_full_model_nonzero_correction_hides_target_and_padding(arm):
     from paper.scripts.count_aware_tpp_backbone.core import target_outputs
-    torch.manual_seed(4); model, _ = runner.build_model(data(), ARM); model.eval()
+    torch.manual_seed(4); model, _ = runner.build_model(data(), arm); model.eval()
     for projection in model.multilag_detail.output_projections:
         torch.nn.init.normal_(projection.weight, std=.02)
     dt = torch.randint(1, 8, (2, 12)).float(); quantity = torch.randint(1, 20, dt.shape).float()
@@ -149,8 +156,9 @@ def test_full_model_nonzero_correction_hides_target_and_padding():
 
 
 @pytest.mark.parametrize("strict", [True, False])
-def test_state_load_cannot_cross_width_or_ignore_missing_identity(strict):
-    narrow, _ = runner.build_model(data(), runner.BASELINE); wide, _ = runner.build_model(data(), ARM)
+@pytest.mark.parametrize("arm", ARMS)
+def test_state_load_cannot_cross_width_or_ignore_missing_identity(strict, arm):
+    narrow, _ = runner.build_model(data(), runner.BASELINE); wide, _ = runner.build_model(data(), arm)
     with pytest.raises(ValueError, match="identity"):
         wide.load_state_dict(narrow.state_dict(), strict=strict)
     with pytest.raises(RuntimeError):
@@ -162,12 +170,18 @@ def test_state_load_cannot_cross_width_or_ignore_missing_identity(strict):
     with pytest.raises(RuntimeError, match="tensor mismatch"):
         wide.load_state_dict(changed, strict=strict)
     wide.load_state_dict(wide.state_dict(), strict=strict)
+    for other in ARMS:
+        if other != arm:
+            model, _ = runner.build_model(data(), other)
+            with pytest.raises(ValueError, match="identity"):
+                wide.load_state_dict(model.state_dict(), strict=strict)
 
 
 @pytest.mark.parametrize("mutation", ["width", "projection", "role", "head", "split", "monitor", "identity", "shape"])
-def test_metadata_route_drift_fails_closed(mutation):
+@pytest.mark.parametrize("arm", ARMS)
+def test_metadata_route_drift_fails_closed(mutation, arm):
     from models.TPPs.CountAwareFactory import validate_checkpoint_route
-    value = payload(); validate_checkpoint_route(value, ARM)
+    value = payload(arm); validate_checkpoint_route(value, arm)
     with pytest.raises(ValueError):
         validate_checkpoint_route(value, runner.BASELINE)
     if mutation == "width": value["encoder_config"]["history_mlp_width"] = 4
@@ -178,22 +192,31 @@ def test_metadata_route_drift_fails_closed(mutation):
     elif mutation == "monitor": value["resume_identity"]["checkpoint_monitor"] = "validation_joint_objective"
     elif mutation == "identity": value["model_state_dict"]["history_width_identity"][0] ^= 1
     else: value["model_state_dict"]["multilag_detail.input_projections.7.weight"] = torch.zeros(4, 128)
-    with pytest.raises(ValueError): validate_checkpoint_route(value, ARM)
+    with pytest.raises(ValueError): validate_checkpoint_route(value, arm)
 
 
-def test_hooks_are_idempotent_and_role_loss_constraints_remain():
+@pytest.mark.parametrize("arm", ARMS)
+def test_hooks_are_idempotent_and_role_loss_constraints_remain(arm):
     from models.TPPs import CountAwareFactory as factory
     from paper.scripts.count_aware_tpp_backbone import constants, observed_time, training
     runner.install_hooks(); build = factory.build_count_aware_model; runner.install_hooks()
     assert build is factory.build_count_aware_model is training.build_model
-    args = SimpleNamespace(model_role=ROLE, time_head_mode="heteroscedastic_lognormal_duration",
+    role = role_for_arm(arm)
+    args = SimpleNamespace(model_role=role, time_head_mode="heteroscedastic_lognormal_duration",
         lambda_tail=0., lambda_log_qty=1., quantile_adaptive_strength=0.,
         checkpoint_monitor="validation_raw_quantity_rmse", dataset_contract="intermittent_frozen_5000")
-    observed_time.validate_launch(args, (ARM,), (runner.VARIANT,))
+    observed_time.validate_launch(args, (arm,), (runner.VARIANT,))
     for field, value in (("lambda_log_qty", 2.), ("model_role", "observed_time_core_ablation_v1")):
         changed = deepcopy(args); setattr(changed, field, value)
-        with pytest.raises(ValueError): observed_time.validate_launch(changed, (ARM,), (runner.VARIANT,))
-    constants.validate_model_role_contract(model_role=ROLE, backbones=(ARM,), quantity_variants=(runner.VARIANT,),
+        with pytest.raises(ValueError): observed_time.validate_launch(changed, (arm,), (runner.VARIANT,))
+    for other in ARMS:
+        if other != arm:
+            changed = deepcopy(args); changed.model_role = role_for_arm(other)
+            with pytest.raises(ValueError): observed_time.validate_launch(changed, (arm,), (runner.VARIANT,))
+            with pytest.raises(ValueError): constants.validate_model_role_contract(
+                model_role=changed.model_role, backbones=(arm,), quantity_variants=(runner.VARIANT,),
+                time_head_mode=args.time_head_mode, lambda_tail=0.)
+    constants.validate_model_role_contract(model_role=role, backbones=(arm,), quantity_variants=(runner.VARIANT,),
         time_head_mode=args.time_head_mode, lambda_tail=0.)
 
 
@@ -203,29 +226,72 @@ def test_synthetic_optimizer_check():
     assert result["real_data_loaded"] is False
 
 
-def test_synthetic_shared_trainer_checkpoint_and_endpoint_replay(cpu_training, admitted_contract, tmp_path):
+def test_width16_legacy_identity_and_default_contract_are_preserved():
+    assert ARM == "titantpp_history_mlp_width16" and WIDTH == 16
+    assert ROLE == "observed_time_history_mlp_width16_v1"
+    assert runner.ALL_ARMS == (runner.BASELINE, ARM)
+    assert bytes(identity().tolist()).hex() == "1309671f1eb463992c1ec3b37209d73cc81501cc81d9e513029566e84bd8277a"
+
+
+@pytest.mark.parametrize("bad_width", [4, 6, 20, 16.0, True])
+def test_unadmitted_candidate_width_fails_closed(bad_width):
+    with pytest.raises(ValueError, match="width"):
+        metadata(width=bad_width)
+
+
+def test_all_capacity_candidates_synthetic_optimizer_check():
+    result = runner.synthetic_check("cpu", arms=runner.SUPPORTED_ARMS)
+    assert result["status"] == "passed" and result["synthetic_optimizer_updates"] == 8
+    assert result["correction_parameter_count"] == {
+        runner.BASELINE: 6144, ARMS[0]: 12288, ARMS[1]: 18432, ARM: 24576}
+    assert result["real_data_loaded"] is result["held_out_test_evaluated"] is False
+
+
+@pytest.mark.parametrize("arm", ARMS)
+def test_train_validation_metric_evaluator_accepts_bound_width_checkpoint(arm, tmp_path):
+    from paper.scripts import evaluate_titantpp_history_width as evaluator
+    from paper.scripts.count_aware_tpp_backbone.training import checkpoint_monitor_spec
+    from simple_lab_test.search.common.runner import canonical_state_dict_sha256
+    value = payload(arm)
+    selector = checkpoint_monitor_spec("validation_raw_quantity_rmse")
+    value.update(model_state_sha256=canonical_state_dict_sha256(value["model_state_dict"]),
+                 checkpoint_monitor="validation_raw_quantity_rmse",
+                 checkpoint_monitor_history_key=selector["history_key"],
+                 checkpoint_selection=selector["selection"])
+    path = tmp_path / "synthetic.pt"
+    torch.save(value, path)
+    loaded, digest = evaluator._payload(path, data())
+    assert loaded["backbone"] == arm and digest == value["model_state_sha256"]
+    value["encoder_config"]["history_mlp_width"] = 4
+    torch.save(value, path)
+    with pytest.raises(ValueError):
+        evaluator._payload(path, data())
+
+
+@pytest.mark.parametrize("arm", ARMS)
+def test_synthetic_shared_trainer_checkpoint_and_endpoint_replay(cpu_training, admitted_contract, tmp_path, arm):
     from paper.scripts.count_aware_tpp_backbone import training
     contract = admitted_contract
     contract["training"] = {"maximum_epochs": 300, "minimum_epochs": 40,
                             "patience": 40, "monitor": "validation_raw_quantity_rmse"}
     item = next(d for d in contract["datasets"] if d["dataset_id"] == "intermittent_frozen_5000")
     frame, _ = runner.base.prepare_admitted_data(item)
-    interface = runner.time_interface(item, frame, contract)
-    initial = runner.initial_states(item, 42)
-    args = runner.training_args(contract, item, tmp_path / "train", ARM)
+    interface = runner.time_interface(item, frame, contract, arm=arm)
+    initial = runner.initial_states(item, 42, arms=(runner.BASELINE, arm))
+    args = runner.training_args(contract, item, tmp_path / "train", arm)
     args.device = "cpu"; args.epochs = args.min_epochs = args.early_stopping_patience = 2
     quantity = {"boundaries": item["quantity_boundaries_all_train_rows"],
                 "strata": [{"label": f"bin_{i}"} for i in range(5)]}
     with runner.shared.audited_training(training, item, lambda: None, lambda *_: None):
         summary, _, _ = training.train_one(args=args, frame=frame, quantity_contract=quantity,
-            interface_meta=interface, backbone=ARM, quantity_variant=runner.VARIANT, seed=42)
-    assert summary["initial_state_sha256"] == initial[ARM]
-    directory = args.output_dir / "runs" / ARM / runner.VARIANT / "seed_42"
+            interface_meta=interface, backbone=arm, quantity_variant=runner.VARIANT, seed=42)
+    assert summary["initial_state_sha256"] == initial[arm]
+    directory = args.output_dir / "runs" / arm / runner.VARIANT / "seed_42"
     history = runner.read(directory / "history.json")["history"]
-    resume = training._resume_identity(args=args, backbone=ARM, quantity_variant=runner.VARIANT,
+    resume = training._resume_identity(args=args, backbone=arm, quantity_variant=runner.VARIANT,
         seed=42, monitor=args.checkpoint_monitor, quantity_contract=quantity, interface_meta=interface)
     for filename, epoch in (("best_val_qty_rmse_model.pt", summary["best_epoch"]), ("last_epoch_state.pt", 2)):
         replay = runner.replay_checkpoint(directory / filename, item, frame, lambda: None, device="cpu",
-            expected_arm=ARM, expected_identity=resume, expected_initial=initial[ARM], expected_epoch=epoch)
+            expected_arm=arm, expected_identity=resume, expected_initial=initial[arm], expected_epoch=epoch)
         assert replay["qty_rmse"] == pytest.approx(history[epoch - 1]["val_qty_rmse"], rel=1e-10, abs=1e-8)
         assert replay["time_nll"] == pytest.approx(history[epoch - 1]["val_time_nll"], rel=1e-10, abs=1e-8)
