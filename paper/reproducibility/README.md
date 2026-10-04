@@ -29,12 +29,13 @@ quantity RMSE checkpoint 선택·기존 test 재평가와 동일한 실험이 �
 |---|---|---|---|
 | History MLP 폭 4 | 보존 대조군 | 분기 `128→4→64`, 보정 6,144개 | 기존 checkpoint와 해당 source 재사용 |
 | History MLP 폭 16 / seed42·52·62 | 후속 기본 기준선 확정 · 완료된 12조건의 Validation·Test 검증 | 분기 `128→16→64`, 보정 24,576개 | 기존 마스크, 고정 `/8`, GELU, zero output, 출력부·손실·선택 기준; 기존 source·checkpoint 재사용 |
-| 폭 8·12 | 다음 작업: 미구현·미실행 | 보정 파라미터는 각각 12,288·18,432개 | 폭별 identity·계약·초기화 검증 후 별도 실행 계약 필요 |
+| 폭 8·12 | 구현·계약 검증 완료; 5080 학습 중, 5090 체크포인트 전송 승인 대기 | 보정 파라미터는 각각 12,288·18,432개 | Taxi·Intermittent·RAF ×3seed, 총18조건. Instacart 후속; 폭4/16 재사용 |
 | A100 routing/placement | 완료 · 별도 seed42 탐색 | recent4_attention / post_block, 3데이터×seed42 | 동결 source와 계약으로 해석; 3seed 결과와 구분 |
-| Encoder 1 CNN＋중간 GRU | 다음 작업: 설계 후보 | E1에 인과적 CNN; 중간 MLP 대신 순환 보정; 64차원 잔차 유지 | CNN/GRU 잠재 폭·파라미터 예산·삽입 위치·비교군 미확정 |
+| Encoder 1 CNN＋중간 GRU | 대조 설계·파라미터 검산 완료; 구현 필요 | E1 event Q/K/V causal CNN; MLP16 대신 GRU54, 64차원 잔차 유지 | MLP16/CNN+MLP16/GRU54/CNN+GRU54; 27개 신규 조건은 별도 후속 계약 |
 
-현재 `CountAwareTitanHistoryWidth.py`는 폭4/16만 허용한다. 8·12 계획을 현재
-실행 가능한 옵션으로 오인하지 않는다. 폭16 모델 ID는
+현재 전용 모델·실행기는 폭4/8/12/16을 구분하며 기존 폭4/16의 초기 상태와
+identity를 유지한다. [폭8·12 실행 상태](../../reports/titantpp_history_capacity_launch_20261004_v1/README.md)가
+실제 시작 여부의 기준이다. 폭16 모델 ID는
 `titantpp_history_mlp_width16`이며, 전용 실행기의 factory 연결을 사용한다.
 기존 `titantpp_history_mlp` ID는 폭4 재현용으로 유지한다. 네 데이터의 3seed
 평균·표본 표준편차와 기존 Test 재평가는
@@ -47,7 +48,11 @@ CNN＋GRU는 [설계 검토](../../reports/titantpp_cnn_gru_review_20261003_v1/R
 역사적 대안으로 보존한다. CNN/GRU와 폭 확대를 한 실험으로 묶어 효과를 단정하지
 않고 각 요소의 대조 조건을 먼저 정한다.
 이전 GRU r=24의 근접 파라미터 비교는 폭4 기준 제안이다. 폭16을 기준으로 하는
-후속 CNN·GRU의 잠재 폭과 파라미터 예산은 새 계약에서 다시 확정한다.
+폭16 기준 [새 CNN·GRU 설계](../../reports/titantpp_cnn_gru_width16_design_20261004_v1/README.md)는
+GRU54 보정24,732개와 MLP16 보정24,576개를 비교한다. 이는 근접한 파라미터 대조이며
+작은16차원 상태나 순수 recurrence만의 효과를 검증하는 계약은 아니다.
+[채택·시간 진단](../../reports/titantpp_width_time_adoption_20261004_v1/README.md)은
+전수 validation과 train/validation 표본 진단을 분리한다.
 
 ## 동결본 확인과 복원 — CPU·오프라인, 학습 실행 없음
 

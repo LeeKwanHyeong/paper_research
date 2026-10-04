@@ -1,0 +1,66 @@
+{
+  "schema": "titantpp_width_adoption_criteria_v1",
+  "status": "fixed_before_width8_12_new_results",
+  "user_fixed_followup_baseline_width": 16,
+  "historical_comparator_width": 4,
+  "datasets": [
+    "yellow_trip_hourly",
+    "intermittent_frozen_5000",
+    "raf_spare_parts"
+  ],
+  "deferred_dataset": "insta_market_basket",
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "new_training_intervention": "history correction width only; 8 and12; preserve heads, loss, input transform, fixed /8, branch availability and zero output initialization",
+  "selection": {
+    "metric": "full_validation_raw_quantity_rmse",
+    "rule": "strict first finite minimum",
+    "min_epochs": 40,
+    "max_epochs": 300,
+    "patience": 40,
+    "reselection_for_secondary_metrics": false
+  },
+  "primary_adoption_metric": "full_validation_raw_quantity_rmse at the original selected checkpoint",
+  "required_parallel_metrics": [
+    "full_validation_quantity_mae",
+    "train_fixed_sample_quantity_rmse",
+    "validation_quantity_body_rmse",
+    "validation_quantity_tail_rmse",
+    "recorded_positive_integer_time_nll"
+  ],
+  "tail_definition": {
+    "yellow_trip_hourly": 3449,
+    "intermittent_frozen_5000": 187,
+    "raf_spare_parts": 200
+  },
+  "tail_boundary_rule": "strictly greater than the original TRAIN-derived upper boundary; equality belongs to lower cell",
+  "seed_reporting": {
+    "mean": "arithmetic across42/52/62",
+    "sd": "sample ddof1",
+    "also_report": [
+      "paired delta per seed",
+      "number improved among3",
+      "worst paired seed delta"
+    ],
+    "majority_screen": "positive evidence for a dataset requires lower mean primary metric and at least2 of3 lower primary seed values; does not alone establish statistical significance"
+  },
+  "decision_categories": {
+    "joint_improvement": "mean full RMSE improves, majority seed screen passes, and mean MAE, tail RMSE and time NLL also do not worsen; disclose any adverse per-seed metrics",
+    "tradeoff": "primary or tail quantity benefit accompanies MAE, body or time deterioration; do not label as general superiority or automatically promote",
+    "no_stable_capacity_gain": "no lower primary mean, improvement supported by only one seed, or training gain without corresponding validation gain; retain as negative capacity evidence",
+    "invalid_or_incomplete": "any missing seed, failed scientific/source/checkpoint checks or nonfinite metrics; cannot form a three-seed conclusion"
+  },
+  "scope_guards": [
+    "Do not change user-fixed width16 baseline automatically",
+    "No new Test access for width8/12 selection",
+    "Do not select a different checkpoint for time/tail/MAE",
+    "Do not interpret width alone as a new backbone technique",
+    "CPU sampling diagnostic is not complete-population performance",
+    "Time location-scale algebra is descriptive, not causal training attribution"
+  ],
+  "numeric_time_degradation_gate": "No new arbitrary threshold or changed selection rule; show absolute/relative per-seed deterioration and require an explicit tradeoff decision before promotion",
+  "cnn_gru_target": "Preserve/handle time calibration while improving quantity representation; change one module at a time and record parameter/compute budgets"
+}
