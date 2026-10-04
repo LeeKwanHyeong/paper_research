@@ -26,7 +26,7 @@ def setup(tmp_path):
     contract = {'registry_sha256': p.sha(tmp_path / 'evaluation_registry.json'),
         'dataset_manifest_sha256': p.sha(tmp_path / 'dataset_manifest.json'),
         'selected_binding_sha256': p.sha(tmp_path / 'selected_binding.json'),
-        'resources': {'campaign_timeout_seconds': 60, 'root': str(tmp_path)}, 'environment': {}, 'validation_gate': {'conditions': 2}}
+        'resources': {'campaign_timeout_seconds': 60, 'condition_timeout_seconds': 900, 'root': str(tmp_path)}, 'environment': {}, 'validation_gate': {'conditions': 2}}
     (tmp_path / 'execution_contract.json').write_text(json.dumps(contract))
     return SimpleNamespace(campaign=tmp_path, root=tmp_path, device='cpu')
 
@@ -131,3 +131,52 @@ def test_aggregate_writer_records_only_metrics_and_digests(tmp_path):
     assert result['tail']['qty_rmse'] == 2. and result['tail']['qty_mae'] == 2.
     assert writer.rows == 2 and writer.parts == [] and list(tmp_path.iterdir()) == []
     assert result['tail_definition'] == 'raw_quantity > quantity_boundaries[-1]'
+
+
+@pytest.mark.parametrize('remaining,expected', [(20., 20.), (2000., 900.)])
+def test_native_condition_timeout_obeys_remaining_campaign(tmp_path, monkeypatch, remaining, expected):
+    row = {'dataset': 'synthetic', 'model': 'model', 'seed': 42}
+    contract = {'resources': {'condition_timeout_seconds': 900}}
+    launched = []
+    monkeypatch.setattr(p.shutil, 'which', lambda name: '/usr/bin/timeout')
+    monkeypatch.setattr(p.time, 'time', lambda: 100.)
+    def launch(command, **kwargs):
+        launched.append((command, kwargs))
+        return SimpleNamespace(pid=123, returncode=0, poll=lambda: 0)
+    monkeypatch.setattr(p.subprocess, 'Popen', launch)
+    monkeypatch.setattr(p, 'check_receipt', lambda *args: {'verified': True})
+    p.run_condition(row, 'validation', contract, 100. + remaining, tmp_path, tmp_path, 'cpu')
+    command, kwargs = launched[0]
+    assert command[:4] == ['/usr/bin/timeout', '--signal=TERM', '--kill-after=15s', str(expected) + 's']
+    assert command[command.index('--deadline-seconds') + 1] == str(expected)
+    assert kwargs['start_new_session'] is True
+
+
+def test_missing_native_timeout_stops_before_worker(tmp_path, monkeypatch):
+    monkeypatch.setattr(p.shutil, 'which', lambda name: None)
+    monkeypatch.setattr(p.subprocess, 'Popen', lambda *args, **kwargs: pytest.fail('No worker may start'))
+    with pytest.raises(ValueError, match='GNU timeout is required'):
+        p.run_condition({'dataset': 'synthetic', 'model': 'model', 'seed': 42}, 'validation',
+                        {'resources': {'condition_timeout_seconds': 900}}, 100., tmp_path, tmp_path, 'cpu')
+
+
+def test_external_termination_cleans_owned_worker_and_records_failure(tmp_path, monkeypatch):
+    args = setup(tmp_path)
+    cleaned, launched = [], []
+    monkeypatch.setattr(p.shutil, 'which', lambda name: '/usr/bin/timeout')
+    monkeypatch.setattr(p.time, 'time', lambda: 100.)
+    process = SimpleNamespace(pid=123, returncode=None, poll=lambda: None)
+    def launch(command, **kwargs):
+        launched.append(command)
+        return process
+    monkeypatch.setattr(p.subprocess, 'Popen', launch)
+    def termination(seconds):
+        p.handle_termination(p.signal.SIGTERM, None)
+    monkeypatch.setattr(p.time, 'sleep', termination)
+    monkeypatch.setattr(p, 'stop_group', lambda owned: cleaned.append(owned.pid))
+    with pytest.raises(InterruptedError, match='termination signal'):
+        p.main(args)
+    assert cleaned == [123] and len(launched) == 1
+    status = p.read(tmp_path / 'pipeline_status.json')
+    assert status['status'] == 'failed' and status['exception'] == 'InterruptedError'
+    assert not (tmp_path / 'validation_gate.json').exists()

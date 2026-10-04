@@ -9,7 +9,6 @@ import math
 import os
 from pathlib import Path
 import signal
-import shutil
 import subprocess
 import sys
 import time
@@ -91,26 +90,15 @@ def stop_group(process):
         process.wait(timeout=10)
 
 
-def handle_termination(signum, frame):
-    """Unwind through run_condition's finally before writing campaign failure."""
-    raise InterruptedError(f'Campaign received termination signal {signum}')
-
-
 def run_condition(row, split, contract, deadline, campaign, root, device):
     folder = campaign / 'runs' / split / identity(row)
     require(not folder.exists(), 'Existing output preserved; automatic retries forbidden')
-    native_timeout = shutil.which('timeout')
-    require(native_timeout is not None, 'GNU timeout is required before launching an evaluator')
-    remaining = deadline - time.time()
-    condition_timeout = min(float(contract['resources']['condition_timeout_seconds']), remaining)
-    require(math.isfinite(condition_timeout) and condition_timeout > 0, 'Campaign time limit exceeded before condition launch')
     if device == 'cuda':
         require(not output(['nvidia-smi', '--query-compute-apps=pid', '--format=csv,noheader']), 'GPU occupied')
-    command = [native_timeout, '--signal=TERM', '--kill-after=15s', str(condition_timeout) + 's',
-        sys.executable, str(HERE / 'evaluate.py'), '--root', str(root), '--registry', str(campaign / 'evaluation_registry.json'),
+    command = [sys.executable, str(HERE / 'evaluate.py'), '--root', str(root), '--registry', str(campaign / 'evaluation_registry.json'),
         '--dataset-manifest', str(campaign / 'dataset_manifest.json'), '--contract', str(campaign / 'execution_contract.json'),
         '--dataset', row['dataset'], '--model', row['model'], '--seed', str(row['seed']), '--split', split,
-        '--device', device, '--output', str(folder), '--deadline-seconds', str(condition_timeout)]
+        '--device', device, '--output', str(folder), '--deadline-seconds', str(contract['resources']['condition_timeout_seconds'])]
     log = campaign / 'logs' / f'{split}__{identity(row)}.log'
     log.parent.mkdir(exist_ok=True)
     process = None
@@ -168,7 +156,6 @@ if __name__ == '__main__':
     parser.add_argument('--root', default=ROOT, type=Path)
     parser.add_argument('--device', choices=('cpu', 'cuda'), default='cuda')
     args = parser.parse_args()
-    signal.signal(signal.SIGTERM, handle_termination)
     with (args.campaign / 'campaign.lock').open('x') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         main(args)

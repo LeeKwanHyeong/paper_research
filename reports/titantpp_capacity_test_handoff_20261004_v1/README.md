@@ -21,3 +21,4 @@
 - 새 통합 observer는 서버별 소유 조건과 terminal을 검증합니다. 여섯 조건 전체 완료 후 원본SHA회수 → 동일 선택checkpoint의 full Validation6 gate → 기존 Test6 순서로 처리합니다. 미완료 중에는 Test를 실행하지 않습니다.
 - [시간별 모니터](../titantpp_three_gpu_hourly_monitor_20261004_v1/SCHEDULER.md)의 별도 후속 실행기를 사용합니다. 중복 실행과 자동 retry를 금지하고 평가 시간·메모리 상한을 별도 계약에 묶습니다.
 - Instacart와 A100 CNN/GRU는 현재 Test 배치에 추가하지 않습니다. 원본 binary SHA 회수·nativeGPU Validation 확인과 binary CPU 재추론 감사는 별개입니다.
+- 이관 Runtime·관측기·후속 평가 드라이버·평가 파이프라인의 로컬 테스트59개가 통과했습니다. 실제 미완료 상태의 후속 드라이버 호출은 원격 호출0으로 대기했으며, 학습 완료 전에 Test를 시작하지 않았습니다.

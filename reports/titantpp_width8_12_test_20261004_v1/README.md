@@ -18,6 +18,7 @@
 - 기존 결과 폴더가 있으면 자동 재시도나 덮어쓰기를 하지 않는다. 실패 기록을 보존한다.
 - 첫 두 시도는 자료 경로와 프로젝트 경로 표시 파일 문제로 실제 추론 전에 중단됐다. [실패 기록](preinference_failure_notes.json)과 원본 계약을 보존했으며, 세 번째 시도는 경로·SHA·ancillary marker·staged import preflight를 통과했다.
 - `historical_code/prepare_v1.py`는 초기 세 시도의 seal에 대응하는 원본이다. 현재 `prepare.py`의 후속 계약 비교는 서버 이동에 따른 `data.path`·`split_manifest.path`만 정규화하며 모델·전처리·손실·split·byte SHA는 그대로 일치해야 한다.
+- `historical_code/pipeline_v1.py`도 초기 세 시도의 원본 SHA와 일치한다. 후속 Intermittent 파이프라인에는 조건별 GNU timeout과 외부 종료 신호 시 소유 평가 프로세스 정리를 추가했다. 완료된 Taxi·RAF의 계약·코드 seal·원격 기록은 보존한다.
 
 ```bash
 python3 reports/titantpp_width8_12_test_20261004_v1/prepare.py \
@@ -45,6 +46,6 @@ python3 reports/titantpp_width8_12_test_20261004_v1/pipeline.py \
 - 현재 원고는 수정하지 않는다. 수치의 split, 조건 수, seed 평균과 표본 표준편차를 구분해 기록한다.
 - 이번 Taxi·RAF 집계는 보존하고, `analyze.py --campaign <taxi_raf_attempt3> --campaign <intermittent> --output <new_report_folder>`로 새 결과를 만든다. 전체·tail RMSE/MAE와 정수 간격 Time NLL을 함께 기록한다.
 
-Focused synthetic 검증은 14개 통과했다. Validation 실패 시 Test 차단, 전체 gate 순서, 원본 입력 변경·기존 출력 보호, 순수 집계 저장, Intermittent 일부 완료 차단, deployment path preflight, seed 통계, operational path와 과학 조건 구분을 확인했다. 연구 자료와 GPU는 테스트에서 사용하지 않았다.
+Focused synthetic 검증은 18개 통과했다. Validation 실패 시 Test 차단, 전체 gate 순서, 원본 입력 변경·기존 출력 보호, 순수 집계 저장, Intermittent 일부 완료 차단, deployment path preflight, seed 통계, operational path와 과학 조건 구분, 조건별 시간 제한과 외부 종료 신호의 소유 프로세스 정리를 확인했다. 연구 자료와 GPU는 테스트에서 사용하지 않았다.
 
 예상 평가 시간은 동일 5080의 폭16 실측에 기반한 추정이다. Taxi·RAF 조건당 한 split 약 2.6–3.4초, Intermittent 약 10.8–11.2초였으며, 초기 24 population 평가 약 1–3분과 후속 12 population 평가 약 1–3분을 예상한다. 이 값은 폭8·12의 실제 시간이나 GPU 간 효율 비교가 아니다.
