@@ -1,0 +1,937 @@
+{
+  "architecture": {
+    "titantpp_cnn_mlp16": {
+      "candidate_name": "titantpp_cnn_mlp16",
+      "backbone_contract_id": "titantpp_cnn_gru_width16_v1",
+      "model_role": "observed_time_cnn_mlp16_v1",
+      "base_encoder": "CountAwareTitanTPP",
+      "d_model": 64,
+      "n_layers": 2,
+      "n_heads": 4,
+      "d_ff": 128,
+      "memory_mode": "static_hard_lmm",
+      "persistent_mem_size": 16,
+      "lmm_mem_size": 64,
+      "lmm_topk": 4,
+      "static_retrieval_aggregation": "arithmetic_mean",
+      "static_key_value_tied": true,
+      "additional_parameter_count": 25152,
+      "quantity_objective": "count_only_log_regression",
+      "online_writes": false,
+      "removed_static_parameters": 0,
+      "static_retrieval_enabled": true,
+      "baseline_backbone": "titantpp_history_mlp_width16",
+      "correction_kind": "mlp16",
+      "correction_latent_width": 16,
+      "correction_parameter_count": 24576,
+      "correction_insertion": "between_encoder_blocks",
+      "correction_divisor": 8,
+      "correction_eligibility": "original_eight_thresholds",
+      "correction_availability_lags": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        32,
+        64,
+        128
+      ],
+      "correction_context": "current_immediate_predecessor",
+      "correction_state_scope": "sample_prefix_segment_forward_only",
+      "correction_padding": "skip_no_state_or_count_update",
+      "correction_withheld_valid": "reset_state_and_count_zero_correction",
+      "correction_initialization": "forked_default_input_recurrence_zero_output",
+      "gru_layers": 0,
+      "gru_unidirectional": true,
+      "gru_bias": null,
+      "gru_dropout": 0,
+      "gru_initial_state": null,
+      "cnn_enabled": true,
+      "cnn_layer": 0,
+      "cnn_scope": "event_qkv_after_projection_before_persistent_concat",
+      "cnn_kernel_size": 3,
+      "cnn_channels": 64,
+      "cnn_groups": 64,
+      "cnn_bias": false,
+      "cnn_lags": "current_lag1_lag2_observed_segment",
+      "cnn_initialization": "all_zero_residual_kernel",
+      "cnn_parameter_count": 576,
+      "persistent_tokens_filtered": false,
+      "attention_reference_scope_changed": false,
+      "mutable_batch_context_cache": false,
+      "main_hidden_dim": 64,
+      "added_layer_norm": false,
+      "added_learned_scale": false,
+      "fixed_alpha": 1
+    },
+    "titantpp_gru54": {
+      "candidate_name": "titantpp_gru54",
+      "backbone_contract_id": "titantpp_cnn_gru_width16_v1",
+      "model_role": "observed_time_gru54_v1",
+      "base_encoder": "CountAwareTitanTPP",
+      "d_model": 64,
+      "n_layers": 2,
+      "n_heads": 4,
+      "d_ff": 128,
+      "memory_mode": "static_hard_lmm",
+      "persistent_mem_size": 16,
+      "lmm_mem_size": 64,
+      "lmm_topk": 4,
+      "static_retrieval_aggregation": "arithmetic_mean",
+      "static_key_value_tied": true,
+      "additional_parameter_count": 24732,
+      "quantity_objective": "count_only_log_regression",
+      "online_writes": false,
+      "removed_static_parameters": 0,
+      "static_retrieval_enabled": true,
+      "baseline_backbone": "titantpp_history_mlp_width16",
+      "correction_kind": "gru54",
+      "correction_latent_width": 54,
+      "correction_parameter_count": 24732,
+      "correction_insertion": "between_encoder_blocks",
+      "correction_divisor": 1,
+      "correction_eligibility": "observed_segment_count_at_least_two",
+      "correction_availability_lags": null,
+      "correction_context": "segment_prefix_recurrent",
+      "correction_state_scope": "sample_prefix_segment_forward_only",
+      "correction_padding": "skip_no_state_or_count_update",
+      "correction_withheld_valid": "reset_state_and_count_zero_correction",
+      "correction_initialization": "forked_default_input_recurrence_zero_output",
+      "gru_layers": 1,
+      "gru_unidirectional": true,
+      "gru_bias": true,
+      "gru_dropout": 0,
+      "gru_initial_state": "zero_per_prefix",
+      "cnn_enabled": false,
+      "cnn_layer": null,
+      "cnn_scope": null,
+      "cnn_kernel_size": null,
+      "cnn_channels": null,
+      "cnn_groups": null,
+      "cnn_bias": false,
+      "cnn_lags": null,
+      "cnn_initialization": null,
+      "cnn_parameter_count": 0,
+      "persistent_tokens_filtered": false,
+      "attention_reference_scope_changed": false,
+      "mutable_batch_context_cache": false,
+      "main_hidden_dim": 64,
+      "added_layer_norm": false,
+      "added_learned_scale": false,
+      "fixed_alpha": 1
+    },
+    "titantpp_cnn_gru54": {
+      "candidate_name": "titantpp_cnn_gru54",
+      "backbone_contract_id": "titantpp_cnn_gru_width16_v1",
+      "model_role": "observed_time_cnn_gru54_v1",
+      "base_encoder": "CountAwareTitanTPP",
+      "d_model": 64,
+      "n_layers": 2,
+      "n_heads": 4,
+      "d_ff": 128,
+      "memory_mode": "static_hard_lmm",
+      "persistent_mem_size": 16,
+      "lmm_mem_size": 64,
+      "lmm_topk": 4,
+      "static_retrieval_aggregation": "arithmetic_mean",
+      "static_key_value_tied": true,
+      "additional_parameter_count": 25308,
+      "quantity_objective": "count_only_log_regression",
+      "online_writes": false,
+      "removed_static_parameters": 0,
+      "static_retrieval_enabled": true,
+      "baseline_backbone": "titantpp_history_mlp_width16",
+      "correction_kind": "gru54",
+      "correction_latent_width": 54,
+      "correction_parameter_count": 24732,
+      "correction_insertion": "between_encoder_blocks",
+      "correction_divisor": 1,
+      "correction_eligibility": "observed_segment_count_at_least_two",
+      "correction_availability_lags": null,
+      "correction_context": "segment_prefix_recurrent",
+      "correction_state_scope": "sample_prefix_segment_forward_only",
+      "correction_padding": "skip_no_state_or_count_update",
+      "correction_withheld_valid": "reset_state_and_count_zero_correction",
+      "correction_initialization": "forked_default_input_recurrence_zero_output",
+      "gru_layers": 1,
+      "gru_unidirectional": true,
+      "gru_bias": true,
+      "gru_dropout": 0,
+      "gru_initial_state": "zero_per_prefix",
+      "cnn_enabled": true,
+      "cnn_layer": 0,
+      "cnn_scope": "event_qkv_after_projection_before_persistent_concat",
+      "cnn_kernel_size": 3,
+      "cnn_channels": 64,
+      "cnn_groups": 64,
+      "cnn_bias": false,
+      "cnn_lags": "current_lag1_lag2_observed_segment",
+      "cnn_initialization": "all_zero_residual_kernel",
+      "cnn_parameter_count": 576,
+      "persistent_tokens_filtered": false,
+      "attention_reference_scope_changed": false,
+      "mutable_batch_context_cache": false,
+      "main_hidden_dim": 64,
+      "added_layer_norm": false,
+      "added_learned_scale": false,
+      "fixed_alpha": 1
+    }
+  },
+  "arms": [
+    "titantpp_cnn_mlp16",
+    "titantpp_gru54",
+    "titantpp_cnn_gru54"
+  ],
+  "baseline_replays": {
+    "intermittent_frozen_5000": {
+      "checkpoint": "baselines/intermittent_frozen_5000/selected.pt",
+      "checkpoint_sha256": "2db7c7249094d4a263c89fb672762242d000c17904f6864fbc4cba00ff3d9389",
+      "initial_state_sha256": "c952d6a22ae02a2416334f83a8c5045e2bf522b815b2d117f0728bf8a952d129",
+      "metrics": {
+        "qty_rmse": 1.632469703163,
+        "qty_mae": 0.7139299066924563,
+        "time_nll": 0.35093554422663187
+      },
+      "selected_epoch": 5,
+      "origin_checkpoint": "reports/titantpp_completed_validation_test_20261004_v1/width16/original/intermittent_frozen_5000__42__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "origin_replay": "reports/titantpp_completed_validation_test_20261004_v1/width16/original/intermittent_frozen_5000__42__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_42/endpoint_replays.json",
+      "origin_replay_sha256": "63aca779e8577842ca1591582ea1964cc6e346587b91644fd2faa69080173d30",
+      "origin_source_bundle": "dual",
+      "seed": 42,
+      "baseline_backbone": "titantpp_history_mlp_width16"
+    },
+    "yellow_trip_hourly": {
+      "checkpoint": "baselines/yellow_trip_hourly/selected.pt",
+      "checkpoint_sha256": "3abb2360559f5b133d2caf81a0ef6db2ed8178023e3e67de61e7e02c6542614d",
+      "initial_state_sha256": "55d6312c4cdcb33212fd600530c116181c393317b9e70f34e52844138793d82d",
+      "metrics": {
+        "qty_rmse": 82.49911936207754,
+        "qty_mae": 26.75194131065724,
+        "time_nll": 0.6791508012510068
+      },
+      "selected_epoch": 27,
+      "origin_checkpoint": "reports/titantpp_width16_test_20261003_v1/original/yellow_trip_hourly__42__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "origin_replay": "reports/titantpp_width16_test_20261003_v1/original/yellow_trip_hourly__42__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_42/endpoint_replays.json",
+      "origin_replay_sha256": "2821f0d82fa93471ec92776f387c2d922e0c8ebe1db2256967e049e74b70b374",
+      "origin_source_bundle": "dual",
+      "seed": 42,
+      "baseline_backbone": "titantpp_history_mlp_width16",
+      "exposure": "baselines/yellow_trip_hourly/exposure.json",
+      "exposure_sha256": "37e82b5f035ac7b4d71791fac716007de149e3336a169669cb679b6c408c1738"
+    },
+    "raf_spare_parts": {
+      "checkpoint": "baselines/raf_spare_parts/selected.pt",
+      "checkpoint_sha256": "e48ec120baf2a806e2613a36dfca46444306d4595047f39442f4e47c8eb36adf",
+      "initial_state_sha256": "67d81c667d929a0b979d288ccd77556ceecd9df9d4fa349941ec58ccb84eb112",
+      "metrics": {
+        "qty_rmse": 33.98383138713944,
+        "qty_mae": 9.329765900724494,
+        "time_nll": 3.5558638276263737
+      },
+      "selected_epoch": 9,
+      "origin_checkpoint": "reports/titantpp_width16_test_20261003_v1/original/raf_spare_parts__42__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "origin_replay": "reports/titantpp_width16_test_20261003_v1/original/raf_spare_parts__42__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_42/endpoint_replays.json",
+      "origin_replay_sha256": "66f4f68fb9ccd4ecae85285c4c5af82e1a99f9b7a41af144b49c50f171ce8e22",
+      "origin_source_bundle": "dual",
+      "seed": 42,
+      "baseline_backbone": "titantpp_history_mlp_width16",
+      "exposure": "baselines/raf_spare_parts/exposure.json",
+      "exposure_sha256": "fb8202e19e430ef293c963d78fbba29433dcf808c187f149064316fc9a604896"
+    }
+  },
+  "cost": {
+    "total_cap_usd": 100,
+    "work_cap_usd": 33.0050935159,
+    "retrieval_cleanup_reserve_usd": 20,
+    "automatic_recharge": false,
+    "prior_attempt_cost_usd": 0,
+    "running_rate_usd_hour": 1.5969444444444445,
+    "budget_authorization": "explicit_new_campaign_user_authorization",
+    "provider_stop": "compute-stop request with persistent volume retained; owner manager SHA-retrieves originals before owned Pod stop/delete; request/readback/actual are distinct",
+    "authorized_work_cap_usd": 80,
+    "provider_stop_requested_iso": "2026-10-05T07:17:45.807408+00:00",
+    "provider_stop_requested_unix": 1791184665.8074076,
+    "provider_stop_readback_status": "not_exposed_by_creation_response",
+    "provider_stop_guaranteed": false,
+    "account_autopay_readback": "unknown",
+    "account_balance_is_not_Pod_billing": true
+  },
+  "dataset_sha256": {
+    "intermittent_frozen_5000": "4a2eaf203dbae195f2c633729b6cdf1b4e19da3de8657223485ea459e54cb3b7",
+    "yellow_trip_hourly": "7125ef63a0f75ef5fc67879502b25b0bd3b3a6a31c3d4c4a3dd9c04068356fbe",
+    "raf_spare_parts": "ce94d708fa3a7a7fad1337b491202ccb86c3918cb14ce482f7f67f8d51c397ae"
+  },
+  "datasets": [
+    {
+      "additional_history_boundaries": [
+        64,
+        128
+      ],
+      "dataset_id": "intermittent_frozen_5000",
+      "epochs": 300,
+      "expected_global_steps": 923100,
+      "history_boundaries": [
+        64,
+        128
+      ],
+      "inherited_data_identity": {
+        "data": {
+          "path": "/workspace/titantpp_cnn_gru_a100_seed42_20261004_v1/data/intermittent_frozen_5000/intermittent_frozen_5000_with_split.parquet",
+          "sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f"
+        },
+        "populations": {
+          "train": {
+            "target_count": 393824,
+            "target_identity_sha256": "fb8737489bc18e528adc322e2e55e26fcc5793aa6ff8021d93ceac98d7768aed",
+            "target_quantity_sha256": "c4a9c3721d3861c190e81abe35156488f545b00c8ddbbed4022a9a82a4b3a215"
+          },
+          "validation": {
+            "target_count": 86285,
+            "target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+            "target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385"
+          }
+        },
+        "split_manifest": {
+          "path": "/workspace/titantpp_cnn_gru_a100_seed42_20261004_v1/data/intermittent_frozen_5000/intermittent_frozen_5000_split_manifest.json",
+          "sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04"
+        }
+      },
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 520,
+        "max_seq_len": 256,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "model": {
+        "hidden_dim": 64,
+        "lambda_log_qty": 1.0,
+        "lambda_tail": 0.0,
+        "quantity_variant": "count_only_log_regression",
+        "time_head_lr_multiplier": 1.0,
+        "time_head_mode": "heteroscedastic_lognormal_duration",
+        "time_initial_location": -0.21389036220110552,
+        "time_initial_scale": 0.6816420108412236,
+        "time_observation_contract": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "week"
+        },
+        "time_scale": 3.0,
+        "time_sigma_floor": 0.001
+      },
+      "optimizer": {
+        "grad_clip": 1.0,
+        "lr": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.01
+      },
+      "potentially_active_lags": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        32,
+        64,
+        128
+      ],
+      "quantity_boundaries_all_train_rows": [
+        2,
+        31,
+        46,
+        187
+      ],
+      "statistics": {
+        "all_train_quantity_sha256": "785526474507af840bc5a7e7f4baef1322c4e61b9d0cfa24be109f25efb55be5",
+        "initialization_policy": "use original frozen B mu/std after verifying recalculation; no refitted replacement",
+        "raw_scale": 36.878211774114746,
+        "recomputation_absolute_tolerance": 1e-12,
+        "train_log_mean": 1.821123902075507,
+        "train_log_std": 1.2853917394914367
+      },
+      "steps_per_epoch": 3077,
+      "time_statistics": {
+        "expected_train_target_dt_sha256": "2f4a67cff3706611e45a1855a50efa21aa7e75b1b9dda05c6bae04fdbbe3e684",
+        "expected_train_targets": 393824,
+        "expected_validation_target_dt_sha256": "5ac9547d2fcbcb8f9e5394a88fc379d1c895683db8ea96b7ed6009d374eddea7",
+        "expected_validation_targets": 86285,
+        "recompute_absolute_tolerance": 1e-12,
+        "recompute_before_training": true,
+        "train_log_scaled_mean": -0.21389036220110552,
+        "train_log_scaled_std": 0.6816420108412236,
+        "train_time_scale": 3.0
+      },
+      "window_limitation": "Existing maximum sequence includes the target. Availability still depends on each actual observed history; unavailable branches remain inactive in BOTH new arms.",
+      "prepared_train_validation_path": "/workspace/titantpp_cnn_gru_a100_seed42_20261004_v1/data/intermittent_frozen_5000/intermittent_frozen_5000_with_split.parquet",
+      "data_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f"
+    },
+    {
+      "additional_history_boundaries": [
+        64,
+        128
+      ],
+      "dataset_id": "yellow_trip_hourly",
+      "epochs": 300,
+      "expected_global_steps": 90000,
+      "history_boundaries": [
+        64,
+        128
+      ],
+      "inherited_data_identity": {
+        "data": {
+          "path": "/workspace/titantpp_cnn_gru_a100_seed42_20261004_v1/data/yellow_trip_hourly/yellow_trip_hourly_with_split.parquet",
+          "sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46"
+        },
+        "populations": {
+          "train": {
+            "target_count": 38393,
+            "target_identity_sha256": "fc6453af5a9a34c93dd3f299cd545c9ab946be11752ee001f38055e52cc9e637",
+            "target_quantity_sha256": "bbabe4e040831f05bc96680afdb4c45a1856673e418bdd1db9495cda3f693680"
+          },
+          "validation": {
+            "target_count": 8268,
+            "target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+            "target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd"
+          }
+        },
+        "split_manifest": {
+          "path": "/workspace/titantpp_cnn_gru_a100_seed42_20261004_v1/data/yellow_trip_hourly/yellow_trip_hourly_split_manifest.json",
+          "sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85"
+        }
+      },
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 168,
+        "max_seq_len": 256,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "model": {
+        "hidden_dim": 64,
+        "lambda_log_qty": 1.0,
+        "lambda_tail": 0.0,
+        "quantity_variant": "count_only_log_regression",
+        "time_head_lr_multiplier": 1.0,
+        "time_head_mode": "heteroscedastic_lognormal_duration",
+        "time_initial_location": 0.2357508697949888,
+        "time_initial_scale": 0.5898045019331329,
+        "time_observation_contract": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "hour"
+        },
+        "time_scale": 1.0,
+        "time_sigma_floor": 0.001
+      },
+      "optimizer": {
+        "grad_clip": 1.0,
+        "lr": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.01
+      },
+      "potentially_active_lags": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        32,
+        64,
+        128
+      ],
+      "quantity_boundaries_all_train_rows": [
+        7,
+        686,
+        1562,
+        3449
+      ],
+      "statistics": {
+        "all_train_quantity_sha256": "b6090245dd4b69e5b23bfde51a64bbecea3030245760ddd355b333714fdeab53",
+        "initialization_policy": "use original frozen B mu/std after verifying recalculation; no refitted replacement",
+        "raw_scale": 685.6777796861172,
+        "recomputation_absolute_tolerance": 1e-12,
+        "train_log_mean": 2.837734592747447,
+        "train_log_std": 2.1840596349132664
+      },
+      "steps_per_epoch": 300,
+      "time_statistics": {
+        "expected_train_target_dt_sha256": "3fb47361f8fa9a9edcf01cbb8d95cd0ee105024f1f0cd614f2d2fbe292d3f9aa",
+        "expected_train_targets": 38393,
+        "expected_validation_target_dt_sha256": "8a008bf3b74cd4e39128908cc358c1d482f4a499388234461c0c772f84c222bf",
+        "expected_validation_targets": 8268,
+        "recompute_absolute_tolerance": 1e-12,
+        "recompute_before_training": true,
+        "train_log_scaled_mean": 0.2357508697949888,
+        "train_log_scaled_std": 0.5898045019331329,
+        "train_time_scale": 1.0
+      },
+      "window_limitation": "Existing maximum sequence includes the target. Availability still depends on each actual observed history; unavailable branches remain inactive in BOTH new arms.",
+      "prepared_train_validation_path": "/workspace/titantpp_cnn_gru_a100_seed42_20261004_v1/data/yellow_trip_hourly/yellow_trip_hourly_with_split.parquet",
+      "data_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46"
+    },
+    {
+      "additional_history_boundaries": [
+        64,
+        128
+      ],
+      "dataset_id": "raf_spare_parts",
+      "epochs": 300,
+      "expected_global_steps": 60600,
+      "history_boundaries": [
+        64,
+        128
+      ],
+      "inherited_data_identity": {
+        "data": {
+          "path": "/workspace/titantpp_cnn_gru_a100_seed42_20261004_v1/data/raf_spare_parts/train_validation.parquet",
+          "sha256": "d805cad0242078fedfbb87eed18bde9b73d37bfc9b93c6b75aac49087244efa2"
+        },
+        "populations": {
+          "train": {
+            "target_count": 25779,
+            "target_identity_sha256": "9863e00d51357456e1bf53c0f82f17a867cbbaaf9f296064d1ae23c4392895b2",
+            "target_quantity_sha256": "abbb37aab32b35b029b8705fe6044bd3ed5e8b7239822d40ba7572d0ab6fae22"
+          },
+          "validation": {
+            "target_count": 6690,
+            "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+            "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+          }
+        },
+        "split_manifest": {
+          "path": "/workspace/titantpp_cnn_gru_a100_seed42_20261004_v1/data/raf_spare_parts/split_manifest.json",
+          "sha256": "3cd6204667de4e44eda8787d32845bebff7624e1bb255ffd7677f810b8d7b149"
+        }
+      },
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 84,
+        "max_seq_len": 84,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "model": {
+        "hidden_dim": 64,
+        "lambda_log_qty": 1.0,
+        "lambda_tail": 0.0,
+        "quantity_variant": "count_only_log_regression",
+        "time_head_lr_multiplier": 1.0,
+        "time_head_mode": "heteroscedastic_lognormal_duration",
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_observation_contract": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "time_scale": 6.0,
+        "time_sigma_floor": 0.001
+      },
+      "optimizer": {
+        "grad_clip": 1.0,
+        "lr": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.01
+      },
+      "parent_data_identity": {
+        "data": {
+          "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_with_split.parquet",
+          "sha256": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d"
+        },
+        "split_manifest": {
+          "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_split_manifest.json",
+          "sha256": "cd2458aa3809014aa74b8a121572a74e3d86dc520a690335d79a1e5150899e27"
+        }
+      },
+      "potentially_active_lags": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        32,
+        64
+      ],
+      "quantity_boundaries_all_train_rows": [
+        2.0,
+        30.0,
+        60.0,
+        200.0
+      ],
+      "statistics": {
+        "all_train_quantity_sha256": "dfa47b1848a9dd7e57f0115c22dcd6628f164849d92bdfb217834da3a34b1a6d",
+        "initialization_policy": "derive once from RAF train only; shared across models/seeds",
+        "raw_scale": 54.02472556614234,
+        "recomputation_absolute_tolerance": 1e-12,
+        "train_log_mean": 1.697903161487293,
+        "train_log_std": 1.1687925850626832
+      },
+      "steps_per_epoch": 202,
+      "time_statistics": {
+        "expected_train_target_dt_sha256": "e8f8e6047734a7ec61780dfd981eb2e1c3c19b03fa2bb8f711b5cbaa791c6a8d",
+        "expected_train_targets": 25779,
+        "expected_validation_target_dt_sha256": "c059684ffaf11e4f5a25b8c357d8c05fe1bba95de2fea32c76a0ab87cc5eb17b",
+        "expected_validation_targets": 6690,
+        "recompute_absolute_tolerance": 1e-12,
+        "recompute_before_training": true,
+        "train_log_scaled_mean": -0.08887296773528319,
+        "train_log_scaled_std": 0.9589506323759867,
+        "train_time_scale": 6.0
+      },
+      "window_limitation": "Existing maximum sequence includes the target. Availability still depends on each actual observed history; unavailable branches remain inactive in BOTH new arms.",
+      "prepared_train_validation_path": "/workspace/titantpp_cnn_gru_a100_seed42_20261004_v1/data/raf_spare_parts/train_validation.parquet",
+      "data_sha256": "d805cad0242078fedfbb87eed18bde9b73d37bfc9b93c6b75aac49087244efa2"
+    }
+  ],
+  "design_sha256": "ac5b45440d908d5021c7dbddd11b36be7df1223fc2832a362a829f2cee0d787c",
+  "evaluation_scope": "validation_only",
+  "held_out_test_evaluated": false,
+  "hosts": {
+    "a100": {
+      "environment": {
+        "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+        "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+        "CUDA_VISIBLE_DEVICES": "0",
+        "LD_LIBRARY_PATH": "/workspace/titantpp_cnn_gru_a100_seed42_20261004_v1/venv/lib/python3.12/site-packages/nvidia/cu13/lib",
+        "MKL_NUM_THREADS": "2",
+        "MPLCONFIGDIR": "/workspace/titantpp_cnn_gru_a100_seed42_20261004_v1/cache/mpl",
+        "NVIDIA_TF32_OVERRIDE": "0",
+        "OMP_NUM_THREADS": "2",
+        "OPENBLAS_NUM_THREADS": "2",
+        "POLARS_MAX_THREADS": "2",
+        "PYTHONHASHSEED": "42",
+        "SOURCE_REVISION": "38fcc58e45f39fdaf6ee8560f99a88a2b10e6e18",
+        "PYTHONPATH": "/workspace/titantpp_cnn_gru_a100_seed42_20261004_v1/source"
+      },
+      "gpu_type": "NVIDIA A100-SXM4-80GB",
+      "gpu_uuid": "GPU-92df247f-f64b-6118-bdaa-0d5d21e63add",
+      "output_dir": "/workspace/titantpp_cnn_gru_a100_seed42_20261004_v1/run",
+      "python": "/workspace/titantpp_cnn_gru_a100_seed42_20261004_v1/venv/bin/python",
+      "root": "/workspace/titantpp_cnn_gru_a100_seed42_20261004_v1",
+      "runtime_expected": {
+        "cuda": "13.0",
+        "cudnn": 91900,
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "torch": "2.11.0+cu130"
+      },
+      "source_root": "/workspace/titantpp_cnn_gru_a100_seed42_20261004_v1/source",
+      "tmux": "titantpp_cnn_gru_a100_seed42_20261004_v1",
+      "tmux_binary": "/usr/bin/tmux",
+      "assigned_datasets": [
+        "yellow_trip_hourly",
+        "raf_spare_parts",
+        "intermittent_frozen_5000"
+      ]
+    }
+  },
+  "jobs": [
+    {
+      "id": "yellow_trip_hourly__42__titantpp_cnn_mlp16",
+      "host": "a100",
+      "dataset": "yellow_trip_hourly",
+      "seed": 42,
+      "arm": "titantpp_cnn_mlp16"
+    },
+    {
+      "id": "raf_spare_parts__42__titantpp_cnn_mlp16",
+      "host": "a100",
+      "dataset": "raf_spare_parts",
+      "seed": 42,
+      "arm": "titantpp_cnn_mlp16"
+    },
+    {
+      "id": "intermittent_frozen_5000__42__titantpp_cnn_mlp16",
+      "host": "a100",
+      "dataset": "intermittent_frozen_5000",
+      "seed": 42,
+      "arm": "titantpp_cnn_mlp16"
+    },
+    {
+      "id": "yellow_trip_hourly__42__titantpp_gru54",
+      "host": "a100",
+      "dataset": "yellow_trip_hourly",
+      "seed": 42,
+      "arm": "titantpp_gru54"
+    },
+    {
+      "id": "raf_spare_parts__42__titantpp_gru54",
+      "host": "a100",
+      "dataset": "raf_spare_parts",
+      "seed": 42,
+      "arm": "titantpp_gru54"
+    },
+    {
+      "id": "intermittent_frozen_5000__42__titantpp_gru54",
+      "host": "a100",
+      "dataset": "intermittent_frozen_5000",
+      "seed": 42,
+      "arm": "titantpp_gru54"
+    },
+    {
+      "id": "yellow_trip_hourly__42__titantpp_cnn_gru54",
+      "host": "a100",
+      "dataset": "yellow_trip_hourly",
+      "seed": 42,
+      "arm": "titantpp_cnn_gru54"
+    },
+    {
+      "id": "raf_spare_parts__42__titantpp_cnn_gru54",
+      "host": "a100",
+      "dataset": "raf_spare_parts",
+      "seed": 42,
+      "arm": "titantpp_cnn_gru54"
+    },
+    {
+      "id": "intermittent_frozen_5000__42__titantpp_cnn_gru54",
+      "host": "a100",
+      "dataset": "intermittent_frozen_5000",
+      "seed": 42,
+      "arm": "titantpp_cnn_gru54"
+    }
+  ],
+  "limits": {
+    "automatic_retry": false,
+    "concurrency_candidates": [
+      1,
+      3
+    ],
+    "first_two_epochs": "Same-fit first2epoch 300epoch projection is warning only. Per-fit deadline is min(36h, actual allocation deadline); campaign is bounded by cost, existing credit and48h. No retry/resume or budget expansion.",
+    "minimum_free_bytes": 5368709120,
+    "per_condition_seconds": 74403.55052471161,
+    "qualification_seconds": 5400,
+    "total_wall_seconds": 74403.55052471161,
+    "max_workers": 3,
+    "initial_workers": 1,
+    "max_device_memory_fraction": 0.8
+  },
+  "quantity_variants": {
+    "titantpp_cnn_mlp16": "count_only_log_regression",
+    "titantpp_gru54": "count_only_log_regression",
+    "titantpp_cnn_gru54": "count_only_log_regression"
+  },
+  "reporting": {
+    "single_seed_exploratory": true,
+    "three_seed_conclusion": false,
+    "heterogeneous_gpu_provenance": true,
+    "efficiency_claim": false,
+    "primary": "full_validation_raw_quantity_RMSE_at_first_minimum",
+    "secondary_same_epoch": [
+      "quantity_MAE",
+      "tail_raw_quantity_RMSE",
+      "time_NLL"
+    ],
+    "unfavorable_results_preserved": true
+  },
+  "roles": {
+    "titantpp_cnn_mlp16": "observed_time_cnn_mlp16_v1",
+    "titantpp_gru54": "observed_time_gru54_v1",
+    "titantpp_cnn_gru54": "observed_time_cnn_gru54_v1"
+  },
+  "schema": "titantpp_cnn_gru_a100_seed42_v1",
+  "source": {
+    "base_git_revision": "38fcc58e45f39fdaf6ee8560f99a88a2b10e6e18",
+    "files": {
+      "data_loader/event_seq_data_module.py": "7c11d9ace6c4e4d3bb03861aae92393aa946a38452d702dc7625210b339897ca",
+      "models/TPPs/CountAwareAdditionalTPP.py": "076aebc2618d10bc1ebb558dc7630c35d951c5e417802e8fc0327b8c47cbc72e",
+      "models/TPPs/CountAwareFactory.py": "9f039520a11638bef417890abf9055a3fb3115f5ebb85b54b8640575fb8e9246",
+      "models/TPPs/CountAwareTHPStaticMemory.py": "44fcc1717ca5f19eef36386e8531a3423d7a3444d39f4e462e12c14f98c4b8ee",
+      "models/TPPs/CountAwareTPP.py": "9348e4ad18aea3c12e532cf1403fecd5f8a7af2d932f9c1019ddd8b3b48e4c1c",
+      "models/TPPs/CountAwareTitanActiveBranchNorm.py": "14ebe590a4190276fd789bb2608520d14e031c79e98afe08511fef4aeb13d7e9",
+      "models/TPPs/CountAwareTitanBoundedQK.py": "b0139d409801c4bf184954f393f15d2f3d06f725009621c3e5b95b5ef2aed2a0",
+      "models/TPPs/CountAwareTitanCNNGRU.py": "9d1bcf6c754cbf6216e4929f832d08af60ccf02573edd3b6c1c7a2088115dfc3",
+      "models/TPPs/CountAwareTitanCausalQKV.py": "402f48187658401371ccadf0bf6ba2dc3413e1442a94d837562dac6b5d5bba68",
+      "models/TPPs/CountAwareTitanCoreAblation.py": "b34b61aadc7a2c91e000493caf2497fc89549a499082ca77ebbc3ed7cab2b120",
+      "models/TPPs/CountAwareTitanHistoryControls.py": "60ce1ea2675e9f516f3d09663d893a39e4825ede5a2ab5a703779dcb158e640b",
+      "models/TPPs/CountAwareTitanHistoryWidth.py": "2a903290810070bdfe72a355a98ff09790b02858a6853e94a7a4a87336afc6f7",
+      "models/TPPs/CountAwareTitanInterLayerMemory.py": "0f78c8919e11e9efa1d5402bc46c23074d2cf8833cf9cc90c104c8c6b122637a",
+      "models/TPPs/CountAwareTitanLevelHistoryQKV.py": "f4398a442c7872b158039f2346bc18ce5df5b89de97ec4c1c4a0f9291ad136e0",
+      "models/TPPs/CountAwareTitanLocalGate.py": "3f235b761b33f7367cfbc5303f320d23b0cd97bad121903a67ae06de358f7b30",
+      "models/TPPs/CountAwareTitanMLPCandidates.py": "eb88a42aa092bb173ccbf0139a1a8469542e5a4cb5f25fd23b098d60f2ca841a",
+      "models/TPPs/CountAwareTitanMemoryFiLM.py": "fdcdea9cf6fc1b7b47c0afa88609c1af4575ebf98f7eb2fcecb431ff8c3ecbfd",
+      "models/TPPs/CountAwareTitanMultiLagDetail.py": "4bcbecdadf921df21a4e7fb379962eb4ecec2cfeb2f8ff1edccbb6b418807eae",
+      "models/TPPs/CountAwareTitanNonlinearEpisodeMemory.py": "990665850a4d0367da1b82fcc7ddb8e53babdeff864d48df11083f450fa19cdc",
+      "models/TPPs/CountAwareTitanPairMessage.py": "79c1e7f1da3b22f6a3bbaf606e5e915ff1eab39e2adc849c472c58f1a562508e",
+      "models/TPPs/CountAwareTitanSlotMemory.py": "e9868579089adf9d47d7483bf2a6b912dad8beb8b5b6936ce0e0af85f10d7c32",
+      "models/TPPs/CountAwareTitanStateTransport.py": "9e6e1d7ef30af63f993fb005bfe18c7146288981a1179ce9ede2ea79521c48a0",
+      "models/TPPs/CountAwareTitanSuccessorMemory.py": "0616885eb8318f1823734b91563f2d261a9916f0d33ea9b7d57d6e1f0ae60ffb",
+      "models/TPPs/CountAwareTitanTaskRoutedMemory.py": "c94ce1c29de676af5d5655ba4f05fc238b991052eeaaffd74af23b58d6c0a333",
+      "models/TPPs/CountAwareTitanValueNorm.py": "1de961d90d771737ce7e5d1e81bfa7e1487b7540a90ee2af1bfc2109e946844a",
+      "models/TPPs/DeepRenewalEvent.py": "9fd80299c317be1c95321de8064677c6154d953a6841eea6a5a6523fb3826066",
+      "models/TPPs/NeuralHawkesTPP.py": "75162651b5d0ad87f7418805df0d7b743fe77d256225351b68e02cfbf7c5cbdd",
+      "models/TPPs/RMTPP.py": "e4160e45c588d9af5eba2ee5c27ef58f0311716555786198c332cc77cb5886ea",
+      "models/TPPs/SelfAttentiveHawkesTPP.py": "91360a0c2e1ffde346bc90803beabaa88e909db7d05161062170d6de87b4bde6",
+      "models/TPPs/TitanTPP.py": "5381faad10d7782af40abf028aa0b79894e224d61c82af9680a0d9bac410c37c",
+      "models/TPPs/TransformerHawkesTPP.py": "a74cbb43bd1d47d541bb903dfcdf336ef8647ec489fd5b776da27aa2a7eb3f77",
+      "models/TPPs/__init__.py": "2909671196619588e5ab66b1913a319643a03dad4487397647d6939526b22e15",
+      "models/TPPs/config.py": "6a3cb4d1bbb9f6fab62a2e3bbc4bd87d05a7b8f240e9a82b8ff7534f8632d840",
+      "models/TPPs/magnitude_normalization.py": "c665e3d93ca2dee07d4d5454e6265decd3f9dfa7f13a0208e39dbd9af90c57d4",
+      "models/TPPs/marker_losses.py": "e53308193868191783f8ab5cecb85c024eb668895d6239d8b289c6aacd3ab08d",
+      "models/TPPs/positive_integer_time.py": "783113642d897aaed3da1213fc91fb993ee71af380f953a1159142a1cda8ae59",
+      "models/TPPs/value_conditioning.py": "00548cd6b0f30e44f39fe9ac4c3ec110a056d20bc13aefeeb8e659fc7d89cd3a",
+      "models/TPPs/vendor/__init__.py": "b07f98546bb713a7ffadbd0dd33ec716792c89b11fdf86ac08c7b7c5b4cfcea6",
+      "models/TPPs/vendor/attnhp/LICENSE": "6011182cdbe91e36564c5585fe9503935f424537b169a29c611a3a176bc068a4",
+      "models/TPPs/vendor/attnhp/__init__.py": "b07f98546bb713a7ffadbd0dd33ec716792c89b11fdf86ac08c7b7c5b4cfcea6",
+      "models/TPPs/vendor/attnhp/xfmr.py": "e55258fc1c409ca3036349e3755a41d1a307e6ef1af71c4462eb5667cee528ed",
+      "models/TPPs/vendor/s2p2/LICENCE": "4bf3627d7557be3a023228df316f5c6a9951eb5f6007643240c3aa316688c8be",
+      "models/TPPs/vendor/s2p2/NOTICE": "63069aa792e8e63bd9b50244011532a29281ad94c5b7085f25e095b8e00c063e",
+      "models/TPPs/vendor/s2p2/__init__.py": "b07f98546bb713a7ffadbd0dd33ec716792c89b11fdf86ac08c7b7c5b4cfcea6",
+      "models/TPPs/vendor/s2p2/initializers.py": "7d488746f391c9295e8db7d244df9b8301dc35058567a123aab225447278cc18",
+      "models/TPPs/vendor/s2p2/models.py": "ecefc9bf88e8f3c8ceade57bf6696a60b9ccb343ee60b50a97c9453ac823b25d",
+      "models/Titan/Titans.py": "2efda26d97492f43bf19dc9778ff4d4fcbf24ccf010645b90a5396c324c8183f",
+      "models/Titan/__init__.py": "a8147804206ab500c7adeeeaf194c82447ead4d332b2959f8ed8e3692793c1a7",
+      "models/Titan/backbone.py": "f3531234235a9f50de05cf36c80b0a742a45709145d49555440249c814a20e98",
+      "models/Titan/common/__init__.py": "f301d6cf6edcc7804363d3c9e1c5ef22ec6fbead856aac7d4ec2bcef0508dc88",
+      "models/Titan/common/configs.py": "6a0d804214639629e05320cded343368f83e95f34935fc71588bafc45a5027e7",
+      "models/Titan/common/decoder.py": "361d17156c7f8a0596df4857657a46bd4d79eb88d34eaa0f871abffa730a9354",
+      "models/Titan/common/elapsed_age.py": "fb04e96ea180974e306c5688ef4b51c5b615a516d671edd472c0049d3f1e651d",
+      "models/Titan/common/key_value_memory.py": "a0360ed1e18cc89da2de0f08852b6ca980b5fd05bf4fe5559163e685ed4598de",
+      "models/Titan/common/memory.py": "405ccbfa900b877250c6f1c5a4c6652f46e0a500303cea35a5c6cc7cac02af36",
+      "models/Titan/common/titans_mac.py": "9436fea650c66025fceb7aebb820941176f2c10c80e47d61c55555d8430e0ab1",
+      "models/Titan/common/titans_memory_stability.py": "d7681b65e65f239377d174596b970d5509de075a9f03a5d34c001c7801031e86",
+      "models/Titan/common/tpp_gated_memory.py": "4d77851c904a46117eb5968c602c6e91c87f7bc061f90816b9f941775b818263",
+      "models/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "models/common_layers/RevIN.py": "f20fb6a9664568a5715ece23ed4f745435b30e60c69557afa8baae8255154a89",
+      "models/common_layers/__init__.py": "8fd4cb66926a1cd633c3201645f8dbc63e02a53d91bcec893c6d8b4930244f35",
+      "paper/scripts/count_aware_tpp_backbone/__init__.py": "cd25af65061351f0ca7c46d143361bbe9528ea755c6a3f09dbffdd5f188412bb",
+      "paper/scripts/count_aware_tpp_backbone/constants.py": "6341503f26ec52337d899ccd9d200f7c7940428477eb708ba193931db8c7672e",
+      "paper/scripts/count_aware_tpp_backbone/core.py": "c5cc72a265a05199868332c9beaa32ce9568afaf5f4cfa0930b836215ab36084",
+      "paper/scripts/count_aware_tpp_backbone/datasets.py": "0a2982d92a21d6dd0518adba5e631d40cf2222c9eb9ee476d861b27211623274",
+      "paper/scripts/count_aware_tpp_backbone/observed_time.py": "d3e34a2826ef1339d6692f199431cd122ce8d654871470ef0456079f92c01f26",
+      "paper/scripts/count_aware_tpp_backbone/reporting.py": "4764b790352b6a84a4efa9df9b17e3ad948534779539bf87422af7d8c06825c6",
+      "paper/scripts/count_aware_tpp_backbone/thp_static_contract.py": "96919909906c1fec5b447234dfc77612a43f6b62ab64bca31185a6480f0fc490",
+      "paper/scripts/count_aware_tpp_backbone/training.py": "964ed6fb569acad9d1da0887398da7c770724623277ed688a4e841af4285f6ab",
+      "paper/scripts/evaluate_titantpp_history_width.py": "6de7f1f6c16700efa439a97625c2c669736d1fe66889551175ce5d9e5d997c69",
+      "paper/scripts/local_detail_benchmark_contract.py": "55e68f824f4c564267fec3e0c6235be467554e4baa9239674a93125fa77daccf",
+      "paper/scripts/local_detail_instacart_remaining_contract.py": "c66e97328d333e1082d94295aad3b1a80367f3154e9e6f9b0e147c5e11ddb504",
+      "paper/scripts/local_detail_instacart_replication_contract.py": "3d4ad3869506f908573e94828ce59e6607cc7bb0c1f90a32363598f32cf52b55",
+      "paper/scripts/local_detail_replication_contract.py": "48f57d041c33ab90e3fd3d3d285ac21938fc01c09dd823a916a7e83fcbcc401d",
+      "paper/scripts/mixed_quantity_objective.py": "f52a7fb8050479990c951ccbe4ac3548988a560049cf528731ed6672fc052396",
+      "paper/scripts/observed_slot_parallel_common.py": "5e624ba8ba457fb89a42c159969aada36f8c1e2b83a7073ee27409966b6a21ba",
+      "paper/scripts/prepare_multilag_detail_execution.py": "583d0bc5452843751385a674336a048de83addccb171f8363bfc136460dee76c",
+      "paper/scripts/quantity_comparison_data.py": "8adb418f1417625a23e5af7f247bfce10cf5fdd3c947ad0b17d7a4b8b79b76b1",
+      "paper/scripts/quantity_comparison_engine.py": "a4eb605d7f4f3c27bbc87fd10facb9b3393b44075342c2f1ea55545275fde5fc",
+      "paper/scripts/quantity_comparison_runtime.py": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+      "paper/scripts/quantity_objective_comparison.py": "8c89aba1a3c9f410aa9f14144240fb5a19b2fb5912ebfbf4bd9f053308c4782f",
+      "paper/scripts/raw_aux_gradient_control.py": "97115734829f4200ea61eae6c9bba9367d46c10789a15703ab51b55dbedfea2c",
+      "paper/scripts/run_count_aware_tpp_backbone_control.py": "016d6ae1e5d4bcc77065e7a6b856b14ee1e1dc2acb4ecfbe2ab266e851a2b36c",
+      "paper/scripts/run_hard_lmm_frozen_lognormal_duration.py": "c3bb9a6afb87dfa21c9b49af50a7a4b38b640871ec0bd8ba28ef1f098cf984e6",
+      "paper/scripts/run_hard_lmm_time_head_refit.py": "a1b7774266649bf4204e279147cdc5cb6801abec96ab75e65efaad1718eff65f",
+      "paper/scripts/run_intermittent_log_backbone_control.py": "eb8fd2aba200a48963efc22bf03f2c66f87a9def59a99c0a0261abf133b98ad4",
+      "paper/scripts/run_local_detail_benchmark.py": "31b84f4418fc799927c3d3943cfda385d50afd5ae235310dd1d84ebbb9063e2c",
+      "paper/scripts/run_multilag_detail_execution.py": "1083e19d7076a45668b2d447f2cb76f5cbcbfe01904bfda3d3e0582a1e263aea",
+      "paper/scripts/run_observed_slot_partition.py": "bade0da82038c68564c2543eb18536531bc614fcd6808aaa69a1fa0a20fddb56",
+      "paper/scripts/run_pakdd_extension.py": "499a6b3bafefd2c9eb0f27f8d0ed247acdb80a10795839e6c93a3d99dfbecd3a",
+      "paper/scripts/run_quantity_comparison.py": "56fc8303e55893a5295daf78767552fa91d4a9a9df2280a8f6977617ae62288d",
+      "paper/scripts/run_taxi_log_backbone_control.py": "7d3003455eb8aee97eff0120a2c043f93a74981cc0de0a81d9a95f93a99e1767",
+      "paper/scripts/run_taxi_quantity_interface_ablation.py": "32630140f939b1e8e2287893b7705b1d3ec6e9f67644c5f9477c0ef979890801",
+      "paper/scripts/run_time_quantity_diagnostic.py": "01287ef81df060228cf821d181545581dda4184f5c85aaaa74b74e1e35c39309",
+      "paper/scripts/run_titantpp_cnn_gru.py": "662fa6707fff4f78f117b7dea07c5dadccc5535deaaf440373271243692474cc",
+      "paper/scripts/run_titantpp_core_ablation.py": "7f38d9f074ac8096a6e7cec2d96d52d3ea9f601350b8c4e40020b2da17661236",
+      "paper/scripts/run_titantpp_history_capacity_campaign.py": "e212bc6ca87f3f4d97951e706730c873cf513033719ba7f59f80382765e4aee1",
+      "paper/scripts/run_titantpp_history_width.py": "dc886b3c8d221ae29df63ccc731e4155b665666fd9feb1175da8e108cb88c900",
+      "paper/scripts/run_titantpp_history_width_campaign.py": "cb1eb0412781181dee967ac6af81afec3caa2ce647416b196f2c44749303a6f4",
+      "paper/scripts/time_quantity_diagnostic.py": "b0dc1deecc47c016846dc4475b6bde78b0da90ae6c7bca4e522896567d0d9006",
+      "paper/scripts/verify_local_detail_benchmark.py": "faa01e92921d962aa38edd1e0af1513367ab2e56e029d48f0f24ac1d65221872",
+      "paper/scripts/verify_multilag_detail_cost.py": "17a6750a74e7033badc0933965dfafddbc1cbed1ef8b0148353d09fae63b4000",
+      "paper/scripts/verify_pakdd_extension.py": "5b8a8040d7fb01e18bfb16e17107a704c720da1fe08eee6573fd2eb4c42780b0",
+      "simple_lab_test/__init__.py": "dc0691a4d210ba2dafdde7391d031f36d1dede90787b3aeb337996d685b13018",
+      "simple_lab_test/common/__init__.py": "60dc453d86fcb7bd779a57630d905cdec8cabbb5f1724fec6f4f3e12fcb2eaf2",
+      "simple_lab_test/common/pathing.py": "f3e6e8832f12bd0fef0fd9b7a23a4f5d16626581e54ebeeb10f4f965f8e2f1c1",
+      "simple_lab_test/search/__init__.py": "5dd6d1d5f3d9e15602c88db89d67fc8677bdd43ef78b61a016db6ff5b881f80c",
+      "simple_lab_test/search/common/__init__.py": "e2eb9c6b87702fc16abfcd51e691074277ee278f66b6c674ec54d6e882726541",
+      "simple_lab_test/search/common/benchmark_utils.py": "b3c089da98df5205b36e6aa021b03e8b9b13f6b26281e07d957a0237864ffe7f",
+      "simple_lab_test/search/common/configs.py": "eb241c11d765c66d86aa3f58a0a72d907769a905fe6c3a923e5f8c70abd793f3",
+      "simple_lab_test/search/common/experiment_utils.py": "a06e45ea43e722f55ecaec1ad5915b96fbd47926afbce617c1bb22114fe4836e",
+      "simple_lab_test/search/common/models.py": "71ccb45b17cf64b0a9641a7f75d27279324dbe7a5b095221ad4bac6cc6761c7b",
+      "simple_lab_test/search/common/runner.py": "a1fc687455b768ed454878cda55cf2d1b43cdb13817880a4cf3fbca9c7db8739",
+      "utils/magnitude_pipeline.py": "f18450b89a386501c88d6a99b55ef72ff0b50cc7c4a16fef9d713744e2100f98",
+      "utils/mark_utils.py": "945a7bfb98f0dcd7af0911d7d4b06f43268116b72a3786d8a5b6e1a572e5599b",
+      "utils/tpp_simulation.py": "5e01d477d77388e3686bcaf972644548b6d0c0735e3cc6e9a7618ba5ae2f984b",
+      "utils/training.py": "22c79c91cb672200057f1e80a6ca995c816b3722dd253d4b90f1ccd5795e276e"
+    },
+    "files_sha256": "40184c7ff418f35b191ebfa309e462b9e88889443f36e4722cc5d06988d182cd",
+    "CPU_implementation_manifest_sha256": "9e243974ecd399fe56d1f7730808eb0b478497f00a957249f6de32c67146172d",
+    "parent_campaign": "titantpp_history_width8_12_dual_20261004_v1",
+    "active_campaigns_modified": false
+  },
+  "training": {
+    "batch_size": 128,
+    "maximum_epochs": 300,
+    "minimum_epochs": 40,
+    "monitor": "validation_raw_quantity_rmse",
+    "patience": 40,
+    "tie": "strict_earliest_finite_minimum",
+    "warm_start": false
+  },
+  "approved_scope": "User: A100 SXM; exclude Instacart; Intermittent RAF Taxi; single seed42; later5080continuation separately",
+  "deferred_datasets": [
+    "insta_market_basket"
+  ],
+  "reference_baseline": "titantpp_history_mlp_width16",
+  "expected_initialization_sha256": "eea13c4f4e6933e0c9aeafaad3ad2bb2e0626893079aab9611e6255bac19fa8d",
+  "reuse": [
+    {
+      "dataset": "intermittent_frozen_5000",
+      "arm": "titantpp_history_mlp",
+      "seed": 42,
+      "remote_run": "/workspace/titantpp_cnn_gru_a100_seed42_20261004_v1/references/width4/intermittent_frozen_5000",
+      "file_sha256": {
+        "exposure.json": "5a96cad5f907a0d3739017ef09dd6071315f4494a472270df090b405b7e055c3"
+      }
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "arm": "titantpp_history_mlp",
+      "seed": 42,
+      "remote_run": "/workspace/titantpp_cnn_gru_a100_seed42_20261004_v1/references/width4/yellow_trip_hourly",
+      "file_sha256": {
+        "exposure.json": "0262608fa98237a475cab62a934c12b22525a1c998045edcf93523aa2b35afa5"
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "arm": "titantpp_history_mlp",
+      "seed": 42,
+      "remote_run": "/workspace/titantpp_cnn_gru_a100_seed42_20261004_v1/references/width4/raf_spare_parts",
+      "file_sha256": {
+        "exposure.json": "fb8202e19e430ef293c963d78fbba29433dcf808c187f149064316fc9a604896"
+      }
+    }
+  ],
+  "diagnostic": {
+    "sample_reference": "reports/titantpp_train_validation_tail_diagnostic_20261003_v1/contract.json",
+    "selected_and_last_validation": true,
+    "selected_train_sample": true,
+    "tail_definition": "raw target quantity strictly greater than original train upper boundary",
+    "tail_thresholds": {
+      "yellow_trip_hourly": 3449,
+      "intermittent_frozen_5000": 187,
+      "raf_spare_parts": 200
+    },
+    "train_sampling": {
+      "max_per_bin": 2048,
+      "train_sampling_seed": 20261003
+    },
+    "train_weights": "N_bin/n_bin",
+    "validation": "complete original validation population"
+  },
+  "worker": {
+    "files": {
+      "worker/diagnostics.py": "a950378f4c77a4ebdf8e54a5109de7ddce59be51a67cd60d3e0305e0fce04fff",
+      "worker/dispatch.py": "28db973f5f1c4c042663817cbd9ffc349533949cc9670726950cbb78c2cce791",
+      "worker/qualify.py": "0443a9e292b584f3adcddce5030351c459bc0498e2fa48c25d0d05337d27f878",
+      "worker/runtime.py": "2b186d60df027ce3e954f3a908158bff12190a1593a71d70cb12c867d92e32c0"
+    },
+    "files_sha256": "7d961867f612f86e1b78346630764d7624472532f596aba133a3bf3d24da2f26"
+  },
+  "initialization_policy": "native_historical_baseline_and_common_state_v1"
+}
