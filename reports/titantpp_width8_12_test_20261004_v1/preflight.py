@@ -37,6 +37,9 @@ def main(root, campaign):
         results.append(checked(root / relative, digest))
     registry = read(campaign / 'evaluation_registry.json')
     for bundle in registry['bundles'].values():
+        marker = root / bundle['source_root'] / 'sample_data/.keep'
+        if not marker.is_file():
+            raise ValueError(f'Frozen project-root ancillary marker is missing: {marker}')
         for relative, digest in bundle['source_files'].items():
             source = (root / bundle['source_root']).resolve()
             path = (source / relative).resolve()
