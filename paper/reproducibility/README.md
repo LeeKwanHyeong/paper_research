@@ -1,6 +1,6 @@
 # TitanTPP 연구 코드와 재현성 인덱스
 
-이 문서는 2026-10-03의 후속 연구 상태를 연결한다. 루트 README의 v0.7은
+이 문서는 2026-10-04의 후속 연구 상태와 사용자 결정을 연결한다. 루트 README의 v0.7은
 `567196e5`의 별도 validation freeze이며, 이후 MLP·관측 시간 likelihood·raw
 quantity RMSE checkpoint 선택·기존 test 재평가와 동일한 실험이 아니다.
 
@@ -19,26 +19,35 @@ quantity RMSE checkpoint 선택·기존 test 재평가와 동일한 실험이 �
 
 ## 현재 기준선과 예정 실험
 
+**2026-10-04 사용자 결정: 후속 실험의 기본 기준선은 History MLP 폭16이다.**
+현재 선택은 [기준선 포인터](current_baseline.json)와
+[결정 기록](../../reports/titantpp_width16_baseline_decision_20261004_v1/README.md)을 따른다.
+이는 실험 비교 기준의 선택이며, 모든 데이터·지표에서 최저 오차라는 판정은 아니다.
+기존 폭4와 동결 결과는 비교 대조군으로 보존한다.
+
 | 구분 | 상태 | 변하는 내용 | 유지할 기준 |
 |---|---|---|---|
-| History MLP 폭 4 | 기존 기준선 | 분기 `128→4→64`, 보정 6,144개 | 기존 checkpoint와 해당 source 재사용 |
-| History MLP 폭 16 / seed42 | 승인·실행 증거 보존 | 분기 `128→16→64`, 보정 24,576개 | 기존 마스크, 고정 `/8`, GELU, zero output, 출력부·손실·선택 기준 |
-| 폭 16 / seed52·62 | 승인된 후속 큐 증거 보존 | 4데이터×2seed, 5080·5090의 seed42 종료 후 시작 | 과학 소스 112/113 동일, seed-aware 실행기만 변경 |
+| History MLP 폭 4 | 보존 대조군 | 분기 `128→4→64`, 보정 6,144개 | 기존 checkpoint와 해당 source 재사용 |
+| History MLP 폭 16 / seed42·52·62 | 후속 기본 기준선 확정 · 완료된 12조건의 Validation·Test 검증 | 분기 `128→16→64`, 보정 24,576개 | 기존 마스크, 고정 `/8`, GELU, zero output, 출력부·손실·선택 기준; 기존 source·checkpoint 재사용 |
 | 폭 8·12 | 다음 작업: 미구현·미실행 | 보정 파라미터는 각각 12,288·18,432개 | 폭별 identity·계약·초기화 검증 후 별도 실행 계약 필요 |
-| A100 routing/placement | 별도 캠페인 | recent4_attention / post_block, 3데이터×seed42 | 아래 동결 계약으로만 해석 |
+| A100 routing/placement | 완료 · 별도 seed42 탐색 | recent4_attention / post_block, 3데이터×seed42 | 동결 source와 계약으로 해석; 3seed 결과와 구분 |
 | Encoder 1 CNN＋중간 GRU | 다음 작업: 설계 후보 | E1에 인과적 CNN; 중간 MLP 대신 순환 보정; 64차원 잔차 유지 | CNN/GRU 잠재 폭·파라미터 예산·삽입 위치·비교군 미확정 |
 
 현재 `CountAwareTitanHistoryWidth.py`는 폭4/16만 허용한다. 8·12 계획을 현재
-실행 가능한 옵션으로 오인하지 않는다. 기존 seed42 결과의 우열이나 test 접근
-여부를 이 SCM 정리에서 다시 분석하지 않았다. test를 본 뒤 정한 후속 후보를
-새 독립 평가로 표현하지 않는다. 세 seed가 모두 끝나고 원본 검증이 완료된 뒤
-평균·표본 표준편차를 집계한다.
+실행 가능한 옵션으로 오인하지 않는다. 폭16 모델 ID는
+`titantpp_history_mlp_width16`이며, 전용 실행기의 factory 연결을 사용한다.
+기존 `titantpp_history_mlp` ID는 폭4 재현용으로 유지한다. 네 데이터의 3seed
+평균·표본 표준편차와 기존 Test 재평가는
+[전체 비교 보고서](../../reports/titantpp_completed_validation_test_20261004_v1/README.md)에
+있다. Test를 본 뒤 정한 후속 후보를 새 독립 평가로 표현하지 않는다.
 
 CNN＋GRU는 [설계 검토](../../reports/titantpp_cnn_gru_review_20261003_v1/README.md)의
 방향이며 현재 A100 routing 실험과 다르다. 앞선
 [CNN 보정 모듈 대체 제안](../../reports/titantpp_causal_cnn_design_20261003_v1/README.md)도
 역사적 대안으로 보존한다. CNN/GRU와 폭 확대를 한 실험으로 묶어 효과를 단정하지
 않고 각 요소의 대조 조건을 먼저 정한다.
+이전 GRU r=24의 근접 파라미터 비교는 폭4 기준 제안이다. 폭16을 기준으로 하는
+후속 CNN·GRU의 잠재 폭과 파라미터 예산은 새 계약에서 다시 확정한다.
 
 ## 동결본 확인과 복원 — CPU·오프라인, 학습 실행 없음
 

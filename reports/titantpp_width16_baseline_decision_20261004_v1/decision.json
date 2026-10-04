@@ -1,0 +1,212 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-04T06:22:08.902742+00:00",
+  "status": "user_fixed_followup_baseline",
+  "user_instruction": "그러면 우선 기본 베이스라인을 폭 16으로 고정하자 그래도될거같른데?",
+  "repository": "paper_research",
+  "branch": "master",
+  "parent_commit": "47b5a44f62cdca72c72d579f7979e6772a36b6ed",
+  "role": "Default experimental reference for subsequent width, CNN and GRU studies",
+  "representative_model": "titantpp_history_mlp_width16",
+  "configuration": {
+    "main_hidden_dimension": 64,
+    "history_correction_branch_dimensions": [
+      128,
+      16,
+      64
+    ],
+    "history_correction_branches": 8,
+    "history_correction_parameters": 24576,
+    "activation": "GELU",
+    "bias": false,
+    "branch_availability": "unchanged original observed-history availability",
+    "aggregation": "sum available branch outputs / fixed 8",
+    "output_projection_initialization": "zero",
+    "inputs_heads_losses_preprocessing": "unchanged original width16 scientific settings",
+    "checkpoint_selection": "first finite full Validation raw quantity RMSE minimum; existing selected checkpoint immutable",
+    "training_epoch_policy": {
+      "minimum": 40,
+      "maximum": 300,
+      "patience": 40
+    },
+    "full_model_parameters_max_len256_reference": 114435,
+    "full_model_parameters_depend_on_source_configuration": true,
+    "parameter_increase_from_width4_same_configuration": 18432
+  },
+  "scope": {
+    "datasets": [
+      "yellow_trip_hourly",
+      "intermittent_frozen_5000",
+      "insta_market_basket",
+      "raf_spare_parts"
+    ],
+    "seeds": [
+      42,
+      52,
+      62
+    ],
+    "existing_selected_conditions": 12,
+    "reuse_completed_width16": true,
+    "width4_role": "preserved structural/capacity comparator",
+    "width8_width12_role": "planned capacity ablations, not yet implemented or trained",
+    "cnn_gru_role": "future comparisons against width16; latent width and parameter budget remain to be specified",
+    "manuscript_tables_figures": "future update; unchanged by this decision record"
+  },
+  "scientific_interpretation": {
+    "choice_origin": "Human design decision after reviewing existing Validation and previously accessed Test results",
+    "test_status": "existing split retrospective reevaluation, not untouched independent evidence",
+    "claim_all_datasets_all_metrics_best": false,
+    "prior_checkpoint_or_source_reselection": false,
+    "unfavorable_results_preserved": true,
+    "supersedes": "Earlier recommendation to keep width4 as the followup reference and defer width16 fixation; numerical evidence and original contracts unchanged"
+  },
+  "artifact_refs": {
+    "reports/titantpp_completed_validation_test_20261004_v1/width16/evaluation_registry.json": "ccdee8a321fb44e3c151a4abeb6f8ec3e05127230e4e03b2e92b109820fb5c2a",
+    "reports/titantpp_completed_validation_test_20261004_v1/width16/selected_binding.json": "876b945cbac53c053edbf3ad1945e75a7af70c6982adec189ad6201b19dec73e",
+    "reports/titantpp_completed_validation_test_20261004_v1/width16/final_verification.json": "d7070c04acf97ef3fc8f21ef04783dcd58032fe5559b04b1bd815308a1045d86",
+    "reports/titantpp_completed_validation_test_20261004_v1/results/metrics_aggregated.csv": "a68fd96e67bb18adb62c4f8a991debdee2abddffbc62cc8c10632acd05d63565",
+    "reports/titantpp_completed_validation_test_20261004_v1/comparison_receipt.json": "05bad775adcf6f94853182f8c8aa28dd374ab097633b556ab524ef3cf42c2065",
+    "reports/titantpp_completed_validation_test_20261004_v1/comparison_review.json": "2031ea29d7e54de8a1b393f3b8c9fa740393b3f043c98fcdfca4dff27c9e9010"
+  },
+  "selected_conditions": [
+    {
+      "dataset": "yellow_trip_hourly",
+      "model": "titantpp_history_mlp_width16",
+      "seed": 42,
+      "endpoint": "selected",
+      "evaluator_source_bundle": "dual",
+      "checkpoint_path": "reports/titantpp_width16_test_20261003_v1/original/yellow_trip_hourly__42__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_file_sha256": "3abb2360559f5b133d2caf81a0ef6db2ed8178023e3e67de61e7e02c6542614d",
+      "state_tensor_sha256": "d514bfeafbb79b305ae718da81aeae6993f3547d301d8c741323dd6a495e356d",
+      "selected_epoch": 27
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "titantpp_history_mlp_width16",
+      "seed": 42,
+      "endpoint": "selected",
+      "evaluator_source_bundle": "dual",
+      "checkpoint_path": "reports/titantpp_width16_test_20261003_v1/original/raf_spare_parts__42__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_file_sha256": "e48ec120baf2a806e2613a36dfca46444306d4595047f39442f4e47c8eb36adf",
+      "state_tensor_sha256": "b4ed8316834a25e7bb19b6d817a215804a5404f4e214480fe286648cce634454",
+      "selected_epoch": 9
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "model": "titantpp_history_mlp_width16",
+      "seed": 42,
+      "endpoint": "selected",
+      "evaluator_source_bundle": "dual",
+      "checkpoint_path": "reports/titantpp_completed_validation_test_20261004_v1/width16/original/intermittent_frozen_5000__42__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_file_sha256": "2db7c7249094d4a263c89fb672762242d000c17904f6864fbc4cba00ff3d9389",
+      "state_tensor_sha256": "f3be1a2e9d3583302436985ba23b940253656edf5c2eb24246be7604897b847d",
+      "selected_epoch": 5
+    },
+    {
+      "dataset": "insta_market_basket",
+      "model": "titantpp_history_mlp_width16",
+      "seed": 42,
+      "endpoint": "selected",
+      "evaluator_source_bundle": "dual",
+      "checkpoint_path": "reports/titantpp_completed_validation_test_20261004_v1/width16/original/insta_market_basket__42__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_file_sha256": "41376370ce0d25f20e3aa1a08896f9a5662ba9a39f6da4012a750dcdf954a47d",
+      "state_tensor_sha256": "4ca8d23c68d6aeb9b12df5062532e9f9f17c6b1b1d850dc6bbdde05081d2420b",
+      "selected_epoch": 30
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "model": "titantpp_history_mlp_width16",
+      "seed": 52,
+      "endpoint": "selected",
+      "evaluator_source_bundle": "replication",
+      "checkpoint_path": "reports/titantpp_completed_validation_test_20261004_v1/width16/original/yellow_trip_hourly__52__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt",
+      "checkpoint_file_sha256": "167837747c93abc1122c9f8586070fd144a6fdde5416c0dd0ad5bf8f6500d197",
+      "state_tensor_sha256": "8757855574c848795072b6ddf257b32514b45c5699ccfece4953d7c83b1b613a",
+      "selected_epoch": 82
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "model": "titantpp_history_mlp_width16",
+      "seed": 62,
+      "endpoint": "selected",
+      "evaluator_source_bundle": "replication",
+      "checkpoint_path": "reports/titantpp_completed_validation_test_20261004_v1/width16/original/yellow_trip_hourly__62__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt",
+      "checkpoint_file_sha256": "0413049014ac01a57197a1692711205eab27c70be525ec4636728ecf31c6f14b",
+      "state_tensor_sha256": "77bf63cb75f03c7b6e7358053f04262d66574c646cd35cb2647fcd55eec2c820",
+      "selected_epoch": 94
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "titantpp_history_mlp_width16",
+      "seed": 52,
+      "endpoint": "selected",
+      "evaluator_source_bundle": "replication",
+      "checkpoint_path": "reports/titantpp_completed_validation_test_20261004_v1/width16/original/raf_spare_parts__52__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt",
+      "checkpoint_file_sha256": "331e15b60b75036addd8523734d997efa582fadaf85567859f5f1a5ede6e8c8a",
+      "state_tensor_sha256": "6a26377b54e773dcac86958d839a06c55008b43bf3a1955ba025d0ef91225e6a",
+      "selected_epoch": 5
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "titantpp_history_mlp_width16",
+      "seed": 62,
+      "endpoint": "selected",
+      "evaluator_source_bundle": "replication",
+      "checkpoint_path": "reports/titantpp_completed_validation_test_20261004_v1/width16/original/raf_spare_parts__62__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt",
+      "checkpoint_file_sha256": "ea98f3691e4fef6317dff28ea99bf01fdb94d6c3ea7a8634bcfda2c31570a00e",
+      "state_tensor_sha256": "a3eff759aff84447d45cdadeb653ae49221408329d4fedad38fe27742e2d1591",
+      "selected_epoch": 19
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "model": "titantpp_history_mlp_width16",
+      "seed": 52,
+      "endpoint": "selected",
+      "evaluator_source_bundle": "replication",
+      "checkpoint_path": "reports/titantpp_completed_validation_test_20261004_v1/width16/original/intermittent_frozen_5000__52__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt",
+      "checkpoint_file_sha256": "62f780aa15d56987937cafbfd4ffd8f4ea83084ef4ce5dd525246a326adfb0cd",
+      "state_tensor_sha256": "b8da336930e91e49556d6f9b91cb3c5e3876daba662286c9621bbf87deb8c873",
+      "selected_epoch": 3
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "model": "titantpp_history_mlp_width16",
+      "seed": 62,
+      "endpoint": "selected",
+      "evaluator_source_bundle": "replication",
+      "checkpoint_path": "reports/titantpp_completed_validation_test_20261004_v1/width16/original/intermittent_frozen_5000__62__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt",
+      "checkpoint_file_sha256": "91d9ba2318a408720e678998937943d6aeedd59be74fb41c429f73307afcb5fa",
+      "state_tensor_sha256": "1a2669ce361eaa874ece9ff7d6221f4e84655a7f70ef6025dcd60e44cac034c5",
+      "selected_epoch": 27
+    },
+    {
+      "dataset": "insta_market_basket",
+      "model": "titantpp_history_mlp_width16",
+      "seed": 52,
+      "endpoint": "selected",
+      "evaluator_source_bundle": "replication",
+      "checkpoint_path": "reports/titantpp_completed_validation_test_20261004_v1/width16/original/insta_market_basket__52__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt",
+      "checkpoint_file_sha256": "e18554ec784f7e27c10f7fa580a1f7812ddcfb4247e42265ee20e0128282e538",
+      "state_tensor_sha256": "f30693495e4afb5c233f75a95f75ff75cfbd81af22358207c656bc2d3736736c",
+      "selected_epoch": 15
+    },
+    {
+      "dataset": "insta_market_basket",
+      "model": "titantpp_history_mlp_width16",
+      "seed": 62,
+      "endpoint": "selected",
+      "evaluator_source_bundle": "replication",
+      "checkpoint_path": "reports/titantpp_completed_validation_test_20261004_v1/width16/original/insta_market_basket__62__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt",
+      "checkpoint_file_sha256": "808c9240845d4eaabe33f0659ea235724fb825aee280e128574cd06f19c241af",
+      "state_tensor_sha256": "70cb7ade980023897e994088b46d540778060d9197991cb5744289f218e1bd51",
+      "selected_epoch": 35
+    }
+  ],
+  "actions": {
+    "new_training": false,
+    "remote_access": false,
+    "shared_runtime_change": false,
+    "frozen_code_default_change": false,
+    "new_rental": false
+  }
+}
