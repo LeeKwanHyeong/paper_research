@@ -35,6 +35,8 @@ for rel,digest in c['input_files'].items():
   src=oldroot/'source'/rel;assert sha(src)==digest,(rel,'old input hash changed');dst.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(src,dst)
  assert sha(dst)==digest,rel
 for rel,digest in c['operation']['files'].items():assert sha(root/rel)==digest
+for sentinel in ('models','utils','sample_data'):(root/'source'/sentinel).mkdir(exist_ok=True)
+(root/'source/sample_data/.gitkeep').write_text('Repository-root sentinel; no research data.\n')
 (root/'logs').mkdir();(root/'cache').mkdir()
 launcher=r"""import json,pathlib,subprocess,os,time
 root=pathlib.Path(__file__).parent;c=json.loads((root/'execution_contract.json').read_text());v=c['hosts'][HOST]
