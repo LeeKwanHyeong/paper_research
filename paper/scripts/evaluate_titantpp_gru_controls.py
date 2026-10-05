@@ -361,13 +361,19 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     require(not args.output.exists(), "Do not overwrite an existing evaluation")
-    from paper.scripts import run_titantpp_history_width as width
+    from paper.scripts import run_titantpp_gru_controls as engine
     from paper.scripts.run_multilag_detail_execution import prepare_admitted_data
     from paper.scripts.quantity_comparison_runtime import configure_runtime
-    width.install_hooks()
+    engine.install_hooks()
     configure_runtime(args.device, threads=2)
     contract = json.loads(args.contract.read_text())
     data = next(d for d in contract["datasets"] if d["dataset_id"] == args.dataset)
+    from copy import deepcopy
+    data = deepcopy(data)
+    # The immutable contract keeps portable paths relative to its source bundle.
+    for ref in data['inherited_data_identity'].values():
+        if isinstance(ref, dict) and 'path' in ref and not Path(ref['path']).is_absolute():
+            ref['path'] = str(args.contract.parent / 'source' / ref['path'])
     frame, _ = prepare_admitted_data(data)
     replay = None
     if args.validation_replay:

@@ -1,0 +1,24 @@
+paper_research의 GRU54 기여 분리 3seed 대조 학습을 매시간 관측한다. 사용자는 2026-10-04 5080/5090 시간별 보고를 요청했고, 2026-10-05 대조 계약 확정과 동일3seed 실험을 “진행하자”로 승인했다. 매회 실제 KST 관측시각, 서버별 완료/실패/진행/대기/미확정 수와 현재 조건·seed·저장/best epoch·조건부 ETA를 짧은 한국어 표로 보고한다.
+
+대상은 /Users/igwanhyeong/PycharmProjects/paper_research, bundle search_artifacts/titantpp_gru_controls_3seed_dual_20261005_v1이다. TEST_SESSION_PROTOCOL.md 0·1·9·12절, bundle README.md/current.json/execution_contract.json/analysis_contract.json/approval.json/start_permit.json/training_permit_5080.json/training_permit_5090.json, qualification/receipt_5080.json 및 receipt_5090.json, launch_confirmation.json, hourly_monitor/latest_5080.json 및 latest_5090.json, control/operations_manifest.json을 먼저 읽는다. 과학 계약 canonical SHA는 221e98d5f489842832a359d0c2d4d1ddeb4b22d0fbe08e5e564622a6c7f11b5f, source123 closure는 4e94229fae002dc678025ecf056862f832c64459969f403b3cb5ac8cea8ba7b0이다. 현재 포인터/root/GPU/계약/소스가 다르면 해당 과거 대상으로 접속하지 않고 변경 이유를 확인한다.
+
+Taxi·Intermittent·RAF × seed42/52/62 × 원래GRU54·두사건GRU54·모든분기MLP16 계수1·모든분기MLP16 계수1/8 총36조건이다. 원래 GRU54 seed42 3조건은 SHA검증된 원본으로 재사용하고 신규33fit만 집계한다. 5080은Taxi·RAF22fit,5090은Intermittent11fit, 서버당worker1개다. Instacart는후속이고 CNN 조건은없다. 기존 MLP16 9개는 폭4가 아닌 주 기준선이며 width16_validation_refs.json과 analysis_contract SHA를 사용한다. 폭4는 노출prefix/보조진단 기준이다. 재사용 GRU42 원본 GPU경로는 이종GPU로 표시한다.
+
+5080 root는 /home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_gru_controls_3seed_dual_20261005_v1_5080,UUID GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6.5090 root는 동일 prefix _5090,UUID GPU-c9adc246-ef66-7906-bc07-6e152fa9952f다.5090은 기존 전용runtime_env를 재사용하며 공용ai_env를 변경하지 않는다. 기존min40/max300/patience40·loss·AdamW·loader·최초최소 finite fullValidation raw RMSE selector·36h조건/168h전체 native timeout·소유lease를 유지한다.
+
+회차당 프로젝트root에서 아래2명령을 독립적으로 각각1회 실행한다. 한서버조회실패가 다른관측을 막지않게 하고 필요한네트워크권한을사용한다.
+/usr/local/bin/python3 search_artifacts/titantpp_gru_controls_3seed_dual_20261005_v1/control/observe_once.py --host 5080
+/usr/local/bin/python3 search_artifacts/titantpp_gru_controls_3seed_dual_20261005_v1/control/observe_once.py --host 5090
+각명령은 미종료서버의 읽기전용SSH1회이며 소유argv/PID·GPUUUID/PID,checkpointreceipt/history/실제저장epoch·timing·selected/last fullValidation·terminal소형SHA를 대조한다. 종료cache를 재사용하면 원래실제관측시각을 유지한다. 별도SSH·관측기·polling·학습·resume·retry·qualification·replay·프로세스종료·claim삭제·공용Runtime/소스/데이터/loss/선택/예산/인증변경을 하지않는다. 조회실패는 학습실패가아니고 저장된running JSON만으로현재실행을확정하지않는다. 소유PID부재/불일치면 미확정·사용자조치필요로알린다. 과거A100 Pod/manager/provider/기존캠페인을 다시조회하지 않는다.
+
+진행수치는 최초최소fullValidation RMSE epoch의RMSE·MAE·TimeNLL을 같은epoch의best-so-far로표시한다. 큰수량은 원래Train경계Taxi3449·Intermittent187·RAF200초과다. Train잔차norm은selected 고정N/n가중Train표본만이며 Validationnorm은미수집,재사용GRU42의norm누락은보존한다. Test/예측/Validation-Test혼합파일을 열지않는다.3seed가 모두완료되기전확정결론을내리지않는다. pair는보정모듈직접문맥이고 공유Encoder1은이미history를포함한다. GRU게이트/비선형성/파라미터배치를 순환연산하나의효과로단정하지않는다.
+
+ETA는 해당RTX fit자체 최근최대10완료epoch의중앙값으로 계산한다. best미갱신/현재속도·병렬수유지가정에서 min(300,max(40,best_epoch+40))와300epoch시나리오를별도로표시한다. 미시작모델속도를다른모델/GPU에서복사하지않고 전체큐ETA미확정은그대로둔다. best갱신시ETA변화,endpoint replay/원본회수/CPU감사제외를알린다. 마감은ETA가아니며 완료보장/통계예측구간으로표현하지않는다.
+
+두관측후 아래명령을정확히1회실행한다.
+/usr/local/bin/python3 search_artifacts/titantpp_gru_controls_3seed_dual_20261005_v1/control/finalize_once.py
+이도구는 양서버의33fit 검증terminalcache가 없으면 로컬pending만기록하며 네트워크/평가/학습을하지않는다. 양서버terminal·소유프로세스종료검증후에만 승인실험의원본회수·집계를수행한다. 소유root의manifest와관측manifestSHA를연결하고 binary/소형기록·sourceSHA를확인하여 immutablearchive를봉인·회수한다. 이종단계는관측의oneSSH규칙과구분된학습원본보존작업이다. 새GPU추론/학습/Test/체크포인트재선택은없다. 배타lock/claim/receipt를따라중복을막고 실패/중단/failure.json이면 증거를보존해사용자조치로알리며자동재시도하지않는다. 장시간추가polling을하지않는다.
+
+최종집계는36canonical조건과고정MLP16 9행,데이터별3seed평균·표본SD와seed별paired차이/차이표본SD를보존한다. 전체·큰수량RMSE/MAE/TimeNLL의손해와실패/미시작도누락하지않는다. 다른데이터raw RMSE를합쳐순위를만들지않는다. 전체연구감사나논문독립확인완료라하지않고 CPUbinary재추론감사/새독립평가는별도미완료로표시한다.
+
+신규33fit 및재사용3의36조건,양서버실제종료,신규checkpoint원본manifest/binarySHA회수,analysis/completion_receipt.json과최종비교표가전부확인된뒤최종결과를알리고 이신규자동화만삭제한다. 실행/상태/원본/종료가미확정이면유지한다. 다른자동화·PAUSEDmonitor·Pod·서버작업·chatarchive를변경하지않는다.

@@ -1,0 +1,71 @@
+{
+  "schema": "titantpp_gru_controls_analysis.v1",
+  "scientific_contract_sha256": "221e98d5f489842832a359d0c2d4d1ddeb4b22d0fbe08e5e564622a6c7f11b5f",
+  "scientific_source_closure": "4e94229fae002dc678025ecf056862f832c64459969f403b3cb5ac8cea8ba7b0",
+  "evaluation_scope": "full_validation_only",
+  "held_out_test_evaluated": false,
+  "checkpoint_selection": "frozen earliest strict finite minimum full Validation raw quantity RMSE; all metrics same selected epoch",
+  "datasets": [
+    "yellow_trip_hourly",
+    "intermittent_frozen_5000",
+    "raf_spare_parts"
+  ],
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "width16_registry_SHA256": "4cbb11fac1c1f8a26d7dcbfa9496a4fc3a4a4bf7c87c52ff418c71020d7ec4fe",
+  "reference_baseline": "frozen existing width16 selected Validation; no new inference",
+  "metric_keys": [
+    "qty_rmse",
+    "qty_mae",
+    "time_nll",
+    "tail_qty_rmse",
+    "tail_qty_mae",
+    "tail_time_nll"
+  ],
+  "tail_thresholds": {
+    "intermittent_frozen_5000": 187,
+    "raf_spare_parts": 200.0,
+    "yellow_trip_hourly": 3449
+  },
+  "summary": "mean and sample SD separately per dataset/arm, all 3 individual seeds preserved",
+  "paired_contrasts": [
+    {
+      "candidate": "titantpp_pair_mlp16_all_div8",
+      "reference": "titantpp_history_mlp_width16",
+      "purpose": "eligibility of all eight MLP branches at fixed /8; other correction architecture held constant"
+    },
+    {
+      "candidate": "titantpp_pair_mlp16_all_alpha1",
+      "reference": "titantpp_pair_mlp16_all_div8",
+      "purpose": "fixed residual coefficient 1 vs 1/8, same MLP"
+    },
+    {
+      "candidate": "titantpp_gru54_pair",
+      "reference": "titantpp_pair_mlp16_all_alpha1",
+      "purpose": "matched direct pair context, activation, coefficient and near parameter budget; operator family includes gates/nonlinearity"
+    },
+    {
+      "candidate": "titantpp_gru54",
+      "reference": "titantpp_gru54_pair",
+      "purpose": "adapter recurrent horizon; shared Encoder1 already contextualizes history"
+    }
+  ],
+  "paired_statistics": [
+    "each seed candidate-minus-reference",
+    "mean paired difference",
+    "sample SD of paired differences",
+    "number of seeds with lower overall RMSE"
+  ],
+  "strong_dominance": "all three seeds strictly lower overall RMSE and nonworse other five metrics; otherwise tradeoffs preserved",
+  "cross_dataset_ranking": "do not average raw RMSE with different quantity units",
+  "parameter_budget": "GRU24732 vs MLP24576 correction parameters; 156 difference (.635%) retained explicitly",
+  "residual_norm_scope": "selected fixed N/n weighted TRAIN sample only; no Validation residual norm collected",
+  "hardware_caveat": "each dataset new arms same RTX; original GRU seed42 follows original heterogeneous GPU path",
+  "paper_claim": "no independent confirmation established; requires separately frozen independent evaluation; n=3 descriptive only",
+  "training_outcome_gate": "all33 fresh native terminals and all36 canonical rows, selected/last fullValidation, owned server process exit and immutable binary/small SHA original retrieval",
+  "recovery_behavior": "one owned retrieval per host after terminals; interruption/failure preserved and manual action required; no automatic retry",
+  "independent_evaluation": "not started; requires separate contract"
+}
