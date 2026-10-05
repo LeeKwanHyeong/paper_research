@@ -3,7 +3,7 @@ import json,subprocess,concurrent.futures,shlex,datetime
 s=Path('/private/tmp/cnn_gru54_3seed_switch');c=json.loads((s/'contract/execution_contract.json').read_text())
 def run(h):
  v=c['hosts'][h];program=r'''from pathlib import Path
-import json,subprocess,shutil,datetime,hashlib
+import json,subprocess,shutil,datetime,hashlib,shlex
 root=Path(ROOT);c=json.loads((root/'execution_contract.json').read_text());v=c['hosts'][HOST]
 assert json.loads((root/'qualification_process_exit.json').read_text())['returncode']==1
 assert not (root/'qualification.claim').exists() and not (root/'qualification/receipt.json').exists() and not (root/'qualification/failure.json').exists() and not (root/'run').exists(),'Native qualification or training already entered; repair is not authorized retry'

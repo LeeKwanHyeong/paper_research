@@ -14,7 +14,7 @@ assert json.loads((root/'qualification/receipt.json').read_text())==PERMIT['qual
 assert not (root/'qualification/failure.json').exists() and not (root/'failure.json').exists() and not (root/'training_permit.json').exists()
 assert time.time()<json.loads((root/'start_permit.json').read_text())['deadline_unix']
 ps=subprocess.check_output(['ps','-eo','args'],text=True);assert not any(str(root/'operation/campaign.py') in l and ('--mode qualify' in l or '--mode dispatch' in l or '--mode fit' in l) for l in ps.splitlines())
-assert json.loads((root/'qualification_process_exit.json').read_text())['returncode']==0
+assert json.loads((root/('qualification_attempt2_process_exit.json' if (root/'launch_qualification_attempt2.py').exists() else 'qualification_process_exit.json')).read_text())['returncode']==0
 assert not subprocess.check_output(['nvidia-smi','--query-compute-apps=pid','--format=csv,noheader'],text=True).strip()
 (root/'training_permit.json').write_text(json.dumps(PERMIT,ensure_ascii=False,indent=2)+'\n')
 launcher=r"""import pathlib,json,subprocess,time,os
