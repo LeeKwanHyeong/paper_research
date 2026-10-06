@@ -23,7 +23,7 @@ class Operations(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
         self.c = {'root':str(self.root),'source':{'files_sha256':'a'*64},
-            'operation':{'files':{}},'runtime':{'gpu_uuid':'GPU-fixture','runtime_expected':{'torch':'fixture'}},
+            'operation':{'files':{}},'runtime':{'python':'/env/bin/python3.12','gpu_uuid':'GPU-fixture','runtime_expected':{'torch':'fixture'}},
             'datasets':[{'dataset_id':d,'inherited_data_identity':{'populations':{'train':{'target_count':2},'validation':{'target_count':2}}}} for d in ('taxi','raf')],
             'fitting':{'maximum_epochs':40,'patience':10},'jobs':[]}
         for d in ('taxi','raf'):
@@ -127,8 +127,8 @@ class Operations(unittest.TestCase):
         with self.assertRaises(ValueError):m.validate_snapshot(self.c,s,terminal=True)
 
     def process_fixture(self):
-        j=self.job;controller=['python',str(self.root/'operation/controller.py'),'--contract',str(self.root/'execution_contract.json'),'--mode','dispatch']
-        worker=['python',str(self.root/'operation/titantpp_time_head_refit_runtime.py'),'--contract',str(self.root/'execution_contract.json'),
+        j=self.job;controller=[self.c['runtime']['python'],'-u',str(self.root/'operation/controller.py'),'--contract',str(self.root/'execution_contract.json'),'--mode','dispatch']
+        worker=[self.c['runtime']['python'],'-u',str(self.root/'operation/titantpp_time_head_refit_runtime.py'),'--contract',str(self.root/'execution_contract.json'),
             '--job',j['id'],'--training-permit',j['output_dir']+'/training_permit.json','--owner-pid','50']
         processes={50:{'pid':50,'ppid':1,'argv':controller},100:{'pid':100,'ppid':50,'argv':worker}}
         rows=[{'job':j,'state':'running','worker_process':{'pid':100,'ppid':50,'command':worker}}]
@@ -140,6 +140,35 @@ class Operations(unittest.TestCase):
         self.assertEqual(issues,[]);self.assertEqual(gpu,[100]);self.assertEqual(len(owned),2)
         ps[100]['ppid']=999
         self.assertTrue(m.process_identity(self.c,self.root,ps,{100},{'pid':50},rows)[1])
+
+    def test_actual_tmux_launch_text_is_not_an_owned_interpreter(self):
+        ps,rows=self.process_fixture()
+        controller=ps.pop(50);controller.update(pid=16239,ppid=16238)
+        worker=ps.pop(100);worker.update(pid=16443,ppid=16239)
+        worker['argv'][-1]='16239'
+        ps[16239]=controller;ps[16443]=worker
+        rows[0]['worker_process']={'pid':16443,'ppid':16239,'command':worker['argv'].copy()}
+        # Real ps shape: a tmux server contains the complete shell launch as argv
+        # text, including the interpreter and exact controller path as tokens.
+        ps[16238]={'pid':16238,'ppid':1,'argv':['/usr/bin/tmux','new-session','-d','-s','head-refit',
+            '/bin/bash','-lc','exec']+controller['argv']}
+        owned,issues,gpu=m.process_identity(self.c,self.root,ps,{16443},{'pid':16239},rows)
+        self.assertEqual({p['pid'] for p in owned},{16239,16443})
+        self.assertEqual(issues,[]);self.assertEqual(gpu,[16443])
+        # The wrapper surviving after both real processes exit cannot prevent
+        # a completed campaign from proving absence of its owned Python jobs.
+        rows[0]['state']='complete'
+        owned,issues,gpu=m.process_identity(self.c,self.root,{16238:ps[16238]},set(),{'pid':16239},rows)
+        self.assertEqual((owned,issues,gpu),([],[],[]))
+
+    def test_python_command_string_or_different_interpreter_is_not_script_execution(self):
+        ps,rows=self.process_fixture()
+        ps[100]['argv']=[self.c['runtime']['python'],'-c','print(1)']+ps[100]['argv'][2:]
+        owned,issues,_=m.process_identity(self.c,self.root,ps,{100},{'pid':50},rows)
+        self.assertEqual([p['pid'] for p in owned],[50]);self.assertTrue(issues)
+        ps,rows=self.process_fixture();ps[100]['argv'][0]='/other/bin/python'
+        owned,issues,_=m.process_identity(self.c,self.root,ps,{100},{'pid':50},rows)
+        self.assertEqual([p['pid'] for p in owned],[50]);self.assertTrue(issues)
 
     def test_missing_gpu_or_spoofed_worker_rejected(self):
         ps,rows=self.process_fixture()

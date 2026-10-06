@@ -145,11 +145,16 @@ def process_identity(c, root, processes, gpu_pids, supervisor, rows):
     root = Path(root)
     controller = str(root/'operation/controller.py')
     worker = str(root/'operation/titantpp_time_head_refit_runtime.py')
-    owned = [p for p in processes.values() if controller in p['argv'] or worker in p['argv']]
+    def executes(p, script):
+        # ps may expose a tmux/shell wrapper's full launch command as trailing
+        # arguments. Only the configured interpreter executing this script owns it.
+        argv = p['argv']
+        return argv[:3] == [c['runtime']['python'], '-u', script]
+    owned = [p for p in processes.values() if executes(p, controller) or executes(p, worker)]
     issues = []
     owner_pid = supervisor.get('pid') if supervisor else None
-    controllers = [p for p in owned if controller in p['argv']]
-    workers = [p for p in owned if worker in p['argv']]
+    controllers = [p for p in owned if executes(p, controller)]
+    workers = [p for p in owned if executes(p, worker)]
     for p in controllers:
         a = p['argv']
         if not (p['pid'] == owner_pid and flag(a,'--contract') == str(root/'execution_contract.json') and flag(a,'--mode') == 'dispatch'):
