@@ -5,3 +5,5 @@
 full130 monitor_once → finalize_once 각각 한 번. completion_receipt 원본SHA회수 확인 후 compare_stages.py 로컬 비교 한 번. 추가학습/재시도/선택변경/Test를 하지 않습니다. 원래9조건·양서버terminal, bias2원본회수·5080terminal, full130원본회수·5080terminal 모두 검증해야 이 자동화만 삭제합니다.
 
 현재 full130 canonical f47310a5d2cafa97510f401e1484653023223bf3fa8ec4550dfecbb8ef806187. 실제 시작10/6 10:17:32 KST, 별도lease16:46:52 KST(ETA 아님). 실제 승인·관측명령·회수gate는 번들 scheduler_prompt.txt, 앱readback 증거는 scheduler_receipt.json.
+
+10/6 10:22:28KST에full130 6완료·원본SHA회수·5080terminal을확인했습니다. 해당stage는terminalcache로SSH0을유지하며기존9조건미완료gate 때문에통합자동화는ACTIVE로유지합니다.

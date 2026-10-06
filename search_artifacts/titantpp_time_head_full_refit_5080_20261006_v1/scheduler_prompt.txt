@@ -35,7 +35,7 @@ ETA는해당RTX fit자체최근최대10완료epoch시간중앙값으로계산한
 /usr/local/bin/python3 search_artifacts/titantpp_time_head_bias_refit_5080_20261006_v1/control/finalize_once.py
 6개 terminalcache가 없으면 로컬 pending만 기록하며 원격 회수/평가/학습을 하지 않는다. 6 scientific_success+selected/last·E0·quantity/frozen 동일성+원본SHA+controller exit0+실제 소유PID 부재가 확인된 때만 기승인된 새 head 원본·이력·원래 selected checkpoint manifest/archive SHA 회수와 Validation 요약을 한번 수행한다. exclusive lock/retrieval claim을 보존하며 실패시 자동 retry 없이 원인과 사용자 조치를 알린다. 이는 학습관측 SSH1회와 구분된 원본 보존 후속이다.
 
-새 head Test와 예측 행·Validation/Test 혼합 결과는 열지 않는다. 원래 Train을 본 encoder의 사후 재적합이며 독립 calibration/새 독립 평가가 아니다. S2P2의 동일 재적합은 이번 범위에 없으며 우월성을 확정하지 않는다. 130개 시간 출력부는 아래 승인된 별도 stage로 실행 중이며, Intermittent 보정·Test3seed·CPU binary 재추론 감사·새 독립평가는 별도 후속이다. 원래9조건 회수/종료, bias2 head6조건 원본SHA회수/5080종료, 아래 full130 head6조건 원본SHA회수/5080종료가 모두 검증되기 전 자동화를 유지한다. 세 stage가 모두 확인되면 최종 관측 보고서 후 이 자동화만 삭제한다. 다른자동화/PAUSEDmonitor/Pod/5090 작업/chat archive는 변경하지 않는다.
+새 head Test와 예측 행·Validation/Test 혼합 결과는 열지 않는다. 원래 Train을 본 encoder의 사후 재적합이며 독립 calibration/새 독립 평가가 아니다. S2P2의 동일 재적합은 이번 범위에 없으며 우월성을 확정하지 않는다. 130개 시간 출력부는 아래 승인된 별도 stage로 완료·원본SHA회수·종료검증됐으며, Intermittent 보정·Test3seed·CPU binary 재추론 감사·새 독립평가는 별도 후속이다. 원래9조건 회수/종료, bias2 head6조건 원본SHA회수/5080종료, 아래 full130 head6조건 원본SHA회수/5080종료가 모두 검증되기 전 자동화를 유지한다. 세 stage가 모두 확인되면 최종 관측 보고서 후 이 자동화만 삭제한다. 다른자동화/PAUSEDmonitor/Pod/5090 작업/chat archive는 변경하지 않는다.
 
 5080 시간 출력부 전체130개 재적합 추가 stage
 사용자는 2026-10-06 “시간 출력부 전체 130개 재적합을 검토한다 … 진행하자”로 현재 stage를 직접 승인했다. 위 원래9조건과 bias2 6조건의 관측을 보존하고, full130 신규6조건을 별도 표로 집계한다. Taxi·RAF seed42/52/62 각각 원래 수량-selected checkpoint E0에서 시작하며 이전 bias2 selected 상태로 이어 학습하지 않는다. native 텐서 v_t.weight(64), b_t(1), w_raw(1), time_scale_weight.weight(64), 총130개만 Train으로 학습한다. CNN·GRU·HardLMM·수량경로·나머지 weight/buffer/eval·양성정수 시간 likelihood·단위는 고정한다. 동일 canonical 원본조건을 여러 stage에서 원래9조건에 중복 합산하지 않는다.
@@ -54,4 +54,6 @@ finalize는6verifiedterminalcache 없으면localpending만기록한다. 모두�
 비교는원본E0·bias2·full130의같은6원본CP/quantitybyteSHA/E0를엄격대조하고3seed평균·표본SD와전체/큰수량RMSE/MAE/TimeNLL을구분한다. 임의checkpoint재선택·새평가·Test열람없음. 결과는Train기학습encoder의Validation개발선택이며독립calibration/독립Test증거가아니다. S2P2동일재적합·Intermittent보정·Test3seed·CPUbinary재추론감사·새독립평가는별도미완료다. full130학습완료와원본SHA회수/실제종료를구분해보고한다.
 
 이통합자동화삭제gate는원래9조건원본회수+원래5080/5090terminal, bias2 6조건원본SHA회수+5080terminal, full130 6조건원본SHA회수+5080terminal 모두충족이다. 한stage라도상태/회수/종료미확정이면유지한다. 이전두stage만끝났다고삭제하지않는다. 모든gate통과후세stage최종관측보고서를남기고이자동화titantpp-gru-3seed만삭제한다. 다른자동화/PAUSEDmonitor/Pod/서버작업/chatarchive는변경하지않으며전체연구감사완료라고하지않는다.
+
+2026-10-06 full130 종료 증거: 실제 terminal관측10:22:28KST, 신규6완료/실패0/미시작0, 소유controller/worker/GPU PID부재·supervisor exit0 확인. 새원본119개/archiveSHA1dbf6f033948813b17b8c004f8e43beffc0d276af258b30734199d7b54eb7348 로컬검증·3stageValidation요약완료. full130 monitor는terminalcacheSSH0·실제10:22:28시각보존, finalize는already_finalized로새회수/평가없음. 원래9조건(특히5090) 회수/종료gate가미확정이면통합자동화는유지한다. Taxi3seed는full130도E0선택·TimeNLL평균1.4683615639292191불변, RAF3seed는원본3.5464131118253→full1303.50991779788437(1.0291%감소). fullTrain/Val수량byteSHA동일, Test미평가. 전체시간손해해결·외부비교우월성을확정하지않는다.
 

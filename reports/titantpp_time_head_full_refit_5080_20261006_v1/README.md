@@ -1,26 +1,47 @@
 # CNN+GRU54 수량 경로 동결·시간 출력부130개 재적합
 
-**완료 원본과 두 보정값 결과를 연결한다 — 완료 / 현재 기준선**
-- Taxi·RAF seed42/52/62의 원래 수량 선택 checkpoint6개를 그대로 씁니다. 이전 bias2 단계는6완료·원본SHA회수·실제종료가 확인됐으며 Taxi 개선0, RAF 평균TimeNLL0.725% 감소입니다. 새130개 학습은 이전 bias2 선택 상태가 아닌 원래 quantity-selected E0에서 시작합니다.
+**5080 실제 환경 검증·6조건 학습·원본 회수 — 완료**
 
-**시간 출력부130개를 학습하도록 준비한다 — 완료**
-- 실제 native 파라미터는 v_t.weight64개, b_t1개, w_raw1개, time_scale_weight.weight64개입니다. CNN·GRU·HardLMM·수량 출력부·모든 나머지 weight/buffer/eval을 고정합니다. 원래 시간 단위와 recorded-positive-integer 시간 likelihood를 유지합니다.
-- Train만 fitting에 쓰고 full Validation TimeNLL 최초 strict finite최소를 선택합니다. E0를 포함해 동률/불개선이면 원본을 유지합니다. Adam LR0.001·batch128·clip1·최대40epoch·patience10을 bias2 단계와 같게 유지합니다.
-- 실행 대상은5080 별도root·worker1, 조건1시간/전체6.5시간, CPU16GiB/GPU80%/root8GiB, 자동retry 없음입니다. Test/5090/공용Runtime/인증/과학소스는 변경하지 않습니다.
+- Taxi·RAF seed42/52/62의 원래 수량-selected checkpoint E0에서 시간 출력부의 4개 텐서·130개 파라미터만 다시 학습했습니다. CNN·GRU·HardLMM·수량 경로·나머지 weights/buffers/eval·원래 시간 단위와 양성정수 likelihood를 고정했습니다.
+- CPU 테스트95개와33subtests PASS, 5080 대표Taxi52 native qualification PASS. 실제 시작2026-10-06 10:17:32KST. 조건별 own originalSHA/E0/population/startup gate와 전체 Train/Validation 수량예측 byteSHA·동결 weights/buffers SHA·선택/마지막/terminal을 확인했습니다.
+- Train만 fitting에 사용, AdamLR0.001/batch128/clip1/최대40epoch/patience10, 원본E0 포함 earliest strict finite full Validation TimeNLL 선택입니다. 앞선bias2 selected checkpoint를 재사용하지 않았습니다.
+- 실제 종료 관측은 2026-10-06 10:22:28 KST입니다. 소유 감독·학습 프로세스와 GPU PID 부재, 감독 프로세스 종료 코드0을 확인했습니다. 원본 기록119개를 회수하고 로컬SHA 검증했습니다. archive SHA `1dbf6f033948813b17b8c004f8e43beffc0d276af258b30734199d7b54eb7348`.
 
-**실제 GPU 검증·학습·원본회수로 비교한다 — 진행 중**
-- native 대표 Taxi52 검증 후 각6조건의 원본/E0/population/startup gate를 확인해야 fitting이 가능합니다. 모든 Train/Validation 수량 예측 byteSHA와 동결 weight/buffer SHA가 정확히 유지돼야 합니다.
-- 학습완료 후 selected/last130개 head tensor·이력·원래 selected checkpoint 원본manifest/archiveSHA를 회수합니다. 완료 전에 성능을 확정하지 않습니다.
-- 결과는 Validation 개발 선택이며 독립 calibration이 아닙니다. S2P2의 동일 재적합·Intermittent 후속·별도Test/독립평가/CPUbinary감사는 별도 미완료입니다.
+**원본·bias2·full130의 같은 checkpoint 비교 — 완료 / Validation 개발 결과**
 
-- 로컬 CPU 테스트73개와 subtest33개 PASS. 원본6개·source123 SHA와 native4tensor/130개 일치 읽기 검토PASS. 5080 실제 native qualification PASS(대표Taxi52, 원본whole-state 복구SHA 일치·수량 반복forward 동일, real optimizer update0). 2026-10-06 10:17:32KST에 학습을 실행했습니다.
+평균 ± 표본표준편차(ddof1), 각 행3seed. 시간 재적합 선택이므로 독립 calibration/미접근 Test 결과가 아닙니다.
 
-**실제 실행 증거 — 진행 중**
-- 10:17:44KST 관측: 완료0/실패0/진행1/대기5/미확정0. Taxi seed52 특징추출 중이며 첫새head 저장전입니다. controller17491·worker17510/GPU PID17510의 정확 명령·PPID·GPUUUID를 확인했습니다.
-- 5090의 기존 학습·관측은 유지합니다. 이번작업에서5090 추가SSH나중단은 하지 않았습니다.
-- 기존 매시간 자동화에 full130관측·원본회수·3stage비교를 추가하고 앱readback 확인했습니다.
+| 데이터 | 단계 | 전체 RMSE | 전체 MAE | 전체 TimeNLL | 큰 수량 RMSE | 큰 수량 MAE | 큰 수량 TimeNLL |
+|---|---|---:|---:|---:|---:|---:|---:|
+| Taxi | 원본 | 79.062790 ± 2.666753 | 25.279664 ± 0.709946 | 1.468362 ± 0.650374 | 392.124658 ± 24.734378 | 303.921964 ± 29.042754 | 1.367e-19 ± 2.368e-19 |
+| Taxi | 2개 보정 | 79.062790 ± 2.666753 | 25.279664 ± 0.709946 | 1.468362 ± 0.650374 | 392.124658 ± 24.734378 | 303.921964 ± 29.042754 | 1.367e-19 ± 2.368e-19 |
+| Taxi | 130개 전체 | 79.062790 ± 2.666753 | 25.279664 ± 0.709946 | 1.468362 ± 0.650374 | 392.124658 ± 24.734378 | 303.921964 ± 29.042754 | 1.367e-19 ± 2.368e-19 |
+| RAF | 원본 | 34.184123 ± 0.233359 | 9.206201 ± 0.074141 | 3.546413 ± 0.065948 | 328.392021 ± 7.855998 | 281.575288 ± 8.793100 | 3.495288 ± 0.221023 |
+| RAF | 2개 보정 | 34.184123 ± 0.233359 | 9.206201 ± 0.074141 | 3.520693 ± 0.086278 | 328.392021 ± 7.855998 | 281.575288 ± 8.793100 | 3.475579 ± 0.230830 |
+| RAF | 130개 전체 | 34.184123 ± 0.233359 | 9.206201 ± 0.074141 | 3.509918 ± 0.051516 | 328.392021 ± 7.855998 | 281.575288 ± 8.793100 | 3.353021 ± 0.120860 |
 
-**첫 실제 head checkpoint 확인 — 완료 / 전체 학습은 진행 중**
-- 10:20:07KST: 완료4/실패0/진행1/대기1/미확정0. Taxi3seed 모두head E10/bestE0로 원본이 선택됐습니다. RAF52는head E12/bestE2, TimeNLL3.479681→3.460704이며 나머지RAF62 E3/best3 진행·RAF42 대기입니다.
-- 완료4조건 모두 full Train/Validation 수량예측 byteSHA·동결 weight/bufferSHA·원본CP SHA·selected/last/terminal 증거가 일치합니다. RAF3seed 결과·원본전체회수·서버종료는 아직 미완료입니다.
-- 새비교 CPU22개 PASS. 전체95개+33subtests 검증(73+22). 현재 finalize는pending을기록했고 원격회수/평가를실행하지않았습니다.
+큰 수량 경계는 Train의 Taxi3449·RAF200 초과이며 Validation 대상은Taxi79·RAF50개입니다. 수량 예측은6조건 모두 세 단계 모두에서 byte 단위로 같았습니다. 큰수량 TimeNLL은 전체 TimeNLL과 따로 해석합니다.
+
+| 데이터 | Seed | 원본 수량 선택epoch | 130개 선택/저장epoch | 원본 NLL | 2개 보정 NLL | 130개 전체 NLL |
+|---|---:|---:|---:|---:|---:|---:|
+| RAF | 42 | 9 | 1/11 | 3.548010 | 3.510662 | 3.505588 |
+| RAF | 52 | 5 | 2/12 | 3.479681 | 3.439869 | 3.460704 |
+| RAF | 62 | 20 | 7/17 | 3.611548 | 3.611548 | 3.563462 |
+| Taxi | 42 | 126 | 0/10 | 1.365979 | 1.365979 | 1.365979 |
+| Taxi | 52 | 157 | 0/10 | 2.163854 | 2.163854 | 2.163854 |
+| Taxi | 62 | 54 | 0/10 | 0.875252 | 0.875252 | 0.875252 |
+
+**현재 결과와 해석 범위 — 완료**
+
+- Taxi: 원본 대비 평균 TimeNLL 변화+0.000%, bias2 대비+0.000%. 개선한 seed는 없습니다.
+- RAF: 원본 대비 평균 TimeNLL 변화-1.029%, bias2 대비-0.306%. seed42·52·62 모두 원본보다 개선됐습니다.
+- 수량을 그대로 유지하는 시간 head 재적합은 실행 가능했으나 이 제한된 방법의 결과만으로 시간 일반화 문제 전체가 해결됐다고 보지 않습니다. S2P2에 동일 재적합은 수행하지 않았습니다.
+- Taxi에서는 Train 학습에 따른 NLL 감소와 Validation 악화가 함께 관측됐으며 E0가 선택됐습니다. 이는 현재 Train refit이 Validation 개선으로 이어지지 않았다는 증거이고, encoder 원인이나 모든 보정법의 불가능성을 증명하지 않습니다.
+
+**남은 결과 연결 — 다음 작업**
+
+- 5090 Intermittent의 3seed 학습 종료와 원본 회수 결과를 기존 시간별 관측에서 연결합니다. 5090의 기존 작업과 관측을 유지했습니다.
+- 이어 S2P2와 시간 성능 차이를 비교합니다. S2P2에 동일한 재적합, Intermittent 시간 재적합, 새 Test·독립 평가는 아직 실행하지 않았습니다.
+- 매시간 자동화는 원래9조건·두 파라미터 보정·130개 전체 재적합의 실제 종료와 원본 회수 확인이 모두 끝나면 종료합니다. CPU 원본 재추론 감사·Test3seed·새 독립 평가는 별도로 남아 있습니다.
+
+Validation 원본은 번들 analysis/Validation_three_stage_comparison.json 및 Validation_refit_comparison.json, SHA회수/종료는 completion_receipt.json, 실제기록은 hourly_monitor/terminal_cache.json입니다. 운영소스7c84faa(master), source123 SHA4e94229fae002dc678025ecf056862f832c64459969f403b3cb5ac8cea8ba7b0를 유지했습니다.
