@@ -177,9 +177,10 @@ def prepare(attempt=1):
         'recorded_unix': now, 'local_implementation_native_qualification_and_fresh_54_fit_training': True,
         'Test_access': False, 'shared_Runtime_or_auth_change': False,
         'previous_design_approval_preserved': str(DESIGN.relative_to(PROJECT) / 'approval.json')}
+    lease_started = now if attempt == 1 else read(BUNDLE / 'revisions/attempt1/start_permit.json')['started_at_unix']
     start = {'schema': 'titantpp_architecture_contribution_start_v1', 'contract_sha256': digest,
-        'approval_sha256': canonical(approval), 'started_at_unix': now,
-        'deadline_unix': now + 168*3600, 'automatic_retry': False, 'workers_per_host': 1}
+        'approval_sha256': canonical(approval), 'started_at_unix': lease_started,
+        'deadline_unix': lease_started + 168*3600, 'automatic_retry': False, 'workers_per_host': 1}
     for name, value in [('execution_contract.json', c), ('approval.json', approval), ('start_permit.json', start)]:
         write(BUNDLE / name, value)
     write(BUNDLE / 'current.json', {'schema': NAME, 'contract_path': 'execution_contract.json',
