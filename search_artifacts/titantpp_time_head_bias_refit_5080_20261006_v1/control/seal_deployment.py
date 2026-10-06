@@ -41,12 +41,13 @@ def main():
     c['fit_split'] = 'train'; c['selection_split'] = 'validation'
     csha = digest(c)
     approval = json.loads((BUNDLE/'approval.json').read_text()); approval['contract_sha256'] = csha
-    start = time.time()
+    start = c.get('lease_started_unix', time.time())
     permit = {'contract_sha256': csha, 'approval_sha256': digest(approval),
         'issued_at_unix': start, 'deadline_unix': start+c['limits']['total_wall_seconds']}
     current = {'campaign': c['campaign'], 'host': '5080', 'root': root,
         'canonical_sha256': csha, 'contract': 'execution_contract.json',
-        'status': 'sealed_native_qualification_pending', 'fit_count': 6, 'stage': 'time_bias2'}
+        'status': 'sealed_native_qualification_pending', 'fit_count': 6, 'stage': 'time_bias2',
+        'execution_attempt': c.get('execution_attempt', 1)}
     write(BUNDLE/'execution_contract.json', c); write(BUNDLE/'approval.json', approval)
     write(BUNDLE/'start_permit.json', permit); write(BUNDLE/'current.json', current)
     with tempfile.TemporaryDirectory() as temp:

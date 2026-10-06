@@ -124,10 +124,10 @@ def verify_result(c, j, jobroot):
     return r
 
 
-def run_owned(cmd, log, deadline, environment, pidpath=None):
+def run_owned(cmd, log, deadline, environment, pidpath=None, cwd=None):
     proc = None
     try:
-        proc = subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT, env=environment)
+        proc = subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT, env=environment, cwd=cwd)
         if pidpath:
             write(pidpath, {'pid': proc.pid, 'ppid': os.getpid(), 'command': cmd, 'time': time.time()})
         code = proc.wait(timeout=max(1, deadline-time.time()))
@@ -161,7 +161,7 @@ def main():
             with (root/'logs/qualification.log').open('x') as f:
                 run_owned(base+['--job', c['jobs'][0]['id'], '--qualify'], f,
                     min(time.time()+1800, start['deadline_unix']), environment,
-                    root/'qualification/worker_process.json')
+                    root/'qualification/worker_process.json', c['source']['root'])
             q = read(root/'qualification/receipt.json')
             assert q['status'] == 'passed' and q['contract_sha256'] == digest(c)
             write(root/'qualification/controller_exit.json', {'returncode': 0, 'time': time.time()})
@@ -198,7 +198,7 @@ def main():
             cmd = base+['--job', j['id'], '--training-permit', str(permitpath),
                 '--owner-pid', str(os.getpid())]
             with (root/'logs'/('fit_'+j['id']+'.log')).open('x') as log:
-                run_owned(cmd, log, deadline, environment, jobroot/'worker_process.json')
+                run_owned(cmd, log, deadline, environment, jobroot/'worker_process.json', c['source']['root'])
             result = verify_result(c, j, jobroot)
             files = {str(p.relative_to(jobroot)): sha(p) for p in jobroot.rglob('*') if p.is_file()}
             write(jobroot/'supervisor_terminal_receipt.json', {'status': 'complete', 'scientific_success': True,

@@ -373,3 +373,47 @@ def test_qualification_accepts_only_supervisor_evidence_subset(contract,tmp_path
     assert r.read(output/'failure.json')['automatic_retry_allowed'] is False
     with pytest.raises(ValueError,match='Fresh qualification'):
         r.qualify(contract,contract['jobs'][0],{},output,'cpu')
+
+
+def test_native_relative_input_preparation_preserves_sha_and_population(scientific,tmp_path,monkeypatch):
+    import numpy as np
+    import polars as pl
+    from paper.scripts import quantity_comparison_data as data_code
+    root=tmp_path/'frozen_source'
+    inputs=root/'inputs/data/synthetic';inputs.mkdir(parents=True)
+    parquet=inputs/'train_validation.parquet'
+    manifest=inputs/'split_manifest.json'
+    raw=pl.DataFrame({'oper_part_no':['synthetic']*5,'seq':[1,2,3,4,5],
+        'delta_t':[1.,2.,3.,4.,5.],'demand_qty':[1.,2.,4.,8.,16.],
+        'chronological_split':['train','train','train','validation','validation']})
+    raw.write_parquet(parquet)
+    r.write(manifest,{'scope':'synthetic_train_validation_only'})
+    frame=scientific.core.prepare_count_frame(raw)
+    train_values,train_pop=data_code.exact_target_population(frame,target_split='train',lookback_weeks=84,max_seq_len=84)
+    _,val_pop=data_code.exact_target_population(frame,target_split='validation',lookback_weeks=84,max_seq_len=84)
+    assert train_pop['target_count']==2 and val_pop['target_count']==2
+    populations={label:{key:value[key] for key in data_code.POPULATION_KEYS} for label,value in [('train',train_pop),('validation',val_pop)]}
+    quantities=np.array([1.,2.,4.],dtype=np.float64)
+    stats={'train_log_mean':float(np.log1p(quantities).mean()),'train_log_std':float(np.log1p(quantities).std()),
+        'raw_scale':max(1.,float(np.sqrt(np.square(train_values).mean()))),
+        'all_train_quantity_sha256':data_code._all_row_quantity_identity(quantities)}
+    dataset={'dataset_id':'synthetic','inherited_data_identity':{
+        'data':{'path':'inputs/data/synthetic/train_validation.parquet','sha256':r.sha(parquet)},
+        'split_manifest':{'path':'inputs/data/synthetic/split_manifest.json','sha256':r.sha(manifest)},
+        'populations':populations},'loader':{'lookback_weeks':84,'max_seq_len':84},'statistics':stats}
+    unchanged=r.canonical(dataset)
+    c={'source':{'root':str(root)}}
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(ValueError,match='frozen source working directory'): r.require_frozen_working_directory(c)
+    with pytest.raises(ValueError,match='Cannot resolve input'): data_code.resolve_local_input(dataset['inherited_data_identity']['data']['path'],data_root=root)
+    monkeypatch.chdir(root)
+    r.require_frozen_working_directory(c)
+    assert data_code.resolve_local_input(dataset['inherited_data_identity']['data']['path'],data_root=root)==parquet.resolve()
+    prepared,receipt=scientific.engine.base.prepare_admitted_data(dataset,data_root=root)
+    assert prepared.height==5 and set(prepared['chronological_split'].to_list())=={'train','validation'}
+    assert receipt['input_identity']=={'data_sha256':r.sha(parquet),'split_manifest_sha256':r.sha(manifest)}
+    assert receipt['populations']==populations and receipt['held_out_materialized'] is False
+    assert r.canonical(dataset)==unchanged
+    parquet.write_bytes(b'corrupt synthetic admitted input')
+    with pytest.raises(ValueError,match='data file digest mismatch'):
+        scientific.engine.base.prepare_admitted_data(dataset,data_root=root)

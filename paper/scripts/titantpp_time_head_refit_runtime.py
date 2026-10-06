@@ -453,7 +453,15 @@ class Permit:
         self.resources()
 
 
+def require_frozen_working_directory(c):
+    # The unchanged resolver's first branch resolves admitted relative inputs
+    # against cwd, matching the original frozen campaign launch semantics.
+    require(Path.cwd().resolve() == Path(c["source"]["root"]).resolve(),
+        "Run native data preparation from the pinned frozen source working directory")
+
+
 def load_job(c, job, data, device):
+    require_frozen_working_directory(c)
     import torch
     engine, core, loader, runner = native(c["source"]["root"])
     numerical = importlib.import_module("paper.scripts.quantity_comparison_runtime")
