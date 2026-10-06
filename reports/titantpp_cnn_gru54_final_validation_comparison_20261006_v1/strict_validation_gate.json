@@ -1,0 +1,501 @@
+{
+  "schema": "cnn_gru54_original_validation_strict_gate_v1",
+  "scope": "Validation_only",
+  "status": "PASS_EVIDENCE_FAIL_STRONG_DOMINANCE",
+  "evidence_integrity_gate": "PASS",
+  "evidence_checks": [
+    "all9_final_originals_complete",
+    "original_endpoint_SHA_matches_completion",
+    "matched_seed42_52_62",
+    "matched TRAIN/Validation ordered identity+quantity SHA/statistics; canonical file SHA exact for CNN9; benchmark packaging alternate dt SHA/runtime likelihood equivalence verified",
+    "same_full_Validation_targets_and_fixed_TRAIN_tail",
+    "strict_first_finite_quantity_RMSE_minimum_epoch_preserved",
+    "NLL_same_quantity_selected_epoch",
+    "selected_state_matches_frozen_checkpoint_registry",
+    "no_Test_performance_or_mixed_numeric_source_access"
+  ],
+  "scientific_adoption_gate": "FAIL_TRADEOFF",
+  "frozen_adoption_source": {
+    "path": "reports/titantpp_cnn_gru54_3seed_dual_20261005_v1/execution_contract.json",
+    "sha256": "e809f6a22290674d21382db8cad650edc18f42b4d0821900ff1609a2e7967bfd",
+    "original_rule": "strong dominance only when all3 seeds improve overall RMSE with no worse overall MAE/tail RMSE/MAE/TimeNLL; otherwise report tradeoff, do not hide losers"
+  },
+  "dominance_results": [
+    {
+      "dataset": "yellow_trip_hourly",
+      "reference": "s2p2_matched_head",
+      "strong_dominance": false,
+      "status": "FAIL_TRADEOFF",
+      "failures": [
+        {
+          "view": "overall",
+          "metric": "time_nll",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 0.6731305276196454,
+            "52": 1.5057618839724207,
+            "62": 0.22889734391371064
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "time_nll",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "52": 4.101818238860914e-19,
+            "62": 2.8038096296491377e-32
+          }
+        }
+      ]
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "reference": "titantpp_history_mlp_width16",
+      "strong_dominance": false,
+      "status": "FAIL_TRADEOFF",
+      "failures": [
+        {
+          "view": "overall",
+          "metric": "qty_rmse",
+          "requirement": "all3 strictly improve",
+          "failed_seed_deltas": {
+            "52": 2.3236663586821606,
+            "62": 5.566182878858868
+          }
+        },
+        {
+          "view": "overall",
+          "metric": "qty_mae",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "52": 0.5753666346718802,
+            "62": 1.2510634103603415
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "qty_rmse",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "52": 34.33476953781906,
+            "62": 48.158768648959665
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "qty_mae",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "52": 23.012670589398738,
+            "62": 40.03775217563293
+          }
+        },
+        {
+          "view": "overall",
+          "metric": "time_nll",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 0.6868278137278259,
+            "52": 0.8931817085237985
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "time_nll",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "52": 4.101818238888068e-19,
+            "62": 2.8038096296491294e-32
+          }
+        }
+      ]
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "reference": "s2p2_matched_head",
+      "strong_dominance": false,
+      "status": "FAIL_TRADEOFF",
+      "failures": [
+        {
+          "view": "overall",
+          "metric": "time_nll",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 0.04325499971313179,
+            "52": 0.07207787854924566,
+            "62": 0.08722401911293931
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "time_nll",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "52": 0.0002686485883385182,
+            "62": 8.524198355600318e-06
+          }
+        }
+      ]
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "reference": "titantpp_history_mlp_width16",
+      "strong_dominance": false,
+      "status": "FAIL_TRADEOFF",
+      "failures": [
+        {
+          "view": "overall",
+          "metric": "qty_rmse",
+          "requirement": "all3 strictly improve",
+          "failed_seed_deltas": {
+            "42": 0.13589915526108975,
+            "62": 0.037692747297211504
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "qty_rmse",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 1.302136151919016,
+            "52": 0.18956648280755317,
+            "62": 0.779313509845851
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "qty_mae",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 1.2117410938955002,
+            "52": 0.007272544814033388,
+            "62": 0.7235361110944689
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "time_nll",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 2.4397831421522626e-14
+          }
+        }
+      ]
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "reference": "s2p2_matched_head",
+      "strong_dominance": false,
+      "status": "FAIL_TRADEOFF",
+      "failures": [
+        {
+          "view": "overall",
+          "metric": "qty_rmse",
+          "requirement": "all3 strictly improve",
+          "failed_seed_deltas": {
+            "42": 0.16604642161446037,
+            "52": 0.5525560791082853
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "qty_rmse",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 6.414855209112602,
+            "52": 13.332162600849472
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "qty_mae",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 6.281664655208601,
+            "52": 14.499420709609979
+          }
+        },
+        {
+          "view": "overall",
+          "metric": "time_nll",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 0.16143841807712533,
+            "52": 0.03936561942025607,
+            "62": 0.1822486228935305
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "time_nll",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 0.2203143399791463,
+            "62": 0.4775616414019872
+          }
+        }
+      ]
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "reference": "titantpp_history_mlp_width16",
+      "strong_dominance": false,
+      "status": "FAIL_TRADEOFF",
+      "failures": [
+        {
+          "view": "overall",
+          "metric": "qty_rmse",
+          "requirement": "all3 strictly improve",
+          "failed_seed_deltas": {
+            "42": 0.14501324736122,
+            "52": 0.32030143720119497
+          }
+        },
+        {
+          "view": "overall",
+          "metric": "qty_mae",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "62": 0.023880772508668713
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "qty_rmse",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "52": 6.041229052159451
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "qty_mae",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "52": 5.20884375095369
+          }
+        },
+        {
+          "view": "overall",
+          "metric": "time_nll",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "52": 0.01708699995723606,
+            "62": 0.13239111271147586
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "time_nll",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "62": 0.44301009972201255
+          }
+        }
+      ]
+    }
+  ],
+  "checkpoint_reselection": false,
+  "test_unlock": {
+    "performed_here": false,
+    "automatic_authorization": false,
+    "decision": "Existing user authorization covers original CNNGRU Test9 regardless of adoption superiority; root may execute only after evidence integrity and a new native full Validation9 replay gate pass. Scientific FAIL_TRADEOFF restricts claims, not authorized Test execution.",
+    "eligible_frozen_condition_count": 9,
+    "candidate_model": "titantpp_cnn_gru54",
+    "seeds": [
+      42,
+      52,
+      62
+    ],
+    "datasets": [
+      "yellow_trip_hourly",
+      "intermittent_frozen_5000",
+      "raf_spare_parts"
+    ],
+    "checkpoint_binding_source": "source_bindings.json",
+    "quantity_selector_and_epoch_must_remain_fixed": true,
+    "Test_is_development_exposed_not_independent": true,
+    "authorization_scope": "Existing user instruction; no new permission requested here.",
+    "native_Validation9_replay_gate_required": true
+  },
+  "held_out_performance_read": false,
+  "new_training": false,
+  "new_inference": false,
+  "passed": true,
+  "evaluation_scope": "validation_only",
+  "held_out_test_evaluated": false,
+  "conditions": 9,
+  "rows": [
+    {
+      "dataset": "intermittent_frozen_5000",
+      "seed": 42,
+      "model": "titantpp_cnn_gru54",
+      "selected_epoch": 12,
+      "checkpoint_path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_cnn_gru_resume_dual_20261005_v1/retrieved/5090/run/intermittent_frozen_5000__42__titantpp_cnn_gru54/runs/titantpp_cnn_gru54/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_file_sha256": "597523bfeada42f7e72789ccfd30b926e2c7ae2822f2e5453a289dd5f07e808c",
+      "state_tensor_sha256": "b78c6bc08ca1317d3a19e42d6c5fbae2de1ed7497a1e4aec138b76fbb85b3dd0",
+      "endpoint_sha256": "6e392484204073de0137543fad1f33cf939bb8ffe089402fcbe1dd8c07c13924",
+      "endpoint_path": "search_artifacts/titantpp_cnn_gru_resume_dual_20261005_v1/retrieved/5090/run/intermittent_frozen_5000__42__titantpp_cnn_gru54/runs/titantpp_cnn_gru54/count_only_log_regression/seed_42/endpoint_replays.json",
+      "source_closure_sha256": "40184c7ff418f35b191ebfa309e462b9e88889443f36e4722cc5d06988d182cd",
+      "source_revision": "38fcc58e45f39fdaf6ee8560f99a88a2b10e6e18",
+      "population": {
+        "target_count": 86285,
+        "target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+        "target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385"
+      },
+      "same_epoch_time_nll": true
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "seed": 52,
+      "model": "titantpp_cnn_gru54",
+      "selected_epoch": 11,
+      "checkpoint_path": "search_artifacts/titantpp_cnn_gru54_3seed_dual_20261005_v1/retrieved/5090/original/run/intermittent_frozen_5000__52__titantpp_cnn_gru54/runs/titantpp_cnn_gru54/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt",
+      "checkpoint_file_sha256": "7caf5eba84a2077accb4d34f36a79a97647f9e55975368b302360ac7a2951f64",
+      "state_tensor_sha256": "92bee320c1efa722761d557a50229693b63e679cc9e50eab9e72c6c053ee9eb5",
+      "endpoint_sha256": "245bd9e033f2ebbe689a3ab2dd88f09b95d56eaa69faea328134922104b2fa14",
+      "endpoint_path": "search_artifacts/titantpp_cnn_gru54_3seed_dual_20261005_v1/retrieved/5090/original/run/intermittent_frozen_5000__52__titantpp_cnn_gru54/runs/titantpp_cnn_gru54/count_only_log_regression/seed_52/endpoint_replays.json",
+      "source_closure_sha256": "4e94229fae002dc678025ecf056862f832c64459969f403b3cb5ac8cea8ba7b0",
+      "source_revision": "834c0f08e7cb4326401ee7f0df01b08061a9732d",
+      "population": {
+        "target_count": 86285,
+        "target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+        "target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385"
+      },
+      "same_epoch_time_nll": true
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "seed": 62,
+      "model": "titantpp_cnn_gru54",
+      "selected_epoch": 13,
+      "checkpoint_path": "search_artifacts/titantpp_cnn_gru54_3seed_dual_20261005_v1/retrieved/5090/original/run/intermittent_frozen_5000__62__titantpp_cnn_gru54/runs/titantpp_cnn_gru54/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt",
+      "checkpoint_file_sha256": "e84ab168f99b820c0c14391eec048fc0fc27fd1a14aebb7e9ddc79c2114515ec",
+      "state_tensor_sha256": "053f0581529764e01cdd2c0f77e8077a5e750a52ab170d314b40eab76ff6799a",
+      "endpoint_sha256": "84479fe5cd2681acc780537d99f18b7cc2cee65adec14a01a56b3a19197e2662",
+      "endpoint_path": "search_artifacts/titantpp_cnn_gru54_3seed_dual_20261005_v1/retrieved/5090/original/run/intermittent_frozen_5000__62__titantpp_cnn_gru54/runs/titantpp_cnn_gru54/count_only_log_regression/seed_62/endpoint_replays.json",
+      "source_closure_sha256": "4e94229fae002dc678025ecf056862f832c64459969f403b3cb5ac8cea8ba7b0",
+      "source_revision": "834c0f08e7cb4326401ee7f0df01b08061a9732d",
+      "population": {
+        "target_count": 86285,
+        "target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+        "target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385"
+      },
+      "same_epoch_time_nll": true
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "seed": 42,
+      "model": "titantpp_cnn_gru54",
+      "selected_epoch": 9,
+      "checkpoint_path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_cnn_gru_resume_dual_20261005_v1/recovery/ssh_info_attempt2/original/run/raf_spare_parts__42__titantpp_cnn_gru54/runs/titantpp_cnn_gru54/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_file_sha256": "9378109de04238ad0f25df574aaa5b035cbbb78e04a74bc5aa35a94c67e2103c",
+      "state_tensor_sha256": "e0b3074394af4f664d718653f224e1fbb7f966365f5f7d8d8c05b36d71ef26a3",
+      "endpoint_sha256": "659d35478174e55f68bad94a04e35b3b5b266729f11082d6db5f5468d638e31d",
+      "endpoint_path": "search_artifacts/titantpp_cnn_gru_resume_dual_20261005_v1/recovery/ssh_info_attempt2/original/run/raf_spare_parts__42__titantpp_cnn_gru54/runs/titantpp_cnn_gru54/count_only_log_regression/seed_42/endpoint_replays.json",
+      "source_closure_sha256": "40184c7ff418f35b191ebfa309e462b9e88889443f36e4722cc5d06988d182cd",
+      "source_revision": "38fcc58e45f39fdaf6ee8560f99a88a2b10e6e18",
+      "population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      },
+      "same_epoch_time_nll": true
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "seed": 52,
+      "model": "titantpp_cnn_gru54",
+      "selected_epoch": 5,
+      "checkpoint_path": "search_artifacts/titantpp_cnn_gru54_3seed_dual_20261005_v1/retrieved/5080/original/run/raf_spare_parts__52__titantpp_cnn_gru54/runs/titantpp_cnn_gru54/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt",
+      "checkpoint_file_sha256": "6bc229ed0754d7da9c79433d7c3069eb7d09a403f8e2a42ab7458b2d0292e3a3",
+      "state_tensor_sha256": "45ed545e75af108e5bc236b128da4c94e9e6babe8ea49db139f283f0c2d5c01a",
+      "endpoint_sha256": "6626f6b11bb3842aff290e983f8b2def949cd71df14a248c4ffd46f0653878ae",
+      "endpoint_path": "search_artifacts/titantpp_cnn_gru54_3seed_dual_20261005_v1/retrieved/5080/original/run/raf_spare_parts__52__titantpp_cnn_gru54/runs/titantpp_cnn_gru54/count_only_log_regression/seed_52/endpoint_replays.json",
+      "source_closure_sha256": "4e94229fae002dc678025ecf056862f832c64459969f403b3cb5ac8cea8ba7b0",
+      "source_revision": "834c0f08e7cb4326401ee7f0df01b08061a9732d",
+      "population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      },
+      "same_epoch_time_nll": true
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "seed": 62,
+      "model": "titantpp_cnn_gru54",
+      "selected_epoch": 20,
+      "checkpoint_path": "search_artifacts/titantpp_cnn_gru54_3seed_dual_20261005_v1/retrieved/5080/original/run/raf_spare_parts__62__titantpp_cnn_gru54/runs/titantpp_cnn_gru54/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt",
+      "checkpoint_file_sha256": "8928090b181e616f23af48045d3d438705a1402de28562da38ae232b008cd26b",
+      "state_tensor_sha256": "03cac6ef0fa47c7ff2d8288dbe684f62086e76d27b50bcd4043cec5daec445de",
+      "endpoint_sha256": "d6fc9710ac5a1f1d377782b9c28464806c0da5d61b660259b547f6a52bc28542",
+      "endpoint_path": "search_artifacts/titantpp_cnn_gru54_3seed_dual_20261005_v1/retrieved/5080/original/run/raf_spare_parts__62__titantpp_cnn_gru54/runs/titantpp_cnn_gru54/count_only_log_regression/seed_62/endpoint_replays.json",
+      "source_closure_sha256": "4e94229fae002dc678025ecf056862f832c64459969f403b3cb5ac8cea8ba7b0",
+      "source_revision": "834c0f08e7cb4326401ee7f0df01b08061a9732d",
+      "population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      },
+      "same_epoch_time_nll": true
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "seed": 42,
+      "model": "titantpp_cnn_gru54",
+      "selected_epoch": 126,
+      "checkpoint_path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_cnn_gru_resume_dual_20261005_v1/recovery/ssh_info_attempt2/original/run/yellow_trip_hourly__42__titantpp_cnn_gru54/runs/titantpp_cnn_gru54/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_file_sha256": "17f90d3eed5dd4df8ef7aefcc0481a056d2705b3443bbc048570cec0e0b43a75",
+      "state_tensor_sha256": "a0cdcfd1c3784598371af677444ca1acd117c1363e30ba2ec7520db15eb9404c",
+      "endpoint_sha256": "547369548594f978ad279880ae2570c682f8be3cb576a2318d84ba9f039d3aa4",
+      "endpoint_path": "search_artifacts/titantpp_cnn_gru_resume_dual_20261005_v1/recovery/ssh_info_attempt2/original/run/yellow_trip_hourly__42__titantpp_cnn_gru54/runs/titantpp_cnn_gru54/count_only_log_regression/seed_42/endpoint_replays.json",
+      "source_closure_sha256": "40184c7ff418f35b191ebfa309e462b9e88889443f36e4722cc5d06988d182cd",
+      "source_revision": "38fcc58e45f39fdaf6ee8560f99a88a2b10e6e18",
+      "population": {
+        "target_count": 8268,
+        "target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+        "target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd"
+      },
+      "same_epoch_time_nll": true
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "seed": 52,
+      "model": "titantpp_cnn_gru54",
+      "selected_epoch": 157,
+      "checkpoint_path": "search_artifacts/titantpp_cnn_gru54_3seed_dual_20261005_v1/retrieved/5080/original/run/yellow_trip_hourly__52__titantpp_cnn_gru54/runs/titantpp_cnn_gru54/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt",
+      "checkpoint_file_sha256": "cae5ed00f4f6a2662a0953643a555772832c1cd75d98197313b1d43ccdae77fc",
+      "state_tensor_sha256": "64647dfb1916fc5eb9ed5099ee9cd60fa55bc79c0b3e6e0406f3bcc22c73439c",
+      "endpoint_sha256": "a0268a6131340f9c3babf8119f29da7713fe0ad3ed0079f4167f50c247729886",
+      "endpoint_path": "search_artifacts/titantpp_cnn_gru54_3seed_dual_20261005_v1/retrieved/5080/original/run/yellow_trip_hourly__52__titantpp_cnn_gru54/runs/titantpp_cnn_gru54/count_only_log_regression/seed_52/endpoint_replays.json",
+      "source_closure_sha256": "4e94229fae002dc678025ecf056862f832c64459969f403b3cb5ac8cea8ba7b0",
+      "source_revision": "834c0f08e7cb4326401ee7f0df01b08061a9732d",
+      "population": {
+        "target_count": 8268,
+        "target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+        "target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd"
+      },
+      "same_epoch_time_nll": true
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "seed": 62,
+      "model": "titantpp_cnn_gru54",
+      "selected_epoch": 54,
+      "checkpoint_path": "search_artifacts/titantpp_cnn_gru54_3seed_dual_20261005_v1/retrieved/5080/original/run/yellow_trip_hourly__62__titantpp_cnn_gru54/runs/titantpp_cnn_gru54/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt",
+      "checkpoint_file_sha256": "9a791ebe42c75913cb555677f8fed27eccd36d3ffb4d90d8799cf17015e1b82a",
+      "state_tensor_sha256": "c53d4fbb73fa77cf33fd8ece88e6dcf60edb66438fbb6cd200187e1272d3f70b",
+      "endpoint_sha256": "97d94fdfc11e27db4c2bedda2662ddfe5fdeede33dd342d0d9f0bf353f15e8f2",
+      "endpoint_path": "search_artifacts/titantpp_cnn_gru54_3seed_dual_20261005_v1/retrieved/5080/original/run/yellow_trip_hourly__62__titantpp_cnn_gru54/runs/titantpp_cnn_gru54/count_only_log_regression/seed_62/endpoint_replays.json",
+      "source_closure_sha256": "4e94229fae002dc678025ecf056862f832c64459969f403b3cb5ac8cea8ba7b0",
+      "source_revision": "834c0f08e7cb4326401ee7f0df01b08061a9732d",
+      "population": {
+        "target_count": 8268,
+        "target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+        "target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd"
+      },
+      "same_epoch_time_nll": true
+    }
+  ]
+}

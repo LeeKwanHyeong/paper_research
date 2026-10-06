@@ -1,0 +1,345 @@
+{
+  "scope": "Test_previously_exposed",
+  "evidence_integrity_gate": "PASS",
+  "scientific_adoption_gate": "FAIL_TRADEOFF",
+  "frozen_adoption_source": {
+    "path": "reports/titantpp_cnn_gru54_3seed_dual_20261005_v1/execution_contract.json",
+    "sha256": "e809f6a22290674d21382db8cad650edc18f42b4d0821900ff1609a2e7967bfd",
+    "original_rule": "strong dominance only when all3 seeds improve overall RMSE with no worse overall MAE/tail RMSE/MAE/TimeNLL; otherwise report tradeoff, do not hide losers"
+  },
+  "criteria_source_sha256": "4ad398701cb4112ad1f347fc7d63f6a98d89d09cbdf7b6b1736d36c7d292f47e",
+  "dominance_results": [
+    {
+      "dataset": "yellow_trip_hourly",
+      "reference": "s2p2_matched_head",
+      "strong_dominance": false,
+      "status": "FAIL_TRADEOFF",
+      "failures": [
+        {
+          "view": "overall",
+          "metric": "qty_rmse",
+          "requirement": "all3 strictly improve",
+          "failed_seed_deltas": {
+            "52": 56.04877895561012,
+            "62": 2.904893126250087
+          }
+        },
+        {
+          "view": "overall",
+          "metric": "qty_mae",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "52": 15.530928703549527
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "qty_rmse",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 63.426917554979696,
+            "52": 499.2876968545951,
+            "62": 167.20416119462993
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "qty_mae",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 25.581098809299704,
+            "52": 514.8992772849209,
+            "62": 113.25041180346386
+          }
+        },
+        {
+          "view": "overall",
+          "metric": "time_nll",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 0.5741354356538447,
+            "52": 1.1439933341182802,
+            "62": 0.20164376470194612
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "time_nll",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "52": 9.028973668556672e-13,
+            "62": 1.1089054810013305e-33
+          }
+        }
+      ]
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "reference": "titantpp_history_mlp_width16",
+      "strong_dominance": false,
+      "status": "FAIL_TRADEOFF",
+      "failures": [
+        {
+          "view": "overall",
+          "metric": "qty_rmse",
+          "requirement": "all3 strictly improve",
+          "failed_seed_deltas": {
+            "42": 10.0082780671693,
+            "52": 35.585544440022176,
+            "62": 5.428743001956178
+          }
+        },
+        {
+          "view": "overall",
+          "metric": "qty_mae",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 1.4593481395952352,
+            "52": 10.272860086843203
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "qty_rmse",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 131.97947606314125,
+            "52": 374.82744842074294,
+            "62": 201.40838974291057
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "qty_mae",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 91.66661274002263,
+            "52": 416.0961252235504,
+            "62": 161.55259024378768
+          }
+        },
+        {
+          "view": "overall",
+          "metric": "time_nll",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 0.5613484476221404,
+            "52": 0.7073504718369279
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "time_nll",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "52": 9.028973668556674e-13
+          }
+        }
+      ]
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "reference": "s2p2_matched_head",
+      "strong_dominance": false,
+      "status": "FAIL_TRADEOFF",
+      "failures": [
+        {
+          "view": "overall",
+          "metric": "qty_rmse",
+          "requirement": "all3 strictly improve",
+          "failed_seed_deltas": {
+            "42": 0.17971489101517069
+          }
+        },
+        {
+          "view": "overall",
+          "metric": "time_nll",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 1.0898201636847524,
+            "52": 7.421255202722088,
+            "62": 4.702268568718287
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "time_nll",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "52": 1.1292166898694224e-06,
+            "62": 6.286121802046979e-09
+          }
+        }
+      ]
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "reference": "titantpp_history_mlp_width16",
+      "strong_dominance": false,
+      "status": "FAIL_TRADEOFF",
+      "failures": [
+        {
+          "view": "overall",
+          "metric": "qty_rmse",
+          "requirement": "all3 strictly improve",
+          "failed_seed_deltas": {
+            "42": 0.18007483753283848
+          }
+        },
+        {
+          "view": "overall",
+          "metric": "qty_mae",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 0.09201358634880386
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "qty_rmse",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "52": 2.0114386898790677
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "qty_mae",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "52": 0.8889280091587892
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "time_nll",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 4.129095250156794e-16
+          }
+        }
+      ]
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "reference": "s2p2_matched_head",
+      "strong_dominance": false,
+      "status": "FAIL_TRADEOFF",
+      "failures": [
+        {
+          "view": "overall",
+          "metric": "qty_rmse",
+          "requirement": "all3 strictly improve",
+          "failed_seed_deltas": {
+            "42": 0.017962804402081645,
+            "52": 0.6892853766543681
+          }
+        },
+        {
+          "view": "overall",
+          "metric": "qty_mae",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "62": 0.14871955601091535
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "qty_rmse",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 4.676089573466413,
+            "52": 12.30210091236603
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "qty_mae",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 0.8452502947586709,
+            "52": 12.046373611841489
+          }
+        },
+        {
+          "view": "overall",
+          "metric": "time_nll",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 0.31000700314187135,
+            "62": 0.6159184797286326
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "time_nll",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "42": 0.19221216590255352,
+            "62": 1.0937875165482422
+          }
+        }
+      ]
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "reference": "titantpp_history_mlp_width16",
+      "strong_dominance": false,
+      "status": "FAIL_TRADEOFF",
+      "failures": [
+        {
+          "view": "overall",
+          "metric": "qty_rmse",
+          "requirement": "all3 strictly improve",
+          "failed_seed_deltas": {
+            "52": 0.15366801667725127
+          }
+        },
+        {
+          "view": "overall",
+          "metric": "qty_mae",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "62": 0.06056553405954368
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "qty_rmse",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "52": 4.273478961830108
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "qty_mae",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "52": 3.875092775393796
+          }
+        },
+        {
+          "view": "overall",
+          "metric": "time_nll",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "52": 0.03810820781732982,
+            "62": 0.3469498003597469
+          }
+        },
+        {
+          "view": "tail",
+          "metric": "time_nll",
+          "requirement": "no seed worse",
+          "failed_seed_deltas": {
+            "62": 0.8960057888101187
+          }
+        }
+      ]
+    }
+  ],
+  "checkpoint_reselection": false,
+  "tiny_NLL_deltas_retained_in_exact_frozen_rule": true,
+  "interpretation": "Descriptions include absolute effects; microscopic tail NLL numerical ordering alone is not a practical claim."
+}
