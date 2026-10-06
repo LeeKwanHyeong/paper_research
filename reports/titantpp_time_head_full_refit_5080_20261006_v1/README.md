@@ -45,3 +45,5 @@
 - 매시간 자동화는 원래9조건·두 파라미터 보정·130개 전체 재적합의 실제 종료와 원본 회수 확인이 모두 끝나면 종료합니다. CPU 원본 재추론 감사·Test3seed·새 독립 평가는 별도로 남아 있습니다.
 
 Validation 원본은 번들 analysis/Validation_three_stage_comparison.json 및 Validation_refit_comparison.json, SHA회수/종료는 completion_receipt.json, 실제기록은 hourly_monitor/terminal_cache.json입니다. 운영소스7c84faa(master), source123 SHA4e94229fae002dc678025ecf056862f832c64459969f403b3cb5ac8cea8ba7b0를 유지했습니다.
+
+원본회수 receipt의 comparison_sha256는 Validation_refit_comparison.json을 가리킵니다. 후속 3단계 비교표의 파일SHA와 입력SHA 연결은 analysis/three_stage_comparison_receipt.json에 따로 기록했습니다.
