@@ -1,6 +1,6 @@
 # CNN+GRU54 검색부 5방식 Taxi seed42 Validation 대조
 
-**검색부의 추가 효과를 구분한다 — 구현 완료 / native 검증 다음 작업**
+**검색부의 추가 효과를 구분한다 — 구현·5090 native 검증 완료 / 학습 진행 중**
 - 공통 CNN+GRU54, learned static prototype64개와 top4, 동일 원본 Train/Validation을 사용한다. 관측된 과거32사건의 시간·수량 요약으로 검색 query만 바꾼다.
 - 기존 평균 검색, cosine softmax 가중합, 시간·수량 query 고정0.5 혼합, 이력에 따른 가변 혼합, 같은 문맥·추가521개 파라미터의 일반 query/temperature 검색을 비교한다.
 - 추가 파라미터는 0/0/512/521/521개, 총115167/115167/115679/115688/115688개다. 고정/가변 비교에는 gate9개 차이가 포함되며, 일반 검색은 query/temperature 패키지 대조다.
@@ -19,9 +19,11 @@
 - 서버별 worker1, 조건7200초/호스트전체28800초, qualification1800초, CPU16GiB/GPU80%/root8GiB. 호스트별 시작 허가에서 8시간 기한을 고정하며 마감을 ETA로 쓰지 않는다. 자동 retry/resume 없다.
 
 **검증과 원본을 보존한다 — 종료 후 다음 작업**
-- 로컬 CPU 합성 모델13·운영20·배포5 검사를 통과했다. 실제 RTX qualification과 학습은 별도 영수증으로 확인한다. 실제 Train optimizer update 없이 synthetic native 동작·인과성·gradient·프로파일과 원본 Train/Validation population/time identity를 검증한 뒤 허가한다.
+- 로컬 CPU 모델13·운영20·배포5·원본회수16·관측15, 총69개 검사를 통과했다. 독립 QA에서 관측의 import 전 봉인 검증과 JSON/Markdown 원본SHA 결합도 확인했다. 5090 native qualification과 두 길이의 사전 비용 기준을 모두 통과했고 실제 종료 확인 후 본학습을 시작했다. 5080은 기존54의 원본 회수·종료 gate 대기다. 실제 RTX 결과와 학습 상태는 별도 영수증으로 확인한다. 실제 Train optimizer update 없이 synthetic native 동작·인과성·gradient·프로파일과 원본 Train/Validation population/time identity를 검증한 뒤 허가한다.
 - 관측은 live host당 읽기전용 SSH1회, verified terminal cache는 원 관측시각을 보존해 SSH0이다. 조회 실패와 학습 실패를 구분한다. 실제 저장/best epoch 및 fit 자체 최근10완료 epoch 중앙값으로 조건부 ETA만 보고한다.
 - 양호스트10terminal·source/operation/원본 SHA·소유PID 부재·supervisor exit0 확인 후 selected/last binary와 작은 원본/이력을 manifest/archiveSHA로 한번 회수한다. lock/claim/failure를 보존하며 자동 retry하지 않는다.
 - Test/held-out 성과·예측 행·혼합성과를 열지 않는다. Validation 개발 대조이며 독립 Test/독립 평가/통계적 유의성/외부 우월성 증명이 아니다. 확대 실험은 pilot 후 별도 판단한다.
 
 실행 계약과 증적: search_artifacts/titantpp_contextual_retrieval_pilot_dual_20261007_v1/current.json 및 execution_contract.json. 현재 상태는 SCHEDULER.md와 hourly 보고에서 확인한다.
+
+현재 실행과 대기: [SCHEDULER.md](SCHEDULER.md). GPU 비용 실측: [NATIVE_QUALIFICATION_5090.md](NATIVE_QUALIFICATION_5090.md). 최신 상태: [hourly/latest.json](hourly/latest.json).
