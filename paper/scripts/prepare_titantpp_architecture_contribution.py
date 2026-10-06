@@ -7,9 +7,11 @@ import datetime as dt
 import hashlib
 import importlib.util
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tarfile
 import time
 
@@ -59,7 +61,8 @@ def load_module(path, name):
     return module
 
 
-def prepare():
+def prepare(attempt=1):
+    assert attempt in (1, 2), 'Unknown explicitly prepared execution attempt'
     assert not (BUNDLE / 'execution_contract.json').exists(), 'Already frozen; no replacement/retry'
     design_validator = load_module(DESIGN / 'control/validate_contract.py', 'frozen_design_validation')
     design_validator.validate_contract(PROJECT, DESIGN)
@@ -88,8 +91,10 @@ def prepare():
     hosts = deepcopy(parent['hosts'])
     for host, spec in hosts.items():
         root = '/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/' + NAME + '_' + host
+        if attempt == 2:
+            root += '_attempt2'
         spec.update(root=root, source_root=root + '/source', operation_root=root + '/operation',
-                    output_dir=root + '/run', tmux=NAME + '_' + host)
+                    output_dir=root + '/run', tmux=NAME + '_' + host + ('_attempt2' if attempt == 2 else ''))
         spec['environment'].update(SOURCE_REVISION=revision, PYTHONPATH=root + '/source',
             MPLCONFIGDIR=root + '/cache/matplotlib', XDG_CACHE_HOME=root + '/cache')
     datasets = deepcopy(design['datasets'])
@@ -109,13 +114,22 @@ def prepare():
             shutil.copyfile(PARENT / 'source' / relative, target)
             input_files[relative] = record['sha256']
             data['inherited_data_identity'][kind]['path'] = hosts[host]['source_root'] + '/' + relative
+    # The frozen project resolver recognizes this directory; no dataset is read
+    # through it. A file preserves the empty directory in the files-only package.
+    sentinel = source / 'sample_data/.frozen_root_sentinel'
+    sentinel.parent.mkdir(parents=True, exist_ok=False)
+    sentinel.write_bytes(b'')
+    input_files['sample_data/.frozen_root_sentinel'] = sha(sentinel)
+    bootstrap_code = "from pathlib import Path; from paper.scripts import run_titantpp_architecture_contribution as e; e.install_hooks(); assert e.ROOT == Path.cwd(); print('isolated frozen bootstrap passed')"
+    subprocess.run([sys.executable, '-c', bootstrap_code], cwd=source,
+        env={**os.environ, 'PYTHONPATH': str(source), 'PYTHONDONTWRITEBYTECODE': '1'}, check=True)
     operations = {str(p.relative_to(BUNDLE)): sha(p) for p in sorted((BUNDLE / 'operation').glob('*.py'))}
     assert {'operation/campaign.py', 'operation/monitor.py', 'operation/qualify.py'} <= set(operations)
     jobs = [{'id': f"{block['dataset']}__{block['seed']}__{arm}", 'host': host,
              'dataset': block['dataset'], 'seed': block['seed'], 'arm': arm}
             for host in hosts for block in design['execution_plan']['paired_blocks']
             if block['proposed_host'] == host for arm in block['ordered_arms']]
-    c = {'schema': NAME, 'design_contract': design, 'design_sha256': DESIGN_SHA,
+    c = {'schema': NAME, 'execution_attempt': attempt, 'design_contract': design, 'design_sha256': DESIGN_SHA,
          'architecture': deepcopy(design['architecture']),
          'objective': design['objective'], 'arms': ARMS, 'seeds': [42, 52, 62],
          'hosts': hosts, 'datasets': datasets, 'dataset_sha256': {d['dataset_id']: canonical(d) for d in datasets},
@@ -140,6 +154,12 @@ def prepare():
              'implementation': True, 'native_qualification': True, 'fresh_54_training': True,
              'new_Test_access': False, 'shared_Runtime_changes': False},
          'operational_path_amendment': 'Only inherited_data_identity data/split_manifest paths remapped to SHA-pinned exclusive source/inputs/data; all scientific dataset fields unchanged',
+         'runtime_layout': {'project_root_sentinels': ['models', 'utils', 'sample_data'],
+             'sample_data_sentinel_is_empty_not_a_dataset': True},
+         'manual_preparation_repair': None if attempt == 1 else {
+             'previous_attempt': 'revisions/attempt1', 'reason': 'Missing empty sample_data project-root sentinel before qualification/fit',
+             'previous_real_data_optimizer_updates': 0, 'previous_qualification_claim_created': False,
+             'claims_and_remote_roots_preserved': True, 'automatic_retry': False},
          'diagnostic': deepcopy(parent.get('diagnostic', {})),
          'reporting': {'mandatory_time_harm': True, 'same_selected_epoch_all_metrics': True,
              'full_Validation_and_fixed_Train_diagnostics_separate': True,
@@ -203,5 +223,7 @@ def prepare():
 
 
 if __name__ == '__main__':
-    argparse.ArgumentParser(description=__doc__).parse_args()
-    prepare()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--attempt', type=int, choices=(1, 2), default=1)
+    args = parser.parse_args()
+    prepare(args.attempt)

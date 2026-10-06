@@ -51,7 +51,12 @@ def contract(host):
         raise ValueError("Foreign deployment host")
     c = read(B / "execution_contract.json")
     spec = c["hosts"][host]
+    attempt = c.get("execution_attempt", 1)
+    if type(attempt) is not int or attempt not in (1, 2):
+        raise ValueError("Only the original or explicitly prepared manual attempt2 is admitted")
     expected = "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/" + B.name + "_" + host
+    if attempt == 2:
+        expected += "_attempt2"
     if spec["root"] != expected or spec["source_root"] != expected + "/source" or spec["operation_root"] != expected + "/operation":
         raise ValueError("Deployment root differs from the approved isolated campaign")
     if spec["environment"].get("SOURCE_REVISION") != c["source"]["git_revision"]:
