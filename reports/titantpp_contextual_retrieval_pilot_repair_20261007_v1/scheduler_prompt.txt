@@ -1,0 +1,25 @@
+paper_research의 CNN+GRU54 검색부 5방식 Taxi seed42 파일럿을 승인된 운영 수정 계약에 맞춰 매시간 읽기 전용으로 관측한다. 사용자는 기존 실험 실행과 2026-10-07 “문제 해결해서 진행하자”를 직접 승인했으며 매시간 GPU 보고를 명시적으로 요청했다. 실제 KST 관측시각, 서버별 완료/실패/진행/대기/미확정, 방식·seed·실제 저장/best epoch와 조건부 ETA를 짧은 한국어 표로 보고한다. 수량이 주목표이고 시간 손해도 필수 보고다.
+
+프로젝트 /Users/igwanhyeong/PycharmProjects/paper_research에서 TEST_SESSION_PROTOCOL.md 0·1·9·12, reports/titantpp_contextual_retrieval_pilot_repair_20261007_v1/README.md·SCHEDULER.md·CLOCK_FIX.md, search_artifacts/titantpp_contextual_retrieval_pilot_repair_20261007_v1의 current.json·execution_contract.json·approval.json·start_permit_5080/5090.json·training_permit_5080/5090.json·qualification/호스트/receipt.json·deployment/launch_receipt_호스트.json·control/integrity_receipt.json·hourly_monitor/latest_호스트.json·analysis/completion_receipt.json(존재시)을 먼저 읽고 stdlib SHA로 대조한다. Test/heldout 예측·성과·Validation/Test 혼합 성과를 열지 않는다.
+
+수정 canonical SHA bf1215ba8d6cfff14573cdcf9a98101846561238f1df5416c0a14249318cd9bf, control integrity rawSHA 5232e69dbedc0b0b448b379342e6c9b995b994a5f3a67ba9f65a409c5fd10070, repair operation closure 674511434f797994aed3a7c88a22032d8930fa7a47ca16cbd92681b58264b0b3를 고정한다. 부모 과학 계약 SHA 5372f2ec93c98e6b45ecf37d2b19ae1375a838fdfd9eb8a9c4f3a908456e7953, source126 closure 918f7cb883b62cbdc6f3f178cc53b6e20aac2e71a49b6e036769aa2fea76155a, 부모 operation4 closure e4c25f8b21443f264f70df27fa5f33f28a43df1716ec84b04357c80d88380597, frozen science revision 4274043717cf24640d9a18fb35231a1f7ba50c8e는 유지한다. 수정 운영 코드는 branch codex/contextual-retrieval-pilot-20261007의 commit7edc5f1에 보존됐다. 공용 Runtime·인증·source·data·loss·optimizer·selector를 변경하지 않는다. 포인터/root/GPU/계약/SHA가 다르면 변경 이유를 확인하고 과거 root를 대신 조회하거나 덮어쓰지 않는다.
+
+새 root는 /home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_contextual_retrieval_pilot_repair_20261007_v1_5080 및 동일이름_5090이다. GPU5080 UUID GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6, 5090 GPU-c9adc246-ef66-7906-bc07-6e152fa9952f. 기존 ai_env/전용 resume runtime_env를 유지한다. 새 tmux/소스·cache 경로만 분리했다.
+
+원래5090 mean E120/best80, weighted E99/best59의 완료 원본2를 재사용한다. 원래14:08:54KST 실제 관측시각을 새시각으로 바꾸지 않는다. 원래fixed는7200초 제한중단 E148/best120·worker124/supervisor1의 정확한 failure/claim/부분원본을 보존한다. 새5090fixed는같은GPU에서 E148 optimizer/RNG/loader/history/exposure/timing/best120 검증 후 E149부터 이어가며 adaptive/generic2는 fresh fit이다. 새5080 다섯 방식은 fresh fit이다. 원래10 execution ID는 재사용2+재개1+fresh7로각각한번 집계한다. 부모fixed중단을새실패로중복집계하지않는다. 5과학설정/10실행/단일seed42 두GPU반복이며2seed/독립평가가아니다.
+
+시각 차단은 로컬 수신 시각+원본rawSHA binding·절댓값10초 skew허용으로 수정됐고 새 부모종료/idle/runtime/source/checkpoint검증으로 양서버 새dispatcher가시작됐다. 이미launch됐으므로 deploy/activate/collect/qualification/launch를다시실행하지않는다. 새조건한도21600초(6시간)/host129600초(36시간)는새startpermit의lease로고정하며마감은ETA가아니다. 서버당worker1/min40/max300/patience40/batch128·최초strict finite최소fullValidationraw수량RMSE 선택유지,자동retry없음이다.
+
+로컬control/integrity_receipt.json의봉인control파일과project_files를모두std SHA확인한다. 위봉인검증후프로젝트root에서아래명령을정확히한번실행한다.
+/usr/local/bin/python3 paper/scripts/observe_titantpp_retrieval_repair.py
+실행된livehost는읽기전용SSH1회씩독립조회,terminalcache는SSH0·원관측시각유지다. 미launch는로컬waitingSSH0. 정확한supervisor/timeout/worker argv·PID·PPID·GPUUUID/PID,source/parentop/repair_opSHA,lease·claim·qualificationbridge·checkpointreceipt와실제저장epoch/history/timing/selected-lastfullValidation을검증한다. 첫새checkpoint전은그사실을명시하고E148원본을새진척으로표시하지않는다. 조회실패는학습실패와구분하고PID불일치·부재는미확정/사용자조치로보고한다. 별도SSH/원래observer/반복polling/새학습/replay/자동retry/resume/프로세스종료/claim삭제를추가하지않는다.
+
+ETA는각RTXfit자체최근최대10완료epoch elapsed_seconds중앙값이다. 재개fixed는E149이후완료epoch만속도표본에넣는다. best미갱신/현속도유지시 min(300,max(40,best+40)) 잔여와300epoch시나리오를분리한다. 실측없는미시작arm/GPU속도를복사하지않고전체큐ETA미확정이다. endpoint/원본회수/CPU감사는학습ETA와별도다.
+
+관측후아래명령을정확히한번실행한다.
+/usr/local/bin/python3 paper/scripts/finalize_titantpp_retrieval_repair.py
+검증된새양host8terminal+부모완료2·세owner종료·새hostexit0·원래5090정확timeout종료·source/operation/원본SHA·resume148연속성이없으면localpending/remote0이다. 모두충족하면기승인된세owner의immutablemanifest/archiveSHA 원본회수와같은선택epoch10실행Validation비교를한번수행한다. exclusive lock/retrievalclaim/failure보존·자동retry없음이다. 이미완료시로컬원본SHA만재검증하고원격0이다. partial/failed/정합오류는사용자조치필요로알린다. 부모실패를지우거나부모completion을조작하지않는다. 회수는관측SSH와구분된승인원본보존작업이다.
+
+공통CNNGRU54/학습된정적prototype64/top4/과거32관측사건요약/추가param0,0,512,521,521을유지한다. 실제사건bank라표현하지않는다. 전체Validation8268/큰수량79(>3449)의동일최초최소RMSEepoch 전체·큰수량RMSE/MAE/TimeNLL을보고한다. 원래nativequalification의T64/T256비용은host별평균검색대비추론+20%,학습step+30%,peak+20% gate다. 비용초과arm도결과보존한다. 5090adaptive가mean/fixed/generic각각보다전체·큰수량RMSE모두strict개선이고양길이비용적격일때만탐색성공이다. weighted변화와동일epochMAE/TimeNLL손해도필수보고한다. 사후시간허용치/selector/성공기준을새로만들지않는다. 5080은같은seedGPU반복이며host시간을혼합하지않는다. 단일데이터/seed의Validation개발증거이고참신성·유의성·외부우월성·독립Test성능확정이아니다. 확대학습은자동실행하지않는다.
+
+전체10실행·세owner실제종료·새binary원본manifest/archiveSHA로컬검증·최종Validation보고가모두확인된뒤최종관측보고서를남기고이검색부자동화titantpp-5-gpu만삭제한다. 미확정이면유지한다. CPUbinary재추론감사·Test·새독립평가는별도미완료다. 다른자동화/PAUSEDmonitor/과거A100/CNNGRU/head/중단GRUcontrol/Pod/기존서버작업/chatarchive를변경하거나다시조회·재시작하지않는다.

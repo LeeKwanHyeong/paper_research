@@ -3,7 +3,7 @@
 ## 목적과 승인
 사용자는 “문제 해결해서 진행하자”라고 명시적으로 승인했다. 기존 5080 시각 검사 차단과 5090 조건 7200초 중단을 보존하면서 미완료 실험을 한 번 이어간다. 과학 source126, 데이터, 모델, 손실, optimizer, batch128, min40/max300/patience40 및 최초 strict 최소 Validation 수량 RMSE 선택은 변경하지 않는다. Test는 열람·평가하지 않는다.
 
-## 수정 내용 — 구현 완료 / 원격 진입 검증 대기
+## 수정 내용 — 완료 / 양 GPU 학습 진행 중
 - 5080: 서버 시각이 로컬 수신보다 약 2초 앞선 경우를 정상 수집으로 처리한다. 로컬 수신 시각·raw SHA·원본 qualification receipt를 결합하고 허용 시각차는 절댓값 10초다. 오래된 기록·변조는 거부한다.
 - 5090 fixed: 원래 E148/best120의 checkpoint, optimizer·RNG·loader 상태와 148epoch history/exposure/timing을 SHA로 대조한 뒤 새 운영 root에서 E149부터 이어간다. 기존 run/claim/failure를 변경하지 않는다.
 - 5090 mean E120/best80와 weighted E99/best59는 완료 결과를 재사용한다. adaptive/generic 두 조건과 5080 다섯 조건은 fresh fit이다.
@@ -21,6 +21,7 @@
 원래 실패·claim·부분 checkpoint, 원래 과학 계약과 네 operation 파일을 보존한다. 세 소유 root의 scientific terminal·실제 프로세스 종료와 immutable binary manifest/archive SHA 회수를 모두 확인한 뒤 최종 Validation 보고를 작성한다. CPU binary 재추론 감사·Test·새 독립 평가는 별도 미완료다.
 
 ## 다음 작업
-1. 새 운영 계약·source/operation SHA를 봉인하고 양 GPU native Runtime·idle·원본 경계를 확인한다.
-2. 5090 E148 재개 및 5080 첫 학습 진입을 확인한다.
-3. 매시간 읽기 전용으로 관측하고 모든 10실행 완료 후 원본을 회수한다.
+1. **학습과 시간별 관측 — 진행 중:** 5090 fixed E150/best120, 5080 mean E1/best1의 실제 저장을 확인했다. 다음 순서의 adaptive/generic 및 5080 나머지 네 방식은 대기다.
+2. **최종 원본 회수와 Validation 비교 — 학습 완료 후:** 10실행 및 세owner 종료가 검증되면 manifest/archiveSHA를 회수하고 동일 선택 epoch의 비교를 작성한다.
+
+실제 진입 증거는 [15:25 KST 상태 보고서](STATUS_20261007_1525KST.md)와 JSON을 참조한다. 68 tests·30 subtests PASS, 기존 완료2를 재사용하며 7edc5f1은 운영 코드 커밋이다.

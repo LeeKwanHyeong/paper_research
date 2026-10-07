@@ -230,3 +230,79 @@ def test_remote_recovery_code_has_no_model_or_heldout_execution(tmp_path):
     assert "torch.load" not in script and "optimizer.step" not in script
     assert "'failure.json'" in script and "'EXIT_CODE': 1" not in script
     assert "EXIT_CODE=1" in script
+
+
+def completed_fixture(tmp_path):
+    c, observer = fixture(tmp_path)
+    evidence = f.terminal_gate(c, tmp_path, observer)
+    originals = {key: {"binary_originals": []} for key in evidence}
+    result = f.summarize(c, evidence, originals)
+    (tmp_path / "analysis").mkdir()
+    outputs = f.write_summary(tmp_path, result)
+    receipt = {"status": "all10_Validation_originals_complete", "contract_sha256": f.canonical(c),
+        "integrity": {}, "local_originals_SHA_verified": True, "execution_conditions": 10,
+        "canonical_configurations": 5, "originals": originals, "outputs": outputs}
+    write(tmp_path / "analysis/completion_receipt.json", receipt)
+    return c, observer, originals
+
+
+def test_completed_result_is_idempotent_and_revalidates_locally(tmp_path):
+    c, observer, originals = completed_fixture(tmp_path)
+    remote_permissions = []
+
+    def local_receipt(c, key, owner, bundle, runner, *, allow_remote):
+        remote_permissions.append(allow_remote)
+        return originals[key]
+
+    with patch.object(f, "load_bundle", return_value=(c, observer, {})), \
+         patch.object(f, "retrieve", side_effect=local_receipt):
+        first = f.run(tmp_path, runner=no_remote)
+        second = f.run(tmp_path, runner=no_remote)
+    assert first == second
+    assert first["already_finalized_local_revalidated"] is True and first["remote_calls"] == 0
+    assert remote_permissions == [False] * 6
+    assert not (tmp_path / "analysis/finalize.claim").exists()
+
+
+def test_completed_output_corruption_requires_action_without_recovery(tmp_path):
+    c, observer, originals = completed_fixture(tmp_path)
+    (tmp_path / "analysis/report.md").write_text("corrupted report")
+    with patch.object(f, "load_bundle", return_value=(c, observer, {})), \
+         patch.object(f, "retrieve", side_effect=lambda c, key, *args, **kwargs: originals[key]):
+        with pytest.raises(ValueError, match="output raw SHA"):
+            f.run(tmp_path, runner=no_remote)
+    assert not (tmp_path / "analysis/finalize.claim").exists()
+
+
+def test_archive_corruption_is_rejected_before_extraction(tmp_path):
+    path = archive(tmp_path, [("model.pt", b"native binary bytes", "regular")])
+    digest = f.sha(path)
+    with path.open("ab") as stream:
+        stream.write(b"changed")
+    with pytest.raises(ValueError, match="Archive raw SHA"):
+        f.extract_verified(path, tmp_path / "original", {"archive_sha256": digest}, 1024)
+    assert not (tmp_path / "original").exists()
+
+
+def test_recovered_binary_corruption_fails_local_raw_sha_gate(tmp_path):
+    c = {}
+    owner = {"contract_sha256": "parent-contract", "snapshot_sha256": "snapshot",
+             "snapshot": {"rows": []}, "snapshot_rows": []}
+    destination = tmp_path / "recovered"
+    original = destination / "original"
+    original.mkdir(parents=True)
+    binary = original / "model.pt"
+    binary.write_bytes(b"native binary bytes")
+    binary_sha = f.sha(binary)
+    manifest = {"owner": "parent_5090", "repair_contract_sha256": f.canonical(c),
+        "contract_sha256": owner["contract_sha256"], "terminal_snapshot_sha256": owner["snapshot_sha256"],
+        "files": {"model.pt": {"sha256": binary_sha, "size_bytes": binary.stat().st_size}}}
+    write(original / "archive_manifest.json", manifest)
+    (destination / "training_originals.tar.gz").write_bytes(b"sealed archive")
+    receipt = {"archive_sha256": f.sha(destination / "training_originals.tar.gz"),
+               "manifest_sha256": f.sha(original / "archive_manifest.json")}
+    with patch.object(f, "inventory", return_value=({"model.pt": binary_sha}, {})):
+        assert f.verify_originals(c, "parent_5090", owner, destination, receipt) == []
+        binary.write_bytes(b"changed binary bytes")
+        with pytest.raises(ValueError, match="original raw SHA"):
+            f.verify_originals(c, "parent_5090", owner, destination, receipt)
