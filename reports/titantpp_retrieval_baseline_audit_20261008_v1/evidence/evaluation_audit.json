@@ -1,0 +1,64 @@
+{
+  "schema": "retrieval_baseline_evaluation_audit_v1",
+  "scope": "synthetic metric aggregation only; no real prediction, training, GPU, or Test inference",
+  "python": "3.12.10",
+  "numpy": "2.3.1",
+  "sources": [
+    {
+      "path": "search_artifacts/titantpp_cnn_gru_test_20261005_v1/attempt2/source/paper/scripts/evaluate_titantpp_history_width.py",
+      "raw_sha256": "6de7f1f6c16700efa439a97625c2c669736d1fe66889551175ce5d9e5d997c69",
+      "class_line": 107
+    },
+    {
+      "path": "search_artifacts/titantpp_retrieval_test_20261008_v1/operation/evaluate.py",
+      "raw_sha256": "a66f64103c6ea7cbbeed26bff766c6fffbb811af046e6afe5f273b52f01be1d6",
+      "class_line": 250
+    }
+  ],
+  "test_input_count": 10017,
+  "cases": [
+    {
+      "chunk_size": 1,
+      "count": 10017,
+      "tail_count": 7096,
+      "all_counts_and_statistics_within_tolerance": true
+    },
+    {
+      "chunk_size": 17,
+      "count": 10017,
+      "tail_count": 7096,
+      "all_counts_and_statistics_within_tolerance": true
+    },
+    {
+      "chunk_size": 128,
+      "count": 10017,
+      "tail_count": 7096,
+      "all_counts_and_statistics_within_tolerance": true
+    },
+    {
+      "chunk_size": 10017,
+      "count": 10017,
+      "tail_count": 7096,
+      "all_counts_and_statistics_within_tolerance": true
+    }
+  ],
+  "comparison_rel_tol": 1e-12,
+  "comparison_abs_tol": 1e-10,
+  "maximum_absolute_difference_across_sufficient_statistics": 9.5367431640625e-07,
+  "maximum_relative_difference": 6.5652824966368426e-15,
+  "formula_equivalence": true,
+  "boundary_rule": "bisect/searchsorted left; tail raw quantity >3449",
+  "floating_accumulation_difference": "old NumPy float64 sums; new Python double math.fsum; formulas unchanged",
+  "verification_limit": "Synthetic aggregation equivalence does not reproduce historical native model inference or prove cause of training divergence.",
+  "static_evaluation_route": {
+    "old": "CNNGRU frozen import adapter -> same frozen core target_outputs; eval/no_grad; strict selected state; no target write",
+    "new": "contextual retrieval hook -> frozen core target_outputs; mean delegates unchanged CNNGRU forward; eval/no_grad; strict selected state",
+    "evaluation_population_equivalence": "old/new algorithms crosswalk from same frozen loader matched both original receipts",
+    "old_Validation_replay_vs_training_selection_absolute_difference": 6.929727092597204e-06,
+    "old_Validation_gate_rel_tol": 1e-05,
+    "old_Validation_gate_abs_tol": 1e-05,
+    "old_Validation_replay_gate_pass": true,
+    "new10_Validation_replay_max_absolute_difference": 1.4210854715202004e-14,
+    "new_inference_this_audit": false
+  }
+}
