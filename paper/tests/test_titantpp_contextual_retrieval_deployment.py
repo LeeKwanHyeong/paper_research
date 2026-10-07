@@ -10,6 +10,75 @@ from paper.scripts import deploy_titantpp_contextual_retrieval as d
 
 
 class DeploymentTests(unittest.TestCase):
+    def observation(self, b, *, offset=2, age=1):
+        q=b/'qualification/5080';q.mkdir(parents=True)
+        received_ns=1791349372178051000
+        receipt={'status':'PASS'}
+        raw=json.dumps(receipt)
+        (q/'receipt.json').write_text(raw)
+        observed={'host':'5080','observed_unix':received_ns/1e9+offset,
+                  'local_received_unix_ns':received_ns,'receipt':receipt,
+                  'receipt_json_text':raw,'receipt_sha256':d.sha(q/'receipt.json'),
+                  'qualification_shell_exit':{'returncode':0},
+                  'GPU_query_returncode':0,'GPU_process_query_returncode':0,
+                  'ps_returncode':0,'owned_processes':[],'gpu_processes':''}
+        path=q/(str(received_ns)+'.json');d.write(path,observed)
+        latest={'path':str(path),'sha256':d.sha(path)}
+        (q/'latest.json').write_text(json.dumps(latest))
+        return q,path,latest,received_ns/1e9+age
+
+    def test_small_native_clock_skew_uses_fresh_local_collection(self):
+        for offset in (-2,0,1.979943,10):
+            with self.subTest(offset=offset),tempfile.TemporaryDirectory() as tmp:
+                b=Path(tmp);q,path,latest,now=self.observation(b,offset=offset)
+                with patch.object(d,'B',b),patch.object(d.time,'time',return_value=now):
+                    self.assertEqual(d.fresh_qualification_observation('5080')['host'],'5080')
+
+    def test_old_readback_future_collection_and_large_server_skew_rejected(self):
+        for offset,age in ((2,600),(2,-1),(11,1),(-11,1),(float('nan'),1)):
+            with self.subTest(offset=offset,age=age),tempfile.TemporaryDirectory() as tmp:
+                b=Path(tmp)
+                # JSON writing rejects NaN too; emulate a malformed external input below.
+                q,path,latest,now=self.observation(b,offset=0 if offset!=offset else offset,age=age)
+                if offset!=offset:
+                    observed=d.read(path);observed['observed_unix']=offset
+                    path.write_text(json.dumps(observed));latest['sha256']=d.sha(path)
+                    (q/'latest.json').write_text(json.dumps(latest))
+                with patch.object(d,'B',b),patch.object(d.time,'time',return_value=now):
+                    with self.assertRaises(ValueError):d.fresh_qualification_observation('5080')
+
+    def test_readback_path_SHA_receipt_and_timestamp_bindings_rejected(self):
+        for tamper in ('path','snapshot_sha','receipt_sha','timestamp','legacy','host'):
+            with self.subTest(tamper=tamper),tempfile.TemporaryDirectory() as tmp:
+                b=Path(tmp);q,path,latest,now=self.observation(b)
+                if tamper=='path':
+                    foreign=b/path.name;foreign.write_bytes(path.read_bytes())
+                    latest['path']=str(foreign)
+                elif tamper=='snapshot_sha':latest['sha256']='0'*64
+                elif tamper=='receipt_sha':(q/'receipt.json').write_text('{"status":"different"}')
+                else:
+                    observed=d.read(path)
+                    if tamper=='timestamp':observed['local_received_unix_ns']+=1
+                    elif tamper=='legacy':del observed['local_received_unix_ns']
+                    else:observed['host']='5090'
+                    path.write_text(json.dumps(observed));latest['sha256']=d.sha(path)
+                (q/'latest.json').write_text(json.dumps(latest))
+                with patch.object(d,'B',b),patch.object(d.time,'time',return_value=now):
+                    with self.assertRaises(ValueError):d.fresh_qualification_observation('5080')
+
+    def test_stale_launch_does_not_write_permit_or_consume_intent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            b=Path(tmp);q,path,latest,now=self.observation(b,age=601)
+            with patch.object(d,'B',b),patch.object(d.time,'time',return_value=now), \
+                    patch.object(d,'capacity_gate',return_value=True), \
+                    patch.object(d,'contract',return_value={'hosts':{'5080':{}}}), \
+                    patch.object(d,'qualified_receipts',return_value={'5080':{'status':'PASS'}}), \
+                    patch.object(d,'ssh') as ssh:
+                with self.assertRaisesRegex(ValueError,'stale'):d.launch('5080')
+                ssh.assert_not_called()
+                self.assertFalse((b/'training_permit_5080.json').exists())
+                self.assertFalse((b/'deployment/launch_intent_5080.json').exists())
+
     def archive(self, root, name='x', payload=b'abc', digest=None, kind=None):
         archive = root/'package.tar.gz'
         raw = json.dumps({'files':{name:digest or d.hashlib.sha256(payload).hexdigest()}}).encode()

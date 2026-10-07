@@ -341,7 +341,9 @@ print(json.dumps(out))
 ''' % (root, host)
     result = ssh(host, code, action="collect")
     dest = B / "qualification" / host
-    readback_path = dest / (str(time.time_ns()) + ".json")
+    received_ns = time.time_ns()
+    result['local_received_unix_ns'] = received_ns
+    readback_path = dest / (str(received_ns) + ".json")
     write(readback_path, result)
     (dest/'latest.json').write_text(json.dumps({'path':str(readback_path),'sha256':sha(readback_path)},indent=2)+'\n')
     if result["receipt"] is not None:
@@ -386,17 +388,42 @@ def qualified_receipts(c, host):
     return {host: receipt}
 
 
+def fresh_qualification_observation(host):
+    """Bind a fresh local readback to its original receipt, allowing <=10s skew."""
+    dest = B / 'qualification' / host
+    latest = read(dest / 'latest.json')
+    path = Path(latest['path'])
+    if (path.is_symlink() or path.parent.resolve() != dest.resolve() or
+            path.suffix != '.json' or not path.stem.isdecimal()):
+        raise ValueError('Qualification readback path is not an own-host timestamped original')
+    observed = read(path)
+    if (sha(path) != latest['sha256'] or observed.get('host') != host or
+            not qualification_terminated(observed)):
+        raise ValueError('Qualification actual exit/GPU absence not verified; do not consume launch intent')
+    received_ns = observed.get('local_received_unix_ns')
+    if type(received_ns) is not int or received_ns != int(path.stem):
+        raise ValueError('Qualification local collection timestamp is not bound to readback')
+    received = received_ns / 1e9
+    remote = observed.get('observed_unix')
+    if (not isinstance(remote, (int, float)) or isinstance(remote, bool) or
+            not math.isfinite(remote) or abs(remote - received) > 10):
+        raise ValueError('Qualification server/local clock skew exceeds 10 seconds')
+    if not 0 <= time.time() - received < 600:
+        raise ValueError('Native qualification exit observation is stale')
+    receipt_path = dest / 'receipt.json'
+    if (sha(receipt_path) != observed.get('receipt_sha256') or
+            receipt_path.read_text() != observed.get('receipt_json_text') or
+            read(receipt_path) != observed.get('receipt')):
+        raise ValueError('Qualification original receipt SHA/content binding changed')
+    return observed
+
+
 def launch(host):
     if not capacity_gate(host): return
     c = contract(host)
     spec = c["hosts"][host]
     receipts = qualified_receipts(c, host)
-    latest = read(B/'qualification'/host/'latest.json')
-    observed = read(latest['path'])
-    if sha(latest['path']) != latest['sha256'] or observed.get('host') != host or not qualification_terminated(observed):
-        raise ValueError('Qualification actual exit/GPU absence not verified; do not consume launch intent')
-    if not 0 <= time.time()-observed['observed_unix'] < 600:
-        raise ValueError('Native qualification exit observation is stale')
+    fresh_qualification_observation(host)
     start = read(B / ("start_permit_"+host+".json"))
     permit = {"schema": SCHEMA, "host": host, "contract_sha256": canonical(c),
               "start_permit_sha256": canonical(start), "qualification_sha256": sha(B / "qualification" / host / "receipt.json"), "qualifications": receipts}
