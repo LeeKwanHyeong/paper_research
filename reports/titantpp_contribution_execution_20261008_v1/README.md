@@ -2,11 +2,12 @@
 
 사용자는 2026-10-08 이 문서의 세 주제 모두 구현·검증·5080/5090 학습을 승인했다. Test 접근, 공용 Runtime 변경, 자동 재시도는 포함하지 않는다. 과거 결과와 신규 결과를 섞어 하나의 대표 모델 성능으로 표시하지 않는다.
 
-**Instacart의 비교 목적과 조건을 고정한다 — 계약 완료 / 학습 준비 중**
+**Instacart의 비교 목적과 조건을 고정한다 — 계약 완료 / 학습 진행 중**
 - 대상은 paper_research와 전용 5080/5090 root다. 폭8·12와 CNN+GRU54 각각 seed42/52/62의 9개를 새로 학습한다.
 - 기존 폭16 selected binary 3개는 SHA로 보존한 역사적 참고 원본이다. 이번에 다시 학습하거나 같은 GPU의 짝지어진 효율 대조로 취급하지 않는다.
 - 기존 Instacart 데이터·split·Train 통계, batch128, 길이64, lookback52, day 단위, 큰 수량 >35를 유지한다. 이 단계는 데이터 확장과 기준선 비교이며 보정·검색의 추가 효과를 직접 증명하지 않는다.
 - 5080은 seed42/62의 6개, 5090은 seed52의 3개를 맡는다. 같은 seed의 세 구조는 같은 GPU/Runtime에서 비교한다.
+- 2026-10-08 09:56 KST 양쪽 native qualification PASS·실제 exit0·소유/GPU PID 부재를 확인한 뒤 학습을 시작했다. 09:57:24 KST 양쪽 정확한 supervisor/timeout/worker·claim·lease·GPU 소유권 검증이 통과했다. 5080 폭8 seed42, 5090 폭8 seed52가 첫 checkpoint 저장 전이며 완료0/실패0/진행2/대기7/미확정0이다. 전체 큐 ETA는 미확정이다.
 
 **대표 CNN+GRU54에서 명시적 보정의 추가 효과를 확인한다 — 구현·로컬 테스트 완료 / Instacart 종료 대기**
 - Taxi·Intermittent·RAF × seed42/52/62 × full·보정 없음·현재 상태 전용의 27개를 새로 학습한다.
@@ -27,7 +28,7 @@
 - Validation 최초 strict finite 최소 전체 raw 수량 RMSE의 같은 epoch에서 여섯 지표를 집계한다. seed 평균과 표본 SD, 손해 사례, native 비용을 기록한다. 신규 Test·CPU binary 재추론 감사·새 독립 평가는 별도 미완료다.
 
 **남은 작업을 의존관계에 따라 이어간다 — 다음 작업**
-- 각 GPU native qualification·실제 종료를 확인해 Instacart 학습을 시작한다. 후속 두 stage는 승인된 완료 gate에 따라 연결한다.
+- Instacart 학습·원본 회수·최종 Validation 집계를 마친 뒤 이력 보정27개, 그 단계 완료 뒤 검색27개를 실행한다. 시간별 자동화 `titantpp-instacart-63`가 승인된 완료 gate에 따라 연결하며 주제별 완료 여부를 보고한다.
 - 과학 주장에 필요한 성능 판정은 학습·원본 회수 후 수행한다. 구현 완료를 기여 검증 완료로 표시하지 않는다.
 
 실행 저장소: paper_research, 브랜치 `codex/contextual-retrieval-pilot-20261007`. 신규 파일만 별도 커밋하며 기존 사용자 변경은 보존한다. Push/MR은 이번 실행 범위에 포함하지 않는다.
