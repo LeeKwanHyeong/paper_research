@@ -75,3 +75,7 @@
 - 이 초안은 내부 검토용 AI-assisted 문서다. 현재 PAKDD2027 생성형 AI 정책을 만족하는 투고문이라고 표시하지 않는다. 정책에 맞는 저자 작성 과정은 별도 정리가 필요하다.
 
 독립 문서 QA 및 파일 링크/해시 검증 결과는 `REVIEW.md`에 기록한다. 문서 검증은 학습·성능·재현성 검증을 대신하지 않는다.
+
+## 7. 결과·논의 본문 추가 — 2026-10-08
+
+완료된 MLP8 구조54의 수량 이득·반례·시간/계산비용 손해와 Instacart 완료1조건을 본문7절에 추가하고, 현재 가능한 결론과 새 검증을 구분한 논의8절을 작성했다. [추가 근거와 검증](/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_contribution_writing_20261008_v1/RESULTS_UPDATE_20261008.md)을 참조한다. 새 Q1/Q2 결과를 기다리는 것과 기존 결과의 본문 작성을 구분한다.

@@ -1,11 +1,13 @@
 # TitanTPP 본문 초안과 기여 근거 정리
 
-2026-10-08 작성. **Methods·실험 설계 영문 초안과 표적 선행연구 대조를 완료했다.** 작성에 사용한 관측 기준으로 승인된 63조건 캠페인은 Instacart 단계가 진행 중이며, Q1/Q2 결과는 대기 상태다. 그 성과를 본문에 미리 확정하지 않았다.
+2026-10-08 작성. **Methods·실험 설계·표적 선행연구 대조와, 완료 근거의 Results·Discussion 작성을 완료했다.** 작성에 사용한 관측 기준으로 승인된 63조건 캠페인은 Instacart 단계가 진행 중이며, Q1/Q2 결과는 대기 상태다. 그 성과를 본문에 미리 확정하지 않았다.
 
 - [영문 연구 초안](/Users/igwanhyeong/PycharmProjects/paper_research/paper/drafts/titantpp_contribution_methods_20261008_v1.md): 중심 질문, 관련 방법, 정확한 모델 수식, 대조군,63조건 설계, 지표·비용·판정 기준.
 - [주장–근거 지도와 작성 메모](/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_contribution_writing_20261008_v1/WRITING_NOTES.md): 기존 근거·새 검증·미확인의 경계, 코드 위치와 작성 시점 상태.
 - [S2P2·선행연구 비교](/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_contribution_writing_20261008_v1/LITERATURE_COMPARISON.md): S2P2, deep renewal, RMTPP, A-NHP, persistent memory, product-key memory의 방법 대조.
 - [검토 결과](/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_contribution_writing_20261008_v1/REVIEW.md), [원본 해시 근거](/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_contribution_writing_20261008_v1/evidence_manifest.json).
+
+- [완료 결과의 본문 반영](/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_contribution_writing_20261008_v1/RESULTS_UPDATE_20261008.md): MLP8 구조54 최종 Validation과 Instacart 완료1조건의 중간 기록, 시간·비용 손해.
 
 ## 현재 논문 기여의 구성
 
@@ -24,6 +26,7 @@
 | Methods와 실험 설계 초안 | 완료 | 동결 source 수식·대조군·63조건·선택 규칙 연결 |
 | 기존 근거와 미확인 주장 구분 | 완료 | MLP8/parity/새Validation/독립평가 분리 |
 | S2P2 adaptation 및 6편 방법 대조 | 완료 | primary source에 기반한 표적 비교. 포괄적 최초성 조사는 아님. |
+| 완료 MLP8 Results·Discussion 및 Instacart 중간 행 | 완료 | 54조건 평균/표본SD 재계산 및 원본 SHA 대조 |
 | 새 Q1/Q2 성과 판정 | 다음 작업 | 자동화의 원본 검증·최종Validation 집계 이후 |
 | 투고 가능한 최종 원고 | 외부 작업 대기 | 저자 작성 과정·학회 AI 정책·최종 근거 반영 필요 |
 

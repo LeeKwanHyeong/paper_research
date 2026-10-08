@@ -151,7 +151,7 @@ This identity exposes its relationship to a concatenated normalized representati
 
 ### 6.1 Roles of completed and new evidence
 
-The completed MLP8 study is motivation, not a result for CNN+GRU54. Its 54 Validation conditions showed lower overall quantity RMSE for the history-enabled branch in all 18 matched history-on/off comparisons. Yet the comparison includes a capacity change, and adverse timing results remain: on Taxi, mean overall TimeNLL increased by 53.17% and 69.64% for the two prototype settings at the quantity-selected checkpoints. Prototype addition did not uniformly improve quantity RMSE. These observations motivate the active-budget control and mandatory reporting of timing and tail metrics; they do not establish the representative model's contribution [E1].
+The completed MLP8 study motivates the representative-architecture experiment, but does not provide a result for CNN+GRU54. Section 7 reports its quantity gains, matched-budget comparisons, and adverse timing and tail results. Those findings motivate the current-only capacity control and mandatory reporting of all six metrics [E1].
 
 A completed native check found bitwise agreement across 83 parity checks between the existing CNN+GRU54 implementation and the mean-retrieval implementation on one RTX 5080 Runtime. Its scope included initialization, specified synthetic cases, and a small number of shared-batch updates. It supports the new structural baseline, not equality of historical A100 training runs or of converged checkpoints [E2].
 
@@ -200,6 +200,58 @@ The current campaign does not repeat all external baselines. Before a final exte
 
 Finally, no unseen evaluation is claimed here. Candidate and selector choices must be frozen before a genuinely unexposed period or dataset is used, with access history checked first. A new Validation table on previously used data does not restore independence. CPU binary reinference, any separately authorized Test evaluation, and a new independent assessment remain distinct tasks. The manuscript's eventual empirical contribution must be limited to the evidence these steps actually produce.
 
+## 7. Completed Validation evidence and current limits
+
+### 7.1 Scope of the completed MLP8 comparison
+
+The completed structural study contains 54 conditions: six configurations on Taxi, Intermittent, and RAF, each with seeds 42, 52, and 62. Selected and final checkpoint originals were retrieved and their hashes verified before the study was finalized on 7 October 2026. We use its full-Validation results at each fit's first finite minimum of overall raw quantity RMSE [E1]. This study concerns **MLP8**, not the representative CNN+GRU54 intervention described in Section 4.
+
+In this earlier study, P0 disables the external prototype path, P1 uses 64 learned static prototypes with top-four mean aggregation, and PF replaces that path with a parameter-matched feedforward network. H0 disables the explicit correction, H1 combines the current and immediately preceding observed hidden states, and HC substitutes a parameter-matched current-state-only correction. H1's eight branches use the same current/previous pair and different observation-count eligibility thresholds; they are not eight different lags. H1 and HC each register 12,288 correction parameters, but their bottleneck widths differ (8 versus 12). On RAF, the sequence cap makes the eighth branch ineligible in both, leaving seven potentially active branches. The prototype and feedforward substitutes also have different initial residual distributions. All configurations retain the common causal encoder and its persistent tokens. The removal comparisons change parameter count, whereas PF and HC provide narrower capacity controls with their own architectural and initialization differences.
+
+The table reports mean overall quantity RMSE ± sample standard deviation over the three seeds. These standard deviations describe seed variability on the same evaluation population, not confidence intervals based on independent datasets.
+
+| MLP8 configuration | Taxi | Intermittent | RAF |
+|---|---:|---:|---:|
+| P0_H0 | 88.9766 ± 0.5011 | 1.777327 ± 0.065439 | 34.2422 ± 0.1471 |
+| P1_H0 | 90.5093 ± 0.5207 | 1.720767 ± 0.044778 | 34.2303 ± 0.1273 |
+| P0_H1 | 77.3773 ± 1.8224 | 1.617101 ± 0.008638 | 33.9788 ± 0.0450 |
+| P1_H1 | 77.7352 ± 0.6807 | 1.664286 ± 0.009488 | 33.9380 ± 0.0706 |
+| PF_H1 | 79.2546 ± 1.2300 | 1.758884 ± 0.124080 | 34.1251 ± 0.0744 |
+| P1_HC | 88.8457 ± 1.2669 | 1.728073 ± 0.060651 | 34.2733 ± 0.3269 |
+
+Adding H1 reduced overall quantity RMSE in all **18 of 18** matched seed comparisons, comprising the H1/H0 contrasts under both P0 and P1. The reduction calculated from the three-seed means was 13.04%/14.11% on Taxi, 9.01%/3.28% on Intermittent, and 0.77%/0.85% on RAF for P0/P1 respectively. The direction was consistent across seeds, but the effect size differed substantially across datasets. Because H1 also adds parameters, this result alone does not attribute the gain solely to access to the preceding state.
+
+### 7.2 Matched-budget evidence and the prototype counterexample
+
+The historical study's fixed consistency criterion required P1_H1 to improve overall RMSE over both PF_H1 and P1_HC for all three seeds in the same two or more datasets. Taxi and RAF met that criterion; Intermittent did not. On Taxi, mean RMSE was 1.92% lower than PF_H1 and 12.51% lower than P1_HC; the corresponding reductions on RAF were 0.55% and 0.98%. On Intermittent, each comparison improved in only two of three seeds, with different losing seeds. These results support the specified package against its controls on Taxi and RAF, rather than a universal advantage of every component.
+
+In particular, beating the feedforward substitute is different from showing that prototypes are necessary. With H1 retained, adding P1 instead of P0 **increased** mean overall RMSE by 0.46% on Taxi and 2.92% on Intermittent. Only one of three Taxi seeds and none of the Intermittent seeds improved. RAF improved by 0.12% in all three seeds. We therefore retain the historical designated configuration and report these counterexamples, rather than selecting a different best configuration for each dataset and presenting the combined scores as one model.
+
+### 7.3 Timing and large-quantity tradeoffs
+
+The quantity gains did not imply a joint improvement in quantity and timing. At the same quantity-selected checkpoints, Taxi's mean overall TimeNLL rose from 0.817976 to 1.252906 when H1 was added under P0, and from 0.724678 to 1.229372 under P1. These increases of 53.17% and 69.64% occurred in all three seeds of their respective comparisons. We do not replace these time scores with values from a separately time-selected epoch. Nor do the aggregate scores establish whether the harm originates in optimization, calibration, or another mechanism.
+
+Large-quantity results also constrain the claim. On Taxi, P1_H1's mean large-quantity RMSE was 376.6596 versus 366.7086 for PF_H1, a 2.71% deterioration despite its better overall RMSE. On RAF, adding H1 increased large-quantity MAE by 1.27% under P0 and 0.94% under P1; large-quantity TimeNLL increased by 3.64% and 3.85%, respectively. The full six-metric tables and their sample standard deviations remain available in [E1]. These subsets contain 79 Taxi, 1,141 Intermittent, and 50 RAF Validation targets. Repeating training with three seeds does not triple those evaluation sample sizes. Near-zero tail TimeNLL values are retained on their original scale rather than turned into unstable percentage comparisons.
+
+These findings motivate the representative-architecture controls: the most consistent existing signal concerns quantity prediction, while prototype benefit, tail behavior, and timing depend on the condition. They justify testing whether the signal persists in CNN+GRU54 with a current-only parameter-budget control. They do not establish that it already does. Equal parameter budgets also did not imply equal measured computational cost. Across the three same-device synthetic qualification scenarios, P1_H1 had 23.2–43.9% longer measured step wall time and 67.4–117.8% greater peak allocated memory than PF_H1. These three-step qualification measurements included gradient copying and auditing, discarded no warm-up steps, and are not deployment-latency or full-training benchmarks. They are kept separate from TimeNLL and from the later retrieval cost protocol [E4].
+
+### 7.4 Instacart: one completed condition, no architecture ranking yet
+
+At the locally archived observation of **8 October 2026, 14:38:07 KST**, one Instacart fit had completed: MLP8 with seed 52 on the RTX 5090. Its final saved epoch was 55 and its quantity-selected checkpoint was epoch 15. The same selected checkpoint yielded the following full-Validation and large-quantity scores:
+
+| Instacart MLP8, seed 52 | Targets | Quantity RMSE | Quantity MAE | Recorded-time NLL |
+|---|---:|---:|---:|---:|
+| Full Validation | 503,733 | 5.884102 | 3.994055 | 2.811975 |
+| Quantity >35 | 6,036 | 24.665215 | 22.087655 | 2.899737 |
+
+This row is an **interim descriptive record**, supported by a hash-verified stored observation and its selected-endpoint readback [E4]. It is not the completed nine-fit stage report: final stage-wide binary retrieval and the completion receipt were still unavailable in the consulted local record. There is no completed matched architecture/seed set here from which to infer superiority, a three-seed mean, or a contribution effect. Unfinished fits are not substituted into this table. The observation time is preserved and is not a statement about the GPUs' current state.
+
+## 8. Discussion: what can be concluded now
+
+The completed study provides a reason to prioritize explicit history correction: its quantity benefit was consistent in the removal comparisons, and the specified matched-budget criterion held on two datasets. The prototype counterexamples and timing harm narrow that evidence to a task- and condition-dependent effect. Neither an explanation based on demand shocks nor a claim that the mechanism specifically resolves sparsity follows from these aggregate scores; such explanations require additional evidence.
+
+The next result to resolve the primary claim is the representative CNN+GRU54 comparison against disabled and current-only corrections. The fixed-query experiment addresses a separate, secondary question after its mean baseline is established. Instacart supplies a supplementary comparison and cannot substitute for either intervention study. External superiority, methodological priority, and independent predictive validity remain separate questions. This division allows the completed results and their limitations to be written now, while reserving the new empirical conclusions until their contracted evidence is available.
+
 ## References
 
 [1] N. Du et al. *Recurrent Marked Temporal Point Processes: Embedding Event History to Vector*. KDD, 2016, pp. 1555–1564. [DOI](https://doi.org/10.1145/2939672.2939875), [author manuscript](https://people.mpi-sws.org/~manuelgr/pubs/rmtpp.pdf).
@@ -219,3 +271,5 @@ Finally, no unseen evaluation is claimed here. Candidate and selector choices mu
 [E2] CNN+GRU54/mean native parity: [attempt 3 completion receipt](/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_claims_and_parity_20261008_v1/evidence/attempt3/completion_receipt.json).
 
 [E3] Frozen execution contracts: [Instacart](/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_contribution_instacart_20261008_v1/execution_contract.json), [history correction](/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_contribution_history_20261008_v1/execution_contract.json), [retrieval](/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_contribution_retrieval_20261008_v1/execution_contract.json). File-level method provenance is in the accompanying writing notes and evidence manifest; these development references will need publication-appropriate anonymization and archival identifiers.
+
+[E4] Results update, including the Instacart interim observation and historical qualification cost scope: [evidence note](/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_contribution_writing_20261008_v1/RESULTS_UPDATE_20261008.md), [derived evidence and original hashes](/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_contribution_writing_20261008_v1/results_update_evidence.json).
