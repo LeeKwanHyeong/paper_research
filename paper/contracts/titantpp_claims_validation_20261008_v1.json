@@ -1,0 +1,181 @@
+{
+  "schema": "titantpp_claims_validation_20261008_v1",
+  "status": "scientific questions and selection rules fixed; downstream arm implementation and GPU expansion not authorized",
+  "representative": {
+    "model": "titantpp_cnn_gru54",
+    "mean_alias": "titantpp_retrieval_mean",
+    "source_revision": "4274043717cf24640d9a18fb35231a1f7ba50c8e",
+    "source126_closure_sha256": "918f7cb883b62cbdc6f3f178cc53b6e20aac2e71a49b6e036769aa2fea76155a",
+    "trainable_parameters": 115167,
+    "alias_usable_after_native_parity_pass": true,
+    "single_version_for_all_datasets": true,
+    "historical_A100_checkpoint": "frozen reference only; not initialization or training-equivalence evidence"
+  },
+  "questions": {
+    "Q1": {
+      "question": "인코더가 이미 관측 이력을 요약해도 직전 관측 상태를 명시적으로 연결하는 보정이 추가 수량 이득을 주는가?",
+      "primary": true,
+      "comparators": [
+        "full CNN+GRU54 correction",
+        "same common encoder weights and observed mask with CNN/GRU correction paths disabled",
+        "current-state-only correction with equal active correction parameter budget"
+      ],
+      "capacity_controls_required": true,
+      "scope_note": "현재 상태 자체에도 prefix 이력이 포함된다; current-only는 이력 없는 모델이 아니다."
+    },
+    "Q2": {
+      "question": "시간·수량 검색 정보를 분리해 학습된 정적 prototype을 선택·결합하면 일반 학습 검색보다 추가 수량 이득을 주는가?",
+      "primary": false,
+      "candidate": "titantpp_retrieval_fixed",
+      "comparators": [
+        "mean",
+        "weighted",
+        "fixed 0.5/0.5",
+        "generic learned retrieval with exactly matched active parameter budget"
+      ],
+      "fixed_additional_parameters": 512,
+      "existing_generic_additional_parameters": 521,
+      "existing_generic_is_fixed_exact_budget_control": false,
+      "additional_identifiability_controls": [
+        "same top4 memory size64 and observation-only history summary32",
+        "match score scale, normalization and temperature",
+        "compare fixed selected subset to isolate selection versus value aggregation",
+        "two-view concatenation algebraic equivalence audit"
+      ],
+      "adaptive_claim_status": "not supported by existing pilot Test; original results preserved",
+      "prototype_semantics": "train-learned static slots; not observed-event bank or prototype-content improvement"
+    }
+  },
+  "scientific_training_budget": {
+    "min_epochs": 40,
+    "max_epochs": 300,
+    "patience_epochs": 40,
+    "batch_size": 128,
+    "max_seq_len": 256,
+    "lookback_weeks": 168,
+    "optimizer": "AdamW",
+    "lr": 0.001,
+    "weight_decay": 0.01,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "eps": 1e-08,
+    "gradient_clip_norm": 1.0,
+    "quantity_variant": "count_only_log_regression",
+    "lambda_log_qty": 1.0,
+    "lambda_tail": 0.0,
+    "time_head_lr_multiplier": 1.0,
+    "time_head_mode": "heteroscedastic_lognormal_duration",
+    "observation_contract": "positive_integer_round_clamp_v1",
+    "time_sigma_floor": 0.001,
+    "time_unit": "hour",
+    "test_based_tuning": false,
+    "wall_clock_lease": "separate operational contract required before downstream launch; timeout is censored execution, not scientific completion"
+  },
+  "validation_selection": {
+    "split": "full Validation only",
+    "metric": "raw overall quantity RMSE",
+    "tie_policy": "first strict finite minimum",
+    "metrics_reported_at_same_selected_epoch": [
+      "overall quantity RMSE",
+      "overall quantity MAE",
+      "overall TimeNLL",
+      "large-quantity RMSE",
+      "large-quantity MAE",
+      "large-quantity TimeNLL"
+    ],
+    "large_quantity_definition": "strictly above frozen Train threshold",
+    "thresholds": {
+      "Taxi": 3449,
+      "Intermittent": 187,
+      "RAF": 200
+    },
+    "mixed_Validation_Test_aggregation": false,
+    "new_posthoc_time_tolerance": false
+  },
+  "comparison_controls": {
+    "datasets": [
+      "Taxi",
+      "Intermittent",
+      "RAF"
+    ],
+    "planned_seeds": [
+      42,
+      52,
+      62
+    ],
+    "same_dataset_seed_all_arms_same_GPU_Runtime": true,
+    "GPU_repeats_are_not_independent_seeds": true,
+    "common_initial_tensor_snapshot_and_common_batch_orders_required": true,
+    "measure_cost_same_GPU_lengths": [
+      64,
+      256
+    ],
+    "existing_cost_gate_reference": {
+      "inference_increase_max": 0.2,
+      "training_step_increase_max": 0.3,
+      "peak_allocation_increase_max": 0.2
+    },
+    "report_seed_pairs_mean_sample_SD_and_adverse_cases": true,
+    "history_primary_checkpoint_policy": "quantity selector only; no time or tail checkpoint re-selection"
+  },
+  "claim_decision": {
+    "Q1": {
+      "unit": "dataset x seed paired overall raw quantity full Validation RMSE at each arm earliest strict minimum",
+      "required_comparisons": [
+        "full correction vs correction-disabled",
+        "full correction vs active-budget current-state-only"
+      ],
+      "development_support_rule": "For at least two of the same three datasets, all three seed pairs must strictly improve in both comparisons. Other datasets and all adverse metrics remain reported.",
+      "seed_rule": "42/52/62 are independent training seeds; two-GPU seed42 repeats do not count as two seeds",
+      "statistical_significance_claim": false,
+      "independent_confirmation_required": true,
+      "MLP8_existing_gate": "preserved separately; does not substitute CNN controls"
+    },
+    "Q2": {
+      "unit": "dataset x seed paired overall raw quantity full Validation RMSE at each arm earliest strict minimum",
+      "required_comparisons": [
+        "fixed vs mean",
+        "fixed vs weighted",
+        "fixed vs generic active-512 control"
+      ],
+      "development_support_rule": "For at least two of the same three datasets, all three seed pairs must strictly improve in all three comparisons and fixed must meet both sequence-length cost limits on that same GPU.",
+      "large_quantity_claim": "Tail RMSE/MAE are reported, not inferred from overall improvement; a tail-improvement claim requires its own consistent paired results.",
+      "time_prediction_claim": "No time improvement implied; same-epoch TimeNLL harm reported without posthoc tolerance.",
+      "statistical_significance_claim": false,
+      "independent_confirmation_required": true,
+      "existing_adaptive_pilot_gate": "unchanged and separate; this prospective fixed development rule does not relabel past Test as a success gate"
+    },
+    "interaction": "Only after individual effects are supported, test correction ON/OFF x mean/fixed with difference-of-differences; parameter effects reported.",
+    "external": "Include RMTPP/THP/NHP/SAHP/AttNHP and S2P2 using aligned common-output-head population and training/selection provenance; current scoped historical seed42 claim preserved, no universal superiority."
+  },
+  "independent_evaluation": {
+    "existing_Taxi_Test_is_development_exposed": true,
+    "candidate_inventory": "reports/titantpp_claims_and_parity_20261008_v1/evidence/independent_evaluation_inventory.json",
+    "unseen_status_requires_access_and_provenance_audit": true,
+    "reserve_before_design_tuning": true,
+    "evaluate_only_after_model_and_selector_freeze": true,
+    "new_split_performance_access_now": false,
+    "independent_evaluation_not_executed": true
+  },
+  "approved_execution_now": {
+    "claim_contract": true,
+    "baseline_native_parity": true,
+    "host": "5080",
+    "seed": 42,
+    "real_Train_updates_per_model": 3,
+    "synthetic_updates_per_model": 2,
+    "new_full_fit": false,
+    "downstream_contribution_ablation": false,
+    "new_Validation_inference": false,
+    "new_Test_inference": false,
+    "remote_runtime_changes": false
+  },
+  "writing_boundary": "Research contract and technical evidence only; PAKDD manuscript prose must follow current Author Kit generative-AI policy.",
+  "evidence_inputs": {
+    "reports/titantpp_claims_and_parity_20261008_v1/LITERATURE_REVIEW.md": "e9caefc87ca8e9e3f3a5b1492e24d765b84a89372833f9302ccd06e35223244f",
+    "reports/titantpp_claims_and_parity_20261008_v1/evidence/literature_review.json": "42507f1a749a2cc06d20a4aba853c04a8a1153bf4c27dcc63cc099359f3c9d04",
+    "reports/titantpp_claims_and_parity_20261008_v1/evidence/independent_evaluation_inventory.json": "0fbb0aeffa581013e3de1f70dcd2ee1adae3e691a9554be21814dc8c57be69d2"
+  }
+}

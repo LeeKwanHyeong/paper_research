@@ -1,0 +1,54 @@
+{
+  "status": "completed_targeted_review_novelty_unconfirmed",
+  "date": "2026-10-08",
+  "artifact_role": "internal_technical_literature_review_not_manuscript",
+  "questions": {
+    "Q1": "Does an explicit current/previous observed hidden-state correction add value beyond an encoder already using prefix history?",
+    "Q2": "Does fixed time/quantity score separation add value over generic retrieval from 64 learned static prototypes with top-4?"
+  },
+  "assumptions": ["Project architecture details supplied by parent frozen-design context, not independently code-audited here", "MLP8 structure evidence and CNNGRU54 retrieval evidence are separate"],
+  "sources": [
+    {"id":"NHP","title":"The Neural Hawkes Process: A Neurally Self-Modulating Multivariate Point Process","url":"https://papers.nips.cc/paper/2017/file/6463c88460bd63bbe256e495c63aa40b-Paper.pdf","evidence_class":"academic_primary","read_depth":"full_method_section_3.2.2_equations_4_to_7","finding":"A continuous-time recurrent hidden state represents past event order and timing and determines intensity.","extraction_confidence":"high","novelty_implication":"History use itself is established."},
+    {"id":"THP","title":"Transformer Hawkes Process","url":"https://proceedings.mlr.press/v119/zuo20a/zuo20a.pdf","evidence_class":"academic_primary","read_depth":"method_section_3.1_equations_4_5_and_masking","finding":"Causal self-attention accesses historical events; future positions are masked.","extraction_confidence":"high","novelty_implication":"Distinguish extra correction path from historical attention."},
+    {"id":"SAHP","title":"Self-Attentive Hawkes Process","url":"https://proceedings.mlr.press/v119/zhang20q/zhang20q.pdf","evidence_class":"academic_primary","read_depth":"full_method_section_4","finding":"Time-encoded event representations are attention-weighted to parameterize history-dependent intensity.","extraction_confidence":"high","novelty_implication":"Temporal information in history attention is established."},
+    {"id":"ANHP","title":"Transformer Embeddings of Irregularly Spaced Events and Their Participants","url":"https://www.cs.jhu.edu/~jason/papers/yang%2Bal.iclr22.pdf","evidence_class":"academic_primary_author_hosted","read_depth":"full_method_sections_2_3_equations_1_to_6","finding":"Continuous-time event queries attend to past event representations; layer embeddings include residual connections.","extraction_confidence":"high","novelty_implication":"Residual plus history is not itself new; exact path differs."},
+    {"id":"TITANS","title":"Titans: Learning to Memorize at Test Time","url":"https://arxiv.org/html/2501.00663v1","evidence_class":"academic_primary_preprint_version_1","read_depth":"method_sections_3.1_3.3_4.1_to_4.3_targeted","finding":"Context-updated neural memory and input-independent persistent parameters are distinct.","extraction_confidence":"high","novelty_implication":"Static prototype retrieval is not test-time neural memory updating."},
+    {"id":"PERSISTENT","title":"Augmenting Self-attention with Persistent Memory","url":"https://arxiv.org/pdf/1907.01470","evidence_class":"academic_primary","read_depth":"full_method_sections_4.1_4.2_equations_9_to_14","finding":"Input-independent learned key/value vectors augment attention.","extraction_confidence":"high","novelty_implication":"Learned static task memory is established."},
+    {"id":"PKM","title":"Large Memory Layers with Product Keys","url":"https://papers.neurips.cc/paper/9061-large-memory-layers-with-product-keys.pdf","evidence_class":"academic_primary","read_depth":"method_section_3.1_equations_1_to_3_and_product_key_definition","finding":"Learned query selects top-k trainable memory keys and softmax-weights their values.","extraction_confidence":"high","novelty_implication":"Top-k weighted learned memory retrieval is established."}
+  ],
+  "synthesis": {
+    "Q1_status": "primary_testable_hypothesis_novelty_unconfirmed",
+    "Q1_scope": "Task-specific benefit of explicit current/previous-state correction beyond prefix encoder and active-capacity-matched current-only correction",
+    "Q2_status": "conditional_secondary_hypothesis_novelty_unconfirmed",
+    "Q2_scope": "Benefit of constrained time/quantity score design beyond weighted and same-information same-active-budget generic retrieval",
+    "interpretation_confidence": "medium",
+    "global_novelty_confidence": "low",
+    "forbidden_inferences": ["first use of history", "first residual history model", "first learned prototype memory", "first top-k weighted retrieval", "prototype content improvement proven", "actual historical-event bank", "two independent contributions from combined score alone"]
+  },
+  "recommended_contract_checks": [
+    "Match encoder, output head, data, active capacity, initialization/RNG, optimizer and selection policy",
+    "Separate no correction, current-only active-budget control, current-plus-previous correction",
+    "Consider simple lag-1 concatenate/project control before attributing benefit to complex correction",
+    "Document observed-event indexing, boundaries, masking and residual initialization",
+    "Match mean/weighted/fixed/generic input access, bank64, top4 and value pathway",
+    "Match fixed512 and generic active parameter budget; existing generic521 is not exact match",
+    "Record score normalization, temperature, fixed coefficient provenance and tie handling",
+    "Check conditional algebraic equivalence of weighted two-view dot products and concatenated single dot product",
+    "Separate selection effect from aggregation effect with fixed-index/fixed-aggregation diagnostic controls",
+    "Use 2x2 correction-by-retrieval contrast for main effects and interaction",
+    "Keep full/tail quantity and same-selected-epoch TimeNLL plus same-GPU cost",
+    "Do not treat reused exposed Test as new independent evaluation"
+  ],
+  "coverage": {
+    "target_papers": 7,
+    "accessible_method_sections": 7,
+    "abstract_only_sources": 0,
+    "systematic_review": false,
+    "academic": "seven selected primary method texts",
+    "web_docs_code": "source acquisition only; no new code audit",
+    "community_market": "excluded as irrelevant evidence class",
+    "paid_calls": 0,
+    "failures": ["oma CLI unavailable", "Knows endpoint web error", "OpenReview challenge recovered via author JHU PDF", "persistent-memory HTML failure recovered via arXiv PDF", "shared Codex execution protocol file not found in searched skill/project paths"],
+    "not_covered": ["exhaustive literature through 2026", "S2P2 exact method comparison", "nearest count-aware marked TPP literature", "recent lag/local residual methods", "broad task-specific multi-view retrieval survey", "statistical significance", "GPU execution", "new independent data availability"]
+  }
+}
