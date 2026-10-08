@@ -99,7 +99,7 @@ assert not subprocess.check_output(["nvidia-smi","--query-compute-apps=gpu_uuid,
 gpu=subprocess.check_output(["nvidia-smi","--query-gpu=uuid","--format=csv,noheader"],text=True).strip()
 assert gpu==c["runtime"]["gpu_uuid"],"GPU UUID differs"
 claims=root/"claims"; claims.mkdir(exist_ok=True)
-argv=["/usr/bin/timeout","--signal=TERM","--kill-after=15s","900s",sys.executable,str(root/"operation/check.py"),"--source",str(root/"source"),"--contract",str(root/"execution_contract.json"),"--output",str(root/"result.json"),"--device","cuda"]
+argv=["/usr/bin/timeout","--signal=TERM","--kill-after=15s","900s",sys.executable,str(root/"operation/check.py"),"--source",str(root/"source"),"--contract",str(root/"execution_contract.json"),"--output",str(root/"result.json"),"--device","cuda:0"]
 started=datetime.datetime.now(datetime.timezone.utc).isoformat()
 with (claims/"native.json").open("x") as stream: json.dump({"argv":argv,"started_at_utc":started,"wrapper_pid":os.getpid(),"wrapper_ppid":os.getppid(),"retry":False},stream)
 clock=time.monotonic(); result=subprocess.run(argv,capture_output=True,text=True,timeout=940)
@@ -130,7 +130,7 @@ def main():
     parser.add_argument("--bundle", type=Path, default=BUNDLE)
     args = parser.parse_args()
     bundle = args.bundle.resolve()
-    if bundle not in (BUNDLE.resolve(), (BUNDLE / "attempt2").resolve()):
+    if bundle not in tuple(path.resolve() for path in (BUNDLE, BUNDLE / "attempt2", BUNDLE / "attempt3")):
         raise ValueError("Only the approved native-check bundle and its recorded correction are allowed")
     contract, manifest = verify_bundle(bundle)
     runtime = contract["runtime"]
