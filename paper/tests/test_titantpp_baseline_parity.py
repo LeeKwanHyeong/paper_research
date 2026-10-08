@@ -154,6 +154,27 @@ class BaselineParityTests(unittest.TestCase):
         right["quantities"][0, -1] += 1.
         self.assertFalse(parity.compare_tensors(left, right)["passed"])
 
+    def test_gpu_uuid_bare_prefixed_case_normalization(self):
+        bare = "7500aa5a-f7b0-bf7c-3159-13852192cbc6"
+        normalized = "GPU-" + bare
+        self.assertEqual(parity.canonical_gpu_uuid(bare), normalized)
+        self.assertEqual(parity.canonical_gpu_uuid(normalized.upper()), normalized)
+        self.assertEqual(parity.require_gpu_uuid_match(bare, normalized), normalized)
+
+    def test_malformed_gpu_uuid_rejected(self):
+        for raw in (None, "", "GPU-", "7500aa5af7b0bf7c315913852192cbc6",
+            "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbcg",
+            "MIG-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+            "GPU-GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+            "7500aa5a-f7b0-bf7c-3159-13852192cbc6\n"):
+            with self.subTest(raw=raw), self.assertRaisesRegex(parity.ParityError, "Malformed"):
+                parity.canonical_gpu_uuid(raw)
+
+    def test_different_gpu_uuid_rejected(self):
+        with self.assertRaisesRegex(parity.ParityError, "GPU UUID changed"):
+            parity.require_gpu_uuid_match("7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+                "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc7")
+
 
 if __name__ == "__main__":
     unittest.main()

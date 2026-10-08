@@ -17,6 +17,7 @@ from pathlib import Path
 import pickle
 import platform
 import random
+import re
 import sys
 import time
 
@@ -39,6 +40,21 @@ class ParityError(RuntimeError):
 def require(condition, message):
     if not condition:
         raise ParityError(message)
+
+
+def canonical_gpu_uuid(raw):
+    """Accept Torch's bare UUID or NVIDIA's GPU-prefixed UUID, strictly."""
+    require(isinstance(raw, str) and re.fullmatch(
+        r"(?:GPU-)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+        raw, flags=re.IGNORECASE) is not None, "Malformed GPU UUID")
+    value = raw[4:] if raw[:4].upper() == "GPU-" else raw
+    return "GPU-" + value.lower()
+
+
+def require_gpu_uuid_match(left_raw, right_raw):
+    normalized = canonical_gpu_uuid(left_raw)
+    require(normalized == canonical_gpu_uuid(right_raw), "GPU UUID changed")
+    return normalized
 
 
 def sha_json(value):
@@ -596,13 +612,18 @@ def actual_runtime(device):
         "CUDA_VISIBLE_DEVICES": os.environ.get("CUDA_VISIBLE_DEVICES")}
     if str(device).startswith("cuda"):
         properties = torch.cuda.get_device_properties(device)
-        result["gpu"] = {"name": properties.name, "uuid": str(getattr(properties, "uuid", "")),
+        uuid_raw = str(getattr(properties, "uuid", ""))
+        uuid_normalized = canonical_gpu_uuid(uuid_raw)
+        result["gpu"] = {"name": properties.name, "uuid_raw": uuid_raw,
+            "uuid": uuid_normalized, "uuid_normalized": uuid_normalized,
             "total_memory": properties.total_memory, "capability": list(torch.cuda.get_device_capability(device)),
             "device_index": torch.device(device).index if torch.device(device).index is not None else torch.cuda.current_device()}
-        require(bool(result["gpu"]["uuid"]), "GPU UUID unavailable")
-        result["cuda_rng_device_mapping"] = [{"visible_device_index": index,
-            "uuid": str(getattr(torch.cuda.get_device_properties(index), "uuid", ""))}
-            for index in range(torch.cuda.device_count())]
+        result["cuda_rng_device_mapping"] = []
+        for index in range(torch.cuda.device_count()):
+            raw = str(getattr(torch.cuda.get_device_properties(index), "uuid", ""))
+            normalized = canonical_gpu_uuid(raw)
+            result["cuda_rng_device_mapping"].append({"visible_device_index": index,
+                "uuid_raw": raw, "uuid": normalized, "uuid_normalized": normalized})
     return result
 
 
@@ -633,11 +654,18 @@ def execute(source, c, device, receipt, contract_root):
     if str(device).startswith("cuda"):
         import subprocess
         lines = subprocess.check_output(["nvidia-smi", "--query-gpu=uuid,driver_version", "--format=csv,noheader"], text=True).splitlines()
-        uuid = receipt["runtime"]["gpu"]["uuid"]
-        matched = [line.split(",")[-1].strip() for line in lines if line.split(",")[0].strip() == uuid]
+        uuid = require_gpu_uuid_match(receipt["runtime"]["gpu"]["uuid_raw"], c["runtime"]["gpu_uuid"])
+        records = []
+        for line in lines:
+            fields = line.split(",")
+            require(len(fields) == 2, "Malformed GPU/driver inventory row")
+            raw, driver = (field.strip() for field in fields)
+            records.append({"uuid_raw": raw, "uuid_normalized": canonical_gpu_uuid(raw),
+                "driver": driver, "raw_line": line})
+        matched = [record for record in records if record["uuid_normalized"] == uuid]
         require(len(matched) == 1, "GPU driver/UUID binding unavailable")
-        receipt["runtime"]["driver"] = matched[0]
-        require(uuid == c["runtime"]["gpu_uuid"], "GPU UUID changed")
+        receipt["runtime"]["driver"] = matched[0]["driver"]
+        receipt["runtime"]["nvidia_smi_gpu_binding"] = matched[0]
         for name, expected in c["runtime"]["runtime_expected"].items():
             require(receipt["runtime"].get(name) == expected, "Runtime mismatch: " + name)
         torch.cuda.set_per_process_memory_fraction(c["resources"]["gpu_memory_limit_bytes"]
@@ -671,9 +699,15 @@ def execute(source, c, device, receipt, contract_root):
     if str(device).startswith("cuda"):
         process_lines = subprocess.check_output(["nvidia-smi", "--query-compute-apps=pid,gpu_uuid", "--format=csv,noheader"], text=True).splitlines()
         owned = [line for line in process_lines if line.split(",")[0].strip() == str(os.getpid())]
-        require(any(line.split(",")[-1].strip() == c["runtime"]["gpu_uuid"] for line in owned),
+        owned_records = [{"uuid_raw": line.split(",")[-1].strip(),
+            "uuid_normalized": canonical_gpu_uuid(line.split(",")[-1].strip()), "raw_line": line}
+            for line in owned]
+        require(any(record["uuid_normalized"] == canonical_gpu_uuid(c["runtime"]["gpu_uuid"])
+            for record in owned_records),
             "Current PID is not reported on the approved GPU UUID")
-        receipt["native_gpu_process"] = {"pid": os.getpid(), "gpu_uuid": c["runtime"]["gpu_uuid"], "verified": True}
+        receipt["native_gpu_process"] = {"pid": os.getpid(), "gpu_uuid": c["runtime"]["gpu_uuid"],
+            "gpu_uuid_normalized": canonical_gpu_uuid(c["runtime"]["gpu_uuid"]),
+            "owned_nvidia_smi_rows": owned_records, "verified": True}
     receipt["scientific_imports"] = verify_imports(source, c["source_files"])
     receipt["source_postcheck"] = verify_source(source, c)
     require([case["case"] for case in receipt["cases"]] == ["synthetic_T64", "synthetic_T256"]

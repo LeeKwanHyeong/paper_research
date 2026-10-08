@@ -127,16 +127,20 @@ def remote(contract, code, args, input_bytes, timeout):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=["deploy", "run"], required=True)
+    parser.add_argument("--bundle", type=Path, default=BUNDLE)
     args = parser.parse_args()
-    contract, manifest = verify_bundle()
+    bundle = args.bundle.resolve()
+    if bundle not in (BUNDLE.resolve(), (BUNDLE / "attempt2").resolve()):
+        raise ValueError("Only the approved native-check bundle and its recorded correction are allowed")
+    contract, manifest = verify_bundle(bundle)
     runtime = contract["runtime"]
-    evidence = BUNDLE / "deployment"
+    evidence = bundle / "deployment"
     evidence.mkdir(exist_ok=True)
     if args.mode == "deploy":
         stream = io.BytesIO()
         with tarfile.open(fileobj=stream, mode="w:gz") as archive:
             for rel in sorted(list(manifest["files"]) + ["deployment_manifest.json"]):
-                archive.add(BUNDLE / rel, arcname=rel, recursive=False)
+                archive.add(bundle / rel, arcname=rel, recursive=False)
         blob = stream.getvalue()
         write_once(evidence / "deploy_intent.json", {"package_sha256": hashlib.sha256(blob).hexdigest(), "root": runtime["root"]})
         result = remote(contract, DEPLOY, [runtime["root"], hashlib.sha256(blob).hexdigest()], blob, 180)
@@ -161,7 +165,7 @@ def main():
     if hashlib.sha256(raw).hexdigest() != reply["result_raw_sha256"]:
         raise ValueError("Returned result SHA differs")
     if raw:
-        with (BUNDLE / "result_5080.json").open("xb") as stream:
+        with (bundle / "result_5080.json").open("xb") as stream:
             stream.write(raw)
     write_once(evidence / "execution_receipt.json", reply)
     if result.returncode or reply["status"] != "complete":
