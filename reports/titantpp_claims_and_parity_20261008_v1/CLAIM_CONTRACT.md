@@ -10,7 +10,7 @@
 
 **명시적 이력 보정의 추가 효과를 검증한다 — 중심 가설 / 후속 실행 대기**
 - 질문: 인코더가 이미 관측 이력을 요약해도 직전 관측 상태를 명시적으로 연결하는 보정이 추가 수량 이득을 주는가?
-- 공통 encoder 파라미터·관측 마스크·출력부를 유지하고, CNN 보정과 GRU 잔차 경로의 전체 사용, 해당 보정 경로 제거, 같은 활성 파라미터 예산의 현재 상태 전용 보정을 비교한다.
+- 공통 encoder 구조와 초기 파라미터·관측 마스크·출력부를 맞추고, CNN 보정과 GRU 잔차 경로의 전체 사용, 해당 보정 경로 제거, 같은 활성 파라미터 예산의 현재 상태 전용 보정을 비교한다. 각 arm은 별도로 end-to-end 학습하므로 학습 후 encoder 상태까지 동일하다는 뜻은 아니다.
 - 현재 상태에도 prefix 이력이 들어 있으므로 현재 상태 대조를 '이력이 없는 모델'이라고 표현하지 않는다. 제거 대조만으로 용량 효과가 통제됐다고 보지 않는다.
 - 같은 데이터·seed의 두 비교 모두에서 전체 raw 수량 Validation RMSE가 엄격하게 낮아야 개선 쌍이다. 같은 두 데이터 이상에서 각 3seed가 모두 개선되면 개발 단계 지지로 판정한다. 세 데이터의 불리한 결과, 개선 크기, 평균과 표본 SD를 함께 보존한다.
 - 이 기준은 신규 CNN 대조를 위한 사전 규칙이다. 완료된 MLP8 구조54의 기존 계약·판정을 바꾸거나 그 결과를 CNN 기여의 대체 증거로 쓰지 않는다. 통계적 유의성이나 독립 일반화를 이 부호 기준만으로 주장하지 않는다.
@@ -27,6 +27,7 @@
 **학습과 선택 조건을 맞춘다 — 계약 확정 / 후속 구현 대기**
 - B128, 최대 길이256, lookback168, min40/max300/patience40, AdamW lr0.001/wd0.01/betas0.9,0.999/eps1e-8, clip1, time-head LR multiplier1을 유지한다.
 - count-only log regression, 수량 손실 계수1, tail 보조 손실0, 동일 lognormal duration head·관측 시간 계약·Train 통계를 유지한다.
+- 기록 시간 단위는 Taxi=hour, Intermittent=week, RAF=month다. 각 데이터의 기존 관측 단위를 유지하며 데이터 간 TimeNLL을 하나의 수치로 합산하지 않는다.
 - 최초 strict finite 최소 full Validation raw 전체 수량 RMSE로 checkpoint를 선택한다. 동률이면 최초 epoch를 유지하며 시간이나 큰 수량 점수로 다른 epoch를 고르지 않는다.
 - 같은 선택 epoch의 전체/큰 수량 RMSE·MAE·TimeNLL 6지표를 보고한다. Train 고정 경계 초과를 큰 수량으로 정의한다: Taxi3449, Intermittent187, RAF200.
 - 같은 데이터·seed의 모든 arm은 같은 GPU·Runtime·배치 순서를 사용한다. 공통 초기 tensor의 binding과 RNG를 기록한다. 같은 seed의 이종 GPU 반복은 독립 seed로 세지 않는다.
@@ -40,15 +41,18 @@
 - 독립 후보는 이후 기간 Taxi와 Online Retail II다. 둘 다 아직 미노출 인증이 없으며 원본 확보 또는 접근 이력 감사가 필요하다. 모델·학습·selector를 동결한 후에만 예약한 평가 자료의 성과를 확인한다.
 - 현재 데이터 조사는 metadata·접근 계보의 확인이며 새 독립 평가 실행은 아니다.
 
-**현재 승인 범위의 기준선 검사를 수행한다 — 승인됨**
+**현재 승인 범위의 기준선 검사를 수행한다 — 완료**
 - 5080 기존 ai_env에서 seed42, 두 구현 각각의 자연 초기화와 constructor RNG, 합성 B128/T64,T256 eval/train, 실제 Taxi 첫 Train 배치를 반복한 3회 업데이트를 확인한다.
 - 실제 Train optimizer update는 각 구현3회, 합성 업데이트는 각 구현2회가 상한이다. 구현 사이 파라미터 복사를 통해 차이를 숨기지 않는다. Dropout 비교를 위해 분기 시작 RNG를 복원하고 종료 RNG도 비교한다.
 - 공통 tensor·gradient·clip 이후 gradient·optimizer state·업데이트 이후 파라미터는 bitwise로 비교한다. 입력, source, RNG, 실제 Runtime과 GPU UUID의 digest를 남긴다.
 - native 검사의 합격은 새 환경의 구현 동등성 근거다. 새 full fit, Validation/Test 성과 평가, checkpoint 선택, 기여 대조 확대는 실행하지 않는다.
+- 2026-10-08 09:11:52KST, 5080/ai_env의 합성2case와 실제 Train1case에서 총83개 bitwise 비교가 통과했다. 각 구현의 실제 Train 업데이트3회·합성2회, exit0·종료 후 GPU PID 부재와 source/input 보존을 확인했다.
+- 전향 계약의 시간 단위 표기는 v2에서 데이터별 단위로 정정했다. native 검사가 rawSHA로 참조한 v1은 그대로 보존하며, 실제 검사는 동결 Taxi 데이터 계약을 사용했으므로 이 문서 표기 정정이 검사 계산이나 결과를 바꾸지 않는다.
 
 근거:
-- [기계 판독 계약](/Users/igwanhyeong/PycharmProjects/paper_research/paper/contracts/titantpp_claims_validation_20261008_v1.json)
-- [승인된 native 검사 계약](/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_baseline_parity_20261008_v1/execution_contract.json)
+- [현재 기계 판독 계약 v2](/Users/igwanhyeong/PycharmProjects/paper_research/paper/contracts/titantpp_claims_validation_20261008_v2.json)
+- [완료된 native 검사 계약](/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_claims_and_parity_20261008_v1/evidence/attempt3/execution_contract.json)
+- [native 완료 증적](/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_claims_and_parity_20261008_v1/evidence/attempt3/completion_receipt.json)
 - [문헌 검토](LITERATURE_REVIEW.md)
 - [독립 평가 후보 계보](evidence/independent_evaluation_inventory.json)
 - [완료된 기준선 감사](/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_retrieval_baseline_audit_20261008_v1/README.md)
