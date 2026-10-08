@@ -13,6 +13,12 @@ table 또는 artifact에 연결하고 validation과 held-out 결과를 구분한
 - [Validation tables](../tables/T3_v0_7_backbone_validation.md)과
   [paired comparisons](../tables/T4_v0_7_paired_titan_deltas.md): 본문 수치의 원천
 
+## Contribution study working draft — 2026-10-08
+
+- [Methods and experiment design](/Users/igwanhyeong/PycharmProjects/paper_research/paper/drafts/titantpp_contribution_methods_20261008_v1.md): 대표 CNN+GRU54 보정 주질문과 고정 검색 보조질문을 구분한 영문 연구 검토 초안.
+- [Evidence and related-method comparison](/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_contribution_writing_20261008_v1/README.md): 기존 MLP8 근거, 새 63조건 검증, S2P2 adaptation과 미확인 주장.
+- 기존 v0.7 계약과 원고를 대체하지 않는다. 결과 대기인 실험을 완료로 표시하지 않으며, AI-assisted 연구 초안을 현재 PAKDD2027 정책에 적합한 투고문으로 간주하지 않는다.
+
 ## Historical drafts
 
 `manuscript_section_plan_v0_1.md`, `introduction_v0_1.md`,
