@@ -14,7 +14,7 @@
 
 새 root와 운영 계약 번호 때문에 checkpoint identity가 달라지는 문제도 수정했다. 재개2개만 입력의 정확한 경로 연결과 부모 과학 interface identity 연결을 별도 receipt로 기록한다. 원본 .pt, receipt, source129/input7, data/loss/optimizer/selector는 보존했다. exposure/timing 기록을 원래 prefix에 이어 붙이고 optimizer/RNG/loader/best/history 연속성을 확인한다.
 
-로컬 검증: 회귀15개, 봉인 gate8개, 볼륨 정리4개 시나리오 PASS. 독립 검토는 [PRELAUNCH_REVIEW.md](PRELAUNCH_REVIEW.md). 실제 native qualification·3 worker admission·첫 신규 checkpoint는 아직 실행 전이다.
+로컬 검증: 회귀15개, 봉인 gate8개, 볼륨 정리4개 시나리오 PASS. 독립 검토는 [PRELAUNCH_REVIEW.md](PRELAUNCH_REVIEW.md). 실제 native qualification·3 worker admission·새 E24 저장과 current_only E49 완료까지 확인했다. 최신 증거는 [STARTUP_VERIFIED.md](STARTUP_VERIFIED.md).
 
 ## 새 전용 자원과 비용
 
@@ -37,8 +37,8 @@
 
 ## 남은 순서
 
-1. 새 비용 manager 봉인 및 native qualification·3 worker admission — 다음 작업. 실제 exit0와 GPU/owner idle 후에만 fit을 시작한다.
-2. RAF42 E24/E47의 첫 새 checkpoint 저장과 연속성 확인 — 위 검사 통과 후 진행.
+1. 새 비용 manager·서비스 활성과 native qualification·3 worker admission — 완료. 실제 exit0와 GPU/owner idle 후 fit을 시작했다.
+2. RAF42 full E24 새 저장과 current_only E47부터 E49 종료 — 완료. full은 계속 학습 중이다.
 3. RAF52/62와 Intermittent42/52/62의 3개 동시 batch — 비용 lease 안에서 진행.
 4. 원본 회수·27개 동일 선택 epoch Validation 비교·Q1 판정 — 종료 증거 확인 후. 큰 수량 RMSE/MAE와 TimeNLL 손해도 보고한다.
 5. 고정 검색 자원·mean 비교 계약 — 대기. CPU binary 재추론 감사, Test, 새 독립 평가 — 별도 미완료.
