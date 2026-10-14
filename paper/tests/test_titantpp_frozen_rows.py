@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 import polars as pl
@@ -178,6 +179,97 @@ class FrozenRowTests(unittest.TestCase):
         historical["quantity_cells"][0]["qty_mae"] = 2.
         with self.assertRaisesRegex(ValueError, "sufficient sum"):
             e.compare_metrics(actual, historical)
+
+    def reused_validation_fixture(self):
+        c, j = self.contract()
+        base = self.root / "results" / j["id"]
+        metrics = e.RawMetrics([2, 7, 13, 19], np)
+        metrics.add(np.asarray([1., 5., 25.]), np.asarray([2., 6., 26.]), np.asarray([1., 2., 3.]))
+        aggregate = metrics.finish()
+        e.write_exclusive(self.root / "prior_validation.json", {"metrics": aggregate})
+        j["reference_receipts"]["validation"] = {"path": "prior_validation.json", "sha256": e.sha(self.root / "prior_validation.json")}
+        writer = e.PredictionWriter(base / "validation" / "predictions", pl)
+        writer.add([{"target_index": index, "raw_quantity": float(index + 1)} for index in range(3)])
+        e.write_exclusive(base / "validation" / "predictions_manifest.json", writer.finish())
+        qualification = {key: True for key in ("target_quantity_perturbation_preserves_prediction",
+            "target_quantity_perturbation_preserves_time_loss", "target_gap_perturbation_preserves_quantity_prediction",
+            "single_vs_batch_prediction_matches", "single_vs_batch_time_loss_matches", "parameters_unchanged")}
+        old_sha = "old-contract-sha"
+        receipt = {"status": "complete", "split": "validation", "job_id": j["id"], "contract_raw_sha256": old_sha,
+            "reference_metrics_match": "PASS", **{key: j[key] for key in ("dataset", "arm", "seed", "family")},
+            "checkpoint_file_sha256": "checkpoint", "state_sha256_before": "state", "state_sha256_after": "state",
+            "selected_epoch": 7, "source_closure": "closure", "data_sha256": "data", "new_training": False,
+            "checkpoint_reselection": False, "full_population": True, "raw_predictions_written": True,
+            "qualification": qualification, "population": {"count": 3}, "metrics": aggregate,
+            "runtime": {"native": "identity"}, "runtime_after": {"native": "identity"}, "prediction_rows": 3,
+            "predictions_manifest_sha256": e.sha(base / "validation" / "predictions_manifest.json")}
+        exit_receipt = {"job_id": j["id"], "split": "validation", "contract_sha256": old_sha,
+                        "exit_code": 0, "actual_child_exit_observed": True}
+        e.write_exclusive(base / "validation" / "receipt.json", receipt)
+        e.write_exclusive(base / "validation_worker_exit.json", exit_receipt)
+        bridge = {"receipt_sha256": e.sha(base / "validation" / "receipt.json"),
+                  "worker_exit_sha256": e.sha(base / "validation_worker_exit.json"), "contract_sha256": old_sha}
+        c["reused_validation"] = {j["id"]: bridge}
+        current_sha = self.replace(c)
+        gate = {"status": "complete", "contract_sha256": current_sha, "actual_worker_exit0": True,
+                "jobs": {j["id"]: {key: bridge[key] for key in ("receipt_sha256", "worker_exit_sha256")}}}
+        e.write_exclusive(self.root / "validation_gate.json", gate)
+        spec = {"parent": self.root, "checkpoint": {"sha256": "checkpoint"}, "state_sha": "state",
+                "selected_epoch": 7, "source_closure": "closure", "data": {"sha256": "data"}, "runtime": {"approved": True}}
+        return c, j, gate, receipt, spec, current_sha
+
+    def test_reused_validation_bridge_requires_explicit_old_contract_and_scientific_identity(self):
+        c, j, gate, receipt, spec, current_sha = self.reused_validation_fixture()
+        with patch.object(e, "resolve_job", return_value=spec), patch.object(e, "check_runtime") as native:
+            e.verify_validation_gate(self.root, j, current_sha)
+            native.assert_called_once_with(receipt["runtime"], spec["runtime"])
+        # Even if the bridge and gate are repinned, a different model/selection cannot pass.
+        for key, value in (("checkpoint_file_sha256", "foreign"), ("state_sha256_after", "mutated"),
+                           ("selected_epoch", 9), ("data_sha256", "foreign"), ("arm", "foreign")):
+            changed = {**receipt, key: value}
+            p = self.root / "results" / j["id"] / "validation" / "receipt.json"
+            p.write_text(json.dumps(changed))
+            bad_contract = deepcopy(c)
+            bad_contract["reused_validation"][j["id"]]["receipt_sha256"] = e.sha(p)
+            digest = self.replace(bad_contract)
+            bad_gate = deepcopy(gate)
+            bad_gate["contract_sha256"] = digest
+            bad_gate["jobs"][j["id"]]["receipt_sha256"] = e.sha(p)
+            (self.root / "validation_gate.json").write_text(json.dumps(bad_gate))
+            with patch.object(e, "resolve_job", return_value=spec), patch.object(e, "check_runtime"), self.assertRaises(ValueError):
+                e.verify_validation_gate(self.root, j, digest)
+
+    def test_reused_validation_missing_foreign_bridge_or_modified_bytes_are_rejected(self):
+        c, j, gate, receipt, spec, current_sha = self.reused_validation_fixture()
+        for altered_reuse in ({}, {"foreign-job": c["reused_validation"][j["id"]]}):
+            bad = {**c, "reused_validation": altered_reuse}
+            digest = self.replace(bad)
+            (self.root / "validation_gate.json").write_text(json.dumps({**gate, "contract_sha256": digest}))
+            with self.assertRaises(ValueError):
+                e.verify_validation_gate(self.root, j, digest)
+        digest = self.replace(c)
+        (self.root / "validation_gate.json").write_text(json.dumps({**gate, "contract_sha256": digest}))
+        part = self.root / "results" / j["id"] / "validation" / "predictions" / "part-00000.parquet"
+        part.write_bytes(b"changed")
+        with patch.object(e, "resolve_job", return_value=spec), patch.object(e, "check_runtime"), self.assertRaisesRegex(ValueError, "prediction bytes"):
+            e.verify_validation_gate(self.root, j, digest)
+
+    def test_restored_empty_layout_sentinel_resolves_the_frozen_source_without_source_edits(self):
+        # The frozen helper is executed from its own bytes; it only checks directories.
+        helper = Path(__file__).resolve().parents[2] / "simple_lab_test" / "common" / "pathing.py"
+        copied = self.root / "source" / "simple_lab_test" / "common" / "pathing.py"
+        copied.parent.mkdir(parents=True)
+        copied.write_bytes(helper.read_bytes())
+        for directory in ("models", "utils"):
+            (self.root / "source" / directory).mkdir()
+        # Require the empty directory before import; no Python source modification.
+        original_sha = e.sha(copied)
+        module = e.file_module(copied, "_empty_layout_pathing_test")
+        with self.assertRaisesRegex(RuntimeError, "Could not locate"):
+            module.resolve_project_root(copied)
+        (self.root / "source" / "sample_data").mkdir()
+        self.assertEqual(module.resolve_project_root(copied), self.root / "source")
+        self.assertEqual(e.sha(copied), original_sha)
 
 
 if __name__ == "__main__":

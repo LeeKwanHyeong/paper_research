@@ -336,6 +336,55 @@ class PredictionWriter:
         return {"parts": self.parts, "prediction_rows": self.count, "compression": "zstd"}
 
 
+def verify_reused_validation(root, job, bridge, entry, receipt, actual_exit, contract_sha):
+    """An explicit byte-bound bridge can reuse a completed component Validation.
+
+    The gate belongs to this new contract; only the scientific receipt and its
+    actual worker exit retain the previous contract. No old artifact is edited.
+    """
+    require(job["family"] == "component", "Only an explicitly completed component Validation may be reused")
+    require(isinstance(bridge, dict) and set(bridge) == {"receipt_sha256", "worker_exit_sha256", "contract_sha256"},
+            "Reused Validation bridge must pin exactly receipt/exit/old contract")
+    require(bridge["contract_sha256"] != contract_sha
+            and receipt.get("contract_raw_sha256") == actual_exit.get("contract_sha256") == bridge["contract_sha256"],
+            "Reused Validation old contract differs")
+    require(all(entry.get(key) == bridge[key] for key in ("receipt_sha256", "worker_exit_sha256")),
+            "Gate references differ from explicit reused Validation byte pins")
+    require(actual_exit.get("split") == "validation", "Reused exit belongs to another split")
+    spec = resolve_job(job)
+    require(all(receipt.get(key) == job[key] for key in ("dataset", "arm", "seed", "family")),
+            "Reused Validation scientific job identity differs")
+    for key, expected in (("checkpoint_file_sha256", spec["checkpoint"]["sha256"]),
+                          ("state_sha256_before", spec["state_sha"]), ("state_sha256_after", spec["state_sha"]),
+                          ("selected_epoch", spec["selected_epoch"]), ("source_closure", spec["source_closure"]),
+                          ("data_sha256", spec["data"]["sha256"])):
+        require(receipt.get(key) == expected, "Reused Validation science binding differs: " + key)
+    require(receipt.get("new_training") is False and receipt.get("checkpoint_reselection") is False
+            and receipt.get("full_population") is True and receipt.get("raw_predictions_written") is True,
+            "Reused Validation is not a complete frozen diagnostic")
+    qualification = receipt.get("qualification", {})
+    keys = {"target_quantity_perturbation_preserves_prediction", "target_quantity_perturbation_preserves_time_loss",
+            "target_gap_perturbation_preserves_quantity_prediction", "single_vs_batch_prediction_matches",
+            "single_vs_batch_time_loss_matches", "parameters_unchanged"}
+    require(all(qualification.get(key) is True for key in keys), "Reused Validation causality/batch/state qualification is incomplete")
+    verify_population(receipt["population"], job["expected_populations"]["validation"])
+    original = job["expected_populations"]["validation"].get("original_population_identity")
+    if original:
+        require(receipt.get("original_population_identity") == original, "Reused original loader population differs")
+    reference = verify_reference(spec["parent"], job["reference_receipts"]["validation"])
+    compare_metrics(receipt["metrics"], reference.get("metrics", reference))
+    require(receipt.get("runtime") == receipt.get("runtime_after"), "Reused native Runtime changed during inference")
+    check_runtime(receipt["runtime"], spec["runtime"])
+    base = "results/" + job["id"] + "/validation/"
+    manifest = verify_reference(root, dict(path=base + "predictions_manifest.json", sha256=receipt["predictions_manifest_sha256"]))
+    require(manifest.get("prediction_rows") == receipt.get("prediction_rows") == receipt["population"]["count"]
+            == sum(part["rows"] for part in manifest["parts"]), "Reused Validation prediction manifest count differs")
+    require(len(manifest["parts"]) == len({part["path"] for part in manifest["parts"]}), "Reused prediction manifest duplicates a part")
+    for part in manifest["parts"]:
+        path = confined(root, base + "predictions/" + part["path"])
+        require(path.stat().st_size == part["bytes"] and sha(path) == part["sha256"], "Reused Validation prediction bytes differ")
+
+
 def verify_validation_gate(root, job, contract_sha):
     gate = read(Path(root) / "validation_gate.json")
     require(gate.get("status") == "complete" and gate.get("contract_sha256") == contract_sha
@@ -347,10 +396,18 @@ def verify_validation_gate(root, job, contract_sha):
     receipt = verify_reference(root, dict(path=base + "validation/receipt.json", sha256=entry["receipt_sha256"]))
     actual_exit = verify_reference(root, dict(path=base + "validation_worker_exit.json", sha256=entry["worker_exit_sha256"]))
     require(receipt.get("status") == "complete" and receipt.get("split") == "validation"
-            and receipt.get("job_id") == job["id"] and receipt.get("contract_raw_sha256") == contract_sha
+            and receipt.get("job_id") == job["id"]
             and receipt.get("reference_metrics_match") == "PASS", "Diagnostic Validation did not pass")
     require(actual_exit.get("exit_code") == 0 and actual_exit.get("actual_child_exit_observed") is True
             and actual_exit.get("job_id") == job["id"], "Diagnostic Validation actual worker exit0 missing")
+    require(sha(Path(root) / "contract.json") == contract_sha, "Current gate contract byte SHA differs")
+    c = read(Path(root) / "contract.json")
+    reuse = c.get("reused_validation", {})
+    require(isinstance(reuse, dict) and set(reuse) <= {j["id"] for j in c["jobs"]}, "Reused Validation bridge has a foreign job ID")
+    if job["id"] in reuse:
+        verify_reused_validation(root, job, reuse[job["id"]], entry, receipt, actual_exit, contract_sha)
+    else:
+        require(receipt.get("contract_raw_sha256") == contract_sha, "Diagnostic Validation contract differs; no reuse bridge")
     return sha(Path(root) / "validation_gate.json")
 
 
@@ -568,6 +625,8 @@ def worker(root, job_id, split, contract_sha):
                    "truth_digest_fields": TRUTH_FIELDS, "raw_predictions_written": True, "full_population": True,
                    "prediction_rows": processed, "predictions_manifest_sha256": sha(output / "predictions_manifest.json"),
                    "reference_metrics_match": "PASS" if split != "train" else "not_available_new_diagnostic",
+                   "validation_gate_sha256": gate_sha,
+                   "reused_validation": c.get("reused_validation", {}).get(job_id) if split == "test" else None,
                    "qualification": {**qualification, "parameters_unchanged": True}, "runtime": runtime, "runtime_after": runtime_after,
                    "registered_parameters": registered, "active_parameters_before_freeze": active, "new_training": False,
                    "checkpoint_reselection": False, "automatic_retry": False, "test_independent": False,
