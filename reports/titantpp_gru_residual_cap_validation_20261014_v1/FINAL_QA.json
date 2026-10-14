@@ -1,0 +1,141 @@
+{
+  "status": "PASS",
+  "summary": "로컬 구현·합성 검증·생성된 계약 묶음의 독립 QA 통과. 확인된 결함은 없으며 실제 학습과 native 검증의 통과를 뜻하지 않는다.",
+  "reviewed_utc": "2026-10-14T06:35:47.919778+00:00",
+  "role_configuration": {
+    "file": ".codex/agents/qa-reviewer.toml",
+    "configured_model": "gpt-6-astra",
+    "configured_reasoning": "high"
+  },
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "reviewed_files_sha256": {
+    "models/TPPs/CountAwareTitanCNNGRUResidualCap.py": "a5aaff3d01dfc0198dba4e7395f35552573ecf3a2350bcc1a69fed78ca4bac0e",
+    "paper/scripts/run_titantpp_gru_residual_cap.py": "e723a8f249d42e460d0f896380b7c18be0566162a5e372c99214548749f21b9a",
+    "paper/scripts/prepare_titantpp_gru_residual_cap.py": "03de239c298f7201bafbc5ca9d38d95d1ce1c7b75334483da39bce2e2d48a82a",
+    "paper/tests/test_titantpp_gru_residual_cap.py": "6d5cb0e34e398b26e93b6382be87bebe9ca7c928a6ed342fb504af91cb2b0dda",
+    "paper/tests/test_run_titantpp_gru_residual_cap.py": "68234de69b1e94570462f15914872ea12000e283e435c39ed3e5dabdae27b639",
+    "paper/tests/test_prepare_titantpp_gru_residual_cap.py": "71db8e4228d58e141b7ff0bf11c309ddb917e6744da606aaaccb0897f7ee864a",
+    "reports/titantpp_gru_residual_cap_validation_20261014_v1/EXPERIMENT_CONTRACT.md": "ef31d615947a7c69b4a83c4a8e1ff52cb1fbfcb0b7e46e77c89bc0fdc00883fd"
+  },
+  "files_changed": [
+    "reports/titantpp_gru_residual_cap_validation_20261014_v1/FINAL_QA.json",
+    "reports/titantpp_gru_residual_cap_validation_20261014_v1/FINAL_QA.md"
+  ],
+  "acceptance_criteria": [
+    {
+      "status": "PASS",
+      "criterion": "보정량은 각 배치·위치의 64차원 L2 반경 rho=0.25 안에 있으며 원래 출력 dtype을 유지한다."
+    },
+    {
+      "status": "PASS",
+      "criterion": "기준 반경만 detach하고 포화 보정의 분석적 gradient와 autograd가 일치한다. 0 초기화에서 학습 gradient가 유지된다."
+    },
+    {
+      "status": "PASS",
+      "criterion": "포화 dtype 반올림 상한, padding·withheld reset·미래 입력 차단·배치 독립성이 합성 검증을 통과한다."
+    },
+    {
+      "status": "PASS",
+      "criterion": "원본 FULL 초기 tensor·생성 난수·초기 출력·dropout 난수와 학습 파라미터 수가 유지된다."
+    },
+    {
+      "status": "PASS",
+      "criterion": "후보 identity와 원본 FULL identity를 함께 검사하고 rho·metadata 변경과 checkpoint 재표기를 차단한다."
+    },
+    {
+      "status": "PASS",
+      "criterion": "원본 CNN/FULL 경로는 기존 실행기로 위임하며 기존 핵심 소스 5개의 git diff가 없다."
+    },
+    {
+      "status": "PASS",
+      "criterion": "공통 인자 생성기의 실제 경로에서 손실·head·AdamW·loader·학습 예산을 합성 metadata로 검증했다."
+    },
+    {
+      "status": "PASS",
+      "criterion": "후보 실행기는 실제 학습을 PermissionError로 차단하고 CLI는 합성 검사만 허용한다."
+    },
+    {
+      "status": "PASS",
+      "criterion": "Validation replay는 validation split만 사용하며 전체 대상 수를 확인한다."
+    },
+    {
+      "status": "PASS",
+      "criterion": "계약은 원래 source131·데이터 정의·Train 통계·시간 규칙·학습 예산을 유지한다."
+    },
+    {
+      "status": "PASS",
+      "criterion": "검증된 기준선 참조를 expected_references로 전달해 재해시한 기준선 교체도 차단한다."
+    },
+    {
+      "status": "PASS",
+      "criterion": "원본 참조 241개·복제 source134개·현재 확장 모듈3개 SHA가 독립 재검증을 통과한다."
+    },
+    {
+      "status": "PASS",
+      "criterion": "기존 CNN/FULL Validation18개를 독립 재수집해 계약과 일치함을 확인했다."
+    },
+    {
+      "status": "PASS",
+      "criterion": "후보9개는 계획 상태이며 시작 fit0·후보 checkpoint0·실행승인0·원격0·Test0이다."
+    },
+    {
+      "status": "PASS",
+      "criterion": "Test 결과를 본 뒤 설계한 탐색 후속임과 CNN 활성 파라미터 차이·host 차이를 계약에 명시한다."
+    }
+  ],
+  "automated_checks": [
+    {
+      "검사": "모델10개 및 이전 실행기7개 합성 테스트",
+      "결과": "17 passed",
+      "소요_초": 11.14
+    },
+    {
+      "검사": "최신 실행기8개 및 준비 계약12개 테스트",
+      "결과": "20 passed, 35 subtests passed",
+      "소요_초": 10.99
+    },
+    {
+      "검사": "대상 신규6개 Python 파일 Ruff E9/F63/F7/F82",
+      "결과": "PASS"
+    },
+    {
+      "검사": "별도 합성 포화 분석 gradient·반경 detach·실제 모델 삽입점 cap 검사",
+      "결과": "PASS"
+    }
+  ],
+  "evidence": {
+    "bundle": "search_artifacts/titantpp_gru_residual_cap_validation_20261014_v1",
+    "contract_raw_sha256": "fae92b1695483ee4c978a6f72ddff7628881fc9bb2af42b246508835bddf06c9",
+    "contract_canonical_sha256": "6b5564173eb6f9feed35bc89142bfdde50944c285c4a402d2a4f5b311e2983f0",
+    "preparation_receipt_raw_sha256": "709dc99c777d5b199820fc1d40baf65a4a534d7e26808a018c64ab678004cb68",
+    "source134_closure_sha256": "cb6de1c8443f6c8d6598d546ed4538e203d7897c9ff806e0f254b0f45b04d305",
+    "baseline18_sha256": "f6f8f2414adf574c3b4ec3df9cec21adfc33200417b0bd2ed4dfaba249fd52be",
+    "verified_original_files": 241,
+    "verified_frozen_source_files": 134,
+    "baseline_references": 18,
+    "planned_fit_count": 9,
+    "started_fit_count": 0
+  },
+  "limitations": [
+    "native GPU·Runtime 검증과 성능·학습 시간 측정은 수행하지 않았다.",
+    "실제 데이터 행·입력 Parquet bytes·held-out Test 수치와 예측은 열람하지 않았다. 입력 bytes 재검증은 후속 native 검증 사항이다.",
+    "합성 검증은 일반화 개선이나 향후 실제 학습 성공을 입증하지 않는다.",
+    "bandit·mypy는 로컬에서 사용할 수 없었다. Node·웹 UI가 없는 대상이므로 npm audit·Lighthouse·접근성 검사는 적용하지 않았다.",
+    "지정된 .agents/skills/_shared/runtime/execution-protocols/codex.md가 없어 사용 가능한 oma-qa 지침을 적용했다. .agents/ 쓰기 금지와 지정된 보고서 소유 범위를 지켰다."
+  ],
+  "next_steps": [
+    {
+      "status": "승인 필요",
+      "task": "대상 5080·5090의 native 검증과 후보9개 실제 학습 실행 범위를 별도 확정한다."
+    },
+    {
+      "status": "다음 작업",
+      "task": "승인 후 고정 Runtime·입력 SHA·source SHA를 검증하고 계약에 따른 Train·Validation 실험을 수행한다."
+    }
+  ]
+}
