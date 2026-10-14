@@ -9,6 +9,8 @@ from paper.scripts.analyze_titantpp_frozen_rows import (
     paired_group, safe_share, shared_entity_decomposition, truth_digests,
     verify_exit_payload, verify_pipeline_hosts,
     receipt_contract_bridge,
+    verify_executable_proof,
+    evaluator_sha_for_receipt,
 )
 
 
@@ -148,6 +150,38 @@ class FrozenRowAnalysisTests(unittest.TestCase):
         for wrong_job in ({**job, "family": "external"}, {**job, "host": "5090"}):
             with self.assertRaisesRegex(RuntimeError, "outside"):
                 receipt_contract_bridge(wrong_job, entry, "n" * 64, contract)
+
+    def test_unstored_resolved_executable_uses_sealed_guard_and_actual_argv(self):
+        source = """
+def check_runtime(actual, expected):
+    require(Path(sys.executable).resolve() == Path(expected['python']).resolve(), 'fixed executable')
+def worker():
+    check_runtime(runtime, expected)
+    check_runtime(runtime_after, expected)
+"""
+        result = verify_executable_proof({"python": "/native/python"},
+                                         {"argv": ["/native/python", "evaluate.py"]}, source)
+        self.assertFalse(result["direct_resolved_path_stored"])
+        self.assertTrue(result["before_and_after_guard_in_successful_worker"])
+        with self.assertRaisesRegex(RuntimeError, "argv"):
+            verify_executable_proof({"python": "/native/python"},
+                                     {"argv": ["/different/python", "evaluate.py"]}, source)
+        with self.assertRaisesRegex(RuntimeError, "resolution guard"):
+            verify_executable_proof({"python": "/native/python"},
+                                     {"argv": ["/native/python", "evaluate.py"]},
+                                     source.replace("Path(sys.executable).resolve() == Path(expected['python']).resolve()", "True"))
+        with self.assertRaisesRegex(RuntimeError, "before and after"):
+            verify_executable_proof({"python": "/native/python"},
+                                     {"argv": ["/native/python", "evaluate.py"]},
+                                     source.replace("    check_runtime(runtime_after, expected)", "    pass"))
+
+    def test_historical_evaluator_source_only_has_exact_cache_authority(self):
+        self.assertEqual(evaluator_sha_for_receipt("a" * 64, "a" * 64, authorized_cache=False), "a" * 64)
+        self.assertEqual(evaluator_sha_for_receipt("b" * 64, "a" * 64, authorized_cache=True), "b" * 64)
+        with self.assertRaisesRegex(RuntimeError, "Fresh"):
+            evaluator_sha_for_receipt("b" * 64, "a" * 64, authorized_cache=False)
+        with self.assertRaisesRegex(RuntimeError, "Invalid"):
+            evaluator_sha_for_receipt("../" * 22, "a" * 64, authorized_cache=True)
 
 
 if __name__ == "__main__":

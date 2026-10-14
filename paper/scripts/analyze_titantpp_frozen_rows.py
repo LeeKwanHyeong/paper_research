@@ -6,6 +6,7 @@ decompositions describe observed errors and do not identify a causal mechanism.
 from __future__ import annotations
 
 import argparse
+import ast
 from collections import defaultdict
 from datetime import datetime, timezone
 import hashlib
@@ -146,11 +147,49 @@ def verify_native_runtime_receipt(actual, expected):
                               ("threads", "torch_num_threads"), ("interop_threads", "interop_threads")):
         require(actual.get(key) == expected[expected_key], "Native runtime binding differs: " + key)
     require(actual.get("gpu", {}).get("uuid") == expected["gpu_uuid"], "Native GPU UUID differs")
-    require(actual.get("resolved_python_executable") == expected.get("resolved_python_executable", expected["python"]),
-            "Native resolved Python identity differs")
+    if "resolved_python_executable" in actual:
+        require(actual["resolved_python_executable"] == expected.get("resolved_python_executable", expected["python"]),
+                "Directly recorded native resolved Python identity differs")
     require(actual.get("default_dtype") == "torch.float32" and actual.get("deterministic_algorithms") is True
             and actual.get("cuda_matmul_tf32") is False and actual.get("cudnn_tf32") is False,
             "Native numerical policy differs")
+
+
+def verify_executable_proof(expected, worker_exit, evaluator_source):
+    """Attest the sealed live resolution guard; do not invent an unstored path."""
+    argv = worker_exit.get("argv", [])
+    require(isinstance(argv, list) and len(argv) >= 2 and argv[0] == expected["python"],
+            "Actual worker Python argv differs from the fixed native contract")
+    tree = ast.parse(evaluator_source)
+    functions = {node.name: node for node in tree.body if isinstance(node, ast.FunctionDef)}
+    require("check_runtime" in functions and "worker" in functions,
+            "Sealed evaluator omits runtime resolution checks")
+    comparison = ast.parse("Path(sys.executable).resolve() == Path(expected['python']).resolve()", mode="eval").body
+    guards = [node for node in ast.walk(functions["check_runtime"])
+              if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+              and node.func.id == "require" and node.args
+              and ast.dump(node.args[0], include_attributes=False) == ast.dump(comparison, include_attributes=False)]
+    require(guards, "Sealed evaluator omits the live executable resolution guard")
+    checked = {node.args[0].id for node in ast.walk(functions["worker"])
+               if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+               and node.func.id == "check_runtime" and node.args and isinstance(node.args[0], ast.Name)}
+    require({"runtime", "runtime_after"} <= checked,
+            "Sealed evaluator does not check native runtime before and after inference")
+    return {"kind": "sealed_evaluator_live_executable_resolution_guard",
+            "worker_argv_python": argv[0], "native_contract_python": expected["python"],
+            "expected_resolved_path_in_contract": expected.get("resolved_python_executable"),
+            "direct_resolved_path_stored": False,
+            "before_and_after_guard_in_successful_worker": True}
+
+
+def evaluator_sha_for_receipt(recorded_sha, current_sha, *, authorized_cache):
+    require(isinstance(recorded_sha, str) and len(recorded_sha) == 64
+            and all(c in "0123456789abcdef" for c in recorded_sha), "Invalid evaluator source SHA")
+    if not authorized_cache:
+        require(recorded_sha == current_sha, "Fresh worker used a different diagnostic evaluator")
+    # Cache authorization was already established by the exact receipt byte SHA,
+    # which binds this recorded historical evaluator SHA along with all fields.
+    return recorded_sha
 
 
 def canonical_frame(frame, *, split, bounds):
@@ -434,6 +473,15 @@ def load_new_rows(bundle, entry, job, bounds, evidence, contracts, contract_payl
             "Diagnostic scope includes forbidden training/reselection/retry")
     require(receipt.get("runtime") == receipt.get("runtime_after"), "Runtime changed during inference")
     verify_native_runtime_receipt(receipt["runtime"], job["runtime"])
+    evaluator_sha = evaluator_sha_for_receipt(receipt.get("evaluator_sha256"),
+                                              contract_payloads[job["host"]]["evaluator_sha256"],
+                                              authorized_cache=cached)
+    evaluator_path = confined(bundle, "control/evaluator_sources/" + evaluator_sha + ".py")
+    evidence.verify(evaluator_path, evaluator_sha)
+    executable_proof = verify_executable_proof(job["runtime"], worker_exit, evaluator_path.read_text())
+    executable_proof["evaluator_source_sha256"] = evaluator_sha
+    executable_proof["historical_source_allowed_by_exact_validation_cache_SHA"] = cached
+    executable_proof["direct_resolved_path_stored"] = "resolved_python_executable" in receipt["runtime"]
     require(receipt["data_sha256"] == expected_data_sha(job, evidence), "Frozen input data SHA differs")
     selection = expected_selection(job, evidence)
     require(receipt.get("selected_epoch") == selection["epoch"]
@@ -478,6 +526,7 @@ def load_new_rows(bundle, entry, job, bounds, evidence, contracts, contract_payl
     return frame, {"kind": "new_fixed_checkpoint_diagnostic", "receipt_path": str(receipt_path),
                    "execution_mode": "SHA_authorized_validation_reuse" if cached else "fresh_current_native_contract",
                    "receipt_contract_sha256": expected_contract,
+                   "native_executable_evidence": executable_proof,
                    "receipt_sha256": receipt_ref["sha256"], "worker_exit_sha256": exit_ref["sha256"],
                    "selected_epoch": receipt["selected_epoch"], "state_tensor_sha256": receipt["state_sha256_before"],
                    "checkpoint_file_sha256": receipt["checkpoint_file_sha256"], "source_closure": receipt["source_closure"],
