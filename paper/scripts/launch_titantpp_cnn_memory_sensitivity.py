@@ -15,7 +15,7 @@ from paper.scripts.prepare_titantpp_cnn_memory_sensitivity import PROJECT, NAME,
 INSTALL = r'''
 import hashlib,io,json,os,pathlib,shlex,subprocess,sys,tarfile,time
 root=pathlib.Path(sys.argv[1]);expected=sys.argv[2];archive_sha=sys.argv[3];host=sys.argv[4]
-assert host in ('5080','5090') and root.name=='titantpp_cnn_memory_sensitivity_20261015_v1_'+host
+assert host in ('5080','5090') and root.name in ['titantpp_cnn_memory_sensitivity_20261015_'+v+'_'+host for v in ('v1','v2')]
 assert root.parent==pathlib.Path('/home/leekwanhyeong/workspace/paper_research_experiment_artifacts')
 assert not root.exists(), 'Existing native root; no retry or overwrite'
 raw=sys.stdin.buffer.read();assert hashlib.sha256(raw).hexdigest()==archive_sha
@@ -23,6 +23,17 @@ with tarfile.open(fileobj=io.BytesIO(raw),mode='r:gz') as tar:
  cbytes=tar.extractfile('contract.json').read();assert hashlib.sha256(cbytes).hexdigest()==expected
  c=json.loads(cbytes);assert c['remote_roots'][host]==str(root) and time.time()<c['deadline_unix']
  assert c['allowed_splits']==['train','validation'] and c['new_training'] is False
+ if 'operational_repair' in c:
+  old=root.with_name(root.name.replace('_v2_','_v1_'))
+  assert hashlib.sha256((old/'contract.json').read_bytes()).hexdigest()==c['operational_repair']['prior_contract_raw_sha256']
+  previous=json.loads((old/'runtime'/host/'receipt.json').read_text())
+  assert previous['status']=='failed' and previous['actual_worker_exit0_count']==0
+  assert json.loads((old/'launch/dispatcher_exit.json').read_text())['actual_dispatcher_os_exit']==1
+  assert not list((old/'results').glob('*/*/receipt.json'))
+  for worker in previous['workers']:
+   err=old/'runtime'/host/'workers'/worker['job_id']/(worker['split']+'.stderr')
+   assert 'Could not locate the paper_research project root' in err.read_text()
+  assert c['deadline_unix']==json.loads((old/'contract.json').read_text())['deadline_unix']
  files={**c['input_files'],**c['operation_files']}
  assert not set(c['input_files'])&set(c['operation_files'])
  assert {m.name for m in tar.getmembers()}==set(files)|{'contract.json'}
@@ -63,7 +74,7 @@ sys.exit(code)
 def launch(bundle, expected):
     assert sha(bundle/'contract.json') == expected
     c = json.loads((bundle/'contract.json').read_text())
-    report = PROJECT/'reports'/NAME/'deployment'
+    report = PROJECT/'reports'/bundle.name/'deployment'
     report.mkdir(parents=True, exist_ok=False)
     archive = report/'bundle.tar.gz'
     files = {**c['input_files'], **c['operation_files']}
@@ -95,4 +106,5 @@ def launch(bundle, expected):
 
 if __name__ == '__main__':
     p=argparse.ArgumentParser();p.add_argument('--contract-sha',required=True)
-    a=p.parse_args();launch(PROJECT/'search_artifacts'/NAME,a.contract_sha)
+    p.add_argument('--bundle', type=Path, default=PROJECT/'search_artifacts'/NAME)
+    a=p.parse_args();launch(a.bundle.resolve(),a.contract_sha)

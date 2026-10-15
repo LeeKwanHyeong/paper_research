@@ -29,6 +29,8 @@ def canonical(value):
 
 def prepare(root):
     root = root.resolve()
+    name = root.name
+    assert name in (NAME, NAME.replace('_v1', '_v2'))
     root.mkdir(parents=True, exist_ok=False)
     files, operations, parents, jobs, datasets, runtimes = {}, {}, {}, [], {}, {}
     def transfer(src, relative, digest, manifest):
@@ -61,6 +63,9 @@ def prepare(root):
         helper = f'operation/helper_{cohort}.py'
         transfer(parent / 'operation/evaluate.py', helper,
                  c['evaluator_integrity']['files']['operation/evaluate.py'], operations)
+        transfer(parent / 'source/sample_data/.frozen_root_sentinel',
+                 'source/sample_data/.frozen_root_sentinel',
+                 c['evaluator_integrity']['files']['source/sample_data/.frozen_root_sentinel'], operations)
         runtimes.update(c['runtimes'])
         for dataset, spec in c['datasets'].items():
             path = f'inputs/data/{dataset}.parquet'
@@ -102,12 +107,12 @@ def prepare(root):
     execution = {}
     for host in runtimes:
         previous = prior_execution['hosts'][host]
-        native_root = f'/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/{NAME}_{host}'
+        native_root = f'/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/{name}_{host}'
         environment = dict(previous['environment'])
         environment.update(PYTHONPATH=native_root+'/source', MPLCONFIGDIR=native_root+'/cache/matplotlib',
                            XDG_CACHE_HOME=native_root+'/cache')
         execution[host] = dict(tmux_binary=previous['tmux_binary'], environment=environment,
-                               tmux=f'cnn_memory_sensitivity_20261015_{host}')
+                               tmux=f'cnn_memory_sensitivity_20261015_{name.rsplit("_",1)[1]}_{host}')
     c = dict(schema='titantpp_cnn_memory_sensitivity_v1', created_unix=now, deadline_unix=now+48*3600,
         approval=dict(user_instruction='이거 먼저 진행하자. 그리고 학습은 직전 실험과 동일하게 5080/5090에서 세개씩 병렬로 돌릴 수 있게 학습하는 방식으로',
             scope='fixed CNN Train/Validation memory intervention first; conditional subsequent controlled training',
@@ -116,7 +121,7 @@ def prepare(root):
         alphas=[1., .5, .25, 0.], max_parallel_per_host=3, source=source,
         datasets=datasets, jobs=sorted(jobs, key=lambda j:(j['host'],j['dataset'],j['seed'])),
         runtimes=runtimes, execution=execution, parents=parents, operation_files=operations, input_files=files,
-        remote_roots={h:f'/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/{NAME}_{h}' for h in runtimes},
+        remote_roots={h:f'/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/{name}_{h}' for h in runtimes},
         analysis=dict(primary_metric='raw_quantity_rmse', secondary='raw_quantity_mae',
             aggregation='three seed mean and sample SD; paired seed and event differences',
             features='observed quantities and encoded/retrieval telemetry only; no future target features',
@@ -125,6 +130,13 @@ def prepare(root):
             adaptive_support='Additionally an observed-feature stratum has attenuation benefit and another has harm in >=2/3 Validation seeds using Train quartile cuts; no target-defined gate',
             stop='No fixed support: do not launch gate training. Fixed support alone: report constant attenuation evidence, do not claim adaptive need.',
             inferential_limit='Post-Test exploratory diagnostic; inference intervention is not newly trained model performance'))
+    if name != NAME:
+        prior = PROJECT/'search_artifacts'/NAME/'contract.json'
+        old = json.loads(prior.read_text())
+        c['deadline_unix'] = old['deadline_unix']
+        c['operational_repair'] = dict(prior_contract_raw_sha256=sha(prior),
+            reason='Missing empty sample_data root sentinel blocked source import before data/model inference',
+            original_roots_and_failures_preserved=True, same_science_selection_inputs=True)
     with (root / 'contract.json').open('x') as stream:
         json.dump(c, stream, ensure_ascii=False, indent=2, allow_nan=False); stream.write('\n')
     print(json.dumps(dict(root=str(root), contract_sha256=sha(root/'contract.json'), jobs=len(jobs),

@@ -3,6 +3,7 @@ from copy import deepcopy
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -158,6 +159,69 @@ class DiagnosticContractTests(unittest.TestCase):
 
 
 class FrozenScienceIntegrationTests(unittest.TestCase):
+    def test_source131_only_package_requires_preserved_operational_root_sentinel(self):
+        # Copy only the sealed scientific manifest, not the existing directory:
+        # the latter already contains operational scaffolding and hides omissions.
+        parent = SOURCE.parent
+        contract = json.loads((parent / "contract.json").read_text())
+        source = contract["sources"]["components"]
+        self.assertEqual(len(source["files"]), 131)
+        sentinel_name = "source/sample_data/.frozen_root_sentinel"
+        sentinel_sha = contract["evaluator_integrity"]["files"][sentinel_name]
+        self.assertEqual(evaluator.sha(parent / sentinel_name), sentinel_sha)
+        code = r'''
+import json, pathlib, sys
+expected = pathlib.Path(sys.argv[1]).resolve()
+from paper.scripts import run_titantpp_cnn_gru_components as engine
+engine.install_hooks()
+from paper.scripts.count_aware_tpp_backbone import core
+from models.TPPs import CountAwareFactory as factory
+from simple_lab_test.common.pathing import resolve_project_root
+resolved = resolve_project_root(pathlib.Path(core.__file__))
+assert resolved == expected, (resolved, expected)
+prefixes = {"models", "paper", "utils", "simple_lab_test", "data_loader"}
+origins = {}
+for name, obj in tuple(sys.modules.items()):
+    path = getattr(obj, "__file__", None)
+    if name.split(".")[0] in prefixes and path:
+        actual = pathlib.Path(path).resolve()
+        assert actual.is_relative_to(expected), (name, str(actual))
+        origins[name] = str(actual.relative_to(expected))
+assert "paper.scripts.count_aware_tpp_backbone.core" in origins
+assert "models.TPPs.CountAwareFactory" in origins
+print(json.dumps({"resolved_root": str(resolved), "verified_import_count": len(origins)}))
+'''
+        with tempfile.TemporaryDirectory(prefix="cnn-memory-deployment-", dir="/private/tmp") as cwd:
+            root = (Path(cwd) / "source").resolve()
+            root.mkdir()
+            for name, digest in source["files"].items():
+                original = SOURCE / name
+                self.assertEqual(evaluator.sha(original), digest)
+                destination = (root / name).resolve()
+                self.assertTrue(destination.is_relative_to(root))
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(original, destination)
+            self.assertFalse((root / "sample_data").exists())
+            env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1", PYTHONPATH=str(root),
+                       CUDA_VISIBLE_DEVICES="", MPLCONFIGDIR=str(Path(cwd)/"matplotlib"),
+                       XDG_CACHE_HOME=str(Path(cwd)/"cache"))
+            args = [sys.executable, "-B", "-c", code, str(root)]
+            missing = subprocess.run(args, cwd=cwd, env=env, text=True, capture_output=True, timeout=60)
+            self.assertNotEqual(missing.returncode, 0)
+            self.assertIn("Could not locate the paper_research project root", missing.stderr)
+            sentinel = root / "sample_data/.frozen_root_sentinel"
+            sentinel.parent.mkdir()
+            shutil.copyfile(parent / sentinel_name, sentinel)
+            self.assertEqual(evaluator.sha(sentinel), sentinel_sha)
+            self.assertEqual(sentinel.stat().st_size, 0)
+            restored = subprocess.run(args, cwd=cwd, env=env, text=True, capture_output=True, timeout=60)
+            self.assertEqual(restored.returncode, 0, restored.stdout + restored.stderr)
+            proof = json.loads(restored.stdout.strip().splitlines()[-1])
+            self.assertEqual(proof["resolved_root"], str(root))
+            self.assertGreater(proof["verified_import_count"], 10)
+            for name, digest in source["files"].items():
+                self.assertEqual(evaluator.sha(root / name), digest)
+
     def test_real_source131_cnn_and_full_on_fabricated_inputs(self):
         # Fresh interpreter prevents installed factory adapters or current source
         # imports elsewhere in the test suite from contaminating source131.
