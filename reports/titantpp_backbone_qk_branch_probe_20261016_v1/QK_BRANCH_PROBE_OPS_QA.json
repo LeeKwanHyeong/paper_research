@@ -1,0 +1,111 @@
+{
+  "status": "PASS_operations_scope_only",
+  "created_kst": "2026-10-16T04:24:19.554985+09:00",
+  "open_findings": [],
+  "severity_counts": {
+    "CRITICAL": 0,
+    "HIGH": 0,
+    "MEDIUM": 0,
+    "LOW": 0
+  },
+  "files_reviewed_sha256": {
+    "paper/scripts/prepare_titantpp_qk_branch_probe.py": "d6adaef699d95ac38a430646f3cec0845bb80ee1671e7eb4703d41abe6f9df4e",
+    "paper/scripts/advance_titantpp_qk_branch_probe.py": "e804423e0156537e0295cfdb7d567b389596e0416d3b2394f59b879192e14676",
+    "paper/scripts/titantpp_qk_branch_probe_runtime.py": "c3bc4802d29e97582e75274ac3527554ef48b834b08fca38eac656ad4531038f",
+    "paper/tests/test_titantpp_qk_branch_probe_ops.py": "43340a5df7766b4c8f0a025992a565896b9282fc232ca88501582d4916d84ad8"
+  },
+  "spec_sha256": "10371800c7e0f4095defad1380344a5bef19a9b31578dd599bc163779b1af7ee",
+  "acceptance_sha256": "5bc011e4473f71db5fd520af8ff3763753c767ceeb98d12cfdc1a6f2c4063193",
+  "actual_test_runs": [
+    {
+      "command": [
+        "/usr/local/bin/python3",
+        "-m",
+        "pytest",
+        "-p",
+        "no:cacheprovider",
+        "paper/tests/test_titantpp_qk_branch_probe_ops.py",
+        "-q"
+      ],
+      "actual_exit": 0,
+      "started_unix": 1792092145.887594,
+      "completed_unix": 1792092158.565877,
+      "stdout_sha256": "80c68a8b310693c013ee3050eb4f7a1b82bdcf0a91de6e7ca566aea40ac1ebf3",
+      "stderr_sha256": "eae3b3ab88ebd007cd93d95595b7a951b2c689b68948b08fd24d8ff83282945e"
+    },
+    {
+      "command": [
+        "/usr/local/bin/python3",
+        "-m",
+        "pytest",
+        "-p",
+        "no:cacheprovider",
+        "paper/tests/test_titantpp_qk_branch_probe_ops.py",
+        "-q",
+        "-k",
+        "coordinated_duplicate or pipeline_pid_cannot or pipeline_exact_stage"
+      ],
+      "actual_exit": 0,
+      "started_unix": 1792092214.7987242,
+      "completed_unix": 1792092218.285829,
+      "stdout_sha256": "5aa20987c183ce0de4ea1d5dc07911e50bf36c03bc3d6fe53f5786c0735599ed",
+      "stderr_sha256": "eae3b3ab88ebd007cd93d95595b7a951b2c689b68948b08fd24d8ff83282945e"
+    }
+  ],
+  "distinct_tests_passed": 37,
+  "subtests_passed_across_runs": 60,
+  "first_suite": "34 passed, 58 subtests passed in11.85s",
+  "incremental_regression": "3 passed,34 deselected,2 subtests passed in2.69s",
+  "evidence_sha256": {
+    "/private/tmp/qk_branch_probe_ops_independent_20261016/stdout.txt": "80c68a8b310693c013ee3050eb4f7a1b82bdcf0a91de6e7ca566aea40ac1ebf3",
+    "/private/tmp/qk_branch_probe_ops_independent_20261016/regression.stderr.txt": "eae3b3ab88ebd007cd93d95595b7a951b2c689b68948b08fd24d8ff83282945e",
+    "/private/tmp/qk_branch_probe_ops_independent_20261016/regression.receipt.json": "a3fcdc338ec4c898de2a6a52ee788bb885c92e6d99528d0db0dd4cf62cb3c24f",
+    "/private/tmp/qk_branch_probe_ops_independent_20261016/stderr.txt": "eae3b3ab88ebd007cd93d95595b7a951b2c689b68948b08fd24d8ff83282945e",
+    "/private/tmp/qk_branch_probe_ops_independent_20261016/regression.stdout.txt": "5aa20987c183ce0de4ea1d5dc07911e50bf36c03bc3d6fe53f5786c0735599ed",
+    "/private/tmp/qk_branch_probe_ops_independent_20261016/receipt.json": "090ea72d5b7cc0b85be0ce82f26ad788cc9c08a24673880c38e4e5e5150d18af"
+  },
+  "acceptance_criteria": {
+    "exact_five_stages_qualification_onValidation_onTrain_offValidation_offTrain": true,
+    "15_fresh_worker_PIDs_and12data_workers": true,
+    "max_parallel_three_and_strict_stage_barriers": true,
+    "onValidation_failure_blocks_onTrain_and_off": true,
+    "onTrain_failure_blocks_both_off_stages": true,
+    "old_on_prediction_rows_not_required_and_false_rowwise_claim_rejected": true,
+    "population_and_aggregate_replay_claims_required": true,
+    "15_unique_workerPIDs_plus_disjoint_pipeline16unique_owner_probes": true,
+    "terminal_owner_queryerrors_livePID_GPU_occupancy_rejected": true,
+    "positive_full_archive_complete_fixture": true,
+    "empty_cache_missing_onTrain_foreign_parent_rehashed_original_rejected": true,
+    "exclusive_attempt_and_archive_no_overwrite": true,
+    "failure_timeout_owned_process_cleanup": true,
+    "fixed_source143_native5090_inherited_deadline_no_baseline_or_Test_inference": true
+  },
+  "checks_added_after_static_review": [
+    "Coordinated duplicate worker PID plus duplicate owner probe, with updated receipt/gate/pipeline hash bindings, is rejected.",
+    "Pipeline PID cannot alias a worker PID.",
+    "Pipeline exact stage membership rejects missing or duplicated on_train records."
+  ],
+  "protected_existing_model_training_source_sha256": {
+    "models/TPPs/CountAwareTitanQKOnlyCNN.py": "1511c040b71367ff790e43ad6012141d738542e9a47f648ff63a3873b7fe7078",
+    "paper/scripts/run_titantpp_qk_only_cnn.py": "d1dc15001733acb3d75a16642eaaf515945bda2e5c5d13e392497f9c510dfeaa",
+    "paper/tests/test_titantpp_qk_only_model.py": "d03052cd9b2e2e29e053314d5a79b69718161a2041a180ab0a6ccafe3a6116be",
+    "paper/scripts/prepare_titantpp_qk_only_raf3.py": "0de75150e7a36b482e2a135c6eed5292d275ea88e988a3ad43bf8697712e6f3f",
+    "paper/scripts/deploy_titantpp_qk_only_raf3.py": "55c422ee01ebfe6eebdd632598cc101070bb4c53d3dd528573e0f457bd3ad475",
+    "paper/scripts/advance_titantpp_qk_only_raf3.py": "5a8718421b93c5b97ee063cc9ba24bfcb9b33b59d8a0f2db86b8d5871d2c90eb",
+    "paper/scripts/titantpp_qk_only_raf3_runtime.py": "481304d9f4ae2b3372be1c299ed5a404cd18816aa6f7d3e929ba0dfdba71f705",
+    "paper/tests/test_titantpp_qk_only_raf3_ops.py": "948e0d60428d763376e36e8ad1f4ca90d0aa0c620d4d7a95499493b7a41ed620"
+  },
+  "protected_existing_files_unchanged": true,
+  "limits": [
+    "Operational fixture uses fabricated JSON and fake parquet bytes and launches only a small local fake worker. Scientific six-metric and runtime gate validation are stubbed in collector fixtures; exporter and native integration remain separate required reviews.",
+    "No actual prepare, deployment, remote call, research-data inference, optimizer or Test execution.",
+    "Candidate source remains frozen; no existing implementation modified. This report alone does not authorize treating unfinished exporter validation as complete."
+  ],
+  "files_changed": [
+    "paper/tests/test_titantpp_qk_branch_probe_ops.py",
+    "reports/titantpp_backbone_qk_branch_probe_20261016_v1/QK_BRANCH_PROBE_OPS_QA.json"
+  ],
+  "remote_calls": 0,
+  "actual_data_access": 0,
+  "existing_source_modifications": 0
+}

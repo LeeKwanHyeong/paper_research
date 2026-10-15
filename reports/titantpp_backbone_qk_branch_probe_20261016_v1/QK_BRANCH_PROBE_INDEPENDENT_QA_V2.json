@@ -1,0 +1,143 @@
+{
+  "status": "PASS",
+  "scope": "Independent local worker and operations QA; comparison arithmetic is independently reviewed by a separate agent.",
+  "created_kst": "2026-10-16T04:30:13.696571+09:00",
+  "summary": "No unresolved CRITICAL/HIGH/MEDIUM findings. Final worker31 and operations39 synthetic tests passed. Native execution remains a subsequent gated step.",
+  "severity_counts": {
+    "CRITICAL": 0,
+    "HIGH": 0,
+    "MEDIUM": 0,
+    "LOW": 0
+  },
+  "open_findings": [],
+  "files_reviewed_sha256": {
+    "paper/scripts/prepare_titantpp_qk_branch_probe.py": "d6adaef699d95ac38a430646f3cec0845bb80ee1671e7eb4703d41abe6f9df4e",
+    "paper/scripts/advance_titantpp_qk_branch_probe.py": "59b15ef5e2afd7ed92e60bfd261912f68924b6bfe35c1381be96e7caa842d645",
+    "paper/scripts/titantpp_qk_branch_probe_runtime.py": "ee2a7f59c53d9ee077745af3e68acd79699ea3eee1f57e992feb41cb76d173e3",
+    "paper/scripts/export_titantpp_qk_branch_probe.py": "deef5e811c302aa5db8641d368e51af1ceb3c11384b6f9aa89eabc302e4c07c6",
+    "paper/tests/test_titantpp_qk_branch_probe_ops.py": "7591b3dc46661c03d93e728b9ecb1e700b790fdb6d7a12e2b08ce0a3b1be03e2",
+    "paper/tests/test_export_titantpp_qk_branch_probe.py": "45356f4cd13b5fb37816fdade067e82c12fafc030fc783c67a5302bb32320a82"
+  },
+  "spec_sha256": "10371800c7e0f4095defad1380344a5bef19a9b31578dd599bc163779b1af7ee",
+  "acceptance_sha256": "5bc011e4473f71db5fd520af8ff3763753c767ceeb98d12cfdc1a6f2c4063193",
+  "actual_test_runs": [
+    {
+      "command": [
+        "/usr/local/bin/python3",
+        "-m",
+        "pytest",
+        "-p",
+        "no:cacheprovider",
+        "paper/tests/test_titantpp_qk_branch_probe_ops.py",
+        "-q"
+      ],
+      "actual_exit": 0,
+      "started_unix": 1792092389.876647,
+      "completed_unix": 1792092407.5931342,
+      "stdout_sha256": "d0d2b7403687a9088e3b256ecbde1b1a97a4bb48d690c70ac18136700ecf158b",
+      "stderr_sha256": "eae3b3ab88ebd007cd93d95595b7a951b2c689b68948b08fd24d8ff83282945e",
+      "tests_passed": 39,
+      "subtests_passed": 74
+    },
+    {
+      "command": [
+        "/usr/local/bin/python3",
+        "-m",
+        "pytest",
+        "-p",
+        "no:cacheprovider",
+        "paper/tests/test_export_titantpp_qk_branch_probe.py",
+        "-q"
+      ],
+      "actual_exit": 0,
+      "started_unix": 1792092425.7032268,
+      "completed_unix": 1792092428.1926882,
+      "stdout_sha256": "e29e81b3a81bd5317675c5d13fe5dc9bbddbdc93c7fff17d6b4104c7631901e9",
+      "stderr_sha256": "eae3b3ab88ebd007cd93d95595b7a951b2c689b68948b08fd24d8ff83282945e",
+      "tests_passed": 31,
+      "subtests_passed": 88
+    }
+  ],
+  "distinct_tests_passed": 70,
+  "subtests_passed": 162,
+  "evidence_sha256": {
+    "/private/tmp/qk_branch_probe_ops_independent_20261016/state_v2.stdout.txt": "d0d2b7403687a9088e3b256ecbde1b1a97a4bb48d690c70ac18136700ecf158b",
+    "/private/tmp/qk_branch_probe_ops_independent_20261016/state_v2.stderr.txt": "eae3b3ab88ebd007cd93d95595b7a951b2c689b68948b08fd24d8ff83282945e",
+    "/private/tmp/qk_branch_probe_ops_independent_20261016/state_v2.receipt.json": "8c9c382f073e52731eca85c23c73b896fd1665a9789dcefe6a7cceb612459c22",
+    "/private/tmp/qk_branch_probe_ops_independent_20261016/worker.stdout.txt": "e29e81b3a81bd5317675c5d13fe5dc9bbddbdc93c7fff17d6b4104c7631901e9",
+    "/private/tmp/qk_branch_probe_ops_independent_20261016/worker.stderr.txt": "eae3b3ab88ebd007cd93d95595b7a951b2c689b68948b08fd24d8ff83282945e",
+    "/private/tmp/qk_branch_probe_ops_independent_20261016/worker.receipt.json": "66e6a9d695967fb050bffc7e1884b732344f62908aa3c0407a44fd6654984a0c"
+  },
+  "acceptance_criteria": {
+    "exact_five_stages_qualification_onValidation_onTrain_offValidation_offTrain": true,
+    "15_fresh_worker_PIDs_and12data_workers": true,
+    "max_parallel_three_and_strict_stage_barriers": true,
+    "onValidation_failure_blocks_onTrain_and_off": true,
+    "onTrain_failure_blocks_both_off_stages": true,
+    "old_on_prediction_rows_not_required_and_false_rowwise_claim_rejected": true,
+    "population_and_aggregate_replay_claims_required": true,
+    "15_unique_workerPIDs_plus_disjoint_pipeline16unique_owner_probes": true,
+    "terminal_owner_queryerrors_livePID_GPU_occupancy_rejected": true,
+    "positive_full_archive_complete_fixture": true,
+    "empty_cache_missing_onTrain_foreign_parent_rehashed_original_rejected": true,
+    "exclusive_attempt_and_archive_no_overwrite": true,
+    "failure_timeout_owned_process_cleanup": true,
+    "fixed_source143_native5090_inherited_deadline_no_baseline_or_Test_inference": true,
+    "only_current_QKOnly_three_selected_models_on_off_Train_Validation": true,
+    "on_delegates_original_off_calls_checks_then_zeros_and_finally_restores": true,
+    "V_projection_and_all_model_parameters_unmodified": true,
+    "exact_parameter_all_named_buffers_context_hashes_before_after_required": true,
+    "same_job_all_five_fresh_stage_initial_states_equal_required": true,
+    "target_perturbation_batch_invariance_padding_withheld_short_prefix_checks": true,
+    "onValidation_aggregate_and_separate_native_population_domain_gate": true,
+    "no_nonexistent_prior_individual_row_replay_claim": true,
+    "science_spec_and_acceptance_worker_operations_alignment": true,
+    "old_eight_model_training_files_unchanged": true
+  },
+  "resolved_findings": [
+    {
+      "severity": "HIGH",
+      "location": "paper/scripts/advance_titantpp_qk_branch_probe.py:221",
+      "issue": "Coordinated duplicated worker PID and owner probe could undermine the exact fresh-process/owner-set proof.",
+      "fix": "Require15 unique workerPIDs, a disjoint pipelinePID, and exactly16 unique explicit-absence ownerprobes.",
+      "verification": "Regression rejects coordinated receipt/gate/pipeline rehashed duplicate PID proof, pipeline-worker PID alias, and missing/duplicated on_train stage. Identified by pre-native static review; final regression verified."
+    },
+    {
+      "severity": "HIGH",
+      "location": "paper/scripts/titantpp_qk_branch_probe_runtime.py:140",
+      "issue": "Persistent state hashes plus unchanged booleans alone did not bind nonpersistent named buffers/context in completed receipts.",
+      "fix": "Require exact three64-lowerhex predictive hashes, before==after, selected tensor binding, and same-job equality across all five fresh stages. Worker gate independently validates the same proof.",
+      "verification": "Negative tests reject missing/malformed/extra hashes, each after-state mutation, and coordinated within-stage unchanged but cross-stage context drift. Identified and fixed before native execution."
+    }
+  ],
+  "protected_existing_model_training_source_sha256": {
+    "models/TPPs/CountAwareTitanQKOnlyCNN.py": "1511c040b71367ff790e43ad6012141d738542e9a47f648ff63a3873b7fe7078",
+    "paper/scripts/run_titantpp_qk_only_cnn.py": "d1dc15001733acb3d75a16642eaaf515945bda2e5c5d13e392497f9c510dfeaa",
+    "paper/tests/test_titantpp_qk_only_model.py": "d03052cd9b2e2e29e053314d5a79b69718161a2041a180ab0a6ccafe3a6116be",
+    "paper/scripts/prepare_titantpp_qk_only_raf3.py": "0de75150e7a36b482e2a135c6eed5292d275ea88e988a3ad43bf8697712e6f3f",
+    "paper/scripts/deploy_titantpp_qk_only_raf3.py": "55c422ee01ebfe6eebdd632598cc101070bb4c53d3dd528573e0f457bd3ad475",
+    "paper/scripts/advance_titantpp_qk_only_raf3.py": "5a8718421b93c5b97ee063cc9ba24bfcb9b33b59d8a0f2db86b8d5871d2c90eb",
+    "paper/scripts/titantpp_qk_only_raf3_runtime.py": "481304d9f4ae2b3372be1c299ed5a404cd18816aa6f7d3e929ba0dfdba71f705",
+    "paper/tests/test_titantpp_qk_only_raf3_ops.py": "948e0d60428d763376e36e8ad1f4ca90d0aa0c620d4d7a95499493b7a41ed620"
+  },
+  "protected_existing_files_unchanged": true,
+  "preserved_prior_qa": {
+    "path": "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_backbone_qk_branch_probe_20261016_v1/QK_BRANCH_PROBE_OPS_QA.json",
+    "sha256": "2ddb0ef846127d492eaad0fe56acbf65687adb3ac142b9ac815f72047edafa33"
+  },
+  "limits": [
+    "Operational collector fixtures use fabricated JSON/fake parquet bytes and stub scientific metric/runtime validation; exporter suite separately tests those guards and the current model on fabricated CPU inputs.",
+    "Local synthetic tests do not establish native CUDA replay, current remote idle status, or scientific improvement. Those require the authorized subsequent native qualification and gated execution.",
+    "No actual prepare/deploy/remote/research-data inference/training/Test/oldCNN inference was performed by this QA task.",
+    "This joint fixed-checkpoint Q/K intervention cannot distinguish Q from K, establish memory-independent causality, or prove retrained architecture/generalization gains.",
+    "Parent reported276-dependency verify_parent and temporary prepare-to-runtime verification with committed-code check mocked; this report does not present that as an actual commit or deployment verification.",
+    "Own supervisor OS exit is not assumed; directly observed child/pipeline exits are separate proofs."
+  ],
+  "files_changed": [
+    "paper/tests/test_titantpp_qk_branch_probe_ops.py",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_backbone_qk_branch_probe_20261016_v1/QK_BRANCH_PROBE_INDEPENDENT_QA_V2.json"
+  ],
+  "remote_calls": 0,
+  "actual_research_data_inference": 0,
+  "source_implementation_edits_by_reviewer": 0
+}

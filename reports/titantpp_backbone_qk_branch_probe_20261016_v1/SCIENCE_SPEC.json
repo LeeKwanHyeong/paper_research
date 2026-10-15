@@ -1,0 +1,630 @@
+{
+  "schema": "titantpp_qk_branch_probe_science_spec_v1",
+  "created_kst": "2026-10-16T04:17:49.556154+09:00",
+  "status": "specified_independent_design_review_and_implementation_validation_pending",
+  "campaign": "titantpp_backbone_qk_branch_probe_20261016_v1",
+  "purpose": "Measure direct joint Q/K-local-residual sensitivity within the current fixed QK-only models; distinguish this from cross-model joint-training differences before selecting another CNN-backbone hypothesis.",
+  "authorization": "Existing user preapproval for failed-loop diagnosis and CNN-backbone research; existing CNN remains unchanged and no trained baseline inference is permitted.",
+  "candidate_only": "titantpp_cnn_qk_only_v1",
+  "dataset": "raf_spare_parts",
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "selected_epochs": {
+    "42": 5,
+    "52": 5,
+    "62": 22
+  },
+  "selected_models": [
+    {
+      "seed": 42,
+      "selected_epoch": 5,
+      "checkpoint_path": "search_artifacts/titantpp_backbone_qk_only_raf3_20261016_v1/retrieval/originals/run/raf_spare_parts__42__titantpp_cnn_qk_only_v1/runs/titantpp_cnn_qk_only_v1/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_raw_sha256": "7997b2be5c41667ef149cc675fd05b81e22694e04d69b446fa20881c1474ecb2",
+      "checkpoint_tensor_sha256": "0e08fe7d083d23c0f50f30909567bfa7b1e8eca7890d29f85df9da09bdd1f8cd",
+      "initial_state_sha256": "37e5ea2041655846bc0524a566e669454d0ba6c196284f9e3d2116c65f2fe65d",
+      "summary_path": "search_artifacts/titantpp_backbone_qk_only_raf3_20261016_v1/retrieval/originals/run/raf_spare_parts__42__titantpp_cnn_qk_only_v1/runs/titantpp_cnn_qk_only_v1/count_only_log_regression/seed_42/summary.json",
+      "summary_raw_sha256": "e24429ffe17eaa4ed38fc2fc5c8e0d6e648c338686b2b0ce51cd30a8fed47627",
+      "selected_validation_reference": {
+        "additional_history_boundaries": [
+          64,
+          128
+        ],
+        "additional_history_cells": [
+          {
+            "bin": 0,
+            "count": 6690,
+            "qty_mae": 9.209257783572593,
+            "qty_rmse": 34.45801577176051,
+            "qty_sse": 7943403.952700933,
+            "time_nll": 3.418660049962109
+          },
+          {
+            "bin": 1,
+            "count": 0,
+            "qty_mae": null,
+            "qty_rmse": null,
+            "qty_sse": 0.0,
+            "time_nll": null
+          },
+          {
+            "bin": 2,
+            "count": 0,
+            "qty_mae": null,
+            "qty_rmse": null,
+            "qty_sse": 0.0,
+            "time_nll": null
+          }
+        ],
+        "body": {
+          "count": 6416,
+          "qty_mae": 4.861934329431848,
+          "qty_rmse": 10.994430723716023,
+          "qty_sse": 775550.0845179987,
+          "time_nll": 3.4140020405322287
+        },
+        "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_backbone_qk_only_raf3_20261016_v1_5090/run/raf_spare_parts__42__titantpp_cnn_qk_only_v1/runs/titantpp_cnn_qk_only_v1/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+        "count": 6690,
+        "evaluation_scope": "validation_only",
+        "held_out_test_evaluated": false,
+        "history_boundaries": [
+          64,
+          128
+        ],
+        "history_cells": [
+          {
+            "bin": 0,
+            "count": 6690,
+            "qty_mae": 9.209257783572593,
+            "qty_rmse": 34.45801577176051,
+            "qty_sse": 7943403.952700933,
+            "time_nll": 3.418660049962109
+          },
+          {
+            "bin": 1,
+            "count": 0,
+            "qty_mae": null,
+            "qty_rmse": null,
+            "qty_sse": 0.0,
+            "time_nll": null
+          },
+          {
+            "bin": 2,
+            "count": 0,
+            "qty_mae": null,
+            "qty_rmse": null,
+            "qty_sse": 0.0,
+            "time_nll": null
+          }
+        ],
+        "qty_mae": 9.209257783572593,
+        "qty_rmse": 34.45801577176051,
+        "qty_sse": 7943403.952700933,
+        "quantity_boundaries": [
+          2.0,
+          30.0,
+          60.0,
+          200.0
+        ],
+        "quantity_cells": [
+          {
+            "bin": 0,
+            "count": 3626,
+            "qty_mae": 2.076893409838416,
+            "qty_rmse": 6.221012358880563,
+            "qty_sse": 140329.80703364388,
+            "time_nll": 3.3793085650608465
+          },
+          {
+            "bin": 1,
+            "count": 2555,
+            "qty_mae": 6.942437144501569,
+            "qty_rmse": 12.947709978295503,
+            "qty_sse": 428328.3598576453,
+            "time_nll": 3.4615708507482315
+          },
+          {
+            "bin": 2,
+            "count": 235,
+            "qty_mae": 25.214588295145237,
+            "qty_rmse": 29.67138585973129,
+            "qty_sse": 206891.91762670956,
+            "time_nll": 3.432130687159243
+          },
+          {
+            "bin": 3,
+            "count": 224,
+            "qty_mae": 71.63222594452756,
+            "qty_rmse": 84.20815288210248,
+            "qty_sse": 1588386.9146466819,
+            "time_nll": 3.5757676702044576
+          },
+          {
+            "bin": 4,
+            "count": 50,
+            "qty_mae": 287.4029060578346,
+            "qty_rmse": 334.04990506019465,
+            "qty_sse": 5579466.9535362525,
+            "time_nll": 3.3125336813186808
+          }
+        ],
+        "state_sha256": "0e08fe7d083d23c0f50f30909567bfa7b1e8eca7890d29f85df9da09bdd1f8cd",
+        "tail": {
+          "count": 50,
+          "qty_mae": 287.4029060578346,
+          "qty_rmse": 334.04990506019465,
+          "qty_sse": 5579466.9535362525,
+          "time_nll": 3.3125336813186808
+        },
+        "time_metric": "recorded_positive_integer_time_nll",
+        "time_nll": 3.418660049962109
+      },
+      "endpoint_replay_path": "search_artifacts/titantpp_backbone_qk_only_raf3_20261016_v1/retrieval/originals/run/raf_spare_parts__42__titantpp_cnn_qk_only_v1/runs/titantpp_cnn_qk_only_v1/count_only_log_regression/seed_42/endpoint_replays.json",
+      "endpoint_replay_raw_sha256": "a8bcb40282a5c49cc6b282e7eac0040bedc69080879279d4a9950a024911ada5"
+    },
+    {
+      "seed": 52,
+      "selected_epoch": 5,
+      "checkpoint_path": "search_artifacts/titantpp_backbone_qk_only_raf3_20261016_v1/retrieval/originals/run/raf_spare_parts__52__titantpp_cnn_qk_only_v1/runs/titantpp_cnn_qk_only_v1/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt",
+      "checkpoint_raw_sha256": "805f661997cf4f66e52d09c903878eaa8ab32e73b63aa4c3b9bc32ab111697d4",
+      "checkpoint_tensor_sha256": "eb8ccf7c07a54c1fe811ac2d1173040d3902fa551e45aecaf25bb186ea942dd2",
+      "initial_state_sha256": "ecd62e78dd286c074819090e517d868ef7d31d57c836e0fcb93daa0ac29f32e1",
+      "summary_path": "search_artifacts/titantpp_backbone_qk_only_raf3_20261016_v1/retrieval/originals/run/raf_spare_parts__52__titantpp_cnn_qk_only_v1/runs/titantpp_cnn_qk_only_v1/count_only_log_regression/seed_52/summary.json",
+      "summary_raw_sha256": "76adf87e37c8a91af135eb7f56e651c11225ac5721259c5eb1ab7a12cc588aba",
+      "selected_validation_reference": {
+        "additional_history_boundaries": [
+          64,
+          128
+        ],
+        "additional_history_cells": [
+          {
+            "bin": 0,
+            "count": 6690,
+            "qty_mae": 9.22740814312513,
+            "qty_rmse": 34.40160323407896,
+            "qty_sse": 7917416.340951697,
+            "time_nll": 3.4661599433398456
+          },
+          {
+            "bin": 1,
+            "count": 0,
+            "qty_mae": null,
+            "qty_rmse": null,
+            "qty_sse": 0.0,
+            "time_nll": null
+          },
+          {
+            "bin": 2,
+            "count": 0,
+            "qty_mae": null,
+            "qty_rmse": null,
+            "qty_sse": 0.0,
+            "time_nll": null
+          }
+        ],
+        "body": {
+          "count": 6416,
+          "qty_mae": 4.878596390116765,
+          "qty_rmse": 11.329888261985136,
+          "qty_sse": 823598.6172745039,
+          "time_nll": 3.4631222194346427
+        },
+        "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_backbone_qk_only_raf3_20261016_v1_5090/run/raf_spare_parts__52__titantpp_cnn_qk_only_v1/runs/titantpp_cnn_qk_only_v1/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt",
+        "count": 6690,
+        "evaluation_scope": "validation_only",
+        "held_out_test_evaluated": false,
+        "history_boundaries": [
+          64,
+          128
+        ],
+        "history_cells": [
+          {
+            "bin": 0,
+            "count": 6690,
+            "qty_mae": 9.22740814312513,
+            "qty_rmse": 34.40160323407896,
+            "qty_sse": 7917416.340951697,
+            "time_nll": 3.4661599433398456
+          },
+          {
+            "bin": 1,
+            "count": 0,
+            "qty_mae": null,
+            "qty_rmse": null,
+            "qty_sse": 0.0,
+            "time_nll": null
+          },
+          {
+            "bin": 2,
+            "count": 0,
+            "qty_mae": null,
+            "qty_rmse": null,
+            "qty_sse": 0.0,
+            "time_nll": null
+          }
+        ],
+        "qty_mae": 9.22740814312513,
+        "qty_rmse": 34.40160323407896,
+        "qty_sse": 7917416.340951697,
+        "quantity_boundaries": [
+          2.0,
+          30.0,
+          60.0,
+          200.0
+        ],
+        "quantity_cells": [
+          {
+            "bin": 0,
+            "count": 3626,
+            "qty_mae": 2.0851213363113814,
+            "qty_rmse": 6.42964245743836,
+            "qty_sse": 149899.93552517123,
+            "time_nll": 3.444413465906549
+          },
+          {
+            "bin": 1,
+            "count": 2555,
+            "qty_mae": 6.898105352965353,
+            "qty_rmse": 13.248596025212652,
+            "qty_sse": 448467.13291336165,
+            "time_nll": 3.4901617256750415
+          },
+          {
+            "bin": 2,
+            "count": 235,
+            "qty_mae": 26.024533177436666,
+            "qty_rmse": 30.95855491954136,
+            "qty_sse": 225231.54883597075,
+            "time_nll": 3.4578115890034016
+          },
+          {
+            "bin": 3,
+            "count": 224,
+            "qty_mae": 73.10776462831667,
+            "qty_rmse": 87.29124008538287,
+            "qty_sse": 1706826.3734242457,
+            "time_nll": 3.59451714640756
+          },
+          {
+            "bin": 4,
+            "count": 50,
+            "qty_mae": 281.0829352355003,
+            "qty_rmse": 328.2374552135373,
+            "qty_sse": 5386991.350252945,
+            "time_nll": 3.2809204051120235
+          }
+        ],
+        "state_sha256": "eb8ccf7c07a54c1fe811ac2d1173040d3902fa551e45aecaf25bb186ea942dd2",
+        "tail": {
+          "count": 50,
+          "qty_mae": 281.0829352355003,
+          "qty_rmse": 328.2374552135373,
+          "qty_sse": 5386991.350252945,
+          "time_nll": 3.2809204051120235
+        },
+        "time_metric": "recorded_positive_integer_time_nll",
+        "time_nll": 3.4661599433398456
+      },
+      "endpoint_replay_path": "search_artifacts/titantpp_backbone_qk_only_raf3_20261016_v1/retrieval/originals/run/raf_spare_parts__52__titantpp_cnn_qk_only_v1/runs/titantpp_cnn_qk_only_v1/count_only_log_regression/seed_52/endpoint_replays.json",
+      "endpoint_replay_raw_sha256": "385dbb0da1e38c3803fb0c897fd29433d2e86bcceace79a49d93942cf9f67477"
+    },
+    {
+      "seed": 62,
+      "selected_epoch": 22,
+      "checkpoint_path": "search_artifacts/titantpp_backbone_qk_only_raf3_20261016_v1/retrieval/originals/run/raf_spare_parts__62__titantpp_cnn_qk_only_v1/runs/titantpp_cnn_qk_only_v1/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt",
+      "checkpoint_raw_sha256": "9db2326c1d8af90ecdd0bc59ac0abbab104b1d4e22374a55b37375d81fac15ab",
+      "checkpoint_tensor_sha256": "1ee9235b4344459334ea59241d1e2ef36200abb69aa88fb55f0a423de092a128",
+      "initial_state_sha256": "46494986749a16b6c645667e223e84d2041213e23629d379fc09b9ba665a968f",
+      "summary_path": "search_artifacts/titantpp_backbone_qk_only_raf3_20261016_v1/retrieval/originals/run/raf_spare_parts__62__titantpp_cnn_qk_only_v1/runs/titantpp_cnn_qk_only_v1/count_only_log_regression/seed_62/summary.json",
+      "summary_raw_sha256": "89956d0f487db830158583740930465bf26146d2f6a75c1fd379e9c6f8efbd08",
+      "selected_validation_reference": {
+        "additional_history_boundaries": [
+          64,
+          128
+        ],
+        "additional_history_cells": [
+          {
+            "bin": 0,
+            "count": 6690,
+            "qty_mae": 9.25902920686076,
+            "qty_rmse": 34.566536898045314,
+            "qty_sse": 7993516.215199078,
+            "time_nll": 3.387579809335364
+          },
+          {
+            "bin": 1,
+            "count": 0,
+            "qty_mae": null,
+            "qty_rmse": null,
+            "qty_sse": 0.0,
+            "time_nll": null
+          },
+          {
+            "bin": 2,
+            "count": 0,
+            "qty_mae": null,
+            "qty_rmse": null,
+            "qty_sse": 0.0,
+            "time_nll": null
+          }
+        ],
+        "body": {
+          "count": 6416,
+          "qty_mae": 4.961930091829594,
+          "qty_rmse": 11.953337950840595,
+          "qty_sse": 916732.7608795107,
+          "time_nll": 3.3816719470360934
+        },
+        "checkpoint_path": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_backbone_qk_only_raf3_20261016_v1_5090/run/raf_spare_parts__62__titantpp_cnn_qk_only_v1/runs/titantpp_cnn_qk_only_v1/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt",
+        "count": 6690,
+        "evaluation_scope": "validation_only",
+        "held_out_test_evaluated": false,
+        "history_boundaries": [
+          64,
+          128
+        ],
+        "history_cells": [
+          {
+            "bin": 0,
+            "count": 6690,
+            "qty_mae": 9.25902920686076,
+            "qty_rmse": 34.566536898045314,
+            "qty_sse": 7993516.215199078,
+            "time_nll": 3.387579809335364
+          },
+          {
+            "bin": 1,
+            "count": 0,
+            "qty_mae": null,
+            "qty_rmse": null,
+            "qty_sse": 0.0,
+            "time_nll": null
+          },
+          {
+            "bin": 2,
+            "count": 0,
+            "qty_mae": null,
+            "qty_rmse": null,
+            "qty_sse": 0.0,
+            "time_nll": null
+          }
+        ],
+        "qty_mae": 9.25902920686076,
+        "qty_rmse": 34.566536898045314,
+        "qty_sse": 7993516.215199078,
+        "quantity_boundaries": [
+          2.0,
+          30.0,
+          60.0,
+          200.0
+        ],
+        "quantity_cells": [
+          {
+            "bin": 0,
+            "count": 3626,
+            "qty_mae": 1.9615573912480886,
+            "qty_rmse": 6.742503042410465,
+            "qty_sse": 164842.8452260915,
+            "time_nll": 3.358306781184782
+          },
+          {
+            "bin": 1,
+            "count": 2555,
+            "qty_mae": 7.298310123824327,
+            "qty_rmse": 14.21132393076219,
+            "qty_sse": 516012.21469521313,
+            "time_nll": 3.410838512087366
+          },
+          {
+            "bin": 2,
+            "count": 235,
+            "qty_mae": 25.85512341337001,
+            "qty_rmse": 31.681775482041623,
+            "qty_sse": 235877.70095820603,
+            "time_nll": 3.425082660529133
+          },
+          {
+            "bin": 3,
+            "count": 224,
+            "qty_mae": 72.73606820989933,
+            "qty_rmse": 89.2677850117626,
+            "qty_sse": 1784997.1867630037,
+            "time_nll": 3.579979601991966
+          },
+          {
+            "bin": 4,
+            "count": 50,
+            "qty_mae": 276.28565291404726,
+            "qty_rmse": 325.3240313151355,
+            "qty_sse": 5291786.267556564,
+            "time_nll": 3.2837256284760987
+          }
+        ],
+        "state_sha256": "1ee9235b4344459334ea59241d1e2ef36200abb69aa88fb55f0a423de092a128",
+        "tail": {
+          "count": 50,
+          "qty_mae": 276.28565291404726,
+          "qty_rmse": 325.3240313151355,
+          "qty_sse": 5291786.267556564,
+          "time_nll": 3.2837256284760987
+        },
+        "time_metric": "recorded_positive_integer_time_nll",
+        "time_nll": 3.387579809335364
+      },
+      "endpoint_replay_path": "search_artifacts/titantpp_backbone_qk_only_raf3_20261016_v1/retrieval/originals/run/raf_spare_parts__62__titantpp_cnn_qk_only_v1/runs/titantpp_cnn_qk_only_v1/count_only_log_regression/seed_62/endpoint_replays.json",
+      "endpoint_replay_raw_sha256": "aaea1d292bf4b492c4ac215e042def27c360bfdb86b0f50bee50db5b32f4011c"
+    }
+  ],
+  "allowed_splits": [
+    "train",
+    "validation"
+  ],
+  "conditions": [
+    "on",
+    "off"
+  ],
+  "residual_multipliers": [
+    1,
+    0
+  ],
+  "source_file_count": 143,
+  "source_closure": "74e79d12538ac005665043fd20f875a9883a436c6a5d02f2768cfd538a8566f7",
+  "source_revision": "dfd708894b244dc4bcc8eb685736e75cf30c16d8",
+  "parent_training_receipt_raw_sha256": "e16e983b571a271a8bc86abe82136023e863e0d8cfdc7caa15fe9d8a1bbf059e",
+  "evidence_pins": {
+    "reports/titantpp_backbone_qk_only_raf3_20261016_v1/NEXT_EVIDENCE_REVIEW.json": "97875bfd0af996373a9ce2343feb186850bf08aa027e0a01f2e61041a5256db5",
+    "reports/titantpp_backbone_qk_only_raf3_20261016_v1/THREE_SEED_VALIDATION.json": "99d314eb9d38e0fd12e8c9624c4e3b7f62a783e35986d71bfc00e61135c48c65",
+    "search_artifacts/titantpp_backbone_qk_only_raf3_20261016_v1/retrieval/final_receipt.json": "e16e983b571a271a8bc86abe82136023e863e0d8cfdc7caa15fe9d8a1bbf059e",
+    "search_artifacts/titantpp_backbone_qk_only_raf3_20261016_v1/execution_contract.json": "46a14ffcd674b6c37f5b7d103832e0bdcca232e332faa67da5b47a020e1f1a9b",
+    "reports/titantpp_backbone_value_difference_raf3_20261016_v1/diagnostics_paired_regret_v1/PLAN.json": "0708d991be70c3792af95e6266005de2c9cea14d6851fc5aaa731351727ed8b3",
+    "reports/titantpp_backbone_value_difference_raf3_20261016_v1/diagnostics_current_candidate_rows_v1/RESULT.json": "3c753214772e4b185a32f3af1a7f07fba4f3a3a2e470b2f17a14b5fb284b13b4",
+    "reports/titantpp_backbone_value_difference_raf3_20261016_v1/diagnostics_branch_probe_v1/RESULT.json": "3bd4900b7621c5419dd987ee3f0b73959eeb8894921f6caa943ad0501ae3afd5"
+  },
+  "input_identity": {
+    "data": {
+      "path": "inputs/data/raf_spare_parts/train_validation.parquet",
+      "sha256": "d805cad0242078fedfbb87eed18bde9b73d37bfc9b93c6b75aac49087244efa2"
+    },
+    "populations": {
+      "train": {
+        "target_count": 25779,
+        "target_identity_sha256": "9863e00d51357456e1bf53c0f82f17a867cbbaaf9f296064d1ae23c4392895b2",
+        "target_quantity_sha256": "abbb37aab32b35b029b8705fe6044bd3ed5e8b7239822d40ba7572d0ab6fae22"
+      },
+      "validation": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      }
+    },
+    "split_manifest": {
+      "path": "inputs/data/raf_spare_parts/split_manifest.json",
+      "sha256": "3cd6204667de4e44eda8787d32845bebff7624e1bb255ffd7677f810b8d7b149"
+    }
+  },
+  "source_immutability": "Every one of the inherited143 scientific source files remains byte-identical; diagnostic adapters live only under new operation files.",
+  "intervention": {
+    "on": "Use the original candidate causal_depthwise_residual for both Q and K, unchanged.",
+    "off": "In the current QKOnlyAttention module only, replace the result of both Q/K causal_depthwise_residual calls with zeros of the same shape/dtype/device after original validation checks. The common QKV projection including V is unchanged.",
+    "validation_preservation": "The off adapter must retain original shape/mask/index/nonfinite checks and exception behavior. It must not convert an invalid result into silently accepted zeros.",
+    "scope": "Exactly simultaneous Q/K on1/off0; no separate Q-only/K-only combination, interpolation, scale sweep, alternate checkpoint or new architecture.",
+    "state": "Never zero or edit parameter tensors; never save an ablated checkpoint. Verify parameter values, buffers and memory/context state before and after each condition. Restore the original function identity in finally, including exception paths.",
+    "process": "Each of the12 real-data split-condition-seed workers starts fresh with identical eval mode, loader/batch policy and initial context state. No state reuse between on and off workers.",
+    "memory_caveat": "Holding memory tensors fixed does not hold attention allocation to memory fixed: Q affects event and memory scores, and K-local processing affects event keys. Interpret a joint Q/K-path effect, not a Q-only/K-only or memory-independent mechanism."
+  },
+  "phases": [
+    {
+      "phase": "on_validation_gate",
+      "workers": 3,
+      "condition": "on",
+      "split": "validation",
+      "require_before_next": "All three workers actualexit0, six stored aggregate metrics and separately reconstructed original_population_identity6690/target/quantity SHA. No prior individual-row comparison because none exist."
+    },
+    {
+      "phase": "on_train_rows",
+      "workers": 3,
+      "condition": "on",
+      "split": "train",
+      "require_before_next": "All three workers actualexit0, valid immutable rows and unchanged state."
+    },
+    {
+      "phase": "off_rows",
+      "workers": 6,
+      "condition": "off",
+      "split": [
+        "validation",
+        "train"
+      ],
+      "require_before_next": "All six workers actualexit0, exact on/off target/truth binding and unchanged state.",
+      "execution_order": "off Validation3, then off Train3, each fresh worker and maximum3 concurrent"
+    }
+  ],
+  "real_data_worker_count": 12,
+  "qualification_workers_separate_from_real_data_count": true,
+  "max_parallel": 3,
+  "training_calls": 0,
+  "optimizer_steps": 0,
+  "test_calls": 0,
+  "existing_CNN_inference": 0,
+  "row_replay_tolerance": {
+    "relative": 1e-05,
+    "absolute": 1e-05
+  },
+  "aggregate_replay_tolerance": {
+    "relative": 1e-05,
+    "absolute": 1e-05
+  },
+  "tolerance_provenance": "Reuse fixed preceding V-branch probe tolerances from paper/scripts/titantpp_value_branch_probe_runtime.py and export_titantpp_value_branch_probe.py; do not tune after observing results.",
+  "existing_on_validation_rows": "Confirmed absent: existing native Validation receipt has raw_predictions_written=false. Do not require or claim comparison with nonexistent prior individual rows. On Validation3 replays original six aggregate metrics and original_population_identity; freshly exported on rows provide the reference for off only.",
+  "analysis": {
+    "primary_contrast": "off minus on on identical targets within each seed/split. Positive means removing the joint Q/K local residual worsens error.",
+    "row_fields": "split, seed, condition, target identity and exact truth, pre-target observed-context identity, raw prediction, signed error, AE, SE, recorded positive-integer time NLL; no Test rows.",
+    "metrics": [
+      "whole raw quantity RMSE",
+      "whole raw quantity MAE",
+      "Train-fixed q>200 RMSE",
+      "Train-fixed q>200 MAE",
+      "whole recorded positive-integer TimeNLL",
+      "q>200 recorded positive-integer TimeNLL"
+    ],
+    "frozen_plan_path": "reports/titantpp_backbone_value_difference_raf3_20261016_v1/diagnostics_paired_regret_v1/PLAN.json",
+    "frozen_plan_sha256": "0708d991be70c3792af95e6266005de2c9cea14d6851fc5aaa731351727ed8b3",
+    "frozen_condition_count": 15,
+    "train_magnitude_cuts": [
+      0.4054651081081645,
+      1.252762968495368
+    ],
+    "conditions_definition": "Reuse whole, four observed-history patterns, and ten pattern-by-fixed-Train-magnitude cells exactly. No new cut, regrouping or subgroup search.",
+    "weights": [
+      "row: one per target, separate seed summaries",
+      "common entity equal: for each existing cell retain entities present in both Train and Validation; within split each entity receives mass1 using row weight1/n(entity,split,cell), then normalize over entities"
+    ],
+    "aggregation": "Report each seed, means and sampleSD(ddof1), signed/absolute/squared error deltas, time/tail effects, support/exclusions and both weights. Additive closure only for disjoint row-weighted cells; different common-entity cells have different estimands and cannot be summed.",
+    "auxiliary_comparisons": "Keep current on versus stored originalCNN and current on versus stored loop3off separately labelled. Use only verified saved rows; no CNN/previous-model inference. These are cross-model descriptive contrasts, not the primary same-checkpoint intervention.",
+    "target_join": "Bind pure-input SHA, split/entity/ordinal and exact target truth/history within the new on/off row domain. Enforce unique keys, no loss/duplication, identical expected counts25779Train and6690Validation. Reconstruct original_population_identity in its separate native parent-SHA/float32 audit domain; do not compare digests from different domains directly. Auxiliary storedCNN/loop3off joins use the previously verified semantic target-binding procedure with separate digest domains."
+  },
+  "host": "5090",
+  "gpu_uuid": "GPU-c9adc246-ef66-7906-bc07-6e152fa9952f",
+  "runtime": {
+    "python": "3.12.13",
+    "torch": "2.11.0+cu130",
+    "cudnn": 92000,
+    "threads": 4,
+    "interop_threads": 1
+  },
+  "inherited_absolute_host_deadline": 1792679647.915156,
+  "new_local_bundle": "search_artifacts/titantpp_backbone_qk_branch_probe_20261016_v1",
+  "new_remote_root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_backbone_qk_branch_probe_20261016_v1_5090",
+  "entry_requirements": [
+    "Independent design review and local implementation/synthetic QA before any native work.",
+    "Verify all source/input/checkpoint/tensor/metadata/approval/operation SHA and completed parent training evidence.",
+    "Fresh owner/GPU idle verification after concurrent evaluation is actually complete; historical completion cache is not current idle proof.",
+    "Same native Runtime/GPU/input fingerprint, fabricated qualification with no baseline forward, then exclusive single attempt.",
+    "Never repeat an incomplete/failed attempt automatically, overwrite old bundles or extend the inherited deadline."
+  ],
+  "completion": "All12 real-data workers and stage pipelines have observed exit0, owner/PID/GPU absence verified, archive/manifest/all result SHA verified and on/off paired metric reconstruction complete. Supervisor wrapper ownOSexit is distinct and not assumed.",
+  "interpretation": "This measures a joint Q/K residual intervention in three fixed, co-adapted V-free models. It is not a retrained no-CNN model or the original CNN; it cannot identify Q versus K, DC versus direction/scale, a preferred history range, generalization improvement or a causal explanation of all errors.",
+  "next_training_rule": "No automatic training/architecture choice follows any sign pattern. Preserve all unfavorable metrics and seed/weight exceptions; consider a single nonredundant backbone hypothesis only after evidence review. DC-preserving or multi-range filters are not preselected.",
+  "actual_implementation_verified": false,
+  "actual_native_execution_started": false,
+  "updated_kst": "2026-10-16T04:18:30.634769+09:00",
+  "original_population_identity": {
+    "train": {
+      "target_count": 25779,
+      "target_identity_sha256": "9863e00d51357456e1bf53c0f82f17a867cbbaaf9f296064d1ae23c4392895b2",
+      "target_quantity_sha256": "abbb37aab32b35b029b8705fe6044bd3ed5e8b7239822d40ba7572d0ab6fae22"
+    },
+    "validation": {
+      "target_count": 6690,
+      "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+      "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+    }
+  },
+  "target_hash_domains": {
+    "original_population": "Reproduce the original population identity separately using the native parent-input identity and original arithmetic conventions.",
+    "exporter_paired_rows": "New on/off rows use the same pure Train/Validation-input SHA and float64 history-mean scheme. Require exact on/off target/truth/history identity within this scheme.",
+    "prohibition": "Do not directly equate native parent-SHA/float32-history target digests to exporter pure-input-SHA/float64-history digests. If native identity reconstruction is needed, preserve its audit digest separately and label the domain."
+  }
+}

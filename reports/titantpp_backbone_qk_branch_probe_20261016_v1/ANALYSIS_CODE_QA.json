@@ -1,0 +1,58 @@
+{
+  "schema": "qk_branch_probe_analysis_code_qa_v1",
+  "status": "PASS_ANALYSIS_CODE_AND_SYNTHETIC_ONLY",
+  "reviewed_kst": "2026-10-16T04:23:52.090780+09:00",
+  "reviewer": "loop3_next_backbone_basis",
+  "review_independence": "Independent review of parent-authored analysis code; reviewer authored the diagnostic specification, so this is not an independent scientific-design review.",
+  "files_sha256": {
+    "paper/scripts/compare_titantpp_qk_branch_probe.py": "0e83b9062249090c8db124f3795947e6299451dab5cb4d55b85a030fb776e753",
+    "paper/tests/test_compare_titantpp_qk_branch_probe.py": "d28045544baf072511331c243c7f16efcecf86d663a40791e056dd196e182f04",
+    "paper/scripts/compare_titantpp_value_difference_rows.py": "3844e5f6dd335aa0a0b7421f0d45780784b1f1b4b5f4e980f84827cd47ce475e",
+    "paper/scripts/analyze_titantpp_value_difference_rows.py": "c689918ad4f64913cf1b15894a3e4e177667711675a59e9056e72bfa6400cb33",
+    "reports/titantpp_backbone_qk_branch_probe_20261016_v1/SCIENCE_SPEC.json": "10371800c7e0f4095defad1380344a5bef19a9b31578dd599bc163779b1af7ee",
+    "reports/titantpp_backbone_qk_branch_probe_20261016_v1/ACCEPTANCE.json": "5bc011e4473f71db5fd520af8ff3763753c767ceeb98d12cfdc1a6f2c4063193"
+  },
+  "scope": {
+    "code_edits": 0,
+    "model_inference": 0,
+    "remote_calls": 0,
+    "test_split_read": false,
+    "old_CNN_or_V_prediction_rows_read": false,
+    "actual_saved_row_analysis_executed": false
+  },
+  "findings": [],
+  "checks": {
+    "cohort": "Source143 closure and selected epochs 5/5/22 fixed; native complete verifier and selected history/metadata/binary SHA checked before reading new on/off rows.",
+    "same_diagnostic": "Both conditions read exclusively from the new diagnostic originals/data_receipts. No verify_baseline or old helper run/main invocation. Frozen helper constants mentioning old CNN are not prediction reads.",
+    "target_identity": "Exact new-domain target/truth/history join, unique target IDs, dataset/seed/split/entity/seq checks; no native-versus-exporter target digest direct equality.",
+    "fixed_conditions": "Reuses pinned pure arithmetic with exactly15 conditions, unchanged Train Q25/Q75 recalculated from eligible Train rows and checked against prior frozen values; no target-derived cuts.",
+    "weighting": "Row weights 1; each condition intersects Train/Validation entity sets, weights each retained row by inverse entity count, normalizes by entity mass. Support/excluded rows retained. Different-support weighted cells are not summed.",
+    "direction": "candidate mapped to off and cnn mapped to on only in output metrics; paired delta is off minus on. Output expressly states off is neither historical CNN nor a separately retrained model.",
+    "unfavorable": "All180 per-seed condition/split/weighting records retained, including empty cells as null; six whole/tail/time groups per split and every per-seed native aggregate retained. No sign-based filtering.",
+    "additivity": "AE, SE and signed-error sums checked for disjoint pattern and pattern×magnitude partitions; no additive RMSE claim.",
+    "uncertainty": "Same jointly trained checkpoint branch sensitivity only. No new model success, causal isolation, independent generalization or significance claim.",
+    "immutability": "Exclusive output directory/files; dependency SHA recheck before and after output. Same predictive state before/after and between fresh on/off, plus unchanged Runtime, checked."
+  },
+  "synthetic_validation": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m unittest paper.tests.test_compare_titantpp_qk_branch_probe paper.tests.test_titantpp_value_difference_rows_analysis -v",
+    "actual_exit_code": 0,
+    "test_count": 15,
+    "new_test_count": 8,
+    "inherited_pure_test_count": 7,
+    "independent_random_trials": 30,
+    "independent_scalar_assertions": 41400,
+    "random_check_method": "Deterministic seeds0..29; 3seeds×Train/Validation with shared and split-only entities, unequal entity sizes, positive/negative errors and sparse cells. Independently recomputed weighted MAE/RMSE/AE/SE/signed sums and off-on direction.",
+    "four_analysis_test_dependency_hashes_before_after_random_check_equal": true
+  },
+  "limitations": [
+    "No actual native run, real input/prediction rows, checkpoint deserialization or completed-receipt integration was executed in this review.",
+    "Operational collector/worker validation is handled by separate QA; its final pinned implementation and native receipts remain prerequisites.",
+    "Three-seed summary excludes a cell if any seed lacks support, but all per-seed nulls and support counts remain preserved.",
+    "The immutable helper uses internal variable names candidate/cnn; public result nested metric roles are off/on and helper predictions are never historical CNN rows."
+  ],
+  "recommendation": "Proceed to the separately reviewed operational implementation and gated native diagnostic. After native completion, run this fixed analysis once and independently verify output SHA/counts; do not interpret this synthetic PASS as diagnostic completion.",
+  "artifacts_created": [
+    "ANALYSIS_CODE_QA.json",
+    "ANALYSIS_CODE_QA.md"
+  ]
+}

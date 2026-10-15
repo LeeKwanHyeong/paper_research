@@ -1,0 +1,57 @@
+{
+  "schema": "titantpp_qk_branch_probe_acceptance_v1",
+  "created_kst": "2026-10-16T04:17:49.556154+09:00",
+  "status": "specified_independent_review_pending",
+  "spec_sha256": "10371800c7e0f4095defad1380344a5bef19a9b31578dd599bc163779b1af7ee",
+  "must_pass_before_native": [
+    "Independent design review and synthetic implementation tests, with no unresolved critical findings.",
+    "Pinned unchanged source143 and input, exact three checkpoint tensors/binaries/epochs5,5,22; existing results/claims/failures untouched.",
+    "On exactly delegates original residual; off changes only both Q/K residual outputs. Invalid shapes/masks/nonfinite inputs remain rejected. Function identity restored in finally on success and exception.",
+    "Full parameter/buffer/context snapshots unchanged and equal across corresponding fresh-process initial states; nooptimizer/noTest/noextra checkpoint selection.",
+    "Padding skipping, valid-withheld boundary reset, insufficient-history semantics, no target access, batch consistency and native maximum-three synthetic validation."
+  ],
+  "gate1_on_validation": {
+    "workers": 3,
+    "targets_exact": "Original population target count/quantity/identity SHA reproduced in the original native domain.",
+    "six_metrics": true,
+    "tolerance": {
+      "relative": 1e-05,
+      "absolute": 1e-05
+    },
+    "known_rows_policy": "Existing native raw_predictions_written=false: no prior individual rows exist. No prior rowwise reproduction is required or claimed; new on rows become reference for off.",
+    "all_actual_exit0_required": true,
+    "target_domain_separation_required": true
+  },
+  "gate2_on_train": {
+    "workers": 3,
+    "expected_target_count_per_seed": 25779,
+    "all_actual_exit0_required": true,
+    "parameter_buffer_context_unchanged": true
+  },
+  "gate3_off": {
+    "workers": 6,
+    "splits": [
+      "validation",
+      "train"
+    ],
+    "expected_counts_per_seed": {
+      "train": 25779,
+      "validation": 6690
+    },
+    "pairing": "Unique identical target/truth/context within each seed/split under the common new-export scheme, off minus on. No cross-domain digest equality.",
+    "all_actual_exit0_required": true,
+    "parameter_buffer_context_unchanged": true
+  },
+  "analysis_acceptance": [
+    "Reconstruct native six metrics from saved rows and reproduce aggregate validation references without tolerance adjustment.",
+    "Use frozen15conditions and exact Train cuts, original common-entity weighting and support counts.",
+    "Preserve every seed, whole/tail/time degradation, signed-error sum, AE/SE delta and exclusions.",
+    "Row-weighted disjoint-group AE/SE/signed error counts close to the full sum; do not sum common-entity estimates across differing supports.",
+    "Separately identify historicalCNN runtime confound and loop3off cross-model joint-training differences; primary interpretation remains within the current checkpoint.",
+    "Store full stdout/stderr size/SHA, actual transport versus worker/pipeline exits, timeout and final owned process absence; no false wrapper-exit claim."
+  ],
+  "failure_handling": "Preserve exact failure/attempt evidence; do not automatically retry, modify frozen scientific source, tune tolerances, or run off before gate1 and gate2 pass.",
+  "decision_acceptance": "A completed diagnostic is not a successful new model. No numerical improvement threshold or automatic next-learning rule is introduced. New structural claims require a subsequent evidence review.",
+  "actual_native_execution_started": false,
+  "updated_kst": "2026-10-16T04:18:30.634769+09:00"
+}
