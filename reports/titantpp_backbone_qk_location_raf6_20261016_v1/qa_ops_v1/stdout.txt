@@ -1,0 +1,144 @@
+........................................................................ [ 85%]
+..........FF                                                             [100%]
+=================================== FAILURES ===================================
+_______ test_dispatch_six_fits_has_strict_three_seed_arm_barrier[False] ________
+
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-53/test_dispatch_six_fits_has_str0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1151f7f80>
+first_wave_failure = False
+
+    @pytest.mark.parametrize('first_wave_failure',[False,True])
+    def test_dispatch_six_fits_has_strict_three_seed_arm_barrier(tmp_path,monkeypatch,first_wave_failure):
+        c=contract();events=[];running=set();seen=[];peak=0
+        monkeypatch.setattr(runtime,'ROOT',tmp_path)
+        monkeypatch.setattr(runtime,'authorization',lambda *_:{'deadline_unix':runtime.INHERITED_DEADLINE})
+        monkeypatch.setattr(runtime,'verify_training_permit',lambda *_:True)
+        monkeypatch.setattr(runtime,'common',SimpleNamespace(gpu_pids=lambda *_:[]))
+        monkeypatch.setattr(runtime,'frozen',SimpleNamespace(VARIANT='count_only_log_regression',audit_host_batch_prefix=lambda *_:None))
+        monkeypatch.setattr(runtime,'gpu_observation',lambda *_:None)
+        monkeypatch.setattr(runtime,'write_parallel_pulse',lambda *_:None)
+        monkeypatch.setattr(runtime,'sha_file',lambda *_:'a'*64)
+        monkeypatch.setattr(runtime,'read',lambda *_:{})
+        monkeypatch.setattr(runtime,'validate_terminal',lambda _c,_r,j:{'job':j,'complete':True})
+        monkeypatch.setattr(runtime,'launch_identity',lambda child,command,digest,**kw:{'pid':child.pid,'start_ticks':1,'argv':command,'contract_sha256':digest,**kw})
+        class FakeChild:
+            def __init__(self,command,**_):
+                nonlocal peak
+                self.job=command[command.index('--job')+1];self.pid=800000000+len(seen);seen.append(self.job)
+                if len(seen)==4:
+                    assert not running,'KeyOnly started before QueryOnly exited'
+                running.add(self.job);peak=max(peak,len(running));events.append(('start',self.job))
+            def poll(self):return 0
+        def observe(child,*_,**kw):
+            running.discard(child.job);events.append(('exit',child.job))
+            return {'returncode':1 if first_wave_failure and child.job==c['jobs'][0]['id'] else 0}
+        monkeypatch.setattr(runtime.subprocess,'Popen',FakeChild)
+        monkeypatch.setattr(runtime,'observe_exit',observe)
+        monkeypatch.setattr(runtime,'stop_owned',lambda child:running.discard(child.job))
+        if first_wave_failure:
+            with pytest.raises(ValueError,match='Worker failed'):runtime.dispatch(c,'5090',tmp_path)
+            assert len(seen)==3 and all(runtime.ARMS[0] in name for name in seen)
+            assert (tmp_path/'failure.json').exists()
+        else:
+>           runtime.dispatch(c,'5090',tmp_path)
+
+paper/tests/test_titantpp_qk_location_raf6_ops.py:592: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+paper/scripts/titantpp_qk_location_raf6_runtime.py:759: in dispatch
+    'start_ticks':start_ticks(os.getpid()),'ppid':os.getppid(),'guard_start_ticks':start_ticks(os.getppid()),
+                  ^^^^^^^^^^^^^^^^^^^^^^^^
+paper/scripts/titantpp_qk_location_raf6_runtime.py:193: in start_ticks
+    return int(Path('/proc',str(pid),'stat').read_text().rsplit(')',1)[1].split()[19])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/proc/2152/stat'), mode = 'r', buffering = -1
+encoding = 'locale', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/proc/2152/stat'
+
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py:1013: FileNotFoundError
+________ test_dispatch_six_fits_has_strict_three_seed_arm_barrier[True] ________
+
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-53/test_dispatch_six_fits_has_str1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1151f7f20>
+first_wave_failure = True
+
+    @pytest.mark.parametrize('first_wave_failure',[False,True])
+    def test_dispatch_six_fits_has_strict_three_seed_arm_barrier(tmp_path,monkeypatch,first_wave_failure):
+        c=contract();events=[];running=set();seen=[];peak=0
+        monkeypatch.setattr(runtime,'ROOT',tmp_path)
+        monkeypatch.setattr(runtime,'authorization',lambda *_:{'deadline_unix':runtime.INHERITED_DEADLINE})
+        monkeypatch.setattr(runtime,'verify_training_permit',lambda *_:True)
+        monkeypatch.setattr(runtime,'common',SimpleNamespace(gpu_pids=lambda *_:[]))
+        monkeypatch.setattr(runtime,'frozen',SimpleNamespace(VARIANT='count_only_log_regression',audit_host_batch_prefix=lambda *_:None))
+        monkeypatch.setattr(runtime,'gpu_observation',lambda *_:None)
+        monkeypatch.setattr(runtime,'write_parallel_pulse',lambda *_:None)
+        monkeypatch.setattr(runtime,'sha_file',lambda *_:'a'*64)
+        monkeypatch.setattr(runtime,'read',lambda *_:{})
+        monkeypatch.setattr(runtime,'validate_terminal',lambda _c,_r,j:{'job':j,'complete':True})
+        monkeypatch.setattr(runtime,'launch_identity',lambda child,command,digest,**kw:{'pid':child.pid,'start_ticks':1,'argv':command,'contract_sha256':digest,**kw})
+        class FakeChild:
+            def __init__(self,command,**_):
+                nonlocal peak
+                self.job=command[command.index('--job')+1];self.pid=800000000+len(seen);seen.append(self.job)
+                if len(seen)==4:
+                    assert not running,'KeyOnly started before QueryOnly exited'
+                running.add(self.job);peak=max(peak,len(running));events.append(('start',self.job))
+            def poll(self):return 0
+        def observe(child,*_,**kw):
+            running.discard(child.job);events.append(('exit',child.job))
+            return {'returncode':1 if first_wave_failure and child.job==c['jobs'][0]['id'] else 0}
+        monkeypatch.setattr(runtime.subprocess,'Popen',FakeChild)
+        monkeypatch.setattr(runtime,'observe_exit',observe)
+        monkeypatch.setattr(runtime,'stop_owned',lambda child:running.discard(child.job))
+        if first_wave_failure:
+>           with pytest.raises(ValueError,match='Worker failed'):runtime.dispatch(c,'5090',tmp_path)
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+paper/tests/test_titantpp_qk_location_raf6_ops.py:588: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+paper/scripts/titantpp_qk_location_raf6_runtime.py:759: in dispatch
+    'start_ticks':start_ticks(os.getpid()),'ppid':os.getppid(),'guard_start_ticks':start_ticks(os.getppid()),
+                  ^^^^^^^^^^^^^^^^^^^^^^^^
+paper/scripts/titantpp_qk_location_raf6_runtime.py:193: in start_ticks
+    return int(Path('/proc',str(pid),'stat').read_text().rsplit(')',1)[1].split()[19])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/proc/2152/stat'), mode = 'r', buffering = -1
+encoding = 'locale', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/proc/2152/stat'
+
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py:1013: FileNotFoundError
+=========================== short test summary info ============================
+FAILED paper/tests/test_titantpp_qk_location_raf6_ops.py::test_dispatch_six_fits_has_strict_three_seed_arm_barrier[False]
+FAILED paper/tests/test_titantpp_qk_location_raf6_ops.py::test_dispatch_six_fits_has_strict_three_seed_arm_barrier[True]
+2 failed, 82 passed in 2.04s

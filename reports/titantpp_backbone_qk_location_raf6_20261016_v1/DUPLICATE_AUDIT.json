@@ -1,0 +1,80 @@
+{
+  "schema": "titantpp_qk_location_duplicate_audit_v1",
+  "status": "bounded_search_complete",
+  "created_at": "2026-10-15T19:48:20.864803+00:00",
+  "question": "기존 선형 관측3tap CNN에서 Q-only/K-only 각각192계수의 동일용량 대조군이 이미 구현·학습되었는가",
+  "scope": {
+    "model_files": 33,
+    "runner_files": 41,
+    "directories": [
+      "models/TPPs",
+      "paper/scripts",
+      "reports"
+    ],
+    "report_types": [
+      "SCIENCE_SPEC",
+      "EXPERIMENT_PLAN",
+      "contract",
+      "DUPLICATE_AUDIT"
+    ],
+    "performance_results_opened": false,
+    "exact_new_arm_names_found": false
+  },
+  "conclusion": "확인 범위에서 해당 대조쌍의 구현·학습 선언을 찾지 못했다. 전역 미실행이나 방법론 신규성의 증명은 아니다.",
+  "new_arm_names": [
+    "titantpp_cnn_query_only_v1",
+    "titantpp_cnn_key_only_v1"
+  ],
+  "closest_existing": [
+    {
+      "name": "QKOnly",
+      "path": "models/TPPs/CountAwareTitanQKOnlyCNN.py",
+      "lines": [
+        23,
+        24,
+        57,
+        108,
+        109
+      ],
+      "distinction": "Q와K 두 지역필터384계수를 함께 유지하는 단일 arm이다."
+    },
+    {
+      "name": "루프2 Query/Value nonlinear",
+      "path": "models/TPPs/CountAwareTitanNonlinearLocationCNN.py",
+      "lines": [
+        26,
+        27,
+        28,
+        29,
+        35,
+        64,
+        107,
+        129
+      ],
+      "distinction": "원래QKV576계수에 Q 또는V 비선형1024계수를 추가한다. K-only가 없고 제안된 선형192계수쌍과 다르다."
+    },
+    {
+      "name": "BoundedQK / LevelHistoryQKV",
+      "paths": [
+        "models/TPPs/CountAwareTitanBoundedQK.py",
+        "models/TPPs/CountAwareTitanLevelHistoryQKV.py"
+      ],
+      "distinction": "Q/K 공동 제약 또는 QKV 전체 이력변환이며 단일 Q/K 선형192계수쌍이 아니다."
+    }
+  ],
+  "source143_closure": "74e79d12538ac005665043fd20f875a9883a436c6a5d02f2768cfd538a8566f7",
+  "source_revision": "dfd708894b244dc4bcc8eb685736e75cf30c16d8",
+  "evidence_files": {
+    "models/TPPs/CountAwareTitanQKOnlyCNN.py": "1511c040b71367ff790e43ad6012141d738542e9a47f648ff63a3873b7fe7078",
+    "models/TPPs/CountAwareTitanNonlinearLocationCNN.py": "e683c09954b289a86a07bf56eea3c6d7875c621f2abc370502e0f83bb2d47329",
+    "models/TPPs/CountAwareTitanBoundedQK.py": "b0139d409801c4bf184954f393f15d2f3d06f725009621c3e5b95b5ef2aed2a0",
+    "models/TPPs/CountAwareTitanLevelHistoryQKV.py": "f4398a442c7872b158039f2346bc18ce5df5b89de97ec4c1c4a0f9291ad136e0",
+    "reports/titantpp_backbone_location_raf6_20261015_v1/EXPERIMENT_PLAN.md": "d6db175569e95df4c6b57f7a9e1531cbdb1a1811072b4445daf4755da6f9d4db",
+    "reports/titantpp_backbone_qk_only_raf3_20261016_v1/SCIENCE_SPEC.json": "0393da551a4933d3ed8105910fc3859d8aadcaf008b19e786cd177282a56db14",
+    "reports/titantpp_backbone_qk_only_raf3_20261016_v1/DUPLICATE_AUDIT.json": "91621fea33cd9d807af5cab0135e8d945706205b72a7827e1502f24cd66045a0"
+  },
+  "new_model_adoption_decision": false,
+  "remote_calls": 0,
+  "model_inference": 0,
+  "held_out_test_evaluated": false
+}

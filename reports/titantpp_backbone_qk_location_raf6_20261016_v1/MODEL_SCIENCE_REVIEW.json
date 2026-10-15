@@ -1,0 +1,146 @@
+{
+  "schema": "titantpp_qk_location_model_science_review_v1",
+  "status": "PASS_static_science_alignment",
+  "created_kst": "2026-10-16T04:58:45.405991+09:00",
+  "reviewer": "/root/loop3_next_backbone_basis",
+  "review_scope": "Static implementation-to-frozen-science-spec alignment plus independent rerun of authored synthetic model tests. Reviewer did not implement the model/runner/tests, but did write the science specification; this is not an independent scientific-design review.",
+  "input_sha256": {
+    "reports/titantpp_backbone_qk_location_raf6_20261016_v1/SCIENCE_SPEC.json": "75388ec70cd8a35bbf3bd866c94b00e0ee8d510691d860ba02bbc0414697c15f",
+    "models/TPPs/CountAwareTitanQKLocationCNN.py": "a660cd2a1f9ea4d594e2aba64c0d4457d589fc46f2ed7921d252e8f387690b23",
+    "paper/scripts/run_titantpp_qk_location_cnn.py": "05395c5e6981b13798d268b48d142811aa8e6dccb3befc069121e280dcfafda1",
+    "paper/tests/test_titantpp_qk_location_model.py": "bf473ad7b1390f31e41e2c8077647ead22d7a51b95c9c05b225f3580fc591de1",
+    "models/TPPs/CountAwareTitanCNNGRU.py": "9d1bcf6c754cbf6216e4929f832d08af60ccf02573edd3b6c1c7a2088115dfc3",
+    "models/TPPs/CountAwareTitanQKOnlyCNN.py": "1511c040b71367ff790e43ad6012141d738542e9a47f648ff63a3873b7fe7078",
+    "models/TPPs/CountAwareTitanCNNGRUComponents.py": "8325d527d1b1c085ffa299a3f86372e50c247e234548b97d29561ea24f4b1d8c",
+    "paper/scripts/run_titantpp_qk_only_cnn.py": "d1dc15001733acb3d75a16642eaaf515945bda2e5c5d13e392497f9c510dfeaa"
+  },
+  "findings": [],
+  "checks": [
+    {
+      "name": "capacity_and_physical_removal",
+      "status": "PASS",
+      "finding": "Each arm retains only its selected original 3x64 parameter: 192 local coefficients. The other Q/K kernel and V local kernel are absent, not frozen zero/dummy parameters. Relative original CNN576: -384; relative QK-only384: -192. Historical inactive GRU registration remains unchanged.",
+      "references": [
+        "models/TPPs/CountAwareTitanQKLocationCNN.py:33",
+        "models/TPPs/CountAwareTitanQKLocationCNN.py:93",
+        "paper/tests/test_titantpp_qk_location_model.py:67"
+      ]
+    },
+    {
+      "name": "common_qkv_and_v_projection",
+      "status": "PASS",
+      "finding": "Common qkv object and all projector rows remain normally trainable; removing the local V filter does not remove or freeze the common V projection. Synthetic gradient tests cover the retained192 coefficients and common V projection.",
+      "references": [
+        "models/TPPs/CountAwareTitanQKLocationCNN.py:99",
+        "paper/tests/test_titantpp_qk_location_model.py:179"
+      ]
+    },
+    {
+      "name": "initialization_rng",
+      "status": "PASS",
+      "finding": "One original CNN constructor initializes the common tensors and original kernels. Replacement reuses those objects and introduces only a deterministic uint8 identity buffer; no new random initialization or checkpoint warmstart. Direct wrapper is state/RNG-equivalent to the QK-only-then-single-location design inheritance. Synthetic tests compare Torch/Python/NumPy RNG and all retained tensors, all3 seeds and contexts32/84/256.",
+      "references": [
+        "models/TPPs/CountAwareTitanQKLocationCNN.py:163",
+        "paper/scripts/run_titantpp_qk_location_cnn.py:160",
+        "paper/tests/test_titantpp_qk_location_model.py:408"
+      ]
+    },
+    {
+      "name": "forward_algebra",
+      "status": "PASS",
+      "finding": "Independent stdlib AST comparison: resolving the candidate q/k branch makes its complete forward AST identical to original ObservedCausalQKVMemoryAttention.forward after deleting only the two unselected local-residual assignment statements. All subsequent memory concatenation, scoring, masking, softmax, dropout, output projection and query masking are unchanged.",
+      "references": [
+        "models/TPPs/CountAwareTitanQKLocationCNN.py:109",
+        "models/TPPs/CountAwareTitanCNNGRU.py:133"
+      ]
+    },
+    {
+      "name": "observed_boundaries_and_target_isolation",
+      "status": "PASS",
+      "finding": "Inherited observed_context and causal_depthwise_residual preserve current/previous/second-previous observed taps, padding skip, withheld boundary reset and unavailable taps. Synthetic tests include NaN padding, future/target perturbation, short histories, batch consistency and unchanged evaluation state.",
+      "references": [
+        "models/TPPs/CountAwareTitanCNNGRU.py:85",
+        "models/TPPs/CountAwareTitanCNNGRUComponents.py:101",
+        "paper/tests/test_titantpp_qk_location_model.py:99",
+        "paper/tests/test_titantpp_qk_location_model.py:199",
+        "paper/tests/test_titantpp_qk_location_model.py:359"
+      ]
+    },
+    {
+      "name": "memory_asymmetry",
+      "status": "PASS",
+      "finding": "Memory tokens bypass the retained local filter. Query filtering changes query scores against both event and memory keys; Key filtering changes event keys before memory concatenation. Either can change normalized memory mass. This is the specified position asymmetry, not identical functional intervention on memory.",
+      "references": [
+        "models/TPPs/CountAwareTitanQKLocationCNN.py:124",
+        "paper/tests/test_titantpp_qk_location_model.py:374"
+      ]
+    },
+    {
+      "name": "common_training_conditions",
+      "status": "PASS",
+      "finding": "Runner reuses original common training/replay functions and model input/head implementations. It validates hidden64, quantity loss1/tail0, unchanged recorded-time head, AdamW .001/.01/clip1, loader128, max300/min40/patience40, strict earliest finite full-Validation rawRMSE selection and no warmstart/force rerun. No added gate/norm/nonlinearity/RevIN/GRU activation.",
+      "references": [
+        "paper/scripts/run_titantpp_qk_location_cnn.py:27",
+        "paper/scripts/run_titantpp_qk_location_cnn.py:199",
+        "paper/scripts/run_titantpp_qk_location_cnn.py:237"
+      ]
+    },
+    {
+      "name": "arm_identity_and_baseline_guard",
+      "status": "PASS",
+      "finding": "Distinct metadata and state identity bind both selected and terminal states to the physical single-kernel arm. Complete state validation remains strict even load_state_dict(strict=False); forged cross-arm identity with wrong physical kernel, baseline relabel, missing/extra/dummy tensors and changed split/head/selector are rejected in synthetic tests. training_args allows only the two new candidates, not the CNN alias. Historical baseline comparison/reuse is an operational responsibility outside this model review; no historical CNN checkpoint/prediction was read or run here.",
+      "references": [
+        "models/TPPs/CountAwareTitanQKLocationCNN.py:174",
+        "models/TPPs/CountAwareTitanQKLocationCNN.py:181",
+        "paper/scripts/run_titantpp_qk_location_cnn.py:203",
+        "paper/tests/test_titantpp_qk_location_model.py:288",
+        "paper/tests/test_titantpp_qk_location_model.py:424"
+      ]
+    }
+  ],
+  "validation": {
+    "ast_forward_comparison": {
+      "query_only": "PASS",
+      "key_only": "PASS",
+      "real_data_read": false,
+      "neural_forward": false
+    },
+    "synthetic_tests": {
+      "command": "PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m pytest -q -p no:cacheprovider paper/tests/test_titantpp_qk_location_model.py",
+      "actual_exit_code": 0,
+      "result": "63 passed in 9.77s",
+      "torch": "2.14.0",
+      "pytest": "9.0.3",
+      "scope": "Local fabricated inputs only; test fixture blocks polars read_parquet/scan_parquet. Random initial original-CNN synthetic comparison is not historical baseline inference or training.",
+      "warning": "pkg_resources deprecation warning from fs dependency; suite completed successfully."
+    },
+    "reviewed_source_hashes_after_test_unchanged": true
+  },
+  "boundaries": {
+    "source_edits": 0,
+    "remote_calls": 0,
+    "real_dataset_reads": 0,
+    "historical_CNN_checkpoint_reads": 0,
+    "historical_CNN_inference": 0,
+    "Test_reads": 0,
+    "actual_training": 0
+  },
+  "tradeoffs": {
+    "Q_only_vs_K_only": "Identical192 local parameter capacity and common initialization; materially different event/memory score location. No predicted winner.",
+    "vs_stored_CNN_or_QK_only": "Capacity and fresh coadaptation differ; this contrast cannot isolate placement alone."
+  },
+  "limitations": [
+    "Local CPU torch2.14.0 synthetic validation does not establish native5090 torch2.11.0+cu130/cuDNN92000 runtime equivalence; native qualification remains separate.",
+    "Source closure145, dataset/inputSHA, permits, scheduling, deadline and stored-baseline-only aggregation require operational verification; this report does not certify deploy or training completion.",
+    "No real-data performance, causal mechanism, statistical significance or independent generalization claim.",
+    "SCIENCE_SPEC initialization inheritance is interpreted as preservation of QK-only replacement design/state: implementation constructs original CNN exactly once, not an additional randomly initialized intermediate model. Synthetic direct/via-parent comparison confirms equivalence."
+  ],
+  "next_steps": [
+    "Use separate operational QA and native qualification before the already-authorized fresh6 training.",
+    "After verified completion, evaluate fixed Validation-selected checkpoints under the frozen Validation/Test gate; retain all unfavorable seed/tail/time results."
+  ],
+  "artifacts_created": [
+    "MODEL_SCIENCE_REVIEW.json",
+    "MODEL_SCIENCE_REVIEW.md"
+  ]
+}

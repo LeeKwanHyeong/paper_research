@@ -1,0 +1,431 @@
+{
+  "schema": "titantpp_backbone_qk_location_science_spec_v1",
+  "created_kst": "2026-10-16T04:48:53.658091+09:00",
+  "status": "science_spec_prepared_implementation_and_execution_verification_pending",
+  "campaign": "titantpp_backbone_qk_location_raf6_20261016_v1",
+  "loop_index": 5,
+  "authorization": {
+    "scope": "Existing preapproval for evidence-driven CNN backbone loops: RAF5090 maximum3 concurrent fresh fits, fixed common conditions, guarded Validation/Test evaluation and same-method expansion only after user performance gate.",
+    "baseline_constraint": "기존 CNN기준선은 건들지마",
+    "existing_baseline_retraining": false,
+    "existing_baseline_reevaluation": false
+  },
+  "evidence_pins": {
+    "search_artifacts/titantpp_backbone_qk_only_raf3_20261016_v1/execution_contract.json": "46a14ffcd674b6c37f5b7d103832e0bdcca232e332faa67da5b47a020e1f1a9b",
+    "reports/titantpp_backbone_qk_only_raf3_20261016_v1/THREE_SEED_VALIDATION.json": "99d314eb9d38e0fd12e8c9624c4e3b7f62a783e35986d71bfc00e61135c48c65",
+    "reports/titantpp_backbone_qk_branch_probe_20261016_v1/diagnostics_branch_probe_v1/RESULT.json": "2155f65eed92298a882f5fa152d9dd2faca78b08ec234e351c950443230b4534",
+    "reports/titantpp_backbone_qk_branch_probe_20261016_v1/diagnostics_branch_probe_v1/RECEIPT.json": "dd4881811a3d27b5fb7b7c759563d101933fa1fb42be089af4e6ed7ddc885bac",
+    "models/TPPs/CountAwareTitanQKOnlyCNN.py": "1511c040b71367ff790e43ad6012141d738542e9a47f648ff63a3873b7fe7078",
+    "models/TPPs/CountAwareTitanNonlinearLocationCNN.py": "e683c09954b289a86a07bf56eea3c6d7875c621f2abc370502e0f83bb2d47329",
+    "reports/titantpp_backbone_qk_location_raf6_20261016_v1/DUPLICATE_AUDIT.json": "3ab74392439343715bcb63739add0b708539661d7b741a25d09737ae5f46cfd3"
+  },
+  "duplicate_audit": {
+    "status": "bounded_read_only_audit_complete_no_matching_arm_identified",
+    "reviewer": "/root/loop3_paired_regret",
+    "scope": "Current33 model files,41 run_titantpp runners, and relevant report specification/plan/contract declarations; exact proposed arm-name search.",
+    "findings": [
+      "No existing implementation/training declaration of the192-parameter free linear observed3tap Q-only versus K-only pair was identified in this scope.",
+      "Exact proposed arm names had0 matches before this specification.",
+      "Loop2 query-nonlinear retained original Q/K/V576 local coefficients and added1024 nonlinear coefficients to Q or V, with no K-only candidate. It is a different intervention."
+    ],
+    "closest_sources": [
+      "models/TPPs/CountAwareTitanQKOnlyCNN.py:23",
+      "models/TPPs/CountAwareTitanQKOnlyCNN.py:57",
+      "models/TPPs/CountAwareTitanQKOnlyCNN.py:108",
+      "models/TPPs/CountAwareTitanNonlinearLocationCNN.py:107"
+    ],
+    "limits": "Bounded current source/runner/report-declaration audit, not exhaustive historical Git/remote runs or external publication coverage; no novelty claim.",
+    "path": "reports/titantpp_backbone_qk_location_raf6_20261016_v1/DUPLICATE_AUDIT.json",
+    "raw_sha256": "3ab74392439343715bcb63739add0b708539661d7b741a25d09737ae5f46cfd3"
+  },
+  "question": "Under identical local capacity and fixed common conditions, does retaining the original linear observed-history3tap filter on only Query or only Key yield a different RAF quantity-error tradeoff after fresh training?",
+  "hypothesis": "Separate the location of learned local relation processing rather than remove all of it or add nonlinear/gating machinery. The symmetric-capacity pair tests which endpoint can retain useful local processing under fresh joint optimization. No predicted winning arm is fixed.",
+  "evidence_interpretation": {
+    "observed": [
+      "Current QK-only joint on/off probe: removing both local paths worsened whole MAE in all3seeds on both Train/Validation and both weighting schemes.",
+      "Off Validation mean RMSE improved but mean MAE worsened, with RMSE direction mixed by seed and seed62 dominating the aggregate gain.",
+      "Current QK-only fresh training did not improve both Validation mean RMSE and MAE over stored CNN."
+    ],
+    "unresolved": [
+      "Joint on/off does not separate Query and Key or predict performance of either single-path retrained model.",
+      "No proof that a Q/K bilinear interaction, norm, DC component or memory allocation caused the prior failure.",
+      "Local capacity reduction and joint optimization differ from stored QK-only/original CNN."
+    ],
+    "reason_for_pair": "An equal192-coefficient fresh-fit position ablation directly tests the unresolved endpoint question. Additional frozen Q-only/K-only inference is not a prerequisite to this empirical training comparison; it would answer a different co-adapted-network question.",
+    "negative_evidence": "Preserve all prior/prospective harms, seed exceptions, tail and time errors; neither endpoint is claimed to be an established improvement.",
+    "claim_type": "Exploratory empirical local-filter location ablation; no new principle, causal identification, independent generalization or significance claim."
+  },
+  "model_arms": [
+    "titantpp_cnn_query_only_v1",
+    "titantpp_cnn_key_only_v1"
+  ],
+  "new_fit_count": 6,
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "new_cnn_baseline_fits": 0,
+  "baseline_reevaluations": 0,
+  "model": {
+    "module": "models/TPPs/CountAwareTitanQKLocationCNN.py",
+    "runner": "paper/scripts/run_titantpp_qk_location_cnn.py",
+    "parent_source_count": 143,
+    "parent_source_closure": "74e79d12538ac005665043fd20f875a9883a436c6a5d02f2768cfd538a8566f7",
+    "parent_source_revision": "dfd708894b244dc4bcc8eb685736e75cf30c16d8",
+    "inheritance": "All143 frozen parent scientific source files remain byte-identical; add only the designated new model and runner for scientific implementation. Operational files are separately versioned and sealed.",
+    "candidates": [
+      {
+        "arm": "titantpp_cnn_query_only_v1",
+        "dataset": "raf_spare_parts",
+        "seeds": [
+          42,
+          52,
+          62
+        ],
+        "new_fit_count": 3,
+        "fresh_fit": true,
+        "warmstart": false,
+        "retained_local_path": "query",
+        "local_parameter_count": 192,
+        "kernel_shape": [
+          3,
+          64
+        ],
+        "q_local": "original free learned observed3tap residual",
+        "k_local": "physically absent",
+        "v_local": "physically absent",
+        "formula": "Q'=Q+L_Q(Q); K'=K; V'=V"
+      },
+      {
+        "arm": "titantpp_cnn_key_only_v1",
+        "dataset": "raf_spare_parts",
+        "seeds": [
+          42,
+          52,
+          62
+        ],
+        "new_fit_count": 3,
+        "fresh_fit": true,
+        "warmstart": false,
+        "retained_local_path": "key",
+        "local_parameter_count": 192,
+        "kernel_shape": [
+          3,
+          64
+        ],
+        "q_local": "physically absent",
+        "k_local": "original free learned observed3tap residual",
+        "v_local": "physically absent",
+        "formula": "Q'=Q; K'=K+L_K(K); V'=V"
+      }
+    ],
+    "common_qkv_projection": "All Q/K/V projection rows remain present and normally trainable; no frozen Q/K or removed V content.",
+    "history_semantics": "Same current/previous/second-previous observed taps; skip padding and reset at valid withheld boundaries; preserve attention masks and unavailable-history behavior.",
+    "physical_removal": "Retain exactly the selected one3x64 kernel. Physically remove the opposite local kernel and the already-removed V local filter. No fixed-zero/dummy local parameters. Inherited inactive GRU registration remains unchanged.",
+    "initialization": "Construct the original CNN using the normal seed/init ordering, inherit the QK-only replacement, then keep only the designated original initialized Q or K kernel and all common initialized tensors. No additional RNG draws, new stochastic initialization, trained checkpoint load or warmstart. Verify both arms have identical common tensors and post-replacement RNG state per seed. This is initialization construction, not historical CNN inference/training.",
+    "local_parameter_counts": {
+      "original_CNN": 576,
+      "stored_QK_only": 384,
+      "query_only": 192,
+      "key_only": 192,
+      "pair_difference": 0,
+      "delta_vs_QK_only": -192,
+      "delta_vs_CNN": -384
+    },
+    "location": "First encoder attention block event Q/K after common projection and before memory concatenation. Memory tokens bypass local filters.",
+    "contract_id": "titantpp_qk_location_cnn_20261016_v1",
+    "model_arm_argument": "qk_location_arm",
+    "checkpoint_identity_buffer": "qk_location_cnn_identity"
+  },
+  "primary_contrast": {
+    "direction": "KeyOnly minus QueryOnly",
+    "matched": "Local active capacity192, fresh common initialization, seed, Runtime, input, loss/head/memory, optimization/budget/selection.",
+    "interpretation": "Empirical parameter-matched placement comparison, including joint adaptation and its different effect on event/memory scores; not isolation of a physiological cause."
+  },
+  "stored_comparisons": {
+    "CNN": "Use existing SHA-verified CNN3 results only. No new CNN fit or inference.",
+    "QK_only": "Historical interpretation only; do not add to operational comparison table or baseline_reference_count. Preserve its original results; no reevaluation.",
+    "external": "Reuse pinned external registry and same-target stored metrics only; no external model reevaluation."
+  },
+  "fixed_conditions": {
+    "parent_contract_raw_sha256": "46a14ffcd674b6c37f5b7d103832e0bdcca232e332faa67da5b47a020e1f1a9b",
+    "input_and_preprocessing": "Same pure Train/Validation input SHA and preprocessing/log1p; no new features, RevIN or output rescaling.",
+    "dataset_definition": {
+      "additional_history_boundaries": [
+        64,
+        128
+      ],
+      "data_sha256": "d805cad0242078fedfbb87eed18bde9b73d37bfc9b93c6b75aac49087244efa2",
+      "dataset_id": "raf_spare_parts",
+      "epochs": 300,
+      "expected_global_steps": 60600,
+      "history_boundaries": [
+        64,
+        128
+      ],
+      "inherited_data_identity": {
+        "data": {
+          "path": "inputs/data/raf_spare_parts/train_validation.parquet",
+          "sha256": "d805cad0242078fedfbb87eed18bde9b73d37bfc9b93c6b75aac49087244efa2"
+        },
+        "populations": {
+          "train": {
+            "target_count": 25779,
+            "target_identity_sha256": "9863e00d51357456e1bf53c0f82f17a867cbbaaf9f296064d1ae23c4392895b2",
+            "target_quantity_sha256": "abbb37aab32b35b029b8705fe6044bd3ed5e8b7239822d40ba7572d0ab6fae22"
+          },
+          "validation": {
+            "target_count": 6690,
+            "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+            "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+          }
+        },
+        "split_manifest": {
+          "path": "inputs/data/raf_spare_parts/split_manifest.json",
+          "sha256": "3cd6204667de4e44eda8787d32845bebff7624e1bb255ffd7677f810b8d7b149"
+        }
+      },
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 84,
+        "max_seq_len": 84,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "model": {
+        "hidden_dim": 64,
+        "lambda_log_qty": 1.0,
+        "lambda_tail": 0.0,
+        "quantity_variant": "count_only_log_regression",
+        "time_head_lr_multiplier": 1.0,
+        "time_head_mode": "heteroscedastic_lognormal_duration",
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_observation_contract": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "time_scale": 6.0,
+        "time_sigma_floor": 0.001
+      },
+      "optimizer": {
+        "grad_clip": 1.0,
+        "lr": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.01
+      },
+      "parent_data_identity": {
+        "data": {
+          "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_with_split.parquet",
+          "sha256": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d"
+        },
+        "split_manifest": {
+          "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_split_manifest.json",
+          "sha256": "cd2458aa3809014aa74b8a121572a74e3d86dc520a690335d79a1e5150899e27"
+        }
+      },
+      "potentially_active_lags": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        32,
+        64
+      ],
+      "prepared_train_validation_path": "inputs/data/raf_spare_parts/train_validation.parquet",
+      "quantity_boundaries_all_train_rows": [
+        2.0,
+        30.0,
+        60.0,
+        200.0
+      ],
+      "statistics": {
+        "all_train_quantity_sha256": "dfa47b1848a9dd7e57f0115c22dcd6628f164849d92bdfb217834da3a34b1a6d",
+        "initialization_policy": "derive once from RAF train only; shared across models/seeds",
+        "raw_scale": 54.02472556614234,
+        "recomputation_absolute_tolerance": 1e-12,
+        "train_log_mean": 1.697903161487293,
+        "train_log_std": 1.1687925850626832
+      },
+      "steps_per_epoch": 202,
+      "time_statistics": {
+        "expected_train_target_dt_sha256": "e8f8e6047734a7ec61780dfd981eb2e1c3c19b03fa2bb8f711b5cbaa791c6a8d",
+        "expected_train_targets": 25779,
+        "expected_validation_target_dt_sha256": "c059684ffaf11e4f5a25b8c357d8c05fe1bba95de2fea32c76a0ab87cc5eb17b",
+        "expected_validation_targets": 6690,
+        "recompute_absolute_tolerance": 1e-12,
+        "recompute_before_training": true,
+        "train_log_scaled_mean": -0.08887296773528319,
+        "train_log_scaled_std": 0.9589506323759867,
+        "train_time_scale": 6.0
+      },
+      "window_limitation": "Existing maximum sequence includes the target. Availability still depends on each actual observed history; unavailable branches remain inactive in BOTH new arms."
+    },
+    "training": {
+      "batch_size": 128,
+      "maximum_epochs": 300,
+      "minimum_epochs": 40,
+      "monitor": "validation_raw_quantity_rmse",
+      "patience": 40,
+      "tie": "strict_earliest_finite_minimum",
+      "warm_start": false
+    },
+    "fixed_components": [
+      "Quantity/time losses and weights",
+      "Quantity/time heads and output interpretation",
+      "Memory modules, memory sizes and retrieval rule",
+      "Shared QKV/out projections and attention arithmetic outside the designated physical local-kernel removal",
+      "Optimizer/schedule/batch/threads/seeds/data order/validation selection"
+    ],
+    "prohibited": [
+      "RevIN",
+      "GRU activation or change",
+      "Gate/clipping/new normalization/nonlinear branch",
+      "Longer or multiple temporal ranges",
+      "Changed input/loss/head/memory",
+      "Test checkpoint reselection",
+      "Additional baseline fits or reevaluations",
+      "Artificial parameter matching",
+      "Hyperparameter or multiplier search"
+    ]
+  },
+  "checkpoint_selection": {
+    "split": "fullValidation",
+    "metric": "whole raw quantity RMSE",
+    "rule": "First strict finite minimum; ties retain earliest epoch.",
+    "maximum_epochs": 300,
+    "minimum_epochs": 40,
+    "patience": 40,
+    "batch_size": 128,
+    "warm_start": false
+  },
+  "remote_root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_backbone_qk_location_raf6_20261016_v1_5090",
+  "runtime": {
+    "gpu_host": "5090",
+    "gpu_uuid": "GPU-c9adc246-ef66-7906-bc07-6e152fa9952f",
+    "python": "3.12.13",
+    "torch": "2.11.0+cu130",
+    "cudnn": 92000,
+    "training_threads": 4,
+    "interop_threads": 1,
+    "max_parallel": 3,
+    "unchanged_native_expected": {
+      "cuda": "13.0",
+      "cuda_matmul_tf32": false,
+      "cudnn": 92000,
+      "cudnn_tf32": false,
+      "default_dtype": "torch.float32",
+      "deterministic_algorithms": true,
+      "deterministic_warn_only": false,
+      "gpu": {
+        "compute_capability": [
+          12,
+          0
+        ],
+        "driver_version": "595.99.02",
+        "logical_index": 0,
+        "multiprocessor_count": 170,
+        "name": "NVIDIA GeForce RTX 5090",
+        "pci_bus_id": "00000000:02:00.0",
+        "total_memory_bytes": 33670758400,
+        "uuid": "GPU-c9adc246-ef66-7906-bc07-6e152fa9952f",
+        "visible_device_count": 1
+      },
+      "interop_threads": 1,
+      "numpy": "2.4.4",
+      "polars": "1.39.3",
+      "python": "3.12.13",
+      "threads": 4,
+      "torch": "2.11.0+cu130"
+    }
+  },
+  "operating_contract": {
+    "gpu_host": "5090",
+    "max_parallel": 3,
+    "remote_root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_backbone_qk_location_raf6_20261016_v1_5090",
+    "queue": [
+      {
+        "arm": "titantpp_cnn_query_only_v1",
+        "seed": 42,
+        "dataset": "raf_spare_parts"
+      },
+      {
+        "arm": "titantpp_cnn_query_only_v1",
+        "seed": 52,
+        "dataset": "raf_spare_parts"
+      },
+      {
+        "arm": "titantpp_cnn_query_only_v1",
+        "seed": 62,
+        "dataset": "raf_spare_parts"
+      },
+      {
+        "arm": "titantpp_cnn_key_only_v1",
+        "seed": 42,
+        "dataset": "raf_spare_parts"
+      },
+      {
+        "arm": "titantpp_cnn_key_only_v1",
+        "seed": 52,
+        "dataset": "raf_spare_parts"
+      },
+      {
+        "arm": "titantpp_cnn_key_only_v1",
+        "seed": 62,
+        "dataset": "raf_spare_parts"
+      }
+    ],
+    "inherited_absolute_host_deadline": 1792679647.915156,
+    "inherited_start_permit_sha256": "b3faca44824ce90972a62a740bb338b2cf5f54b0dfeb0d3fb291e06bed2a7f5a",
+    "per_condition_seconds": 129600,
+    "deadline_extension_allowed": false,
+    "start_requires": "Completed local/model/operational independent checks and exact source/input/contract/approval pins; fresh actual5090owner/GPU idle; nativeGPU/Runtime/input and maximum3concurrent synthetic qualification; exclusive start permit. Do not reuse prior terminal cache as current idle proof.",
+    "entrypoint_policy": "Use only validated preparation result and recorded integritySHA; no guessed command/hash.",
+    "automatic_retry_resume": false,
+    "native_started": false
+  },
+  "evaluation": {
+    "entry": "All6actualscientificworker exits0, dispatcher/pipeline direct exits0, terminalbinary/selected/archive/manifest SHA and explicit owner/GPU absence before original collection/evaluation.",
+    "validation_gate": "All6nativeValidation replays of fixed selected checkpoints must reproduce same targets and six metrics with actualexit0 before any Test6.",
+    "test": "Evaluate each selected candidate once after gate6; no reselection/retraining.",
+    "user_success_gate": "Each candidate independently passes only if its3seed mean is strictly below both stored CNN and same-target metric-wise best external model for all4 of Validation RMSE, Validation MAE, Test RMSE and Test MAE.",
+    "external_registry_raw_sha256": "57e88f4d5d338c6da7f54fe38d2b9492b06476fa93161331481de3c4ee1a6b49",
+    "pairwise_requirement": "Report KeyOnly−QueryOnly for every split/metric/seed, separately from user performance pass. No winning endpoint or mechanism established solely by passing CNN comparison.",
+    "extension_selection": "Among candidates that satisfy all4user conditions, choose lowest Validation mean RMSE, then Validation mean MAE, then lexicographically smallest exact arm string. Test is used in eligibility and must be disclosed; this is not Validation-only selection or independent validation.",
+    "report": [
+      "Whole raw quantity RMSE and MAE,3seed mean±sampleSD(ddof1)",
+      "All seed-wise absolute/relative deltas vs storedCNN and KeyOnly−QueryOnly; zero denominator relative delta N/A",
+      "Same-checkpoint Train-fixed q>200 large quantityRMSE/MAE and whole/tail recorded positive-integer TimeNLL",
+      "Every negative result, seed exception and simple baseline(TimeNLLN/A)",
+      "Host-specific runtime/timing, no raw-error average across datasets"
+    ],
+    "baseline_reference_count": 3,
+    "candidate_test_count": 6,
+    "comparison_model_count": 9,
+    "seed_count": 3,
+    "validation_replay_count": 6
+  },
+  "confounds_and_limits": [
+    "Q-only affects scores against both event and unfiltered memory keys; K-only changes event keys before memory concatenation while memory keys bypass the local filter. Hence memory/event attention allocation is part of the placement effect even with unchanged memory modules.",
+    "Equal192 local coefficients makes the candidate pair capacity-matched, but neither is capacity-matched to storedQK-only384 or originalCNN576; shared model co-adapts during fresh training.",
+    "The joint on/off probe is not a retrained single-path model and does not identify Q/Kinteraction as the failure cause.",
+    "StoredCNN/external5080cuDNN91900 versus newRAF5090cuDNN92000 is a retained comparison limitation, not a reason to rerun baselines.",
+    "Exploratory sequence informed by previous Test inspection; no independent generalization, statistical significance or universal superiority claim.",
+    "Bounded duplicate audit does not prove conceptual novelty."
+  ],
+  "minimum_validation": [
+    "Exact common initialized tensor equality and unchanged RNG state across original→QK-only→single-path replacement for each seed; no trained checkpoint reuse.",
+    "Both arms retain normally trainable commonQKV includingV; exactly192active localcoefficients; absent opposite/V local parameters; no dummy; inheritedinactiveGRUunchanged.",
+    "Branch arm/metadata/checkpoint identity cannot be relabelled; originalbaselineexecution blocked.",
+    "Padding skip/withheld reset/short histories/future-target invariants; masks and original attention unchanged beyond designated path; finite forward/backward and nonzero retained-kernel gradients.",
+    "Synthetic3concurrent native qualification with fixedGPU/Runtime/input/thread conditions before one start.",
+    "Existing source143/input/baseline/externalregistry/claims/failures unchanged; no deadline extension."
+  ],
+  "next_decision": "Only a fully verified passing candidate is eligible for the exact same methodology onTaxi5090 and Intermittent5080 after existing work completes and fresh idle is verified. If neither passes, preserve results and diagnose before another single hypothesis; no arbitrary parameter search or baseline replacement.",
+  "actual_new_training_started": false
+}
