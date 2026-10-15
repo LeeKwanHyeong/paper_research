@@ -1,0 +1,360 @@
+{
+  "schema": "backbone_loop3_completion_decision_v1",
+  "recorded_kst": "2026-10-16T02:18:44.214685+09:00",
+  "status": "complete_performance_gate_failed",
+  "loop_index": 3,
+  "dataset": "raf_spare_parts",
+  "arm": "titantpp_cnn_value_difference_v1",
+  "training_terminal_observed_kst": "2026-10-16T02:08:38.100834+09:00",
+  "validation_gate_kst": "2026-10-16T02:10:13.485513+09:00",
+  "test_pipeline_exit_kst": "2026-10-16T02:10:23.618758+09:00",
+  "evaluation_completed_kst": "2026-10-16T02:10:23.994909+09:00",
+  "summaries": {
+    "validation": {
+      "qty_rmse": {
+        "candidate": {
+          "mean": 34.44580623658982,
+          "sample_sd": 0.06778862854185297,
+          "ddof": 1
+        },
+        "historical_CNN": {
+          "mean": 34.43140831691986,
+          "sample_sd": 0.0732010654996562,
+          "ddof": 1
+        },
+        "external_frontier": {
+          "models": [
+            "s2p2_matched_head"
+          ],
+          "mean": 33.99470373349431,
+          "sample_sd": {
+            "s2p2_matched_head": 0.1261185452077655
+          }
+        },
+        "user_performance_pass": false
+      },
+      "qty_mae": {
+        "candidate": {
+          "mean": 9.250620570432861,
+          "sample_sd": 0.032364706101474204,
+          "ddof": 1
+        },
+        "historical_CNN": {
+          "mean": 9.218271236747547,
+          "sample_sd": 0.028001938985035457,
+          "ddof": 1
+        },
+        "external_frontier": {
+          "models": [
+            "rmtpp"
+          ],
+          "mean": 9.136204564111056,
+          "sample_sd": {
+            "rmtpp": 0.055678014468013064
+          }
+        },
+        "user_performance_pass": false
+      }
+    },
+    "test": {
+      "qty_rmse": {
+        "candidate": {
+          "mean": 39.51402640479418,
+          "sample_sd": 0.08296635785195944,
+          "ddof": 1
+        },
+        "historical_CNN": {
+          "mean": 39.6006634067701,
+          "sample_sd": 0.023653674541581078,
+          "ddof": 1
+        },
+        "external_frontier": {
+          "models": [
+            "s2p2_matched_head"
+          ],
+          "mean": 39.772935306713876,
+          "sample_sd": {
+            "s2p2_matched_head": 0.1609135618279136
+          }
+        },
+        "user_performance_pass": true
+      },
+      "qty_mae": {
+        "candidate": {
+          "mean": 10.029605529479097,
+          "sample_sd": 0.07230953808036869,
+          "ddof": 1
+        },
+        "historical_CNN": {
+          "mean": 9.972138203343105,
+          "sample_sd": 0.036427588996541055,
+          "ddof": 1
+        },
+        "external_frontier": {
+          "models": [
+            "rmtpp"
+          ],
+          "mean": 9.90634650459991,
+          "sample_sd": {
+            "rmtpp": 0.037017526200991684
+          }
+        },
+        "user_performance_pass": false
+      }
+    }
+  },
+  "seed_differences": [
+    {
+      "split": "validation",
+      "seed": 42,
+      "metric": "qty_rmse",
+      "candidate": 34.410016011520284,
+      "differences": {
+        "historical_CNN": {
+          "reference": 34.420452618672016,
+          "absolute_candidate_minus_reference": -0.010436607151731891,
+          "relative_percent_candidate_minus_reference": -0.03032094687235565
+        },
+        "external_frontier:s2p2_matched_head": {
+          "reference": 33.9627982128862,
+          "absolute_candidate_minus_reference": 0.4472177986340853,
+          "relative_percent_candidate_minus_reference": 1.3167872559582015
+        }
+      }
+    },
+    {
+      "split": "validation",
+      "seed": 52,
+      "metric": "qty_rmse",
+      "candidate": 34.40341376332378,
+      "differences": {
+        "historical_CNN": {
+          "reference": 34.36430259009707,
+          "absolute_candidate_minus_reference": 0.03911117322671487,
+          "relative_percent_candidate_minus_reference": 0.11381337690230248
+        },
+        "external_frontier:s2p2_matched_head": {
+          "reference": 33.887601970267674,
+          "absolute_candidate_minus_reference": 0.515811793056109,
+          "relative_percent_candidate_minus_reference": 1.5221253882427925
+        }
+      }
+    },
+    {
+      "split": "validation",
+      "seed": 62,
+      "metric": "qty_rmse",
+      "candidate": 34.52398893492539,
+      "differences": {
+        "historical_CNN": {
+          "reference": 34.509469741990486,
+          "absolute_candidate_minus_reference": 0.014519192934905334,
+          "relative_percent_candidate_minus_reference": 0.04207306876477052
+        },
+        "external_frontier:s2p2_matched_head": {
+          "reference": 34.13371101732907,
+          "absolute_candidate_minus_reference": 0.3902779175963218,
+          "relative_percent_candidate_minus_reference": 1.1433796852565627
+        }
+      }
+    },
+    {
+      "split": "validation",
+      "seed": 42,
+      "metric": "qty_mae",
+      "candidate": 9.26609049041175,
+      "differences": {
+        "historical_CNN": {
+          "reference": 9.23111022291162,
+          "absolute_candidate_minus_reference": 0.034980267500129614,
+          "relative_percent_candidate_minus_reference": 0.37893889960612287
+        },
+        "external_frontier:rmtpp": {
+          "reference": 9.075063116962065,
+          "absolute_candidate_minus_reference": 0.19102737344968546,
+          "relative_percent_candidate_minus_reference": 2.1049701912556293
+        }
+      }
+    },
+    {
+      "split": "validation",
+      "seed": 52,
+      "metric": "qty_mae",
+      "candidate": 9.213424018787162,
+      "differences": {
+        "historical_CNN": {
+          "reference": 9.18615195937399,
+          "absolute_candidate_minus_reference": 0.027272059413171235,
+          "relative_percent_candidate_minus_reference": 0.2968823021193495
+        },
+        "external_frontier:rmtpp": {
+          "reference": 9.149560936826584,
+          "absolute_candidate_minus_reference": 0.06386308196057833,
+          "relative_percent_candidate_minus_reference": 0.6979906730117749
+        }
+      }
+    },
+    {
+      "split": "validation",
+      "seed": 62,
+      "metric": "qty_mae",
+      "candidate": 9.27234720209967,
+      "differences": {
+        "historical_CNN": {
+          "reference": 9.237551527957033,
+          "absolute_candidate_minus_reference": 0.03479567414263762,
+          "relative_percent_candidate_minus_reference": 0.37667637400809173
+        },
+        "external_frontier:rmtpp": {
+          "reference": 9.183989638544519,
+          "absolute_candidate_minus_reference": 0.08835756355515123,
+          "relative_percent_candidate_minus_reference": 0.9620825701318426
+        }
+      }
+    },
+    {
+      "split": "test",
+      "seed": 42,
+      "metric": "qty_rmse",
+      "candidate": 39.49150533261445,
+      "differences": {
+        "historical_CNN": {
+          "reference": 39.60377544397001,
+          "absolute_candidate_minus_reference": -0.11227011135555642,
+          "relative_percent_candidate_minus_reference": -0.2834833550513186
+        },
+        "external_frontier:s2p2_matched_head": {
+          "reference": 39.63737355488605,
+          "absolute_candidate_minus_reference": -0.14586822227159502,
+          "relative_percent_candidate_minus_reference": -0.3680067804432366
+        }
+      }
+    },
+    {
+      "split": "test",
+      "seed": 52,
+      "metric": "qty_rmse",
+      "candidate": 39.60592823003623,
+      "differences": {
+        "historical_CNN": {
+          "reference": 39.57560775545666,
+          "absolute_candidate_minus_reference": 0.030320474579568213,
+          "relative_percent_candidate_minus_reference": 0.07661404662923375
+        },
+        "external_frontier:s2p2_matched_head": {
+          "reference": 39.73066877029487,
+          "absolute_candidate_minus_reference": -0.12474054025864234,
+          "relative_percent_candidate_minus_reference": -0.31396536761018773
+        }
+      }
+    },
+    {
+      "split": "test",
+      "seed": 62,
+      "metric": "qty_rmse",
+      "candidate": 39.44464565173186,
+      "differences": {
+        "historical_CNN": {
+          "reference": 39.622607020883635,
+          "absolute_candidate_minus_reference": -0.17796136915177385,
+          "relative_percent_candidate_minus_reference": -0.44914098927911755
+        },
+        "external_frontier:s2p2_matched_head": {
+          "reference": 39.95076359496072,
+          "absolute_candidate_minus_reference": -0.5061179432288583,
+          "relative_percent_candidate_minus_reference": -1.266854241786504
+        }
+      }
+    },
+    {
+      "split": "test",
+      "seed": 42,
+      "metric": "qty_mae",
+      "candidate": 10.013694287954598,
+      "differences": {
+        "historical_CNN": {
+          "reference": 10.01377430596983,
+          "absolute_candidate_minus_reference": -8.001801523249696e-05,
+          "relative_percent_candidate_minus_reference": -0.0007990794758055738
+        },
+        "external_frontier:rmtpp": {
+          "reference": 9.866791756854312,
+          "absolute_candidate_minus_reference": 0.14690253110028628,
+          "relative_percent_candidate_minus_reference": 1.4888581285627651
+        }
+      }
+    },
+    {
+      "split": "test",
+      "seed": 52,
+      "metric": "qty_mae",
+      "candidate": 9.966576690024633,
+      "differences": {
+        "historical_CNN": {
+          "reference": 9.946143719025876,
+          "absolute_candidate_minus_reference": 0.020432970998756517,
+          "relative_percent_candidate_minus_reference": 0.2054361124871994
+        },
+        "external_frontier:rmtpp": {
+          "reference": 9.940154690784464,
+          "absolute_candidate_minus_reference": 0.02642199924016886,
+          "relative_percent_candidate_minus_reference": 0.2658107450245693
+        }
+      }
+    },
+    {
+      "split": "test",
+      "seed": 62,
+      "metric": "qty_mae",
+      "candidate": 10.108545610458059,
+      "differences": {
+        "historical_CNN": {
+          "reference": 9.956496585033609,
+          "absolute_candidate_minus_reference": 0.15204902542444998,
+          "relative_percent_candidate_minus_reference": 1.5271338078195777
+        },
+        "external_frontier:rmtpp": {
+          "reference": 9.912093066160951,
+          "absolute_candidate_minus_reference": 0.19645254429710768,
+          "relative_percent_candidate_minus_reference": 1.9819481413847906
+        }
+      }
+    }
+  ],
+  "candidate_selection": {
+    "selection_rule": "single_candidate:all_four_user_checks",
+    "selected_candidate": null,
+    "test_used_for_eligibility": true,
+    "test_used_for_checkpoint_selection": false,
+    "multiple_candidate_tie_break": false
+  },
+  "all_four_user_checks": [
+    false,
+    false,
+    true,
+    false
+  ],
+  "expand_to_taxi_intermittent": false,
+  "new_loop4_training_started": false,
+  "next_action": "Diagnose stored Validation quantity aggregates and stored CNN Train/Validation same-target error regret; choose a single nonredundant CNN operation only if evidence supports it.",
+  "historical_cnn_retrained": false,
+  "historical_cnn_reevaluated": false,
+  "pipeline_wrapper_own_exit_directly_observed": false,
+  "limitations": [
+    "Repeated Test-informed exploratory design; not independent generalization or causal proof.",
+    "Candidate 5090/cuDNN92000 vs historical CNN 5080/cuDNN91900.",
+    "V intervention jointly changes coefficient count 576 to512, boundary behavior and optimization parameterization.",
+    "Candidate per-row predictions were not exported; stored aggregates cannot recover candidate history-pattern errors."
+  ],
+  "files": {
+    "search_artifacts/titantpp_backbone_value_difference_raf3_20261016_v1/retrieval/final_receipt.json": "c90ea7adfbc7d687650f98b0b2905818b2c7b469dbbf02d6f37ed24badc650fb",
+    "search_artifacts/titantpp_backbone_value_difference_raf3_20261016_v1/evaluation_v1/final_receipt.json": "4eb93c8ea1ca8ed589b9ce526caa1e85066fbd138bb92e4a5e8b457776cbc670",
+    "reports/titantpp_backbone_value_difference_raf3_20261016_v1/COMPLETION_QA.json": "b9cd1baa448f40148e335eaf487418911dc94370c63ace357450a66d242f2633",
+    "reports/titantpp_backbone_value_difference_raf3_20261016_v1/evaluation_v1/THREE_SEED_VALIDATION.json": "59007ce031e3e6978f92b848cd8fd3a30f91788ec6412e1eb502667e63dd20cb",
+    "reports/titantpp_backbone_value_difference_raf3_20261016_v1/evaluation_v1/THREE_SEED_VALIDATION.md": "429f4f8918c680a8898cc871cac61fa053d7be73efd174a9c63dde5a06f6fe41",
+    "reports/titantpp_backbone_value_difference_raf3_20261016_v1/evaluation_v1/THREE_SEED_TEST.json": "8fe190515756f231c2a18e4b568055281fd313f55ace7ef830ac11c7dcf6e02d",
+    "reports/titantpp_backbone_value_difference_raf3_20261016_v1/evaluation_v1/THREE_SEED_TEST.md": "ca0746d7d6b991314d99025215082b845c04d2a451d2b172b79b298eeb3f191f",
+    "reports/titantpp_backbone_value_difference_raf3_20261016_v1/evaluation_v1/EXTERNAL_COMPARISON.json": "f27caf7cfb70ba32f30cebbff7a3f1fab927f1f7f6f964b493a49e006a861e47",
+    "reports/titantpp_backbone_value_difference_raf3_20261016_v1/evaluation_v1/EXTERNAL_COMPARISON.md": "047ba36a7c43d8f982ed6f6a4058d30230e919875e338586ee1d47e84f9e3adc"
+  }
+}

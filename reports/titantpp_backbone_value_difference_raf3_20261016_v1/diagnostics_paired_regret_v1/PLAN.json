@@ -1,0 +1,90 @@
+{
+  "schema": "raf_cnn_stored_paired_regret_plan_v1",
+  "created_kst": "2026-10-16T02:18:49.541643+09:00",
+  "scope": "Existing CNN alpha=1 saved Train/Validation prediction_1 only; no inference/remote/training/Test; no existing result replacement",
+  "dataset": "raf_spare_parts",
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "splits": [
+    "train",
+    "validation"
+  ],
+  "expected_target_count": {
+    "train": 25779,
+    "validation": 6690
+  },
+  "prediction_contract_sha256": "d51ab06365a7165e00cc18849b84caba4ee2dd8af6a36aee84a5c1d62e01fab3",
+  "input_sha256": "d805cad0242078fedfbb87eed18bde9b73d37bfc9b93c6b75aac49087244efa2",
+  "reused_binding_script": "reports/titantpp_backbone_location_raf6_20261015_v1/diagnostics_elapsed_v1/analyze.py",
+  "reused_binding_script_sha256": "13e8cd6a8f056b278a6cba299885735638e8401c27bed9616ee99acc87e27b8e",
+  "history": "Exact frozen loader context: 84-month lookback, max_seq_len84, target excluded, seq sorted per entity; verify saved history and identity",
+  "d1": "log1p(last observed quantity)-log1p(previous observed quantity)",
+  "d2": "log1p(previous observed quantity)-log1p(second previous observed quantity)",
+  "patterns": {
+    "insufficient_history": "history_length <3; d1 retained when >=2 but no d2/magnitude",
+    "stagnation": "history>=3 and at least one of d1,d2 exactly zero",
+    "same_sign": "history>=3 and d1*d2>0",
+    "reversal": "history>=3 and d1*d2<0"
+  },
+  "magnitude": {
+    "definition": "max(abs(d1),abs(d2)) when history>=3",
+    "cut_source": "all unique eligible Train targets, not repeated over seeds",
+    "quantiles": [
+      0.25,
+      0.75
+    ],
+    "method": "numpy linear",
+    "bins": {
+      "low": "x<=Q25",
+      "middle": "Q25<x<=Q75",
+      "high": "x>Q75",
+      "unavailable": "history<3"
+    },
+    "ties": "retain fixed inequalities, allow empty bins, no threshold optimization"
+  },
+  "baselines": {
+    "last_observed": "last observed raw quantity",
+    "history_mean": "arithmetic mean raw quantity over exact observed context"
+  },
+  "error": "prediction - actual raw quantity",
+  "regret": "CNN AE/SE minus naive AE/SE on identical target; positive means CNN worse",
+  "summaries": [
+    "whole",
+    "pattern",
+    "pattern_x_Train_fixed_magnitude"
+  ],
+  "row_weight": "1 per target; each seed analyzed separately",
+  "common_entity_weight": "For each reported cell c, S_c=entities having >=1 Train AND >=1 Validation row in c. Within split s/c, each row entity e has w=1/n_(e,s,c). Thus each retained entity has mass1; normalized metric=(1/|S_c|) sum_e (1/n_e) sum_i metric_i. Pattern summaries use S_pattern; finer magnitude cells use S_(pattern,bin), separately disclosed. No exact-history matching.",
+  "support_report": [
+    "rows",
+    "entities",
+    "common entity count",
+    "excluded rows/entities",
+    "history length",
+    "last raw quantity",
+    "target raw quantity",
+    "d1",
+    "d2",
+    "magnitude",
+    "row and equal-entityweight distributions"
+  ],
+  "checks": [
+    "cross-seed target identities and raw quantities",
+    "selection first strict finite minimum epochs9/5/8",
+    "source/checkpoint/input/receipt/shard SHA and native exits",
+    "stored CNN aggregate reproduction",
+    "hand calculated regret and entity weights",
+    "pattern/conditional magnitude count and SSE/AE/signed error additive closure for rowweighted summaries; weighted cells have different estimands, no false closure"
+  ],
+  "entry_rule": "Descriptive entry signal only if a history condition has CNN excess AE AND SE versus BOTH last-observed and history-mean in Train AND Validation, all3seeds, both rowweighted and common-entity-equalweighted. Each metric/baseline sign and weaker consistency also reported. No p-value or causal assertion. Even a passing signal requires architecture review against prior Adaptive/MultiLag/LevelHistory before any new model.",
+  "limitations": [
+    "Candidate individual prediction rows unavailable: no candidate-minus-CNN history decomposition",
+    "Train and Validation distributions/history support differ; common-entity weighting does not remove target quantity/history confounding",
+    "same target used across seeds; no tripling sample size",
+    "naive arithmetic references are descriptive, not new learned baselines",
+    "criteria not optimized on observed results"
+  ]
+}
