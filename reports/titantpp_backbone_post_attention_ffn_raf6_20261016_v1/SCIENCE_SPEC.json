@@ -1,0 +1,177 @@
+{
+  "schema": "post_attention_ffn_science_spec_v1",
+  "created_kst": "2026-10-16T07:26:12.777813+09:00",
+  "status": "design_fixed_implementation_and_native_validation_pending",
+  "research_status": "exploratory_test_informed_followup_not_causal_or_independent_generalization",
+  "hypothesis": "At the last encoder FFN, explicit previous-prefix content in a nonlinear observed-lag filter can reduce the RMSE/MAE tradeoff compared with a same-parameter current-prefix nonlinear expansion.",
+  "evidence_strength": "Architecture and unresolved tradeoff justify a bounded controlled hypothesis; no evidence establishing that FFN is defective or that the proposed intervention will improve performance.",
+  "dataset": "raf_spare_parts",
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "candidate_fit_count": 6,
+  "arms": {
+    "titantpp_cnn_ffn_current_v1": {
+      "role": "new_nonlinear_capacity_control",
+      "sources": [
+        "current",
+        "current",
+        "current"
+      ]
+    },
+    "titantpp_cnn_ffn_temporal_v1": {
+      "role": "explicit_previous_prefix_content_candidate",
+      "sources": [
+        "current",
+        "previous_observed",
+        "second_previous_observed"
+      ]
+    }
+  },
+  "historical_baseline": {
+    "model": "titantpp_cnn",
+    "reuse_saved_results_only": true,
+    "training": false,
+    "inference": false,
+    "reevaluation": false
+  },
+  "placement": "encoder.layers[1] FFN, after its attention residual and norm2; before existing first GELU; existing W1/W2 remain",
+  "formula": {
+    "u": "W1(norm2(x))+b1",
+    "C": "sum(l=0..2, A[t,l] * c[l] * GELU(a[l] * u[source(t,l)] + b[l])) / 3",
+    "output": "existing W2(existing dropout(existing GELU(u+C))) followed by unchanged external drop2/residual/mask",
+    "channel_mixing": "Only original W1/W2 mix channels; C is channelwise nonlinear observed-lag filtering, not a new cross-channel operator."
+  },
+  "dimensions": {
+    "model": 64,
+    "expanded_ffn": 128,
+    "observed_taps": 3,
+    "new_parameter_shapes": {
+      "a": [
+        3,
+        128
+      ],
+      "b": [
+        3,
+        128
+      ],
+      "c": [
+        3,
+        128
+      ]
+    },
+    "new_registered_and_trainable_parameters": 1152,
+    "expected_original_active": 90435,
+    "expected_new_active": 91587,
+    "expected_original_registered": 115167,
+    "expected_new_registered": 116319,
+    "inherited_inactive_gru": 24732,
+    "context_length_for_counts": 256,
+    "counts_status": "derived_from_parent_constants; must verify actual implementation"
+  },
+  "initialization": {
+    "a": [
+      1,
+      1,
+      1
+    ],
+    "b": [
+      -1,
+      0,
+      1
+    ],
+    "c": [
+      0,
+      0,
+      0
+    ],
+    "broadcast": "each scalar repeated for 128 expanded channels",
+    "extra_rng_draws": 0,
+    "common_parent_initial_tensor_and_rng_exact": true,
+    "original_checkpoint_warmstart": false,
+    "offset_meaning": "dimensionless fixed design constants, not estimated mean/std or optimized hyperparameters",
+    "gradient_note": "At c=0 initial task gradients into a/b are zero; c learns directly. AdamW decoupled weight decay may update a/b from first step. Verify generic subsequent gradient activation, not universally nonzero gradients."
+  },
+  "observation_contract": {
+    "source": "original observed_context(valid, memory_write_mask)",
+    "padding": "skip padded positions in lag counting",
+    "withheld_valid": "reset eligibility only for new local FFN gather; original attention can retain earlier visible-prefix information",
+    "availability": "exact same A for both arms; constant divisor3 even when fewer taps available",
+    "safe_values": "where-mask unobserved values before gather, mask absent branches after GELU, reject nonfinite observed u/learned parameters/intermediates",
+    "future": "no future event/target is a local source",
+    "state": "no added persistent/contextual state"
+  },
+  "unchanged": [
+    "log1p input and preprocessing",
+    "input projection dimensions",
+    "original Q/K/V local filters and normal common projection training",
+    "attention structure",
+    "all previous encoder processing",
+    "original FFN W1/W2/GELU/dropout/norm/residual",
+    "memory algorithm and head/loss",
+    "training budget/optimizer/scheduler/batch and seed selection policy"
+  ],
+  "interpretation_limits": [
+    "Current-only uses an attention-prefix hidden and availability; it is not a history-free model.",
+    "Equal registered/trainable counts do not prove equal function space or optimization difficulty.",
+    "Common weights including QKV and head are trainable; their learned values/attention may change.",
+    "The downstream Hard-LMM may retrieve different prototypes; memory functional influence is not held fixed.",
+    "Applying nonlinear temporal processing at this location is not a novel principle or the first use of temporal-channel interactions in this project."
+  ],
+  "excluded": [
+    "QKV branch/filter alteration",
+    "new gate/norm/RevIN/GRU/head/loss",
+    "longer than3 observed local sources",
+    "adaptive lag selection",
+    "checkpoint warmstart",
+    "new CNN baseline fitting",
+    "input-statistics channels",
+    "scale/hyperparameter search"
+  ],
+  "selection": "first strictly finite fullValidation raw quantity RMSE minimum epoch; first epoch for ties",
+  "evaluation": {
+    "native_validation_replay_all_before_test": true,
+    "metrics": [
+      "whole_quantity_rmse",
+      "whole_quantity_mae",
+      "tail_quantity_rmse",
+      "tail_quantity_mae",
+      "whole_recorded_positive_integer_TimeNLL",
+      "tail_recorded_positive_integer_TimeNLL"
+    ],
+    "tail_threshold": "quantity > 200 (original Train fixed)",
+    "historical_external_registry_sha256": "57e88f4d5d338c6da7f54fe38d2b9492b06476fa93161331481de3c4ee1a6b49",
+    "baseline_reexecution": false
+  },
+  "decision": {
+    "user_performance_gate": "For each arm all four Validation/Test mean RMSE/MAE strictly below both saved CNN and same-target external per-metric best.",
+    "mechanism_evidence": "Temporal minus Current mean RMSE and MAE must both be negative in Validation; confirm Test differences separately. Temporal contribution across splits requires both metrics lower in both splits. Preserve every seed exception and time/tail deterioration.",
+    "expansion": "Among arms passing user gate, choose Validation mean RMSE then MAE then exact arm lexical order. Test eligibility is selection use. If Current is chosen describe a pointwise FFN expansion, not explicit temporal-content success.",
+    "failure": "Preserve results; do not claim cause or expand failing models; next evidence-based backbone hypothesis only."
+  },
+  "execution_constraints": {
+    "host": "5090",
+    "max_parallel_training": 3,
+    "stage_order": [
+      "Current42/52/62 all exit",
+      "Temporal42/52/62"
+    ],
+    "gpu_uuid": "GPU-c9adc246-ef66-7906-bc07-6e152fa9952f",
+    "runtime": {
+      "python": "3.12.13",
+      "torch": "2.11.0+cu130",
+      "cudnn": 92000,
+      "threads": 4
+    },
+    "condition_timeout_hours": 36,
+    "absolute_host_deadline_unix": 1792679647.915156,
+    "inherited_start_permit_sha256": "b3faca44824ce90972a62a740bb338b2cf5f54b0dfeb0d3fb291e06bed2a7f5a",
+    "deadline_extension": false,
+    "fresh_native_idle_required": true,
+    "entrypoints": null,
+    "integrity_sha256": null,
+    "training_start_ready": false
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "schema": "post_attention_ffn_acceptance_v1",
+  "status": "specified_not_executed",
+  "approval_status": "prior user approval sufficient; pending engineering/scientific checks, not awaiting another permission",
+  "stages": [
+    {
+      "id": "local_predeploy",
+      "required_checks": [
+        "Exact both-arm active/registered parameter counts; no dummy parameters; inherited inactive GRU separately documented",
+        "Original fresh CNN synthetic initialization only: common tensors and post-construction RNG exactly equal; no historical checkpoint read",
+        "c=0 candidate/current outputs and dropout RNG equal to fresh parent on synthetic observed and masked inputs in eval and train",
+        "Generic nonzero c: current-only output nonaffine and independent tap effects; reject duplicate linear current-tap control",
+        "Generic synthetic two backward/optimizer-step test for all a/b/c branches; initial a/b task-gradient zero documented; weight decay included",
+        "Both arms use same availability; missing taps cannot contribute via bias; fixed divisor3",
+        "Padding skip and withheld reset for new gather; attention remains parent logic; lengths0/1/2/3 and nonconsecutive observed indices",
+        "Perturb future quantities/durations/targets: earlier outputs unchanged; targeted boundary isolation for FFN gather (not all attention hidden)",
+        "Unobserved NaN/Inf sanitized with where; observed nonfinite inputs, parameters, overflowed intermediate rejected",
+        "Full synthetic forward/backward, task head signatures, positive-integer time likelihood, gradients, batch consistency and state identity",
+        "Checkpoint exact arm/source/schema/shape mismatch must reject; no baseline alias allowed for candidate state",
+        "Parent frozen source145 unchanged; new model/runner in distinct files, no changes to historical operators",
+        "Independent implementation review and reproducible local test receipts before operational sealing"
+      ],
+      "allows_after_pass": "Prepare/seal isolated execution contract and deploy for native qualification only. Training/Test still blocked."
+    },
+    {
+      "id": "native_pretraining",
+      "required_checks": [
+        "Operational contract binds input/source/baseline/external/runtime/deadline/approval/raw SHA; new root exclusive, fresh GPU idle and max3 native qualification before one start"
+      ],
+      "allows_after_pass": "Start approved new RAF6 fits once in fresh root. Posttraining checks are not required before this point."
+    },
+    {
+      "id": "posttraining_retrieval",
+      "required_checks": [
+        "All6 actual worker, pipeline, dispatcher exit0; terminal binaries and explicit owner/GPU absence before exclusive original collection"
+      ],
+      "allows_after_pass": "Collect original terminal artifacts and prepare fixed-checkpoint evaluation; Test still blocked."
+    },
+    {
+      "id": "native_pretest",
+      "required_checks": [
+        "All6 fixed checkpoint nativeValidation targets and six metrics reproducible before Test6; no baseline inference or Test-based reselection"
+      ],
+      "allows_after_pass": "Run new candidates Test6 once; no historical baseline inference or reselection."
+    }
+  ]
+}

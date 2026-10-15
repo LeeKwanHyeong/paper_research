@@ -1,0 +1,20 @@
+/Users/igwanhyeong/.matplotlib is not a writable directory
+Matplotlib created a temporary cache directory at /var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/matplotlib-5ql0fsiv because there was an issue with the default path (/Users/igwanhyeong/.matplotlib); it is highly recommended to set the MPLCONFIGDIR environment variable to a writable directory, in particular to speed up the import of Matplotlib and to better support multiprocessing.
+Matplotlib is building the font cache; this may take a moment.
+Traceback (most recent call last):
+  File "/private/tmp/ffn_ops/cpu_synthetic_integration.py", line 17, in <module>
+    results[arm]=runtime.synthetic_arm(contract,Path('/private/tmp/ffn_ops'),arm)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/titantpp_post_attention_ffn_raf6_runtime.py", line 638, in synthetic_arm
+    result={'status':'passed','arm':arm,'admission_id':admission_id,'seed':seed,'start_ticks':start_ticks(os.getpid()),'pid':os.getpid(),'shape':list(shape),
+                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/titantpp_post_attention_ffn_raf6_runtime.py", line 193, in start_ticks
+    return int(Path('/proc',str(pid),'stat').read_text().rsplit(')',1)[1].split()[19])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py", line 1027, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/proc/27778/stat'

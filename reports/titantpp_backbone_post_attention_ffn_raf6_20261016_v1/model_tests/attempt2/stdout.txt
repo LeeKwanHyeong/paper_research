@@ -1,0 +1,34 @@
+...............................................F                         [100%]
+=================================== FAILURES ===================================
+___ test_training_contract_rejects_selector_budget_test_and_checkpoint_reuse ___
+
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-62/test_training_contract_rejects0')
+
+    def test_training_contract_rejects_selector_budget_test_and_checkpoint_reuse(tmp_path):
+        data=route.fabricated_data()
+        contract={'training':deepcopy(route.TRAINING),'evaluation_scope':'validation_only',
+            'held_out_test_evaluated':False,'test_evaluation':False}
+        with patch.object(route.base,'training_args',side_effect=AssertionError('must reject before argument delegation')):
+            for field,value in [('maximum_epochs',200),('minimum_epochs',20),('monitor','validation_mae'),('warm_start',True)]:
+                bad=deepcopy(contract);bad['training'][field]=value
+>               with pytest.raises(RuntimeError):route.training_args(bad,data,tmp_path)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+paper/tests/test_titantpp_post_attention_ffn_model.py:313: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+paper/scripts/run_titantpp_post_attention_ffn.py:192: in training_args
+    require(all(contract.get("training", {}).get(key) == value for key, value in TRAINING.items()),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False
+message = 'Frozen training budget or Validation checkpoint selector changed'
+
+    def require(condition, message):
+        if not condition:
+>           raise ValueError(message)
+E           ValueError: Frozen training budget or Validation checkpoint selector changed
+
+paper/scripts/observed_slot_parallel_common.py:45: ValueError
+=========================== short test summary info ============================
+FAILED paper/tests/test_titantpp_post_attention_ffn_model.py::test_training_contract_rejects_selector_budget_test_and_checkpoint_reuse
+1 failed, 47 passed in 1.91s

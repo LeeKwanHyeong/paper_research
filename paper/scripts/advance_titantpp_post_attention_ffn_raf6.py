@@ -1,0 +1,437 @@
+"""Read-only hourly observation and one terminal collection for approved RAF6 post-attention FFN CNN."""
+from __future__ import annotations
+import argparse, base64, hashlib, io, json, math, shlex, statistics, subprocess, tarfile, time
+from pathlib import Path
+from datetime import datetime, timezone, timedelta
+ROOT=Path(__file__).resolve().parents[2]
+BUNDLE=ROOT/'search_artifacts/titantpp_backbone_post_attention_ffn_raf6_20261016_v1'
+REPORT=ROOT/'reports/titantpp_backbone_post_attention_ffn_raf6_20261016_v1'
+REMOTE='/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_backbone_post_attention_ffn_raf6_20261016_v1_5090'
+KST=timezone(timedelta(hours=9))
+
+def sha(p):
+    h=hashlib.sha256()
+    with Path(p).open('rb') as f:
+        for b in iter(lambda:f.read(1048576),b''):h.update(b)
+    return h.hexdigest()
+
+def read(p):return json.loads(Path(p).read_text())
+def write(p,x):
+    p=Path(p);p.parent.mkdir(parents=True,exist_ok=True)
+    with p.open('x') as f:json.dump(x,f,ensure_ascii=False,sort_keys=True,indent=2,allow_nan=False);f.write('\n')
+def require(ok,msg):
+    if not ok:raise ValueError(msg)
+
+def parse_control(raw):
+    # Preserve the first supervisor launcher bytes. Its final newline was
+    # serialized as literal backslash-n; allow exactly that known suffix only.
+    text=raw.decode();obj,end=json.JSONDecoder().raw_decode(text)
+    require(text[end:] in ('','\n','\\n'),'Unknown trailing control bytes')
+    return obj
+
+REMOTE_CODE=r'''
+import base64,hashlib,io,json,math,os,subprocess,tarfile,time
+from pathlib import Path
+root=Path(ROOT)
+def h(p):
+ d=hashlib.sha256()
+ with p.open('rb') as f:
+  for b in iter(lambda:f.read(1048576),b''):d.update(b)
+ return d.hexdigest()
+def canon(v):return hashlib.sha256(json.dumps(v,sort_keys=True,ensure_ascii=False,separators=(',',':'),allow_nan=False).encode()).hexdigest()
+def rd(p):
+ s=p.read_text();v,e=json.JSONDecoder().raw_decode(s);assert s[e:] in ('',chr(10),chr(92)+'n');return v
+def safe(n):
+ p=Path(n);assert not p.is_absolute() and '..' not in p.parts
+ f=(root/p).resolve();assert f.is_relative_to(root);return f
+assert h(root/'deployment_manifest.json')==MANIFEST_SHA
+manifest=rd(root/'deployment_manifest.json')
+for n,d in manifest['files'].items():assert h(safe(n))==d,'Deployment SHA mismatch '+n
+c=rd(root/'execution_contract.json');digest=manifest['contract_sha256'];assert canon(c)==digest
+assert c['hosts']['5090']['root']==str(root)
+arms=('titantpp_cnn_ffn_current_v1','titantpp_cnn_ffn_temporal_v1')
+expected=[{'id':f'raf_spare_parts__{s}__{a}','host':'5090','dataset':'raf_spare_parts','seed':s,'arm':a} for a in arms for s in (42,52,62)]
+assert c['jobs']==expected and c['arms']==list(arms)
+base=[c['hosts']['5090']['python'],str(root/'operation/runtime.py'),'--contract',str(root/'execution_contract.json'),'--host','5090']
+files={};values={}
+def get(n):
+ p=safe(n)
+ if not p.exists():return None
+ b=p.read_bytes();entry={'raw_sha256':hashlib.sha256(b).hexdigest(),'byte_count':len(b),'base64':base64.b64encode(b).decode()};files[n]=entry
+ try:v=rd(p)
+ except (ValueError,AssertionError) as e:entry['parse_error']=str(e);return None
+ values[n]=v;return v
+def probe(pid):
+ p=Path('/proc')/str(pid)
+ try:before=(p/'stat').read_text()
+ except FileNotFoundError:return {'pid':pid,'state':'absent','probe':'initial_stat_enoent'}
+ try:
+  argv=(p/'cmdline').read_bytes().decode().rstrip('\x00').split('\x00');after=(p/'stat').read_text()
+ except FileNotFoundError:return {'pid':pid,'state':'unconfirmed','reason':'vanished_mid_probe'}
+ a=before.rsplit(')',1)[1].split();b=after.rsplit(')',1)[1].split()
+ return {'pid':pid,'state':'live' if a[19]==b[19] and a[1:3]==b[1:3] and b[0] not in ('Z','X') else 'unconfirmed',
+   'ppid':int(b[1]),'pgrp':int(b[2]),'start_ticks':int(b[19]),'argv':argv}
+def identity(v):
+ return isinstance(v,dict) and type(v.get('pid')) is int and v['pid']>0 and type(v.get('start_ticks')) is int and v['start_ticks']>0 and v.get('contract_sha256')==digest
+def finite(v):return type(v) in (float,int) and math.isfinite(v)
+def guard(argv,tail):
+ return isinstance(argv,list) and len(argv)==len(base)+len(tail)+4 and argv[:3]==['timeout','--signal=TERM','--kill-after=15s'] and argv[3].isdigit() and int(argv[3])>0 and argv[4:]==base+tail
+def child_binding(child,launch,tail):
+ return bool(identity(child) and identity(launch) and child.get('ppid')==launch['pid'] and child.get('guard_start_ticks')==launch['start_ticks'] and child.get('argv')==base+tail and guard(launch.get('argv'),tail))
+def exited(name,launch_name,**fields_required):
+ e=values.get(name);l=values.get(launch_name)
+ return bool(identity(l) and isinstance(e,dict) and type(e.get('returncode')) is int and e['returncode']==0 and e.get('actual_child_exit_observed') is True and e.get('contract_sha256')==digest and e.get('argv')==l.get('argv') and e.get('worker_group_pid',e.get('pid'))==l['pid'] and e.get('supervisor_pid',e.get('observer_pid'))==l.get('observer_pid') and e.get('launch_sha256')==files.get(launch_name,{}).get('raw_sha256') and all(e.get(k)==v for k,v in fields_required.items()))
+def live_matches(observed,saved):
+ return bool(identity(saved) and observed and observed['state']=='live' and observed.get('pid')==saved['pid'] and observed.get('start_ticks')==saved['start_ticks'] and observed.get('argv')==saved.get('argv') and observed.get('ppid')==saved.get('ppid'))
+for n in ('approval.json','status.json','qualification/receipt.json','qualification/actual_exit.json','qualification/launch.json','training_permit.json',
+ 'start_permit.json','supervisor.claim','pipeline.claim','pipeline_launch.json','dispatcher_launch.json','failure.json','pipeline_failure.json',
+ 'train_complete.json','dispatcher_exit.json','pipeline_exit.json','deployment_receipt.json'):
+ get(n)
+status=values.get('status.json',{});owned=set();jobs=[]
+pipeline=values.get('pipeline.claim');pl=values.get('pipeline_launch.json');supervisor=values.get('supervisor.claim');dl=values.get('dispatcher_launch.json')
+q=values.get('qualification/receipt.json');ql=values.get('qualification/launch.json');tp=values.get('training_permit.json');start=values.get('start_permit.json');approval=values.get('approval.json')
+pipeline_bound=bool(identity(pipeline) and identity(pl) and pipeline['pid']==pl['pid'] and pipeline['start_ticks']==pl['start_ticks'] and pipeline.get('ppid')==pl.get('observer_pid') and pipeline.get('wrapper_start_ticks')==pl.get('observer_start_ticks') and pipeline.get('argv')==pl.get('argv')==base+['--mode','pipeline'])
+start_bound=bool(pipeline_bound and isinstance(start,dict) and isinstance(approval,dict) and approval.get('approved') is True and approval.get('contract_sha256')==digest and approval.get('hosts')==['5090'] and approval.get('fresh_fit_count')==6 and approval.get('maximum_concurrent_workers')==3 and start.get('host')=='5090' and start.get('contract_sha256')==digest and start.get('approval_sha256')==canon(approval) and finite(start.get('started_at_unix')) and finite(start.get('deadline_unix')) and start['deadline_unix']==c['limits']['inherited_absolute_host_deadline_unix']==1792679647.915156 and 0<start['deadline_unix']-start['started_at_unix']<=c['limits']['total_wall_seconds'])
+qualification_bound=bool(start_bound and child_binding(q,ql,['--mode','native']) and ql.get('observer_pid')==pipeline['pid'] and ql.get('observer_start_ticks')==pipeline['start_ticks'] and exited('qualification/actual_exit.json','qualification/launch.json',phase='native') and q.get('status')=='passed' and q.get('host')=='5090' and q.get('source_closure')==c['source']['files_sha256'] and q.get('held_out_test_evaluated') is False and q.get('scientific_optimizer_updates')==0 and set(q.get('synthetic',{}))==set(arms) and all(q['synthetic'][a].get('status')=='passed' and q['synthetic'][a].get('arm')==a and q['synthetic'][a].get('contract_sha256')==digest and q['synthetic'][a].get('active_trainable_parameter_count')==80579 and q['synthetic'][a].get('registered_parameter_count')==105311 and q['synthetic'][a].get('original_local_cnn_parameters')==576 and q['synthetic'][a].get('added_ffn_parameters')==1152 and q['synthetic'][a].get('original_qkv_kernels_preserved')==True and q['synthetic'][a].get('common_qkv_projection_gradient_verified')==True and q['synthetic'][a].get('first_step_ab_task_gradient_zero')==True and q['synthetic'][a].get('subsequent_ffn_gradient_groups')==9 and q['synthetic'][a].get('target_blocked')==True and q['synthetic'][a].get('eval_state_unchanged')==True and q['synthetic'][a].get('ffn_sources')==('current' if a==arms[0] else 'observed_temporal') for a in arms))
+if qualification_bound:
+ cap=q.get('capacity_check',{});qualification_bound=(cap.get('passed') is True and cap.get('maximum_workers')==3 and cap.get('simultaneous_synthetic_workers_executed') is True and cap.get('worker_actual_exit0_count')==3 and bool(cap.get('evidence_files')))
+ if qualification_bound:
+  for n,d in cap['evidence_files'].items():
+   assert h(safe(n))==d,'Qualification admission evidence drift '+n
+  for phase in ('ready','trained'):
+   v=get('qualification/admission/'+phase+'_concurrency.json');m=(v or {}).get('memory',{})
+   qualification_bound=qualification_bound and bool(v and v.get('contract_sha256')==digest and len(v.get('workers',[]))==3 and m.get('gpu_uuid')==c['hosts']['5090']['gpu_uuid'] and finite(m.get('total_bytes')) and m['total_bytes']>0 and finite(m.get('used_bytes')) and 0<=m['used_bytes']<=.8*m['total_bytes'] and m.get('limit_fraction')==.8)
+  for admission_id,arm,seed in (('current42',arms[0],42),('current52',arms[0],52),('temporal62',arms[1],62)):
+   prefix='qualification/admission/'+admission_id
+   e=get(prefix+'.actual_exit.json');r=get(prefix+'.ready.json');l=get(prefix+'.launch.json')
+   qualification_bound=qualification_bound and bool(identity(l) and r and e and exited(prefix+'.actual_exit.json',prefix+'.launch.json',admission_id=admission_id,arm=arm,seed=seed) and r.get('contract_sha256')==digest and r.get('pid')==l['pid'] and r.get('start_ticks')==l['start_ticks'] and l.get('observer_pid')==q['pid'] and l.get('observer_start_ticks')==q['start_ticks'] and l.get('argv')==base+['--mode','admission','--admission-id',admission_id])
+   if r and type(r.get('pid')) is int:owned.add(r['pid'])
+training_bound=bool(qualification_bound and isinstance(tp,dict) and tp.get('contract_sha256')==digest and tp.get('qualification')==q and tp.get('qualification_sha256')==files['qualification/receipt.json']['raw_sha256'] and tp.get('start_permit_sha256')==canon(start))
+supervisor_bound=bool(training_bound and child_binding(supervisor,dl,['--mode','dispatch']) and dl.get('observer_pid')==pipeline['pid'] and dl.get('observer_start_ticks')==pipeline['start_ticks'])
+for value in (pipeline,pl,supervisor,dl,q,ql):
+ if isinstance(value,dict):
+  owned.update(value[k] for k in ('pid','ppid','observer_pid') if type(value.get(k)) is int and value[k]>0)
+pipeline_probe=probe(pipeline['pid']) if identity(pipeline) else None
+supervisor_probe=probe(supervisor['pid']) if identity(supervisor) else None
+pipeline_live=bool(pipeline_bound and live_matches(pipeline_probe,pipeline))
+supervisor_live=bool(supervisor_bound and live_matches(supervisor_probe,supervisor) and status.get('supervisor_pid')==supervisor['pid'] and status.get('supervisor_start_ticks')==supervisor['start_ticks'] and status.get('supervisor_argv')==supervisor['argv'] and status.get('contract_sha256')==digest)
+gpu=subprocess.check_output(['nvidia-smi','--query-compute-apps=gpu_uuid,pid','--format=csv,noheader,nounits'],text=True)
+gpupids={int(row.split(',')[1]) for row in gpu.splitlines() if row.split(',')[0].strip()==c['hosts']['5090']['gpu_uuid']}
+for j in c['jobs']:
+ name=j['id'];folder='run/'+name
+ wi=get('worker_identities/'+name+'.json');ex=get('worker_exits/'+name+'.json');launch=get('worker_launches/'+name+'.json');claim=get('claims/'+name+'.json')
+ get(folder+'/status.json');lease=get('leases/'+name+'.json')
+ prefix=folder+'/runs/'+j['arm']+'/count_only_log_regression/seed_'+str(j['seed'])+'/'
+ history=get(prefix+'history.json');timing=get(prefix+'epoch_timing.json');terminal=get(folder+'/terminal_manifest.json')
+ row={'job':j,'state':'waiting','history':history,'timing':timing,'identity':wi,'process':None,'selected_binary_present':False,'terminal_binary_verified':False}
+ bound=bool(supervisor_bound and isinstance(claim,dict) and claim.get('job')==j and claim.get('contract_sha256')==digest and finite(claim.get('deadline_unix')) and start['started_at_unix']<claim['deadline_unix']<=start['deadline_unix'] and child_binding(wi,launch,['--mode','fit','--job',name,'--deadline',str(claim['deadline_unix'])]) and wi.get('job')==j and wi.get('deadline_unix')==claim['deadline_unix'] and wi.get('supervisor_pid')==supervisor['pid'] and wi.get('supervisor_start_ticks')==supervisor['start_ticks'] and wi.get('pgrp')==launch['pid'] and wi.get('launch_sha256')==files.get('worker_launches/'+name+'.json',{}).get('raw_sha256') and launch.get('job')==j and launch.get('observer_pid')==supervisor['pid'] and launch.get('observer_start_ticks')==supervisor['start_ticks'])
+ for value in (wi,launch):
+  if isinstance(value,dict):owned.update(value[k] for k in ('pid','ppid','observer_pid') if type(value.get(k)) is int and value[k]>0)
+ if terminal:
+  assert terminal['contract_sha256']==digest and terminal['job']==j and terminal['status']=='complete' and terminal['scientific_success'] is True and terminal['held_out_test_evaluated'] is False and terminal['evaluation_scope']=='validation_only'
+  for n,d in terminal['files'].items():assert h(safe(folder+'/'+n))==d,'Terminal SHA mismatch '+name+'/'+n
+  selected=prefix[len(folder)+1:]+'best_val_qty_rmse_model.pt';last=prefix[len(folder)+1:]+'last_epoch_state.pt'
+  row['selected_binary_present']=selected in terminal['files'];row['terminal_binary_verified']=selected in terminal['files'] and last in terminal['files']
+  exit_bound=bool(bound and exited('worker_exits/'+name+'.json','worker_launches/'+name+'.json',job=j) and ex.get('worker_identity_sha256')==files.get('worker_identities/'+name+'.json',{}).get('raw_sha256') and ex.get('worker_claim_sha256')==files.get('claims/'+name+'.json',{}).get('raw_sha256'))
+  row['state']='complete' if exit_bound and row['terminal_binary_verified'] else 'unconfirmed'
+ elif wi and identity(wi) and type(wi.get('ppid')) is int:
+  pr=probe(wi['pid']);row['process']=pr;gr=probe(wi['ppid'])
+  live=bool(bound and pipeline_live and supervisor_live and isinstance(lease,dict) and lease.get('contract_sha256')==digest and lease.get('job')==name and lease.get('supervisor_pid')==supervisor['pid'] and lease.get('supervisor_start_ticks')==supervisor['start_ticks'] and lease.get('worker_group_pid')==launch['pid'] and lease.get('worker_group_start_ticks')==launch['start_ticks'] and finite(lease.get('expires_unix')) and time.time()<lease['expires_unix']<=claim['deadline_unix'] and live_matches(pr,wi) and pr.get('pgrp')==wi['pgrp'] and gr['state']=='live' and gr.get('start_ticks')==launch['start_ticks'] and gr.get('argv')==launch['argv'] and gr.get('ppid')==supervisor['pid'] and wi['pid'] in gpupids)
+  row['state']='running' if live and name in status.get('active_jobs',{}) else 'unconfirmed'
+ elif wi or ex or launch or claim or name in status.get('active_jobs',{}):row['state']='unconfirmed'
+ jobs.append(row)
+probes={str(p):probe(p) for p in sorted(owned)}
+failed=bool(values.get('failure.json') or values.get('pipeline_failure.json') or any(values.get(n,{}).get('returncode',0)!=0 for n in ('qualification/actual_exit.json','dispatcher_exit.json','pipeline_exit.json')))
+complete=values.get('train_complete.json',{})
+terminal=bool(not failed and supervisor_bound and all(j['state']=='complete' and j['terminal_binary_verified'] for j in jobs)
+ and status.get('status')=='complete' and status.get('contract_sha256')==digest and set(status.get('completed',{}))=={j['id'] for j in c['jobs']}
+ and complete.get('status')=='complete' and complete.get('contract_sha256')==digest and complete.get('scientific_worker_count')==6 and complete.get('dispatcher_actual_exit')==0
+ and exited('dispatcher_exit.json','dispatcher_launch.json',phase='dispatch') and exited('pipeline_exit.json','pipeline_launch.json')
+ and bool(probes) and all(x['state']=='absent' for x in probes.values()) and not gpupids)
+out={'observed_unix':time.time(),'contract_sha256':digest,'jobs':jobs,'files':files,'owner_probes':probes,
+ 'gpu_compute_pids':sorted(gpupids),'all_training_terminal_verified':terminal,'failure':failed,
+ 'proof_bindings':{'pipeline':pipeline_bound,'start':start_bound,'qualification':qualification_bound,'training_permit':training_bound,'dispatcher':supervisor_bound},
+ 'supervisor_wrapper_own_os_exit_directly_observed':False}
+archive=b''
+if terminal:
+ names=[]
+ for folder in ('run','worker_exits','worker_identities','worker_launches','claims','leases','progress','qualification','logs'):
+  names.extend(str(p.relative_to(root)) for p in (root/folder).rglob('*') if p.is_file())
+ names.extend(n for n in ('execution_contract.json','approval.json','start_permit.json','training_permit.json',
+  'status.json','supervisor.claim','pipeline.claim','pipeline_launch.json','dispatcher_launch.json','train_complete.json','dispatcher_exit.json','pipeline_exit.json',
+  'deployment_receipt.json','pipeline.log') if (root/n).is_file())
+ rawmanifest={n:h(safe(n)) for n in sorted(set(names))};buffer=io.BytesIO()
+ with tarfile.open(fileobj=buffer,mode='w:gz') as tar:
+  for n in rawmanifest:tar.add(safe(n),arcname=n,recursive=False)
+ archive=buffer.getvalue();out['retrieval_manifest']=rawmanifest;out['archive_sha256']=hashlib.sha256(archive).hexdigest()
+header=json.dumps(out,sort_keys=True,allow_nan=False).encode()
+import sys
+sys.stdout.buffer.write(str(len(header)).encode()+b'\n'+header+archive)
+
+'''
+
+def metric_rows(endpoint):
+    return {'RMSE':endpoint['qty_rmse'],'MAE':endpoint['qty_mae'],
+        'Large_RMSE':endpoint['tail']['qty_rmse'],'Large_MAE':endpoint['tail']['qty_mae'],
+        'TimeNLL':endpoint['time_nll'],'Large_TimeNLL':endpoint['tail']['time_nll']}
+
+def analyze(c,local,*,write_outputs=True):
+    expected=[{'id':f'raf_spare_parts__{seed}__{arm}','host':'5090','dataset':'raf_spare_parts','seed':seed,'arm':arm} for arm in ('titantpp_cnn_ffn_current_v1','titantpp_cnn_ffn_temporal_v1') for seed in (42,52,62)]
+    require(c['jobs']==expected,'Unexpected candidate cohort')
+    require(len(c['baseline_jobs'])==3 and {j['seed'] for j in c['baseline_jobs']}=={42,52,62},'Missing/duplicate baseline seed')
+    require(all(j['original']['validation_reference']['count']==6690 for j in c['baseline_jobs']),'Not full Validation baseline')
+    rows=[{'arm':'CNN','seed':j['seed'],'best_epoch':j['original']['selected_epoch'],
+           **metric_rows(j['original']['validation_reference'])} for j in c['baseline_jobs']]
+    for j in c['jobs']:
+        folder=local/'run'/j['id'];manifest=read(folder/'terminal_manifest.json')
+        require(manifest['job']==j and manifest['held_out_test_evaluated'] is False
+            and manifest['status']=='complete' and manifest['scientific_success'] is True
+            and manifest['evaluation_scope']=='validation_only','Foreign result')
+        for n,d in manifest['files'].items():require(sha(folder/n)==d,'Terminal file mismatch')
+        endpoint=read(folder/'runs'/j['arm']/'count_only_log_regression'/f"seed_{j['seed']}"/'endpoint_replays.json')
+        history=read(folder/'runs'/j['arm']/'count_only_log_regression'/f"seed_{j['seed']}"/'history.json')['history']
+        finite=[r for r in history if type(r.get('val_qty_rmse')) in (int,float) and math.isfinite(r['val_qty_rmse'])]
+        require(finite and all(type(r.get('epoch')) is int for r in history)
+            and all(a['epoch']<b['epoch'] for a,b in zip(history,history[1:])),'Invalid saved selection history')
+        best=min(finite,key=lambda r:r['val_qty_rmse'])
+        require(best['epoch']==endpoint['best_epoch'],'Selector not earliest minimum')
+        require(endpoint['selected']['count']==6690,'Not full Validation')
+        rows.append({'arm':{'titantpp_cnn_ffn_current_v1':'Current','titantpp_cnn_ffn_temporal_v1':'Temporal'}[j['arm']],'seed':j['seed'],
+            'best_epoch':endpoint['best_epoch'],**metric_rows(endpoint['selected'])})
+    metrics=['RMSE','MAE','Large_RMSE','Large_MAE','TimeNLL','Large_TimeNLL'];aggregates={};differences=[]
+    for arm in ('CNN','Current','Temporal'):
+        subset=[r for r in rows if r['arm']==arm];require(len(subset)==3 and {r['seed'] for r in subset}=={42,52,62},'Missing/duplicate seed')
+        require(all(type(r[k]) in (int,float) and math.isfinite(r[k]) for r in subset for k in metrics),'Nonfinite Validation metric')
+        aggregates[arm]={k:{'mean':statistics.mean(r[k] for r in subset),'sample_sd':statistics.stdev(r[k] for r in subset)} for k in metrics}
+    for seed in (42,52,62):
+        group={r['arm']:r for r in rows if r['seed']==seed}
+        for a,b in (('Current','CNN'),('Temporal','CNN'),('Temporal','Current')):
+            differences.append({'seed':seed,'contrast':a+'−'+b,**{k:{'absolute':group[a][k]-group[b][k],
+                'relative_percent':100*(group[a][k]-group[b][k])/group[b][k] if group[b][k]!=0 else None} for k in metrics}})
+    result={'split':'validation','dataset':'raf_spare_parts','seed_count':3,'new_fit_count':6,
+        'baseline_reference_count':3,'held_out_test_evaluated':False,'rows':rows,'aggregate':aggregates,'seed_differences':differences,
+        'comparison_runtime_limitation':c['comparison_runtime_limitation'],
+        'primary_contrast':c['primary_contrast'],
+        'constraint_limitation':'Current and Temporal each add1152 FFN parameters with the same initialization/availability. Current uses an attention-prefix state, not history-free input. Equal counts do not imply equal function spaces or optimization; common trainable weights and memory retrieval may change. Stored CNN has fewer parameters and different Runtime.',
+        'interpretation':'Post-Test-informed exploratory follow-up; not independent generalization or causal proof.'}
+    if not write_outputs:return result
+    write(REPORT/'THREE_SEED_VALIDATION.json',result)
+    lines=['# RAF Current/Temporal FFN CNN: 고정 선택 checkpoint의 Validation 비교','',
+      '평균±표본SD, seed42·52·62. 모든 지표는 낮을수록 좋음. 큰 수량은 Train 고정 q>200. 기존 CNN3는 저장된 Validation 결과를 재사용하며 새 학습은 Current/Temporal FFN 각3seed 총6개다.','',
+      '| 구조 | RMSE | MAE | 큰 수량 RMSE | 큰 수량 MAE | TimeNLL | 큰 수량 TimeNLL |','|---|---:|---:|---:|---:|---:|---:|']
+    lines[4:4]=[c['comparison_runtime_limitation']+'; 기존 CNN 비교는 환경 차이를 포함한다.',
+        result['constraint_limitation'], '']
+    for a in aggregates:lines.append('| '+a+' | '+' | '.join(f"{aggregates[a][k]['mean']:.6g} ± {aggregates[a][k]['sample_sd']:.6g}" for k in metrics)+' |')
+    lines+=['','| seed | 구조 | 선택 epoch | RMSE | MAE |','|---|---|---:|---:|---:|']
+    for r in sorted(rows,key=lambda r:(r['seed'],r['arm'])):lines.append(f"| {r['seed']} | {r['arm']} | {r['best_epoch']} | {r['RMSE']:.6g} | {r['MAE']:.6g} |")
+    lines+=['','차이는 앞 구조−뒤 구조. 음수는 개선, 양수는 악화.','',
+        '| seed | 비교 | RMSE 차이 | RMSE 상대차이 | MAE 차이 | MAE 상대차이 |','|---|---|---:|---:|---:|---:|']
+    relative=lambda x:'N/A' if x is None else f'{x:+.3f}%'
+    for r in differences:lines.append(f"| {r['seed']} | {r['contrast']} | {r['RMSE']['absolute']:+.6g} | {relative(r['RMSE']['relative_percent'])} | {r['MAE']['absolute']:+.6g} | {relative(r['MAE']['relative_percent'])} |")
+    lines+=['','전체 지표의 seed별 차이는 JSON에도 모두 보존한다. 기존 Test를 본 뒤 설계한 탐색적 실험이며, 이번 결과는 Test 개선이나 오류 원인 확정의 근거가 아니다.','']
+    with (REPORT/'THREE_SEED_VALIDATION.md').open('x') as f:f.write('\n'.join(lines))
+    return result
+
+
+def brief_round(snapshot):
+    rows=[]
+    for item in snapshot['jobs']:
+        j=item['job'];history=(item.get('history') or {}).get('history',[])
+        finite=[x for x in history if isinstance(x.get('val_qty_rmse'),(float,int)) and math.isfinite(x['val_qty_rmse'])]
+        best=min(finite,key=lambda x:x['val_qty_rmse']) if finite else None
+        timing=(item.get('timing') or {}).get('epochs',[])
+        times=[x['elapsed_seconds'] for x in timing if isinstance(x.get('elapsed_seconds'),(int,float)) and math.isfinite(x['elapsed_seconds']) and x['elapsed_seconds']>0][-10:]
+        epoch=max([x['epoch'] for x in history],default=0)
+        row={'arm':j['arm'],'seed':j['seed'],'state':item['state'],'saved_epoch':epoch or None,'best_epoch':best['epoch'] if best else None,'timing_samples':len(times)}
+        if item['state']=='running' and times and best:
+            target=min(300,max(40,best['epoch']+40));speed=statistics.median(times)
+            row.update(conditional_stop_epoch=target,conditional_stop_seconds=max(0,target-epoch)*speed,epoch300_seconds=max(0,300-epoch)*speed)
+        rows.append(row)
+    return {'observed_kst':datetime.fromtimestamp(snapshot['observed_unix'],KST).isoformat(),
+        'rows':rows,'all_training_terminal_verified':snapshot['all_training_terminal_verified'],'failure':snapshot['failure']}
+
+
+def verify_complete_cache(receipt, c):
+    """Verify historical terminal evidence locally; never reinterpret it as fresh idle."""
+    from paper.scripts import titantpp_post_attention_ffn_raf6_runtime as runtime
+    require(c['schema']==runtime.SCHEMA and c['jobs']==runtime.expected_jobs() and c['hosts']['5090']['root']==REMOTE,'Foreign cached contract')
+    digest=runtime.sha_json(c);dest=BUNDLE/'retrieval';local=dest/'originals'
+    require(receipt.get('status')=='complete' and receipt.get('new_fit_count')==6
+        and receipt.get('baseline_reference_count')==3 and receipt.get('seed_count')==3
+        and receipt.get('held_out_test_evaluated') is False and receipt.get('all_training_terminal_verified') is True,
+        'Incomplete final receipt')
+    files=receipt.get('files',{})
+    required={str((dest/n).relative_to(ROOT)) for n in ('intent.json','manifest.json','originals.tar.gz')}
+    required|={str((REPORT/n).relative_to(ROOT)) for n in ('THREE_SEED_VALIDATION.json','THREE_SEED_VALIDATION.md')}
+    require(isinstance(files,dict) and required<=set(files),'Missing final archive/manifest/result evidence')
+    for name,value in files.items():
+        p=Path(name);require(not p.is_absolute() and '..' not in p.parts,'Unsafe final evidence path')
+        require(sha(ROOT/p)==value,'Final artifact drift '+name)
+    pointer=read(dest/'intent.json');latest=read(REPORT/'latest.json')
+    require(pointer==latest,'Latest does not point to the terminal round')
+    for kind in ('round','summary'):
+        p=Path(pointer[kind]);require(p.resolve().is_relative_to((REPORT/'hourly').resolve()),'Foreign terminal round')
+        require(sha(p)==pointer[kind+'_sha256'],'Terminal round/summary SHA drift')
+    snapshot=read(pointer['round']);summary=read(pointer['summary'])
+    require(snapshot.get('contract_sha256')==digest and snapshot.get('all_training_terminal_verified') is True
+        and snapshot.get('failure') is False and summary==brief_round(snapshot),'Terminal snapshot drift')
+    require(snapshot.get('proof_bindings')==dict.fromkeys(('pipeline','start','qualification','training_permit','dispatcher'),True),
+        'Terminal proof chain missing')
+    require(snapshot.get('supervisor_wrapper_own_os_exit_directly_observed') is False,'Wrapper exit claim changed')
+    manifest=read(dest/'manifest.json')
+    require(isinstance(manifest,dict) and manifest and manifest==snapshot.get('retrieval_manifest'),'Terminal manifest missing')
+    require(sha(dest/'originals.tar.gz')==snapshot.get('archive_sha256'),'Terminal archive SHA drift')
+    expected_files=required|{str((local/n).relative_to(ROOT)) for n in manifest}
+    require(set(files)==expected_files,'Final evidence inventory differs')
+    require({str(p.relative_to(local)) for p in local.rglob('*') if p.is_file()}==set(manifest),'Original inventory differs')
+    with tarfile.open(dest/'originals.tar.gz','r:gz') as archive:
+        names=set()
+        for member in archive.getmembers():
+            name=member.name;p=Path(name)
+            require(member.isfile() and not p.is_absolute() and '..' not in p.parts and name not in names,'Unsafe/duplicate cache archive')
+            names.add(name);require(name in manifest and hashlib.sha256(archive.extractfile(member).read()).hexdigest()==manifest[name],
+                'Cache archive member drift')
+        require(names==set(manifest),'Cache archive coverage differs')
+    for name,value in manifest.items():
+        require(files.get(str((local/name).relative_to(ROOT)))==value and sha(local/name)==value,'Original SHA differs '+name)
+    require(read(local/'execution_contract.json')==c,'Cached contract differs')
+    for name,entry in snapshot['files'].items():
+        if name not in manifest:continue
+        raw=(local/name).read_bytes()
+        require(entry['raw_sha256']==hashlib.sha256(raw).hexdigest() and entry['byte_count']==len(raw)
+            and base64.b64decode(entry['base64'],validate=True)==raw,'Snapshot original bytes differ '+name)
+    runtime.verify_training_permit(c,local,identity_root=Path(REMOTE))
+    base=[c['hosts']['5090']['python'],REMOTE+'/operation/runtime.py','--contract',REMOTE+'/execution_contract.json','--host','5090']
+    def rd(name):
+        require(name in manifest,'Missing terminal control '+name)
+        return parse_control((local/name).read_bytes())
+    def ident(value):
+        require(type(value.get('pid')) is int and value['pid']>0 and type(value.get('start_ticks')) is int
+            and value['start_ticks']>0 and value.get('contract_sha256')==digest,'Bad saved process identity')
+    def exited(name, launch_name, **fields):
+        e,l=rd(name),rd(launch_name);ident(l)
+        require(type(e.get('returncode')) is int and e['returncode']==0 and e.get('actual_child_exit_observed') is True
+            and e.get('contract_sha256')==digest and e.get('argv')==l.get('argv')
+            and e.get('worker_group_pid',e.get('pid'))==l['pid']
+            and e.get('supervisor_pid',e.get('observer_pid'))==l.get('observer_pid')
+            and e.get('launch_sha256')==manifest[launch_name] and all(e.get(k)==v for k,v in fields.items()),
+            'Saved actual exit proof missing '+name)
+        return e,l
+    pipeline=rd('pipeline.claim');pl=rd('pipeline_launch.json');supervisor=rd('supervisor.claim');dl=rd('dispatcher_launch.json')
+    for x in (pipeline,pl,supervisor,dl):ident(x)
+    _,_=exited('pipeline_exit.json','pipeline_launch.json')
+    _,_=exited('dispatcher_exit.json','dispatcher_launch.json',phase='dispatch')
+    require(pipeline['pid']==pl['pid'] and pipeline['start_ticks']==pl['start_ticks'] and pipeline['argv']==pl['argv']==base+['--mode','pipeline'],
+        'Saved pipeline identity missing')
+    require(supervisor['ppid']==dl['pid'] and supervisor['guard_start_ticks']==dl['start_ticks']
+        and supervisor['argv']==base+['--mode','dispatch'] and dl['observer_pid']==pipeline['pid']
+        and dl['observer_start_ticks']==pipeline['start_ticks'],'Saved dispatcher identity missing')
+    def guard(argv,tail):
+        return isinstance(argv,list) and len(argv)==len(base)+len(tail)+4 and argv[:3]==['timeout','--signal=TERM','--kill-after=15s'] and argv[3].isdigit() and int(argv[3])>0 and argv[4:]==base+tail
+    require(guard(dl['argv'],['--mode','dispatch']),'Saved dispatcher guard differs')
+    required_owners=set()
+    def owners(value):
+        required_owners.update(value[k] for k in ('pid','ppid','observer_pid') if type(value.get(k)) is int and value[k]>0)
+    for name in ('pipeline.claim','pipeline_launch.json','supervisor.claim','dispatcher_launch.json','qualification/receipt.json','qualification/launch.json'):
+        owners(rd(name))
+    for admission_id,arm,seed in runtime.ADMISSION_JOBS:owners(rd('qualification/admission/'+admission_id+'.ready.json'))
+    rows=snapshot.get('jobs',[])
+    require(len(rows)==6 and [x.get('job') for x in rows]==c['jobs'] and all(x.get('state')=='complete'
+        and x.get('selected_binary_present') is True and x.get('terminal_binary_verified') is True for x in rows),'Incomplete terminal cohort')
+    for job in c['jobs']:
+        name=job['id'];wi_name='worker_identities/'+name+'.json';claim_name='claims/'+name+'.json'
+        wi,claim=rd(wi_name),rd(claim_name);ident(wi)
+        ex,launch=exited('worker_exits/'+name+'.json','worker_launches/'+name+'.json',job=job)
+        deadline=claim.get('deadline_unix');start=rd('start_permit.json')
+        require(type(deadline) in (int,float) and math.isfinite(deadline) and start['started_at_unix']<deadline<=start['deadline_unix'],
+            'Saved job deadline invalid')
+        tail=['--mode','fit','--job',name,'--deadline',str(deadline)]
+        require(claim.get('job')==job and claim.get('contract_sha256')==digest and wi.get('job')==job
+            and wi.get('deadline_unix')==deadline and wi.get('ppid')==launch['pid'] and wi.get('pgrp')==launch['pid']
+            and wi.get('guard_start_ticks')==launch['start_ticks'] and wi.get('argv')==base+tail and guard(launch['argv'],tail)
+            and launch.get('job')==job and launch.get('observer_pid')==supervisor['pid'] and launch.get('observer_start_ticks')==supervisor['start_ticks']
+            and wi.get('supervisor_pid')==supervisor['pid'] and wi.get('supervisor_start_ticks')==supervisor['start_ticks']
+            and wi.get('launch_sha256')==manifest['worker_launches/'+name+'.json']
+            and ex.get('worker_identity_sha256')==manifest[wi_name] and ex.get('worker_claim_sha256')==manifest[claim_name],
+            'Saved scientific worker identity/exit differs')
+        owners(wi);owners(launch)
+        terminal=rd('run/'+name+'/terminal_manifest.json')
+        require(terminal.get('job')==job and terminal.get('contract_sha256')==digest and terminal.get('status')=='complete'
+            and terminal.get('scientific_success') is True and terminal.get('held_out_test_evaluated') is False
+            and terminal.get('evaluation_scope')=='validation_only','Terminal scientific result invalid')
+        prefix='runs/'+job['arm']+'/count_only_log_regression/seed_'+str(job['seed'])+'/'
+        require({prefix+'best_val_qty_rmse_model.pt',prefix+'last_epoch_state.pt'}<=set(terminal.get('files',{})),
+            'Selected or terminal binary missing')
+        for n,d in terminal['files'].items():require(manifest.get('run/'+name+'/'+n)==d,'Terminal binary/artifact manifest mismatch')
+    complete=rd('train_complete.json');status=rd('status.json')
+    require(complete.get('status')=='complete' and complete.get('contract_sha256')==digest and complete.get('scientific_worker_count')==6
+        and complete.get('dispatcher_actual_exit')==0 and status.get('status')=='complete' and status.get('contract_sha256')==digest
+        and set(status.get('completed',{}))=={j['id'] for j in c['jobs']},'Saved training completion differs')
+    probes=snapshot.get('owner_probes',{})
+    require(required_owners and required_owners<={int(p) for p in probes} and snapshot.get('gpu_compute_pids')==[]
+        and all(type(x.get('pid')) is int and str(x['pid'])==p and x.get('state')=='absent' and x.get('probe')=='initial_stat_enoent' for p,x in probes.items()),
+        'Explicit historical owner/GPU absence missing')
+    require(not any(n in manifest for n in ('failure.json','pipeline_failure.json','qualification/failure.json')),'Preserved failure cannot complete')
+    result=read(REPORT/'THREE_SEED_VALIDATION.json')
+    require(result.get('split')=='validation' and result.get('new_fit_count')==6 and result.get('baseline_reference_count')==3
+        and result.get('seed_count')==3 and result.get('held_out_test_evaluated') is False,'Validation comparison missing')
+    require(result==analyze(c,local,write_outputs=False),'Cached comparison differs from fixed selected original metrics')
+    return {'status':'complete','remote_calls':0,'historical_terminal_observed_kst':summary['observed_kst'],
+        'current_gpu_idle_proven':False,'verified_files':len(files)}
+
+
+def advance(integrity_sha):
+    integrity=BUNDLE/'followup_integrity.json';require(sha(integrity)==integrity_sha,'Follow-up integrity mismatch')
+    for n,d in read(integrity)['files'].items():require(sha(ROOT/n)==d,'Local evidence drift '+n)
+    final=BUNDLE/'retrieval/final_receipt.json'
+    if final.exists():
+        result=verify_complete_cache(read(final),read(BUNDLE/'execution_contract.json'))
+        print(json.dumps({**result,'receipt':str(final)}));return
+    blocked=REPORT/'ACTION_REQUIRED.json'
+    if blocked.exists():print(json.dumps({'status':'action_required','remote_calls':0,'receipt':str(blocked)}));return
+    round_dir=REPORT/'hourly'/datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S_%fZ');round_dir.mkdir(parents=True)
+    try:
+        require(not (BUNDLE/'retrieval').exists(),'Incomplete retrieval exists; no automatic retry')
+        remote='ROOT='+repr(REMOTE)+'\nMANIFEST_SHA='+repr(sha(BUNDLE/'deployment_manifest.json'))+'\n'+REMOTE_CODE
+        try:
+            proc=subprocess.run(['ssh','-o','BatchMode=yes','-o','ConnectTimeout=10','5090',shlex.join(['/usr/bin/python3','-c',remote])],capture_output=True,timeout=180)
+            stdout,stderr,rc=proc.stdout,proc.stderr,proc.returncode
+        except subprocess.TimeoutExpired as exc:
+            stdout,stderr,rc=exc.stdout or b'',exc.stderr or b'',None
+        for name,value in [('transport.stdout',stdout),('transport.stderr',stderr)]:
+            with (round_dir/name).open('xb') as stream:stream.write(value)
+        write(round_dir/'transport.json',{'actual_transport_exit':rc,'timeout':rc is None,
+            'stdout_sha256':sha(round_dir/'transport.stdout'),'stderr_sha256':sha(round_dir/'transport.stderr'),
+            'stdout_bytes':len(stdout),'stderr_bytes':len(stderr),'truncated':False})
+        require(rc==0,'Observation transport/query failed; not a scientific failure')
+        count,body=stdout.split(b'\n',1);size=int(count);snapshot=json.loads(body[:size]);archive=body[size:]
+        write(round_dir/'round.json',snapshot);brief=brief_round(snapshot);write(round_dir/'summary.json',brief)
+        pointer={'round':str(round_dir/'round.json'),'round_sha256':sha(round_dir/'round.json'),'summary':str(round_dir/'summary.json'),'summary_sha256':sha(round_dir/'summary.json')}
+        tmp=REPORT/'latest.pending.json';write(tmp,pointer);tmp.replace(REPORT/'latest.json')
+        require(not snapshot['failure'],'Owned campaign failed; preserve records, no retry')
+        if not snapshot['all_training_terminal_verified']:
+            print(json.dumps({'status':'running_or_unconfirmed',**brief},ensure_ascii=False));return
+        require(archive and hashlib.sha256(archive).hexdigest()==snapshot['archive_sha256'],'Archive mismatch')
+        dest=BUNDLE/'retrieval';dest.mkdir(exist_ok=False);write(dest/'intent.json',pointer)
+        (dest/'originals.tar.gz').write_bytes(archive);local=dest/'originals';local.mkdir()
+        with tarfile.open(fileobj=io.BytesIO(archive),mode='r:gz') as t:
+            names=set()
+            for member in t.getmembers():
+                p=Path(member.name);require(member.isfile() and not p.is_absolute() and '..' not in p.parts and member.name not in names,'Unsafe/duplicate archive member')
+                names.add(member.name);target=local/p;target.parent.mkdir(parents=True,exist_ok=True)
+                with target.open('xb') as f:f.write(t.extractfile(member).read())
+            require(names==set(snapshot['retrieval_manifest']),'Archive inventory differs')
+        for n,d in snapshot['retrieval_manifest'].items():require(sha(local/n)==d,'Retrieved file SHA mismatch')
+        write(dest/'manifest.json',snapshot['retrieval_manifest'])
+        c=read(BUNDLE/'execution_contract.json');analyze(c,local)
+        files={str(p.relative_to(ROOT)):sha(p) for p in sorted(dest.rglob('*')) if p.is_file()}
+        for n in ('THREE_SEED_VALIDATION.json','THREE_SEED_VALIDATION.md'):files[str((REPORT/n).relative_to(ROOT))]=sha(REPORT/n)
+        write(final,{'status':'complete','new_fit_count':6,'baseline_reference_count':3,'seed_count':3,
+            'held_out_test_evaluated':False,'all_training_terminal_verified':True,'files':files})
+        print(json.dumps({'status':'complete','receipt':str(final),'report':str(REPORT/'THREE_SEED_VALIDATION.md')},ensure_ascii=False))
+    except BaseException as exc:
+        if not blocked.exists():write(blocked,{'status':'action_required','type':type(exc).__name__,'message':str(exc),'round':str(round_dir),'automatic_retry':False})
+        raise
+
+if __name__=='__main__':
+    p=argparse.ArgumentParser();p.add_argument('--integrity-sha',required=True);a=p.parse_args();advance(a.integrity_sha)

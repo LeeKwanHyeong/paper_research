@@ -1,0 +1,44 @@
+...................................................F.................... [ 85%]
+............                                                             [100%]
+=================================== FAILURES ===================================
+_______ test_preparation_spec_tamper_stops_before_remote_or_bundle_write _______
+
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-58/test_preparation_spec_tamper_s0')
+
+    def test_preparation_spec_tamper_stops_before_remote_or_bundle_write(tmp_path):
+        report=tmp_path/'report';report.mkdir();(report/'SCIENCE_SPEC.json').write_text('{}')
+        with patch.object(prep,'REPORT',report),patch.object(prep.subprocess,'check_output') as call,pytest.raises(ValueError,match='Scientific specification'):
+>           prep.prepare()
+
+paper/tests/test_titantpp_post_attention_ffn_raf6_ops.py:404: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+paper/scripts/prepare_titantpp_post_attention_ffn_raf6.py:88: in prepare
+    science,design_evidence=design_pins()
+                            ^^^^^^^^^^^^^
+paper/scripts/prepare_titantpp_post_attention_ffn_raf6.py:66: in design_pins
+    require(sha(manifest)==DESIGN_MANIFEST_SHA,'Design manifest drift')
+            ^^^^^^^^^^^^^
+paper/scripts/prepare_titantpp_post_attention_ffn_raf6.py:30: in sha
+    with Path(path).open('rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-58/test_preparation_spec_tamper_s0/report/DESIGN_MANIFEST.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-58/test_preparation_spec_tamper_s0/report/DESIGN_MANIFEST.json'
+
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py:1013: FileNotFoundError
+=========================== short test summary info ============================
+FAILED paper/tests/test_titantpp_post_attention_ffn_raf6_ops.py::test_preparation_spec_tamper_stops_before_remote_or_bundle_write
+1 failed, 83 passed in 1.88s

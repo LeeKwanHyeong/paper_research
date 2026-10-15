@@ -1,0 +1,14 @@
+{
+  "status": "ONE_HARDENING_CHANGE_REQUESTED_AFTER_INITIAL_REVIEW",
+  "severity": "evidence_integrity",
+  "finding": "Independent QA document is sealed, but its separately referenced oracle/raw stream files are not automatically rehashed during preparation/sealing. Official suite test receipt streams are already included.",
+  "requested_change": "Validate both independent QA files inventories as nonempty project-relative safe paths with current SHA, then include those files in preparation policy_files; existing seal policy verification collects them.",
+  "scientific_model_affected": false,
+  "initial_review_valid_for_original_file_hashes": true,
+  "requires_revalidation": [
+    "changed prepare source",
+    "new synthetic receipt-inventory tests",
+    "ops suite"
+  ],
+  "parent_and_ops_notified": true
+}
