@@ -1,0 +1,14 @@
+{
+  "schema": "value_branch_counterfactual_acceptance_v1",
+  "status": "design_review_pass_implementation_pending",
+  "review_agent": "/root/loop3_next_backbone_basis",
+  "spec_sha256": "d509654b763c50017ef0e0100974b86e839af12db6103c95aac979f27ce66415",
+  "required_acceptance": [
+    "On Validation must match every stored target prediction and time loss within the fixed tolerance, in addition to six aggregate metrics and exact target identity.",
+    "Off must retain original shape/mask/nonfinite validation; only the V residual becomes zero. Restore the original function reference in finally. Never mutate parameter tensors or save a modified checkpoint.",
+    "Use separate fresh processes for on/off with identical eval mode, batch policy and initial memory state; verify parameters, all buffers and context state before and after each condition."
+  ],
+  "interpretation": "This isolates the direct fixed-checkpoint sensitivity to the V residual with jointly trained weights held fixed. It does not identify the effect of retraining without V or fully separate joint-training causes. Off is not an original CNN baseline.",
+  "actual_implementation_started": false,
+  "actual_native_execution_started": false
+}
