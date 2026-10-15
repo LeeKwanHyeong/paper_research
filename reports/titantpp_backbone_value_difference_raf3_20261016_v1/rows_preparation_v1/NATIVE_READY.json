@@ -1,0 +1,38 @@
+{
+  "status": "native_diagnostic_operation_ready",
+  "created_kst": "2026-10-16T02:47:25.300264+09:00",
+  "scope": "current ValueDifference3 selected checkpoint Train/Validation rows only; no historical CNN inference, no Test, no training",
+  "spec_sha256": "c6ee63c3dfb6ee750ce1ff3b27ae40257a62fcacd1b2e7044853e15c04c8ed0c",
+  "files": {
+    "paper/scripts/prepare_titantpp_value_difference_rows.py": "23bda46936f98277970dc8da28dcd02830abc1cb065ef08a3d6056b3f60ab288",
+    "paper/scripts/advance_titantpp_value_difference_rows.py": "912907cb5a6a2339afad15c34c69fd19e1c4c76edadc78986ccdc59ed6f6d056",
+    "paper/scripts/titantpp_value_difference_rows_runtime.py": "1e1c48270fc85ef73d45ba40c49f3e1d322c41ff9a0b46015757f16e68cc0f56",
+    "paper/scripts/export_titantpp_value_difference_rows.py": "28837d12634cb186660f0504de4e09081898b40541eaa980ddaa1e3cb4cca399",
+    "paper/tests/test_titantpp_value_difference_rows_operations.py": "a7defc8877beed831768f15c85e2bbb4a0ed70bdff52c6f958382863689c8fdf",
+    "paper/tests/test_titantpp_value_difference_rows.py": "b08d237e5fff1d673fe527d790483ff65b0ff475868d544fa863aa04549d0254",
+    "paper/scripts/analyze_titantpp_value_difference_rows.py": "c689918ad4f64913cf1b15894a3e4e177667711675a59e9056e72bfa6400cb33",
+    "paper/tests/test_titantpp_value_difference_rows_analysis.py": "dd3af5448949cd2c8485412221180eb8b7856f71748c308786abbf8bfb34fbf0"
+  },
+  "independent_review": {
+    "agent": "/root/nonlinear_launch_qa",
+    "operations_tests": 22,
+    "operations_subtests": 20,
+    "worker_tests": 21,
+    "worker_subtests": 42,
+    "actual_exit_code": 0,
+    "status": "PASS",
+    "checks": [
+      "archive and manifest exact coverage",
+      "9 actual worker exits,3 qualification,3 Validation,3 Train",
+      "PID and GPU explicit absence",
+      "maximum3 and exclusive one-time attempt",
+      "state and selection immutable",
+      "negative empty-file receipt blocked"
+    ]
+  },
+  "actual_remote_calls": 0,
+  "actual_research_inference": 0,
+  "comparison_caller_status": "being_implemented_separately",
+  "prepare_command": "PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m paper.scripts.advance_titantpp_value_difference_rows --mode prepare",
+  "advance_command_template": "PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m paper.scripts.advance_titantpp_value_difference_rows --mode advance --integrity-sha <actual prepare return>"
+}
