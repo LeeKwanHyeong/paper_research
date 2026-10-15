@@ -1,0 +1,176 @@
+{
+  "schema": "titantpp_backbone_qk_only_science_spec_v1",
+  "created_kst": "2026-10-16T03:35:32.809591+09:00",
+  "status": "science_spec_prepared_implementation_and_execution_verification_pending",
+  "campaign": "titantpp_backbone_qk_only_raf3_20261016_v1",
+  "loop_index": 4,
+  "authorization": {
+    "scope": "Existing preapproval for evidence-driven CNN-backbone RAF loops on 5090 with maximum three concurrent fits.",
+    "baseline_constraint": "기존 CNN기준선은 건들지마",
+    "existing_baseline_retraining": false,
+    "existing_baseline_reevaluation": false
+  },
+  "evidence_pins": {
+    "reports/titantpp_backbone_value_difference_raf3_20261016_v1/diagnostics_branch_probe_v1/RESULT.json": "3bd4900b7621c5419dd987ee3f0b73959eeb8894921f6caa943ad0501ae3afd5",
+    "search_artifacts/titantpp_backbone_value_difference_branch_probe_20261016_v1/retrieval/final_receipt.json": "ea4e59631ff5b2209272608f830c93bf5a6c260566848d484ddb8c4433ed7805",
+    "reports/titantpp_backbone_value_difference_raf3_20261016_v1/diagnostics_current_candidate_rows_v1/RESULT.json": "3c753214772e4b185a32f3af1a7f07fba4f3a3a2e470b2f17a14b5fb284b13b4",
+    "search_artifacts/titantpp_backbone_value_difference_raf3_20261016_v1/execution_contract.json": "c40a2921595bf60ac13d34d915f5a5b3fabe57db00b0eabf394d085c3c00ad99"
+  },
+  "duplicate_audit": {
+    "path": "reports/titantpp_backbone_qk_only_raf3_20261016_v1/DUPLICATE_AUDIT.json",
+    "raw_sha256": "91621fea33cd9d807af5cab0135e8d945706205b72a7827e1502f24cd66045a0"
+  },
+  "question": "Does fresh joint training with local observed-time filtering restricted to Q/K, while V retains its normally trainable common projection, improve RAF raw quantity errors under unchanged common conditions?",
+  "hypothesis": "Remove the additional V-local CNN transformation while retaining Q/K temporal relation processing. Evaluate the entire structural restriction through fresh training; do not assume the probe effect persists after training.",
+  "evidence_interpretation": {
+    "supported": "For the frozen current V-difference models, disabling the V residual improved Validation MAE in all three seeds; Train RMSE worsened in all three and Validation row-weighted RMSE was mixed.",
+    "unresolved": "The probe does not answer whether a jointly trained QK-only model performs better. It does not isolate capacity from V-path removal or establish V as universally harmful.",
+    "negative_evidence_retained": [
+      "Off-probe large-quantity and time errors worsen in the reported mean.",
+      "No frozen history condition established a robust universal candidate-error mechanism across Train/Validation, all seeds and both weights."
+    ],
+    "claim_type": "Exploratory empirical structural ablation; not a new principle, established cause or independent generalization proof."
+  },
+  "candidate": {
+    "arm": "titantpp_cnn_qk_only_v1",
+    "dataset": "RAF",
+    "seeds": [
+      42,
+      52,
+      62
+    ],
+    "new_fit_count": 3,
+    "fresh_fit": true,
+    "warmstart": false,
+    "q_local": "Independent free learned three-tap observed-history residual, normally trained.",
+    "k_local": "Independent free learned three-tap observed-history residual, normally trained.",
+    "v_local": "No additional local CNN or difference branch; no corresponding registered trainable or fixed-zero/dummy local V weights.",
+    "common_qkv_projection": "All Q/K/V projection rows remain present and normally trainable. V content is not removed.",
+    "history_semantics": "Inherit observed-context construction: skip padding, reset eligibility at valid withheld boundary; use only currently available observations. Preserve attention mask and all downstream semantics.",
+    "inactive_gru_registration": "Keep inherited inactive GRU registration unchanged; do not misreport all registered weights as active.",
+    "local_cnn_parameter_counts": {
+      "stored_original_CNN": 576,
+      "new_Q": 192,
+      "new_K": 192,
+      "new_V": 0,
+      "new_total": 384,
+      "delta_vs_original": -192
+    },
+    "initialization": "Construct the original CNN with the usual seed and common initialization order, then replace only its local attention wrapper/filter structure while retaining original Q/K filter parameters and all common module tensors. Do not truncate the common QKV projection. Consume no additional RNG draws; do not load a historical checkpoint."
+  },
+  "fixed_conditions": [
+    "Input source and preprocessing including log1p",
+    "Quantity/time losses and loss weights",
+    "Quantity/time heads and output interpretation",
+    "Attention, memory and common backbone components outside the designated local QKV filter",
+    "Optimizer hyperparameters, learning schedule, training budget and seed set",
+    "Validation population, raw quantity RMSE checkpoint selection and tie handling",
+    "Existing CNN, external model and previous candidate artifacts"
+  ],
+  "prohibited_additions": [
+    "RevIN",
+    "GRU activation or changes",
+    "New input features",
+    "Gate, clipping, nonlinear branch or normalization",
+    "Artificial capacity-matching dummy parameters",
+    "Test checkpoint reselection",
+    "Baseline inference or retraining"
+  ],
+  "operating_contract": {
+    "gpu_host": "5090",
+    "max_parallel": 3,
+    "remote_root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_backbone_qk_only_raf3_20261016_v1_5090",
+    "gpu_uuid": "GPU-c9adc246-ef66-7906-bc07-6e152fa9952f",
+    "python": "3.12.13",
+    "torch": "2.11.0+cu130",
+    "cudnn": 92000,
+    "training_threads": 4,
+    "inherited_absolute_host_deadline": 1792679647.915156,
+    "deadline_extension_allowed": false,
+    "entrypoint_policy": "Use only the validated preparation return and frozen integrity SHA recorded later by the operation owner; no entrypoint/SHA guessed here.",
+    "native_started": false
+  },
+  "checkpoint_selection": {
+    "split": "fullValidation",
+    "metric": "whole raw quantity RMSE",
+    "rule": "First strict finite minimum; retain earliest epoch on ties.",
+    "budget": "Inherit exact existing approved training contract; no extension or new search."
+  },
+  "evaluation": {
+    "first": "Verify all three terminal workers, dispatcher/pipeline exits, ownership absence, binary/archive/manifest hashes and selected model identity.",
+    "validation_gate": "All three native Validation replays must reproduce the same targets and six metrics with actual worker exit0 before any Test evaluation.",
+    "test": "Evaluate the three fixed selected models once; reuse SHA-verified stored CNN3 and external results without inference.",
+    "user_success_gate": "For each of Validation RMSE, Validation MAE, Test RMSE and Test MAE, the three-seed mean must be strictly lower than both the stored CNN mean and the same-target metric-wise best external mean. All four conditions must hold.",
+    "external_registry_raw_sha256": "57e88f4d5d338c6da7f54fe38d2b9492b06476fa93161331481de3c4ee1a6b49",
+    "report": [
+      "Three-seed mean and sample SD (ddof=1)",
+      "All seed-wise absolute and relative differences versus stored CNN",
+      "Whole raw quantity RMSE and MAE",
+      "Train-fixed RAF q>200 quantity RMSE and MAE",
+      "Whole and large-quantity recorded positive-integer TimeNLL",
+      "Simple baselines with TimeNLL N/A",
+      "Every degradation and seed exception"
+    ]
+  },
+  "confounds_and_limits": [
+    "Physical V-local-filter removal reduces active local capacity by 192 parameters and changes joint optimization; no isolated position-only causal claim.",
+    "The fixed-model on/off intervention changes a co-adapted network; it is not a trained QK-only model.",
+    "Historical CNN/external runtime is 5080/cuDNN91900 versus new RAF 5090/cuDNN92000; preserve this limitation without expanding baseline execution.",
+    "The sequence follows previously inspected Test results and remains exploratory; passing does not establish independent generalization or statistical significance."
+  ],
+  "minimum_validation": [
+    "Exact common-state tensor equality after original-model construction and replacement; unchanged RNG state across replacement.",
+    "Q/K local parameters remain trainable, common V projection remains trainable, and no local V parameter or dummy registration survives.",
+    "Final local count 384 and inherited inactive GRU registration unchanged.",
+    "Observed-history padding/withheld/short-history/future-target invariants; finite forward/backward and nonzero-gradient connectivity for retained paths.",
+    "Runner arm identity, fixed common contract/source/input hashes, baseline protection and ownership/duplicate-start guards.",
+    "Native fixed runtime/GPU/input plus three-concurrent synthetic validation before first exclusive training start."
+  ],
+  "next_decision": "Only verified RAF success permits the same structure to expand to Taxi5090 and Intermittent5080 after the existing work is complete and actual idle status is freshly verified. Otherwise preserve all results and diagnose before selecting another evidence-based backbone hypothesis.",
+  "model_arm": "titantpp_cnn_qk_only_v1",
+  "new_fit_count": 3,
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "new_cnn_baseline_fits": 0,
+  "baseline_reevaluations": 0,
+  "model": {
+    "arm": "titantpp_cnn_qk_only_v1",
+    "dataset": "RAF",
+    "seeds": [
+      42,
+      52,
+      62
+    ],
+    "new_fit_count": 3,
+    "fresh_fit": true,
+    "warmstart": false,
+    "q_local": "Independent free learned three-tap observed-history residual, normally trained.",
+    "k_local": "Independent free learned three-tap observed-history residual, normally trained.",
+    "v_local": "No additional local CNN or difference branch; no corresponding registered trainable or fixed-zero/dummy local V weights.",
+    "common_qkv_projection": "All Q/K/V projection rows remain present and normally trainable. V content is not removed.",
+    "history_semantics": "Inherit observed-context construction: skip padding, reset eligibility at valid withheld boundary; use only currently available observations. Preserve attention mask and all downstream semantics.",
+    "inactive_gru_registration": "Keep inherited inactive GRU registration unchanged; do not misreport all registered weights as active.",
+    "local_cnn_parameter_counts": {
+      "stored_original_CNN": 576,
+      "new_Q": 192,
+      "new_K": 192,
+      "new_V": 0,
+      "new_total": 384,
+      "delta_vs_original": -192
+    },
+    "initialization": "Construct the original CNN with the usual seed and common initialization order, then replace only its local attention wrapper/filter structure while retaining original Q/K filter parameters and all common module tensors. Do not truncate the common QKV projection. Consume no additional RNG draws; do not load a historical checkpoint."
+  },
+  "remote_root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_backbone_qk_only_raf3_20261016_v1_5090",
+  "runtime": {
+    "gpu_host": "5090",
+    "gpu_uuid": "GPU-c9adc246-ef66-7906-bc07-6e152fa9952f",
+    "python": "3.12.13",
+    "torch": "2.11.0+cu130",
+    "cudnn": 92000,
+    "training_threads": 4,
+    "max_parallel": 3
+  }
+}

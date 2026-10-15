@@ -1,0 +1,105 @@
+{
+  "schema": "titantpp_qk_only_model_science_review_v1",
+  "created_kst": "2026-10-16T03:38:14.452549+09:00",
+  "status": "PASS_static_science_alignment",
+  "reviewer": "loop3_next_backbone_basis",
+  "science_spec_sha256": "0393da551a4933d3ed8105910fc3859d8aadcaf008b19e786cd177282a56db14",
+  "reviewed_file_sha256": {
+    "models/TPPs/CountAwareTitanQKOnlyCNN.py": "1511c040b71367ff790e43ad6012141d738542e9a47f648ff63a3873b7fe7078",
+    "paper/scripts/run_titantpp_qk_only_cnn.py": "d1dc15001733acb3d75a16642eaaf515945bda2e5c5d13e392497f9c510dfeaa",
+    "paper/scripts/prepare_titantpp_qk_only_raf3.py": "0de75150e7a36b482e2a135c6eed5292d275ea88e988a3ad43bf8697712e6f3f",
+    "paper/scripts/titantpp_qk_only_raf3_runtime.py": "481304d9f4ae2b3372be1c299ed5a404cd18816aa6f7d3e929ba0dfdba71f705"
+  },
+  "findings": [],
+  "checks": [
+    {
+      "name": "Designated intervention only",
+      "status": "PASS",
+      "evidence": [
+        "models/TPPs/CountAwareTitanQKOnlyCNN.py:88",
+        "models/TPPs/CountAwareTitanQKOnlyCNN.py:149"
+      ],
+      "detail": "Original component CNN constructor is invoked first. Replacement reuses Q/K kernels and common qkv/out projection, dropout and memory objects; V local kernel is not registered. Common V projection remains present."
+    },
+    {
+      "name": "Attention and memory arithmetic unchanged outside V residual",
+      "status": "PASS",
+      "method": "stdlib AST comparison without importing the model",
+      "detail": "New QKOnlyAttention.forward AST equals original ObservedCausalQKVMemoryAttention.forward after removing exactly one assignment: v = v + causal_depthwise_residual(...). This includes masks, memory concatenation, scaling, softmax, dropout and output projection."
+    },
+    {
+      "name": "Initialization and RNG preservation",
+      "status": "PASS_static_contract",
+      "evidence": [
+        "models/TPPs/CountAwareTitanQKOnlyCNN.py:88",
+        "paper/scripts/run_titantpp_qk_only_cnn.py:159"
+      ],
+      "detail": "Replacement performs no random initialization; identity is a deterministic tensor. initial_states asserts identical RNG state and common state tensors for seed42/52/62 after original construction. This review did not execute model construction or synthetic checks."
+    },
+    {
+      "name": "Physical local capacity and inactive GRU",
+      "status": "PASS_static_contract",
+      "detail": "Only causal_q_kernel and causal_k_kernel of shape3x64 are retained:384 local parameters instead of576. Existing component CNN initialization keeps historical inactive GRU registration; no V dummy or fixed-zero local parameter is registered. Metadata and state validator enforce this. Actual runtime counts remain subject to the separate synthetic/native verification."
+    },
+    {
+      "name": "Input loss head optimizer selection budget",
+      "status": "PASS_static_contract",
+      "evidence": [
+        "paper/scripts/run_titantpp_qk_only_cnn.py:198",
+        "paper/scripts/prepare_titantpp_qk_only_raf3.py:62",
+        "paper/scripts/titantpp_qk_only_raf3_runtime.py:467"
+      ],
+      "detail": "Preparation copies parent dataset/input and141 source files unchanged, adding only model/runner. Runner preserves original input and training functions; explicitly enforces lambda_log_qty1/lambda_tail0/time-head LR multiplier1, recorded-time head, AdamW lr.001/weight_decay.01/clip1, batch128/max300/min40/patience40 and raw Validation RMSE selection. Runtime reuses frozen run_fit and routes only candidate model/identity and ownership guards."
+    },
+    {
+      "name": "Historical baseline is reference only",
+      "status": "PASS_static_call_path",
+      "evidence": [
+        "paper/scripts/run_titantpp_qk_only_cnn.py:138",
+        "paper/scripts/run_titantpp_qk_only_cnn.py:198",
+        "paper/scripts/titantpp_qk_only_raf3_runtime.py:418",
+        "paper/scripts/titantpp_qk_only_raf3_runtime.py:720"
+      ],
+      "detail": "Scientific jobs and training_args allow only the new candidate. Native baseline loop computes initial random-state hash from a fresh constructor and compares stored hash; it does not load trained CNN weights, forward data or train the baseline. Actual training/replay is dispatched via candidate-only ARMS. Generic baseline aliases remain available for fabricated unit checks, not contracted scientific jobs."
+    },
+    {
+      "name": "Host concurrency and inherited deadline",
+      "status": "PASS_static_contract",
+      "detail": "RAF seeds42/52/62,5090 maximum3,exact approved remote root, unchanged absolute deadline1792679647.915156. No earlier deadline renewal or old-result overwrite found within reviewed science path."
+    }
+  ],
+  "limitations": [
+    "This is read-only source and AST review, not an executed model test, native qualification or runtime success claim.",
+    "Future fixed-checkpoint evaluation and comparison tools are not implemented or reviewed by this report. Existing stored references are preserved in this training scope; final reporting requires their independent SHA validation.",
+    "Physical capacity reduction and altered joint optimization remain part of the intervention.",
+    "Report applies only to listed file hashes; concurrent later edits require scoped revalidation."
+  ],
+  "actions": {
+    "model_inference": 0,
+    "existing_CNN_checkpoint_reads": 0,
+    "remote_calls": 0,
+    "prepare_calls": 0,
+    "training_calls": 0,
+    "code_modifications": 0,
+    "report_files_created": 1
+  },
+  "updated_kst": "2026-10-16T03:45:23.945059+09:00",
+  "operation_change_notes": {
+    "status": "PASS_science_unchanged",
+    "previous_review_sha256": "0184ce4d81cafa91fe231581206696ef085d0835e11b3190fdb60089b33f433c",
+    "previous_operation_sha256": {
+      "paper/scripts/prepare_titantpp_qk_only_raf3.py": "b8ef09a749636c86011951009c658ad8de68c2b157bd5e82a745fd32c2284013",
+      "paper/scripts/titantpp_qk_only_raf3_runtime.py": "7cc8426ce8052b856ad2bd01993564cbe80240e0342d904968dff49654a0cf1f"
+    },
+    "method": "Remove exactly the described source edits in memory and reconstruct both prior reviewed raw SHA values byte-for-byte; no imported code, model execution or source modification.",
+    "changes": [
+      "verify_training_permit gains keyword-only identity_root=None. Omission retains root for command identity, so the existing native dispatch and frozen training calls are unchanged. The override lets a local cached evidence directory validate original remote argv identity without treating its local archive path as the remote path. Evidence files are still read from root.",
+      "prepare requires LOCAL_INDEPENDENT_QA.json status PASS and MODEL_SCIENCE_REVIEW.json status PASS_static_science_alignment and includes both in policy_files SHA closure. No scientific contract field, model/input, native qualification or training loop changes."
+    ],
+    "default_identity_root_preserves_native_behavior": true,
+    "training_loop_changed": false,
+    "native_qualification_changed": false,
+    "model_runner_changed": false,
+    "remaining_validation": "Separate operational QA must test cache override evidence and tamper rejection. This report confirms only static scientific alignment."
+  }
+}

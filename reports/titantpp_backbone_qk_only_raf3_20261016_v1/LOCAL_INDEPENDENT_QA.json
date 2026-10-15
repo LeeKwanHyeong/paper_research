@@ -1,0 +1,122 @@
+{
+  "status": "PASS",
+  "created_kst": "2026-10-16T03:45:26.814715+09:00",
+  "review_scope": "QK-only model/runner and RAF5090 three-fit operating tools; local synthetic and read-only provenance QA before any preparation/deployment/training",
+  "open_findings": [],
+  "severity_counts": {
+    "CRITICAL": 0,
+    "HIGH": 0,
+    "MEDIUM": 0,
+    "LOW": 0
+  },
+  "reviewed_file_sha256": {
+    "models/TPPs/CountAwareTitanQKOnlyCNN.py": "1511c040b71367ff790e43ad6012141d738542e9a47f648ff63a3873b7fe7078",
+    "paper/scripts/run_titantpp_qk_only_cnn.py": "d1dc15001733acb3d75a16642eaaf515945bda2e5c5d13e392497f9c510dfeaa",
+    "paper/tests/test_titantpp_qk_only_model.py": "d03052cd9b2e2e29e053314d5a79b69718161a2041a180ab0a6ccafe3a6116be",
+    "paper/scripts/prepare_titantpp_qk_only_raf3.py": "0de75150e7a36b482e2a135c6eed5292d275ea88e988a3ad43bf8697712e6f3f",
+    "paper/scripts/deploy_titantpp_qk_only_raf3.py": "55c422ee01ebfe6eebdd632598cc101070bb4c53d3dd528573e0f457bd3ad475",
+    "paper/scripts/advance_titantpp_qk_only_raf3.py": "5a8718421b93c5b97ee063cc9ba24bfcb9b33b59d8a0f2db86b8d5871d2c90eb",
+    "paper/scripts/titantpp_qk_only_raf3_runtime.py": "481304d9f4ae2b3372be1c299ed5a404cd18816aa6f7d3e929ba0dfdba71f705",
+    "paper/tests/test_titantpp_qk_only_raf3_ops.py": "948e0d60428d763376e36e8ad1f4ca90d0aa0c620d4d7a95499493b7a41ed620"
+  },
+  "science_spec_sha256": "0393da551a4933d3ed8105910fc3859d8aadcaf008b19e786cd177282a56db14",
+  "test_runs": [
+    {
+      "scope": "workspace model23 + initial ops57",
+      "passed": 80,
+      "actual_exit": 0,
+      "pytest_seconds": 9.86,
+      "receipt": "/private/tmp/qk_only_independent_qa_20261016/receipt.json"
+    },
+    {
+      "scope": "isolated frozen source141 plus new2 model tests",
+      "passed": 23,
+      "actual_exit": 0,
+      "pytest_seconds": 9.64,
+      "receipt": "/private/tmp/qk_only_independent_qa_20261016/frozen_receipt.json"
+    },
+    {
+      "scope": "final revised operating tools incl15 cached-completion regression cases",
+      "passed": 72,
+      "actual_exit": 0,
+      "pytest_seconds": 1.11,
+      "receipt": "/private/tmp/qk_only_independent_qa_20261016/cache_fixed_receipt.json"
+    }
+  ],
+  "additional_checks": {
+    "nonzero_QK_attention_equivalence_cases": 12,
+    "conditions": "3seeds × context memory present/absent × event bias present/absent, with padding and withheld boundary",
+    "extra_receipt": "/private/tmp/qk_only_independent_qa_20261016/extra_checks.json",
+    "original_empty_files_advance_counterexample_now_rejected": true,
+    "independent_counterexample_error": "Missing final archive/manifest/result evidence"
+  },
+  "evidence_files": {
+    "/private/tmp/qk_only_independent_qa_20261016/stdout.txt": "a34939a87b9c25058d745028e0bf24113592b115c53f9baa104b8ad058386b14",
+    "/private/tmp/qk_only_independent_qa_20261016/extra_checks.json": "e52ed3c837c2740ae983e0c4b9a74d3b4044da71c6238762a4b51418a8a48fd0",
+    "/private/tmp/qk_only_independent_qa_20261016/frozen_stdout.txt": "d0134f972c9a318eafc4f0e46b8092aa955542217db3f825354650c70360d14a",
+    "/private/tmp/qk_only_independent_qa_20261016/cache_fixed_stdout.txt": "8766b53ce442622affbd9f398e1f7c3d1a40de9e15cd76d5f91d4ac90127dff1",
+    "/private/tmp/qk_only_independent_qa_20261016/stderr.txt": "eae3b3ab88ebd007cd93d95595b7a951b2c689b68948b08fd24d8ff83282945e",
+    "/private/tmp/qk_only_independent_qa_20261016/frozen_receipt.json": "87574a6d435d6aefb2ac43ee05957a560bce707dc5c50961120a74065a167313",
+    "/private/tmp/qk_only_independent_qa_20261016/cache_fixed_receipt.json": "b7670cd6ff94000f61198fedbee363ba7c10a14e1a6c69e000c7081528b089aa",
+    "/private/tmp/qk_only_independent_qa_20261016/receipt.json": "59828a2efe2ec22af27e350cc7170f60e84c3ca8060f98a40ed8f1ab64d3dbbc",
+    "/private/tmp/qk_only_independent_qa_20261016/cache_fixed_stderr.txt": "eae3b3ab88ebd007cd93d95595b7a951b2c689b68948b08fd24d8ff83282945e",
+    "/private/tmp/qk_only_independent_qa_20261016/frozen_stderr.txt": "eae3b3ab88ebd007cd93d95595b7a951b2c689b68948b08fd24d8ff83282945e"
+  },
+  "source_preservation": {
+    "parent_source_files_verified_before_and_after": 141,
+    "parent_integrity_files_verified_before_and_after": 360,
+    "parent_training_pins_verified": 111,
+    "new_source_extension_count": 2,
+    "expected_frozen_source_count": 143,
+    "existing_two_workspace_differences_preserved": [
+      "paper/scripts/evaluate_titantpp_gru_controls.py",
+      "paper/scripts/run_titantpp_adaptive_history_cnn.py"
+    ],
+    "frozen_model_overlay_pass": true
+  },
+  "acceptance_criteria": {
+    "one_candidate_three_seeds_only": true,
+    "source_input_parent_pins_and_original_absolute_deadline": true,
+    "original_common_initial_tensor_and_RNG_preservation": true,
+    "local_QK384_V_filter_absent_no_dummy": true,
+    "inactive_GRU_registration_preserved": true,
+    "all_QK_coefficients_and_common_V_projection_gradients": true,
+    "observed_padding_withheld_target_future_state_guards": true,
+    "shared_loss_head_memory_optimizer_selector_unchanged": true,
+    "historical_CNN_scientific_training_or_inference_excluded": true,
+    "native_GPURuntime_and_three_concurrent_synthetic_barriers_enforced": true,
+    "exclusive_attempt_claim_lease_failure_preservation": true,
+    "PID_start_ticks_argv_binding_running_and_terminal": true,
+    "scientific_worker_dispatcher_pipeline_exit_and_owner_GPU_absence": true,
+    "archive_exact_inventory_binary_SHA_and_cache_reverification": true,
+    "sample_SD_seed_deltas_and_unfavorable_Validation_metrics_preserved": true,
+    "no_prepare_deploy_remote_or_real_data_inference_performed": true
+  },
+  "resolved_findings": [
+    {
+      "severity": "HIGH",
+      "original_file_line": "paper/scripts/advance_titantpp_qk_only_raf3.py:257",
+      "description": "Cached final receipt accepted files={} and returned complete without archive, terminal process, selected/terminal binary or comparison evidence.",
+      "pre_fix_reproduction_root": "/private/tmp/qk_cache_counterexample_3ousmhrn",
+      "discovery_stage": "Before preparation, deployment or training",
+      "remediation": "New verify_complete_cache verifies required exact inventory and SHA, historical terminal round, native qualification permit, launch/claim/worker exit identities, selected and last binary coverage, archive member bytes, explicit owner/GPU absence, and recomputed fixed Validation comparison. Runtime identity_root argument only permits local validation of saved remote identities.",
+      "regression": "Normal fully bound cache passes with remote0/current_gpu_idle_proven=false; empty/missing/tampered/rehash-semantic-invalid cache fails. Final72 ops tests and independent original advance counterexample pass.",
+      "old_loop3_files_modified": false,
+      "failure_evidence_preserved": true
+    }
+  ],
+  "limits": [
+    "Local torch differs from native frozen GPU Runtime; actual native qualification has not run in this review and must pass before fresh fits.",
+    "This is structural removal with local capacity576→384, not parameter-matched causal attribution.",
+    "Historical CNN reference Runtime5080/cuDNN91900 differs from new5090/cuDNN92000.",
+    "Supervisor wrapper own OS exit is not directly observed; pipeline child exit is separately required.",
+    "Only fabricated synthetic reference-model forwards were used; no historical trained CNN checkpoint inference or Test evaluation.",
+    "Project .agents execution-protocol path is absent; no .agents files were written."
+  ],
+  "files_changed": [
+    "reports/titantpp_backbone_qk_only_raf3_20261016_v1/LOCAL_INDEPENDENT_QA.json"
+  ],
+  "remote_calls": 0,
+  "native_training_started_by_reviewer": false,
+  "new_bundle_absent_at_completion": true
+}

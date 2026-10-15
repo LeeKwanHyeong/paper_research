@@ -1,0 +1,84 @@
+{
+  "status": "PASS",
+  "severity_counts": {
+    "CRITICAL": 0,
+    "HIGH": 0,
+    "MEDIUM": 0,
+    "LOW": 0
+  },
+  "scope": "Independent local arithmetic and provenance QA of same-current-checkpoint on/off Train/Validation only",
+  "result_sha256": "3bd4900b7621c5419dd987ee3f0b73959eeb8894921f6caa943ad0501ae3afd5",
+  "receipt_sha256": "8148554e9d03895629d9233ad7d96422dcac65fc1fcae525bc1023d892e09b73",
+  "input_pins_verified": 607,
+  "output_pins_verified": 2,
+  "per_seed_cells_verified": 180,
+  "common_entity_support_rows_verified": 90,
+  "three_seed_groups_verified": 60,
+  "additive_closures_verified": 12,
+  "six_metric_groups_verified": 12,
+  "numeric_comparisons": 8628,
+  "train_targets_per_seed": 25779,
+  "validation_targets_per_seed": 6690,
+  "train_cut_eligible": 15922,
+  "cuts": [
+    0.4054651081081645,
+    1.252762968495368
+  ],
+  "whole_row_deltas_off_minus_on": [
+    {
+      "seed": 42,
+      "split": "train",
+      "delta_rmse": 0.02144474980403288,
+      "delta_mae": 0.006077405070355368
+    },
+    {
+      "seed": 42,
+      "split": "validation",
+      "delta_rmse": 0.0005366879825814408,
+      "delta_mae": -0.020015384272431547
+    },
+    {
+      "seed": 52,
+      "split": "train",
+      "delta_rmse": 0.012303872187040099,
+      "delta_mae": 0.004156443424768952
+    },
+    {
+      "seed": 52,
+      "split": "validation",
+      "delta_rmse": -0.007480110278571317,
+      "delta_mae": -0.005575339124163747
+    },
+    {
+      "seed": 62,
+      "split": "train",
+      "delta_rmse": 0.03471460895610079,
+      "delta_mae": -0.005343218864112487
+    },
+    {
+      "seed": 62,
+      "split": "validation",
+      "delta_rmse": 0.006141263808032704,
+      "delta_mae": -0.03471832135511299
+    }
+  ],
+  "interpretation_limit": "Fixed jointly trained checkpoint V-residual sensitivity only. Off is not original CNN or retrained V-free model; no causal/generalization/significance conclusion.",
+  "remote_calls": 0,
+  "inference_calls": 0,
+  "test_reads": 0,
+  "historical_cnn_prediction_reads": 0,
+  "acceptance_criteria": {
+    "all_input_output_hashes": true,
+    "one_to_one_on_off_targets_and_history": true,
+    "target_excluded_last_three_history_and_train_only_cuts": true,
+    "fixed_15_cells": true,
+    "row_and_common_entity_equal_weights": true,
+    "all_six_metrics": true,
+    "means_sample_sd_and_seed_deltas": true,
+    "all_12_additive_closures": true,
+    "negative_results_and_seed_exceptions_preserved": true
+  },
+  "files_changed": [
+    "reports/titantpp_backbone_value_difference_raf3_20261016_v1/BRANCH_PROBE_RESULT_QA.json"
+  ]
+}
