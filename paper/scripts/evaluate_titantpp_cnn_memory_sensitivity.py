@@ -134,6 +134,16 @@ def selected_telemetry(record, lengths, np):
     return out
 
 
+def load_observed_frame(path, split, pl):
+    """Filter before materialization: a historically named export may include Test."""
+    need(split in ('train', 'validation'), 'Only observed diagnostic splits are permitted')
+    allowed = ['train'] if split == 'train' else ['train', 'validation']
+    frame = pl.scan_parquet(path).filter(pl.col('chronological_split').is_in(allowed)).collect()
+    need(frame.height > 0 and set(frame['chronological_split'].unique()) <= set(allowed),
+         'Disallowed rows materialized')
+    return frame.sort(['oper_part_no', 'seq'])
+
+
 def worker(root, contract_sha, job_id, split):
     root = Path(root).resolve()
     c, job = verify(root, contract_sha, job_id, split)
@@ -179,10 +189,7 @@ def worker(root, contract_sha, job_id, split):
         state_sha = original['checkpoint_state_sha256']
         need(runner.canonical_state_dict_sha256(payload['model_state_dict']) == state_sha, 'Tensor SHA differs')
         data = c['datasets'][job['dataset']]
-        frame = pl.read_parquet(checked(root, data['path'])).sort(['oper_part_no', 'seq'])
-        need(set(frame['chronological_split'].unique()) <= {'train', 'validation'}, 'Input contains held-out rows')
-        if split == 'train':
-            frame = frame.filter(pl.col('chronological_split') == 'train')
+        frame = load_observed_frame(checked(root, data['path']), split, pl)
         helper.validate_frame(frame, definition, 'validation', np, pl)
         train_q = frame.filter(pl.col('chronological_split') == 'train')['demand_qty'].to_numpy().astype(np.float64)
         stats = definition['statistics']

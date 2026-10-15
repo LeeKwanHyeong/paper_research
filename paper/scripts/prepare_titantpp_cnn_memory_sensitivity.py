@@ -30,7 +30,7 @@ def canonical(value):
 def prepare(root):
     root = root.resolve()
     name = root.name
-    assert name in (NAME, NAME.replace('_v1', '_v2'))
+    assert name in tuple(NAME.replace('_v1', '_v'+str(v)) for v in (1, 2, 3))
     root.mkdir(parents=True, exist_ok=False)
     files, operations, parents, jobs, datasets, runtimes = {}, {}, {}, [], {}, {}
     def transfer(src, relative, digest, manifest):
@@ -131,11 +131,14 @@ def prepare(root):
             stop='No fixed support: do not launch gate training. Fixed support alone: report constant attenuation evidence, do not claim adaptive need.',
             inferential_limit='Post-Test exploratory diagnostic; inference intervention is not newly trained model performance'))
     if name != NAME:
-        prior = PROJECT/'search_artifacts'/NAME/'contract.json'
+        previous_name = NAME.replace('_v1', '_v2') if name.endswith('_v3') else NAME
+        prior = PROJECT/'search_artifacts'/previous_name/'contract.json'
         old = json.loads(prior.read_text())
         c['deadline_unix'] = old['deadline_unix']
         c['operational_repair'] = dict(prior_contract_raw_sha256=sha(prior),
-            reason='Missing empty sample_data root sentinel blocked source import before data/model inference',
+            prior_bundle=previous_name,
+            reason=('Push down Train/Validation split filter before materializing historical mixed input' if name.endswith('_v3')
+                    else 'Missing empty sample_data root sentinel blocked source import before data/model inference'),
             original_roots_and_failures_preserved=True, same_science_selection_inputs=True)
     with (root / 'contract.json').open('x') as stream:
         json.dump(c, stream, ensure_ascii=False, indent=2, allow_nan=False); stream.write('\n')

@@ -1,4 +1,4 @@
-"""Synthetic integration tests; never open datasets/checkpoints or contact hosts."""
+"""Synthetic tests; never open research datasets/checkpoints or contact hosts."""
 from copy import deepcopy
 import json
 import os
@@ -12,6 +12,7 @@ import unittest
 from unittest.mock import patch
 
 import numpy as np
+import polars as pl
 import torch
 
 from paper.scripts import evaluate_titantpp_cnn_memory_sensitivity as evaluator
@@ -19,6 +20,68 @@ from paper.scripts import evaluate_titantpp_cnn_memory_sensitivity as evaluator
 
 PROJECT = Path(__file__).resolve().parents[2]
 SOURCE = PROJECT / "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source"
+
+
+class ObservedFrameBoundaryTests(unittest.TestCase):
+    def test_lazy_predicate_precedes_materialization_and_preserves_allowed_rows(self):
+        fabricated = pl.DataFrame({
+            "oper_part_no": ["b", "a", "a", "b", "a", "b", "a"],
+            "seq": [3, 3, 2, 1, 4, 2, 1],
+            "chronological_split": ["test", "validation", "train", "train", "test", "validation", "train"],
+            "demand_qty": [987654321., 3., 2., 4., 987654322., 5., 1.],
+        })
+        with tempfile.TemporaryDirectory(prefix="cnn-memory-split-", dir="/private/tmp") as tmp:
+            path = Path(tmp) / "synthetic_mixed_splits.parquet"
+            fabricated.write_parquet(path)
+            original_scan = pl.scan_parquet
+            for split, allowed, expected_values in (
+                ("train", {"train"}, [1., 2., 4.]),
+                ("validation", {"train", "validation"}, [1., 2., 3., 4., 5.]),
+            ):
+                events = []
+                test_case = self
+
+                class GuardedLazy:
+                    def __init__(self, query, filtered=False):
+                        self.query, self.filtered = query, filtered
+
+                    def filter(self, predicate):
+                        events.append("filter")
+                        return GuardedLazy(self.query.filter(predicate), filtered=True)
+
+                    def collect(self):
+                        # Check the query before executing it, not after loading a
+                        # complete frame and dropping held-out rows in Python.
+                        test_case.assertTrue(self.filtered)
+                        plan = self.query.explain(optimized=False)
+                        test_case.assertIn("FILTER", plan)
+                        test_case.assertIn("chronological_split", plan)
+                        test_case.assertEqual(events, ["scan", "filter"])
+                        events.append("collect")
+                        result = self.query.collect()
+                        test_case.assertLessEqual(set(result["chronological_split"]), allowed)
+                        test_case.assertFalse((result["demand_qty"] >= 987654321.).any())
+                        return result
+
+                def guarded_scan(filename):
+                    self.assertEqual(Path(filename), path)
+                    events.append("scan")
+                    return GuardedLazy(original_scan(filename))
+
+                with self.subTest(split=split), patch.object(pl, "scan_parquet", side_effect=guarded_scan), \
+                     patch.object(pl, "read_parquet", side_effect=AssertionError("eager materialization forbidden")):
+                    actual = evaluator.load_observed_frame(path, split, pl)
+                self.assertEqual(events, ["scan", "filter", "collect"])
+                self.assertEqual(actual["demand_qty"].to_list(), expected_values)
+                expected = fabricated.filter(pl.col("chronological_split").is_in(sorted(allowed))).sort(["oper_part_no", "seq"])
+                self.assertTrue(actual.equals(expected))
+
+    def test_held_out_request_is_rejected_before_io(self):
+        with patch.object(pl, "scan_parquet") as scan, patch.object(pl, "read_parquet") as eager:
+            with self.assertRaisesRegex(ValueError, "Only observed diagnostic splits"):
+                evaluator.load_observed_frame(Path("/does/not/exist.parquet"), "test", pl)
+        scan.assert_not_called()
+        eager.assert_not_called()
 
 
 class ObservedHistoryAndTelemetryTests(unittest.TestCase):
