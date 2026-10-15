@@ -1,0 +1,761 @@
+"""Taxi adaptive/capacity CNN6 frozen Validation gate and Test; reuse historical CNN3.
+No training, checkpoint reselection or automatic retry. Exclusive isolated outputs.
+"""
+from __future__ import annotations
+import argparse
+import copy
+import hashlib
+import importlib.util
+import io
+import json
+import math
+import os
+from pathlib import Path
+import shlex
+import statistics
+import subprocess
+import sys
+import tarfile
+import time
+import traceback
+
+PROJECT = Path(__file__).resolve().parents[2]
+TRAIN = PROJECT / 'search_artifacts/titantpp_cnn_history_adaptation_matched_20261015_v1/execution_v1'
+BUNDLE = PROJECT / 'search_artifacts/titantpp_history_taxi6_test_20261015_v1'
+REPORT = PROJECT / 'reports/titantpp_history_taxi6_test_20261015_v1'
+TRAIN_SHA = '515a7ca4db247b902074f100b282bcb64e9bb5037e5e37c8fd1f01d4dcbf8005'
+TRAIN_CANONICAL = '147cccbf88c534a5bb709b2afa049e97c454306943de227c28def92bddaf5188'
+FOLLOWUP_SHA = 'c34a26cce9b8656917e0c1dc10d67b53104b0fbd23ae02f96caed2d4b444661a'
+BASELINE = PROJECT / 'search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1'
+ADAPTIVE = 'titantpp_cnn_history_adaptive_v1'
+CAPACITY = 'titantpp_cnn_history_capacity_v1'
+CNN = 'titantpp_cnn_gru54_cnn_only'
+DATASETS = ('yellow_trip_hourly',)
+SEEDS = (42, 52, 62)
+HOSTS = ('5080',)
+USER_INSTRUCTION = '그럼 Taxi도 Validation에서 선택한 checkpoint 그대로 Test까지 비교해봐. 기존 CNN·이력 적응 CNN·용량 대조군의 3seed RMSE·MAE와 seed별 차이를 RAF와 나란히 정리해서, 이력 적응 방식에 개선 근거가 남는지 판단해줘.'
+APPROVAL_CONTEXT = '5080 Taxi 두 후보 × 3seed의 학습·원본 회수 완료 후, 고정 선택 checkpoint Validation6 재현과 Test6. 기존 Taxi CNN3와 완료 RAF9 결과 재사용 비교. 새 학습·재선택·재시도 없음.'
+REMOTE = {h: '/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/' + BUNDLE.name + '_' + h for h in HOSTS}
+
+
+TRAIN_REPORT = PROJECT/'reports/titantpp_cnn_history_adaptation_matched_20261015_v1/execution_v1'
+RAF_BUNDLE = PROJECT/'search_artifacts/titantpp_history_raf6_test_20261015_v1'
+RAF_REPORT = PROJECT/'reports/titantpp_history_raf6_test_20261015_v1'
+RAF_RECEIPT_SHA = 'dc85fbdab7b41c067b1a53a6823a0fbc68b612bcfd22e00f62ab1cb4b347ade0'
+QUALIFICATION_SHA = '46528e441832aef2e47ab28c85c84989ede366038dd383eed0dcc26f44912108'
+
+
+def verify_training_seals():
+    require(sha(TRAIN/'followup_integrity.json')==FOLLOWUP_SHA,'Training followup seal changed; remote0')
+    for name,digest in read(TRAIN/'followup_integrity.json')['files'].items():
+        require(sha(safe(PROJECT,name))==digest,'Training source/input/operation/baseline changed; remote0')
+
+
+def qualification_metadata():
+    import base64
+    pointer=read(TRAIN_REPORT/'latest.json')
+    require(sha(pointer['round'])==pointer['round_sha256'],'Observed training round changed')
+    snapshot=read(pointer['round'])
+    require(snapshot['contract_sha256']==TRAIN_CANONICAL,'Foreign training snapshot')
+    entry=snapshot['files']['qualification/receipt.json'];raw=base64.b64decode(entry['base64'],validate=True)
+    require(hashlib.sha256(raw).hexdigest()==entry['raw_sha256']==QUALIFICATION_SHA,'Native training qualification changed')
+    q=json.loads(raw);require(q['status']=='passed','Native qualification incomplete')
+    require(q['contract_sha256']==TRAIN_CANONICAL,'Qualification contract changed')
+    return q['runtime']
+
+
+def verify_raf():
+    path=RAF_BUNDLE/'final_receipt.json';require(sha(path)==RAF_RECEIPT_SHA,'Completed RAF receipt changed')
+    r=read(path)
+    require(r['status']=='complete' and r['candidate_test_count']==6 and r['baseline_reference_count']==3
+            and r['seed_count']==3 and r['validation_replay_count']==6 and r['actual_native_worker_exit0_count']==12
+            and r['actual_pipeline_exit0_count']==2 and canonical(r['files'])==r['files_sha256'], 'RAF completion invalid')
+    for name,digest in r['files'].items():require(sha(name)==digest,'Completed RAF evidence changed')
+    return read(RAF_REPORT/'THREE_SEED_TEST.json')
+
+
+def paired_judgment(result):
+    by_arm={r['arm']:r['metrics'] for r in result['grouped']}
+    answer={}
+    for ref in (CNN,CAPACITY):
+        metrics={}
+        for key in ('whole_qty_rmse','whole_qty_mae'):
+            new=by_arm[ADAPTIVE][key]['mean'];old=by_arm[ref][key]['mean']
+            differences=[r['metrics'][key]['candidate_minus_baseline'] for r in result['seed_differences']
+                         if r['candidate']==ADAPTIVE and r['baseline']==ref]
+            require(len(differences)==3,'Matched seed comparison incomplete')
+            metrics[key]={'mean_difference':new-old,'relative_percent':100*(new-old)/old if old else None,
+                          'improved_seed_count':sum(x<0 for x in differences),'worsened_seed_count':sum(x>0 for x in differences)}
+        answer[ref]=metrics
+    return answer
+
+
+def compare_raf(taxi):
+    raf=verify_raf();sources={}
+    for name in ('THREE_SEED_TEST.json','THREE_SEED_TEST.md'):
+        sources[str(RAF_REPORT/name)]=sha(RAF_REPORT/name)
+    sources[str(RAF_BUNDLE/'final_receipt.json')]=RAF_RECEIPT_SHA
+    sets={'Taxi':taxi,'RAF':raf};labels={CNN:'기존 CNN',ADAPTIVE:'이력 적응 CNN',CAPACITY:'용량 대조군'}
+    joint={'status':'complete','split':'test','datasets':sets,'paired_judgment':{k:paired_judgment(v) for k,v in sets.items()},
+           'sources':sources,'test_independent':False,'statistical_significance_tested':False,
+           'interpretation_rule':'Compare Adaptive against BOTH CNN and matched Capacity within each dataset; retain adverse metrics and seed exceptions. No cross-dataset raw-error averaging.'}
+    lines=['# Taxi·RAF 이력 적응 CNN 고정 checkpoint 비교','',
+           '각 학습의 전체 Validation raw RMSE 최초 strict finite 최소 epoch를 고정했다. 기존 CNN Test와 완료된 RAF 결과는 재사용했다.',
+           '', '| 데이터셋 | 구조 | Test RMSE 평균±표본SD | Test MAE 평균±표본SD |','|---|---|---:|---:|']
+    for name,data in sets.items():
+        for row in data['grouped']:
+            m=row['metrics'];fmt=lambda key:f"{m[key]['mean']:.6f}±{m[key]['sample_sd']:.6f}"
+            lines.append(f"| {name} | {labels[row['arm']]} | {fmt('whole_qty_rmse')} | {fmt('whole_qty_mae')} |")
+    lines += ['', '| 데이터셋 | seed | 비교 | ΔRMSE | ΔMAE |','|---|---:|---|---:|---:|']
+    for name,data in sets.items():
+        for row in data['seed_differences']:
+            m=row['metrics'];lines.append(f"| {name} | {row['seed']} | {labels[row['candidate']]}−{labels[row['baseline']]} | {m['whole_qty_rmse']['candidate_minus_baseline']:+.6f} | {m['whole_qty_mae']['candidate_minus_baseline']:+.6f} |")
+    lines += ['', '음수는 개선, 양수는 악화다. 표본SD는 ddof=1이며 seed3개에 대한 기술 통계다.','',
+              '| 데이터셋 | 구조 | Validation RMSE 평균±표본SD | Validation MAE 평균±표본SD |','|---|---|---:|---:|']
+    validation={}
+    for name,path in [('Taxi',TRAIN_REPORT/'THREE_SEED_VALIDATION.json'),('RAF',PROJECT/'reports/titantpp_cnn_history_raf6_20261015_v1/THREE_SEED_VALIDATION.json')]:
+        v=read(path);require(v['split']=='validation' and v['held_out_test_evaluated'] is False,'Validation source scope differs')
+        validation[name]=v;sources[str(path)]=sha(path)
+        for arm,label in [('CNN','기존 CNN'),('Adaptive','이력 적응 CNN'),('Capacity','용량 대조군')]:
+            m=v['aggregate'][arm];fmt=lambda key:f"{m[key]['mean']:.6f}±{m[key]['sample_sd']:.6f}"
+            lines.append(f"| {name} | {label} | {fmt('RMSE')} | {fmt('MAE')} |")
+    joint['validation']=validation
+    lines += ['', '## 결과 판단','']
+    for name,data in joint['paired_judgment'].items():
+        for ref,metrics in data.items():
+            r,m=metrics['whole_qty_rmse'],metrics['whole_qty_mae']
+            lines.append(f"- {name}, 이력 적응−{labels[ref]}: 평균 RMSE {r['mean_difference']:+.6f} ({r['relative_percent']:+.3f}%), MAE {m['mean_difference']:+.6f} ({m['relative_percent']:+.3f}%). seed 개선은 RMSE {r['improved_seed_count']}/3, MAE {m['improved_seed_count']}/3이다.")
+    taxi_effect=joint['paired_judgment']['Taxi']
+    both=all(v['mean_difference']<0 for metrics in taxi_effect.values() for v in metrics.values())
+    if both:
+        verdict='Taxi에서는 기존 CNN과 용량 대조군 대비 두 지표 평균이 모두 낮아 개선 근거가 남는다. 다만 seed별 예외를 함께 봐야 하며 RAF의 같은 대조에서는 우위가 유지되지 않아 공통 backbone의 보편적 개선으로 확대할 수 없다.'
+    else:
+        verdict='Taxi에서도 기존 CNN과 용량 대조군 모두에 대해 RMSE·MAE가 함께 낮아지는 조건은 충족하지 못했다. 일부 지표나 seed의 이득은 보존하되, 두 데이터셋에 걸친 일관된 이력 적응 효과를 주장할 근거는 부족하다.'
+    joint['verdict']=verdict;lines += ['',verdict,'',
+        'Taxi 세 구조는 5080/cuDNN91900, RAF 신규 후보는5090/cuDNN92000·기존 CNN은5080/cuDNN91900이다. RAF의 CNN 대비 차이는 환경 차이를 포함하며 같은5090의 Adaptive−Capacity가 주 대조다.',
+        '기존 Test 접근 뒤 설계한 탐색적 후속 평가다. 새 독립 평가·원인 확정·통계적 유의성으로 해석하지 않는다. 큰 수량과 시간 지표, seed별 원문 및 단순 기준선은 두 결과 JSON에 모두 남겼다.','']
+    write(REPORT/'TAXI_RAF_COMPARISON.json',joint)
+    with (REPORT/'TAXI_RAF_COMPARISON.md').open('x') as f:f.write('\n'.join(lines))
+    return [REPORT/'TAXI_RAF_COMPARISON.json',REPORT/'TAXI_RAF_COMPARISON.md']
+
+
+def require(ok, message):
+    if not ok:
+        raise ValueError(message)
+
+
+def sha(path):
+    digest = hashlib.sha256()
+    with Path(path).open('rb') as f:
+        for block in iter(lambda: f.read(1024 * 1024), b''):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def read(path):
+    return json.loads(Path(path).read_text())
+
+
+def canonical(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False,
+                         allow_nan=False, separators=(',', ':')).encode()).hexdigest()
+
+
+def write(path, value):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open('x') as f:
+        json.dump(value, f, indent=2, ensure_ascii=False, allow_nan=False)
+        f.write('\n')
+
+
+def safe(root, name):
+    root = Path(root).resolve()
+    p = Path(name)
+    require(not p.is_absolute() and '..' not in p.parts and p.parts, 'Unsafe relative path')
+    target = root / p
+    require(target.resolve().is_relative_to(root) and not target.is_symlink(), 'Path escapes root')
+    return target
+
+
+def copy_checked(source, destination, expected):
+    require(sha(source) == expected, 'Source bytes changed: ' + str(source))
+    destination = Path(destination)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with Path(source).open('rb') as src, destination.open('xb') as dst:
+        for block in iter(lambda: src.read(1024 * 1024), b''):
+            dst.write(block)
+    require(sha(destination) == expected, 'Copied bytes differ')
+
+
+def evaluator():
+    spec = importlib.util.spec_from_file_location('taxi6_eval_operational', BUNDLE / 'operation/evaluate.py')
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def training_contract():
+    require(sha(TRAIN / 'execution_contract.json') == TRAIN_SHA, 'Original training contract changed; remote0')
+    c = read(TRAIN / 'execution_contract.json')
+    require(canonical(c) == TRAIN_CANONICAL, 'Training canonical seal differs')
+    expected = {f'{d}__{s}__{a}' for d in DATASETS for s in SEEDS for a in (ADAPTIVE, CAPACITY)}
+    require(len(c['jobs']) == 6 and {j['id'] for j in c['jobs']} == expected, 'Foreign training cohort')
+    return c
+
+
+def check_receipt(receipt, contract, job, split, e):
+    if split == 'validation':
+        return e.verify_validation_receipt(receipt, contract, job)
+    require(receipt['status'] == 'complete' and receipt['split'] == 'test'
+            and receipt['contract_sha256'] == contract['contract_sha256']
+            and receipt['job_id'] == job['id'] and receipt['selected_epoch'] == job['selected_epoch']
+            and receipt['checkpoint_sha256'] == job['checkpoint']['sha256']
+            and receipt['state_sha256'] == job['checkpoint_state_sha256']
+            and receipt['source_closure'] == contract['sources']['components']['closure']
+            and receipt['retrained'] is False and receipt['reselected'] is False
+            and receipt['held_out_test_evaluated'] is True and receipt['full_population'] is True
+            and receipt['native_runtime_checked'] is True, 'Test receipt is incomplete or foreign')
+    for key in ('id', 'cohort', 'study', 'dataset', 'arm', 'seed', 'initial_state_sha256'):
+        require(receipt[key] == job[key], 'Test model identity differs: ' + key)
+    require(set(receipt['qualification']) == e.QUALIFICATION_KEYS
+            and all(v is True for v in receipt['qualification'].values()), 'Test causal checks failed')
+    population = contract['datasets'][job['dataset']]['test_population']
+    require(receipt['metrics']['count'] == receipt['prediction_rows'] == population['count'], 'Test count differs')
+    for key in ('target_identity_sha256', 'truth_sha256', 'time_sha256'):
+        require(receipt[key] == population[key], 'Test population differs')
+    e.compare_validation_metrics(receipt['metrics'], receipt['metrics'])  # finite six metrics; not a Test selection
+    runtime = contract['runtimes'][job['evaluation_host']]
+    e.check_runtime(receipt['runtime'], runtime, 'cuda', current_process=False)
+    e.check_runtime(receipt['runtime_after'], runtime, 'cuda', current_process=False)
+    require(receipt['runtime'] == receipt['runtime_after'], 'Runtime changed during Test')
+    return receipt
+
+
+def prepare():
+    c = training_contract()
+    verify_training_seals()
+    require(not BUNDLE.exists(), 'Evaluation bundle already exists; no overwrite')
+    BUNDLE.mkdir(); REPORT.mkdir(exist_ok=True)
+    files, dependencies = {}, {}
+    def add(src, name, expected=None):
+        expected = expected or sha(src)
+        copy_checked(src, safe(BUNDLE, name), expected); files[name] = expected
+    add(TRAIN / 'execution_contract.json', 'provenance/training_contract.json', TRAIN_SHA)
+    for src, name in [('evaluate_titantpp_history_taxi6_frozen.py', 'evaluate.py'),
+                      ('run_titantpp_gru_cap9_test_pipeline.py', 'pipeline.py')]:
+        add(PROJECT / 'paper/scripts' / src, 'operation/' + name)
+    for name, expected in {**c['source']['files'], **c['input_files']}.items():
+        add(TRAIN / 'source' / name, 'source/' + name, expected)
+    approval = {'approved': True, 'user_instruction': USER_INSTRUCTION, 'scope_context': APPROVAL_CONTEXT,
+        'user_instruction_sha256': hashlib.sha256(USER_INSTRUCTION.encode()).hexdigest(),
+        'expected_condition_count': 6, 'job_ids': sorted(j['id'] for j in c['jobs']),
+        'training_contract_sha256': TRAIN_CANONICAL, 'new_training': False,
+        'checkpoint_reselection': False, 'local_root': str(BUNDLE), 'remote_roots': REMOTE,
+        'test_independent': False, 'automatic_retry': False, 'approved_date_kst': '2026-10-15'}
+    write(BUNDLE / 'approval.json', approval); files['approval.json'] = sha(BUNDLE / 'approval.json')
+    old = read(BASELINE / 'contract.json'); manifest = read(BASELINE / 'evaluation_results_manifest.json')
+    require(old['contract_sha256'] == canonical({k:v for k,v in old.items() if k!='contract_sha256'})
+            and manifest['contract_sha256'] == old['contract_sha256'], 'Baseline contract/manifest differs')
+    for name in ('contract.json', 'evaluation_results_manifest.json'):
+        dependencies[str(BASELINE / name)] = sha(BASELINE / name)
+    spec = copy.deepcopy(old['datasets']['yellow_trip_hourly'])
+    require(spec['definition'] == c['datasets'][0], 'Taxi preprocessing differs from original CNN')
+    for pk, hk in [('data_path','data_sha256'), ('training_data_path','training_data_sha256'),
+                   ('split_manifest_path','split_manifest_sha256')]:
+        if spec[pk] not in files:
+            add(BASELINE / spec[pk], spec[pk], spec[hk])
+    references=[]
+    for ref in c['baseline_jobs']:
+        j = next(j for j in old['jobs'] if j['id']==ref['id'])
+        require(j['dataset']=='yellow_trip_hourly' and j['arm']==CNN and j['seed'] in SEEDS
+                and j['checkpoint']['sha256']==ref['original']['checkpoint']['sha256']
+                and j['selected_epoch']==ref['original']['selected_epoch'], 'Wrong historical CNN baseline')
+        for suffix in ('test_metrics.json', 'test_worker_exit.json'):
+            name='results/'+j['id']+'/'+suffix; expected=manifest['files'][name]
+            add(BASELINE/name, 'references/'+j['id']+'/'+suffix, expected)
+            dependencies[str(BASELINE/name)] = expected
+        actual=read(BASELINE/'results'/j['id']/'test_worker_exit.json')
+        require(actual['actual_child_exit_observed'] is True and type(actual['exit_code']) is int
+                and actual['exit_code']==0 and actual['job_id']==j['id']
+                and actual['contract_sha256']==old['contract_sha256'], 'CNN Test exit not verified')
+        receipt=check_receipt(read(BASELINE/'results'/j['id']/'test_metrics.json'),old,j,'test',evaluator())
+        path='references/'+j['id']+'/test_metrics.json'
+        references.append({'id':j['id'],'dataset':j['dataset'],'seed':j['seed'],'arm':j['arm'],
+            'selected_epoch':j['selected_epoch'],'checkpoint_sha256':j['checkpoint']['sha256'],
+            'contract_sha256':old['contract_sha256'],'receipt_path':path,'receipt_sha256':files[path]})
+    require({r['seed'] for r in references}==set(SEEDS) and len(references)==3, 'CNN3 references incomplete')
+    h=c['hosts']['5080']; q=qualification_metadata()
+    write(BUNDLE/'provenance/native_training_runtime.json',q)
+    files['provenance/native_training_runtime.json']=sha(BUNDLE/'provenance/native_training_runtime.json')
+    runtimes={'5080':{'host':'5080','python':h['python'],'resolved_python_executable':'/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python3.12',
+        'python_version':q['python'],**{k:q[k] for k in ('torch','cuda','cudnn','numpy','polars')},
+        'gpu_uuid':h['gpu_uuid'],'torch_num_threads':4,'interop_threads':1,'dtype':'float32',
+        'deterministic_algorithms':True,'TF32':False,
+        'native':{k:q[k] for k in ('gpu','cudnn_benchmark','cudnn_deterministic','float32_matmul_precision','reduced_precision_reduction','runtime_helper_sha256')}}}
+    ops={k:v for k,v in files.items() if k.startswith('operation/')}
+    e=evaluator()
+    jobs=[{**j,'cohort':e.COHORT,'study':'components','training_host':j['host'],'evaluation_host':j['host'],
+           'frozen_source_closure':c['source']['files_sha256']} for j in c['jobs']]
+    draft={'schema':e.KIND,'cohort':e.COHORT,'evaluation_scope':'test_history_taxi6_followup',
+        'metrics_schema':'quantity_time_tail_v1','expected_seeds':list(SEEDS),'expected_jobs':6,'binding_complete':False,
+        'sources':{'components':{'root':'source','files':c['source']['files'],'closure':c['source']['files_sha256'],
+                               'revision':c['source']['base_git_revision']}},
+        'jobs':jobs,'datasets':{'yellow_trip_hourly':spec},'runtimes':runtimes,
+        'evaluator_integrity':{'files':ops,'closure':canonical(ops)},
+        'training_contract_path':'provenance/training_contract.json','training_contract_sha256':TRAIN_SHA,
+        'partial_approval_path':'approval.json','partial_approval_sha256':files['approval.json'],
+        'baseline_references':references,'test_is_independent':False,'new_training':False,
+        'checkpoint_reselection':False,'automatic_retry':False,'bound_files':{}}
+    draft['contract_sha256']=canonical(draft);write(BUNDLE/'draft_contract.json',draft)
+    files['draft_contract.json']=sha(BUNDLE/'draft_contract.json')
+    write(BUNDLE/'preparation_inventory.json',{'files':files,'external_dependencies':dependencies})
+    e.verify_contract(BUNDLE,require_bound=False)
+    return {'status':'prepared_unbound','candidate_count':6,'baseline_count':3,'remote_calls':0}
+
+def verify_bootstrap(expected):
+    require(sha(BUNDLE / 'bootstrap_integrity.json') == expected, 'Bootstrap integrity differs; remote0')
+    seal = read(BUNDLE / 'bootstrap_integrity.json')
+    for name, value in seal['files'].items():
+        require(sha(name) == value, 'Pinned dependency changed; remote0: ' + name)
+    c = training_contract()
+    inventory = read(BUNDLE / 'preparation_inventory.json')
+    for name, value in inventory['files'].items():
+        require(sha(safe(BUNDLE, name)) == value, 'Prepared artifact changed; remote0')
+    for name, value in inventory['external_dependencies'].items():
+        require(sha(name) == value, 'Existing baseline proof changed; remote0')
+    verify_training_seals()
+    verify_raf()
+    return c
+
+
+def collection_gate(c):
+    path=TRAIN/'retrieval/final_receipt.json'
+    verify_training_seals()
+    require(not (TRAIN_REPORT/'ACTION_REQUIRED.json').exists(), 'Training observation/collection requires user action; remote0')
+    if not path.exists():
+        require(not (TRAIN/'retrieval').exists(), 'Incomplete retrieval: no automatic retry; remote0')
+        return None
+    r=read(path)
+    require(r['status']=='complete' and r['new_fit_count']==6 and r['seed_count']==3
+            and r['baseline_reference_count']==3 and r['held_out_test_evaluated'] is False
+            and r['all_training_terminal_verified'] is True, 'Training completion invalid')
+    for name,digest in r['files'].items():
+        require(sha(safe(PROJECT,name))==digest, 'Training original/archive/summary changed: '+name)
+    pointer=read(TRAIN/'retrieval/intent.json')
+    require(sha(pointer['round'])==pointer['round_sha256'] and sha(pointer['summary'])==pointer['summary_sha256'],
+            'Terminal observation bytes changed')
+    snapshot=read(pointer['round'])
+    require(snapshot['all_training_terminal_verified'] is True and not snapshot['failure'], 'Training not terminal')
+    require(snapshot['contract_sha256']==TRAIN_CANONICAL and bool(snapshot['owner_probes'])
+            and all(p['state']=='absent' for p in snapshot['owner_probes'].values()), 'Training owner absence missing')
+    local=TRAIN/'retrieval/originals'
+    from paper.scripts.advance_titantpp_history_taxi6 import parse_control
+    for name in ('dispatcher_exit.json','pipeline_exit.json'):
+        exit_record=parse_control((local/name).read_bytes())
+        require(exit_record['actual_child_exit_observed'] is True and type(exit_record['returncode']) is int and exit_record['returncode']==0,
+                'Training pipeline/dispatcher exit0 not verified')
+    require(read(local/'train_complete.json')['scientific_worker_count']==6, 'Training count differs')
+    for j in c['jobs']:
+        ex=read(local/'worker_exits'/ (j['id']+'.json'))
+        require(ex['actual_child_exit_observed'] is True and type(ex['returncode']) is int and ex['returncode']==0,
+                'Scientific worker exit0 missing')
+        folder=local/'run'/j['id'];m=read(folder/'terminal_manifest.json')
+        require(m['contract_sha256']==TRAIN_CANONICAL and m['job']==j and m['scientific_success'] is True and m['held_out_test_evaluated'] is False,
+                'Terminal manifest identity differs')
+        for name,digest in m['files'].items():
+            require(sha(safe(folder,name))==digest, 'Terminal binary/original changed')
+    return r
+
+def validation_reference(endpoint):
+    """Add evaluator split metadata to a copy of a verified native endpoint."""
+    require(isinstance(endpoint, dict)
+            and endpoint.get('evaluation_scope') == 'validation_only'
+            and endpoint.get('held_out_test_evaluated') is False
+            and endpoint.get('split', 'validation') == 'validation',
+            'Selected endpoint is not Validation-only')
+    return {**copy.deepcopy(endpoint), 'split': 'validation'}
+
+
+def bind(c, receipt):
+    import torch
+    e=evaluator(); contract=read(BUNDLE/'draft_contract.json');contract.pop('contract_sha256')
+    proof='provenance/training_final_receipt.json'
+    receipt_sha=sha(TRAIN/'retrieval/final_receipt.json')
+    copy_checked(TRAIN/'retrieval/final_receipt.json',BUNDLE/proof,receipt_sha)
+    bound={proof:receipt_sha}
+    for j in contract['jobs']:
+        folder=TRAIN/'retrieval/originals/run'/j['id'];m=read(folder/'terminal_manifest.json')
+        prefix='runs/'+j['arm']+'/count_only_log_regression/seed_'+str(j['seed'])+'/'
+        checkpoint_name='originals/'+j['id']+'/'+prefix+'best_val_qty_rmse_model.pt'
+        history_name='originals/'+j['id']+'/'+prefix+'history.json'
+        for relative in (prefix+'best_val_qty_rmse_model.pt',prefix+'history.json',prefix+'endpoint_replays.json','input_receipt.json','terminal_manifest.json'):
+            name='originals/'+j['id']+'/'+relative
+            digest=sha(folder/relative) if relative=='terminal_manifest.json' else m['files'][relative]
+            copy_checked(folder/relative,BUNDLE/name,digest);bound[name]=digest
+        payload=torch.load(BUNDLE/checkpoint_name,map_location='cpu',weights_only=False)
+        metadata={k:v for k,v in payload.items() if k!='model_state_dict'}
+        metadata_name='metadata/'+j['id']+'.json';write(BUNDLE/metadata_name,metadata);bound[metadata_name]=sha(BUNDLE/metadata_name)
+        epoch,value=e.strict_selected_epoch(e.read_selection_history(BUNDLE/history_name))
+        endpoint=read(folder/(prefix+'endpoint_replays.json'))['selected']
+        require(epoch==payload['best_epoch'] and value==payload['selected_metric_value']
+                and payload['model_state_sha256']==endpoint['state_sha256'], 'Frozen selection history differs')
+        j.update(selected_epoch=epoch,selected_metric_value=value,initial_state_sha256=payload['initial_state_sha256'],
+            source_revision_history=payload['source_revision_history'],checkpoint_state_sha256=payload['model_state_sha256'],
+            checkpoint={'relative_path':checkpoint_name,'sha256':bound[checkpoint_name]},
+            checkpoint_metadata_path=metadata_name,checkpoint_metadata_sha256=bound[metadata_name],
+            selection_history_path=history_name,selection_history_sha256=bound[history_name],
+            validation_reference=validation_reference(endpoint),binding_status='bound_terminal_immutable_originals')
+        e.validate_payload(payload,j,contract['sources']['components'],contract['datasets'][j['dataset']]['definition'],metadata)
+        del payload
+    contract.update(binding_complete=True,training_receipt_path=proof,training_receipt_sha256=bound[proof],bound_files=bound)
+    contract['contract_sha256']=canonical(contract);write(BUNDLE/'contract.json',contract)
+    e.verify_contract(BUNDLE);return contract
+
+def transport(host, label, code, payload=None, archive=None, timeout=120):
+    from paper.scripts.titantpp_inter62_transport_evidence import recorded_run
+    write(BUNDLE / 'control' / (label + '_intent.json'), {'host': host, 'started_unix': time.time(),
+          'automatic_retry': False, 'training_root_writes': 0})
+    argv = ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15', '-o', 'ServerAliveInterval=30',
+            '-o', 'ServerAliveCountMax=3', host, '/usr/bin/python3 -c ' + shlex.quote(code)]
+    if archive:
+        with Path(archive).open('xb') as stream:
+            result = recorded_run(BUNDLE, label, argv, input=json.dumps(payload).encode(), stdout=stream, timeout=timeout)
+    else:
+        result = recorded_run(BUNDLE, label, argv, input=json.dumps(payload).encode(), timeout=timeout)
+    require(result.returncode == 0, 'Remote operation failed; no retry: ' + label + ': ' + result.stderr.decode(errors='replace')[-2000:])
+    return result.stdout
+
+
+def pack(names, path):
+    names = sorted(set(names))
+    require(all(safe(BUNDLE, n).is_file() for n in names), 'Packet file missing')
+    manifest = {n: sha(BUNDLE / n) for n in names}
+    with Path(path).open('xb') as out, tarfile.open(fileobj=out, mode='w:gz') as tar:
+        raw = json.dumps(manifest, sort_keys=True).encode()
+        info = tarfile.TarInfo('packet_manifest.json'); info.size = len(raw)
+        tar.addfile(info, io.BytesIO(raw))
+        for n in names:
+            tar.add(BUNDLE / n, arcname=n, recursive=False)
+    return manifest
+
+
+DEPLOY = r'''
+import hashlib,json,sys,tarfile
+from pathlib import Path
+p=json.load(sys.stdin); r=Path(p['root'])
+assert str(r) in p['allowed_roots'] and r.name.startswith('titantpp_history_taxi6_test_20261015_v1_')
+archive=r/'incoming'/p['archive_name']; assert hashlib.sha256(archive.read_bytes()).hexdigest()==p['archive_sha256']
+with tarfile.open(archive) as t:
+ members=t.getmembers(); manifest=json.load(t.extractfile('packet_manifest.json'))
+ assert len(members)==len(manifest)+1 and {m.name for m in members}==set(manifest)|{'packet_manifest.json'}
+ raws={}
+ for m in members:
+  if m.name=='packet_manifest.json':continue
+  n=Path(m.name); target=r/n
+  assert m.isfile() and not n.is_absolute() and '..' not in n.parts and target.resolve().is_relative_to(r.resolve())
+  raw=t.extractfile(m).read(); assert hashlib.sha256(raw).hexdigest()==manifest[m.name]; raws[m.name]=raw
+  assert not target.exists() or hashlib.sha256(target.read_bytes()).hexdigest()==manifest[m.name]
+ for n,raw in raws.items():
+  target=r/n
+  if target.exists():continue
+  target.parent.mkdir(parents=True,exist_ok=True)
+  with target.open('xb') as f:f.write(raw)
+ with (r/(p['archive_name']+'.receipt.json')).open('x') as f:json.dump({'files':manifest,'archive_sha256':p['archive_sha256']},f)
+print(json.dumps({'status':'deployed','file_count':len(manifest)}))
+'''
+
+
+def deploy(host, names, label, reserve=False):
+    from paper.scripts.titantpp_inter62_transport_evidence import recorded_run
+    archive = BUNDLE / (label + '.tar.gz')
+    pack(names, archive)
+    root = REMOTE[host]
+    if reserve:
+        transport(host, label + '_reserve',
+                  "import json,sys;from pathlib import Path;p=json.load(sys.stdin);r=Path(p['root']);"
+                  "assert str(r) in p['allowed_roots'];r.mkdir(exist_ok=False);(r/'incoming').mkdir()",
+                  {'root': root, 'allowed_roots': list(REMOTE.values())})
+    write(BUNDLE / 'control' / (label + '_upload_intent.json'), {'started_unix': time.time(), 'automatic_retry': False})
+    result = recorded_run(BUNDLE, label + '_upload', ['scp', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15',
+                          str(archive), host + ':' + root + '/incoming/' + archive.name], timeout=300)
+    require(result.returncode == 0, 'Packet upload failed; no retry')
+    transport(host, label + '_deploy', DEPLOY, {'root': root, 'allowed_roots': list(REMOTE.values()),
+        'archive_name': archive.name, 'archive_sha256': sha(archive)}, timeout=300)
+
+
+SUPERVISE = r'''
+import importlib.util,json,os,signal,subprocess,sys,time
+from pathlib import Path
+p=json.load(sys.stdin); r=Path(p['root']); s=p['split']
+spec=importlib.util.spec_from_file_location('native_cap9_pipeline',r/'operation/pipeline.py');m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+e=m.load_evaluator(r);c=e.verify_contract(r);a=e.verify_partial_metadata(r,c)
+assert str(r)==a['remote_roots'][p['host']] and c['contract_sha256']==p['contract_sha256']
+with (r/(s+'_supervision.claim')).open('x') as f:json.dump({'argv':p['argv'],'pid':os.getpid(),'started_unix':time.time()},f)
+child=None;outcome=None;start=time.time()
+def term(sig,frame):raise KeyboardInterrupt('evaluation supervisor interrupted')
+signal.signal(signal.SIGTERM,term);signal.signal(signal.SIGHUP,term)
+try:
+ child=subprocess.Popen(p['argv'],cwd=r,start_new_session=True);code=child.wait(timeout=43200)
+ outcome={'actual_child_exit_observed':True,'exit_code':code}
+except BaseException:
+ signal.signal(signal.SIGTERM,signal.SIG_IGN);signal.signal(signal.SIGHUP,signal.SIG_IGN)
+ if child is not None:outcome=m.stop_owned_child(child)
+ raise
+finally:
+ if outcome is not None:
+  with (r/(s+'_pipeline_actual_exit.json')).open('x') as f:json.dump({'contract_sha256':c['contract_sha256'],'host':p['host'],'split':s,'started_unix':start,'completed_unix':time.time(),**outcome},f)
+sys.exit(code)
+'''
+
+
+RECOVER = r'''
+import hashlib,io,json,sys,tarfile
+from pathlib import Path
+p=json.load(sys.stdin);r=Path(p['root']);s=p['split']
+assert hashlib.sha256((r/'contract.json').read_bytes()).hexdigest()==p['contract_raw_sha256']
+c=json.loads((r/'contract.json').read_text());a=json.loads((r/(s+'_pipeline_actual_exit.json')).read_text())
+assert a['actual_child_exit_observed'] and type(a['exit_code']) is int and a['exit_code']==0
+names=[s+'_pipeline_actual_exit.json',s+'_pipeline_complete.json',s+'_supervision.claim',s+'_pipeline.claim']
+for j in c['jobs']:
+ if j['evaluation_host']!=p['host']:continue
+ q='validation_replay' if s=='validation' else 'test_metrics'
+ names += ['results/'+j['id']+'/'+q+'.json','results/'+j['id']+'/'+q+'_claim.json','results/'+j['id']+'/'+s+'_worker_exit.json',
+           'worker_launches/'+s+'_'+j['id']+'.json','logs/'+s+'_'+j['id']+'.log']
+raws={n:(r/n).read_bytes() for n in names};manifest={n:hashlib.sha256(v).hexdigest() for n,v in raws.items()}
+raws['result_manifest.json']=json.dumps(manifest,sort_keys=True).encode()
+with tarfile.open(fileobj=sys.stdout.buffer,mode='w|gz') as t:
+ for n,raw in raws.items():
+  i=tarfile.TarInfo(n);i.size=len(raw);t.addfile(i,io.BytesIO(raw))
+'''
+
+
+def extract_results(archive, host, split, contract):
+    expected = {split + suffix for suffix in ('_pipeline_actual_exit.json', '_pipeline_complete.json',
+                                            '_supervision.claim', '_pipeline.claim')}
+    for j in contract['jobs']:
+        if j['evaluation_host'] != host:
+            continue
+        q = 'validation_replay' if split == 'validation' else 'test_metrics'
+        expected.update({'results/' + j['id'] + '/' + q + '.json',
+                         'results/' + j['id'] + '/' + q + '_claim.json',
+                         'results/' + j['id'] + '/' + split + '_worker_exit.json',
+                         'worker_launches/' + split + '_' + j['id'] + '.json',
+                         'logs/' + split + '_' + j['id'] + '.log'})
+    with tarfile.open(archive) as tar:
+        manifest = json.load(tar.extractfile('result_manifest.json'))
+        members = tar.getmembers()
+        require(set(manifest) == expected and len(members) == len(manifest) + 1 and {m.name for m in members}
+                == set(manifest) | {'result_manifest.json'}, 'Result archive membership differs')
+        require(sum(m.size for m in members) <= 256 * 1024 ** 2, 'Result archive expansion limit exceeded')
+        # Verify the entire packet before writing any recovered result.
+        for m in members:
+            require(m.isfile(), 'Unsafe archive member')
+            safe(BUNDLE, m.name)
+            if m.name != 'result_manifest.json':
+                require(hashlib.sha256(tar.extractfile(m).read()).hexdigest() == manifest[m.name], 'Result archive SHA differs')
+        for m in members:
+            require(m.isfile(), 'Unsafe archive member')
+            if m.name == 'result_manifest.json':
+                continue
+            raw = tar.extractfile(m).read()
+            require(hashlib.sha256(raw).hexdigest() == manifest[m.name], 'Result archive SHA differs')
+            prefix = '' if m.name.startswith(('results/', 'logs/', 'worker_launches/')) else 'native/' + host + '/'
+            path = safe(BUNDLE, prefix + m.name)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with path.open('xb') as f:
+                f.write(raw)
+    write(BUNDLE / 'native' / host / (split + '_result_manifest.json'), manifest)
+    actual = read(BUNDLE / 'native' / host / (split + '_pipeline_actual_exit.json'))
+    complete = read(BUNDLE / 'native' / host / (split + '_pipeline_complete.json'))
+    jobs = [j for j in contract['jobs'] if j['evaluation_host'] == host]
+    require(actual['actual_child_exit_observed'] is True and type(actual['exit_code']) is int
+            and actual['exit_code'] == 0 and actual['contract_sha256'] == contract['contract_sha256']
+            and complete['status'] == 'complete' and set(complete['completed']) == {j['id'] for j in jobs},
+            'Native pipeline completion not verified')
+    e = evaluator()
+    for j in jobs:
+        exit_record = read(BUNDLE / 'results' / j['id'] / (split + '_worker_exit.json'))
+        require(exit_record['actual_child_exit_observed'] is True and type(exit_record['exit_code']) is int
+                and exit_record['exit_code'] == 0 and exit_record['job_id'] == j['id']
+                and exit_record['contract_sha256'] == contract['contract_sha256'], 'Worker actual exit not zero')
+        name = 'validation_replay.json' if split == 'validation' else 'test_metrics.json'
+        r = check_receipt(read(BUNDLE / 'results' / j['id'] / name), contract, j, split, e)
+        if split == 'test':
+            require(r['validation_gate_sha256'] == sha(BUNDLE / 'validation_gate.json'), 'Test gate SHA differs')
+
+
+def evaluate_stage(c, training, split):
+    # Host time is kept separate. These are bounded evaluations, not training concurrency changes.
+    for h in HOSTS:
+        begin = time.time()
+        permit = {'schema': 'titantpp_history_taxi6_evaluation_permit_v1', 'authorized': True,
+            'new_training': False, 'frozen_selection': True, 'stage': split,
+            'contract_sha256': c['contract_sha256'], 'evaluator_sha256': sha(BUNDLE / 'operation/evaluate.py'),
+            'host': h, 'job_ids': sorted(j['id'] for j in c['jobs'] if j['evaluation_host'] == h),
+            'not_before_unix': begin, 'deadline_unix': begin + 43200, 'automatic_retry': False}
+        name = 'permits/' + h + '_' + split + '.json'
+        write(BUNDLE / name, permit)
+        names = [name]
+        if split == 'test':
+            names += ['validation_gate.json']
+            for j in c['jobs']:
+                names += ['results/' + j['id'] + '/validation_replay.json',
+                          'results/' + j['id'] + '/validation_worker_exit.json']
+        deploy(h, names, h + '_' + split + '_gate')
+        root = REMOTE[h]
+        env = dict(training['hosts'][h]['environment'])
+        env.update(PYTHONPATH=root + '/source', MPLCONFIGDIR=root + '/runtime_cache/matplotlib',
+                   XDG_CACHE_HOME=root + '/runtime_cache', PYTHONDONTWRITEBYTECODE='1',
+                   OMP_NUM_THREADS='4', MKL_NUM_THREADS='4', OPENBLAS_NUM_THREADS='4')
+        argv = ['env', *[k + '=' + str(v) for k, v in sorted(env.items())], c['runtimes'][h]['python'],
+                root + '/operation/pipeline.py', '--root', root, '--host', h, '--split', split]
+        transport(h, h + '_' + split + '_execute', SUPERVISE,
+                  {'root': root, 'host': h, 'split': split, 'argv': argv, 'contract_sha256': c['contract_sha256']},
+                  timeout=43320)
+        archive = BUNDLE / (h + '_' + split + '_results.tar.gz')
+        transport(h, h + '_' + split + '_recover', RECOVER,
+                  {'root': root, 'host': h, 'split': split, 'contract_raw_sha256': sha(BUNDLE / 'contract.json')}, archive=archive)
+        extract_results(archive, h, split, c)
+
+
+def make_gate(c):
+    e = evaluator()
+    receipts, exits = {}, {}
+    for j in c['jobs']:
+        stem = BUNDLE / 'results' / j['id']
+        e.verify_validation_receipt(read(stem / 'validation_replay.json'), c, j)
+        receipts[j['id']] = sha(stem / 'validation_replay.json')
+        exits[j['id']] = sha(stem / 'validation_worker_exit.json')
+    write(BUNDLE / 'validation_gate.json', {'schema': 'titantpp_history_taxi6_validation_gate_v1',
+          'cohort': c['cohort'], 'status': 'PASS', 'contract_sha256': c['contract_sha256'],
+          'job_count': 6, 'validation_receipts': receipts, 'validation_worker_exits': exits, 'created_unix': time.time()})
+    return e.verify_global_validation_gate(BUNDLE, c)
+
+
+def aggregate(rows):
+    keys = [('whole_qty_rmse', None, 'qty_rmse'), ('whole_qty_mae', None, 'qty_mae'),
+            ('tail_qty_rmse', 'tail', 'qty_rmse'), ('tail_qty_mae', 'tail', 'qty_mae'),
+            ('whole_time_nll', None, 'time_nll'), ('tail_time_nll', 'tail', 'time_nll')]
+    require(len(rows) == 9 and len({(r['dataset'], r['arm'], r['seed']) for r in rows}) == 9,
+            'Expected six Taxi candidates and three historical CNN receipts')
+    by_key = {(r['dataset'], r['arm'], r['seed']): r for r in rows}
+    grouped, deltas = [], []
+    for d in DATASETS:
+        for arm in (CNN, CAPACITY, ADAPTIVE):
+            subset = [by_key[(d, arm, s)] for s in SEEDS]
+            metrics = {}
+            for name, group, key in keys:
+                values = [(r['metrics'] if group is None else r['metrics'][group])[key] for r in subset]
+                require(all(type(v) in (int, float) and math.isfinite(v) for v in values), 'Nonfinite metric')
+                metrics[name] = {'mean': statistics.mean(values), 'sample_sd': statistics.stdev(values)}
+            grouped.append({'dataset': d, 'arm': arm, 'seed_count': 3, 'metrics': metrics})
+        for seed in SEEDS:
+            for candidate, other in ((ADAPTIVE,CNN),(CAPACITY,CNN),(ADAPTIVE,CAPACITY)):
+                cap = by_key[(d, candidate, seed)]
+                ref = by_key[(d, other, seed)]
+                for key in ('target_identity_sha256', 'truth_sha256', 'time_sha256'):
+                    require(cap[key] == ref[key], 'Matched baseline target population differs')
+                metrics = {}
+                for name, group, key in keys:
+                    left = (cap['metrics'] if group is None else cap['metrics'][group])[key]
+                    right = (ref['metrics'] if group is None else ref['metrics'][group])[key]
+                    metrics[name] = {'candidate_minus_baseline': left - right,
+                                     'relative_percent': 100 * (left - right) / right if right != 0 else None}
+                deltas.append({'dataset': d, 'seed': seed, 'candidate': candidate, 'baseline': other, 'metrics': metrics})
+    return {'status': 'complete', 'split': 'test', 'candidate_fit_count': 6, 'baseline_reference_count': 3,
+            'seed_count': 3, 'grouped': grouped, 'seed_differences': deltas, 'seed_results': rows,
+            'test_independent': False, 'interpretation': 'Exploratory follow-up after previously observed Test reversal; no causal or statistical significance claim.',
+            'runtime_limitation': 'Taxi CNN/Adaptive/Capacity all trained on5080 cuDNN91900; all candidates replayed on the original5080. Historical CNN Test used1 thread and new candidates use the training4 threads with mandatory Validation replay.',
+            'new_training': False, 'checkpoint_reselection': False}
+
+
+def summarize(c):
+    e=evaluator();rows=[]
+    for j in c['jobs']:
+        rows.append(check_receipt(read(BUNDLE/'results'/j['id']/'test_metrics.json'),c,j,'test',e))
+    for ref in c['baseline_references']:
+        require(sha(BUNDLE/ref['receipt_path'])==ref['receipt_sha256'],'Reused CNN Test changed')
+        rows.append(read(BUNDLE/ref['receipt_path']))
+    result=aggregate(rows);write(REPORT/'THREE_SEED_TEST.json',result)
+    labels={CNN:'기존 CNN',CAPACITY:'용량 대조군',ADAPTIVE:'이력 적응 CNN'}
+    lines=['# Taxi 고정 checkpoint 3seed Test 비교','',
+        'Validation 전체 raw 수량 RMSE 최초 strict finite 최소 epoch를 고정했다. Native Validation6을 모두 통과한 뒤 Test6을 실행했다. 기존 CNN3 Test는 재사용했다.','',
+        '| 구조 | RMSE 평균±표본SD | MAE 평균±표본SD |','|---|---:|---:|']
+    for r in result['grouped']:
+        m=r['metrics'];fmt=lambda k:f"{m[k]['mean']:.6f}±{m[k]['sample_sd']:.6f}"
+        lines.append(f"| {labels[r['arm']]} | {fmt('whole_qty_rmse')} | {fmt('whole_qty_mae')} |")
+    lines += ['', '| seed | 구조 | 선택 epoch | Test RMSE | Test MAE |','|---:|---|---:|---:|---:|']
+    for r in sorted(rows,key=lambda r:(r['seed'],r['arm'])):
+        lines.append(f"| {r['seed']} | {labels[r['arm']]} | {r['selected_epoch']} | {r['metrics']['qty_rmse']:.6f} | {r['metrics']['qty_mae']:.6f} |")
+    lines += ['', '차이는 앞 구조−뒤 구조이며 음수는 개선이다.','', '| seed | 비교 | ΔRMSE | ΔMAE |','|---:|---|---:|---:|']
+    for r in result['seed_differences']:
+        m=r['metrics'];lines.append(f"| {r['seed']} | {labels[r['candidate']]}−{labels[r['baseline']]} | {m['whole_qty_rmse']['candidate_minus_baseline']:+.6f} | {m['whole_qty_mae']['candidate_minus_baseline']:+.6f} |")
+    lines += ['', '| 구조 | 큰수량 RMSE | 큰수량 MAE | 전체 TimeNLL | 큰수량 TimeNLL |','|---|---:|---:|---:|---:|']
+    for r in result['grouped']:
+        m=r['metrics'];fmt=lambda k:f"{m[k]['mean']:.6f}±{m[k]['sample_sd']:.6f}"
+        lines.append('| '+labels[r['arm']]+' | '+' | '.join(fmt(k) for k in ('tail_qty_rmse','tail_qty_mae','whole_time_nll','tail_time_nll'))+' |')
+    lines += ['', '큰수량 기준은 Train에서 고정한 q>3449이다. 시간 지표는 recorded positive-integer TimeNLL이다. 모든 값은 같은 선택 checkpoint에서 계산했다.',
+        'Taxi 세 구조 모두 5080/cuDNN91900에서 학습했다. 새 후보 평가는 학습과 같은4 threads, 기존 CNN Test는1 thread였으며 Validation 재현으로 수치 일치를 확인했다.',
+        '기존 Test 접근 이후 설계한 탐색적 후속 실험이다. 새 독립 평가·보편적 일반화 개선·원인 확정·통계적 유의성을 주장하지 않는다.',
+        '직전 수량·관측 이력 평균의 단순 기준선과 여섯 지표의 seed별 절대·상대 차이는 JSON에 보존했다. 기준선 TimeNLL은 N/A다.','']
+    with (REPORT/'THREE_SEED_TEST.md').open('x') as f:f.write('\n'.join(lines))
+    joint_files=compare_raf(result)
+    files={str(p):sha(p) for p in BUNDLE.rglob('*') if p.is_file()}
+    files.update({str(path):sha(path) for path in joint_files})
+    files.update({str(REPORT/n):sha(REPORT/n) for n in ('THREE_SEED_TEST.json','THREE_SEED_TEST.md')})
+    receipt={'status':'complete','candidate_test_count':6,'baseline_reference_count':3,'seed_count':3,
+        'validation_replay_count':6,'actual_native_worker_exit0_count':12,'actual_pipeline_exit0_count':2,'raf_comparison_complete':True,
+        'pipeline_wrapper_own_exit_directly_observed':False,'files':files,'files_sha256':canonical(files),
+        'contract_sha256':c['contract_sha256'],'completed_unix':time.time(),'held_out_test_evaluated':True}
+    write(BUNDLE/'final_receipt.json',receipt);return receipt
+
+def advance(expected):
+    training = verify_bootstrap(expected)
+    final_path = BUNDLE / 'final_receipt.json'
+    if final_path.exists():
+        r = read(final_path)
+        require(r['status'] == 'complete' and r['candidate_test_count'] == 6 and r['seed_count'] == 3
+                and r['baseline_reference_count'] == 3 and r['validation_replay_count']==6
+                and r['actual_native_worker_exit0_count']==12 and r['actual_pipeline_exit0_count']==2
+                and r['raf_comparison_complete'] is True and r['held_out_test_evaluated'] is True
+                and canonical(r['files']) == r['files_sha256'], 'Final receipt invalid')
+        for n, value in r['files'].items():
+            require(sha(n) == value, 'Final local evidence SHA differs')
+        return {'status': 'complete', 'receipt_sha256': sha(final_path), 'remote_calls': 0}
+    require(not (BUNDLE / 'advance.claim').exists() and not (BUNDLE / 'failure.json').exists(),
+            'Existing attempt or failure: no automatic retry; remote0')
+    receipt = collection_gate(training)
+    if receipt is None:
+        return {'status': 'waiting_for_verified_training6_and_original_collection', 'remote_calls': 0,
+                'held_out_test_evaluated': False, 'checkpoint_reselection': False}
+    write(BUNDLE / 'advance.claim', {'started_unix': time.time(), 'bootstrap_sha256': expected, 'automatic_retry': False})
+    try:
+        c = bind(training, receipt)
+        names = list(read(BUNDLE / 'preparation_inventory.json')['files']) + list(c['bound_files']) + ['contract.json']
+        names = [n for n in names if not n.startswith('references/') and n != 'draft_contract.json']
+        for host in HOSTS:
+            deploy(host, names, host + '_initial', reserve=True)
+        evaluate_stage(c, training, 'validation')
+        make_gate(c)
+        evaluate_stage(c, training, 'test')
+        result = summarize(c)
+        return {'status': result['status'], 'candidate_test_count': 6, 'baseline_reference_count': 3,
+                'receipt_sha256': sha(BUNDLE / 'final_receipt.json')}
+    except BaseException as error:
+        write(BUNDLE / 'failure.json', {'status': 'failed', 'error': str(error), 'traceback': traceback.format_exc(),
+              'automatic_retry': False, 'completed_unix': time.time()})
+        raise
+
+
+if __name__ == '__main__':
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument('--mode', choices=('prepare', 'advance'), required=True)
+    p.add_argument('--integrity-sha')
+    args = p.parse_args()
+    if args.mode == 'prepare':
+        value = prepare()
+    else:
+        require(bool(args.integrity_sha), 'Integrity SHA required')
+        value = advance(args.integrity_sha)
+    print(json.dumps(value, ensure_ascii=False, allow_nan=False))
