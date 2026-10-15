@@ -1,0 +1,28 @@
+{
+  "schema": "raf_location_diagnostic_basis_v1",
+  "status": "hypothesis_not_causal_proof",
+  "source_files": {
+    "reports/titantpp_backbone_nonlinear_raf6_20261015_v1/LOOP1_DECISION.json": "4e3e089c8770a6eac76e4fd299a2eefb6a446b7795dc3bd2180533900acc1853",
+    "reports/titantpp_backbone_nonlinear_raf6_20261015_v1/diagnostics_v1/RESULTS.json": "d6cba7c1a40863d2bf9c29d5c1db3b8c499b598483061efca9f65924f4cbff5e",
+    "reports/titantpp_backbone_nonlinear_raf6_20261015_v1/diagnostics_v1/EXECUTION.json": "8e85e5bebf852ce4ae5ba5beeb6c80005dc30f9a5b4b3a8b20793dc858a03646",
+    "reports/titantpp_backbone_nonlinear_raf6_20261015_v1/diagnostics_v1/DIAGNOSIS.md": "d523f42fca8704fa7f2e0e48e37a795139b115a4b5efab2e6bffa394a061de51",
+    "reports/titantpp_backbone_nonlinear_raf6_20261015_v1/diagnostics_v1/diagnose_train_validation.py": "b9a5d82493ecdbfd0ce46686bfaaf43382fcecf8f7b5da87957961f1a63c2543"
+  },
+  "diagnostic_splits": [
+    "train",
+    "validation"
+  ],
+  "diagnostic_test_files_read": 0,
+  "baseline_reevaluations": 0,
+  "new_hypothesis": "One nonlinear observed-local CNN branch in V versus Q, exactly1024 weights each; retained original linear QKV CNN.",
+  "discarded_for_current_loop": "For Channel follow-up, Q/K norm restoration did not reduce attention TV on any seed in bounded same-model arithmetic probe; Joint differs. This is not predictive-performance evaluation.",
+  "limitations": [
+    "128 deterministic targets each Train and Validation per fitted candidate; localCPU torch2.14 versusnative5090torch2.11",
+    "Attention TV is not predictive performance or causal proof.",
+    "Shared QKV upstream projection still learns; V-only does not freezeQ/K.",
+    "StoredQKVChannel has3072 additionalweights; auxiliary comparison is capacityconfounded.",
+    "Activation sample tail counts: Train0 and Validation1; cannot explain tail error mechanism.",
+    "Nonlinear-QK-disabled arithmetic comparator is not oldCNN attention.",
+    "SSE sum decomposition is not an additive decomposition of meanRMSE differences."
+  ]
+}
