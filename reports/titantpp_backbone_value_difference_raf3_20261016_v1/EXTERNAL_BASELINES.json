@@ -1,0 +1,1941 @@
+{
+  "schema": "raf_backbone_loop_frozen_references_v1",
+  "status": "verified",
+  "dataset": "raf_spare_parts",
+  "created_kst": "2026-10-15T22:11:20.457395+09:00",
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "candidate_results_read": false,
+  "new_training": false,
+  "new_inference": false,
+  "remote_calls": 0,
+  "prediction_part_reaggregation": "existing external Test predictions only",
+  "checkpoint_deserialization": false,
+  "first_strict_finite_selected_epoch_verified_from_history": true,
+  "selection": "first strict finite minimum fullValidation raw quantity RMSE; identical checkpoint for both splits and MAE",
+  "statistics": "arithmetic mean of seed metrics; sample SD ddof=1; no pooling across targets, seeds, or datasets",
+  "metrics": {
+    "qty_rmse": "sqrt(mean((predicted_raw_quantity - raw_quantity)^2))",
+    "qty_mae": "mean(abs(predicted_raw_quantity - raw_quantity))"
+  },
+  "user_performance_gate": "candidate 3seed means strictly lower for both metrics on both splits than historical CNN and per-metric external frontier",
+  "same_host_control_gate": "reported separately: candidate means below fresh same-host CNN for both metrics and both splits",
+  "capacity_attribution": "reported separately; not silently added to user's performance gate",
+  "expected_population": {
+    "validation": {
+      "count": 6690,
+      "target_identity_sha256": "97f2c71da401d22dd3124aaaadb9c96c5874f0bacb592a500ca7261289017dfd",
+      "truth_sha256": "28d8467c4a551c1f0a9210e738edfe1dbb06c6398f95bbd6e13243d1c662b16e",
+      "time_sha256": "57012615dacc3459a9982c48abbec399091447417669c96249cf2e5fccb10efc",
+      "original_recorded_duration_sha256": "c059684ffaf11e4f5a25b8c357d8c05fe1bba95de2fea32c76a0ab87cc5eb17b",
+      "training_population_identity": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      }
+    },
+    "test": {
+      "count": 5226,
+      "target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+      "truth_sha256": "57b936b0ceb8ed030b35bb830d5e9037c4b908ffa9f525d16e07964cc653845f",
+      "time_sha256": "421c7ce582434e3e589386bbac3cff19a7a0b63bfbdf3ab5724d66703a246a0d",
+      "original_recorded_duration_sha256": "baa947aab5976d004fbc8310b25c610fdfe31556563fd2e478d43733bb4cc342",
+      "training_population_identity": {
+        "target_count": 5226,
+        "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+        "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482"
+      }
+    }
+  },
+  "data": {
+    "data_sha256": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d",
+    "training_data_sha256": "d805cad0242078fedfbb87eed18bde9b73d37bfc9b93c6b75aac49087244efa2",
+    "split_manifest_sha256": "3cd6204667de4e44eda8787d32845bebff7624e1bb255ffd7677f810b8d7b149"
+  },
+  "common_conditions": {
+    "loader": {
+      "batch_size": 128,
+      "drop_last": false,
+      "lookback_weeks": 84,
+      "max_seq_len": 84,
+      "num_workers": 0,
+      "train_shuffle": true,
+      "validation_shuffle": false
+    },
+    "model": {
+      "hidden_dim": 64,
+      "lambda_log_qty": 1.0,
+      "lambda_tail": 0.0,
+      "quantity_variant": "count_only_log_regression",
+      "time_head_lr_multiplier": 1.0,
+      "time_head_mode": "heteroscedastic_lognormal_duration",
+      "time_initial_location": -0.08887296773528319,
+      "time_initial_scale": 0.9589506323759867,
+      "time_observation_contract": {
+        "mode": "positive_integer_round_clamp_v1",
+        "top_code": null,
+        "unit": "month"
+      },
+      "time_scale": 6.0,
+      "time_sigma_floor": 0.001
+    },
+    "optimizer": {
+      "grad_clip": 1.0,
+      "lr": 0.001,
+      "name": "AdamW",
+      "weight_decay": 0.01
+    },
+    "statistics": {
+      "all_train_quantity_sha256": "dfa47b1848a9dd7e57f0115c22dcd6628f164849d92bdfb217834da3a34b1a6d",
+      "initialization_policy": "derive once from RAF train only; shared across models/seeds",
+      "raw_scale": 54.02472556614234,
+      "recomputation_absolute_tolerance": 1e-12,
+      "train_log_mean": 1.697903161487293,
+      "train_log_std": 1.1687925850626832
+    },
+    "epochs": 300,
+    "steps_per_epoch": 202
+  },
+  "rows": [
+    {
+      "dataset": "raf_spare_parts",
+      "model": "rmtpp",
+      "split": "validation",
+      "seed": 42,
+      "metrics": {
+        "qty_rmse": 34.72873558852717,
+        "qty_mae": 9.075063116962065
+      },
+      "selected_epoch": 30,
+      "checkpoint_sha256": "d069a2867cf39eecca277b843f3d177e095a9025305b6abf28b93887090ae602",
+      "tensor_sha256": "efd769f0217e3799e0465a156de8b16220ba057360d3db72ee14f2fb511f1113",
+      "count": 6690,
+      "source_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/runs/rmtpp/count_only_log_regression/seed_42/endpoint_replays.json",
+      "source_sha256": "d59a3af6b6240a3ba2315feede4f472702185356ccd9144e4855a0beb19ecf37",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "input_receipt Train/Validation target identity+quantity SHA and same data/loader/endpoint count",
+      "raw_validation_predictions_available": false,
+      "original_training_population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "rmtpp",
+      "split": "test",
+      "seed": 42,
+      "metrics": {
+        "qty_rmse": 40.58470419121695,
+        "qty_mae": 9.866791756854312
+      },
+      "selected_epoch": 30,
+      "checkpoint_sha256": "d069a2867cf39eecca277b843f3d177e095a9025305b6abf28b93887090ae602",
+      "tensor_sha256": "efd769f0217e3799e0465a156de8b16220ba057360d3db72ee14f2fb511f1113",
+      "count": 5226,
+      "source_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__rmtpp__seed42/receipt.json",
+      "source_sha256": "cbf2320fff950f34bc124da7f7418e08f2dad8dff9fdc32107e530762e38b8c8",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "prediction part SHA, target order, common truth and recorded time rehashed",
+      "raw_validation_predictions_available": null,
+      "original_training_population": null
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "rmtpp",
+      "split": "validation",
+      "seed": 52,
+      "metrics": {
+        "qty_rmse": 34.26378646557772,
+        "qty_mae": 9.149560936826584
+      },
+      "selected_epoch": 15,
+      "checkpoint_sha256": "6ba914b44ba249c330fe55e2be5bd6ddcfa5eead613e9beb38e20519e9528719",
+      "tensor_sha256": "c2bf8d5b9b713b7a61bbfca8848b0a0a397473ac3db8433046ee48f904b69a0c",
+      "count": 6690,
+      "source_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/runs/rmtpp/count_only_log_regression/seed_52/endpoint_replays.json",
+      "source_sha256": "b11bef9be36a478bb7327d21aff103c3d9558127b6c8ce61e2b2906d7b9c7d13",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "input_receipt Train/Validation target identity+quantity SHA and same data/loader/endpoint count",
+      "raw_validation_predictions_available": false,
+      "original_training_population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "rmtpp",
+      "split": "test",
+      "seed": 52,
+      "metrics": {
+        "qty_rmse": 40.184950595686395,
+        "qty_mae": 9.940154690784464
+      },
+      "selected_epoch": 15,
+      "checkpoint_sha256": "6ba914b44ba249c330fe55e2be5bd6ddcfa5eead613e9beb38e20519e9528719",
+      "tensor_sha256": "c2bf8d5b9b713b7a61bbfca8848b0a0a397473ac3db8433046ee48f904b69a0c",
+      "count": 5226,
+      "source_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__rmtpp__seed52/receipt.json",
+      "source_sha256": "fa87b1bc33219d098b4fa95e2b67e1ed2af2c707e7ed2754bf8300b85ca2d3e6",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "prediction part SHA, target order, common truth and recorded time rehashed",
+      "raw_validation_predictions_available": null,
+      "original_training_population": null
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "rmtpp",
+      "split": "validation",
+      "seed": 62,
+      "metrics": {
+        "qty_rmse": 34.65845993950495,
+        "qty_mae": 9.183989638544519
+      },
+      "selected_epoch": 8,
+      "checkpoint_sha256": "59defbbdf5b85946bd3439f25197c6ee8a213e6d9851b8ab1ab267a4330591c9",
+      "tensor_sha256": "8630ebfbeba763ad1c8661d98d2d8edc7532f90ea80d8c79a9673de7a9186770",
+      "count": 6690,
+      "source_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/runs/rmtpp/count_only_log_regression/seed_62/endpoint_replays.json",
+      "source_sha256": "a9363e726d81e8f59f7c5a37679856acbbe8e7f88f1d173cc37e23bc7ed2a594",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "input_receipt Train/Validation target identity+quantity SHA and same data/loader/endpoint count",
+      "raw_validation_predictions_available": false,
+      "original_training_population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "rmtpp",
+      "split": "test",
+      "seed": 62,
+      "metrics": {
+        "qty_rmse": 40.619842594941325,
+        "qty_mae": 9.912093066160951
+      },
+      "selected_epoch": 8,
+      "checkpoint_sha256": "59defbbdf5b85946bd3439f25197c6ee8a213e6d9851b8ab1ab267a4330591c9",
+      "tensor_sha256": "8630ebfbeba763ad1c8661d98d2d8edc7532f90ea80d8c79a9673de7a9186770",
+      "count": 5226,
+      "source_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__rmtpp__seed62/receipt.json",
+      "source_sha256": "82429f9daf4a736e6e936cef005ae148ae83d780a122b992bfc4d239da7c4354",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "prediction part SHA, target order, common truth and recorded time rehashed",
+      "raw_validation_predictions_available": null,
+      "original_training_population": null
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "thp",
+      "split": "validation",
+      "seed": 42,
+      "metrics": {
+        "qty_rmse": 34.8182236760018,
+        "qty_mae": 9.216271015257757
+      },
+      "selected_epoch": 50,
+      "checkpoint_sha256": "785697214e53580212ef628dd9f12711f8b4deb0f787b777f90e80cb4dc5c0df",
+      "tensor_sha256": "acdd9c4aac9eb1577117c66280776ae7ebcb22b2da974e9b78860e7bbfbf66a8",
+      "count": 6690,
+      "source_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/runs/thp/count_only_log_regression/seed_42/endpoint_replays.json",
+      "source_sha256": "528c1d0ff0eac6d28a3b5cb35c2c73bcc854b73a6b267e6f80c3f64f0564b032",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "input_receipt Train/Validation target identity+quantity SHA and same data/loader/endpoint count",
+      "raw_validation_predictions_available": false,
+      "original_training_population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "thp",
+      "split": "test",
+      "seed": 42,
+      "metrics": {
+        "qty_rmse": 40.34282716863453,
+        "qty_mae": 10.077917111659023
+      },
+      "selected_epoch": 50,
+      "checkpoint_sha256": "785697214e53580212ef628dd9f12711f8b4deb0f787b777f90e80cb4dc5c0df",
+      "tensor_sha256": "acdd9c4aac9eb1577117c66280776ae7ebcb22b2da974e9b78860e7bbfbf66a8",
+      "count": 5226,
+      "source_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__thp__seed42/receipt.json",
+      "source_sha256": "07ae164dc6c6f468adf23d6f64e62ea9fc8b0baf3f358985e6d21f6ed1fcb159",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "prediction part SHA, target order, common truth and recorded time rehashed",
+      "raw_validation_predictions_available": null,
+      "original_training_population": null
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "thp",
+      "split": "validation",
+      "seed": 52,
+      "metrics": {
+        "qty_rmse": 35.0216551956657,
+        "qty_mae": 9.177595406458874
+      },
+      "selected_epoch": 15,
+      "checkpoint_sha256": "63bdacfda65177be8dcb23c2fccedebe515e11118340707986b4dc1bb5ea734a",
+      "tensor_sha256": "52bbfe537ef1a57ef5fa89c01128da4338104b2c623857d5b345b724c80ed36c",
+      "count": 6690,
+      "source_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/runs/thp/count_only_log_regression/seed_52/endpoint_replays.json",
+      "source_sha256": "336ce779044d5d2c36ff02cbf07f92b9607faea935eb42a96c846eabf12b1d2a",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "input_receipt Train/Validation target identity+quantity SHA and same data/loader/endpoint count",
+      "raw_validation_predictions_available": false,
+      "original_training_population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "thp",
+      "split": "test",
+      "seed": 52,
+      "metrics": {
+        "qty_rmse": 40.892272333280985,
+        "qty_mae": 9.918315602316055
+      },
+      "selected_epoch": 15,
+      "checkpoint_sha256": "63bdacfda65177be8dcb23c2fccedebe515e11118340707986b4dc1bb5ea734a",
+      "tensor_sha256": "52bbfe537ef1a57ef5fa89c01128da4338104b2c623857d5b345b724c80ed36c",
+      "count": 5226,
+      "source_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__thp__seed52/receipt.json",
+      "source_sha256": "964ebb36044a50b3b996ceb6828d016a2dc71e55748a5dfefdb7350f5f7f427c",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "prediction part SHA, target order, common truth and recorded time rehashed",
+      "raw_validation_predictions_available": null,
+      "original_training_population": null
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "thp",
+      "split": "validation",
+      "seed": 62,
+      "metrics": {
+        "qty_rmse": 34.39367354063759,
+        "qty_mae": 9.510208173717619
+      },
+      "selected_epoch": 20,
+      "checkpoint_sha256": "03595a64a334525a55690f37dc07c59a8c9d20556f02b57374cbb13e235a40b3",
+      "tensor_sha256": "bd777039312ae93888fe72927ecbf61ecb36e62bd5880858de82b31b61d668d4",
+      "count": 6690,
+      "source_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/runs/thp/count_only_log_regression/seed_62/endpoint_replays.json",
+      "source_sha256": "8e914944350692a39661a052107e00e79aaef63aa625ad4bc61f65d70256495c",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "input_receipt Train/Validation target identity+quantity SHA and same data/loader/endpoint count",
+      "raw_validation_predictions_available": false,
+      "original_training_population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "thp",
+      "split": "test",
+      "seed": 62,
+      "metrics": {
+        "qty_rmse": 40.430174494434205,
+        "qty_mae": 10.37261828870277
+      },
+      "selected_epoch": 20,
+      "checkpoint_sha256": "03595a64a334525a55690f37dc07c59a8c9d20556f02b57374cbb13e235a40b3",
+      "tensor_sha256": "bd777039312ae93888fe72927ecbf61ecb36e62bd5880858de82b31b61d668d4",
+      "count": 5226,
+      "source_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__thp__seed62/receipt.json",
+      "source_sha256": "24deb671ef6da61936a905535aadf6044c21741bd32a3450a48df35c187dd8a1",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "prediction part SHA, target order, common truth and recorded time rehashed",
+      "raw_validation_predictions_available": null,
+      "original_training_population": null
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "nhp",
+      "split": "validation",
+      "seed": 42,
+      "metrics": {
+        "qty_rmse": 36.046264351092866,
+        "qty_mae": 9.105753867312576
+      },
+      "selected_epoch": 4,
+      "checkpoint_sha256": "a9819262affac578986d3b8e2598eeab2af2e7c21dd00e60ef8beb28b0591a17",
+      "tensor_sha256": "a240a8388acfc1818f640bcb89fdbd0ed85e891a44b99f1026360bd5fa0c552a",
+      "count": 6690,
+      "source_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/runs/nhp/count_only_log_regression/seed_42/endpoint_replays.json",
+      "source_sha256": "10b336398c6722a16fa7919babd3a7afece23f2235547e1400b702a7217b70fc",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "input_receipt Train/Validation target identity+quantity SHA and same data/loader/endpoint count",
+      "raw_validation_predictions_available": false,
+      "original_training_population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "nhp",
+      "split": "test",
+      "seed": 42,
+      "metrics": {
+        "qty_rmse": 41.94148444629708,
+        "qty_mae": 9.895699388169714
+      },
+      "selected_epoch": 4,
+      "checkpoint_sha256": "a9819262affac578986d3b8e2598eeab2af2e7c21dd00e60ef8beb28b0591a17",
+      "tensor_sha256": "a240a8388acfc1818f640bcb89fdbd0ed85e891a44b99f1026360bd5fa0c552a",
+      "count": 5226,
+      "source_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__nhp__seed42/receipt.json",
+      "source_sha256": "07414ddc054be0ac61f81fe16d8b7c70c924a343180cdc36b0cb4621a1c4c23b",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "prediction part SHA, target order, common truth and recorded time rehashed",
+      "raw_validation_predictions_available": null,
+      "original_training_population": null
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "nhp",
+      "split": "validation",
+      "seed": 52,
+      "metrics": {
+        "qty_rmse": 36.135588252309674,
+        "qty_mae": 9.155006046288038
+      },
+      "selected_epoch": 15,
+      "checkpoint_sha256": "a5a4907e0914aa68f35174651b03dbf332caaf885314b206892417da6c365e5a",
+      "tensor_sha256": "3c16eb84eed9323174f3febd41a6477fe81af21897713f97d6f4713a4eecfbab",
+      "count": 6690,
+      "source_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/runs/nhp/count_only_log_regression/seed_52/endpoint_replays.json",
+      "source_sha256": "e890fd4a307a7f830a148f2d060fde494a87f90d065a96fa577622ad781bad16",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "input_receipt Train/Validation target identity+quantity SHA and same data/loader/endpoint count",
+      "raw_validation_predictions_available": false,
+      "original_training_population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "nhp",
+      "split": "test",
+      "seed": 52,
+      "metrics": {
+        "qty_rmse": 42.07256356062817,
+        "qty_mae": 9.93777734467776
+      },
+      "selected_epoch": 15,
+      "checkpoint_sha256": "a5a4907e0914aa68f35174651b03dbf332caaf885314b206892417da6c365e5a",
+      "tensor_sha256": "3c16eb84eed9323174f3febd41a6477fe81af21897713f97d6f4713a4eecfbab",
+      "count": 5226,
+      "source_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__nhp__seed52/receipt.json",
+      "source_sha256": "58d9e4594996d987ba18bf8464de788d18c33b3a1a7f2595ee8b5fe9d2c4931c",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "prediction part SHA, target order, common truth and recorded time rehashed",
+      "raw_validation_predictions_available": null,
+      "original_training_population": null
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "nhp",
+      "split": "validation",
+      "seed": 62,
+      "metrics": {
+        "qty_rmse": 36.637380911357994,
+        "qty_mae": 9.276998069432462
+      },
+      "selected_epoch": 8,
+      "checkpoint_sha256": "c39aa02752d73bf78744f1357db172117adf632ff81be12bd73022e01a48d077",
+      "tensor_sha256": "1a3d61519c01f7a8e61cf0fe82dd47228a643436d83c66f5bd619ecafae05e75",
+      "count": 6690,
+      "source_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/runs/nhp/count_only_log_regression/seed_62/endpoint_replays.json",
+      "source_sha256": "9943a27d90ae45022a54003f858cbcde048ec0629f4148947ac10fd9204ab950",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "input_receipt Train/Validation target identity+quantity SHA and same data/loader/endpoint count",
+      "raw_validation_predictions_available": false,
+      "original_training_population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "nhp",
+      "split": "test",
+      "seed": 62,
+      "metrics": {
+        "qty_rmse": 42.51494073179417,
+        "qty_mae": 10.073958651183712
+      },
+      "selected_epoch": 8,
+      "checkpoint_sha256": "c39aa02752d73bf78744f1357db172117adf632ff81be12bd73022e01a48d077",
+      "tensor_sha256": "1a3d61519c01f7a8e61cf0fe82dd47228a643436d83c66f5bd619ecafae05e75",
+      "count": 5226,
+      "source_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__nhp__seed62/receipt.json",
+      "source_sha256": "dc357d4aa23e638e4b93226ec44ae3f0e7d0e956c3a8658aada199de00dcba4a",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "prediction part SHA, target order, common truth and recorded time rehashed",
+      "raw_validation_predictions_available": null,
+      "original_training_population": null
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "sahp",
+      "split": "validation",
+      "seed": 42,
+      "metrics": {
+        "qty_rmse": 35.542306504229316,
+        "qty_mae": 9.255863888238755
+      },
+      "selected_epoch": 30,
+      "checkpoint_sha256": "d9f92eecf1cfc0c973ffe556b84e8a57a64440bdffd41b4bb33619c58df16847",
+      "tensor_sha256": "7b8fe619d991a3564a54957a1f57bf4119485c80d09a48e05afd468d567b35ab",
+      "count": 6690,
+      "source_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/runs/sahp/count_only_log_regression/seed_42/endpoint_replays.json",
+      "source_sha256": "07ad59c37ab4038262651480b38ee6d859d5cb5fb1eec6b7ee767a41970db95d",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "input_receipt Train/Validation target identity+quantity SHA and same data/loader/endpoint count",
+      "raw_validation_predictions_available": false,
+      "original_training_population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "sahp",
+      "split": "test",
+      "seed": 42,
+      "metrics": {
+        "qty_rmse": 41.14184605008441,
+        "qty_mae": 10.308732378656181
+      },
+      "selected_epoch": 30,
+      "checkpoint_sha256": "d9f92eecf1cfc0c973ffe556b84e8a57a64440bdffd41b4bb33619c58df16847",
+      "tensor_sha256": "7b8fe619d991a3564a54957a1f57bf4119485c80d09a48e05afd468d567b35ab",
+      "count": 5226,
+      "source_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__sahp__seed42/receipt.json",
+      "source_sha256": "f90f46974c51f1f28e4775f0d1bb914854c5c3ab94873d1ba5b9b2f4c18761eb",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "prediction part SHA, target order, common truth and recorded time rehashed",
+      "raw_validation_predictions_available": null,
+      "original_training_population": null
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "sahp",
+      "split": "validation",
+      "seed": 52,
+      "metrics": {
+        "qty_rmse": 35.54223819294627,
+        "qty_mae": 9.228865447030117
+      },
+      "selected_epoch": 9,
+      "checkpoint_sha256": "b1b92c528a1201c458bcbd005371364afa4c44e437ba1fd5f5134afa9f24c48e",
+      "tensor_sha256": "4d1e2682d3244d8bc5a608f2ff9804fbaea4878629b559d29a783eef93c81cfe",
+      "count": 6690,
+      "source_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/runs/sahp/count_only_log_regression/seed_52/endpoint_replays.json",
+      "source_sha256": "f12fc5932e25c780241f0a056cf7f30baf40a52bfc30f83108f3f2fc9726047f",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "input_receipt Train/Validation target identity+quantity SHA and same data/loader/endpoint count",
+      "raw_validation_predictions_available": false,
+      "original_training_population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "sahp",
+      "split": "test",
+      "seed": 52,
+      "metrics": {
+        "qty_rmse": 41.13708428087978,
+        "qty_mae": 10.143258589052214
+      },
+      "selected_epoch": 9,
+      "checkpoint_sha256": "b1b92c528a1201c458bcbd005371364afa4c44e437ba1fd5f5134afa9f24c48e",
+      "tensor_sha256": "4d1e2682d3244d8bc5a608f2ff9804fbaea4878629b559d29a783eef93c81cfe",
+      "count": 5226,
+      "source_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__sahp__seed52/receipt.json",
+      "source_sha256": "ab5ca2181e4398b7f70abbd85db24678c9e7ff3e75b9e01a7e110274aa8dcdd7",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "prediction part SHA, target order, common truth and recorded time rehashed",
+      "raw_validation_predictions_available": null,
+      "original_training_population": null
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "sahp",
+      "split": "validation",
+      "seed": 62,
+      "metrics": {
+        "qty_rmse": 35.17326378555673,
+        "qty_mae": 9.214783020101498
+      },
+      "selected_epoch": 20,
+      "checkpoint_sha256": "90b6fa7d544dbf5eb52a42408bc634626adc99b4fa973c19c8309813bc525603",
+      "tensor_sha256": "22d0320c502d14c48aaa015bbdbbd80f194ea3f32f07bc1072d45c298a675315",
+      "count": 6690,
+      "source_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/runs/sahp/count_only_log_regression/seed_62/endpoint_replays.json",
+      "source_sha256": "089cb6525fa755171441d1f3a265a693afdece90c49a07d5090fe679fe66e998",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "input_receipt Train/Validation target identity+quantity SHA and same data/loader/endpoint count",
+      "raw_validation_predictions_available": false,
+      "original_training_population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "sahp",
+      "split": "test",
+      "seed": 62,
+      "metrics": {
+        "qty_rmse": 40.869102506054794,
+        "qty_mae": 10.332938430845806
+      },
+      "selected_epoch": 20,
+      "checkpoint_sha256": "90b6fa7d544dbf5eb52a42408bc634626adc99b4fa973c19c8309813bc525603",
+      "tensor_sha256": "22d0320c502d14c48aaa015bbdbbd80f194ea3f32f07bc1072d45c298a675315",
+      "count": 5226,
+      "source_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__sahp__seed62/receipt.json",
+      "source_sha256": "ae11166dcd880d9ec99b7c6559725c8cba4f76e4b680fae701c26f0edd369da6",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "prediction part SHA, target order, common truth and recorded time rehashed",
+      "raw_validation_predictions_available": null,
+      "original_training_population": null
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "s2p2_matched_head",
+      "split": "validation",
+      "seed": 42,
+      "metrics": {
+        "qty_rmse": 33.9627982128862,
+        "qty_mae": 9.311775153928808
+      },
+      "selected_epoch": 21,
+      "checkpoint_sha256": "5571b79df1368b0aad4c72b37a9e4162f7a65ca0aa9cd22a9c5097b0a107186d",
+      "tensor_sha256": "7b3c74cb231e02598676383120c4ef3827cf0648e42c6f849cca7f91947287b9",
+      "count": 6690,
+      "source_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/endpoint_replays.json",
+      "source_sha256": "d89dc0da3d4099b67bb2cc193d529e76ea5cf92520672299be8a27635d449a50",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "input_receipt Train/Validation target identity+quantity SHA and same data/loader/endpoint count",
+      "raw_validation_predictions_available": false,
+      "original_training_population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "s2p2_matched_head",
+      "split": "test",
+      "seed": 42,
+      "metrics": {
+        "qty_rmse": 39.63737355488605,
+        "qty_mae": 10.258660113280001
+      },
+      "selected_epoch": 21,
+      "checkpoint_sha256": "5571b79df1368b0aad4c72b37a9e4162f7a65ca0aa9cd22a9c5097b0a107186d",
+      "tensor_sha256": "7b3c74cb231e02598676383120c4ef3827cf0648e42c6f849cca7f91947287b9",
+      "count": 5226,
+      "source_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__s2p2_matched_head__seed42/receipt.json",
+      "source_sha256": "d5b874f94fbfe493d63e238fa20a569a536ecd66308220d5eead470301316673",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "prediction part SHA, target order, common truth and recorded time rehashed",
+      "raw_validation_predictions_available": null,
+      "original_training_population": null
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "s2p2_matched_head",
+      "split": "validation",
+      "seed": 52,
+      "metrics": {
+        "qty_rmse": 33.887601970267674,
+        "qty_mae": 9.292873667173856
+      },
+      "selected_epoch": 27,
+      "checkpoint_sha256": "3e8fa3fb6a0f664e06759ce258e7b0fb7f7320a3c3e809b5eeb954ae88acd5b6",
+      "tensor_sha256": "43cd611a4ac28065f00fdd5ed916eec90ce5d7fcba80bc4d2190c566fe56d138",
+      "count": 6690,
+      "source_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/endpoint_replays.json",
+      "source_sha256": "93cf1356d33c5acec027950d2fa9248dbb9a74ee061f04ad54dd8e4d9a116ee5",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "input_receipt Train/Validation target identity+quantity SHA and same data/loader/endpoint count",
+      "raw_validation_predictions_available": false,
+      "original_training_population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "s2p2_matched_head",
+      "split": "test",
+      "seed": 52,
+      "metrics": {
+        "qty_rmse": 39.73066877029487,
+        "qty_mae": 10.050110437452132
+      },
+      "selected_epoch": 27,
+      "checkpoint_sha256": "3e8fa3fb6a0f664e06759ce258e7b0fb7f7320a3c3e809b5eeb954ae88acd5b6",
+      "tensor_sha256": "43cd611a4ac28065f00fdd5ed916eec90ce5d7fcba80bc4d2190c566fe56d138",
+      "count": 5226,
+      "source_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__s2p2_matched_head__seed52/receipt.json",
+      "source_sha256": "dc44005872b02c7f3eaed46c7e475115d88e7ac19c56c18048376b929036d3f9",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "prediction part SHA, target order, common truth and recorded time rehashed",
+      "raw_validation_predictions_available": null,
+      "original_training_population": null
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "s2p2_matched_head",
+      "split": "validation",
+      "seed": 62,
+      "metrics": {
+        "qty_rmse": 34.13371101732907,
+        "qty_mae": 9.214314514612402
+      },
+      "selected_epoch": 22,
+      "checkpoint_sha256": "0619af965a5c3cdfa5c08445cbc4aff02bc8c494e05a45eff90e748b77eec8c9",
+      "tensor_sha256": "949c263b3ab62d6bb9af5e2e93ce88944b97e2df014569cc7c5dee8eb7547af2",
+      "count": 6690,
+      "source_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/endpoint_replays.json",
+      "source_sha256": "c9776bf3578cc92a4bbfffd467dd9cbf2e8cd461b05c1447d8b33f39528faa40",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "input_receipt Train/Validation target identity+quantity SHA and same data/loader/endpoint count",
+      "raw_validation_predictions_available": false,
+      "original_training_population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "s2p2_matched_head",
+      "split": "test",
+      "seed": 62,
+      "metrics": {
+        "qty_rmse": 39.95076359496072,
+        "qty_mae": 9.978644990676944
+      },
+      "selected_epoch": 22,
+      "checkpoint_sha256": "0619af965a5c3cdfa5c08445cbc4aff02bc8c494e05a45eff90e748b77eec8c9",
+      "tensor_sha256": "949c263b3ab62d6bb9af5e2e93ce88944b97e2df014569cc7c5dee8eb7547af2",
+      "count": 5226,
+      "source_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__s2p2_matched_head__seed62/receipt.json",
+      "source_sha256": "b3464f7669f58a036bf8afc1f39139ee054cdd5125ca899fbce9c6b83f3eb27e",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "prediction part SHA, target order, common truth and recorded time rehashed",
+      "raw_validation_predictions_available": null,
+      "original_training_population": null
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "attnhp_matched_head",
+      "split": "validation",
+      "seed": 42,
+      "metrics": {
+        "qty_rmse": 34.85607951830057,
+        "qty_mae": 9.201472211418665
+      },
+      "selected_epoch": 50,
+      "checkpoint_sha256": "8e7f10b2981d13b2b4be9639a520352dead333e447ab62f74a6eb69c5ccfa54a",
+      "tensor_sha256": "f7027315633f5a62be8d66837baf4b94da8965bcf11203bcca5c0c65cd410f8e",
+      "count": 6690,
+      "source_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/endpoint_replays.json",
+      "source_sha256": "0ba631936aa2dd9192828d163df91ab48f5b754e3219b49e381779e53633ce22",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "input_receipt Train/Validation target identity+quantity SHA and same data/loader/endpoint count",
+      "raw_validation_predictions_available": false,
+      "original_training_population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "attnhp_matched_head",
+      "split": "test",
+      "seed": 42,
+      "metrics": {
+        "qty_rmse": 40.16718616737345,
+        "qty_mae": 9.961347623581727
+      },
+      "selected_epoch": 50,
+      "checkpoint_sha256": "8e7f10b2981d13b2b4be9639a520352dead333e447ab62f74a6eb69c5ccfa54a",
+      "tensor_sha256": "f7027315633f5a62be8d66837baf4b94da8965bcf11203bcca5c0c65cd410f8e",
+      "count": 5226,
+      "source_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__attnhp_matched_head__seed42/receipt.json",
+      "source_sha256": "8c4225410f5a30b67fec927e93e8479595ad4ba765485e3dce2bb84940c0cc24",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "prediction part SHA, target order, common truth and recorded time rehashed",
+      "raw_validation_predictions_available": null,
+      "original_training_population": null
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "attnhp_matched_head",
+      "split": "validation",
+      "seed": 52,
+      "metrics": {
+        "qty_rmse": 34.952104003888564,
+        "qty_mae": 9.144195730269223
+      },
+      "selected_epoch": 80,
+      "checkpoint_sha256": "a2a9e27ac9ec5c577b6d06ed6ec01fb4ff6c0176620570abcb2dfe078a77bac6",
+      "tensor_sha256": "eb93f4c2d67215db4d5837a7524a54948352aa4e385a6d0c0b7c6c0fb6d65e94",
+      "count": 6690,
+      "source_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/endpoint_replays.json",
+      "source_sha256": "f372497af00bc00ee664014064f27752847d8fac1f788a31197d09b27be47c97",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "input_receipt Train/Validation target identity+quantity SHA and same data/loader/endpoint count",
+      "raw_validation_predictions_available": false,
+      "original_training_population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "attnhp_matched_head",
+      "split": "test",
+      "seed": 52,
+      "metrics": {
+        "qty_rmse": 40.42379548634199,
+        "qty_mae": 9.974579395654327
+      },
+      "selected_epoch": 80,
+      "checkpoint_sha256": "a2a9e27ac9ec5c577b6d06ed6ec01fb4ff6c0176620570abcb2dfe078a77bac6",
+      "tensor_sha256": "eb93f4c2d67215db4d5837a7524a54948352aa4e385a6d0c0b7c6c0fb6d65e94",
+      "count": 5226,
+      "source_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__attnhp_matched_head__seed52/receipt.json",
+      "source_sha256": "ed79bd04cc20ecf2d5faf050797c5e1d957675ee975635b25b3ffeda6b3db265",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "prediction part SHA, target order, common truth and recorded time rehashed",
+      "raw_validation_predictions_available": null,
+      "original_training_population": null
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "attnhp_matched_head",
+      "split": "validation",
+      "seed": 62,
+      "metrics": {
+        "qty_rmse": 34.821748159232854,
+        "qty_mae": 9.229309067776029
+      },
+      "selected_epoch": 26,
+      "checkpoint_sha256": "24cae8a4a285b2a59739cee1bf059eab5c31e6fae95528e370aa73fe01f77fea",
+      "tensor_sha256": "da04743156a19789407098f59032aec4059b2f2877b6880143aee86893ef8081",
+      "count": 6690,
+      "source_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/endpoint_replays.json",
+      "source_sha256": "c0a638df2df2f1cd8af4d16dd27a409bcc742f6fc6c279ee055acb16b57cb243",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "input_receipt Train/Validation target identity+quantity SHA and same data/loader/endpoint count",
+      "raw_validation_predictions_available": false,
+      "original_training_population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "attnhp_matched_head",
+      "split": "test",
+      "seed": 62,
+      "metrics": {
+        "qty_rmse": 40.0198918220372,
+        "qty_mae": 10.015874395026497
+      },
+      "selected_epoch": 26,
+      "checkpoint_sha256": "24cae8a4a285b2a59739cee1bf059eab5c31e6fae95528e370aa73fe01f77fea",
+      "tensor_sha256": "da04743156a19789407098f59032aec4059b2f2877b6880143aee86893ef8081",
+      "count": 5226,
+      "source_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__attnhp_matched_head__seed62/receipt.json",
+      "source_sha256": "65bc20e49db962e650312f83529fce47cd1a205977597a4c04bf2c996a149a71",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "population_evidence": "prediction part SHA, target order, common truth and recorded time rehashed",
+      "raw_validation_predictions_available": null,
+      "original_training_population": null
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "historical_CNN",
+      "split": "validation",
+      "seed": 42,
+      "selected_epoch": 9,
+      "checkpoint_sha256": "182a16d4feb46b110088d6ed17c2f5d8d8d4b5b34c95ca104ab30beb3c0c0cd1",
+      "tensor_sha256": "e5e7f6200a783959944777d3c1e17fb32e0120f728d7184d74384ed096323faf",
+      "metrics": {
+        "qty_rmse": 34.420452618672016,
+        "qty_mae": 9.23111022291162
+      },
+      "population": {
+        "target_identity_sha256": "97f2c71da401d22dd3124aaaadb9c96c5874f0bacb592a500ca7261289017dfd",
+        "truth_sha256": "28d8467c4a551c1f0a9210e738edfe1dbb06c6398f95bbd6e13243d1c662b16e",
+        "time_sha256": "57012615dacc3459a9982c48abbec399091447417669c96249cf2e5fccb10efc"
+      },
+      "count": 6690,
+      "source_path": "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/results/raf_spare_parts__42__titantpp_cnn_gru54_cnn_only/validation_replay.json",
+      "source_sha256": "765ff29699c86d549fa0d88a1befb572fcc7851c1583fdc269f87c5c4ab0c575",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "15f6d2b482c5f76c0488d017f5c923c76bc54fd75543aab838c477266a608b53"
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "historical_CNN",
+      "split": "test",
+      "seed": 42,
+      "selected_epoch": 9,
+      "checkpoint_sha256": "182a16d4feb46b110088d6ed17c2f5d8d8d4b5b34c95ca104ab30beb3c0c0cd1",
+      "tensor_sha256": "e5e7f6200a783959944777d3c1e17fb32e0120f728d7184d74384ed096323faf",
+      "metrics": {
+        "qty_rmse": 39.60377544397001,
+        "qty_mae": 10.01377430596983
+      },
+      "population": {
+        "target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+        "truth_sha256": "57b936b0ceb8ed030b35bb830d5e9037c4b908ffa9f525d16e07964cc653845f",
+        "time_sha256": "421c7ce582434e3e589386bbac3cff19a7a0b63bfbdf3ab5724d66703a246a0d"
+      },
+      "count": 5226,
+      "source_path": "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/results/raf_spare_parts__42__titantpp_cnn_gru54_cnn_only/test_metrics.json",
+      "source_sha256": "1d9cffd73ee470f6dded4b3aebb867ed31c491642d1bde2ecfb76a2907b9b6d8",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "15f6d2b482c5f76c0488d017f5c923c76bc54fd75543aab838c477266a608b53"
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "historical_CNN",
+      "split": "validation",
+      "seed": 52,
+      "selected_epoch": 5,
+      "checkpoint_sha256": "dceb5d346f750aeca93d063c17ef2f81d43ec3ced5867abbbeab10cd7146cf38",
+      "tensor_sha256": "1e0a1c74b819654ab8a3a77bbacf3fc31c73a2a6093b12ff6a054a07bab0eafa",
+      "metrics": {
+        "qty_rmse": 34.36430259009707,
+        "qty_mae": 9.18615195937399
+      },
+      "population": {
+        "target_identity_sha256": "97f2c71da401d22dd3124aaaadb9c96c5874f0bacb592a500ca7261289017dfd",
+        "truth_sha256": "28d8467c4a551c1f0a9210e738edfe1dbb06c6398f95bbd6e13243d1c662b16e",
+        "time_sha256": "57012615dacc3459a9982c48abbec399091447417669c96249cf2e5fccb10efc"
+      },
+      "count": 6690,
+      "source_path": "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/results/raf_spare_parts__52__titantpp_cnn_gru54_cnn_only/validation_replay.json",
+      "source_sha256": "4832ff80628a9bad754ce6388f0d92c4e3293ebac590ff2ae4ef9567d8ce2487",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "15f6d2b482c5f76c0488d017f5c923c76bc54fd75543aab838c477266a608b53"
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "historical_CNN",
+      "split": "test",
+      "seed": 52,
+      "selected_epoch": 5,
+      "checkpoint_sha256": "dceb5d346f750aeca93d063c17ef2f81d43ec3ced5867abbbeab10cd7146cf38",
+      "tensor_sha256": "1e0a1c74b819654ab8a3a77bbacf3fc31c73a2a6093b12ff6a054a07bab0eafa",
+      "metrics": {
+        "qty_rmse": 39.57560775545666,
+        "qty_mae": 9.946143719025876
+      },
+      "population": {
+        "target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+        "truth_sha256": "57b936b0ceb8ed030b35bb830d5e9037c4b908ffa9f525d16e07964cc653845f",
+        "time_sha256": "421c7ce582434e3e589386bbac3cff19a7a0b63bfbdf3ab5724d66703a246a0d"
+      },
+      "count": 5226,
+      "source_path": "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/results/raf_spare_parts__52__titantpp_cnn_gru54_cnn_only/test_metrics.json",
+      "source_sha256": "35aaf30beff1d290f702428b0f1ed805ea5052d7ec53d3c9d978d41af531940e",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "15f6d2b482c5f76c0488d017f5c923c76bc54fd75543aab838c477266a608b53"
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "historical_CNN",
+      "split": "validation",
+      "seed": 62,
+      "selected_epoch": 8,
+      "checkpoint_sha256": "018c634f0db51054393af97f2b36b96b82da1d5cceb2d26c0e3a454fbedd9d7f",
+      "tensor_sha256": "5523c2d484a87f23e7ecc68a4f8c1c5138b96aec2090fc92d05b9954bdc62a71",
+      "metrics": {
+        "qty_rmse": 34.509469741990486,
+        "qty_mae": 9.237551527957033
+      },
+      "population": {
+        "target_identity_sha256": "97f2c71da401d22dd3124aaaadb9c96c5874f0bacb592a500ca7261289017dfd",
+        "truth_sha256": "28d8467c4a551c1f0a9210e738edfe1dbb06c6398f95bbd6e13243d1c662b16e",
+        "time_sha256": "57012615dacc3459a9982c48abbec399091447417669c96249cf2e5fccb10efc"
+      },
+      "count": 6690,
+      "source_path": "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/results/raf_spare_parts__62__titantpp_cnn_gru54_cnn_only/validation_replay.json",
+      "source_sha256": "f5edec9771b342bea167f8727ff7e46f5aa6f944d06586927ecc6527b76ddf47",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "15f6d2b482c5f76c0488d017f5c923c76bc54fd75543aab838c477266a608b53"
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "historical_CNN",
+      "split": "test",
+      "seed": 62,
+      "selected_epoch": 8,
+      "checkpoint_sha256": "018c634f0db51054393af97f2b36b96b82da1d5cceb2d26c0e3a454fbedd9d7f",
+      "tensor_sha256": "5523c2d484a87f23e7ecc68a4f8c1c5138b96aec2090fc92d05b9954bdc62a71",
+      "metrics": {
+        "qty_rmse": 39.622607020883635,
+        "qty_mae": 9.956496585033609
+      },
+      "population": {
+        "target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+        "truth_sha256": "57b936b0ceb8ed030b35bb830d5e9037c4b908ffa9f525d16e07964cc653845f",
+        "time_sha256": "421c7ce582434e3e589386bbac3cff19a7a0b63bfbdf3ab5724d66703a246a0d"
+      },
+      "count": 5226,
+      "source_path": "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/results/raf_spare_parts__62__titantpp_cnn_gru54_cnn_only/test_metrics.json",
+      "source_sha256": "28313e6b873b19efd1b96880f7330931d6c5a3c413c8dd55cd7d6045b502d3f1",
+      "training_host": "5080",
+      "evaluation_host": "5080",
+      "evaluation_cudnn": 91900,
+      "source_closure": "15f6d2b482c5f76c0488d017f5c923c76bc54fd75543aab838c477266a608b53"
+    }
+  ],
+  "aggregates": {
+    "rmtpp": {
+      "validation": {
+        "qty_rmse": {
+          "mean": 34.55032733120328,
+          "sample_sd": 0.250627048553142,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 9.136204564111056,
+          "sample_sd": 0.055678014468013064,
+          "ddof": 1
+        }
+      },
+      "test": {
+        "qty_rmse": {
+          "mean": 40.46316579394822,
+          "sample_sd": 0.2415811442600097,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 9.90634650459991,
+          "sample_sd": 0.037017526200991684,
+          "ddof": 1
+        }
+      }
+    },
+    "thp": {
+      "validation": {
+        "qty_rmse": {
+          "mean": 34.744517470768365,
+          "sample_sd": 0.3204133163281381,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 9.301358198478082,
+          "sample_sd": 0.1819002055995457,
+          "ddof": 1
+        }
+      },
+      "test": {
+        "qty_rmse": {
+          "mean": 40.555091332116575,
+          "sample_sd": 0.29525524464565456,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 10.12295033422595,
+          "sample_sd": 0.23047500095589143,
+          "ddof": 1
+        }
+      }
+    },
+    "nhp": {
+      "validation": {
+        "qty_rmse": {
+          "mean": 36.27307783825351,
+          "sample_sd": 0.31864123499191854,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 9.179252661011025,
+          "sample_sd": 0.08815933265436442,
+          "ddof": 1
+        }
+      },
+      "test": {
+        "qty_rmse": {
+          "mean": 42.17632957957314,
+          "sample_sd": 0.3004805615340124,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 9.969145128010396,
+          "sample_sd": 0.0931774896956118,
+          "ddof": 1
+        }
+      }
+    },
+    "sahp": {
+      "validation": {
+        "qty_rmse": {
+          "mean": 35.419269494244105,
+          "sample_sd": 0.2130471959371725,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 9.233170785123457,
+          "sample_sd": 0.020876095990418102,
+          "ddof": 1
+        }
+      },
+      "test": {
+        "qty_rmse": {
+          "mean": 41.04934427900633,
+          "sample_sd": 0.1561121108339262,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 10.2616431328514,
+          "sample_sd": 0.10323593559685378,
+          "ddof": 1
+        }
+      }
+    },
+    "s2p2_matched_head": {
+      "validation": {
+        "qty_rmse": {
+          "mean": 33.99470373349431,
+          "sample_sd": 0.1261185452077655,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 9.27298777857169,
+          "sample_sd": 0.05168394797336973,
+          "ddof": 1
+        }
+      },
+      "test": {
+        "qty_rmse": {
+          "mean": 39.772935306713876,
+          "sample_sd": 0.1609135618279136,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 10.095805180469693,
+          "sample_sd": 0.1454926952674325,
+          "ddof": 1
+        }
+      }
+    },
+    "attnhp_matched_head": {
+      "validation": {
+        "qty_rmse": {
+          "mean": 34.876643893807326,
+          "sample_sd": 0.06756723846631019,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 9.191659003154639,
+          "sample_sd": 0.0433969393818474,
+          "ddof": 1
+        }
+      },
+      "test": {
+        "qty_rmse": {
+          "mean": 40.203624491917545,
+          "sample_sd": 0.20440243670610622,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 9.983933804754184,
+          "sample_sd": 0.028441535265402988,
+          "ddof": 1
+        }
+      }
+    },
+    "historical_CNN": {
+      "validation": {
+        "qty_rmse": {
+          "mean": 34.43140831691986,
+          "sample_sd": 0.0732010654996562,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 9.218271236747547,
+          "sample_sd": 0.028001938985035457,
+          "ddof": 1
+        }
+      },
+      "test": {
+        "qty_rmse": {
+          "mean": 39.6006634067701,
+          "sample_sd": 0.023653674541581078,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 9.972138203343105,
+          "sample_sd": 0.036427588996541055,
+          "ddof": 1
+        }
+      }
+    }
+  },
+  "external_frontier": {
+    "validation": {
+      "qty_rmse": {
+        "models": [
+          "s2p2_matched_head"
+        ],
+        "mean": 33.99470373349431,
+        "sample_sd": {
+          "s2p2_matched_head": 0.1261185452077655
+        }
+      },
+      "qty_mae": {
+        "models": [
+          "rmtpp"
+        ],
+        "mean": 9.136204564111056,
+        "sample_sd": {
+          "rmtpp": 0.055678014468013064
+        }
+      }
+    },
+    "test": {
+      "qty_rmse": {
+        "models": [
+          "s2p2_matched_head"
+        ],
+        "mean": 39.772935306713876,
+        "sample_sd": {
+          "s2p2_matched_head": 0.1609135618279136
+        }
+      },
+      "qty_mae": {
+        "models": [
+          "rmtpp"
+        ],
+        "mean": 9.90634650459991,
+        "sample_sd": {
+          "rmtpp": 0.037017526200991684
+        }
+      }
+    }
+  },
+  "historical_cnn": {
+    "validation": {
+      "qty_rmse": {
+        "mean": 34.43140831691986,
+        "sample_sd": 0.0732010654996562,
+        "ddof": 1
+      },
+      "qty_mae": {
+        "mean": 9.218271236747547,
+        "sample_sd": 0.028001938985035457,
+        "ddof": 1
+      }
+    },
+    "test": {
+      "qty_rmse": {
+        "mean": 39.6006634067701,
+        "sample_sd": 0.023653674541581078,
+        "ddof": 1
+      },
+      "qty_mae": {
+        "mean": 9.972138203343105,
+        "sample_sd": 0.036427588996541055,
+        "ddof": 1
+      }
+    }
+  },
+  "verified_source_count": 523,
+  "external_terminal_files_verified": 198,
+  "external_fit_count": 18,
+  "historical_cnn_fit_count": 3,
+  "source_references": {
+    "paper/scripts/compare_titantpp_backbone_loop.py": "f829035dfe40450771aca0f0a45be48aad9a600bd320d5527d7c351349b50063",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__attnhp_matched_head__seed42/predictions/part-00000.parquet": "b18fcc6faa1711b8cdb6dd4d590f9f84a5c8b90f6afe132e48a6b452402e9ef2",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__attnhp_matched_head__seed42/receipt.json": "8c4225410f5a30b67fec927e93e8479595ad4ba765485e3dce2bb84940c0cc24",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__attnhp_matched_head__seed52/predictions/part-00000.parquet": "8f0b6dc46017ae0f7a2dc621735a88acc67bec81fb736eeafa06fc48b06e7073",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__attnhp_matched_head__seed52/receipt.json": "ed79bd04cc20ecf2d5faf050797c5e1d957675ee975635b25b3ffeda6b3db265",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__attnhp_matched_head__seed62/predictions/part-00000.parquet": "be10992391185dc98fbd6a6f8ddcb39a6b434b9444d014be8718884e5b82fe5f",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__attnhp_matched_head__seed62/receipt.json": "65bc20e49db962e650312f83529fce47cd1a205977597a4c04bf2c996a149a71",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__nhp__seed42/predictions/part-00000.parquet": "ba5855d5af922911e6a8584a62002bd538661956e12fd235882b5e3ddf8f6538",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__nhp__seed42/receipt.json": "07414ddc054be0ac61f81fe16d8b7c70c924a343180cdc36b0cb4621a1c4c23b",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__nhp__seed52/predictions/part-00000.parquet": "828bf5c6f24c08b3af3b6d36cff7900c559b809656b68ba826e2671b8d74fdb5",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__nhp__seed52/receipt.json": "58d9e4594996d987ba18bf8464de788d18c33b3a1a7f2595ee8b5fe9d2c4931c",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__nhp__seed62/predictions/part-00000.parquet": "a5684a3e8d30cf8b23a5fad3e9e9a8e4fc299b55d09ebc916a22bbaa48862a87",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__nhp__seed62/receipt.json": "dc357d4aa23e638e4b93226ec44ae3f0e7d0e956c3a8658aada199de00dcba4a",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__rmtpp__seed42/predictions/part-00000.parquet": "f177d12cd2c7fe6f9739db00417f0317bcd7a9bbd0521a4e5762951192f876e8",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__rmtpp__seed42/receipt.json": "cbf2320fff950f34bc124da7f7418e08f2dad8dff9fdc32107e530762e38b8c8",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__rmtpp__seed52/predictions/part-00000.parquet": "461849236db76db01aee90c303a5abcc57f6b38a2ace104eba19b5393272df01",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__rmtpp__seed52/receipt.json": "fa87b1bc33219d098b4fa95e2b67e1ed2af2c707e7ed2754bf8300b85ca2d3e6",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__rmtpp__seed62/predictions/part-00000.parquet": "5aa0f81bf9185c6175116472591538cb7489ab1689c5b32795c581fc28e48fd9",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__rmtpp__seed62/receipt.json": "82429f9daf4a736e6e936cef005ae148ae83d780a122b992bfc4d239da7c4354",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__s2p2_matched_head__seed42/predictions/part-00000.parquet": "6be3b39e9d237bf800845257420bc5240975bd61932b89a492b146dd70053996",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__s2p2_matched_head__seed42/receipt.json": "d5b874f94fbfe493d63e238fa20a569a536ecd66308220d5eead470301316673",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__s2p2_matched_head__seed52/predictions/part-00000.parquet": "d7d259adc66c907e66809f56643f00e6f50c23e806da663ef994eb2a503136c0",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__s2p2_matched_head__seed52/receipt.json": "dc44005872b02c7f3eaed46c7e475115d88e7ac19c56c18048376b929036d3f9",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__s2p2_matched_head__seed62/predictions/part-00000.parquet": "cfb928adce7266e9154d28f4687738fef1c291136aa07fcef46d906bf34d855e",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__s2p2_matched_head__seed62/receipt.json": "b3464f7669f58a036bf8afc1f39139ee054cdd5125ca899fbce9c6b83f3eb27e",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__sahp__seed42/predictions/part-00000.parquet": "c53db3f5821851d901c3cf463584ead3d2ddf21b2f3a7096b0e790924e92aa55",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__sahp__seed42/receipt.json": "f90f46974c51f1f28e4775f0d1bb914854c5c3ab94873d1ba5b9b2f4c18761eb",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__sahp__seed52/predictions/part-00000.parquet": "c5ecc163b31d15326fce8b9eb886b0292a7df60322e26905fb79a780a088552b",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__sahp__seed52/receipt.json": "ab5ca2181e4398b7f70abbd85db24678c9e7ff3e75b9e01a7e110274aa8dcdd7",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__sahp__seed62/predictions/part-00000.parquet": "4ec9721655e17d62834f17099d1fa854dea1f51545bba5ce4c109bdcbb09392b",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__sahp__seed62/receipt.json": "ae11166dcd880d9ec99b7c6559725c8cba4f76e4b680fae701c26f0edd369da6",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__thp__seed42/predictions/part-00000.parquet": "1e60b96de8de05845c238d988738d37d4ff1acf77a90989d4aa49d97a8f3635a",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__thp__seed42/receipt.json": "07ae164dc6c6f468adf23d6f64e62ea9fc8b0baf3f358985e6d21f6ed1fcb159",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__thp__seed52/predictions/part-00000.parquet": "215ee5b793b871b4cf90164db4570b33f71e73f6e2a5c5de636467cda178fcd1",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__thp__seed52/receipt.json": "964ebb36044a50b3b996ceb6828d016a2dc71e55748a5dfefdb7350f5f7f427c",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__thp__seed62/predictions/part-00000.parquet": "634d68dc5b68514108a4322efa1d132601b7153807f91d845352a5d0d0143282",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__thp__seed62/receipt.json": "24deb671ef6da61936a905535aadf6044c21741bd32a3450a48df35c187dd8a1",
+    "reports/titantpp_rank_reversal_diagnostics_20261014_v1/EXTERNAL_ANALYSIS.json": "cb1f5dab5de826e52f2125c7b732e60d2dc88b072e75d0c24298ab8ab1f2e533",
+    "reports/titantpp_rank_reversal_diagnostics_20261014_v1/external_analysis.py": "86714f9262b3c8615d0aa287aaead239d484cb16d2e1d6465acd0af15b4d6556",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/bindings.json": "88d4e6388cb58b1bd9598698a0f2cb1ac8505fb4be5e05b2785d3c2d27b0dba0",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/data/raf_spare_parts.parquet": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/data/raf_spare_parts_split_manifest.json": "3cd6204667de4e44eda8787d32845bebff7624e1bb255ffd7677f810b8d7b149",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/data/raf_spare_parts_train_validation.parquet": "d805cad0242078fedfbb87eed18bde9b73d37bfc9b93c6b75aac49087244efa2",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/evaluation_results_manifest.json": "bf3c3ae028bbf9a6c6f1f2de1ca3881a5b8d2b13feab84d3601616187acf0a68",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/final_receipt.json": "9b4db5b90700910d6dc650966fb15753e4036f9ae2b83068cc71d073c0e478f6",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/metadata/raf_spare_parts__42__titantpp_cnn_gru54_cnn_only.json": "2ec2561e790e0410fbc9b1cd91d08c92e49284f7cbd03626abba87768f09f279",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/metadata/raf_spare_parts__52__titantpp_cnn_gru54_cnn_only.json": "80ab7d0cfe1fe3a3894bdc831d1c008e8521fd68d4090d6e906236b32cd902d1",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/metadata/raf_spare_parts__62__titantpp_cnn_gru54_cnn_only.json": "4c5dae219ed2940fa873db542d3662b481043e128b19718ec80d1f7f8d980d5a",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/native_input_receipt.json": "c3a9c2ebaa1c00e50fd41d20c999c93ae4b0762f3b00cfffbf766c8d6a4101f5",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/originals/run/raf_spare_parts__42__titantpp_cnn_gru54_cnn_only/input_receipt.json": "747b7344376fe2421b97828c46ca369435d4e0a1b15f4df5580246eebcd452b8",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/originals/run/raf_spare_parts__42__titantpp_cnn_gru54_cnn_only/runs/titantpp_cnn_gru54_cnn_only/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt": "182a16d4feb46b110088d6ed17c2f5d8d8d4b5b34c95ca104ab30beb3c0c0cd1",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/originals/run/raf_spare_parts__42__titantpp_cnn_gru54_cnn_only/runs/titantpp_cnn_gru54_cnn_only/count_only_log_regression/seed_42/history.json": "18fec225b931ccd5addebae81b35b6198922cf8038cf36ae813dd54d51cf1b8e",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/originals/run/raf_spare_parts__42__titantpp_cnn_gru54_cnn_only/terminal_manifest.json": "74996833e00b45990ce33ad32aa624c0dc2a8b7bfcf3682450908bbd2e334caf",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/originals/run/raf_spare_parts__52__titantpp_cnn_gru54_cnn_only/input_receipt.json": "747b7344376fe2421b97828c46ca369435d4e0a1b15f4df5580246eebcd452b8",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/originals/run/raf_spare_parts__52__titantpp_cnn_gru54_cnn_only/runs/titantpp_cnn_gru54_cnn_only/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt": "dceb5d346f750aeca93d063c17ef2f81d43ec3ced5867abbbeab10cd7146cf38",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/originals/run/raf_spare_parts__52__titantpp_cnn_gru54_cnn_only/runs/titantpp_cnn_gru54_cnn_only/count_only_log_regression/seed_52/history.json": "a0fd11427044296e52555fbbc4af96c4ab2968b3fd6987fff75bdc65f4aaaf4f",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/originals/run/raf_spare_parts__52__titantpp_cnn_gru54_cnn_only/terminal_manifest.json": "ed09adfed5e6c628190455a8629966345e601e9362ea1a97a963c842a9cc81f8",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/originals/run/raf_spare_parts__62__titantpp_cnn_gru54_cnn_only/input_receipt.json": "747b7344376fe2421b97828c46ca369435d4e0a1b15f4df5580246eebcd452b8",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/originals/run/raf_spare_parts__62__titantpp_cnn_gru54_cnn_only/runs/titantpp_cnn_gru54_cnn_only/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt": "018c634f0db51054393af97f2b36b96b82da1d5cceb2d26c0e3a454fbedd9d7f",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/originals/run/raf_spare_parts__62__titantpp_cnn_gru54_cnn_only/runs/titantpp_cnn_gru54_cnn_only/count_only_log_regression/seed_62/history.json": "7d58b8fdaff4f2b2adc81d7e9fe8981867bf9d21f1d6e36a3b16164b80fcbe0a",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/originals/run/raf_spare_parts__62__titantpp_cnn_gru54_cnn_only/terminal_manifest.json": "15346c412d3be00bd71d651a716e2fe5aef50b44f735d7d91b39471f475d2f71",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/originals/worker_exits/raf_spare_parts__42__titantpp_cnn_gru54_cnn_only.json": "44a582557ae6366eef334e01251fcde7b6d502df5e674a4008d298d2d34a584f",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/originals/worker_exits/raf_spare_parts__52__titantpp_cnn_gru54_cnn_only.json": "af9ecfeecd67462cf94a39dc326ec06aa78e75c404b4fdaa3dc62ffc98162317",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/originals/worker_exits/raf_spare_parts__62__titantpp_cnn_gru54_cnn_only.json": "820227bd657798d2c786fe5d42195f78623a28272986d61559c6049689116c3c",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/originals_manifest.json": "f0cd36eb5cffabab76b25755353d16d48ff9bbc17380cb32359718559666385f",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/results/raf_spare_parts__42__titantpp_cnn_gru54_cnn_only/test_metrics.json": "1d9cffd73ee470f6dded4b3aebb867ed31c491642d1bde2ecfb76a2907b9b6d8",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/results/raf_spare_parts__42__titantpp_cnn_gru54_cnn_only/validation_replay.json": "765ff29699c86d549fa0d88a1befb572fcc7851c1583fdc269f87c5c4ab0c575",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/results/raf_spare_parts__52__titantpp_cnn_gru54_cnn_only/test_metrics.json": "35aaf30beff1d290f702428b0f1ed805ea5052d7ec53d3c9d978d41af531940e",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/results/raf_spare_parts__52__titantpp_cnn_gru54_cnn_only/validation_replay.json": "4832ff80628a9bad754ce6388f0d92c4e3293ebac590ff2ae4ef9567d8ce2487",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/results/raf_spare_parts__62__titantpp_cnn_gru54_cnn_only/test_metrics.json": "28313e6b873b19efd1b96880f7330931d6c5a3c413c8dd55cd7d6045b502d3f1",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/results/raf_spare_parts__62__titantpp_cnn_gru54_cnn_only/validation_replay.json": "f5edec9771b342bea167f8727ff7e46f5aa6f944d06586927ecc6527b76ddf47",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/data_loader/event_seq_data_module.py": "7c11d9ace6c4e4d3bb03861aae92393aa946a38452d702dc7625210b339897ca",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareAdditionalTPP.py": "076aebc2618d10bc1ebb558dc7630c35d951c5e417802e8fc0327b8c47cbc72e",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareFactory.py": "9f039520a11638bef417890abf9055a3fb3115f5ebb85b54b8640575fb8e9246",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTHPStaticMemory.py": "44fcc1717ca5f19eef36386e8531a3423d7a3444d39f4e462e12c14f98c4b8ee",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTPP.py": "9348e4ad18aea3c12e532cf1403fecd5f8a7af2d932f9c1019ddd8b3b48e4c1c",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanActiveBranchNorm.py": "14ebe590a4190276fd789bb2608520d14e031c79e98afe08511fef4aeb13d7e9",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanBoundedQK.py": "b0139d409801c4bf184954f393f15d2f3d06f725009621c3e5b95b5ef2aed2a0",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanCNNGRU.py": "9d1bcf6c754cbf6216e4929f832d08af60ccf02573edd3b6c1c7a2088115dfc3",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanCNNGRUComponents.py": "8325d527d1b1c085ffa299a3f86372e50c247e234548b97d29561ea24f4b1d8c",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanCNNHistoryControls.py": "30e38b4a98ea7c5c5be3da717ae5f0743871330d82ef9e159b5bcf12d0028255",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanCausalQKV.py": "402f48187658401371ccadf0bf6ba2dc3413e1442a94d837562dac6b5d5bba68",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanContextualRetrieval.py": "bdb11f38c44e9fc6f628af6768cfed1e5386a00ae3854bf05bbce40e9049e108",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanCoreAblation.py": "b34b61aadc7a2c91e000493caf2497fc89549a499082ca77ebbc3ed7cab2b120",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanGRUControls.py": "2b98bd74dd1b07c7b71fc39814d5cd45933da8b97ec4e3816abf06e2aa18f554",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanHistoryControls.py": "60ce1ea2675e9f516f3d09663d893a39e4825ede5a2ab5a703779dcb158e640b",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanHistoryWidth.py": "2a903290810070bdfe72a355a98ff09790b02858a6853e94a7a4a87336afc6f7",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanInterLayerMemory.py": "0f78c8919e11e9efa1d5402bc46c23074d2cf8833cf9cc90c104c8c6b122637a",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanLevelHistoryQKV.py": "f4398a442c7872b158039f2346bc18ce5df5b89de97ec4c1c4a0f9291ad136e0",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanLocalGate.py": "3f235b761b33f7367cfbc5303f320d23b0cd97bad121903a67ae06de358f7b30",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanMLPCandidates.py": "eb88a42aa092bb173ccbf0139a1a8469542e5a4cb5f25fd23b098d60f2ca841a",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanMemoryFiLM.py": "fdcdea9cf6fc1b7b47c0afa88609c1af4575ebf98f7eb2fcecb431ff8c3ecbfd",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanMultiLagDetail.py": "4bcbecdadf921df21a4e7fb379962eb4ecec2cfeb2f8ff1edccbb6b418807eae",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanNonlinearEpisodeMemory.py": "990665850a4d0367da1b82fcc7ddb8e53babdeff864d48df11083f450fa19cdc",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanPairMessage.py": "79c1e7f1da3b22f6a3bbaf606e5e915ff1eab39e2adc849c472c58f1a562508e",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanSlotMemory.py": "e9868579089adf9d47d7483bf2a6b912dad8beb8b5b6936ce0e0af85f10d7c32",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanStateTransport.py": "9e6e1d7ef30af63f993fb005bfe18c7146288981a1179ce9ede2ea79521c48a0",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanSuccessorMemory.py": "0616885eb8318f1823734b91563f2d261a9916f0d33ea9b7d57d6e1f0ae60ffb",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanTaskRoutedMemory.py": "c94ce1c29de676af5d5655ba4f05fc238b991052eeaaffd74af23b58d6c0a333",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/CountAwareTitanValueNorm.py": "1de961d90d771737ce7e5d1e81bfa7e1487b7540a90ee2af1bfc2109e946844a",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/DeepRenewalEvent.py": "9fd80299c317be1c95321de8064677c6154d953a6841eea6a5a6523fb3826066",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/NeuralHawkesTPP.py": "75162651b5d0ad87f7418805df0d7b743fe77d256225351b68e02cfbf7c5cbdd",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/RMTPP.py": "e4160e45c588d9af5eba2ee5c27ef58f0311716555786198c332cc77cb5886ea",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/SelfAttentiveHawkesTPP.py": "91360a0c2e1ffde346bc90803beabaa88e909db7d05161062170d6de87b4bde6",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/TitanTPP.py": "5381faad10d7782af40abf028aa0b79894e224d61c82af9680a0d9bac410c37c",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/TransformerHawkesTPP.py": "a74cbb43bd1d47d541bb903dfcdf336ef8647ec489fd5b776da27aa2a7eb3f77",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/__init__.py": "2909671196619588e5ab66b1913a319643a03dad4487397647d6939526b22e15",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/config.py": "6a3cb4d1bbb9f6fab62a2e3bbc4bd87d05a7b8f240e9a82b8ff7534f8632d840",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/magnitude_normalization.py": "c665e3d93ca2dee07d4d5454e6265decd3f9dfa7f13a0208e39dbd9af90c57d4",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/marker_losses.py": "e53308193868191783f8ab5cecb85c024eb668895d6239d8b289c6aacd3ab08d",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/positive_integer_time.py": "783113642d897aaed3da1213fc91fb993ee71af380f953a1159142a1cda8ae59",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/value_conditioning.py": "00548cd6b0f30e44f39fe9ac4c3ec110a056d20bc13aefeeb8e659fc7d89cd3a",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/vendor/__init__.py": "b07f98546bb713a7ffadbd0dd33ec716792c89b11fdf86ac08c7b7c5b4cfcea6",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/vendor/attnhp/LICENSE": "6011182cdbe91e36564c5585fe9503935f424537b169a29c611a3a176bc068a4",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/vendor/attnhp/__init__.py": "b07f98546bb713a7ffadbd0dd33ec716792c89b11fdf86ac08c7b7c5b4cfcea6",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/vendor/attnhp/xfmr.py": "e55258fc1c409ca3036349e3755a41d1a307e6ef1af71c4462eb5667cee528ed",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/vendor/s2p2/LICENCE": "4bf3627d7557be3a023228df316f5c6a9951eb5f6007643240c3aa316688c8be",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/vendor/s2p2/NOTICE": "63069aa792e8e63bd9b50244011532a29281ad94c5b7085f25e095b8e00c063e",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/vendor/s2p2/__init__.py": "b07f98546bb713a7ffadbd0dd33ec716792c89b11fdf86ac08c7b7c5b4cfcea6",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/vendor/s2p2/initializers.py": "7d488746f391c9295e8db7d244df9b8301dc35058567a123aab225447278cc18",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/TPPs/vendor/s2p2/models.py": "ecefc9bf88e8f3c8ceade57bf6696a60b9ccb343ee60b50a97c9453ac823b25d",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/Titan/Titans.py": "2efda26d97492f43bf19dc9778ff4d4fcbf24ccf010645b90a5396c324c8183f",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/Titan/__init__.py": "a8147804206ab500c7adeeeaf194c82447ead4d332b2959f8ed8e3692793c1a7",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/Titan/backbone.py": "f3531234235a9f50de05cf36c80b0a742a45709145d49555440249c814a20e98",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/Titan/common/__init__.py": "f301d6cf6edcc7804363d3c9e1c5ef22ec6fbead856aac7d4ec2bcef0508dc88",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/Titan/common/configs.py": "6a0d804214639629e05320cded343368f83e95f34935fc71588bafc45a5027e7",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/Titan/common/decoder.py": "361d17156c7f8a0596df4857657a46bd4d79eb88d34eaa0f871abffa730a9354",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/Titan/common/elapsed_age.py": "fb04e96ea180974e306c5688ef4b51c5b615a516d671edd472c0049d3f1e651d",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/Titan/common/key_value_memory.py": "a0360ed1e18cc89da2de0f08852b6ca980b5fd05bf4fe5559163e685ed4598de",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/Titan/common/memory.py": "405ccbfa900b877250c6f1c5a4c6652f46e0a500303cea35a5c6cc7cac02af36",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/Titan/common/titans_mac.py": "9436fea650c66025fceb7aebb820941176f2c10c80e47d61c55555d8430e0ab1",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/Titan/common/titans_memory_stability.py": "d7681b65e65f239377d174596b970d5509de075a9f03a5d34c001c7801031e86",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/Titan/common/tpp_gated_memory.py": "4d77851c904a46117eb5968c602c6e91c87f7bc061f90816b9f941775b818263",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/common_layers/RevIN.py": "f20fb6a9664568a5715ece23ed4f745435b30e60c69557afa8baae8255154a89",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/models/common_layers/__init__.py": "8fd4cb66926a1cd633c3201645f8dbc63e02a53d91bcec893c6d8b4930244f35",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/count_aware_tpp_backbone/__init__.py": "cd25af65061351f0ca7c46d143361bbe9528ea755c6a3f09dbffdd5f188412bb",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/count_aware_tpp_backbone/constants.py": "6341503f26ec52337d899ccd9d200f7c7940428477eb708ba193931db8c7672e",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/count_aware_tpp_backbone/core.py": "c5cc72a265a05199868332c9beaa32ce9568afaf5f4cfa0930b836215ab36084",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/count_aware_tpp_backbone/datasets.py": "0a2982d92a21d6dd0518adba5e631d40cf2222c9eb9ee476d861b27211623274",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/count_aware_tpp_backbone/observed_time.py": "d3e34a2826ef1339d6692f199431cd122ce8d654871470ef0456079f92c01f26",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/count_aware_tpp_backbone/reporting.py": "4764b790352b6a84a4efa9df9b17e3ad948534779539bf87422af7d8c06825c6",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/count_aware_tpp_backbone/thp_static_contract.py": "96919909906c1fec5b447234dfc77612a43f6b62ab64bca31185a6480f0fc490",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/count_aware_tpp_backbone/training.py": "964ed6fb569acad9d1da0887398da7c770724623277ed688a4e841af4285f6ab",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/evaluate_titantpp_gru_controls.py": "ae174e9712e5302a04450cedbf72b7ca8bd6cfaf14738e71c299bab14beee27e",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/evaluate_titantpp_history_width.py": "6de7f1f6c16700efa439a97625c2c669736d1fe66889551175ce5d9e5d997c69",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/local_detail_benchmark_contract.py": "55e68f824f4c564267fec3e0c6235be467554e4baa9239674a93125fa77daccf",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/local_detail_instacart_remaining_contract.py": "c66e97328d333e1082d94295aad3b1a80367f3154e9e6f9b0e147c5e11ddb504",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/local_detail_instacart_replication_contract.py": "3d4ad3869506f908573e94828ce59e6607cc7bb0c1f90a32363598f32cf52b55",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/local_detail_replication_contract.py": "48f57d041c33ab90e3fd3d3d285ac21938fc01c09dd823a916a7e83fcbcc401d",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/mixed_quantity_objective.py": "f52a7fb8050479990c951ccbe4ac3548988a560049cf528731ed6672fc052396",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/observed_slot_parallel_common.py": "5e624ba8ba457fb89a42c159969aada36f8c1e2b83a7073ee27409966b6a21ba",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/prepare_multilag_detail_execution.py": "583d0bc5452843751385a674336a048de83addccb171f8363bfc136460dee76c",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/quantity_comparison_data.py": "8adb418f1417625a23e5af7f247bfce10cf5fdd3c947ad0b17d7a4b8b79b76b1",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/quantity_comparison_engine.py": "a4eb605d7f4f3c27bbc87fd10facb9b3393b44075342c2f1ea55545275fde5fc",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/quantity_comparison_runtime.py": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/quantity_objective_comparison.py": "8c89aba1a3c9f410aa9f14144240fb5a19b2fb5912ebfbf4bd9f053308c4782f",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/raw_aux_gradient_control.py": "97115734829f4200ea61eae6c9bba9367d46c10789a15703ab51b55dbedfea2c",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/run_count_aware_tpp_backbone_control.py": "016d6ae1e5d4bcc77065e7a6b856b14ee1e1dc2acb4ecfbe2ab266e851a2b36c",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/run_hard_lmm_frozen_lognormal_duration.py": "c3bb9a6afb87dfa21c9b49af50a7a4b38b640871ec0bd8ba28ef1f098cf984e6",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/run_hard_lmm_time_head_refit.py": "a1b7774266649bf4204e279147cdc5cb6801abec96ab75e65efaad1718eff65f",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/run_intermittent_log_backbone_control.py": "eb8fd2aba200a48963efc22bf03f2c66f87a9def59a99c0a0261abf133b98ad4",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/run_local_detail_benchmark.py": "31b84f4418fc799927c3d3943cfda385d50afd5ae235310dd1d84ebbb9063e2c",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/run_multilag_detail_execution.py": "1083e19d7076a45668b2d447f2cb76f5cbcbfe01904bfda3d3e0582a1e263aea",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/run_observed_slot_partition.py": "bade0da82038c68564c2543eb18536531bc614fcd6808aaa69a1fa0a20fddb56",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/run_pakdd_extension.py": "499a6b3bafefd2c9eb0f27f8d0ed247acdb80a10795839e6c93a3d99dfbecd3a",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/run_quantity_comparison.py": "56fc8303e55893a5295daf78767552fa91d4a9a9df2280a8f6977617ae62288d",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/run_taxi_log_backbone_control.py": "7d3003455eb8aee97eff0120a2c043f93a74981cc0de0a81d9a95f93a99e1767",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/run_taxi_quantity_interface_ablation.py": "32630140f939b1e8e2287893b7705b1d3ec6e9f67644c5f9477c0ef979890801",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/run_time_quantity_diagnostic.py": "01287ef81df060228cf821d181545581dda4184f5c85aaaa74b74e1e35c39309",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/run_titantpp_cnn_gru.py": "662fa6707fff4f78f117b7dea07c5dadccc5535deaaf440373271243692474cc",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/run_titantpp_cnn_gru_components.py": "45fef2680a2e2af1a976a4bd078ea92ec90f3c756a87cb41e0471b71e22967d6",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/run_titantpp_cnn_history_controls.py": "963295d1606d4cd4d63f29a53ded2a313727246e72f8edb2d0bf6b506691023c",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/run_titantpp_contextual_retrieval.py": "b812dff2a7a556be4a67fec14259208d1c75f7c0045bace19bd974238e8e32f7",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/run_titantpp_core_ablation.py": "7f38d9f074ac8096a6e7cec2d96d52d3ea9f601350b8c4e40020b2da17661236",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/run_titantpp_gru_control_campaign.py": "75404a00eb8563e086289f85d987a2f774172b30cbee98f668429acb25ffd51b",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/run_titantpp_gru_controls.py": "1d452cf8e30a87dead324aadeaa858d5f19eb81b5ac9fec7b5f402d01517c451",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/run_titantpp_history_capacity_campaign.py": "e212bc6ca87f3f4d97951e706730c873cf513033719ba7f59f80382765e4aee1",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/run_titantpp_history_width.py": "dc886b3c8d221ae29df63ccc731e4155b665666fd9feb1175da8e108cb88c900",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/run_titantpp_history_width_campaign.py": "cb1eb0412781181dee967ac6af81afec3caa2ce647416b196f2c44749303a6f4",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/time_quantity_diagnostic.py": "b0dc1deecc47c016846dc4475b6bde78b0da90ae6c7bca4e522896567d0d9006",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/titantpp_gru_control_checks.py": "91cc132619f569870931dc72a4de16549d78aba710856e3fb6d0c26326b96f5e",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/verify_local_detail_benchmark.py": "faa01e92921d962aa38edd1e0af1513367ab2e56e029d48f0f24ac1d65221872",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/verify_multilag_detail_cost.py": "17a6750a74e7033badc0933965dfafddbc1cbed1ef8b0148353d09fae63b4000",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/scripts/verify_pakdd_extension.py": "5b8a8040d7fb01e18bfb16e17107a704c720da1fe08eee6573fd2eb4c42780b0",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/tests/test_titantpp_cnn_history_controls.py": "899eef0ccd8df0bf823c360417bcfba4d7e1157817037fe58a0a30f87a312736",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/tests/test_titantpp_contextual_retrieval_model.py": "55ee06c4a9a2ed81e24d22b98ec48af3cc35c93788ab08900f9af2c540b11c86",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/paper/tests/test_titantpp_gru_controls.py": "93e84d2ca7d1167f19ba30043d32a7870253f8540ad11beaeb3323bd83906838",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/simple_lab_test/__init__.py": "dc0691a4d210ba2dafdde7391d031f36d1dede90787b3aeb337996d685b13018",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/simple_lab_test/common/__init__.py": "60dc453d86fcb7bd779a57630d905cdec8cabbb5f1724fec6f4f3e12fcb2eaf2",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/simple_lab_test/common/pathing.py": "f3e6e8832f12bd0fef0fd9b7a23a4f5d16626581e54ebeeb10f4f965f8e2f1c1",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/simple_lab_test/search/__init__.py": "5dd6d1d5f3d9e15602c88db89d67fc8677bdd43ef78b61a016db6ff5b881f80c",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/simple_lab_test/search/common/__init__.py": "e2eb9c6b87702fc16abfcd51e691074277ee278f66b6c674ec54d6e882726541",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/simple_lab_test/search/common/benchmark_utils.py": "b3c089da98df5205b36e6aa021b03e8b9b13f6b26281e07d957a0237864ffe7f",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/simple_lab_test/search/common/configs.py": "eb241c11d765c66d86aa3f58a0a72d907769a905fe6c3a923e5f8c70abd793f3",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/simple_lab_test/search/common/experiment_utils.py": "a06e45ea43e722f55ecaec1ad5915b96fbd47926afbce617c1bb22114fe4836e",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/simple_lab_test/search/common/models.py": "71ccb45b17cf64b0a9641a7f75d27279324dbe7a5b095221ad4bac6cc6761c7b",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/simple_lab_test/search/common/runner.py": "a1fc687455b768ed454878cda55cf2d1b43cdb13817880a4cf3fbca9c7db8739",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/utils/magnitude_pipeline.py": "f18450b89a386501c88d6a99b55ef72ff0b50cc7c4a16fef9d713744e2100f98",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/utils/mark_utils.py": "945a7bfb98f0dcd7af0911d7d4b06f43268116b72a3786d8a5b6e1a572e5599b",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/utils/tpp_simulation.py": "5e01d477d77388e3686bcaf972644548b6d0c0735e3cc6e9a7618ba5ae2f984b",
+    "search_artifacts/titantpp_components_taxi_raf24_test_20261014_v1/source/utils/training.py": "22c79c91cb672200057f1e80a6ca995c816b3722dd253d4b90f1ccd5795e276e",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/execution_contract.json": "7b83022702d244688d13e8afbd404ed38975b9f09f533de69995b4bd7fd3d9fc",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt": "8e7f10b2981d13b2b4be9639a520352dead333e447ab62f74a6eb69c5ccfa54a",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/endpoint_replays.json": "0ba631936aa2dd9192828d163df91ab48f5b754e3219b49e381779e53633ce22",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/epoch_timing.json": "65d45cabe7b025b8c376840bad6fd433f778adffa2490088d5f15cdffca8b987",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/exposure.json": "100fd2426f2280415c635236e80e24d60ff3f858cbf57fcc1a7b50b7d97c291c",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/history.json": "ba22b5b90126f972689f1e8f42235bb8a924a3039b0e0c351169f5c7f5ba8c03",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/last_epoch_state.pt": "3d6faed0ea03eb7c332e6ce3178d1bde2812813a0557515161a2b62ac41822cd",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/server_checkpoint_receipt.json": "cec2f9eee47a93c9f16106aeedee40c3f8f224bd8d93e6e45b8b1207a734f94c",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/summary.json": "f9c45e812f00686bbfb4f59aaeeedf53f8491965957b95864be9ac0d1ceaf4a1",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/train.log": "b9615db9acca81f9071a2d7c2e0b344d55bdd40a274d8e804d8dd0c1f2051b55",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/status.json": "2a90ed8963c6d29f9e195bccd80680c8366d0cff30d6c95efa6abbe120df6ed4",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/terminal_manifest.json": "f0b46e67cf469e7d818c3a546d3def3139c6bf4094ce69fbe4678731928d2b0c",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/runs/nhp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt": "a9819262affac578986d3b8e2598eeab2af2e7c21dd00e60ef8beb28b0591a17",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/runs/nhp/count_only_log_regression/seed_42/endpoint_replays.json": "10b336398c6722a16fa7919babd3a7afece23f2235547e1400b702a7217b70fc",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/runs/nhp/count_only_log_regression/seed_42/epoch_timing.json": "270457fff5137b4c5d5b6c1972e1c49e473f551fce0c2cb95498eb1f7fc0dfd2",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/runs/nhp/count_only_log_regression/seed_42/exposure.json": "ce61ff00e91eb93b9724cda11f9877053a518163ed4c84c84feebc9f7bf6ee52",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/runs/nhp/count_only_log_regression/seed_42/history.json": "0c2cde5812f84f561557a5655ee9ef448452c906dba7010a1d3c0865645eae7d",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/runs/nhp/count_only_log_regression/seed_42/last_epoch_state.pt": "51d8c969862f173a68e01f1daf8d8021c32b214647c2dae062f7349bcbda8052",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/runs/nhp/count_only_log_regression/seed_42/server_checkpoint_receipt.json": "0760c5858db69a50b80936f03f5aafc4aa6ceb60f49e67c95c4a6df8ee71c097",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/runs/nhp/count_only_log_regression/seed_42/summary.json": "909e2e76b868c9f11e6e9d4d0aee7b6f2ee669b9a149b265bc38e4564cf79d5d",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/runs/nhp/count_only_log_regression/seed_42/train.log": "14d84909a5ed8bfbfceb79dfe1c41c891a5ce691a0346fea81d76990e4e65785",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/status.json": "dda882c9a09eb85d633e2fde34728690437547daa3d84491ae2a9dc93838a1ae",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/terminal_manifest.json": "3989f52abaedcd38b5805a3700641da2d641f204a6b9197576d9085622601755",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/runs/rmtpp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt": "d069a2867cf39eecca277b843f3d177e095a9025305b6abf28b93887090ae602",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/runs/rmtpp/count_only_log_regression/seed_42/endpoint_replays.json": "d59a3af6b6240a3ba2315feede4f472702185356ccd9144e4855a0beb19ecf37",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/runs/rmtpp/count_only_log_regression/seed_42/epoch_timing.json": "ae6d18cd93a321699df5a0de62f5d807e1f4508449454e04ae509b728b137ae4",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/runs/rmtpp/count_only_log_regression/seed_42/exposure.json": "57be12c5a35f76eea1038736bd340ef064d9dc81a6dd2f735d479e1fa2c9508d",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/runs/rmtpp/count_only_log_regression/seed_42/history.json": "b70710a8e7057f4e2ede5ecdf094835565976e42a5dfcf6fbb7c1cf991e9353e",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/runs/rmtpp/count_only_log_regression/seed_42/last_epoch_state.pt": "8498147dcdfa8013b1e2b01906e3569cdc27a7467312f31b1a1911a7e11c3958",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/runs/rmtpp/count_only_log_regression/seed_42/server_checkpoint_receipt.json": "4ac717d820d1a128da8deb9f6cbcf275d6efaf6e3e7e5d82f6f9d691d57130e5",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/runs/rmtpp/count_only_log_regression/seed_42/summary.json": "ed2f7398455abc660cbf1ddb311ef4547b1c2c133512839d6e73bf7948e0ee0a",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/runs/rmtpp/count_only_log_regression/seed_42/train.log": "d78bac4771e7eaef095164741c768e3e7051846c44eb9e5c6c0f01beec95bbea",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/status.json": "0343705db6e516ebae03db8498f867eb32a3ab3742b6bb79a3ee45575def6e2d",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/terminal_manifest.json": "1b97c2516aefa088c71ac6699f697adc081b164099ceb0de5bf7b4f64c3d34e8",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt": "5571b79df1368b0aad4c72b37a9e4162f7a65ca0aa9cd22a9c5097b0a107186d",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/endpoint_replays.json": "d89dc0da3d4099b67bb2cc193d529e76ea5cf92520672299be8a27635d449a50",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/epoch_timing.json": "cd637dc98bfc645ba4f1b2cd9aba06f573d2b30f724b5fb0dac6a709a795a24b",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/exposure.json": "b0467df6f49e5765784932c97c4a7462a888b042897053b42cfde2cd3714f69f",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/history.json": "498aa293d4ba152f91674d226bf77eb27872c8bcad694abca258b49c3cdfd2de",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/last_epoch_state.pt": "6c2d26477b7dcb528c739d332d616f81793e9f9bb42a0dae9dca5414aeab06e6",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/server_checkpoint_receipt.json": "0f8dd0abeaf4914273f61aafab1b21b922d7757bf25fac99d16208909ca7b4b7",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/summary.json": "25af4a7308de9daccdc2c838bbe27ad7168ac2fdd14e244405878ddc196eda4f",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/train.log": "b33ddbd84888f3a26ab2a851aa22ec8aeab119961a345bac779105e9e30a2d6b",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/status.json": "f50b222ede4eeb3486a8dc9448584f7b54e2b190ffa9c02fc9e5a347ec44e24d",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/terminal_manifest.json": "321f9457ecf3a91c35a5aa13c55cc29b74bb84399be03671f6acce9125553956",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/runs/sahp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt": "d9f92eecf1cfc0c973ffe556b84e8a57a64440bdffd41b4bb33619c58df16847",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/runs/sahp/count_only_log_regression/seed_42/endpoint_replays.json": "07ad59c37ab4038262651480b38ee6d859d5cb5fb1eec6b7ee767a41970db95d",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/runs/sahp/count_only_log_regression/seed_42/epoch_timing.json": "f8783f223f675d73346fb0df7993960d063dbd35b650549aba7c801af1cad47e",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/runs/sahp/count_only_log_regression/seed_42/exposure.json": "57be12c5a35f76eea1038736bd340ef064d9dc81a6dd2f735d479e1fa2c9508d",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/runs/sahp/count_only_log_regression/seed_42/history.json": "ff1bc9ecc2cc8c673e05f0b18fdf6b67d71154be6bd488ad47500418a6dca27b",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/runs/sahp/count_only_log_regression/seed_42/last_epoch_state.pt": "bf13f02ccaa7f4d1474625f1d0fdf254903b6b41e350cf23eb7561294393984e",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/runs/sahp/count_only_log_regression/seed_42/server_checkpoint_receipt.json": "d05fdd57ac03a772383c39fa38780ecaa2735bd54c6a0ce1ae9a66402d546499",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/runs/sahp/count_only_log_regression/seed_42/summary.json": "2a32d2d74d55c1247d7923d8ea3f611fef70ba24f6b9e8adf849f3cd9fd63892",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/runs/sahp/count_only_log_regression/seed_42/train.log": "8893935e478dea8ea87cb33da04d63a8fc0628d490e99ed49da70af0081c2723",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/status.json": "ec9401809ce7852abb2afffa846038c0589426a889c07194ac289e16fbf34494",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/terminal_manifest.json": "b9f8c115f2657a8efe92f29aef6ebf28e21543e9462e1f19a980796cb08f3c9a",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/runs/thp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt": "785697214e53580212ef628dd9f12711f8b4deb0f787b777f90e80cb4dc5c0df",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/runs/thp/count_only_log_regression/seed_42/endpoint_replays.json": "528c1d0ff0eac6d28a3b5cb35c2c73bcc854b73a6b267e6f80c3f64f0564b032",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/runs/thp/count_only_log_regression/seed_42/epoch_timing.json": "ebb1ca9fe55a8c936e4f52a45703f40c7a524397601906b994b0884a29903b3b",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/runs/thp/count_only_log_regression/seed_42/exposure.json": "100fd2426f2280415c635236e80e24d60ff3f858cbf57fcc1a7b50b7d97c291c",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/runs/thp/count_only_log_regression/seed_42/history.json": "ce6295849e5500679f0450ec00f17720ba1c36c2a62ce7b15bcce30c9878933e",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/runs/thp/count_only_log_regression/seed_42/last_epoch_state.pt": "cf2d23700768d0ddf7022e2123e06e0c6d24ef65d08335a25428dbcbf6dfb9cd",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/runs/thp/count_only_log_regression/seed_42/server_checkpoint_receipt.json": "ee82450869ef1eb060ea054d94ac1eb719eecfaaca2ba94c1f7bc4ada90fb207",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/runs/thp/count_only_log_regression/seed_42/summary.json": "7e6f6faa4dc1e4984ce4e204b0f53306639a05a1a4c7a79350d486842023cf96",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/runs/thp/count_only_log_regression/seed_42/train.log": "0cb724d5559e3cdcf2d2752b70d465c5a6819e76bbddee1aaa8ebb120b09d80b",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/status.json": "32657c9de1fb19bed073cba6b66908ebe9c81500a3aa22630e78e66363b8f17c",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/terminal_manifest.json": "6282816ea25dabf0d4795be1f0449519142b57df688e82ead718cfeaa3f5bac9",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt": "a2a9e27ac9ec5c577b6d06ed6ec01fb4ff6c0176620570abcb2dfe078a77bac6",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/endpoint_replays.json": "f372497af00bc00ee664014064f27752847d8fac1f788a31197d09b27be47c97",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/epoch_timing.json": "9eb5f1d2265fa4b3eeebf330db592c0d9f8c26de2d65d18ea7a251e0908eb8a9",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/exposure.json": "f42ee2a57bfe39cceb1d1fe7c9fa50a8ff707e1ef32f552a4d169f41ef518b27",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/history.json": "2ae9926cc425d091f92c9ea9f2beba314566d01479475396fa85f21c45a4b0c1",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/last_epoch_state.pt": "d426b1bd1f897d168209b93b105a9bb49b70e538645c2b6d5e03981241dc782d",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/server_checkpoint_receipt.json": "86362fcba2168d833307ee2a8f1550b7293f6fee86ebb2c65530f68d9195cb9b",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/summary.json": "ff47b7016e8b406738e8488f0f6e3e2b691609509f558c76181a67ec99a52ddf",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/train.log": "06be6a7deff9730b21f5b2982429e4684bb86a26709522f13d3d385292561ebf",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/status.json": "5fd819c9a950e2ffc66e953540f9a1b266ba877dc6640dc6a11920560199b635",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/terminal_manifest.json": "3ffedaf089094ebbb197e30c86f09ef9a24fc5d10c1b50da3b13aa823d0ac197",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/runs/nhp/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt": "a5a4907e0914aa68f35174651b03dbf332caaf885314b206892417da6c365e5a",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/runs/nhp/count_only_log_regression/seed_52/endpoint_replays.json": "e890fd4a307a7f830a148f2d060fde494a87f90d065a96fa577622ad781bad16",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/runs/nhp/count_only_log_regression/seed_52/epoch_timing.json": "cfc904374ac59067304435c92c19ae87e9b14a8ee05b23f2e07dec8359450b30",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/runs/nhp/count_only_log_regression/seed_52/exposure.json": "1243fb4caf6007d28f354ff5fcdeba40dcab21892c3ebd43c50e69a1a4b05633",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/runs/nhp/count_only_log_regression/seed_52/history.json": "f0c5ebdb4acdee6892e6fd6c25dc0e15ea38d47cda8d990e49dca2e5c1234451",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/runs/nhp/count_only_log_regression/seed_52/last_epoch_state.pt": "d95eb0e5e9858c935f662ebcf8e9c2b529ea49ed90719c461d3501d37d9e64a1",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/runs/nhp/count_only_log_regression/seed_52/server_checkpoint_receipt.json": "2a5ff9cac5d0308c2514a0bef27643bc3f32279ae143e6ce8c3c863a7a69ddc0",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/runs/nhp/count_only_log_regression/seed_52/summary.json": "509a84fe610e61793c82e4522e46e44eae2f68704401bd386354f46de19dae6f",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/runs/nhp/count_only_log_regression/seed_52/train.log": "efe5ace3ac342f028b0c7b3d763fe8bb08a085f49bc534c788d71b0a117457a3",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/status.json": "baafab543b0be8558d56e81b08d97377257f7687f1f9272ca76604a7e08b6c39",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/terminal_manifest.json": "f28dcca33c68fc87ed3bdfd8a25a21754aec7fa0aa0bbadb7eb3b80ea01cb055",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/runs/rmtpp/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt": "6ba914b44ba249c330fe55e2be5bd6ddcfa5eead613e9beb38e20519e9528719",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/runs/rmtpp/count_only_log_regression/seed_52/endpoint_replays.json": "b11bef9be36a478bb7327d21aff103c3d9558127b6c8ce61e2b2906d7b9c7d13",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/runs/rmtpp/count_only_log_regression/seed_52/epoch_timing.json": "859f935c8a08e99e09db019625d4a2d3c4e91b50ed1bbd25350292b0aaae771e",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/runs/rmtpp/count_only_log_regression/seed_52/exposure.json": "1243fb4caf6007d28f354ff5fcdeba40dcab21892c3ebd43c50e69a1a4b05633",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/runs/rmtpp/count_only_log_regression/seed_52/history.json": "017642815b0ed95f9695f4e430f3f53650e4c609518c18cee9c468607acdd135",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/runs/rmtpp/count_only_log_regression/seed_52/last_epoch_state.pt": "c411dec5577d76c30fa5df170948122e627e602fc339cb7a3fa39465222ead03",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/runs/rmtpp/count_only_log_regression/seed_52/server_checkpoint_receipt.json": "6cd92f52cdb86696e22cef6f35a21f3d8bbfe2c8b94b6f8dfa812880a4459c54",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/runs/rmtpp/count_only_log_regression/seed_52/summary.json": "8bf46941758f4899c36f1a6d2bf2b34a4841ceb7c6390d73c95ae8c70c188a8b",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/runs/rmtpp/count_only_log_regression/seed_52/train.log": "2f9ea213aa51768a41f2b0bcc1999b998b1ffc078e12eec1889b3b00656965ef",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/status.json": "ebcf987477aacdc440e9f4db5969ccf61bff5ec472152e4c8c40c9467560aec7",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/terminal_manifest.json": "f987c94e387c2144e88f354ee46560d4a42cbbbcf5acf18e902e913f284ce5f0",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt": "3e8fa3fb6a0f664e06759ce258e7b0fb7f7320a3c3e809b5eeb954ae88acd5b6",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/endpoint_replays.json": "93cf1356d33c5acec027950d2fa9248dbb9a74ee061f04ad54dd8e4d9a116ee5",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/epoch_timing.json": "d1c6283892f60825f9db775ba0b87bde2b5ef3c66f5dc8bcefcf96c2c9d46555",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/exposure.json": "fd6761e1da1b5e3ddcbafeb34de0f60f569ba4da0588a7ff3de7b4790043b3d6",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/history.json": "a5f4249ec1f90864c76ea49da0135d39d99d813635d4bd2c85e441ff35a29aa4",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/last_epoch_state.pt": "38cd4228194f58c0569071fafb4fac05225a66de918dda2bad97fd5ee1c5cb3c",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/server_checkpoint_receipt.json": "69ce6ee6002b828f37e74c895e8b96e53990a14af66f628f3680809dcf149d79",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/summary.json": "51c16749e1d418fdffdcafa9427e0ebc40fc57f705857ef228487363cb81fa5e",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/train.log": "d9914f9d67bf26e19e176dd7e126f2d3a906d2b2512296d2103298287d3f6389",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/status.json": "43e0c34507ed827c8409180625a41934cd1e026ab5c302654ac323dad3075720",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/terminal_manifest.json": "9104475e9664cf606afb3d9b1de328a1adc4bcf39dd29872416187322c28e861",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/runs/sahp/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt": "b1b92c528a1201c458bcbd005371364afa4c44e437ba1fd5f5134afa9f24c48e",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/runs/sahp/count_only_log_regression/seed_52/endpoint_replays.json": "f12fc5932e25c780241f0a056cf7f30baf40a52bfc30f83108f3f2fc9726047f",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/runs/sahp/count_only_log_regression/seed_52/epoch_timing.json": "daac72ea9845ff19d061113c5cf0ad7b9491f6ccf2ca8e27bda3dfaa0dab0446",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/runs/sahp/count_only_log_regression/seed_52/exposure.json": "b61c4818c1105a7a1dd52e245dd6819d72067b7611e5efc6d14a378867e031fb",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/runs/sahp/count_only_log_regression/seed_52/history.json": "fb6abded4a9649218a9b8ab1bcde78c147bf178b4b2e9311b7549eab381e748c",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/runs/sahp/count_only_log_regression/seed_52/last_epoch_state.pt": "5151b9f3e46930ff56529b80082bd27429e0bc1f1af221f881ba597d39ee3b1d",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/runs/sahp/count_only_log_regression/seed_52/server_checkpoint_receipt.json": "c537edf6e2b646ad53e99c7c2e3127ac69ceeb61a02ae707bf17086418e429d2",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/runs/sahp/count_only_log_regression/seed_52/summary.json": "fa35fec9cf14afec3b9fcb454dc4281ba474e52ad8f10c3ef68cbbda9f756530",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/runs/sahp/count_only_log_regression/seed_52/train.log": "c0acac58c43b0832846b8e2353995fc8a380e72367e034233c10d8887492df53",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/status.json": "0ba0d838948ea2dd09dacb85bfb23f69e8a67f1c7b909d2f2693744e07b47c2b",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/terminal_manifest.json": "449197a3bfd8c3c8f20787c1ca78fd93712c07a194302736508c43470b12cc06",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/runs/thp/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt": "63bdacfda65177be8dcb23c2fccedebe515e11118340707986b4dc1bb5ea734a",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/runs/thp/count_only_log_regression/seed_52/endpoint_replays.json": "336ce779044d5d2c36ff02cbf07f92b9607faea935eb42a96c846eabf12b1d2a",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/runs/thp/count_only_log_regression/seed_52/epoch_timing.json": "af6a4ce8fe5f492dd563c545be461e9c16c46b1ff3949fcaa740dd4b41cdcea7",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/runs/thp/count_only_log_regression/seed_52/exposure.json": "1243fb4caf6007d28f354ff5fcdeba40dcab21892c3ebd43c50e69a1a4b05633",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/runs/thp/count_only_log_regression/seed_52/history.json": "47c0a485a5c45b6917cd30798166a78646cb84611c9f42a0c9c2e56b575b6c1e",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/runs/thp/count_only_log_regression/seed_52/last_epoch_state.pt": "bb29a1a5466558eb45f503c258f29b814819213fe0df12cd0ed1aeab80f2ecf9",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/runs/thp/count_only_log_regression/seed_52/server_checkpoint_receipt.json": "9b545c51973bfc40578d0e51a982644963c9263c0c8628adfc53633865edb264",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/runs/thp/count_only_log_regression/seed_52/summary.json": "f794f60a54c5c856c7c7a178e3c6ebd7edf952125c0f614362a8054dd967eeb5",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/runs/thp/count_only_log_regression/seed_52/train.log": "1c879f13b424e290beb9083fbd63bed9ccd94294fdee2ea6d7804f54465c5ec6",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/status.json": "677b9a186a160e886bbb72f8292201c8629eff6ab957e8082c4723b6fca27884",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/terminal_manifest.json": "f6464e396f10fced0a51154f516c7089647897a70139d942dd48e50ddf59642c",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt": "24cae8a4a285b2a59739cee1bf059eab5c31e6fae95528e370aa73fe01f77fea",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/endpoint_replays.json": "c0a638df2df2f1cd8af4d16dd27a409bcc742f6fc6c279ee055acb16b57cb243",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/epoch_timing.json": "feab7ce1d1c1b47ed2d1e788a71db3a55bea252470f3e2407962edb013af667b",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/exposure.json": "687092197899282999d71e4cbfff2e2f3ad461c6b4f41a4639bf4b726e5f8fed",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/history.json": "0d6d0a4bab421455bb876607697bbb9f3b0959691437e6077dcb596444a9f31d",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/last_epoch_state.pt": "89f60632a4a87f8e6ab4f26c30fce11c67e2bc2ea17c356a55203db78cd571a4",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/server_checkpoint_receipt.json": "423e68af51f920e2be1158b820118e59cd6233540df1130e70a6ddcb78285fdd",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/summary.json": "6ede19606c85e485ba1196ea1cce5ff5923462515136cfa21d308f584d460ec1",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/train.log": "79a6da2a7cce75642f6ed36a63c08c0c34c17d38f688c83c51628e0e90946ec9",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/status.json": "40a5f87021e0037b9a94c84e59b39929e9290a853f2095dfde4e678a534fe77c",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/terminal_manifest.json": "713af68e097912b746956a9ca37c1017a5237985273f69e0859053dec2d6aafe",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/runs/nhp/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt": "c39aa02752d73bf78744f1357db172117adf632ff81be12bd73022e01a48d077",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/runs/nhp/count_only_log_regression/seed_62/endpoint_replays.json": "9943a27d90ae45022a54003f858cbcde048ec0629f4148947ac10fd9204ab950",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/runs/nhp/count_only_log_regression/seed_62/epoch_timing.json": "e45aeb241a126fdd8c1ec3e4432ab18cd4f47344be66d4141b62e174ac3b0084",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/runs/nhp/count_only_log_regression/seed_62/exposure.json": "0773dbba17d2a52e4767fb5a9da8e991ec1514164a12e55f07ea5bf140c501d7",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/runs/nhp/count_only_log_regression/seed_62/history.json": "92b5e4b8860bc02bb7a697160734cc9df3fbe9a1fd5031cfdbaf3d7ffadcc766",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/runs/nhp/count_only_log_regression/seed_62/last_epoch_state.pt": "b44d7bd93e2775dc70daa71c1e5522aa1346be2ba5ea589fa2035dacebe37169",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/runs/nhp/count_only_log_regression/seed_62/server_checkpoint_receipt.json": "96e46f5a455859cd75624d9383f6e86be721bc9285a9425170623882579cd7e1",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/runs/nhp/count_only_log_regression/seed_62/summary.json": "89954f53c76fa6bbf674e1a6595869131d342be229a9aaf8f6a24311bbeff645",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/runs/nhp/count_only_log_regression/seed_62/train.log": "8049fd286b8562057b977bdf09765faa117df843782a16b110bf021fc5fc75f3",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/status.json": "153c3510747d128cd66197a7e0ff2e06bb6fc74270869bca75b5dd43f58f8b60",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/terminal_manifest.json": "d804ac42c013b3ac4e373258d426b88c3336925363400c105a60a0eac4fce884",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/runs/rmtpp/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt": "59defbbdf5b85946bd3439f25197c6ee8a213e6d9851b8ab1ab267a4330591c9",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/runs/rmtpp/count_only_log_regression/seed_62/endpoint_replays.json": "a9363e726d81e8f59f7c5a37679856acbbe8e7f88f1d173cc37e23bc7ed2a594",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/runs/rmtpp/count_only_log_regression/seed_62/epoch_timing.json": "19f78db7ad9d35f43d4ff60d44bd9dbdd9a5a29ae1cf749db3af727680348f0b",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/runs/rmtpp/count_only_log_regression/seed_62/exposure.json": "0773dbba17d2a52e4767fb5a9da8e991ec1514164a12e55f07ea5bf140c501d7",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/runs/rmtpp/count_only_log_regression/seed_62/history.json": "2d668327b8d4f7ed60b079e8b6a009fb14db4a0f34ba3029feb9b58660de01f8",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/runs/rmtpp/count_only_log_regression/seed_62/last_epoch_state.pt": "008bfd7158fbd371f9fc3bb1a5cc290343debd5ed4a2034187295262c9e656cf",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/runs/rmtpp/count_only_log_regression/seed_62/server_checkpoint_receipt.json": "0e3026a6c419c53e6cc1caea9954f56a4fd5030810f6a4c6b52a60dc9ebd49db",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/runs/rmtpp/count_only_log_regression/seed_62/summary.json": "72afab9b05fdbe6552fb8b9f90fc7de002ceb4f2c8a602d3f0034c860bc07010",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/runs/rmtpp/count_only_log_regression/seed_62/train.log": "8ace84642f66faeacf37caf82d69b4302beddbccf7b6299233ca8a04aaf68052",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/status.json": "4c38ed52ee6bd86906c682201184aeebb8801e1cb877e20ae82339d876574b61",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/terminal_manifest.json": "effcfe47c716cd730054b70a472aacff0e9651b46c14a7777d8db077c3bd2eee",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt": "0619af965a5c3cdfa5c08445cbc4aff02bc8c494e05a45eff90e748b77eec8c9",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/endpoint_replays.json": "c9776bf3578cc92a4bbfffd467dd9cbf2e8cd461b05c1447d8b33f39528faa40",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/epoch_timing.json": "909402daf927791b8cb99010b397bb53ecaa8cd850c79fe9e24d75d8aa737ac6",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/exposure.json": "81f19ee04e6b5dfcbcc727bfa8402cd076d3a83ec87328855e59239b3d37b0f0",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/history.json": "1a8ba22293c13cf541c9018bfb23f1226f9b210d7859adfa8534760764870741",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/last_epoch_state.pt": "b7f2773957f84cf038d1c281635a77b9341a09f1ea896b7414be1294b2c5a51e",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/server_checkpoint_receipt.json": "4d41b570da43206c971ee097770f5051808bd321ea35e0d6f3efcfd0c7d19156",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/summary.json": "8cfb68f138a8cc71fa54cb99a2b42289e72e7e40c28f0fefc63212dad8543e0c",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/train.log": "4a8ef0aaf82d703a266c1faa7743f935ff1bf8e509fbb2b36fdebdbe8d99e95e",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/status.json": "89d05565e47a7f3e11846c687ca679ccb19c81dd78681399edfef5f5ada484e3",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/terminal_manifest.json": "e4121574736e6a69678e6001f78aeed4581655b90f950594801a8205309a3907",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/runs/sahp/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt": "90b6fa7d544dbf5eb52a42408bc634626adc99b4fa973c19c8309813bc525603",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/runs/sahp/count_only_log_regression/seed_62/endpoint_replays.json": "089cb6525fa755171441d1f3a265a693afdece90c49a07d5090fe679fe66e998",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/runs/sahp/count_only_log_regression/seed_62/epoch_timing.json": "1871d1a29173427091a22b485de7984fb88f37e4e565194e47e7e1e350056880",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/runs/sahp/count_only_log_regression/seed_62/exposure.json": "67fa8159c43541256de0d336ca00604f3b91c4c4734e4d4dad2af6c1d3ab5555",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/runs/sahp/count_only_log_regression/seed_62/history.json": "2775406a48f03902025db12c64bddf37e867451e6aa6504e09a1cd07cbc9e759",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/runs/sahp/count_only_log_regression/seed_62/last_epoch_state.pt": "5fa130efb4e22eda6a736f0bad36c136c722fffdadff5f02a62df5da941f672f",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/runs/sahp/count_only_log_regression/seed_62/server_checkpoint_receipt.json": "fc0a2626a422e3dc14bd363696448637249b907e0fc5cae12e40f502442f45cf",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/runs/sahp/count_only_log_regression/seed_62/summary.json": "9a7f0f14f8466e175494b693ab149c38469648cb94b15a1436485687066f69d7",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/runs/sahp/count_only_log_regression/seed_62/train.log": "d3172be94e68d3d88718e28c0422e1fb4f1fb1bb036248e5885a329a01d20493",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/status.json": "878267c45541728610ac530083aec26ff6a28b4a1a3706004038d37952d863cf",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/terminal_manifest.json": "78765e4ceb80320e3e955dca1e7fdc64da55e5f62db67b71050bdd4aeb0d8d6a",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/runs/thp/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt": "03595a64a334525a55690f37dc07c59a8c9d20556f02b57374cbb13e235a40b3",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/runs/thp/count_only_log_regression/seed_62/endpoint_replays.json": "8e914944350692a39661a052107e00e79aaef63aa625ad4bc61f65d70256495c",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/runs/thp/count_only_log_regression/seed_62/epoch_timing.json": "e80c51777d96470154c834f649b7154f57abcfa10d4a262a7a640860d7b8b517",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/runs/thp/count_only_log_regression/seed_62/exposure.json": "67fa8159c43541256de0d336ca00604f3b91c4c4734e4d4dad2af6c1d3ab5555",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/runs/thp/count_only_log_regression/seed_62/history.json": "4a0b7c34041ec4570fe8c3505b61dd612fd8f95a34a7004eb3d5fc91f21c0c32",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/runs/thp/count_only_log_regression/seed_62/last_epoch_state.pt": "408e05ad7431c9017c2cd9f07dcecc50734f7debac40500eff44486563511f87",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/runs/thp/count_only_log_regression/seed_62/server_checkpoint_receipt.json": "bdaf1309466c24f4b0a32e875b81adfca6e892efa328b6cb527d559e4ca9ca8b",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/runs/thp/count_only_log_regression/seed_62/summary.json": "3f86bd297cdf66aa144e520dcc4c48cffeb4d02e9cd62338a248cd540dbf5af0",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/runs/thp/count_only_log_regression/seed_62/train.log": "f738b6b2e604ac644955a1d774c7e63fec1e847956ca06e9b221b6c43641727d",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/status.json": "2cc7c387b16b7a42ca6bec662008b55d0329fd82665b46e955ee77df2c5b07d2",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/terminal_manifest.json": "205fdc84dc7bc6ad9e082513375c1b3af3e7097e001480fa5cd3d8b6c774b5f5",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/data_loader/event_seq_data_module.py": "7c11d9ace6c4e4d3bb03861aae92393aa946a38452d702dc7625210b339897ca",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/CountAwareAdditionalTPP.py": "076aebc2618d10bc1ebb558dc7630c35d951c5e417802e8fc0327b8c47cbc72e",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/CountAwareFactory.py": "9b0fe14da9b2fe0b4e5940bc529b0be210de08cab6a0ef06cb895acc3c5cf802",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/CountAwareTHPStaticMemory.py": "44fcc1717ca5f19eef36386e8531a3423d7a3444d39f4e462e12c14f98c4b8ee",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/CountAwareTPP.py": "9348e4ad18aea3c12e532cf1403fecd5f8a7af2d932f9c1019ddd8b3b48e4c1c",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/CountAwareTitanActiveBranchNorm.py": "14ebe590a4190276fd789bb2608520d14e031c79e98afe08511fef4aeb13d7e9",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/CountAwareTitanBoundedQK.py": "b0139d409801c4bf184954f393f15d2f3d06f725009621c3e5b95b5ef2aed2a0",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/CountAwareTitanCausalQKV.py": "402f48187658401371ccadf0bf6ba2dc3413e1442a94d837562dac6b5d5bba68",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/CountAwareTitanCoreAblation.py": "b34b61aadc7a2c91e000493caf2497fc89549a499082ca77ebbc3ed7cab2b120",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/CountAwareTitanInterLayerMemory.py": "0f78c8919e11e9efa1d5402bc46c23074d2cf8833cf9cc90c104c8c6b122637a",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/CountAwareTitanLevelHistoryQKV.py": "f4398a442c7872b158039f2346bc18ce5df5b89de97ec4c1c4a0f9291ad136e0",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/CountAwareTitanLocalGate.py": "3f235b761b33f7367cfbc5303f320d23b0cd97bad121903a67ae06de358f7b30",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/CountAwareTitanMemoryFiLM.py": "fdcdea9cf6fc1b7b47c0afa88609c1af4575ebf98f7eb2fcecb431ff8c3ecbfd",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/CountAwareTitanMultiLagDetail.py": "4bcbecdadf921df21a4e7fb379962eb4ecec2cfeb2f8ff1edccbb6b418807eae",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/CountAwareTitanNonlinearEpisodeMemory.py": "990665850a4d0367da1b82fcc7ddb8e53babdeff864d48df11083f450fa19cdc",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/CountAwareTitanPairMessage.py": "79c1e7f1da3b22f6a3bbaf606e5e915ff1eab39e2adc849c472c58f1a562508e",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/CountAwareTitanSlotMemory.py": "e9868579089adf9d47d7483bf2a6b912dad8beb8b5b6936ce0e0af85f10d7c32",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/CountAwareTitanStateTransport.py": "9e6e1d7ef30af63f993fb005bfe18c7146288981a1179ce9ede2ea79521c48a0",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/CountAwareTitanSuccessorMemory.py": "0616885eb8318f1823734b91563f2d261a9916f0d33ea9b7d57d6e1f0ae60ffb",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/CountAwareTitanTaskRoutedMemory.py": "c94ce1c29de676af5d5655ba4f05fc238b991052eeaaffd74af23b58d6c0a333",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/CountAwareTitanValueNorm.py": "1de961d90d771737ce7e5d1e81bfa7e1487b7540a90ee2af1bfc2109e946844a",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/NeuralHawkesTPP.py": "75162651b5d0ad87f7418805df0d7b743fe77d256225351b68e02cfbf7c5cbdd",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/RMTPP.py": "e4160e45c588d9af5eba2ee5c27ef58f0311716555786198c332cc77cb5886ea",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/SelfAttentiveHawkesTPP.py": "91360a0c2e1ffde346bc90803beabaa88e909db7d05161062170d6de87b4bde6",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/TitanTPP.py": "5381faad10d7782af40abf028aa0b79894e224d61c82af9680a0d9bac410c37c",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/TransformerHawkesTPP.py": "a74cbb43bd1d47d541bb903dfcdf336ef8647ec489fd5b776da27aa2a7eb3f77",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/__init__.py": "2909671196619588e5ab66b1913a319643a03dad4487397647d6939526b22e15",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/config.py": "6a3cb4d1bbb9f6fab62a2e3bbc4bd87d05a7b8f240e9a82b8ff7534f8632d840",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/magnitude_normalization.py": "c665e3d93ca2dee07d4d5454e6265decd3f9dfa7f13a0208e39dbd9af90c57d4",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/marker_losses.py": "e53308193868191783f8ab5cecb85c024eb668895d6239d8b289c6aacd3ab08d",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/positive_integer_time.py": "783113642d897aaed3da1213fc91fb993ee71af380f953a1159142a1cda8ae59",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/value_conditioning.py": "00548cd6b0f30e44f39fe9ac4c3ec110a056d20bc13aefeeb8e659fc7d89cd3a",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/vendor/__init__.py": "b07f98546bb713a7ffadbd0dd33ec716792c89b11fdf86ac08c7b7c5b4cfcea6",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/vendor/attnhp/__init__.py": "b07f98546bb713a7ffadbd0dd33ec716792c89b11fdf86ac08c7b7c5b4cfcea6",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/vendor/attnhp/xfmr.py": "e55258fc1c409ca3036349e3755a41d1a307e6ef1af71c4462eb5667cee528ed",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/vendor/s2p2/__init__.py": "b07f98546bb713a7ffadbd0dd33ec716792c89b11fdf86ac08c7b7c5b4cfcea6",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/vendor/s2p2/initializers.py": "7d488746f391c9295e8db7d244df9b8301dc35058567a123aab225447278cc18",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/TPPs/vendor/s2p2/models.py": "ecefc9bf88e8f3c8ceade57bf6696a60b9ccb343ee60b50a97c9453ac823b25d",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/Titan/Titans.py": "2efda26d97492f43bf19dc9778ff4d4fcbf24ccf010645b90a5396c324c8183f",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/Titan/__init__.py": "a8147804206ab500c7adeeeaf194c82447ead4d332b2959f8ed8e3692793c1a7",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/Titan/backbone.py": "f3531234235a9f50de05cf36c80b0a742a45709145d49555440249c814a20e98",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/Titan/common/__init__.py": "f301d6cf6edcc7804363d3c9e1c5ef22ec6fbead856aac7d4ec2bcef0508dc88",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/Titan/common/configs.py": "6a0d804214639629e05320cded343368f83e95f34935fc71588bafc45a5027e7",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/Titan/common/decoder.py": "361d17156c7f8a0596df4857657a46bd4d79eb88d34eaa0f871abffa730a9354",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/Titan/common/elapsed_age.py": "fb04e96ea180974e306c5688ef4b51c5b615a516d671edd472c0049d3f1e651d",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/Titan/common/key_value_memory.py": "a0360ed1e18cc89da2de0f08852b6ca980b5fd05bf4fe5559163e685ed4598de",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/Titan/common/memory.py": "405ccbfa900b877250c6f1c5a4c6652f46e0a500303cea35a5c6cc7cac02af36",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/Titan/common/titans_mac.py": "9436fea650c66025fceb7aebb820941176f2c10c80e47d61c55555d8430e0ab1",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/Titan/common/titans_memory_stability.py": "d7681b65e65f239377d174596b970d5509de075a9f03a5d34c001c7801031e86",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/Titan/common/tpp_gated_memory.py": "4d77851c904a46117eb5968c602c6e91c87f7bc061f90816b9f941775b818263",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/common_layers/RevIN.py": "f20fb6a9664568a5715ece23ed4f745435b30e60c69557afa8baae8255154a89",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/models/common_layers/__init__.py": "8fd4cb66926a1cd633c3201645f8dbc63e02a53d91bcec893c6d8b4930244f35",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/count_aware_tpp_backbone/__init__.py": "cd25af65061351f0ca7c46d143361bbe9528ea755c6a3f09dbffdd5f188412bb",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/count_aware_tpp_backbone/constants.py": "bc3ff921b8ba7d6c11b8a8b060ef4795cf5d32196a3a34de08c823710a8655e6",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/count_aware_tpp_backbone/core.py": "c5cc72a265a05199868332c9beaa32ce9568afaf5f4cfa0930b836215ab36084",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/count_aware_tpp_backbone/datasets.py": "0a2982d92a21d6dd0518adba5e631d40cf2222c9eb9ee476d861b27211623274",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/count_aware_tpp_backbone/observed_time.py": "71d9b6a1523121ced7922ecc70a72a13226e2552ec7b8d9de13229142c264d6b",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/count_aware_tpp_backbone/reporting.py": "4764b790352b6a84a4efa9df9b17e3ad948534779539bf87422af7d8c06825c6",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/count_aware_tpp_backbone/thp_static_contract.py": "96919909906c1fec5b447234dfc77612a43f6b62ab64bca31185a6480f0fc490",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/count_aware_tpp_backbone/training.py": "964ed6fb569acad9d1da0887398da7c770724623277ed688a4e841af4285f6ab",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/local_detail_benchmark_contract.py": "55e68f824f4c564267fec3e0c6235be467554e4baa9239674a93125fa77daccf",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/local_detail_instacart_remaining_contract.py": "c66e97328d333e1082d94295aad3b1a80367f3154e9e6f9b0e147c5e11ddb504",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/local_detail_instacart_replication_contract.py": "3d4ad3869506f908573e94828ce59e6607cc7bb0c1f90a32363598f32cf52b55",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/local_detail_replication_contract.py": "48f57d041c33ab90e3fd3d3d285ac21938fc01c09dd823a916a7e83fcbcc401d",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/mixed_quantity_objective.py": "f52a7fb8050479990c951ccbe4ac3548988a560049cf528731ed6672fc052396",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/observed_slot_parallel_common.py": "5e624ba8ba457fb89a42c159969aada36f8c1e2b83a7073ee27409966b6a21ba",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/prepare_multilag_detail_execution.py": "583d0bc5452843751385a674336a048de83addccb171f8363bfc136460dee76c",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/quantity_comparison_data.py": "8adb418f1417625a23e5af7f247bfce10cf5fdd3c947ad0b17d7a4b8b79b76b1",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/quantity_comparison_engine.py": "a4eb605d7f4f3c27bbc87fd10facb9b3393b44075342c2f1ea55545275fde5fc",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/quantity_comparison_runtime.py": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/quantity_objective_comparison.py": "8c89aba1a3c9f410aa9f14144240fb5a19b2fb5912ebfbf4bd9f053308c4782f",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/raw_aux_gradient_control.py": "97115734829f4200ea61eae6c9bba9367d46c10789a15703ab51b55dbedfea2c",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/run_active_branch_norm.py": "5218e149a50e1582f6c4f06d05313cee2545b1550f83e7b74b1cdd968de5cd3a",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/run_count_aware_tpp_backbone_control.py": "016d6ae1e5d4bcc77065e7a6b856b14ee1e1dc2acb4ecfbe2ab266e851a2b36c",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/run_hard_lmm_frozen_lognormal_duration.py": "c3bb9a6afb87dfa21c9b49af50a7a4b38b640871ec0bd8ba28ef1f098cf984e6",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/run_hard_lmm_time_head_refit.py": "a1b7774266649bf4204e279147cdc5cb6801abec96ab75e65efaad1718eff65f",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/run_intermittent_log_backbone_control.py": "eb8fd2aba200a48963efc22bf03f2c66f87a9def59a99c0a0261abf133b98ad4",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/run_local_detail_benchmark.py": "31b84f4418fc799927c3d3943cfda385d50afd5ae235310dd1d84ebbb9063e2c",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/run_multilag_detail_execution.py": "1083e19d7076a45668b2d447f2cb76f5cbcbfe01904bfda3d3e0582a1e263aea",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/run_observed_slot_partition.py": "bade0da82038c68564c2543eb18536531bc614fcd6808aaa69a1fa0a20fddb56",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/run_quantity_comparison.py": "56fc8303e55893a5295daf78767552fa91d4a9a9df2280a8f6977617ae62288d",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/run_taxi_log_backbone_control.py": "7d3003455eb8aee97eff0120a2c043f93a74981cc0de0a81d9a95f93a99e1767",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/run_taxi_quantity_interface_ablation.py": "32630140f939b1e8e2287893b7705b1d3ec6e9f67644c5f9477c0ef979890801",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/run_time_quantity_diagnostic.py": "01287ef81df060228cf821d181545581dda4184f5c85aaaa74b74e1e35c39309",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/run_titantpp_core_ablation.py": "7f38d9f074ac8096a6e7cec2d96d52d3ea9f601350b8c4e40020b2da17661236",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/time_quantity_diagnostic.py": "b0dc1deecc47c016846dc4475b6bde78b0da90ae6c7bca4e522896567d0d9006",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/verify_active_branch_norm.py": "3ea2e68dadca9a298b62d210ecbd2ea7106ff30dee65a715e9c68d76d5d77314",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/verify_local_detail_benchmark.py": "faa01e92921d962aa38edd1e0af1513367ab2e56e029d48f0f24ac1d65221872",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/paper/scripts/verify_multilag_detail_cost.py": "17a6750a74e7033badc0933965dfafddbc1cbed1ef8b0148353d09fae63b4000",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/simple_lab_test/__init__.py": "dc0691a4d210ba2dafdde7391d031f36d1dede90787b3aeb337996d685b13018",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/simple_lab_test/common/__init__.py": "60dc453d86fcb7bd779a57630d905cdec8cabbb5f1724fec6f4f3e12fcb2eaf2",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/simple_lab_test/common/pathing.py": "f3e6e8832f12bd0fef0fd9b7a23a4f5d16626581e54ebeeb10f4f965f8e2f1c1",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/simple_lab_test/search/__init__.py": "5dd6d1d5f3d9e15602c88db89d67fc8677bdd43ef78b61a016db6ff5b881f80c",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/simple_lab_test/search/common/__init__.py": "e2eb9c6b87702fc16abfcd51e691074277ee278f66b6c674ec54d6e882726541",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/simple_lab_test/search/common/benchmark_utils.py": "b3c089da98df5205b36e6aa021b03e8b9b13f6b26281e07d957a0237864ffe7f",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/simple_lab_test/search/common/configs.py": "eb241c11d765c66d86aa3f58a0a72d907769a905fe6c3a923e5f8c70abd793f3",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/simple_lab_test/search/common/experiment_utils.py": "a06e45ea43e722f55ecaec1ad5915b96fbd47926afbce617c1bb22114fe4836e",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/simple_lab_test/search/common/models.py": "71ccb45b17cf64b0a9641a7f75d27279324dbe7a5b095221ad4bac6cc6761c7b",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/simple_lab_test/search/common/runner.py": "a1fc687455b768ed454878cda55cf2d1b43cdb13817880a4cf3fbca9c7db8739",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/utils/magnitude_pipeline.py": "f18450b89a386501c88d6a99b55ef72ff0b50cc7c4a16fef9d713744e2100f98",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/utils/mark_utils.py": "945a7bfb98f0dcd7af0911d7d4b06f43268116b72a3786d8a5b6e1a572e5599b",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/utils/tpp_simulation.py": "5e01d477d77388e3686bcaf972644548b6d0c0735e3cc6e9a7618ba5ae2f984b",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/source/utils/training.py": "22c79c91cb672200057f1e80a6ca995c816b3722dd253d4b90f1ccd5795e276e"
+  },
+  "limitations": [
+    "Historical common-head numerical-input external adaptations, not native original-paper model heads.",
+    "Historical external/CNN evaluation was 5080 cuDNN91900; new RAF loop is planned on 5090 cuDNN92000. Whole source and runtime differ.",
+    "External Validation raw prediction rows were not available or regenerated. Population identity is verified through original input receipts, data SHA, loader and full endpoint counts.",
+    "Historical Test informed the new design. Repeated Test comparisons are exploratory, not independent generalization evidence or statistical significance."
+  ]
+}

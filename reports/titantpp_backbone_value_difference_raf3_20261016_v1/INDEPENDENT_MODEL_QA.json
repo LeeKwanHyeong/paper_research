@@ -1,0 +1,45 @@
+{
+  "schema": "value_difference_model_independent_qa_v1",
+  "created_kst": "2026-10-16T00:51:54.835183+09:00",
+  "status": "PASS",
+  "reviewer": "nonlinear_launch_qa",
+  "findings": [],
+  "files": {
+    "models/TPPs/CountAwareTitanValueDifferenceCNN.py": "83d6d535e1c7a46eb7528ad1ef5f95cb85c8f0fd423fabc93d79ad509a90e276",
+    "paper/scripts/run_titantpp_value_difference_cnn.py": "2180488af770c44967182da7fa49bc8205371ee0de088d1f45ebdd68acfb9fa5",
+    "paper/tests/test_titantpp_value_difference_model.py": "3c590229775e1224a193a2f3a34438d3f2a159fb9d73b87773e54b6b088e6a65"
+  },
+  "independent_pytest_passed": 26,
+  "independent_pytest_seconds": 10.29,
+  "sequential_oracle_random_batches_passed": 120,
+  "oracle_checks": [
+    "output",
+    "derivative",
+    "padding skip",
+    "withheld reset",
+    "short history"
+  ],
+  "initial_oracle_harness_issue": "An all-zero expected output had no grad_fn. The independent test harness treated its derivative as zero and then all cases passed. Product code was unchanged.",
+  "existing_files_unchanged_count": 10,
+  "parameter_checks": {
+    "old_v_removed": 192,
+    "new_v_registered": 128,
+    "active_local_cnn": 512,
+    "new_unused_trainable_parameters": 0,
+    "active_total_at_raf84": 79363,
+    "registered_total_at_raf84": 104095
+  },
+  "validated": [
+    "Q/K normal training",
+    "common initial tensors and RNG",
+    "synthetic initial output equality",
+    "unchanged common head/loss/memory",
+    "first-strict Validation selection",
+    "baseline alias fresh-fit rejection",
+    "parent validator oldV tensor exists only in temporary schema adapter, never stored/loaded/optimized"
+  ],
+  "native_environment_verified": false,
+  "remote_calls": 0,
+  "scientific_training": false,
+  "test_evaluation": false
+}
