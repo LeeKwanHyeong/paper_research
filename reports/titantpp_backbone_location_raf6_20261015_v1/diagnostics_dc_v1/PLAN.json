@@ -1,0 +1,48 @@
+{
+  "schema": "raf_cnn_dc_parameter_audit_plan_v1",
+  "created_kst": "2026-10-16T00:28:00.246366+09:00",
+  "scope": "Selected historical RAF CNN3 checkpoints only; no forward/model-class construction/data evaluation/Test/remote",
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "contract_sha256": "d51ab06365a7165e00cc18849b84caba4ee2dd8af6a36aee84a5c1d62e01fab3",
+  "source_closure": "15f6d2b482c5f76c0488d017f5c923c76bc54fd75543aab838c477266a608b53",
+  "expected_keys": [
+    "encoder.layers.0.attn.causal_q_kernel",
+    "encoder.layers.0.attn.causal_k_kernel",
+    "encoder.layers.0.attn.causal_v_kernel"
+  ],
+  "expected_shape": [
+    3,
+    64
+  ],
+  "tap_order": [
+    "current_observed_projection",
+    "previous_observed_projection",
+    "second_previous_observed_projection"
+  ],
+  "per_channel_statistics": [
+    "signed_sum_residual_dc",
+    "abs_sum_residual_dc",
+    "total_constant_gain_1_plus_sum",
+    "L1",
+    "L2",
+    "abs_sum_over_L1"
+  ],
+  "continuous_summaries": [
+    "min",
+    "q10",
+    "median",
+    "q90",
+    "max",
+    "mean"
+  ],
+  "quantile_interpolation": "linear",
+  "zero_L1_policy": "ratio null; count separately, never divide by zero",
+  "large_gain_threshold": "No chosen large-gain cutoff or threshold search; continuous distributions only",
+  "boundary_statistics": "Also report prefix sums of first1/first2 taps because unavailable previous observations are masked to zero. Three-tap DC statement applies only with all3 observations available.",
+  "mathematical_interpretation": "For a channel constant over observed projected history x, residual=sum(kernel)*x and output=(1+sum(kernel))*x when all3 taps exist. A nonzero sum is not evidence of raw-quantity bias; projected QKV mix time, quantity and other encoder signals. Constant quantity does not imply constant QKV projection.",
+  "scientific_scope": "Parameter inspection only; cannot determine activation-weighted effect, error causality, or benefit of a future zero-sum constraint."
+}

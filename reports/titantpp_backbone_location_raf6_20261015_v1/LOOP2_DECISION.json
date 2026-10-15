@@ -1,0 +1,45 @@
+{
+  "schema": "raf_location_loop2_decision_v1",
+  "status": "not_promoted_diagnosis",
+  "recorded_utc": "2026-10-15T15:09:44.970492+00:00",
+  "training_observed_kst": "2026-10-16T00:04:54.876966+09:00",
+  "evaluation_completed_kst": "2026-10-16T00:06:56.951740+09:00",
+  "fresh_fit_count": 6,
+  "fresh_test_count": 6,
+  "baseline_reference_count": 3,
+  "stored_channel_reference_count": 3,
+  "query_user_performance_gate": false,
+  "value_user_performance_gate": false,
+  "candidate_selection": {
+    "selection_rule": "passing_only:validation_qty_rmse_mean,validation_qty_mae_mean,arm_lexicographic",
+    "passing_candidates": [],
+    "selected_candidate": null,
+    "value_user_criteria_pass": false,
+    "value_minus_query_attribution_gate": false,
+    "value_hypothesis_supported": false,
+    "query_only_pass_is_not_value_success": true,
+    "test_used_for_tie_break": false
+  },
+  "findings": [
+    "Value has lower mean Test RMSE than historical CNN and best external RMSE, but Test MAE worsens and Validation RMSE/MAE do not beat references.",
+    "Value minus Query RMSE is lower in all3 seeds on Validation and Test, but MAE is not consistently improved.",
+    "Value seed62 Test MAE worsens from historical CNN9.956497 to10.272254; all3 Value Test MAE exceed historical CNN.",
+    "Value Test whole TimeNLL mean4.229094 versus historical CNN3.821268; retain unfavorable time result."
+  ],
+  "next_action": "Preserve results and diagnose Train/Validation error by observed history and quantity. No Taxi or Intermittent expansion because neither candidate passes all4 criteria. Select one justified CNN backbone hypothesis with control before new isolated implementation.",
+  "historical_cnn_retrained": false,
+  "historical_cnn_reevaluated": false,
+  "test_informed_exploratory": true,
+  "causal_claim": false,
+  "wrapper_own_os_exit_directly_observed": false,
+  "evidence": {
+    "search_artifacts/titantpp_backbone_location_raf6_20261015_v1/retrieval/final_receipt.json": "4c3257762b90ff7edfe35b71d10d63cfabb14635c4f1720ec29b3e5a919fbbf6",
+    "search_artifacts/titantpp_backbone_location_raf6_20261015_v1/evaluation_v1/final_receipt.json": "77152d635be68e8700a4a08c9ecf3466b6bb2b202c8b9dea6a7c6509c6ca625f",
+    "reports/titantpp_backbone_location_raf6_20261015_v1/evaluation_v1/THREE_SEED_VALIDATION.json": "e0f628b627acef88fc5c239f387343f8241af328490b46b687af4a853f637767",
+    "reports/titantpp_backbone_location_raf6_20261015_v1/evaluation_v1/THREE_SEED_VALIDATION.md": "e11f9bda5cfac64cb15ee23efe8a6460bde48b2702b2f97daa072b425947cd4a",
+    "reports/titantpp_backbone_location_raf6_20261015_v1/evaluation_v1/THREE_SEED_TEST.json": "73ad5ffd79f62925aa93d166e40bb26ab472e2f7c821e6ac1d95fd2db562a9c5",
+    "reports/titantpp_backbone_location_raf6_20261015_v1/evaluation_v1/THREE_SEED_TEST.md": "dc7390da005231fb3d6083812de6460c0e3ad6a3875c81f625318519eb5e8404",
+    "reports/titantpp_backbone_location_raf6_20261015_v1/evaluation_v1/EXTERNAL_COMPARISON.json": "e0a5afee2a15a34af13870db30623574b76de3c4323b9800a47f8c67508dd046",
+    "reports/titantpp_backbone_location_raf6_20261015_v1/evaluation_v1/EXTERNAL_COMPARISON.md": "372c961c988ad3543866f658f74b93d8ed7668b288cdb29c42108d0b6bf703e4"
+  }
+}

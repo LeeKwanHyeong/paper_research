@@ -1,0 +1,114 @@
+{
+  "schema": "raf_value_difference_scientific_spec_v1",
+  "created_kst": "2026-10-16T00:37:06.778034+09:00",
+  "loop_index": 3,
+  "campaign": "titantpp_backbone_value_difference_raf3_20261016_v1",
+  "status": "approved_scope_preparing_implementation_not_started",
+  "purpose": "Test the usefulness of restricting only V local CNN correction to adjacent observed differences, under the current common CNN experiment conditions.",
+  "user_authorization": "2026-10-15 CNN backbone iterative improvement preapproval, RAF5090 first max3 parallel, existing CNN untouched; continue other work.",
+  "model_arm": "titantpp_cnn_value_difference_v1",
+  "new_fit_count": 3,
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "dataset": "raf_spare_parts",
+  "host": "5090",
+  "max_concurrent_fits": 3,
+  "remote_root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_backbone_value_difference_raf3_20261016_v1_5090",
+  "new_cnn_baseline_fits": 0,
+  "baseline_reevaluations": 0,
+  "baseline_reference_count": 3,
+  "model": {
+    "base": "current frozen original CNN-only component model; fresh fit from same initialization protocol; no warm start",
+    "qk": "Keep original independent linear observed3tap CNN structure and normal training of Q/K projections and coefficients. Not frozen.",
+    "v": "Replace original free3tap V correction with a*(v0-v1)*I(prev)+b*(v1-v2)*I(prev2), channelwise; v0 current observed projection, v1/v2 prior observed projections.",
+    "available_history": "Use original observed-order semantics: skip padding, reset at valid withheld/unobserved boundaries; no crossing prohibited boundary. Missing differences are exactly0. History1 residual0; history2 first difference only.",
+    "parameters": {
+      "q": 192,
+      "k": 192,
+      "v": 128,
+      "total_local_cnn": 512,
+      "original_local_cnn": 576,
+      "new_difference_shape": [
+        2,
+        64
+      ],
+      "new_difference_initialization": "all zeros",
+      "unused_or_dummy_parameters": 0
+    },
+    "unchanged": [
+      "common input/log1p",
+      "loss",
+      "quantity and time heads",
+      "memory",
+      "global attention",
+      "common trainable projection/encoder weights",
+      "training budget",
+      "seed",
+      "optimizer hyperparameters",
+      "Validation selection"
+    ],
+    "not_added": [
+      "GRU",
+      "RevIN",
+      "nonlinearity",
+      "gate",
+      "Q/K bound",
+      "history confidence",
+      "extra branches",
+      "learned level channel"
+    ]
+  },
+  "selection": "first strict finite minimum of fullValidation raw quantity RMSE; ties first epoch; never reselect on Test",
+  "budget": "inherit current RAF training contract batch/epochs/patience/optimizer/deadlines unchanged; do not extend any inherited absolute host deadline",
+  "runtime": {
+    "python": "3.12.13",
+    "torch": "2.11.0+cu130",
+    "cudnn": 92000,
+    "threads": 4,
+    "gpu_uuid": "GPU-c9adc246-ef66-7906-bc07-6e152fa9952f"
+  },
+  "execution_gates": [
+    "freeze science/source/input/baseline/registry/operation/approval SHA",
+    "model and operation synthetic/contract checks",
+    "independent review",
+    "fresh native fixed GPU/Runtime/input and 3candidate concurrent synthetic checks",
+    "fresh idle and no foreign owner conflict",
+    "unique fresh root, exclusive claim; then one start only"
+  ],
+  "evaluation_gates": [
+    "all3 scientific workers actualexit0, binary SHA, dispatcher/pipeline actualexit0, explicit owned PID/GPU absence",
+    "exclusive original archive/manifest verification",
+    "fixed selected checkpoint3 native Validation replay with all6 metrics and identical targets passes before Test3",
+    "stored CNN3/external results reused only"
+  ],
+  "success": "Each 3seed mean of Validation RMSE, Validation MAE, Test RMSE, Test MAE strictly below both historical CNN and external metricwise best on same targets. Record SD ddof1, all seed absolute/relative differences, tail and time metrics, including worse outcomes.",
+  "expansion": "Only after RAF pass apply same structure to Taxi5090 and verified idle5080 Intermittent; do not run completed Taxi tasks or treat past terminal cache as current idle proof.",
+  "evidence": {
+    "loop2_eval_receipt": "77152d635be68e8700a4a08c9ecf3466b6bb2b202c8b9dea6a7c6509c6ca625f",
+    "loop2_tradeoff": "a56d4715b1a5951144a57c2896caefdd672519ff0eee6c893993f2312a6c6ee8",
+    "dc_audit": "c14dcb2786729a932d4d3fbcb333cb8fb47485733145bb6ebba48315be69b114",
+    "validation_bias": "2b376cfd196232dbcca0cc523404bb6719a7fed9f6bb2a11cb5a74d21c439f21",
+    "elapsed_unidentifiable": "2b235cc579f8d6569db417c74c3da793ae48346d48e38d7a320ffe4b59a5032d",
+    "external_registry": "57e88f4d5d338c6da7f54fe38d2b9492b06476fa93161331481de3c4ee1a6b49"
+  },
+  "limitations": [
+    "Prior LevelHistoryQKV already used zero-sum differences with QK bound/confidence/older source/head; this isolates a current-condition V-only constraint, not a new zero-DC idea.",
+    "V constant-feature gain and small-quantity positive bias motivate but do not establish causal connection. No evidence of explosive weights.",
+    "Fewer degrees of freedom (576->512), short-history boundary change and effective optimizer/weight-decay parameterization are included in the intervention.",
+    "Q/K structure remains free but learns fresh weights, not preservation of previous learned Q/K values.",
+    "Constant latent V preservation is not constant raw quantity preservation or a guarantee of calibrated full-model predictions.",
+    "Historical CNN5080/cuDNN91900 versus new5090/cuDNN92000 is a comparison limitation; no new CNN fits to remove it.",
+    "Repeated Test-informed exploration is not independent evaluation, universal generalization, statistical significance or causal proof."
+  ],
+  "safety": [
+    "existing original source/result/checkpoint/failure/claim unchanged",
+    "no retry/resume/kill or hidden restart",
+    "no shared Runtime/driver/auth changes",
+    "no manuscripts or other automation changes",
+    "no deleted A100 access",
+    "failed transport is not scientific failure; preserve stdout/stderr/actualexit and avoid blind retries"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "schema": "raf_fixed_validation_bias_appendix_plan_v1",
+  "scope": "Separate descriptive bias appendix; no causal association or correlation with coefficient gains",
+  "split": "validation",
+  "models": [
+    "historical_CNN",
+    "Query",
+    "Value"
+  ],
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "target_quantity_boundaries": [
+    2,
+    30,
+    60,
+    200
+  ],
+  "metrics": [
+    "raw_RMSE",
+    "raw_MAE",
+    "signed_bias_prediction_minus_target"
+  ],
+  "aggregation": "Each seed and 3seed mean/sampleSD; no cross-dataset pooling",
+  "baseline": "Same saved prediction_1 rows as elapsed audit, original checkpoint/manifest/rawSHA binding",
+  "candidate": "Native Validation-only report THREE_SEED_VALIDATION.json, split/runtime/target/checkpoint/source identity checked",
+  "interpretation": "Target-defined bins are descriptive only. These outcomes do not establish DC gain causes raw quantity bias. Baseline5080/cuDNN91900 vs new5090/cuDNN92000 remains a confound."
+}

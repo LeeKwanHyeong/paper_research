@@ -1,0 +1,77 @@
+{
+  "schema": "raf_cnn_observed_elapsed_fixed_plan_v1",
+  "created_kst": "2026-10-16T00:17:17.813801+09:00",
+  "dataset": "raf_spare_parts",
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "splits": [
+    "train",
+    "validation"
+  ],
+  "prediction_source": "search_artifacts/titantpp_cnn_memory_sensitivity_20261015_v3/retrieval/results",
+  "prediction_column": "prediction_1",
+  "contract_sha256": "d51ab06365a7165e00cc18849b84caba4ee2dd8af6a36aee84a5c1d62e01fab3",
+  "input_sha256": "d805cad0242078fedfbb87eed18bde9b73d37bfc9b93c6b75aac49087244efa2",
+  "features": {
+    "last_observed_gap": {
+      "definition": "Recorded delta_t of last observed event, valid only when >=2 observations are inside exact loader context; never target delta_t",
+      "unit": "month",
+      "min_history": 2
+    },
+    "last_three_observed_span": {
+      "definition": "Sum of recorded delta_t of last and previous observed event, valid only when >=3 observations are inside exact loader context",
+      "unit": "month",
+      "min_history": 3
+    }
+  },
+  "group_definition": {
+    "quantile_source": "unique Train targets across seeds, each feature eligible histories only",
+    "quantiles": [
+      0.25,
+      0.75
+    ],
+    "interpolation": "linear",
+    "low": "value <= TrainQ25",
+    "high": "value >= TrainQ75",
+    "middle": "exclude Q25<value<Q75",
+    "ties": "if Q25>=Q75 mark low_high_not_separable; do not alter quantiles"
+  },
+  "matching": {
+    "within": "each split and feature separately",
+    "keys": [
+      "entity_id",
+      "target_quantity_bin",
+      "history_length",
+      "observed_change_magnitude_bin"
+    ],
+    "target_quantity_boundaries": [
+      2.0,
+      30.0,
+      60.0,
+      200.0
+    ],
+    "observed_change_magnitude_bin": "floor(abs(log1p(last_quantity)-log1p(previous_quantity))/0.05)",
+    "weight": "Only cells with both low and high; each direction mass=min(n_low,n_high); per row mass/n_group",
+    "history_length": "exact integer",
+    "additional_bin_search": false
+  },
+  "scores": [
+    "raw_RMSE",
+    "raw_MAE",
+    "prediction_minus_actual_bias",
+    "SSE",
+    "absolute_error_sum"
+  ],
+  "report": [
+    "each seed low/high and high-minus-low",
+    "3seed mean/sampleSD, not pooled independent observations",
+    "unique support rows/cells/entities, matched weights/ESS/coverage",
+    "invalid history/middle/ties exclusions",
+    "match balance for continuous target quantity/change magnitude",
+    "exact-target/quantity/history identity cross-seed"
+  ],
+  "interpretation": "Descriptive condition comparison, including target-quantity conditioning. It does not isolate elapsed time as a CNN defect or demonstrate a successful architecture. Seeds reuse identical targets. Sparse coverage cannot generalize to all RAF. No inference, training, Test or remote operations."
+}

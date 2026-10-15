@@ -1,0 +1,44 @@
+{
+  "schema": "raf_next_backbone_review_v1",
+  "status": "hypothesis_review_not_training_contract",
+  "reviewer": "nonlinear_location_runtime",
+  "prior_zero_dc_implementation": {
+    "model": "models/TPPs/CountAwareTitanLevelHistoryQKV.py",
+    "tests": "simple_lab_test/search/tests/test_count_aware_titan_level_history_qkv.py",
+    "terminal_audit": "paper/results/hard_lmm_level_history_qkv_gpu_20260908/local_terminal_audit.json",
+    "verified_prior_audit_files": 8,
+    "actual_prior_training": "5090 Instacart seed42 stopped80 selected40; prior Validation strict B RMSE and mechanism gates failed",
+    "other_datasets": "Taxi/Intermittent e1 checks only; no full seed42 training confirmed",
+    "confounds": [
+      "Q/K bound",
+      "history confidence scale",
+      "different history mask semantics",
+      "older source",
+      "legacy_clamped_rmtpp time head"
+    ]
+  },
+  "candidate_hypothesis": "Does removing learnable DC correction from current CNN local projected-feature residual improve RAF under unchanged common science conditions?",
+  "preferred_minimum_comparison": "One new constrained candidate x seed42/52/62 versus preserved existing CNN3. No new baseline fit or reevaluation.",
+  "why_not_center_zero_control": "Equal degrees of freedom alone do not isolate DC preservation; removing current tap also changes access, phase and delay.",
+  "freedom_difference": {
+    "original_cnn": 576,
+    "constrained_difference": 384
+  },
+  "boundary_requirement": "A full-window sum-zero constraint with zero-padding is insufficient at one/two observations. Use only existing adjacent observed differences or another explicit level-preserving boundary rule; preserve observed-order, padding skipping and resets.",
+  "interpretation_limits": [
+    "Not a new zero-DC idea; current-condition isolation of an earlier mixed modification.",
+    "Difference coefficient parameterization changes effective AdamW regularization relative to three independent tap coefficients.",
+    "This preserves temporally constant projected Q/K/V features, not raw quantity or full model output calibration.",
+    "Present error patterns are compatible with level-shift problems but do not establish their cause.",
+    "A single candidate compares the whole constraint including fewer degrees of freedom; it cannot attribute any gain uniquely to DC preservation."
+  ],
+  "current_phase": "Await parameter-only audit and stored Validation bias appendix; no candidate implementation/deploy/native qualification/training yet.",
+  "remote_calls": 0,
+  "model_inference": 0,
+  "held_out_test_read": false,
+  "prior_file_sha256": {
+    "models/TPPs/CountAwareTitanLevelHistoryQKV.py": "f4398a442c7872b158039f2346bc18ce5df5b89de97ec4c1c4a0f9291ad136e0",
+    "simple_lab_test/search/tests/test_count_aware_titan_level_history_qkv.py": "70a24b5c4de905387e9168a85a92e2bcfbe52c4cc62afc189b6d740dc05555dc",
+    "paper/results/hard_lmm_level_history_qkv_gpu_20260908/local_terminal_audit.json": "b31d65c7cd4c8be9299f9e29b39fa5201bead2f7943975b2746f1d268342733c"
+  }
+}
