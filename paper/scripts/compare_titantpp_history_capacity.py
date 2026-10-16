@@ -13,6 +13,7 @@ from collections import Counter
 import csv
 from datetime import datetime, timezone
 import hashlib
+import importlib.util
 import json
 import math
 from pathlib import Path
@@ -23,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[2]
 NAME = "titantpp_history_width8_12_dual_20261004_v1"
 BASELINE = ROOT / "reports/titantpp_width_time_adoption_20261004_v1"
 OUTPUT = ROOT / "reports/titantpp_history_capacity_comparison_20261004_v1"
-METRICS = ("qty_rmse", "qty_mae", "tail_qty_rmse", "body_qty_rmse", "time_nll")
+METRICS = ("qty_rmse", "qty_mae", "tail_qty_rmse", "tail_qty_mae", "body_qty_rmse", "time_nll")
 SEEDS = (42, 52, 62)
 
 
@@ -107,6 +108,7 @@ def metric_row(dataset, seed, width, epoch, endpoint, *, host, source):
     return {"dataset": dataset, "seed": seed, "width": width, "split": "validation",
             "selected_epoch": epoch, "count": endpoint["count"], "qty_rmse": endpoint["qty_rmse"],
             "qty_mae": endpoint["qty_mae"], "tail_qty_rmse": endpoint["tail"]["qty_rmse"],
+            "tail_qty_mae": endpoint["tail"]["qty_mae"],
             "body_qty_rmse": endpoint["body"]["qty_rmse"], "time_nll": endpoint["time_nll"],
             "tail_count": endpoint["tail"]["count"], "host": host, "source": source}
 
@@ -138,7 +140,7 @@ def baseline_rows(contract, baseline_dir=BASELINE):
         expected = table[key]
         require(int(expected["selected_epoch"]) == row["selected_epoch"] and int(expected["count"]) == row["count"],
                 "Baseline CSV selection/population differs")
-        require(all(close(float(expected[k]), row[k]) for k in METRICS if k != "body_qty_rmse"),
+        require(all(close(float(expected[k]), row[k]) for k in METRICS if k not in ("body_qty_rmse", "tail_qty_mae")),
                 "Baseline CSV/endpoint metrics differ")
         rows.append(row)
         sources.append({**binding, "endpoint_and_history_rechecked": True,
@@ -186,6 +188,14 @@ def verified_fit(folder, job, contract):
     epoch = first_minimum(history)
     require(endpoints["best_epoch"] == epoch, "Selected checkpoint is not strict first minimum")
     data = next(d for d in contract["datasets"] if d["dataset_id"] == job["dataset"])
+    require("input_receipt.json" in manifest["files"], "Input identity proof not sealed")
+    inputs = read(folder / "input_receipt.json")
+    identity = data["inherited_data_identity"]
+    require(inputs["dataset_id"] == job["dataset"] and inputs["held_out_materialized"] is False
+            and inputs["populations"] == identity["populations"]
+            and inputs["input_identity"] == {"data_sha256": identity["data"]["sha256"],
+                                              "split_manifest_sha256": identity["split_manifest"]["sha256"]},
+            "Input population/file identity differs")
     for label, index in (("selected", epoch - 1), ("last", len(history) - 1)):
         endpoint = endpoints[label]
         audit_endpoint(endpoint, data)
@@ -228,7 +238,8 @@ def verified_fit(folder, job, contract):
     row = metric_row(job["dataset"], job["seed"], width, epoch, endpoints["selected"],
                      host=job["host"], source=str(run / "endpoint_replays.json"))
     row.update(train_sample_qty_rmse=train["qty_rmse"], train_sample_qty_mae=train["qty_mae"],
-               train_sample_tail_qty_rmse=train["tail"]["qty_rmse"], train_sample_time_nll=train["time_nll"],
+               train_sample_tail_qty_rmse=train["tail"]["qty_rmse"], train_sample_tail_qty_mae=train["tail"]["qty_mae"],
+               train_sample_time_nll=train["time_nll"],
                train_sample_n=train["count"], train_represented_n=train["represented_n"],
                train_sample_delta_vs_width4=json.dumps(comparison["candidate_minus_baseline"]["train_sample"], sort_keys=True))
     proof = {"job": job, "folder": str(folder), "terminal_manifest_sha256": sha_file(folder / "terminal_manifest.json"),
@@ -237,10 +248,60 @@ def verified_fit(folder, job, contract):
              "selected_state_sha256": endpoints["selected"]["state_sha256"],
              "last_state_sha256": endpoints["last"]["state_sha256"], "selected_first_minimum_verified": True,
              "selected_and_last_validation_replays_verified": True, "checkpoint_binary_sha_verified": True,
+             "checkpoint_binary_sha256": {name: manifest["files"][str((run / name).relative_to(folder))]
+                                           for name in needed[-2:]},
+             "sealed_original_file_count": len(manifest["files"]), "input_identity_verified": True,
              "cpu_inference_audit_performed_here": False, "completed_unix": manifest["completed_unix"],
              "train_sampling": sample, "train_comparator_width16_available": False,
              "train_comparator_note": "Width4 matched sample is sealed by the fit. Width16 time-diagnostic sampling differs; no TRAIN comparison is inferred."}
     return row, proof
+
+
+def verified_handoff(bundle, contract):
+    """Reuse the exact operational whitelist and local reservation audit only."""
+    if not bundle.exists():
+        return None
+    spec = importlib.util.spec_from_file_location("capacity_handoff_readonly", ROOT / "paper/scripts/capacity_handoff_runtime.py")
+    runtime = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(runtime)
+    parent, operational, meta = runtime.load(bundle)
+    require(parent == contract, "Handoff parent is not this capacity campaign")
+    qualification = runtime.verify_native(bundle, parent, operational)
+    runtime.validate_reservation(parent, operational, qualification, read(bundle / "source_reservation.json"))
+    gate_path = bundle / "test_finalizer/gate_receipt.json"
+    gate = read(gate_path) if gate_path.exists() else None
+    if gate is not None:
+        require(gate["status"] == "capacity18_terminal_verified" and gate["conditions"] == 18
+                and gate["parent_contract_sha256"] == sha_json(parent)
+                and gate["operational_contract_sha256"] == sha_json(operational), "Foreign capacity completion gate")
+        for label, ref in gate["refs"].items():
+            require(sha_file(ref["snapshot"]) == ref["snapshot_sha256"], "Capacity completion snapshot SHA changed")
+            snapshot = read(ref["snapshot"])
+            host, digest = {"target2": ("5080", sha_json(operational)),
+                            "source4": ("5090", sha_json(parent)),
+                            "historical12": ("5080", sha_json(parent))}[label]
+            require(snapshot["host"] == host and snapshot["contract_sha256"] == digest
+                    and snapshot["source_closure_sha256"] == parent["source"]["files_sha256"],
+                    "Capacity completion snapshot identity changed")
+            ref["actual_observed_unix"] = snapshot["observed_unix"]
+    proof = {**meta, "bundle": str(bundle), "exact_operational_derivation_verified": True,
+             "source_reservation_verified": True, "destination_native_runtime_verified": True,
+             "source_reservation_file_sha256": sha_file(bundle / "source_reservation.json"),
+             "qualification_file_sha256": sha_file(bundle / "qualification/receipt.json"),
+             "completion_gate_path": str(gate_path) if gate else None,
+             "completion_gate_sha256": sha_file(gate_path) if gate else None,
+             "completion_gate": gate}
+    return operational, proof
+
+
+def retrieved_fit(bundle, job, contract, handoff_bundle, handoff):
+    folder = bundle / "retrieved" / job["host"] / "run" / job["id"]
+    if handoff and job["id"] in handoff[1]["job_ids"]:
+        require(not (folder / "terminal_manifest.json").exists(), "Duplicate original/transferred terminal condition")
+        operational = handoff[0]
+        fit_job = next(j for j in operational["jobs"] if j["id"] == job["id"])
+        return handoff_bundle / "retrieved" / fit_job["host"] / "run" / job["id"], fit_job, operational
+    return folder, job, contract
 
 
 def latest_observations(bundle):
@@ -272,7 +333,9 @@ def status_from_observation(job, observations):
             fields = line.strip().split(maxsplit=1)
             if len(fields) == 2 and fields[0].isdigit():
                 processes[int(fields[0])] = shlex.split(fields[1])
-        gpu_pids = {int(line.split(",", 1)[0].strip()) for line in observation.get("gpu", "").splitlines()
+        gpu = observation.get("gpu", "")
+        gpu_processes = gpu if isinstance(gpu, str) else observation.get("compute", {}).get("stdout", "")
+        gpu_pids = {int(line.split(",", 1)[0].strip()) for line in gpu_processes.splitlines()
                     if line.split(",", 1)[0].strip().isdigit()}
         def argument(command, name, value):
             return name in command and command.index(name) + 1 < len(command) and command[command.index(name) + 1] == value
@@ -304,7 +367,8 @@ def group_decision(rows, dataset, candidate_width, baseline_width):
         statistics_by_metric[metric] = {"baseline_mean": statistics.mean(a), "baseline_sample_sd": statistics.stdev(a),
             "candidate_mean": statistics.mean(b), "candidate_sample_sd": statistics.stdev(b),
             "mean_delta": statistics.mean(delta), "paired_seed_deltas": dict(zip(SEEDS, delta)),
-            "improved_seed_count": sum(d < 0 for d in delta), "worst_paired_seed_delta": max(delta)}
+            "improved_seed_count": sum(d < 0 for d in delta), "worst_paired_seed": SEEDS[delta.index(max(delta))],
+            "worst_paired_seed_delta": max(delta)}
     primary = statistics_by_metric["qty_rmse"]
     screen = primary["mean_delta"] < 0 and primary["improved_seed_count"] >= 2
     joint = screen and all(statistics_by_metric[k]["mean_delta"] <= 0
@@ -329,7 +393,19 @@ def write_csv(path, rows):
         writer.writerows(rows)
 
 
-def generate(bundle, output):
+def seed_summary(rows):
+    result = []
+    for dataset, width in sorted({(r["dataset"], r["width"]) for r in rows}):
+        group = sorted((r for r in rows if r["dataset"] == dataset and r["width"] == width), key=lambda r: r["seed"])
+        if [r["seed"] for r in group] != list(SEEDS):
+            continue
+        result.append({"dataset": dataset, "width": width, "split": "validation", "seeds": "42,52,62", "sd_ddof": 1,
+                       **{metric + "_" + label: function([r[metric] for r in group])
+                          for metric in METRICS for label, function in (("mean", statistics.mean), ("sample_sd", statistics.stdev))}})
+    return result
+
+
+def generate(bundle, output, handoff_bundle=None):
     contract = read(bundle / "execution_contract.json")
     pointer = read(bundle / "current.json")
     require(pointer["contract_sha256"] == sha_json(contract), "Current capacity contract changed")
@@ -344,18 +420,28 @@ def generate(bundle, output):
     require(sha_file(BASELINE / "adoption_criteria.json") == gate["criteria_file_sha256"], "Pre-launch adoption criteria changed")
     require(criteria["user_fixed_followup_baseline_width"] == 16 and criteria["seeds"] == list(SEEDS), "Adoption baseline/seeds changed")
     rows, sources = baseline_rows(contract)
+    handoff_bundle = handoff_bundle or bundle.parent / "titantpp_history_capacity_handoff_20261004_v1"
+    handoff = verified_handoff(handoff_bundle, contract)
+    transfer_ids = set(handoff[1]["job_ids"]) if handoff else set()
     observations = latest_observations(bundle)
     conditions, proofs, failures = [], [], []
     for job in contract["jobs"]:
-        folder = bundle / "retrieved" / job["host"] / "run" / job["id"]
+        folder, fit_job, fit_contract = retrieved_fit(bundle, job, contract, handoff_bundle, handoff)
         state, observed = status_from_observation(job, observations)
-        condition = {**job, "status": state, "observed_unix": observed, "retrieved_folder": str(folder)}
+        if handoff and handoff[1]["completion_gate"]:
+            label = "target2" if job["id"] in transfer_ids else "source4" if job["host"] == "5090" else "historical12"
+            observed = handoff[1]["completion_gate"]["refs"][label]["actual_observed_unix"]
+        condition = {**job, "original_host": job["host"], "execution_host": fit_job["host"],
+                     "status": state, "observed_unix": observed, "retrieved_folder": str(folder)}
         if (folder / "terminal_manifest.json").exists():
             try:
-                row, proof = verified_fit(folder, job, contract)
+                row, proof = verified_fit(folder, fit_job, fit_contract)
+                proof.update(original_job=job, operational_transfer=job["id"] in transfer_ids,
+                             parent_contract_sha256=sha_json(contract))
                 rows.append(row)
                 proofs.append(proof)
-                condition.update(status="complete_verified", selected_epoch=row["selected_epoch"])
+                condition.update(status="complete_verified", selected_epoch=row["selected_epoch"],
+                                 completed_unix=proof["completed_unix"])
             except (ValueError, KeyError, OSError, TypeError) as error:
                 condition.update(status="retrieved_unverified", verification_error=str(error))
                 failures.append({"job": job, "verification_error": str(error)})
@@ -372,15 +458,36 @@ def generate(bundle, output):
                 "baseline_selected_epoch": base["selected_epoch"], "split": "validation",
                 **{k + "_candidate_minus_baseline": row[k] - base[k] for k in METRICS}})
     groups = [group_decision(rows, d, w, bw) for d in criteria["datasets"] for w in (8, 12) for bw in (4, 16)]
+    means = seed_summary(rows)
+    group_metrics = [{"dataset": g["dataset"], "candidate_width": g["candidate_width"],
+                      "baseline_width": g["baseline_width"], "split": "validation", "metric": metric,
+                      "category": g["category"], **{k: v for k, v in cell.items() if k != "paired_seed_deltas"},
+                      **{"seed_" + str(seed) + "_delta": delta for seed, delta in cell["paired_seed_deltas"].items()}}
+                     for g in groups for metric, cell in g.get("metrics", {}).items()]
     now = datetime.now(timezone.utc)
     stamp = now.strftime("%Y%m%dT%H%M%S%fZ")
     output.mkdir(parents=True, exist_ok=True)
     dest = output / "snapshots" / stamp
     dest.mkdir(parents=True, exist_ok=False)
+    previous = read(output / "latest.json") if (output / "latest.json").exists() else None
+    partial_snapshot = None
+    prior = previous["snapshot"] if previous else None
+    visited = set()
+    while prior and prior not in visited:
+        visited.add(prior)
+        prior_summary = read(output / prior / "summary.json")
+        if prior_summary["status_counts"].get("complete_verified", 0) < 18:
+            partial_snapshot = prior
+            break
+        prior = prior_summary.get("previous_snapshot")
     summary = {"schema": "titantpp_history_capacity_comparison_v1", "generated_utc": now.isoformat(),
                "evaluation_scope": "validation_only", "heldout_read": False, "new_training": False,
                "user_baseline_width": 16, "deferred_dataset": "insta_market_basket",
                "contract_sha256": sha_json(contract), "source_closure_sha256": contract["source"]["files_sha256"],
+               "source_file_count": len(contract["source"]["files"]),
+               "operational_handoff": handoff[1] if handoff else None,
+               "previous_snapshot": previous["snapshot"] if previous else None,
+               "preserved_partial_snapshot": partial_snapshot,
                "status_counts": dict(Counter(x["status"] for x in conditions)), "total_conditions": 18,
                "groups": groups, "baseline_full_validation_csv_sha256": sha_file(BASELINE / "full_validation_metrics.csv"),
                "adoption_criteria_sha256": sha_file(BASELINE / "adoption_criteria.json"),
@@ -390,34 +497,81 @@ def generate(bundle, output):
                    "TRAIN is an N_bin/n_bin weighted fixed sample, not a full-population evaluation.",
                    "Width16 TRAIN time-diagnostic sample differs; only Validation is paired to width16.",
                    "Body is the original first three quantity bins (q <= boundary[2]); tail is q > boundary[3].",
-                   "Intermittent width8/12 GPU is5090 while reused width4/16 GPU is5080; no efficiency claim."]}
+                   "Intermittent width8/12 seeds42/52 ran on5090 and seed62 transferred to5080; reused width4/16 ran on5080; no efficiency claim."]}
     write_csv(dest / "full_validation_metrics.csv", rows)
+    train_rows = [{"dataset": r["dataset"], "seed": r["seed"], "width": r["width"], "host": r["host"],
+                   "scope": "train_fixed_weighted_sample", "weighting": "N_bin/n_bin",
+                   **{k: v for k, v in r.items() if k.startswith("train_")}, "source": r["source"]}
+                  for r in rows if r["width"] in (8, 12)]
+    write_csv(dest / "train_fixed_sample_metrics.csv", train_rows)
     write_csv(dest / "paired_validation_deltas.csv", deltas or [{"dataset": "", "seed": "", "candidate_width": "", "baseline_width": ""}])
     write_csv(dest / "condition_status.csv", conditions)
-    write_json(dest / "source_bindings.json", {"baselines": sources, "candidate_fits": proofs, "verification_failures": failures})
+    write_csv(dest / "full_validation_seed_summary.csv", means)
+    write_csv(dest / "paired_validation_seed_summary.csv", group_metrics)
+    write_json(dest / "source_bindings.json", {"baselines": sources, "candidate_fits": proofs,
+                                               "operational_handoff": handoff[1] if handoff else None,
+                                               "verification_failures": failures})
     write_json(dest / "summary.json", summary)
+    write_json(dest / "verification.json", {"status": "passed" if len(proofs) == 18 and not failures else "incomplete",
+               "evaluation_scope": "validation_only", "heldout_read": False, "new_training": False,
+               "source_file_count": len(contract["source"]["files"]), "baseline_binding_count": len(sources),
+               "candidate_verified_count": len(proofs), "original_candidate_file_count": sum(p["sealed_original_file_count"] for p in proofs),
+               "candidate_checkpoint_binary_count": sum(len(p["checkpoint_binary_sha256"]) for p in proofs),
+               "full_validation_rows": len(rows), "three_seed_summary_rows": len(means), "paired_validation_rows": len(deltas),
+               "three_seed_comparison_count": sum(g["three_seed_conclusion"] for g in groups),
+               "cpu_inference_audit_performed_here": False, "verification_failures": failures,
+               "reader_sha256": sha_file(Path(__file__)),
+               "output_sha256": {p.name: sha_file(p) for p in sorted(dest.iterdir()) if p.is_file()}})
     kst = now.astimezone(__import__("zoneinfo").ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d %H:%M:%S KST")
     lines = ["# 폭8·12 조건별 원본 검증과 Validation 비교", "", f"생성 시각: {kst}. 실제 서버 관측 시각은 각 snapshot의 observation 기록을 따릅니다.", "",
              f"신규 18조건 중 원본 검증 완료 **{len(proofs)}/18**입니다. 폭16은 사용자가 고정한 기준선, 폭4는 기존 대조군입니다. Instacart는 후속 실험입니다.", "",
              "기존 폭4·16의 Validation 원본 연결 18개는 endpoint/history SHA와 지표·선택 epoch를 재확인했습니다. 신규 폭8·12는 회수 완료된 원본에만 terminal success·전체 파일 SHA·최초 최소 RMSE 선택 epoch·selected/last replay 검증을 적용합니다. checkpoint binary 회수 SHA 확인과 CPU 재추론 감사는 구분합니다.", "",
-             "| 데이터 | seed | 폭 | 상태 | 선택 epoch |", "|---|---:|---:|---|---:|"]
+             "원계약의 18개 고유 조건을 유지했습니다. Intermittent seed62 폭8·12는 원래 5090에서 시작 전 예약으로 이관한 5080 실행이며 중복 학습으로 집계하지 않습니다. 정확한 운영 계약 파생·114개 동결 소스·5080 native runtime·source 예약을 로컬 기록에서 재검증했습니다.", "",
+             "| 데이터 | seed | 폭 | 실제 실행 서버 | 상태 | 선택 epoch |", "|---|---:|---:|---|---|---:|"]
     for c in conditions:
-        lines.append(f"| {c['dataset']} | {c['seed']} | {c['arm'].rsplit('width',1)[1]} | {c['status']} | {c.get('selected_epoch','—')} |")
+        lines.append(f"| {c['dataset']} | {c['seed']} | {c['arm'].rsplit('width',1)[1]} | {c['execution_host']} | {c['status']} | {c.get('selected_epoch','—')} |")
     if proofs:
-        lines += ["", "| 데이터 | seed | 폭 | 전체 RMSE | MAE | 큰 수량 RMSE | Time NLL |", "|---|---:|---:|---:|---:|---:|---:|"]
+        lines += ["", "| 데이터 | seed | 폭 | 전체 RMSE | MAE | 큰 수량 RMSE | 큰 수량 MAE | Time NLL |", "|---|---:|---:|---:|---:|---:|---:|---:|"]
         keys = {(r["dataset"], r["seed"]) for r in rows if r["width"] in (8, 12)}
         for r in sorted((r for r in rows if (r["dataset"], r["seed"]) in keys), key=lambda r:(r["dataset"],r["seed"],r["width"])):
-            lines.append(f"| {r['dataset']} | {r['seed']} | {r['width']} | {r['qty_rmse']:.6f} | {r['qty_mae']:.6f} | {r['tail_qty_rmse']:.6f} | {r['time_nll']:.6f} |")
+            lines.append(f"| {r['dataset']} | {r['seed']} | {r['width']} | {r['qty_rmse']:.6f} | {r['qty_mae']:.6f} | {r['tail_qty_rmse']:.6f} | {r['tail_qty_mae']:.6f} | {r['time_nll']:.6f} |")
+    lines += ["", "3seed 전수 Validation 평균 ± 표본 표준편차(ddof1)입니다. Train 가중 표본과 합치지 않습니다.", "",
+              "| 데이터 | 폭 | 전체 RMSE | MAE | 큰 수량 RMSE | 큰 수량 MAE | Time NLL |",
+              "|---|---:|---:|---:|---:|---:|---:|"]
+    for r in means:
+        cells = [f"{r[m + '_mean']:.6f} ± {r[m + '_sample_sd']:.6f}" for m in METRICS if m != "body_qty_rmse"]
+        lines.append(f"| {r['dataset']} | {r['width']} | " + " | ".join(cells) + " |")
+    lines += ["", "짝지은 차이는 후보 폭 − 기준 폭이며 음수는 개선입니다. 모든 secondary metric도 같은 수량 RMSE-selected checkpoint에서 읽습니다. 고정 채택 기준의 판정은 폭16 기준선을 자동으로 바꾸지 않으며 통계적 유의성이나 학습 원인을 입증하지 않습니다.", "",
+              "| 데이터 | 후보/기준 폭 | 전체 RMSE 평균 차이 | 개선 seed | 가장 불리한 seed 차이 | MAE 차이 | 큰 수량 RMSE 차이 | Time NLL 차이 | 고정 기준 판정 |",
+              "|---|---:|---:|---:|---:|---:|---:|---:|---|"]
+    names = {"joint_improvement": "함께 개선", "tradeoff": "상충 관계", "no_stable_capacity_gain": "안정적 용량 이득 없음", "invalid_or_incomplete": "검증 미완료"}
+    for g in groups:
+        if not g["three_seed_conclusion"]:
+            continue
+        m = g["metrics"]
+        lines.append(f"| {g['dataset']} | {g['candidate_width']}/{g['baseline_width']} | {m['qty_rmse']['mean_delta']:+.6f} | {m['qty_rmse']['improved_seed_count']}/3 | seed{m['qty_rmse']['worst_paired_seed']}: {m['qty_rmse']['worst_paired_seed_delta']:+.6f} | {m['qty_mae']['mean_delta']:+.6f} | {m['tail_qty_rmse']['mean_delta']:+.6f} | {m['time_nll']['mean_delta']:+.6f} | {names[g['category']]} |")
+    if len(proofs) == 18 and not failures:
+        lines += ["", "**검증된 Validation 해석:** 폭16 대비 Taxi 폭8은 전체 RMSE 평균 차이가 작고 개선 seed가1/3이며 시간 NLL 평균이 악화합니다. Intermittent 폭8은 전체·큰 수량 RMSE와 시간 NLL 평균이 개선하지만 MAE가 악화합니다. RAF 폭8·12는 전체 RMSE 평균이 개선해도 시간 NLL이 악화합니다. 세 데이터의 폭12를 모두 포함해도 함께 개선된 후보는 없습니다. 이는 단순 용량 확대가 모든 목적을 함께 해결한다는 근거가 되지 않으며, 다른 구조의 효능·과적합·gradient 충돌을 입증하지 않습니다."]
     lines += ["", "전체 Validation은 같은 모집단의 원래 선택 checkpoint에서 읽었습니다. 큰 수량은 원래 TRAIN 경계 초과(택시3449, Intermittent187, RAF200)입니다. 같은 seed 비교가 paired_validation_deltas.csv에 보존됩니다.", "",
-              "Train은 고정 수량 구간별 표본과 N/n 가중치의 진단입니다. 폭4와 표본 동일성은 fit 자체의 기록으로 확인합니다. 폭16 시간 진단의 다른 표본과는 Train 결과를 섞지 않습니다.", "",
-              "3seed 모두 검증되기 전에는 평균·표본 표준편차나 폭 채택 결론을 만들지 않습니다. 완료 그룹에는 사전에 고정한 전체 RMSE·seed 다수 개선 기준과 MAE·큰 수량·시간 손해를 함께 적용합니다.", "",
+              "Train은 고정 수량 구간별 표본과 N/n 가중치의 진단입니다. 폭4와 표본 동일성은 fit 자체의 기록으로 확인합니다. 표본 지표와 폭4 대비 차이는 train_fixed_sample_metrics.csv에 별도로 보존합니다. 폭16 시간 진단의 다른 표본과는 Train 결과를 섞지 않습니다.", "",
+              "3seed가 모두 검증된 그룹에만 평균·표본 표준편차와 판정을 만들었습니다. 모든 지표의 seed별 차이·개선 수·가장 불리한 차이는 paired_validation_seed_summary.csv에 보존합니다. 큰 수량 MAE도 원본에서 추가 기록하지만 새로운 채택 문턱으로 사용하지 않습니다.", "",
               "재생성 명령(로컬 회수 원본만 사용, 네트워크·학습·Test 열람 없음):", "",
               "```sh", "/usr/local/bin/python3 paper/scripts/compare_titantpp_history_capacity.py", "```", "",
-              f"증적: [이번 snapshot](snapshots/{stamp}/summary.json), [Validation 지표](snapshots/{stamp}/full_validation_metrics.csv), [원본 연결](snapshots/{stamp}/source_bindings.json), [18조건 목록](snapshots/{stamp}/condition_status.csv).", "",
-              "**현재 결과 연결 — 진행 중**", "- 회수·검증된 조건만 비교에 포함하고, 나머지 학습·미회수 상태를 남깁니다.", "",
-              "**3seed 용량 효과 판단 — 다음 작업**", "- 각 데이터에서 폭8·12의 세 seed 원본 검증 후 폭4·16과 평균·표본 표준편차 및 불리한 seed를 비교합니다.", ""]
+              f"증적: [이번 snapshot](snapshots/{stamp}/summary.json), [Validation 지표](snapshots/{stamp}/full_validation_metrics.csv), [3seed 평균·표준편차](snapshots/{stamp}/full_validation_seed_summary.csv), [짝지은 차이와 불리한 seed](snapshots/{stamp}/paired_validation_seed_summary.csv), [원본 연결](snapshots/{stamp}/source_bindings.json), [18조건 목록](snapshots/{stamp}/condition_status.csv).", ""]
+    if previous:
+        lines += [f"이전 [관측 스냅샷]({previous['snapshot']}/README.md)은 그대로 보존했습니다. 이번 생성 시각을 과거 서버 관측·학습 완료 시각으로 대체하지 않았습니다.", ""]
+    if partial_snapshot:
+        lines += [f"완료 전의 [4/18 등 부분 관측 기록]({partial_snapshot}/README.md)도 원문과 SHA를 유지합니다.", ""]
+    completed = len(proofs) == 18 and not failures
+    lines += [f"**현재 결과 연결과 3seed 용량 효과 판단 — {'완료' if completed else '진행 중'}**",
+              f"- Taxi·Intermittent·RAF 폭8·12의 원본 검증 {len(proofs)}/18, 폭4·16의 기존 Validation 연결 18개, 완전한 3seed 비교 {sum(g['three_seed_conclusion'] for g in groups)}/12를 기록했습니다.", "",
+              "**고정 checkpoint의 CPU 재추론 감사를 구분한다 — 다음 작업**",
+              "- 이번 로컬 집계는 원본 파일과 checkpoint binary SHA, 기록된 GPU selected/last replay를 검증했습니다. 독립 CPU 재추론은 수행하지 않았으므로 별도 미완료로 남깁니다.", "",
+              "**후속 설계의 판단 근거를 연결한다 — 다음 작업**",
+              "- 폭16 기준선을 유지하며 전체·큰 수량·시간·seed 안정성의 손해를 CNN·GRU 설계 검토에 전달합니다. Instacart는 후속 실험입니다.", "",
+              "별도로 작성하는 [3데이터의 최종 Validation·Test 비교](/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_three_dataset_final_comparison_20261005_v1/README.md)에 이번 Validation 원본 연결을 전달합니다. 이 보고서 생성에서는 Test 예측·지표·혼합 결과를 열지 않았습니다.", ""]
     report = "\n".join(lines)
-    (dest / "README.md").write_text(report)
+    (dest / "README.md").write_text(report.replace("(snapshots/", "(../../snapshots/"))
     (output / "README.md").write_text(report)
     write_json(output / "latest.json", {"snapshot": str(dest.relative_to(output)), "summary_sha256": sha_file(dest / "summary.json"),
                                          "generated_utc": now.isoformat()})
@@ -428,8 +582,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bundle", type=Path, default=ROOT / "search_artifacts" / NAME)
     parser.add_argument("--output", type=Path, default=OUTPUT)
+    parser.add_argument("--handoff-bundle", type=Path, default=None)
     args = parser.parse_args()
-    summary = generate(args.bundle.resolve(), args.output.resolve())
+    summary = generate(args.bundle.resolve(), args.output.resolve(), args.handoff_bundle.resolve() if args.handoff_bundle else None)
     print(json.dumps({"total": summary["total_conditions"], "status_counts": summary["status_counts"],
                       "report": str(args.output.resolve() / "README.md")}))
 

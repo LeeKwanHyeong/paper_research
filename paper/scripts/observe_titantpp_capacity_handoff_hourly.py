@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
+import re
 import subprocess
 import time
 
@@ -16,6 +17,47 @@ import capacity_handoff_runtime as handoff
 ROOT = Path(__file__).resolve().parents[2]
 B = ROOT / 'search_artifacts' / handoff.NAME
 PARENT = old.B
+
+
+class ObservationCommandError(RuntimeError):
+    def __init__(self, evidence):
+        self.evidence = evidence
+        super().__init__(f"{evidence['category']} (returncode={evidence['returncode']}): "
+                         + evidence['stderr_summary'])
+
+
+def command_failure_evidence(returncode, stderr, *, timed_out=False):
+    """Keep only fixed diagnostic signatures; never copy stderr values or stdout."""
+    if isinstance(stderr, bytes):
+        stderr = stderr.decode('utf-8', errors='replace')
+    stderr = stderr or ''
+    signatures = {
+        'connection_timeout': ('Connection timed out', 'Operation timed out'),
+        'connection_refused': ('Connection refused',),
+        'connection_unreachable': ('No route to host', 'Network is unreachable'),
+        'authentication_failed': ('Permission denied',),
+        'host_key_verification_failed': ('Host key verification failed',),
+        'hostname_resolution_failed': ('Could not resolve hostname',),
+        'json_non_finite_value': ('Out of range float values are not JSON compliant',),
+    }
+    labels = {'connection_timeout': 'Connection timed out',
+              'json_non_finite_value': 'JSON non-finite value'}
+    matches = [code for code, phrases in signatures.items() if any(p in stderr for p in phrases)]
+    exceptions = re.findall(
+        r'^(ValueError|TypeError|KeyError|RuntimeError|FileNotFoundError|PermissionError|'
+        r'JSONDecodeError|ImportError|ModuleNotFoundError|OSError|AssertionError):', stderr, re.MULTILINE)
+    traceback_seen = 'Traceback (most recent call last):' in stderr
+    category = ('observation_timeout' if timed_out else
+                'remote_observer_failed' if traceback_seen else
+                'ssh_connection_failed' if returncode == 255 and any(code != 'json_non_finite_value' for code in matches) else
+                'ssh_or_remote_command_failed' if returncode == 255 else 'remote_command_failed')
+    summary = '; '.join([labels.get(code, signatures[code][0]) for code in matches]
+                        + list(dict.fromkeys(exceptions)))
+    return {'category': category, 'returncode': returncode, 'reason_codes': matches,
+            'remote_traceback_present': traceback_seen, 'stderr_present': bool(stderr),
+            'stderr_summary': summary[:512] or 'No allowlisted stderr signature; raw output suppressed',
+            'stderr_redaction': 'allowlisted_signatures_only', 'stdout_retained': False,
+            'timeout_seconds': 90 if timed_out else None}
 
 
 def target_process_evidence(snapshot, c, host):
@@ -119,8 +161,12 @@ def snapshot_once(host, parent, c, runner=subprocess.run):
         command = shlex.join([spec['python'], spec['root'] + '/control/capacity_handoff_runtime.py', '--bundle', spec['root'], '--mode', 'observe'])
         argv = ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15', host, command]
         kwargs = {}
-    output = runner(argv, text=True, capture_output=True, timeout=90, **kwargs)
-    old.require(output.returncode == 0, 'SSH observation failed; raw output suppressed')
+    try:
+        output = runner(argv, text=True, capture_output=True, timeout=90, **kwargs)
+    except subprocess.TimeoutExpired as error:
+        raise ObservationCommandError(command_failure_evidence(None, error.stderr, timed_out=True)) from None
+    if output.returncode != 0:
+        raise ObservationCommandError(command_failure_evidence(output.returncode, output.stderr))
     return json.loads(output.stdout)
 
 
@@ -145,6 +191,7 @@ def run_once(host, runner=subprocess.run):
     latest = B / 'hourly_monitor' / ('latest_' + host + '.json')
     calls = 0
     snapshot = None
+    observation_error = None
     try:
         parent = old.load_contract(PARENT)
         p, c, meta = handoff.load(B)
@@ -175,8 +222,15 @@ def run_once(host, runner=subprocess.run):
                     'error_type': type(error).__name__, 'issue': str(error), 'rows': [],
                     'status_counts': {'completed': 0, 'failed': 0, 'in_progress': 0, 'pending': 0, 'unknown': 2 if host == '5080' else 4},
                     'server_terminal_verified': False, 'queue_eta_reason': '이번 조회 실패; 과거 결과를 새 관측으로 표시하지 않음'}
+        if isinstance(error, ObservationCommandError):
+            observation_error = error.evidence
+            analysis['observation_error_evidence'] = observation_error
+            old.write(folder / 'observation_error.json', observation_error)
     old.write(folder / 'analysis.json', analysis)
-    (folder / 'report.md').write_text(old.report(analysis))
+    report = old.report(analysis)
+    if observation_error is not None:
+        report += '\n관측 오류: ' + analysis['issue'] + '\n'
+    (folder / 'report.md').write_text(report)
     receipt = {'host': host, 'requested_unix': requested, 'observed_unix': analysis['observed_unix'],
                'SSH_invocations': calls, 'status': analysis.get('status', 'observed'),
                'status_counts': analysis['status_counts'], 'server_terminal_verified': analysis['server_terminal_verified'],
@@ -184,6 +238,9 @@ def run_once(host, runner=subprocess.run):
                'snapshot': str(folder / 'host_snapshot.json') if snapshot is not None else None,
                'snapshot_sha256': hashlib.sha256((folder / 'host_snapshot.json').read_bytes()).hexdigest() if snapshot is not None and (folder / 'host_snapshot.json').exists() else None,
                'analysis': str(folder / 'analysis.json'), 'report': str(folder / 'report.md')}
+    if observation_error is not None:
+        receipt['observation_error'] = str(folder / 'observation_error.json')
+        receipt['observation_error_evidence'] = observation_error
     old.write(latest, receipt)
     print(json.dumps(receipt, ensure_ascii=False))
     return int('error_type' in analysis)

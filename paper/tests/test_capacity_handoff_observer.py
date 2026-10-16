@@ -2,6 +2,7 @@ from copy import deepcopy
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
 import sys
 
 import pytest
@@ -93,3 +94,120 @@ def test_unrelated_failure_is_not_expected_handoff_boundary(monkeypatch):
     raw['files']['failure.json'].update(type='FileExistsError', active_job=first,
         message='File exists: ' + parent['hosts']['5090']['root'] + '/claims/' + first['id'] + '.json')
     assert observer.analyse_source(raw, parent, c, q)['approved_handoff_boundary_verified'] is True
+
+
+@pytest.mark.parametrize(('returncode', 'stderr', 'category', 'summary'), [
+    (255, 'ssh: connect to host private-host port 22: Connection timed out',
+     'ssh_connection_failed', 'Connection timed out'),
+    (255, 'ssh: connect to host 100.118.62.81 port 22: Operation timed out',
+     'ssh_connection_failed', 'Connection timed out'),
+    (1, 'Traceback (most recent call last):\nValueError: Out of range float values are not JSON compliant: NaN',
+     'remote_observer_failed', 'JSON non-finite value'),
+    (255, 'Traceback (most recent call last):\nRuntimeError: hidden detail',
+     'remote_observer_failed', 'RuntimeError'),
+    (255, 'unrecognized private error', 'ssh_or_remote_command_failed', 'No allowlisted'),
+])
+def test_failed_snapshot_retains_safe_diagnostics(returncode, stderr, category, summary):
+    parent, c = contracts()
+    calls = []
+    secret = 'DO_NOT_PERSIST_CREDENTIAL'
+
+    def runner(*args, **kwargs):
+        calls.append((args, kwargs))
+        return subprocess.CompletedProcess(args[0], returncode, secret,
+            stderr + '\nAuthorization: Bearer ' + secret + '\npassword=' + secret + '\n' + 'x' * 10000)
+
+    with pytest.raises(observer.ObservationCommandError) as error:
+        observer.snapshot_once('5080', parent, c, runner)
+    evidence = error.value.evidence
+    assert len(calls) == 1
+    assert evidence['returncode'] == returncode
+    assert evidence['category'] == category
+    assert summary in evidence['stderr_summary']
+    assert len(evidence['stderr_summary']) <= 512
+    assert secret not in json.dumps(evidence) + str(error.value)
+    assert 'private-host' not in json.dumps(evidence)
+    assert '100.118.62.81' not in json.dumps(evidence)
+
+
+def test_snapshot_timeout_does_not_expose_command_or_partial_output():
+    parent, c = contracts()
+    secret = 'TIMEOUT_SECRET'
+    calls = []
+
+    def runner(*args, **kwargs):
+        calls.append(args)
+        raise subprocess.TimeoutExpired(['ssh', secret], 90, output=secret.encode(),
+                                        stderr=('Permission denied: ' + secret).encode())
+
+    with pytest.raises(observer.ObservationCommandError) as error:
+        observer.snapshot_once('5080', parent, c, runner)
+    assert len(calls) == 1
+    assert error.value.evidence['category'] == 'observation_timeout'
+    assert error.value.evidence['returncode'] is None
+    assert error.value.evidence['timeout_seconds'] == 90
+    assert secret not in json.dumps(error.value.evidence) + str(error.value)
+
+
+def test_run_once_persists_failure_evidence_without_training_failure(tmp_path, monkeypatch, capsys):
+    parent, c = contracts()
+    monkeypatch.setattr(observer, 'B', tmp_path)
+    monkeypatch.setattr(observer.old, 'load_contract', lambda *args: parent)
+    monkeypatch.setattr(observer.handoff, 'load', lambda *args: (parent, c, {}))
+    monkeypatch.setattr(observer.handoff, 'verify_native', lambda *args: {})
+    monkeypatch.setattr(observer.handoff, 'validate_reservation', lambda *args: None)
+    (tmp_path / 'source_reservation.json').write_text('{}')
+    calls = []
+
+    def runner(*args, **kwargs):
+        calls.append(args)
+        return subprocess.CompletedProcess(args[0], 255, 'STDOUT_SECRET',
+                                           'Permission denied (publickey). token=STDERR_SECRET')
+
+    assert observer.run_once('5080', runner) == 1
+    assert len(calls) == 1
+    receipt = json.loads((tmp_path / 'hourly_monitor/latest_5080.json').read_text())
+    analysis = json.loads(Path(receipt['analysis']).read_text())
+    evidence = json.loads(Path(receipt['observation_error']).read_text())
+    assert receipt['observation_error_evidence'] == analysis['observation_error_evidence'] == evidence
+    assert receipt['SSH_invocations'] == 1
+    assert receipt['observed_unix'] is None and receipt['snapshot'] is None
+    assert receipt['status_counts']['failed'] == 0 and receipt['status_counts']['unknown'] == 2
+    assert receipt['status'] == 'observation_failed_not_training_failure'
+    assert receipt['server_terminal_verified'] is False
+    persisted = ''.join(p.read_text() for p in tmp_path.rglob('*') if p.is_file()) + capsys.readouterr().out
+    assert 'STDOUT_SECRET' not in persisted and 'STDERR_SECRET' not in persisted
+    assert 'Permission denied' in Path(receipt['report']).read_text()
+
+
+@pytest.mark.parametrize('host', ['5080', '5090'])
+def test_successful_snapshot_is_unchanged_and_uses_one_ssh(host):
+    parent, c = contracts()
+    snapshot = {'host': host, 'observed_unix': 1791110400}
+    calls = []
+
+    def runner(*args, **kwargs):
+        calls.append((args, kwargs))
+        return subprocess.CompletedProcess(args[0], 0, json.dumps(snapshot), '')
+
+    assert observer.snapshot_once(host, parent, c, runner) == snapshot
+    assert len(calls) == 1
+
+
+def test_terminal_cache_preserves_original_time_and_validates_sha(tmp_path):
+    snapshot = tmp_path / 'host_snapshot.json'
+    raw = {'observed_unix': 1791110400}
+    snapshot.write_text(json.dumps(raw))
+    receipt = tmp_path / 'latest_5080.json'
+    receipt.write_text(json.dumps({'server_terminal_verified': True, 'snapshot': str(snapshot),
+        'snapshot_sha256': observer.hashlib.sha256(snapshot.read_bytes()).hexdigest()}))
+
+    def analyser(value):
+        return dict(value, server_terminal_verified=True)
+
+    recovered, analysis = observer.cached_terminal(receipt, analyser)
+    assert recovered == raw and analysis['observed_unix'] == raw['observed_unix']
+    assert analysis['reused_terminal_evidence'] is True
+    snapshot.write_text(json.dumps({'observed_unix': 1791110401}))
+    with pytest.raises(ValueError, match='Terminal cache SHA changed'):
+        observer.cached_terminal(receipt, analyser)
