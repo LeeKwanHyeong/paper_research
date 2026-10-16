@@ -1,5 +1,8 @@
 # TitanTPP 연구 코드와 재현성 인덱스
 
+> 아래 기준선·진행 상태는 2026-10-04의 역사적 기록이다. 현재 코드 탐색과 로컬 점검은
+> [저장소 작업 안내](../../DEVELOPMENT.md)를, 개별 실험의 종료 여부는 해당 최신 receipt를 따른다.
+
 이 문서는 2026-10-04의 후속 연구 상태와 사용자 결정을 연결한다. 루트 README의 v0.7은
 `567196e5`의 별도 validation freeze이며, 이후 MLP·관측 시간 likelihood·raw
 quantity RMSE checkpoint 선택·기존 test 재평가와 동일한 실험이 아니다.

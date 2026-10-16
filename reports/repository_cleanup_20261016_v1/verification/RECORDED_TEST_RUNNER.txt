@@ -1,0 +1,21 @@
+import json, os, subprocess, sys, time
+from pathlib import Path
+work=Path(__file__).resolve().parent
+tests=json.loads((work/'tests.json').read_text())
+env=dict(os.environ, PYTHONDONTWRITEBYTECODE='1', CUDA_VISIBLE_DEVICES='', OMP_NUM_THREADS='1', MKL_NUM_THREADS='1', MPLCONFIGDIR=str(work/'mpl'), PYTEST_DISABLE_PLUGIN_AUTOLOAD='1', PYTHONPATH=str(work/'guard')+os.pathsep+str(Path.cwd()))
+results=[]
+for i, path in enumerate(tests,1):
+    start=time.monotonic()
+    log=work/('%02d-%s.log' % (i,Path(path).stem))
+    with log.open('wb') as output:
+        try:
+            proc=subprocess.run([sys.executable,'-B','-m','pytest','-q','-p','no:cacheprovider',path],env=env,stdout=output,stderr=subprocess.STDOUT,timeout=180)
+            code=proc.returncode
+        except subprocess.TimeoutExpired:
+            code='timeout'
+    row=dict(path=path,exit_code=code,elapsed_seconds=round(time.monotonic()-start,3),log=log.name)
+    results.append(row)
+    (work/'results.json').write_text(json.dumps(results,indent=2)+'\n')
+    print(json.dumps(row),flush=True)
+print('DONE',len(results),flush=True)
+sys.exit(int(any(r['exit_code'] != 0 for r in results)))
