@@ -1,0 +1,23 @@
+{
+  "schema": "raf_cnn_external_stored_prediction_audit_v1",
+  "status": "fixed_before_full_pairwise_analysis",
+  "scope": "RAF saved Train/Validation only; zero inference, training, remote calls, Test payload reads, baseline mutation or automation changes",
+  "models": ["titantpp_cnn_gru54_cnn_only", "rmtpp", "s2p2_matched_head", "nhp", "thp", "sahp", "attnhp_matched_head"],
+  "primary_external_comparators": ["s2p2_matched_head", "rmtpp"],
+  "selection_basis": "Previously reported Validation metric-specific frontiers; also report all six external models, no selection on this new analysis or Test",
+  "seeds": [42, 52, 62],
+  "splits": ["train", "validation"],
+  "expected_counts": {"train": 25779, "validation": 6690},
+  "pairing": "Exact target_id/entity/seq/date/truth/gap/observed history; identical target order across models and seeds; retain all rows",
+  "provenance": "Verify execution receipt -> split worker/receipt -> prediction manifest -> shards; unchanged model state; original validation checkpoint and source/input/runtime bindings; hash before and after",
+  "history_input": "Only pure Train/Validation parquet d805cad0242078fedfbb87eed18bde9b73d37bfc9b93c6b75aac49087244efa2; mirror frozen84 context without importing model/loader",
+  "primary_difference": "CNN loss minus external loss; positive means external better. AE and SE ordering for the same row must agree. Differences of aggregate MAE/RMSE need not agree.",
+  "metrics": ["whole raw quantity RMSE", "whole raw quantity MAE", "q>200 RMSE", "q>200 MAE", "whole recorded positive-integer TimeNLL", "q>200 recorded positive-integer TimeNLL"],
+  "error_localization": ["win/tie/loss and all-three-seed stable winners", "gross positive and negative AE/SE contributions", "top1percent positive-loss contribution (descriptive only)", "Train CNN pooled-seed AE90 fixed cutoff: both high/CNN only high/external only high/neither", "fixed target quantity bins2,30,60,200 (descriptive, unavailable at prediction time)"],
+  "history_conditions": "Reuse previous fixed15 pattern/magnitude cells (PLAN0708d991be70c3792af95e6266005de2c9cea14d6851fc5aaa731351727ed8b3), plus observed history length1-2/3-10/>10, Train quartiles of last observed quantity and history CV, and last quantity versus history mean sign. Quartile ties retain original inequalities. Report every cell, not only favorable cells.",
+  "weights": "Report row weights and common-entity-equal weights per cell across Train/Validation. Each retained entity total mass1. No exact history matching or false claim that joint distributions are controlled.",
+  "minimum_support_for_signal": {"rows_each_split": 100, "common_entities": 30},
+  "descriptive_signal": "For a primary comparator, a history-only cell has positive CNN-minus-external AE and SE in both splits, all3 seeds, both weighting schemes, and minimum support. Passing localizes a reproducible descriptive deficit; it does not prove a backbone cause or authorize new training.",
+  "decision": "Recommend a new backbone experiment only if the deficit links to a specific information-processing limitation, distinguishes a new mechanism/control from prior work, and makes a falsifiable prediction. Otherwise stop automatic structural search. Do not manufacture a model from a favorable subgroup.",
+  "limitations": ["Validation already used in earlier development", "Repeated targets across seeds are not new independent samples", "Train fit is descriptive, not generalization", "Model-source/optimization/capacity differences may explain predictions; saved errors cannot identify causation", "No p-values or statistical significance claims", "No oracle routing presented as a deployable model"]
+}

@@ -1,0 +1,96 @@
+{
+  "status": "PASS",
+  "scope": "Independent operations tests, code review and frozen design boundary review; exporter/comparator scientific tests remain separate",
+  "reviewed_at_utc": "2026-10-15T21:20:43.373569+00:00",
+  "actual_exit0": true,
+  "actual_exit_code": 0,
+  "passed": 43,
+  "failed": 0,
+  "actual_test_seconds": 14.132,
+  "source_before": {
+    "paper/scripts/prepare_titantpp_key_content_probe.py": "50a09316be9199f72dac1b5704ea9c5846bde08ac1b5771146ffae1695abe38b",
+    "paper/scripts/advance_titantpp_key_content_probe.py": "ffc6d976db1cc9146a8713f86dcf8ccc2ff2b14165c2aa5f856be6144abd32e2",
+    "paper/scripts/titantpp_key_content_probe_runtime.py": "3aaa6f7484954b49c3a03edaa9e38def3c0aaf27468c3818add6aee41dc58d79",
+    "paper/tests/test_titantpp_key_content_probe_ops.py": "c01b46aa5eb2de354d8c1969f252db1b14c72f9d5eb18a672bad150506af4601"
+  },
+  "source_after": {
+    "paper/scripts/prepare_titantpp_key_content_probe.py": "50a09316be9199f72dac1b5704ea9c5846bde08ac1b5771146ffae1695abe38b",
+    "paper/scripts/advance_titantpp_key_content_probe.py": "ffc6d976db1cc9146a8713f86dcf8ccc2ff2b14165c2aa5f856be6144abd32e2",
+    "paper/scripts/titantpp_key_content_probe_runtime.py": "3aaa6f7484954b49c3a03edaa9e38def3c0aaf27468c3818add6aee41dc58d79",
+    "paper/tests/test_titantpp_key_content_probe_ops.py": "c01b46aa5eb2de354d8c1969f252db1b14c72f9d5eb18a672bad150506af4601"
+  },
+  "source_unchanged": true,
+  "evidence_files": {
+    "reports/titantpp_backbone_key_content_probe_20261016_v1/SCIENCE_SPEC.json": "f8ce822618bc0dcbacda3512215a9e368afb054a26466616cca1089b12d18678",
+    "reports/titantpp_backbone_key_content_probe_20261016_v1/NEXT_MECHANISM_ACCEPTANCE.json": "6520d428c1cd3c4ac4f211c2c4e89a6b5b570d4efe22cf4c64ff73a948771d2e",
+    "reports/titantpp_backbone_key_content_probe_20261016_v1/EXPERIMENT_PLAN.md": "e467a7ccdaa1c4f5fdb930b37d8af4424b4596cd393f3defea2a04da2fa6c44b",
+    "reports/titantpp_backbone_key_content_probe_20261016_v1/SCHEDULER.md": "9ebd36ec8de0b35fb1487f55b8b16b0bf49406ee5ea257c02ab53c1155040bc4",
+    "reports/titantpp_backbone_key_content_probe_20261016_v1/qa_ops_v1/receipt.json": "1e3620e7ca5cea873c9c1d54fb1171304a7bf6fe67acc9bf03ba1fd1f93a0039",
+    "reports/titantpp_backbone_key_content_probe_20261016_v1/qa_ops_v1/stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "reports/titantpp_backbone_key_content_probe_20261016_v1/qa_ops_v1/stderr.txt": "28f544d67c2d1ec5985e839b2322ea260a4e86a4ca23942e08a91d195e06615c",
+    "reports/titantpp_backbone_key_content_probe_20261016_v1/qa_ops_v2/receipt.json": "f0f45071551a0b3f9ffa00b3b9eb56e960629d15dd70e6f59b0c94abacc4108e",
+    "reports/titantpp_backbone_key_content_probe_20261016_v1/qa_ops_v2/stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "reports/titantpp_backbone_key_content_probe_20261016_v1/qa_ops_v2/stderr.txt": "f47ce5bfd818be828329b046e888fac795229be54b5fd6abc5e79f0bc82d70d2"
+  },
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "resolved_review_items": [
+    {
+      "item": "Collector must bind stored Train predictive state to fresh stages",
+      "resolution": "Root added direct stored predictive_state equality against new stage initial_states; independent regression rejects drift."
+    },
+    {
+      "item": "None rowwise_replay rejected by AttributeError rather than explicit validation",
+      "resolution": "Root added dictionary type guard; malformed replay remains fail-closed."
+    }
+  ],
+  "preserved_initial_test_failures": {
+    "path": "qa_ops_v1",
+    "actual_exit_code": 1,
+    "test_count": 36,
+    "error_count": 14,
+    "description": "13 mock signature incompatibilities with added reference_root argument and one narrow exception-type expectation; preserved unchanged. Fixed only new tests; final source explicitly rejects malformed replay."
+  },
+  "acceptance_criteria": {
+    "KeyOnly3_only_epochs9_5_26": true,
+    "parent_source145_bytes_verified": true,
+    "new_on_train_forbidden_reused3": true,
+    "new_onValidation_all3_before_any_off": true,
+    "stored_train_gate_before_both_off_stages": true,
+    "stored_reference_parent_and_predictive_state_binding": true,
+    "stages_qualification_onValidation_offTrain_offValidation": true,
+    "fresh_native_worker12_data9_owner13": true,
+    "max3_owned_children": true,
+    "no_trial_multipliers_or_history_kernel_deletion": true,
+    "content_intervention_receipt_fields_required": true,
+    "parameters_buffers_context_invariance_guards": true,
+    "exclusive_attempt_no_retry_and_owned_timeout_cleanup": true,
+    "archive_and_manifest_integrity_empty_or_forged_cache_rejection": true,
+    "raw_stdout_stderr_exit_preserved": true,
+    "original_and_parent_sources_not_modified": true
+  },
+  "scientific_design_limits": [
+    "Preserves available latent K coefficient sum and constant response, not actual K norm/direction or attention allocation.",
+    "Original w0 parameter is unchanged but effective current coefficient includes available past coefficients.",
+    "Only fixed selected weights sensitivity; no inference about retrained architecture, broad generalization or unique causal decomposition.",
+    "Frozen15 conditions, Train-only cuts and equal-entity support remain fixed; different common-entity estimands are not additive."
+  ],
+  "validation_limits": [
+    "Local fabricated-process fixture uses isolated scientific-worker mocks; exporter and comparator final independent testing is separate.",
+    "No actual prepare, remote, training or research inference performed by this reviewer.",
+    "Recorded parent completion proves historical completion only, not current GPU idle.",
+    "Supervisor own OS exit must remain distinct from observed child exits."
+  ],
+  "files_changed": [
+    "paper/tests/test_titantpp_key_content_probe_ops.py"
+  ],
+  "remote_calls": 0,
+  "actual_prepare": false,
+  "actual_training": false,
+  "actual_research_inference": false,
+  "next_step": "Independent exporter/comparator review then root-controlled final seal/readiness/native entry."
+}

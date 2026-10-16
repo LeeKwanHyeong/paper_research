@@ -1,0 +1,18 @@
+paper_research의 A100 원본 보존과 5080·5090 수동 재개를 매시간 읽기 전용으로 확인한다. 사용자가 매시간 GPU 상태 보고를 요청했고 2026-10-05 “진행하자”로 A100 원본 회수·검증 후 미완료 조건의 RTX 재개를 승인했다. 실제 KST 관측시각과 서버별 완료/실패/진행/대기/미확정 수, 조건·seed·저장/best epoch·조건부 ETA를 짧은 한국어 표로 보고한다.
+
+프로젝트 /Users/igwanhyeong/PycharmProjects/paper_research에서 TEST_SESSION_PROTOCOL.md 0·1·9·12, reports/titantpp_three_gpu_hourly_monitor_20261004_v1/SCHEDULER.md와 search_artifacts/titantpp_cnn_gru_resume_dual_20261005_v1의 README/current.json, current.host_contracts가 지정한 서버별 execution contract, approval/start/training permit, qualification receipt, recovery_inventory.json과 hourly_monitor/latest를 먼저 읽는다. 5080 운영 SHA6581c156867c7ad1b317d1af6fb3dfffc29bcf55def953f6264ff6b2de4f6a02,5090 전용환경 운영 SHA6b85d3ea3b5b096653e2d5ba2ffbf35ceeefd5c58f3fe1699c0be29ae9eaf5fb이다. 부모46a0eb48d5207df800553f5d3508016ce9063d1dec9be2c5e84bfa87a1b1fdae,동결117소스40184c7ff418f35b191ebfa309e462b9e88889443f36e4722cc5d06988d182cd와worker4 7d961867f612f86e1b78346630764d7624472532f596aba133a3bf3d24da2f26는보존한다. current/root/GPU/계약이달라지면과거대상에접속하지않고변경이유를확인한다.
+
+원래A1009조건중7조건은원본terminal scientific_success·소형SHA·selected/last fullValidation이검증됐다. Taxi CNN+GRU54는166/best126으로완료되어재학습하지않는다. 원본428개와archiveSHA회수후소유Pod okbl76hxfr7a9d는정지·삭제와provider목록부재확인완료다. A100 SSH/provider/manager와과거campaign을다시관측하지않는다. 회수SHA/cleanup/cost_estimate 증거를재사용한다. 보수비용약$25.82는청구서나계정잔액차이가아니다.
+
+현재미완료2조건은5080 Intermittent GRU54 seed42 원본24/best10 다음25epoch,5090 Intermittent CNN+GRU54 seed42 원본12/best12 다음13epoch다. 두GPU의native초기화·결정성·인과성·메모리와source selected/last Validation검증이통과했고permit/supervisor를배치했다. 5090은새전용runtime_env NumPy2.4.4를사용하며공용ai_env는그대로다. 새remote roots는 /home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_cnn_gru_resume_dual_20261005_v1_5080 및동일이름_5090이다. GPU UUID는5080 GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6,5090 GPU-c9adc246-ef66-7906-bc07-6e152fa9952f다. 기존epoch/patience/min40/max300/손실/선택과optimizer·RNG·sampler·완료exposure/timingprefix를이어쓴다. 서버당worker1,수동1회,자동retry없음,조건36h·전체168h의native timeout을유지한다.
+
+회차당프로젝트root에서아래두명령을독립적으로각각한번만실행한다. 한서버조회실패가다른서버를막지않게한다. 필요한읽기전용네트워크권한사용가능.
+/usr/local/bin/python3 paper/scripts/observe_titantpp_cnn_gru_resume_hourly.py --host 5080
+/usr/local/bin/python3 paper/scripts/observe_titantpp_cnn_gru_resume_hourly.py --host 5090
+별도SSH/observer/polling/qualification/replay/학습/resume/retry/manager/임대/프로세스종료/claim삭제를추가하지않는다. source/Runtime/data/loss/선택/예산/인증정보도변경하지않는다. 실제supervisor/worker argv·PID,GPUUUID·PID,source continuation,checkpoint receipt/history/exposure/timing/실제저장epoch를대조한다. 소유PID부재·불일치는미확정/사용자조치로보고하고재시작하지않는다. 첫새RTXcheckpoint저장전은그사실을분리해알리고과거A100저장을새진척으로표시하지않는다. SSH실패는조회실패이고학습실패가아니다.
+
+최초최소fullValidation raw수량RMSE epoch의RMSE/MAE/TimeNLL을같은epoch에서best-so-far로보고한다. Train큰수량경계Intermittent187초과,Taxi3449/RAF200은원본참조다. Test·예측·Validation/Test혼합파일을읽지않는다. 단일seed·이종GPU 탐색이며3seed/논문효율결론으로쓰지않는다. ETA는source_epoch이후해당RTX fit에서완료한최근최대10epoch중앙값만사용한다. best미갱신/현속도유지시min(300,max(40,best+40))와300epoch시나리오를별도로알린다. 첫새완료epoch없으면ETA미확정이며A100속도를복사하지않는다. 마감은ETA가아니고endpoint replay/회수/CPU감사시간은별도다.
+
+과거폭8/12의18조건과Intermittent6 Validation gate·Test는이미완료된현재기준선이다. reports/titantpp_three_dataset_final_comparison_20261005_v1와보존receipt를참조하고이전capacity관측기·finalizeTest·새평가를실행하지않는다. Instacart는후속이며이번CNN/GRU Test는승인범위밖이다.
+
+두재개조건이terminal scientific_success·소형기록SHA·selected/last fullValidation·실제서버종료증거까지검증돼야완료로집계한다. original7+resume2를canonicalID마다한번집계하며실패/미시작/불리한결과를보존한다. 종료서버는terminalcache로반복SSH를끝내고원래실제시각을유지한다. 새로운RTX checkpoint 원본manifest/SHA회수는학습완료와별도확인이다. 새원본회수·두서버terminal·기존A100원본/비용/삭제목록부재·기존IntermittentTest완료가모두확인된뒤최종관측보고후이통합자동화만삭제한다. 상태/회수/종료미확정이면유지한다. CPUbinary재추론감사는별도미완료로표시하고전체연구감사완료로표현하지않는다. 다른자동화/PAUSEDmonitor/Pod/서버작업/chatarchive상태를변경하지않는다.

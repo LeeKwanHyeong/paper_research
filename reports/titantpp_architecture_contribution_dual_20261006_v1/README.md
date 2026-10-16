@@ -1,5 +1,9 @@
 # TitanTPP 구조 기여 대조: 세 데이터 × 3seed × 여섯 구조
 
+## 2026-10-07 소유권 이관
+
+원래5080 Taxi·RAF36조건의 완료 증거는 보존한다. 사용자 승인으로 미시작 Intermittent seed62 여섯 구조만 새5080 root로 이관했다. 원래5090에는 seed42/52의12조건을 유지한다. 현재 관측 명령·배타예약·원본회수 계약은 [이관 보고서](../titantpp_architecture_capacity_handoff_20261006_v1/README.md)와 [이관 scheduler](../titantpp_architecture_capacity_handoff_20261006_v1/SCHEDULER.md)를 적용한다. 본문의 이전 배치·명령은 보존 이력이며 현 자동화 대상으로 다시 실행하지 않는다. 부모 계약·과학 소스·기존 절대 마감은 변경하지 않았다.
+
 ## 목적과 승인
 
 수량 우위를 주요 목표로 두고 시간 성능 손해를 반드시 함께 보고한다. 사용자는

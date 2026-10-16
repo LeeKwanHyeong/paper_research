@@ -1,0 +1,447 @@
+{
+  "aggregate": {
+    "CNN": {
+      "Large_MAE": {
+        "mean": 283.55541314919793,
+        "sample_sd": 3.016482394532114
+      },
+      "Large_RMSE": {
+        "mean": 330.7575986718216,
+        "sample_sd": 2.5539999843151633
+      },
+      "Large_TimeNLL": {
+        "mean": 3.363184196299083,
+        "sample_sd": 0.16836316725337303
+      },
+      "MAE": {
+        "mean": 9.218271236747547,
+        "sample_sd": 0.028001938985035457
+      },
+      "RMSE": {
+        "mean": 34.43140831691986,
+        "sample_sd": 0.0732010654996562
+      },
+      "TimeNLL": {
+        "mean": 3.497460184563737,
+        "sample_sd": 0.1389917959624318
+      }
+    },
+    "KeyOnly": {
+      "Large_MAE": {
+        "mean": 280.5996590280533,
+        "sample_sd": 3.799704961126962
+      },
+      "Large_RMSE": {
+        "mean": 327.48648341645884,
+        "sample_sd": 3.602740849654421
+      },
+      "Large_TimeNLL": {
+        "mean": 3.411614749374181,
+        "sample_sd": 0.12460484713097093
+      },
+      "MAE": {
+        "mean": 9.254291443983357,
+        "sample_sd": 0.037255726514274036
+      },
+      "RMSE": {
+        "mean": 34.312623108684356,
+        "sample_sd": 0.0666694959669596
+      },
+      "TimeNLL": {
+        "mean": 3.552156358832066,
+        "sample_sd": 0.09810210237682952
+      }
+    },
+    "QueryOnly": {
+      "Large_MAE": {
+        "mean": 281.3915977549553,
+        "sample_sd": 6.418648347390093
+      },
+      "Large_RMSE": {
+        "mean": 328.98970334963246,
+        "sample_sd": 5.278041899937018
+      },
+      "Large_TimeNLL": {
+        "mean": 3.293440387867663,
+        "sample_sd": 0.014105918732498406
+      },
+      "MAE": {
+        "mean": 9.23319913147692,
+        "sample_sd": 0.032437944474924464
+      },
+      "RMSE": {
+        "mean": 34.476366115494926,
+        "sample_sd": 0.10205677726693044
+      },
+      "TimeNLL": {
+        "mean": 3.417647697013908,
+        "sample_sd": 0.03843766743071193
+      }
+    }
+  },
+  "baseline_reference_count": 3,
+  "comparison_runtime_limitation": "QueryOnly/KeyOnly candidates use5090/cuDNN92000; historical CNN3 uses5080/cuDNN91900. This runtime difference is not removed by retraining the baseline.",
+  "constraint_limitation": "QueryOnly and KeyOnly each retain192 local coefficients; their comparison tests location at equal capacity. Historical CNN576/QKOnly384 differences include reduced capacity and joint optimization. Query filtering also changes memory-key scores; not memory-independent or causal proof.",
+  "dataset": "raf_spare_parts",
+  "held_out_test_evaluated": false,
+  "interpretation": "Post-Test-informed exploratory follow-up; not independent generalization or causal proof.",
+  "new_fit_count": 6,
+  "primary_contrast": "KeyOnly−QueryOnly: equal192-coefficient location contrast; candidate−storedCNN includes576 to192 reduction and Runtime difference. Q local filtering also changes memory attention scores; no memory-independent causal claim.",
+  "rows": [
+    {
+      "Large_MAE": 283.0381588172913,
+      "Large_RMSE": 330.71090336840933,
+      "Large_TimeNLL": 3.556554896696149,
+      "MAE": 9.23111022291162,
+      "RMSE": 34.420452618672016,
+      "TimeNLL": 3.645686557273062,
+      "arm": "CNN",
+      "best_epoch": 9,
+      "seed": 42
+    },
+    {
+      "Large_MAE": 280.83100461244584,
+      "Large_RMSE": 328.2272665116951,
+      "Large_TimeNLL": 3.2838765691547476,
+      "MAE": 9.18615195937399,
+      "RMSE": 34.36430259009707,
+      "TimeNLL": 3.476642646905188,
+      "arm": "CNN",
+      "best_epoch": 5,
+      "seed": 52
+    },
+    {
+      "Large_MAE": 286.7970760178566,
+      "Large_RMSE": 333.3346261353603,
+      "Large_TimeNLL": 3.249121123046353,
+      "MAE": 9.237551527957033,
+      "RMSE": 34.509469741990486,
+      "TimeNLL": 3.3700513495129614,
+      "arm": "CNN",
+      "best_epoch": 8,
+      "seed": 62
+    },
+    {
+      "Large_MAE": 288.48622490406035,
+      "Large_RMSE": 334.9531087378827,
+      "Large_TimeNLL": 3.3060880917787414,
+      "MAE": 9.198868833929968,
+      "RMSE": 34.49438002410358,
+      "TimeNLL": 3.4033511309415356,
+      "arm": "QueryOnly",
+      "best_epoch": 5,
+      "seed": 42
+    },
+    {
+      "Large_MAE": 279.7013640975952,
+      "Large_RMSE": 327.0970706390399,
+      "Large_TimeNLL": 3.278228137146254,
+      "MAE": 9.237391491633003,
+      "RMSE": 34.366501786107804,
+      "TimeNLL": 3.4611849952389906,
+      "arm": "QueryOnly",
+      "best_epoch": 5,
+      "seed": 52
+    },
+    {
+      "Large_MAE": 275.9872042632103,
+      "Large_RMSE": 324.91893067197475,
+      "Large_TimeNLL": 3.2960049346779936,
+      "MAE": 9.26333706886779,
+      "RMSE": 34.56821653627339,
+      "TimeNLL": 3.388406964861198,
+      "arm": "QueryOnly",
+      "best_epoch": 22,
+      "seed": 62
+    },
+    {
+      "Large_MAE": 283.15469835281374,
+      "Large_RMSE": 330.2462049593718,
+      "Large_TimeNLL": 3.461457614980391,
+      "MAE": 9.211638425818473,
+      "RMSE": 34.355588582640685,
+      "TimeNLL": 3.5356317617326836,
+      "arm": "KeyOnly",
+      "best_epoch": 9,
+      "seed": 42
+    },
+    {
+      "Large_MAE": 276.23319321393967,
+      "Large_RMSE": 323.4107564791931,
+      "Large_TimeNLL": 3.2698039052043764,
+      "MAE": 9.270767263509054,
+      "RMSE": 34.23582041393082,
+      "TimeNLL": 3.4633659615985835,
+      "arm": "KeyOnly",
+      "best_epoch": 5,
+      "seed": 52
+    },
+    {
+      "Large_MAE": 282.4110855174065,
+      "Large_RMSE": 328.8024888108116,
+      "Large_TimeNLL": 3.5035827279377765,
+      "MAE": 9.280468642622544,
+      "RMSE": 34.34646032948157,
+      "TimeNLL": 3.6574713531649308,
+      "arm": "KeyOnly",
+      "best_epoch": 26,
+      "seed": 62
+    }
+  ],
+  "seed_count": 3,
+  "seed_differences": [
+    {
+      "Large_MAE": {
+        "absolute": 5.4480660867690744,
+        "relative_percent": 1.9248521505137217
+      },
+      "Large_RMSE": {
+        "absolute": 4.242205369473368,
+        "relative_percent": 1.2827534037326809
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.2504668049174077,
+        "relative_percent": -7.0423995184238
+      },
+      "MAE": {
+        "absolute": -0.032241388981653074,
+        "relative_percent": -0.3492688116932016
+      },
+      "RMSE": {
+        "absolute": 0.07392740543156151,
+        "relative_percent": 0.2147775517381146
+      },
+      "TimeNLL": {
+        "absolute": -0.24233542633152627,
+        "relative_percent": -6.64718215689916
+      },
+      "contrast": "QueryOnly−CNN",
+      "seed": 42
+    },
+    {
+      "Large_MAE": {
+        "absolute": 0.11653953552246321,
+        "relative_percent": 0.04117449605008652
+      },
+      "Large_RMSE": {
+        "absolute": -0.4646984090375099,
+        "relative_percent": -0.14051499491077848
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.09509728171575826,
+        "relative_percent": -2.673859520742913
+      },
+      "MAE": {
+        "absolute": -0.01947179709314817,
+        "relative_percent": -0.21093667633627813
+      },
+      "RMSE": {
+        "absolute": -0.06486403603133084,
+        "relative_percent": -0.18844620304656928
+      },
+      "TimeNLL": {
+        "absolute": -0.11005479554037834,
+        "relative_percent": -3.0187673518125555
+      },
+      "contrast": "KeyOnly−CNN",
+      "seed": 42
+    },
+    {
+      "Large_MAE": {
+        "absolute": -5.331526551246611,
+        "relative_percent": -1.8481043776075188
+      },
+      "Large_RMSE": {
+        "absolute": -4.706903778510878,
+        "relative_percent": -1.4052426013440174
+      },
+      "Large_TimeNLL": {
+        "absolute": 0.15536952320164943,
+        "relative_percent": 4.699497378427613
+      },
+      "MAE": {
+        "absolute": 0.012769591888504905,
+        "relative_percent": 0.13881697977260365
+      },
+      "RMSE": {
+        "absolute": -0.13879144146289235,
+        "relative_percent": -0.4023595767365852
+      },
+      "TimeNLL": {
+        "absolute": 0.13228063079114794,
+        "relative_percent": 3.8867758777082915
+      },
+      "contrast": "KeyOnly−QueryOnly",
+      "seed": 42
+    },
+    {
+      "Large_MAE": {
+        "absolute": -1.129640514850621,
+        "relative_percent": -0.4022492161823637
+      },
+      "Large_RMSE": {
+        "absolute": -1.1301958726552357,
+        "relative_percent": -0.344333328753163
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.005648432008493742,
+        "relative_percent": -0.17200500352385714
+      },
+      "MAE": {
+        "absolute": 0.05123953225901268,
+        "relative_percent": 0.5577910368304477
+      },
+      "RMSE": {
+        "absolute": 0.0021991960107357045,
+        "relative_percent": 0.006399652677279875
+      },
+      "TimeNLL": {
+        "absolute": -0.015457651666197503,
+        "relative_percent": -0.44461433733942946
+      },
+      "contrast": "QueryOnly−CNN",
+      "seed": 52
+    },
+    {
+      "Large_MAE": {
+        "absolute": -4.597811398506167,
+        "relative_percent": -1.6372164479670852
+      },
+      "Large_RMSE": {
+        "absolute": -4.816510032502038,
+        "relative_percent": -1.4674314183859614
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.014072663950371211,
+        "relative_percent": -0.42853815160273945
+      },
+      "MAE": {
+        "absolute": 0.08461530413506324,
+        "relative_percent": 0.9211180536668319
+      },
+      "RMSE": {
+        "absolute": -0.12848217616625135,
+        "relative_percent": -0.37388268197614083
+      },
+      "TimeNLL": {
+        "absolute": -0.01327668530660464,
+        "relative_percent": -0.3818823691420567
+      },
+      "contrast": "KeyOnly−CNN",
+      "seed": 52
+    },
+    {
+      "Large_MAE": {
+        "absolute": -3.468170883655546,
+        "relative_percent": -1.2399549408151649
+      },
+      "Large_RMSE": {
+        "absolute": -3.686314159846802,
+        "relative_percent": -1.1269786527421228
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.00842423194187747,
+        "relative_percent": -0.25697515820881484
+      },
+      "MAE": {
+        "absolute": 0.033375771876050564,
+        "relative_percent": 0.36131165282191946
+      },
+      "RMSE": {
+        "absolute": -0.13068137217698705,
+        "relative_percent": -0.38025799946217753
+      },
+      "TimeNLL": {
+        "absolute": 0.002180966359592862,
+        "relative_percent": 0.06301212915787152
+      },
+      "contrast": "KeyOnly−QueryOnly",
+      "seed": 52
+    },
+    {
+      "Large_MAE": {
+        "absolute": -10.809871754646338,
+        "relative_percent": -3.7691708383990954
+      },
+      "Large_RMSE": {
+        "absolute": -8.415695463385532,
+        "relative_percent": -2.5246988472082985
+      },
+      "Large_TimeNLL": {
+        "absolute": 0.04688381163164079,
+        "relative_percent": 1.4429690324281559
+      },
+      "MAE": {
+        "absolute": 0.02578554091075702,
+        "relative_percent": 0.27913826334519753
+      },
+      "RMSE": {
+        "absolute": 0.058746794282903636,
+        "relative_percent": 0.17023383645742207
+      },
+      "TimeNLL": {
+        "absolute": 0.018355615348236487,
+        "relative_percent": 0.5446687140505807
+      },
+      "contrast": "QueryOnly−CNN",
+      "seed": 62
+    },
+    {
+      "Large_MAE": {
+        "absolute": -4.385990500450134,
+        "relative_percent": -1.5293009821958758
+      },
+      "Large_RMSE": {
+        "absolute": -4.532137324548671,
+        "relative_percent": -1.3596359241443654
+      },
+      "Large_TimeNLL": {
+        "absolute": 0.25446160489142367,
+        "relative_percent": 7.831705721479606
+      },
+      "MAE": {
+        "absolute": 0.042917114665511846,
+        "relative_percent": 0.4645940489276313
+      },
+      "RMSE": {
+        "absolute": -0.163009412508913,
+        "relative_percent": -0.47236139450316195
+      },
+      "TimeNLL": {
+        "absolute": 0.2874200036519694,
+        "relative_percent": 8.528653537979688
+      },
+      "contrast": "KeyOnly−CNN",
+      "seed": 62
+    },
+    {
+      "Large_MAE": {
+        "absolute": 6.423881254196203,
+        "relative_percent": 2.327601118807565
+      },
+      "Large_RMSE": {
+        "absolute": 3.883558138836861,
+        "relative_percent": 1.1952391111238596
+      },
+      "Large_TimeNLL": {
+        "absolute": 0.20757779325978287,
+        "relative_percent": 6.297860512155525
+      },
+      "MAE": {
+        "absolute": 0.017131573754754825,
+        "relative_percent": 0.1849395485384052
+      },
+      "RMSE": {
+        "absolute": -0.22175620679181662,
+        "relative_percent": -0.6415031754939445
+      },
+      "TimeNLL": {
+        "absolute": 0.2690643883037329,
+        "relative_percent": 7.940734129460002
+      },
+      "contrast": "KeyOnly−QueryOnly",
+      "seed": 62
+    }
+  ],
+  "split": "validation"
+}

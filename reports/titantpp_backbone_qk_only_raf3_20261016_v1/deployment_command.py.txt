@@ -1,0 +1,48 @@
+ROOT='/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_backbone_qk_only_raf3_20261016_v1_5090'
+ARCHIVE_SHA='1837a3f1433a87c837e4b1479630a4584cc5f6c4d4181f47333bacb369bf550d'
+MANIFEST_SHA='cbc7ff909e589d07e4d0aa0edcead2676a020b67b610f725e7c4d4bddab95bb2'
+COMMIT='dfd708894b244dc4bcc8eb685736e75cf30c16d8'
+
+import os,sys,json,hashlib,tarfile,io,subprocess,shlex,time
+from pathlib import Path
+root=Path(ROOT);blob=sys.stdin.buffer.read()
+assert hashlib.sha256(blob).hexdigest()==ARCHIVE_SHA
+assert not root.exists(),'Existing RAF root: no retry or overwrite'
+out=subprocess.check_output(['nvidia-smi','--query-compute-apps=gpu_uuid,pid','--format=csv,noheader,nounits'],text=True)
+assert not any('GPU-c9adc246-ef66-7906-bc07-6e152fa9952f' in row for row in out.splitlines()),'Pinned GPU busy'
+root.mkdir(parents=False,exist_ok=False)
+names=set()
+with tarfile.open(fileobj=io.BytesIO(blob),mode='r:gz') as t:
+ for m in t.getmembers():
+  p=Path(m.name);assert m.isfile() and not p.is_absolute() and '..' not in p.parts and m.name not in names
+  names.add(m.name);target=root/p;target.parent.mkdir(parents=True,exist_ok=True)
+  with target.open('xb') as f:f.write(t.extractfile(m).read())
+h=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+assert h(root/'deployment_manifest.json')==MANIFEST_SHA
+manifest=json.loads((root/'deployment_manifest.json').read_text())
+assert names==set(manifest['files'])|{'deployment_manifest.json'}
+for n,d in manifest['files'].items():assert h(root/n)==d,n
+c=json.loads((root/'execution_contract.json').read_text());host=c['hosts']['5090']
+assert host['root']==str(root)
+assert c['limits']['inherited_absolute_host_deadline_unix']==1792679647.915156 and time.time()<c['limits']['inherited_absolute_host_deadline_unix'],'Inherited host deadline expired'
+(root/'cache/matplotlib').mkdir(parents=True,exist_ok=True)
+command=[host['python'],str(root/'operation/runtime.py'),'--contract',str(root/'execution_contract.json'),'--host','5090','--mode','pipeline']
+wrapper='\n'.join([
+ 'import subprocess,json,time,sys,os,hashlib',
+ 'from pathlib import Path',
+ 'root=Path('+repr(str(root))+'); cmd='+repr(command)+'; digest='+repr(manifest['contract_sha256']),
+ 'ticks=lambda pid:int(Path("/proc",str(pid),"stat").read_text().rsplit(")",1)[1].split()[19])',
+ 'log=(root/"pipeline.log").open("xb")',
+ 'p=subprocess.Popen(cmd,cwd=root/"source",stdout=log,stderr=subprocess.STDOUT)',
+ 'launch={"pid":p.pid,"start_ticks":ticks(p.pid),"observer_pid":os.getpid(),"observer_start_ticks":ticks(os.getpid()),"argv":cmd,"contract_sha256":digest,"started_unix":time.time()}',
+ '(root/"pipeline_launch.json").open("x").write(json.dumps(launch,sort_keys=True,indent=2)+chr(10))',
+ 'rc=p.wait(); log.close()',
+ 'receipt={"returncode":rc,"actual_child_exit_observed":True,"pid":p.pid,"observer_pid":os.getpid(),"argv":cmd,"observed_unix":time.time(),"contract_sha256":digest,"launch_sha256":hashlib.sha256((root/"pipeline_launch.json").read_bytes()).hexdigest()}',
+ '(root/"pipeline_exit.json").open("x").write(json.dumps(receipt,sort_keys=True,indent=2)+chr(10))',
+ 'sys.exit(rc)'])
+compile(wrapper,'owned_pipeline_wrapper','exec')
+launch=shlex.join(['env',*[k+'='+v for k,v in host['environment'].items()],'/usr/bin/python3','-c',wrapper])
+with (root/'deployment_receipt.json').open('x') as f:
+ json.dump({'archive_sha256':ARCHIVE_SHA,'manifest_sha256':MANIFEST_SHA,'source_commit':COMMIT,'installed_unix':time.time(),'file_count':len(manifest['files']),'launch_command':launch},f,indent=2)
+subprocess.run([host['tmux_binary'],'new-session','-d','-s',host['tmux'],launch],check=True)
+print(json.dumps({'status':'qualification_pipeline_started','root':str(root),'session':host['tmux'],'installed_files':len(manifest['files']),'started_unix':time.time()}))

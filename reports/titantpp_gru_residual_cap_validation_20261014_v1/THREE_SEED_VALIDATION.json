@@ -1,0 +1,934 @@
+{
+  "schema": "titantpp_gru_residual_cap_validation_summary_v2",
+  "status": "complete_validation_only",
+  "contract_raw_sha256": "274ff80ef771788dc4652749bd2875716c7ddeb59ba0a1a0e497358545fe1fdc",
+  "contract_canonical_sha256": "9a7e553730e36879fa89f3732c5d4a5493ed60f6bfcb1a4f826cb0990693622f",
+  "retrieval_index_raw_sha256": "f1ae2d9f4f603727739a4a47a3049c6ce4a77bafacfb48569790e466f54b3109",
+  "candidate_fit_count": 9,
+  "baseline_reference_count": 18,
+  "held_out_test_evaluated": false,
+  "selection_rule": "first_strict_finite_full_validation_raw_quantity_rmse_minimum",
+  "metric_order": [
+    "whole_qty_rmse",
+    "whole_qty_mae",
+    "tail_qty_rmse",
+    "tail_qty_mae",
+    "whole_time_nll",
+    "tail_time_nll"
+  ],
+  "lower_is_better": true,
+  "datasets": {
+    "intermittent_frozen_5000": {
+      "seeds": [
+        42,
+        52,
+        62
+      ],
+      "validation_population": {
+        "target_count": 86285,
+        "target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+        "target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385"
+      },
+      "arms": {
+        "titantpp_cnn_gru54_residual_cap025": {
+          "seed_metrics": {
+            "42": {
+              "whole_qty_rmse": 1.8077518940734403,
+              "whole_qty_mae": 0.7316593728999713,
+              "tail_qty_rmse": 8.696879107555207,
+              "tail_qty_mae": 6.713796777750295,
+              "whole_time_nll": 0.2777155795011993,
+              "tail_time_nll": 0.017573247216808616
+            },
+            "52": {
+              "whole_qty_rmse": 1.6709721615950954,
+              "whole_qty_mae": 0.6799621101104627,
+              "tail_qty_rmse": 8.290108068480912,
+              "tail_qty_mae": 6.1633646076546755,
+              "whole_time_nll": 0.32883056832708446,
+              "tail_time_nll": 1.1044672221533861e-27
+            },
+            "62": {
+              "whole_qty_rmse": 1.640119549714262,
+              "whole_qty_mae": 0.6992452226667697,
+              "tail_qty_rmse": 7.714546917606403,
+              "tail_qty_mae": 5.751603657273636,
+              "whole_time_nll": 0.43375314610999305,
+              "tail_time_nll": 2.2327933562590634e-12
+            }
+          },
+          "mean": {
+            "whole_qty_rmse": 1.706281201794266,
+            "whole_qty_mae": 0.7036222352257345,
+            "tail_qty_rmse": 8.23384469788084,
+            "tail_qty_mae": 6.209588347559535,
+            "whole_time_nll": 0.3467664313127589,
+            "tail_time_nll": 0.005857749073013803
+          },
+          "sample_sd": {
+            "whole_qty_rmse": 0.08921993588138534,
+            "whole_qty_mae": 0.02612509185032427,
+            "tail_qty_rmse": 0.49357705376755906,
+            "tail_qty_mae": 0.48275912821120914,
+            "whole_time_nll": 0.0795499964429861,
+            "tail_time_nll": 0.010145919010515744
+          }
+        },
+        "titantpp_cnn_gru54": {
+          "seed_metrics": {
+            "42": {
+              "whole_qty_rmse": 1.6666611418891555,
+              "whole_qty_mae": 0.715963188436677,
+              "tail_qty_rmse": 7.5600923175467285,
+              "tail_qty_mae": 6.047994147258093,
+              "whole_time_nll": 0.6187131537835328,
+              "tail_time_nll": 1.3824911707828927e-28
+            },
+            "52": {
+              "whole_qty_rmse": 1.6763035504479282,
+              "whole_qty_mae": 0.688762191401342,
+              "tail_qty_rmse": 8.518480904349932,
+              "tail_qty_mae": 6.433375941150341,
+              "whole_time_nll": 0.2878270201310179,
+              "tail_time_nll": 0.0002686485883385182
+            },
+            "62": {
+              "whole_qty_rmse": 1.758642434341163,
+              "whole_qty_mae": 0.7283437243748313,
+              "tail_qty_rmse": 8.740836304662743,
+              "tail_qty_mae": 6.599822289268768,
+              "whole_time_nll": 0.32278110744430255,
+              "tail_time_nll": 2.8695621490634664e-07
+            }
+          },
+          "mean": {
+            "whole_qty_rmse": 1.7005357088927489,
+            "whole_qty_mae": 0.7110230347376167,
+            "tail_qty_rmse": 8.273136508853135,
+            "tail_qty_mae": 6.360397459225734,
+            "whole_time_nll": 0.40977376045295105,
+            "tail_time_nll": 8.964518151780819e-05
+          },
+          "sample_sd": {
+            "whole_qty_rmse": 0.050552326034086784,
+            "whole_qty_mae": 0.020247920314457216,
+            "tail_qty_rmse": 0.6274428221590573,
+            "tail_qty_mae": 0.2830600090029559,
+            "whole_time_nll": 0.18178888750138117,
+            "tail_time_nll": 0.00015502156406781858
+          }
+        },
+        "titantpp_cnn_gru54_cnn_only": {
+          "seed_metrics": {
+            "42": {
+              "whole_qty_rmse": 1.6450859999804492,
+              "whole_qty_mae": 0.6766007726732809,
+              "tail_qty_rmse": 7.8168550106689505,
+              "tail_qty_mae": 6.086555166687493,
+              "whole_time_nll": 0.3587425558374043,
+              "tail_time_nll": 1.2040805195338303e-27
+            },
+            "52": {
+              "whole_qty_rmse": 1.7339734937147664,
+              "whole_qty_mae": 0.7316917587930609,
+              "tail_qty_rmse": 8.1276314855355,
+              "tail_qty_mae": 6.190179221364723,
+              "whole_time_nll": 0.389418389153767,
+              "tail_time_nll": 5.8447324445695844e-06
+            },
+            "62": {
+              "whole_qty_rmse": 1.7898369964785774,
+              "whole_qty_mae": 0.7986229251846761,
+              "tail_qty_rmse": 7.967847142193062,
+              "tail_qty_mae": 6.460123595389016,
+              "whole_time_nll": 0.2905627403927639,
+              "tail_time_nll": 2.6345990360220942e-17
+            }
+          },
+          "mean": {
+            "whole_qty_rmse": 1.7229654967245978,
+            "whole_qty_mae": 0.7356384855503393,
+            "tail_qty_rmse": 7.970777879465838,
+            "tail_qty_mae": 6.245619327813744,
+            "whole_time_nll": 0.3462412284613117,
+            "tail_time_nll": 1.9482441481986435e-06
+          },
+          "sample_sd": {
+            "whole_qty_rmse": 0.07300064893617009,
+            "whole_qty_mae": 0.06110674197624198,
+            "tail_qty_rmse": 0.15540896450443717,
+            "tail_qty_mae": 0.19285628530836188,
+            "whole_time_nll": 0.05059962660546896,
+            "tail_time_nll": 3.3744578502059834e-06
+          }
+        }
+      },
+      "candidate_deltas": {
+        "titantpp_cnn_gru54": {
+          "candidate_minus_reference": {
+            "42": {
+              "whole_qty_rmse": 0.1410907521842848,
+              "whole_qty_mae": 0.01569618446329435,
+              "tail_qty_rmse": 1.136786790008478,
+              "tail_qty_mae": 0.6658026304922018,
+              "whole_time_nll": -0.34099757428233346,
+              "tail_time_nll": 0.017573247216808616
+            },
+            "52": {
+              "whole_qty_rmse": -0.005331388852832797,
+              "whole_qty_mae": -0.00880008129087928,
+              "tail_qty_rmse": -0.22837283586902046,
+              "tail_qty_mae": -0.2700113334956651,
+              "whole_time_nll": 0.04100354819606655,
+              "tail_time_nll": -0.0002686485883385182
+            },
+            "62": {
+              "whole_qty_rmse": -0.11852288462690108,
+              "whole_qty_mae": -0.029098501708061608,
+              "tail_qty_rmse": -1.02628938705634,
+              "tail_qty_mae": -0.8482186319951319,
+              "whole_time_nll": 0.1109720386656905,
+              "tail_time_nll": -2.869539821129904e-07
+            }
+          },
+          "mean": {
+            "whole_qty_rmse": 0.005745492901516973,
+            "whole_qty_mae": -0.0074007995118821794,
+            "tail_qty_rmse": -0.03929181097229417,
+            "tail_qty_mae": -0.1508091116661984,
+            "whole_time_nll": -0.06300732914019214,
+            "tail_time_nll": 0.005768103891495995
+          },
+          "unfavorable_or_tied_seed_metrics": [
+            {
+              "seed": 42,
+              "metric": "whole_qty_rmse",
+              "delta": 0.1410907521842848
+            },
+            {
+              "seed": 42,
+              "metric": "whole_qty_mae",
+              "delta": 0.01569618446329435
+            },
+            {
+              "seed": 42,
+              "metric": "tail_qty_rmse",
+              "delta": 1.136786790008478
+            },
+            {
+              "seed": 42,
+              "metric": "tail_qty_mae",
+              "delta": 0.6658026304922018
+            },
+            {
+              "seed": 42,
+              "metric": "tail_time_nll",
+              "delta": 0.017573247216808616
+            },
+            {
+              "seed": 52,
+              "metric": "whole_time_nll",
+              "delta": 0.04100354819606655
+            },
+            {
+              "seed": 62,
+              "metric": "whole_time_nll",
+              "delta": 0.1109720386656905
+            }
+          ]
+        },
+        "titantpp_cnn_gru54_cnn_only": {
+          "candidate_minus_reference": {
+            "42": {
+              "whole_qty_rmse": 0.16266589409299104,
+              "whole_qty_mae": 0.0550586002266904,
+              "tail_qty_rmse": 0.880024096886256,
+              "tail_qty_mae": 0.6272416110628019,
+              "whole_time_nll": -0.08102697633620498,
+              "tail_time_nll": 0.017573247216808616
+            },
+            "52": {
+              "whole_qty_rmse": -0.06300133211967096,
+              "whole_qty_mae": -0.05172964868259822,
+              "tail_qty_rmse": 0.1624765829454109,
+              "tail_qty_mae": -0.02681461371004712,
+              "whole_time_nll": -0.060587820826682515,
+              "tail_time_nll": -5.8447324445695844e-06
+            },
+            "62": {
+              "whole_qty_rmse": -0.14971744676431542,
+              "whole_qty_mae": -0.09937770251790645,
+              "tail_qty_rmse": -0.2533002245866589,
+              "tail_qty_mae": -0.7085199381153799,
+              "whole_time_nll": 0.14319040571722913,
+              "tail_time_nll": 2.232767010268703e-12
+            }
+          },
+          "mean": {
+            "whole_qty_rmse": -0.016684294930331783,
+            "whole_qty_mae": -0.032016250324604756,
+            "tail_qty_rmse": 0.2630668184150027,
+            "tail_qty_mae": -0.0360309802542084,
+            "whole_time_nll": 0.0005252028514472115,
+            "tail_time_nll": 0.005855800828865604
+          },
+          "unfavorable_or_tied_seed_metrics": [
+            {
+              "seed": 42,
+              "metric": "whole_qty_rmse",
+              "delta": 0.16266589409299104
+            },
+            {
+              "seed": 42,
+              "metric": "whole_qty_mae",
+              "delta": 0.0550586002266904
+            },
+            {
+              "seed": 42,
+              "metric": "tail_qty_rmse",
+              "delta": 0.880024096886256
+            },
+            {
+              "seed": 42,
+              "metric": "tail_qty_mae",
+              "delta": 0.6272416110628019
+            },
+            {
+              "seed": 42,
+              "metric": "tail_time_nll",
+              "delta": 0.017573247216808616
+            },
+            {
+              "seed": 52,
+              "metric": "tail_qty_rmse",
+              "delta": 0.1624765829454109
+            },
+            {
+              "seed": 62,
+              "metric": "whole_time_nll",
+              "delta": 0.14319040571722913
+            },
+            {
+              "seed": 62,
+              "metric": "tail_time_nll",
+              "delta": 2.232767010268703e-12
+            }
+          ]
+        }
+      }
+    },
+    "raf_spare_parts": {
+      "seeds": [
+        42,
+        52,
+        62
+      ],
+      "validation_population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      },
+      "arms": {
+        "titantpp_cnn_gru54_residual_cap025": {
+          "seed_metrics": {
+            "42": {
+              "whole_qty_rmse": 34.151945866948644,
+              "whole_qty_mae": 9.159232346804865,
+              "tail_qty_rmse": 326.3895924562236,
+              "tail_qty_mae": 279.3649998140335,
+              "whole_time_nll": 3.4696043933630416,
+              "tail_time_nll": 3.4004522797637615
+            },
+            "52": {
+              "whole_qty_rmse": 34.335000921879555,
+              "whole_qty_mae": 9.190782726684137,
+              "tail_qty_rmse": 332.50855895460023,
+              "tail_qty_mae": 285.3514498615265,
+              "whole_time_nll": 3.4598304630942973,
+              "tail_time_nll": 3.2564531638851064
+            },
+            "62": {
+              "whole_qty_rmse": 34.33038251610387,
+              "whole_qty_mae": 9.160083090813528,
+              "tail_qty_rmse": 328.05418023172547,
+              "tail_qty_mae": 281.3603255748749,
+              "whole_time_nll": 3.599218957595947,
+              "tail_time_nll": 3.6894972629578944
+            }
+          },
+          "mean": {
+            "whole_qty_rmse": 34.27244310164402,
+            "whole_qty_mae": 9.170032721434177,
+            "tail_qty_rmse": 328.9841105475164,
+            "tail_qty_mae": 282.02559175014494,
+            "whole_time_nll": 3.5095512713510955,
+            "tail_time_nll": 3.448800902202254
+          },
+          "sample_sd": {
+            "whole_qty_rmse": 0.10437921294444598,
+            "whole_qty_mae": 0.01797506550049582,
+            "tail_qty_rmse": 3.1637028220479473,
+            "tail_qty_mae": 3.048168360794881,
+            "whole_time_nll": 0.07780811587233973,
+            "tail_time_nll": 0.2205334212862431
+          }
+        },
+        "titantpp_cnn_gru54": {
+          "seed_metrics": {
+            "42": {
+              "whole_qty_rmse": 34.123512694703976,
+              "whole_qty_mae": 9.208988212835273,
+              "tail_qty_rmse": 319.5146440941661,
+              "tail_qty_mae": 271.1052874326706,
+              "whole_time_nll": 3.423427620327168,
+              "tail_time_nll": 3.2910069776375726
+            },
+            "52": {
+              "whole_qty_rmse": 34.44015804937596,
+              "whole_qty_mae": 9.136572395989,
+              "tail_qty_rmse": 336.726859815434,
+              "tail_qty_mae": 291.1674991750717,
+              "whole_time_nll": 3.47968122898819,
+              "tail_time_nll": 3.2648646721023926
+            },
+            "62": {
+              "whole_qty_rmse": 33.98336600521345,
+              "whole_qty_mae": 9.197878165514123,
+              "tail_qty_rmse": 321.12386888430177,
+              "tail_qty_mae": 273.8963487434387,
+              "whole_time_nll": 3.611547730191855,
+              "tail_time_nll": 3.7055266960663356
+            }
+          },
+          "mean": {
+            "whole_qty_rmse": 34.18234558309779,
+            "whole_qty_mae": 9.181146258112799,
+            "tail_qty_rmse": 325.7884575979673,
+            "tail_qty_mae": 278.72304511706034,
+            "whole_time_nll": 3.504885526502404,
+            "tail_time_nll": 3.4204661152687668
+          },
+          "sample_sd": {
+            "whole_qty_rmse": 0.23401009480385923,
+            "whole_qty_mae": 0.03899974584972389,
+            "tail_qty_rmse": 9.507043883858293,
+            "tail_qty_mae": 10.867190686262191,
+            "whole_time_nll": 0.09655949665239678,
+            "tail_time_nll": 0.24721550533524198
+          }
+        },
+        "titantpp_cnn_gru54_cnn_only": {
+          "seed_metrics": {
+            "42": {
+              "whole_qty_rmse": 34.420452618672016,
+              "whole_qty_mae": 9.23111022291162,
+              "tail_qty_rmse": 330.71090336840933,
+              "tail_qty_mae": 283.0381588172913,
+              "whole_time_nll": 3.645686557273062,
+              "tail_time_nll": 3.556554896696149
+            },
+            "52": {
+              "whole_qty_rmse": 34.36430259009707,
+              "whole_qty_mae": 9.18615195937399,
+              "tail_qty_rmse": 328.2272665116951,
+              "tail_qty_mae": 280.83100461244584,
+              "whole_time_nll": 3.476642646905188,
+              "tail_time_nll": 3.2838765691547476
+            },
+            "62": {
+              "whole_qty_rmse": 34.509469741990486,
+              "whole_qty_mae": 9.237551527957033,
+              "tail_qty_rmse": 333.3346261353603,
+              "tail_qty_mae": 286.7970760178566,
+              "whole_time_nll": 3.3700513495129614,
+              "tail_time_nll": 3.249121123046353
+            }
+          },
+          "mean": {
+            "whole_qty_rmse": 34.43140831691986,
+            "whole_qty_mae": 9.218271236747547,
+            "tail_qty_rmse": 330.7575986718216,
+            "tail_qty_mae": 283.55541314919793,
+            "whole_time_nll": 3.497460184563737,
+            "tail_time_nll": 3.363184196299083
+          },
+          "sample_sd": {
+            "whole_qty_rmse": 0.0732010654996562,
+            "whole_qty_mae": 0.028001938985035457,
+            "tail_qty_rmse": 2.5539999843151633,
+            "tail_qty_mae": 3.016482394532114,
+            "whole_time_nll": 0.1389917959624318,
+            "tail_time_nll": 0.16836316725337303
+          }
+        }
+      },
+      "candidate_deltas": {
+        "titantpp_cnn_gru54": {
+          "candidate_minus_reference": {
+            "42": {
+              "whole_qty_rmse": 0.028433172244668015,
+              "whole_qty_mae": -0.0497558660304076,
+              "tail_qty_rmse": 6.874948362057523,
+              "tail_qty_mae": 8.259712381362931,
+              "whole_time_nll": 0.04617677303587353,
+              "tail_time_nll": 0.10944530212618897
+            },
+            "52": {
+              "whole_qty_rmse": -0.10515712749640471,
+              "whole_qty_mae": 0.05421033069513648,
+              "tail_qty_rmse": -4.218300860833779,
+              "tail_qty_mae": -5.81604931354525,
+              "whole_time_nll": -0.019850765893892675,
+              "tail_time_nll": -0.008411508217286201
+            },
+            "62": {
+              "whole_qty_rmse": 0.34701651089041974,
+              "whole_qty_mae": -0.037795074700595066,
+              "tail_qty_rmse": 6.930311347423697,
+              "tail_qty_mae": 7.4639768314361845,
+              "whole_time_nll": -0.012328772595907811,
+              "tail_time_nll": -0.016029433108441182
+            }
+          },
+          "mean": {
+            "whole_qty_rmse": 0.09009751854622768,
+            "whole_qty_mae": -0.011113536678622063,
+            "tail_qty_rmse": 3.1956529495491472,
+            "tail_qty_mae": 3.302546633084622,
+            "whole_time_nll": 0.004665744848691015,
+            "tail_time_nll": 0.028334786933487194
+          },
+          "unfavorable_or_tied_seed_metrics": [
+            {
+              "seed": 42,
+              "metric": "whole_qty_rmse",
+              "delta": 0.028433172244668015
+            },
+            {
+              "seed": 42,
+              "metric": "tail_qty_rmse",
+              "delta": 6.874948362057523
+            },
+            {
+              "seed": 42,
+              "metric": "tail_qty_mae",
+              "delta": 8.259712381362931
+            },
+            {
+              "seed": 42,
+              "metric": "whole_time_nll",
+              "delta": 0.04617677303587353
+            },
+            {
+              "seed": 42,
+              "metric": "tail_time_nll",
+              "delta": 0.10944530212618897
+            },
+            {
+              "seed": 52,
+              "metric": "whole_qty_mae",
+              "delta": 0.05421033069513648
+            },
+            {
+              "seed": 62,
+              "metric": "whole_qty_rmse",
+              "delta": 0.34701651089041974
+            },
+            {
+              "seed": 62,
+              "metric": "tail_qty_rmse",
+              "delta": 6.930311347423697
+            },
+            {
+              "seed": 62,
+              "metric": "tail_qty_mae",
+              "delta": 7.4639768314361845
+            }
+          ]
+        },
+        "titantpp_cnn_gru54_cnn_only": {
+          "candidate_minus_reference": {
+            "42": {
+              "whole_qty_rmse": -0.2685067517233719,
+              "whole_qty_mae": -0.07187787610675578,
+              "tail_qty_rmse": -4.321310912185709,
+              "tail_qty_mae": -3.6731590032577515,
+              "whole_time_nll": -0.1760821639100203,
+              "tail_time_nll": -0.15610261693238758
+            },
+            "52": {
+              "whole_qty_rmse": -0.029301668217513566,
+              "whole_qty_mae": 0.004630767310146666,
+              "tail_qty_rmse": 4.281292442905112,
+              "tail_qty_mae": 4.5204452490806375,
+              "whole_time_nll": -0.01681218381089078,
+              "tail_time_nll": -0.027423405269641155
+            },
+            "62": {
+              "whole_qty_rmse": -0.17908722588661874,
+              "whole_qty_mae": -0.07746843714350504,
+              "tail_qty_rmse": -5.2804459036348135,
+              "tail_qty_mae": -5.436750442981747,
+              "whole_time_nll": 0.22916760808298564,
+              "tail_time_nll": 0.44037613991154156
+            }
+          },
+          "mean": {
+            "whole_qty_rmse": -0.15896521527583474,
+            "whole_qty_mae": -0.04823851531337139,
+            "tail_qty_rmse": -1.7734881243051366,
+            "tail_qty_mae": -1.5298213990529537,
+            "whole_time_nll": 0.012091086787358188,
+            "tail_time_nll": 0.08561670590317094
+          },
+          "unfavorable_or_tied_seed_metrics": [
+            {
+              "seed": 52,
+              "metric": "whole_qty_mae",
+              "delta": 0.004630767310146666
+            },
+            {
+              "seed": 52,
+              "metric": "tail_qty_rmse",
+              "delta": 4.281292442905112
+            },
+            {
+              "seed": 52,
+              "metric": "tail_qty_mae",
+              "delta": 4.5204452490806375
+            },
+            {
+              "seed": 62,
+              "metric": "whole_time_nll",
+              "delta": 0.22916760808298564
+            },
+            {
+              "seed": 62,
+              "metric": "tail_time_nll",
+              "delta": 0.44037613991154156
+            }
+          ]
+        }
+      }
+    },
+    "yellow_trip_hourly": {
+      "seeds": [
+        42,
+        52,
+        62
+      ],
+      "validation_population": {
+        "target_count": 8268,
+        "target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+        "target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd"
+      },
+      "arms": {
+        "titantpp_cnn_gru54_residual_cap025": {
+          "seed_metrics": {
+            "42": {
+              "whole_qty_rmse": 85.34577536211772,
+              "whole_qty_mae": 26.69497646248652,
+              "tail_qty_rmse": 465.5647649844906,
+              "tail_qty_mae": 357.8640878411788,
+              "whole_time_nll": 1.351947426035953,
+              "tail_time_nll": 8.118823789175697e-138
+            },
+            "52": {
+              "whole_qty_rmse": 84.69741932583521,
+              "whole_qty_mae": 26.520990623214363,
+              "tail_qty_rmse": 421.0642674621671,
+              "tail_qty_mae": 325.5362069818038,
+              "whole_time_nll": 1.094251546818951,
+              "tail_time_nll": 8.288934117877383e-28
+            },
+            "62": {
+              "whole_qty_rmse": 81.92256066157277,
+              "whole_qty_mae": 25.658224617023368,
+              "tail_qty_rmse": 456.068578460649,
+              "tail_qty_mae": 357.5957618423655,
+              "whole_time_nll": 1.630852753974966,
+              "tail_time_nll": 3.3984600405958776e-72
+            }
+          },
+          "mean": {
+            "whole_qty_rmse": 83.98858511650857,
+            "whole_qty_mae": 26.291397234241416,
+            "tail_qty_rmse": 447.56587030243554,
+            "tail_qty_mae": 346.998685555116,
+            "whole_time_nll": 1.3590172422766233,
+            "tail_time_nll": 2.762978039292461e-28
+          },
+          "sample_sd": {
+            "whole_qty_rmse": 1.818360298109413,
+            "whole_qty_mae": 0.5552012612223375,
+            "tail_qty_rmse": 23.437056224095034,
+            "tail_qty_mae": 18.58753586661839,
+            "whole_time_nll": 0.268370454049213,
+            "tail_time_nll": 4.78561834425158e-28
+          }
+        },
+        "titantpp_cnn_gru54": {
+          "seed_metrics": {
+            "42": {
+              "whole_qty_rmse": 86.89961997380297,
+              "whole_qty_mae": 26.839447705178774,
+              "tail_qty_rmse": 473.32872008711837,
+              "tail_qty_mae": 368.14083514636076,
+              "whole_time_nll": 0.9155947237432176,
+              "tail_time_nll": 2.5051695091681028e-25
+            },
+            "52": {
+              "whole_qty_rmse": 76.84631557300185,
+              "whole_qty_mae": 24.59500421031077,
+              "tail_qty_rmse": 387.4215080344928,
+              "tail_qty_mae": 300.2129400712025,
+              "whole_time_nll": 2.1638543075373415,
+              "tail_time_nll": 4.101818238888068e-19
+            },
+            "62": {
+              "whole_qty_rmse": 82.02224422468207,
+              "whole_qty_mae": 26.01244699545511,
+              "tail_qty_rmse": 418.87294867805593,
+              "tail_qty_mae": 334.6410545638845,
+              "whole_time_nll": 0.8752517688351238,
+              "tail_time_nll": 2.8038096296491377e-32
+            }
+          },
+          "mean": {
+            "whole_qty_rmse": 81.92272659049563,
+            "whole_qty_mae": 25.815632970314883,
+            "tail_qty_rmse": 426.54105893322236,
+            "tail_qty_mae": 334.33160992714926,
+            "whole_time_nll": 1.318233600038561,
+            "tail_time_nll": 1.3672735813526192e-19
+          },
+          "sample_sd": {
+            "whole_qty_rmse": 5.027390989711002,
+            "whole_qty_mae": 1.1350918336340672,
+            "tail_qty_rmse": 43.46391844769333,
+            "tail_qty_mae": 33.965004774367834,
+            "whole_time_nll": 0.7326067664277561,
+            "tail_time_nll": 2.368185141209048e-19
+          }
+        },
+        "titantpp_cnn_gru54_cnn_only": {
+          "seed_metrics": {
+            "42": {
+              "whole_qty_rmse": 84.24086110043952,
+              "whole_qty_mae": 27.25602952286738,
+              "tail_qty_rmse": 404.76927511561337,
+              "tail_qty_mae": 328.6531874258307,
+              "whole_time_nll": 0.8770572041221412,
+              "tail_time_nll": 1.9260065030616042e-109
+            },
+            "52": {
+              "whole_qty_rmse": 88.08170135629909,
+              "whole_qty_mae": 27.877054400796123,
+              "tail_qty_rmse": 438.1489775519904,
+              "tail_qty_mae": 349.4482576394383,
+              "whole_time_nll": 0.7296765276404311,
+              "tail_time_nll": 8.226725779397425e-87
+            },
+            "62": {
+              "whole_qty_rmse": 87.62757914588182,
+              "whole_qty_mae": 28.245294963147078,
+              "tail_qty_rmse": 405.7088449039221,
+              "tail_qty_mae": 323.91605580003954,
+              "whole_time_nll": 0.7401011881892092,
+              "tail_time_nll": 2.1659235406092473e-97
+            }
+          },
+          "mean": {
+            "whole_qty_rmse": 86.65004720087347,
+            "whole_qty_mae": 27.792792962270195,
+            "tail_qty_rmse": 416.209032523842,
+            "tail_qty_mae": 334.0058336217695,
+            "whole_time_nll": 0.7822783066505938,
+            "tail_time_nll": 2.742241926538006e-87
+          },
+          "sample_sd": {
+            "whole_qty_rmse": 2.0987353323827453,
+            "whole_qty_mae": 0.4999865201680848,
+            "tail_qty_rmse": 19.006356534733516,
+            "tail_qty_mae": 13.581658538857567,
+            "whole_time_nll": 0.08224626399618935,
+            "tail_time_nll": 4.749702343221812e-87
+          }
+        }
+      },
+      "candidate_deltas": {
+        "titantpp_cnn_gru54": {
+          "candidate_minus_reference": {
+            "42": {
+              "whole_qty_rmse": -1.5538446116852498,
+              "whole_qty_mae": -0.14447124269225498,
+              "tail_qty_rmse": -7.76395510262779,
+              "tail_qty_mae": -10.27674730518197,
+              "whole_time_nll": 0.4363527022927354,
+              "tail_time_nll": -2.5051695091681028e-25
+            },
+            "52": {
+              "whole_qty_rmse": 7.851103752833367,
+              "whole_qty_mae": 1.925986412903594,
+              "tail_qty_rmse": 33.64275942767432,
+              "tail_qty_mae": 25.323266910601262,
+              "whole_time_nll": -1.0696027607183904,
+              "tail_time_nll": -4.101818230599134e-19
+            },
+            "62": {
+              "whole_qty_rmse": -0.09968356310929494,
+              "whole_qty_mae": -0.35422237843174287,
+              "tail_qty_rmse": 37.19562978259307,
+              "tail_qty_mae": 22.95470727848101,
+              "whole_time_nll": 0.7556009851398422,
+              "tail_time_nll": -2.8038096296491377e-32
+            }
+          },
+          "mean": {
+            "whole_qty_rmse": 2.0658585260129407,
+            "whole_qty_mae": 0.47576426392653204,
+            "tail_qty_rmse": 21.0248113692132,
+            "tail_qty_mae": 12.667075627966767,
+            "whole_time_nll": 0.04078364223806238,
+            "tail_time_nll": -1.367273578589641e-19
+          },
+          "unfavorable_or_tied_seed_metrics": [
+            {
+              "seed": 42,
+              "metric": "whole_time_nll",
+              "delta": 0.4363527022927354
+            },
+            {
+              "seed": 52,
+              "metric": "whole_qty_rmse",
+              "delta": 7.851103752833367
+            },
+            {
+              "seed": 52,
+              "metric": "whole_qty_mae",
+              "delta": 1.925986412903594
+            },
+            {
+              "seed": 52,
+              "metric": "tail_qty_rmse",
+              "delta": 33.64275942767432
+            },
+            {
+              "seed": 52,
+              "metric": "tail_qty_mae",
+              "delta": 25.323266910601262
+            },
+            {
+              "seed": 62,
+              "metric": "tail_qty_rmse",
+              "delta": 37.19562978259307
+            },
+            {
+              "seed": 62,
+              "metric": "tail_qty_mae",
+              "delta": 22.95470727848101
+            },
+            {
+              "seed": 62,
+              "metric": "whole_time_nll",
+              "delta": 0.7556009851398422
+            }
+          ]
+        },
+        "titantpp_cnn_gru54_cnn_only": {
+          "candidate_minus_reference": {
+            "42": {
+              "whole_qty_rmse": 1.1049142616782035,
+              "whole_qty_mae": -0.5610530603808606,
+              "tail_qty_rmse": 60.79548986887721,
+              "tail_qty_mae": 29.21090041534808,
+              "whole_time_nll": 0.4748902219138118,
+              "tail_time_nll": -1.9260065030616042e-109
+            },
+            "52": {
+              "whole_qty_rmse": -3.384282030463879,
+              "whole_qty_mae": -1.3560637775817597,
+              "tail_qty_rmse": -17.084710089823318,
+              "tail_qty_mae": -23.912050657634495,
+              "whole_time_nll": 0.36457501917852,
+              "tail_time_nll": 8.288934117877383e-28
+            },
+            "62": {
+              "whole_qty_rmse": -5.705018484309051,
+              "whole_qty_mae": -2.58707034612371,
+              "tail_qty_rmse": 50.359733556726894,
+              "tail_qty_mae": 33.67970604232596,
+              "whole_time_nll": 0.8907515657857568,
+              "tail_time_nll": 3.3984600405958776e-72
+            }
+          },
+          "mean": {
+            "whole_qty_rmse": -2.6614620843649086,
+            "whole_qty_mae": -1.5013957280287766,
+            "tail_qty_rmse": 31.356837778593597,
+            "tail_qty_mae": 12.992851933346515,
+            "whole_time_nll": 0.5767389356260295,
+            "tail_time_nll": 2.762978039292461e-28
+          },
+          "unfavorable_or_tied_seed_metrics": [
+            {
+              "seed": 42,
+              "metric": "whole_qty_rmse",
+              "delta": 1.1049142616782035
+            },
+            {
+              "seed": 42,
+              "metric": "tail_qty_rmse",
+              "delta": 60.79548986887721
+            },
+            {
+              "seed": 42,
+              "metric": "tail_qty_mae",
+              "delta": 29.21090041534808
+            },
+            {
+              "seed": 42,
+              "metric": "whole_time_nll",
+              "delta": 0.4748902219138118
+            },
+            {
+              "seed": 52,
+              "metric": "whole_time_nll",
+              "delta": 0.36457501917852
+            },
+            {
+              "seed": 52,
+              "metric": "tail_time_nll",
+              "delta": 8.288934117877383e-28
+            },
+            {
+              "seed": 62,
+              "metric": "tail_qty_rmse",
+              "delta": 50.359733556726894
+            },
+            {
+              "seed": 62,
+              "metric": "tail_qty_mae",
+              "delta": 33.67970604232596
+            },
+            {
+              "seed": 62,
+              "metric": "whole_time_nll",
+              "delta": 0.8907515657857568
+            },
+            {
+              "seed": 62,
+              "metric": "tail_time_nll",
+              "delta": 3.3984600405958776e-72
+            }
+          ]
+        }
+      }
+    }
+  },
+  "interpretation_limits": [
+    "Validation-only comparison does not establish Test generalization.",
+    "The cap changes optimization trajectories as well as residual magnitude.",
+    "CNN has fewer active parameters than FULL and CAPPED."
+  ]
+}

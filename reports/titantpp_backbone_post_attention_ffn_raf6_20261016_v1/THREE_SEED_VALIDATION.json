@@ -1,0 +1,447 @@
+{
+  "aggregate": {
+    "CNN": {
+      "Large_MAE": {
+        "mean": 283.55541314919793,
+        "sample_sd": 3.016482394532114
+      },
+      "Large_RMSE": {
+        "mean": 330.7575986718216,
+        "sample_sd": 2.5539999843151633
+      },
+      "Large_TimeNLL": {
+        "mean": 3.363184196299083,
+        "sample_sd": 0.16836316725337303
+      },
+      "MAE": {
+        "mean": 9.218271236747547,
+        "sample_sd": 0.028001938985035457
+      },
+      "RMSE": {
+        "mean": 34.43140831691986,
+        "sample_sd": 0.0732010654996562
+      },
+      "TimeNLL": {
+        "mean": 3.497460184563737,
+        "sample_sd": 0.1389917959624318
+      }
+    },
+    "Current": {
+      "Large_MAE": {
+        "mean": 279.0164032129447,
+        "sample_sd": 4.174576548197997
+      },
+      "Large_RMSE": {
+        "mean": 327.1842867027147,
+        "sample_sd": 3.3235280050432583
+      },
+      "Large_TimeNLL": {
+        "mean": 3.3363353527078896,
+        "sample_sd": 0.09268256437405277
+      },
+      "MAE": {
+        "mean": 9.249838302503134,
+        "sample_sd": 0.012292885905177577
+      },
+      "RMSE": {
+        "mean": 34.46604143435198,
+        "sample_sd": 0.07156775959515008
+      },
+      "TimeNLL": {
+        "mean": 3.4768590758018965,
+        "sample_sd": 0.0664996847377995
+      }
+    },
+    "Temporal": {
+      "Large_MAE": {
+        "mean": 281.7743368156751,
+        "sample_sd": 5.661582073786815
+      },
+      "Large_RMSE": {
+        "mean": 329.2942744125145,
+        "sample_sd": 4.6147967435240895
+      },
+      "Large_TimeNLL": {
+        "mean": 3.3027601233053065,
+        "sample_sd": 0.02204706489364813
+      },
+      "MAE": {
+        "mean": 9.2235960936184,
+        "sample_sd": 0.015190120507873502
+      },
+      "RMSE": {
+        "mean": 34.472074372746434,
+        "sample_sd": 0.06669056620845022
+      },
+      "TimeNLL": {
+        "mean": 3.438759516198613,
+        "sample_sd": 0.02596388594917144
+      }
+    }
+  },
+  "baseline_reference_count": 3,
+  "comparison_runtime_limitation": "Current/Temporal candidates use5090/cuDNN92000; historical CNN3 uses5080/cuDNN91900. This runtime difference is not removed by retraining the baseline.",
+  "constraint_limitation": "Current and Temporal each add1152 FFN parameters with the same initialization/availability. Current uses an attention-prefix state, not history-free input. Equal counts do not imply equal function spaces or optimization; common trainable weights and memory retrieval may change. Stored CNN has fewer parameters and different Runtime.",
+  "dataset": "raf_spare_parts",
+  "held_out_test_evaluated": false,
+  "interpretation": "Post-Test-informed exploratory follow-up; not independent generalization or causal proof.",
+  "new_fit_count": 6,
+  "primary_contrast": "Temporal−Current: same1152 added parameters/initialization/availability, explicit past-prefix content versus current-prefix nonlinear expansion. Common QKV/head remain trainable and memory retrieval may change; equal counts do not imply equal function spaces or causal isolation.",
+  "rows": [
+    {
+      "Large_MAE": 283.0381588172913,
+      "Large_RMSE": 330.71090336840933,
+      "Large_TimeNLL": 3.556554896696149,
+      "MAE": 9.23111022291162,
+      "RMSE": 34.420452618672016,
+      "TimeNLL": 3.645686557273062,
+      "arm": "CNN",
+      "best_epoch": 9,
+      "seed": 42
+    },
+    {
+      "Large_MAE": 280.83100461244584,
+      "Large_RMSE": 328.2272665116951,
+      "Large_TimeNLL": 3.2838765691547476,
+      "MAE": 9.18615195937399,
+      "RMSE": 34.36430259009707,
+      "TimeNLL": 3.476642646905188,
+      "arm": "CNN",
+      "best_epoch": 5,
+      "seed": 52
+    },
+    {
+      "Large_MAE": 286.7970760178566,
+      "Large_RMSE": 333.3346261353603,
+      "Large_TimeNLL": 3.249121123046353,
+      "MAE": 9.237551527957033,
+      "RMSE": 34.509469741990486,
+      "TimeNLL": 3.3700513495129614,
+      "arm": "CNN",
+      "best_epoch": 8,
+      "seed": 62
+    },
+    {
+      "Large_MAE": 282.2574295580387,
+      "Large_RMSE": 330.1797644382929,
+      "Large_TimeNLL": 3.443174023869753,
+      "MAE": 9.250317740279998,
+      "RMSE": 34.473685537394545,
+      "TimeNLL": 3.5470253595088073,
+      "arm": "Current",
+      "best_epoch": 9,
+      "seed": 42
+    },
+    {
+      "Large_MAE": 280.48601957321165,
+      "Large_RMSE": 327.7640880275689,
+      "Large_TimeNLL": 3.277514027009801,
+      "MAE": 9.23731271171071,
+      "RMSE": 34.39095845398483,
+      "TimeNLL": 3.4687894036126234,
+      "arm": "Current",
+      "best_epoch": 5,
+      "seed": 52
+    },
+    {
+      "Large_MAE": 274.3057605075836,
+      "Large_RMSE": 323.60900764228234,
+      "Large_TimeNLL": 3.2883180072441145,
+      "MAE": 9.261884455518693,
+      "RMSE": 34.533480311676556,
+      "TimeNLL": 3.4147624642842587,
+      "arm": "Current",
+      "best_epoch": 22,
+      "seed": 62
+    },
+    {
+      "Large_MAE": 287.81622013330457,
+      "Large_RMSE": 334.38068366653636,
+      "Large_TimeNLL": 3.3133546097801605,
+      "MAE": 9.206126702384207,
+      "RMSE": 34.47142846045903,
+      "TimeNLL": 3.420204621821027,
+      "arm": "Temporal",
+      "best_epoch": 5,
+      "seed": 42
+    },
+    {
+      "Large_MAE": 280.91562688827514,
+      "Large_RMSE": 328.12681673152633,
+      "Large_TimeNLL": 3.277415667975538,
+      "MAE": 9.230968791264234,
+      "RMSE": 34.40570910864704,
+      "TimeNLL": 3.468430842237665,
+      "arm": "Temporal",
+      "best_epoch": 5,
+      "seed": 52
+    },
+    {
+      "Large_MAE": 276.59116342544553,
+      "Large_RMSE": 325.37532283948076,
+      "Large_TimeNLL": 3.3175100921602216,
+      "MAE": 9.233692787206762,
+      "RMSE": 34.539085549133226,
+      "TimeNLL": 3.427643084537146,
+      "arm": "Temporal",
+      "best_epoch": 22,
+      "seed": 62
+    }
+  ],
+  "seed_count": 3,
+  "seed_differences": [
+    {
+      "Large_MAE": {
+        "absolute": -0.7807292592525528,
+        "relative_percent": -0.27583887010674574
+      },
+      "Large_RMSE": {
+        "absolute": -0.5311389301164127,
+        "relative_percent": -0.16060520675507578
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.1133808728263963,
+        "relative_percent": -3.1879410305664373
+      },
+      "MAE": {
+        "absolute": 0.019207517368377225,
+        "relative_percent": 0.20807375174336187
+      },
+      "RMSE": {
+        "absolute": 0.053232918722528666,
+        "relative_percent": 0.15465490623342784
+      },
+      "TimeNLL": {
+        "absolute": -0.09866119776425464,
+        "relative_percent": -2.7062446596630143
+      },
+      "contrast": "Current−CNN",
+      "seed": 42
+    },
+    {
+      "Large_MAE": {
+        "absolute": 4.778061316013293,
+        "relative_percent": 1.6881332665457522
+      },
+      "Large_RMSE": {
+        "absolute": 3.669780298127023,
+        "relative_percent": 1.1096641389047026
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.2432002869159886,
+        "relative_percent": -6.838086124915681
+      },
+      "MAE": {
+        "absolute": -0.024983520527413816,
+        "relative_percent": -0.2706448078737561
+      },
+      "RMSE": {
+        "absolute": 0.05097584178701453,
+        "relative_percent": 0.1480975347760585
+      },
+      "TimeNLL": {
+        "absolute": -0.22548193545203477,
+        "relative_percent": -6.184896367522419
+      },
+      "contrast": "Temporal−CNN",
+      "seed": 42
+    },
+    {
+      "Large_MAE": {
+        "absolute": 5.558790575265846,
+        "relative_percent": 1.969404519827822
+      },
+      "Large_RMSE": {
+        "absolute": 4.2009192282434356,
+        "relative_percent": 1.2723127461763462
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.1298194140895923,
+        "relative_percent": -3.770341353344941
+      },
+      "MAE": {
+        "absolute": -0.04419103789579104,
+        "relative_percent": -0.4777245402432352
+      },
+      "RMSE": {
+        "absolute": -0.002257076935514135,
+        "relative_percent": -0.006547245820484794
+      },
+      "TimeNLL": {
+        "absolute": -0.12682073768778013,
+        "relative_percent": -3.5754110792526808
+      },
+      "contrast": "Temporal−Current",
+      "seed": 42
+    },
+    {
+      "Large_MAE": {
+        "absolute": -0.34498503923418866,
+        "relative_percent": -0.12284435606042754
+      },
+      "Large_RMSE": {
+        "absolute": -0.4631784841262174,
+        "relative_percent": -0.14111517578924657
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.00636254214494647,
+        "relative_percent": -0.19375095290454705
+      },
+      "MAE": {
+        "absolute": 0.051160752336718573,
+        "relative_percent": 0.5569334424574991
+      },
+      "RMSE": {
+        "absolute": 0.0266558638877612,
+        "relative_percent": 0.07756847041453636
+      },
+      "TimeNLL": {
+        "absolute": -0.007853243292564649,
+        "relative_percent": -0.22588583556481973
+      },
+      "contrast": "Current−CNN",
+      "seed": 52
+    },
+    {
+      "Large_MAE": {
+        "absolute": 0.08462227582930382,
+        "relative_percent": 0.030132810992890467
+      },
+      "Large_RMSE": {
+        "absolute": -0.10044978016878758,
+        "relative_percent": -0.03060372809253141
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.0064609011792096105,
+        "relative_percent": -0.19674616396658942
+      },
+      "MAE": {
+        "absolute": 0.04481683189024288,
+        "relative_percent": 0.48787383540405765
+      },
+      "RMSE": {
+        "absolute": 0.04140651854996946,
+        "relative_percent": 0.12049282374175632
+      },
+      "TimeNLL": {
+        "absolute": -0.008211804667523026,
+        "relative_percent": -0.2361992733084877
+      },
+      "contrast": "Temporal−CNN",
+      "seed": 52
+    },
+    {
+      "Large_MAE": {
+        "absolute": 0.4296073150634925,
+        "relative_percent": 0.1531653220068452
+      },
+      "Large_RMSE": {
+        "absolute": 0.36272870395742984,
+        "relative_percent": 0.11066761649827848
+      },
+      "Large_TimeNLL": {
+        "absolute": -9.835903426314019e-05,
+        "relative_percent": -0.0030010255776960573
+      },
+      "MAE": {
+        "absolute": -0.006343920446475693,
+        "relative_percent": -0.06867712119817179
+      },
+      "RMSE": {
+        "absolute": 0.014750654662208262,
+        "relative_percent": 0.04289108336990569
+      },
+      "TimeNLL": {
+        "absolute": -0.00035856137495837714,
+        "relative_percent": -0.010336787081537667
+      },
+      "contrast": "Temporal−Current",
+      "seed": 52
+    },
+    {
+      "Large_MAE": {
+        "absolute": -12.491315510273012,
+        "relative_percent": -4.3554542757943855
+      },
+      "Large_RMSE": {
+        "absolute": -9.725618493077945,
+        "relative_percent": -2.9176742319979003
+      },
+      "Large_TimeNLL": {
+        "absolute": 0.03919688419776168,
+        "relative_percent": 1.2063842101709943
+      },
+      "MAE": {
+        "absolute": 0.02433292756166061,
+        "relative_percent": 0.26341317272242654
+      },
+      "RMSE": {
+        "absolute": 0.024010569686069516,
+        "relative_percent": 0.0695767563674092
+      },
+      "TimeNLL": {
+        "absolute": 0.0447111147712973,
+        "relative_percent": 1.3267190951781471
+      },
+      "contrast": "Current−CNN",
+      "seed": 62
+    },
+    {
+      "Large_MAE": {
+        "absolute": -10.205912592411096,
+        "relative_percent": -3.558583209466073
+      },
+      "Large_RMSE": {
+        "absolute": -7.959303295879522,
+        "relative_percent": -2.3877817279766833
+      },
+      "Large_TimeNLL": {
+        "absolute": 0.06838896911386882,
+        "relative_percent": 2.104845172707745
+      },
+      "MAE": {
+        "absolute": -0.003858740750271039,
+        "relative_percent": -0.04177233262074625
+      },
+      "RMSE": {
+        "absolute": 0.029615807142739925,
+        "relative_percent": 0.08581936310282959
+      },
+      "TimeNLL": {
+        "absolute": 0.057591735024184576,
+        "relative_percent": 1.7089275222025242
+      },
+      "contrast": "Temporal−CNN",
+      "seed": 62
+    },
+    {
+      "Large_MAE": {
+        "absolute": 2.2854029178619157,
+        "relative_percent": 0.8331589222307755
+      },
+      "Large_RMSE": {
+        "absolute": 1.7663151971984234,
+        "relative_percent": 0.5458176859993062
+      },
+      "Large_TimeNLL": {
+        "absolute": 0.02919208491610714,
+        "relative_percent": 0.8877512713733107
+      },
+      "MAE": {
+        "absolute": -0.02819166831193165,
+        "relative_percent": -0.3043837185329347
+      },
+      "RMSE": {
+        "absolute": 0.005605237456670409,
+        "relative_percent": 0.01623131351396155
+      },
+      "TimeNLL": {
+        "absolute": 0.012880620252887276,
+        "relative_percent": 0.3772039896657082
+      },
+      "contrast": "Temporal−Current",
+      "seed": 62
+    }
+  ],
+  "split": "validation"
+}

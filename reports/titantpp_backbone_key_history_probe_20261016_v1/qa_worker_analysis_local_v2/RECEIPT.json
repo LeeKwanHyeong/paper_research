@@ -1,0 +1,43 @@
+{
+  "actual_child_exit_observed": true,
+  "exit_code": 0,
+  "elapsed_seconds": 1.4669299125671387,
+  "command": [
+    "/usr/local/bin/python3",
+    "-c",
+    "import unittest,json,sys\nclass Result(unittest.TextTestResult):\n    subtests=0\n    def addSubTest(self,test,subtest,err):\n        self.subtests+=1\n        super().addSubTest(test,subtest,err)\nsuite=unittest.defaultTestLoader.loadTestsFromNames(['paper.tests.test_export_titantpp_key_history_probe','paper.tests.test_compare_titantpp_key_history_probe'])\nr=unittest.TextTestRunner(verbosity=2,resultclass=Result).run(suite)\nprint(json.dumps({'tests_run':r.testsRun,'subtests':r.subtests,'failures':len(r.failures),'errors':len(r.errors),'successful':r.wasSuccessful()}))\nsys.exit(0 if r.wasSuccessful() else 1)\n"
+  ],
+  "files_before": {
+    "paper/scripts/export_titantpp_key_history_probe.py": "6ad3b08af22856a276cb1bb168a29271898bde1d9dc6547b5c3ae2fb0eb9bbe6",
+    "paper/scripts/compare_titantpp_key_history_probe.py": "942134e52cdbe881902a2c5f1219550e1ec0842f447ced56270a5c190e33604c",
+    "paper/tests/test_export_titantpp_key_history_probe.py": "3ef9a379b20a33bd78fd5839cec5511cddcb10e5c1bfaa47efdc1cb4c4610308",
+    "paper/tests/test_compare_titantpp_key_history_probe.py": "6a304073ba471e37735441d69e3730f25429d10b0fb03225f299091895da884b",
+    "paper/scripts/export_titantpp_qk_branch_probe.py": "deef5e811c302aa5db8641d368e51af1ceb3c11384b6f9aa89eabc302e4c07c6",
+    "paper/scripts/compare_titantpp_qk_branch_probe.py": "0e83b9062249090c8db124f3795947e6299451dab5cb4d55b85a030fb776e753",
+    "models/TPPs/CountAwareTitanQKLocationCNN.py": "a660cd2a1f9ea4d594e2aba64c0d4457d589fc46f2ed7921d252e8f387690b23",
+    "paper/scripts/run_titantpp_qk_location_cnn.py": "05395c5e6981b13798d268b48d142811aa8e6dccb3befc069121e280dcfafda1",
+    "reports/titantpp_backbone_key_history_probe_20261016_v1/SCIENCE_SPEC.json": "f15ff87dc3f643e86e99d61c5cb6f45eec61d774879edcbab295f03bfc6f535c",
+    "reports/titantpp_backbone_key_history_probe_20261016_v1/NEXT_MECHANISM_ACCEPTANCE.json": "b99147f6ac5cfd6ac02c66d1636848f3abdc93452e2d21e217d80ab3c54bfff9"
+  },
+  "files_after": {
+    "paper/scripts/export_titantpp_key_history_probe.py": "6ad3b08af22856a276cb1bb168a29271898bde1d9dc6547b5c3ae2fb0eb9bbe6",
+    "paper/scripts/compare_titantpp_key_history_probe.py": "942134e52cdbe881902a2c5f1219550e1ec0842f447ced56270a5c190e33604c",
+    "paper/tests/test_export_titantpp_key_history_probe.py": "3ef9a379b20a33bd78fd5839cec5511cddcb10e5c1bfaa47efdc1cb4c4610308",
+    "paper/tests/test_compare_titantpp_key_history_probe.py": "6a304073ba471e37735441d69e3730f25429d10b0fb03225f299091895da884b",
+    "paper/scripts/export_titantpp_qk_branch_probe.py": "deef5e811c302aa5db8641d368e51af1ceb3c11384b6f9aa89eabc302e4c07c6",
+    "paper/scripts/compare_titantpp_qk_branch_probe.py": "0e83b9062249090c8db124f3795947e6299451dab5cb4d55b85a030fb776e753",
+    "models/TPPs/CountAwareTitanQKLocationCNN.py": "a660cd2a1f9ea4d594e2aba64c0d4457d589fc46f2ed7921d252e8f387690b23",
+    "paper/scripts/run_titantpp_qk_location_cnn.py": "05395c5e6981b13798d268b48d142811aa8e6dccb3befc069121e280dcfafda1",
+    "reports/titantpp_backbone_key_history_probe_20261016_v1/SCIENCE_SPEC.json": "f15ff87dc3f643e86e99d61c5cb6f45eec61d774879edcbab295f03bfc6f535c",
+    "reports/titantpp_backbone_key_history_probe_20261016_v1/NEXT_MECHANISM_ACCEPTANCE.json": "b99147f6ac5cfd6ac02c66d1636848f3abdc93452e2d21e217d80ab3c54bfff9"
+  },
+  "all_before_after_equal": true,
+  "output_files": {
+    "stdout.txt": "b19646f7f5281957990418b5d538cc8bfb91bfd8626d776cf6c635d87d9f50b9",
+    "stderr.txt": "69654a518009b0358e8cbe7d7b07a6ec2fbba6f35df3ecd9af2f5e4665b5788d"
+  },
+  "actual_remote_count": 0,
+  "actual_research_inference_count": 0,
+  "held_out_test_read": false,
+  "new_training": false
+}

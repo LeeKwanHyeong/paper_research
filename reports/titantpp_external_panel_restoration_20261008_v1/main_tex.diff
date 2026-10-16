@@ -1,0 +1,219 @@
+--- before/main.tex
++++ current/main.tex
+@@ -1,5 +1,5 @@
+ % Author-review manuscript. Evidence boundary and source map: README.md and WRITING_NOTES.md.
+-% The reference draft supplies the writing/typographic model, not performance values.
++% Historical Validation tables are traced to audited selected-run records; see the evidence map.
+ \documentclass[runningheads]{llncs}
+ \usepackage[T1]{fontenc}
+ \usepackage{amsmath}
+@@ -33,7 +33,7 @@
+ \maketitle
+ 
+ \begin{abstract}
+-Event forecasting requires predicting how much will occur as well as when it will occur. A history encoder supplies information for both predictions, but this does not establish whether a separate path through recent observed states is useful. We study this question in TitanTPP, a causal attention model with an explicit correction path. The representative architecture applies a three-position correction to queries, keys, and values, then adds a gated recurrent residual between attention blocks. A separate comparison examines prototype retrieval with time and quantity queries. In a completed 54-run study of an earlier MLP correction, adding the correction reduced validation quantity RMSE in all 18 paired comparisons across three datasets. The benefit was largest on Taxi, where mean RMSE fell by 13.0--14.1\%, but recorded-time likelihood deteriorated. Prototype addition was less consistent. These findings motivate controls that separate previous-state input from additional parameters, and split-query retrieval from general query learning. The CNN+GRU controls remain under evaluation. We report the completed MLP comparison and one supplementary Instacart fit as development-validation evidence.
++Event forecasting requires predicting how much will occur as well as when it will occur. A history encoder supplies information for both predictions, but this does not establish whether a separate path through recent observed states is useful. We study this question in TitanTPP, a causal attention model with an explicit correction path. The representative architecture applies a three-position correction to queries, keys, and values, then adds a gated recurrent residual between attention blocks. A separate comparison examines prototype retrieval with time and quantity queries. In a completed 54-run study of an earlier MLP8 correction, adding the correction reduced validation quantity RMSE in all 18 paired comparisons across three datasets. The benefit was largest on Taxi, where mean RMSE fell by 13.0--14.1\%, but recorded-time likelihood deteriorated. Prototype addition was less consistent. These findings motivate controls that separate previous-state input from additional parameters, and split-query retrieval from general query learning. The CNN+GRU controls remain under evaluation. We report an earlier common-head comparison, the completed MLP8 ablation, and one supplementary Instacart fit as development-validation evidence.
+ \keywords{Event forecasting \and Quantity prediction \and History correction \and Temporal point processes}
+ \end{abstract}
+ 
+@@ -46,7 +46,7 @@
+ 
+ We investigate this question with \method. The representative CNN+GRU54 model combines two forms of correction. A local path adjusts attention queries, keys, and values using the current and two preceding observed positions. A recurrent path adds a projected GRU state between the two attention blocks. The suffix 54 denotes the GRU state width. Both paths are residual, allowing the initial model to retain the shared encoder computation. They provide a particular way to reuse history, rather than supplying information unavailable to the causal encoder.
+ 
+-An earlier MLP version gives a reason to examine the correction more closely. Across Taxi, Intermittent, and RAF Spare Parts, switching on its explicit previous-state path improved overall quantity RMSE in all 18 comparisons formed by three seeds and two prototype settings. Yet the strongest quantity gains came with worse timing likelihood on Taxi. Moreover, adding prototypes to the corrected model did not improve quantity RMSE consistently across datasets. This pattern motivates two separate questions: the value of an explicit history path, and the value of the rule used to retrieve from a learned prototype bank.
++An earlier MLP8 version gives a reason to examine the correction more closely. Across Taxi, Intermittent, and RAF Spare Parts, switching on its explicit previous-state path improved overall quantity RMSE in all 18 comparisons formed by three seeds and two prototype settings. Yet the strongest quantity gains came with worse timing likelihood on Taxi. Moreover, adding prototypes to the corrected model did not improve quantity RMSE consistently across datasets. This pattern motivates two separate questions: the value of an explicit history path, and the value of the rule used to retrieve from a learned prototype bank.
+ 
+ The distinction matters for attribution. Removing the history path also removes parameters, so that comparison alone cannot identify the benefit of its input. We therefore include a control with the same number of active correction parameters that operates only on the current position. For retrieval, we compare uniform averaging, similarity weighting, separately normalized time and quantity queries, and a general learned query. Only the last two introduce query parameters, and their budgets are matched. Each study uses the same encoder architecture, output-head definitions, and model-selection rule; each arm is trained independently. Quantity is the primary selection objective, while timing likelihood, large-quantity errors, and computational cost describe the accompanying tradeoffs.
+ 
+@@ -54,9 +54,9 @@
+ \begin{enumerate}
+ \item We describe a local and recurrent correction architecture for next-event quantity prediction within a causal attention model, including the observation rules that prevent access to the target event.
+ \item We formulate controlled comparisons for explicit history input and prototype retrieval, separating these questions from extra parameter count and from the choice of output distribution.
+-\item We report the completed MLP correction study, including seed consistency, large-quantity errors, and timing tradeoffs. Its results support further testing of explicit correction, while showing why quantity improvements alone do not establish a uniformly better event model.
++\item We report an earlier comparison with six event-history encoders and a completed MLP8 correction study. Together they locate the quantity gains, timing costs, and dataset-dependent limits of the earlier models, and motivate the controls for the representative architecture.
+ \end{enumerate}
+-The empirical analysis in this version concerns the MLP study. The representative CNN+GRU comparisons and the supplementary Instacart architecture comparison are specified separately, so that a result for one architecture is not treated as evidence for another.
++The completed comparisons concern two earlier variants: MLP4 in the external-encoder panel and MLP8 in the correction study. The representative CNN+GRU comparisons and the supplementary Instacart architecture comparison are specified separately, so that a result for one architecture is not treated as evidence for another.
+ 
+ \section{Related Work}
+ \paragraph{Intermittent demand and numerical quantities.}
+@@ -280,12 +280,19 @@
+ \end{tabular}
+ \end{table}
+ 
+-The representative experiments use AdamW~\cite{loshchilov2019adamw}, learning rate $10^{-3}$, weight decay 0.01, batch size 128, and gradient clipping at one. Training lasts at least 40 and at most 300 epochs, with patience 40. Each fit retains the first strictly improving finite minimum of overall raw-quantity RMSE on the full validation set. Ties retain the earlier checkpoint. This rule is shared by the completed MLP study and the new comparisons; neither timing likelihood nor large-quantity error changes the selected epoch.
++The representative experiments use AdamW~\cite{loshchilov2019adamw}, learning rate $10^{-3}$, weight decay 0.01, batch size 128, and gradient clipping at one. Training lasts at least 40 and at most 300 epochs, with patience 40. Each fit retains the first strictly improving finite minimum of overall raw-quantity RMSE on the full validation set. Ties retain the earlier checkpoint. This rule is shared by the earlier common-head panel, the completed MLP8 study, and the new comparisons; neither timing likelihood nor large-quantity error changes the selected epoch.
+ 
+ We evaluate quantity RMSE, quantity MAE, and recorded-time NLL on all validation targets and on the large-quantity subset. All six metrics come from that one checkpoint. Three-seed summaries use the arithmetic mean and sample standard deviation. Time scores are interpreted within a dataset, since the recorded units and distributions differ. Appendix~\ref{app:strata} specifies partitions by quantity and usable history, including how their errors contribute to an aggregate difference.
+ 
+ \subsection{Comparisons and Their Scope}
+-\paragraph{Completed MLP correction study.}
++\paragraph{Earlier common-head comparison.}
++We retain the completed comparison of TitanTPP-MLP4 with RMTPP, NHP, THP, SAHP, S2P2, and AttNHP~\cite{du2016rmtpp,mei2017nhp,zuo2020thp,zhang2020sahp,chang2025s2p2,yang2022anhp}. These are adaptations to numerical event inputs and the common quantity and recorded-time heads, rather than reproductions of native marked-event likelihood comparisons. The seven models, four datasets, and seeds 42, 52, and 62 give 84 fits. Their frozen contracts agree with the target populations, observed windows, loss, optimizer, and selection rule above. Each metric retains its run's selected checkpoint.
++
++The historical TitanTPP model uses eight width-four MLP correction branches, with 6,144 nominal correction parameters. We label it MLP4 to distinguish it from the MLP8 ablation and CNN+GRU54. Software environments, initialization, and checkpoints differ across the historical and current campaigns; matching the task does not make their training trajectories equivalent. The historical panel establishes where MLP4 stands among the tested encoder adaptations, while the later controls address the correction mechanism.
++
++Two encoder adaptations warrant further detail. S2P2 uses two width-64 layers with state size 16, complex dynamics, backward zero-order hold, and relative-time inputs. Its affine-doubling recurrence takes $O(L\log L)$ work for a length-$L$ sequence. AttNHP uses two width-64 layers, one attention head, and 16 time features. Both expose the state immediately after the last observed event to the common heads; neither receives the target event time. These adaptations do not support claims about the original models' native likelihoods or computational efficiency. Two nonlearned quantity references repeat the last observed quantity or average the quantities in the same available input window. They do not supply timing distributions.
++
++\paragraph{Completed MLP8 correction study.}
+ The initial study crosses prototype removal/addition ($P_0/P_1$) with correction removal/addition ($H_0/H_1$), giving a $2\times2$ comparison. It places an MLP correction between the first and second attention blocks, with no local Q/K/V correction; prototype retrieval follows the second block. Thus it differs from both correction paths in CNN+GRU54. Eight bias-free branches each map the concatenated current and immediately preceding observed states through $128\!\to\!8\!\to\!64$, and their outputs are averaged. The branches become eligible after more than 1, 2, 4, 8, 16, 32, 64, or 128 observations. These are eligibility thresholds, not eight different history lags.
+ 
+ The correction contains 12,288 parameters; the 64-slot prototype bank contains 4,096. Two additional controls test alternatives to these components. $P_1H_C$ replaces the correction with eight current-state branches of width 12, matching its parameter count. $P_FH_1$ replaces the prototype residual with a bias-free $64\!\to\!32\!\to\!64$ feed-forward residual, also using 4,096 parameters. All six arms retain the backbone's persistent attention entries. The six arms, three datasets, and seeds 42, 52, and 62 produce 54 completed fits.
+@@ -297,7 +304,7 @@
+ 
+ For a dataset and seed, all comparison arms run on the same GPU and software environment. Taxi and RAF are assigned to RTX 5080; Intermittent to RTX 5090. A preliminary implementation check compared CNN+GRU54 with mean retrieval on RTX 5080: 83 bitwise checks covered initialization, synthetic sequences, and the first three updates on a shared Taxi training batch. This establishes a limited implementation baseline, not equivalence of past training trajectories or checkpoints obtained on another GPU.
+ 
+-On Instacart, the supplementary study compares MLP8, MLP12, and CNN+GRU54 across the same three seeds, adding nine fits. It asks about architecture behavior on a fourth dataset; it does not replace the correction or retrieval controls. Together, these studies specify 63 new fits. Their completed comparisons will determine the representative model's evidence, independently of the MLP findings below.
++On Instacart, the supplementary study compares MLP8, MLP12, and CNN+GRU54 across the same three seeds, adding nine fits. It asks about architecture behavior on a fourth dataset; it does not replace the correction or retrieval controls. Together, these studies specify 63 new fits. Their completed comparisons will determine the representative model's evidence, separately from the MLP4 and MLP8 findings below.
+ 
+ \paragraph{Decision criteria and computational cost.}
+ The correction criterion requires the full model to have lower overall quantity RMSE than both controls in every seed on the same two or more core datasets. The fixed-retrieval criterion requires corresponding improvements over mean, weighted, and the general-query control. These are descriptive consistency criteria, not significance tests.
+@@ -305,11 +312,95 @@
+ Retrieval must also meet a predeclared cost bound relative to mean retrieval on the same GPU. With batch 128, sequence lengths 64 and 256, five warm-up iterations and twenty measured iterations, the allowed increases are 20\% for inference time, 30\% for training-step time, and 20\% for peak allocation. Both lengths must pass. Results from arms above these bounds remain part of the comparison.
+ 
+ \section{Results}
+-\subsection{Quantity Gains in the Completed MLP Study}
++\subsection{Overall Performance in the Earlier Common-Head Study}
++Table~\ref{tab:external-legacy} reports the completed four-dataset comparison. On Taxi and Intermittent, TitanTPP-MLP4 has lower quantity MAE and RMSE than all six encoder adaptations in every paired seed. These are 36 model--dataset--seed comparisons for each quantity metric. Relative to RMTPP, which has the lowest mean quantity errors among the six alternatives on both datasets, mean RMSE is lower by 15.85\% on Taxi and 34.39\% on Intermittent; mean MAE is lower by 10.13\% and 21.72\%, respectively.
++
++\begin{table}[p]
++\caption{Historical development-validation comparison with numerical-input, common-head adaptations of the external encoders. Values are mean $\pm$ sample standard deviation over seeds 42, 52, and 62; all three metrics use the same RMSE-selected checkpoint within each run. TitanTPP (MLP4) denotes the earlier eight-branch, width-four correction (6,144 parameters), not CNN+GRU54. Bold marks the lowest mean in each dataset and metric within this panel.}
++\label{tab:external-legacy}\centering\small
++\begin{tabular}{lrrr}
++\toprule
++Model & Quantity MAE & Quantity RMSE & Time NLL\\
++\midrule
++\multicolumn{4}{l}{\textit{Taxi}}\\
++TitanTPP (MLP4) & $\mathbf{25.6237\pm0.8320}$ & $\mathbf{79.7111\pm2.8260}$ & $1.0387\pm0.2843$\\
++RMTPP & $28.5124\pm0.6344$ & $94.7283\pm3.4006$ & $1.5798\pm0.9400$\\
++THP & $32.4095\pm0.8144$ & $107.5977\pm4.5040$ & $0.6629\pm0.0174$\\
++NHP & $94.2694\pm1.8752$ & $318.8148\pm5.3011$ & $\mathbf{0.6516\pm0.0021}$\\
++SAHP & $34.2260\pm0.4539$ & $120.5273\pm1.9996$ & $0.6848\pm0.0146$\\
++S2P2 & $33.0231\pm0.5569$ & $106.3540\pm1.9135$ & $0.6658\pm0.0242$\\
++AttNHP & $35.9811\pm1.6088$ & $127.1290\pm8.9919$ & $0.6876\pm0.0194$\\
++\midrule
++\multicolumn{4}{l}{\textit{Intermittent}}\\
++TitanTPP (MLP4) & $\mathbf{0.7005\pm0.0541}$ & $\mathbf{1.6730\pm0.0819}$ & $0.4971\pm0.2095$\\
++RMTPP & $0.8949\pm0.0494$ & $2.5499\pm0.1604$ & $0.2748\pm0.0047$\\
++THP & $0.8993\pm0.0661$ & $2.7534\pm0.1784$ & $0.2911\pm0.0045$\\
++NHP & $4.5188\pm0.1706$ & $12.8755\pm1.0405$ & $0.4613\pm0.0969$\\
++SAHP & $1.8619\pm0.0899$ & $7.0298\pm0.7673$ & $0.3448\pm0.0138$\\
++S2P2 & $0.9359\pm0.0086$ & $2.5758\pm0.0766$ & $\mathbf{0.2349\pm0.0189}$\\
++AttNHP & $1.0413\pm0.0938$ & $3.0799\pm0.2982$ & $0.2946\pm0.0569$\\
++\midrule
++\multicolumn{4}{l}{\textit{RAF}}\\
++TitanTPP (MLP4) & $9.2506\pm0.0855$ & $\mathbf{33.9507\pm0.0588}$ & $3.5446\pm0.0669$\\
++RMTPP & $\mathbf{9.1362\pm0.0557}$ & $34.5503\pm0.2506$ & $3.5191\pm0.1463$\\
++THP & $9.3014\pm0.1819$ & $34.7445\pm0.3204$ & $3.3928\pm0.0187$\\
++NHP & $9.1793\pm0.0882$ & $36.2731\pm0.3186$ & $\mathbf{3.3889\pm0.0556}$\\
++SAHP & $9.2332\pm0.0209$ & $35.4193\pm0.2130$ & $3.7415\pm0.0745$\\
++S2P2 & $9.2730\pm0.0517$ & $33.9947\pm0.1261$ & $3.4187\pm0.0284$\\
++AttNHP & $9.1917\pm0.0434$ & $34.8766\pm0.0676$ & $3.9707\pm0.0609$\\
++\midrule
++\multicolumn{4}{l}{\textit{Instacart}}\\
++TitanTPP (MLP4) & $3.9916\pm0.0026$ & $5.8827\pm0.0048$ & $2.8071\pm0.0041$\\
++RMTPP & $\mathbf{3.9852\pm0.0052}$ & $5.8775\pm0.0213$ & $2.8051\pm0.0048$\\
++THP & $4.0013\pm0.0025$ & $5.8582\pm0.0253$ & $2.8056\pm0.0016$\\
++NHP & $4.4923\pm0.0304$ & $6.7613\pm0.0538$ & $2.8132\pm0.0080$\\
++SAHP & $3.9979\pm0.0099$ & $5.8776\pm0.0067$ & $2.8018\pm0.0013$\\
++S2P2 & $3.9987\pm0.0063$ & $\mathbf{5.8523\pm0.0150}$ & $\mathbf{2.7970\pm0.0014}$\\
++AttNHP & $3.9958\pm0.0021$ & $5.8648\pm0.0194$ & $2.8080\pm0.0028$\\
++\bottomrule
++\end{tabular}
++\end{table}
++
++The result is narrower on RAF. MLP4 has the lowest mean RMSE, but its advantage over S2P2 is only 0.13\%, with improvements in two of three paired seeds. RMTPP has lower mean MAE. On Instacart, S2P2 has the lowest mean RMSE and timing NLL, while RMTPP has the lowest mean MAE. MLP4 has 0.52\% higher mean RMSE than S2P2, and both S2P2 and AttNHP have lower RMSE in all three paired seeds. These differences rule out a uniform quantity ranking across the four datasets.
++
++Timing provides a further distinction. NHP has the lowest mean time NLL on Taxi and RAF, and S2P2 does so on Intermittent and Instacart. For example, MLP4's Taxi NLL is 1.0387, compared with 0.6516 for NHP; on Intermittent, it is 0.4971, compared with 0.2349 for S2P2. The quantity advantage therefore coexists with worse timing scores at the quantity-selected checkpoints.
++
++Table~\ref{tab:external-simple} puts these quantity results alongside the two nonlearned rules. MLP4 has lower RMSE than both on all four datasets. On Intermittent, however, repeating the last quantity gives lower MAE, 0.5647 versus 0.7005, while its RMSE is 1.7078 versus 1.6730. This disagreement between MAE and RMSE is material: outperforming the learned encoders does not mean that the model improves every measure over a simple rule.
++
++\begin{table}[t]
++\caption{Historical validation comparison with nonlearned quantity rules on the same targets and observed windows. TitanTPP (MLP4) entries are three-seed means; deterministic rules have one result, no seed standard deviation, and no duration likelihood.}
++\label{tab:external-simple}\centering\small
++\begin{tabular}{llrr}
++\toprule
++Dataset & Predictor & MAE & RMSE\\
++\midrule
++Taxi & TitanTPP (MLP4) & 25.6237 & 79.7111\\
++ & Last quantity & 41.1951 & 134.3931\\
++ & Window mean & 120.3771 & 368.7843\\
++\midrule
++Intermittent & TitanTPP (MLP4) & 0.7005 & 1.6730\\
++ & Last quantity & 0.5647 & 1.7078\\
++ & Window mean & 4.5537 & 13.7821\\
++\midrule
++RAF & TitanTPP (MLP4) & 9.2506 & 33.9507\\
++ & Last quantity & 11.3136 & 44.5742\\
++ & Window mean & 10.8564 & 36.8499\\
++\midrule
++Instacart & TitanTPP (MLP4) & 3.9916 & 5.8827\\
++ & Last quantity & 4.9674 & 7.3473\\
++ & Window mean & 4.0507 & 5.9030\\
++\bottomrule
++\end{tabular}
++\end{table}
++
++
++These results describe the archived MLP4 variant under common heads. They establish neither the benefit of the CNN+GRU correction nor the effect of changing its retrieval rule. We next examine the separate MLP8 ablation to distinguish the correction and prototype contributions.
++
++\subsection{Quantity Gains in the Completed MLP8 Study}
+ Table~\ref{tab:rmse} reports the complete six-arm quantity comparison. Adding the MLP correction reduces overall RMSE in all 18 paired comparisons: three datasets, three seeds, and two prototype settings. Without prototypes, the reductions in the means are 13.04\% on Taxi, 9.01\% on Intermittent, and 0.77\% on RAF. With prototypes, the corresponding reductions are 14.11\%, 3.28\%, and 0.85\%. The direction is consistent, but the magnitude is strongly dataset-dependent.
+ 
+ \begin{table}[t]
+-\caption{Completed MLP study: overall validation quantity RMSE (mean $\pm$ sample SD over three seeds; lower is better). Bold marks the lowest mean within each dataset. These are not CNN+GRU54 results.}
++\caption{Completed MLP8 study: overall validation quantity RMSE (mean $\pm$ sample SD over three seeds; lower is better). Bold marks the lowest mean within each dataset. These are not CNN+GRU54 results.}
+ \label{tab:rmse}
+ \centering\small
+ \setlength{\tabcolsep}{6pt}
+@@ -327,11 +418,11 @@
+ \end{tabular}
+ \end{table}
+ 
+-The parameter controls provide a more selective result. $P_1H_1$ beats both $P_FH_1$ and $P_1H_C$ in all three seeds on Taxi and RAF. On Intermittent, it beats each control in only two of three seeds. Thus the original MLP study satisfies its two-dataset consistency criterion, while leaving an exception on Intermittent. The large Taxi gap against $P_1H_C$ is compatible with useful explicit previous-state input in this MLP architecture; the control does not establish which part of the CNN+GRU path would account for such an effect.
++The parameter controls provide a more selective result. $P_1H_1$ beats both $P_FH_1$ and $P_1H_C$ in all three seeds on Taxi and RAF. On Intermittent, it beats each control in only two of three seeds. Thus the MLP8 study satisfies its two-dataset consistency criterion, while leaving an exception on Intermittent. The large Taxi gap against $P_1H_C$ is compatible with useful explicit previous-state input in this MLP architecture; the control does not establish which part of the CNN+GRU path would account for such an effect.
+ 
+ Prototype addition yields a different pattern. With the correction already present, $P_1H_1$ has 0.46\% higher mean RMSE than $P_0H_1$ on Taxi and 2.92\% higher RMSE on Intermittent. On RAF it improves the mean by 0.12\%. The completed evidence therefore favors explicit correction more consistently than prototype addition. Choosing a different best variant for each dataset would conceal this distinction and would not define a single representative model.
+ 
+-\subsection{Timing, Large Quantities, and Cost}
++\subsection{Timing, Large Quantities, and Cost in the MLP8 Study}
+ Quantity gains are not uniform gains across outputs. On Taxi, adding correction raises overall time NLL from 0.818 to 1.253 without prototypes and from 0.725 to 1.229 with prototypes. These are increases of 53.17\% and 69.64\% in the means; timing NLL worsens in every seed under both settings. The checkpoints were selected for quantity RMSE, so this is a tradeoff at the quantity-selected model rather than a comparison of separately optimized timing checkpoints.
+ 
+ Large-quantity behavior also qualifies the overall result. The Taxi full model has large-quantity RMSE 376.660, compared with 366.709 for its feed-forward prototype substitute, despite lower overall RMSE. On RAF, adding correction slightly reduces overall RMSE but increases large-quantity MAE by 1.27\% without prototypes and 0.94\% with prototypes. Its large-quantity time NLL rises by 3.64\% and 3.85\%, respectively. The large subsets contain only 79 Taxi targets and 50 RAF targets, compared with 1,141 on Intermittent. Appendix~\ref{app:metrics} retains all six metrics, including these unfavorable outcomes.
+@@ -344,16 +435,18 @@
+ The archived observation of 8 October 2026, 14:38 KST contains one completed Instacart fit: MLP8, seed 52, on RTX 5090. It selected epoch 15 and stopped after epoch 55, with overall quantity RMSE 5.884, MAE 3.994, and time NLL 2.812. For the 6,036 large-quantity targets, the same checkpoint gives RMSE 24.665, MAE 22.088, and time NLL 2.900. This is a single-fit observation, not a three-seed architecture comparison; final collection of the complete stage remains outstanding. It cannot rank MLP8, MLP12, and CNN+GRU54.
+ 
+ \section{Discussion}
+-The completed study gives a specific empirical motivation for explicit correction. Quantity RMSE improves consistently when the MLP path is added, and the full model beats the two budget controls in every seed on two datasets. At the same time, prototype addition is not consistently helpful, and the largest correction gains coincide with a timing penalty. These results argue for separating the two mechanisms and for keeping timing and large-quantity errors visible alongside the primary metric.
++The completed MLP8 study gives a specific empirical motivation for explicit correction. Quantity RMSE improves consistently when the MLP path is added, and the full model beats the two budget controls in every seed on two datasets. At the same time, prototype addition is not consistently helpful, and the largest correction gains coincide with a timing penalty. These results argue for separating the two mechanisms and for keeping timing and large-quantity errors visible alongside the primary metric.
+ 
+ The representative architecture changes the correction mechanism substantially. Its local operation reads three observed positions, while its GRU carries a recurrent state across the observed prefix. A successful full-versus-current-only comparison would support that combined path, not a claim that one preceding state alone explains the gain. Equal active parameter counts narrow the capacity explanation but do not remove differences in operations, depth, or optimization. Component-level attribution would require further controls.
+ 
+ The retrieval hypothesis is narrower still. Fixed split-query scoring can be expressed as a concatenated dot product. A benefit over the matched general query would support the tested separate-normalization constraint, not the invention of a fundamentally new memory mechanism. A benefit over mean alone would be insufficient, because both similarity weighting and general query learning are plausible alternatives. Earlier exploratory observations informed this hypothesis, making the new comparison a development study rather than independent confirmation.
+ 
+-All performance reported here comes from validation evidence used during research. An independently unexposed evaluation is not yet available. The present comparisons also do not establish superiority over external models such as S2P2: encoder adaptations, output heads, training conditions, and selection rules must be aligned before such a comparison can support a claim. Three seeds and directional consistency describe the current evidence; they do not establish statistical significance or performance across all event-forecasting settings.
++The earlier common-head comparison supports a bounded performance claim for MLP4: lower quantity errors than the six tested encoder adaptations on Taxi and Intermittent, and a small RMSE advantage on RAF. On Instacart, it does not achieve the lowest RMSE. It does not rank the new CNN+GRU54 model, and it compares adapted encoders rather than the original native likelihood models.
++
++All performance reported here comes from validation evidence used during research. An independently unexposed evaluation is not yet available. Three seeds and directional consistency describe the current evidence; they do not establish statistical significance or performance across all event-forecasting settings.
+ 
+ \section{Conclusion}
+-We examined explicit history correction within a causal attention model. The completed MLP analysis finds consistent quantity improvements across paired runs, together with timing and large-quantity costs that limit a broader performance claim. Its prototype results are less consistent. The CNN+GRU architecture and matched controls carry these observations into two focused questions: whether an explicit local and recurrent path adds value, and whether separate time and quantity queries improve prototype retrieval. Those comparisons, followed by an unexposed evaluation, will determine how far the present evidence extends.
++We examined explicit history correction within a causal attention model. The earlier MLP4 comparison shows strong quantity results on Taxi and Intermittent, but mixed results on RAF and Instacart. The MLP8 ablation finds consistent quantity improvements from correction across paired runs, together with timing and large-quantity costs. Its prototype results are less consistent. The CNN+GRU architecture and matched controls carry these observations into two focused questions: whether an explicit local and recurrent path adds value, and whether separate time and quantity queries improve prototype retrieval. Those comparisons, followed by an unexposed evaluation, will determine how far the present evidence extends.
+ 
+ \begin{thebibliography}{28}
+ \bibitem{bachlechner2021rezero}
+@@ -453,12 +546,12 @@
+ \clearpage
+ \appendix
+ \renewcommand{\theHsection}{\Alph{section}}
+-\section{Full Validation Metrics for the MLP Study}
++\section{Full Validation Metrics for the MLP8 Study}
+ \label{app:metrics}
+ All entries in Table~\ref{tab:allmetrics} are means and sample standard deviations over seeds 42, 52, and 62. Each fit contributes metrics from its first minimum-overall-quantity-RMSE checkpoint. The large subsets use the strict training-derived thresholds in Table~\ref{tab:data}. Values are rounded to three decimals except for time NLLs below 0.001, which use scientific notation with the standard deviation on the line beneath the mean. No metric in this table comes from the representative CNN+GRU experiment.
+ 
+ \begin{table}[htbp]
+-\caption{Completed MLP study: all six validation metrics (mean $\pm$ sample SD). Lower is better in every column. The large-quantity subset is shown beside the full population rather than used for independent checkpoint selection.}
++\caption{Completed MLP8 study: all six validation metrics (mean $\pm$ sample SD). Lower is better in every column. The large-quantity subset is shown beside the full population rather than used for independent checkpoint selection.}
+ \label{tab:allmetrics}
+ \centering\scriptsize
+ \setlength{\tabcolsep}{3pt}

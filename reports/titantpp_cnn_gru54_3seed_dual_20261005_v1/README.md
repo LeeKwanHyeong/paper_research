@@ -1,5 +1,9 @@
 # CNN+GRU54 3seed 검증
 
+**최종 현재 기준선 — 완료 / 2026-10-06**
+
+신규6조건과 재사용seed42 3조건의9/9 학습·selected/last 전체Validation·원본SHA회수·두서버 종료 및 두 시간head stage 완료를 검증했습니다. Intermittent62는53/best13, 실제terminal관측13:46:27KST입니다. 승인된 로컬 진단 최종연결도 통과했고 통합자동화는 삭제했습니다. [최종3seed Validation·stage별 종료/회수 증적](hourly_monitor/20261006T044538Z/README.md). 아래의 초기학습진입 기록은 당시 상태입니다. Test3seed/CPU binary 재추론 감사/새 독립평가는 별도 미완료입니다.
+
 기존 대조 실험 중지와 checkpoint·이력 SHA 회수는 완료했습니다. 새 CNN+GRU54 계약·CPU 54개 검증과 두 서버 native qualification이 통과했습니다. 2026-10-05 23:30 KST에 학습을 시작했고 실제 supervisor·worker·GPU PID 일치를 확인했습니다.
 
 |서버|신규 학습|재사용|

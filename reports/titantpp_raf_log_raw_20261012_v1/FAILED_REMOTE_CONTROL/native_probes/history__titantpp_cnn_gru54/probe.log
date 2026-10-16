@@ -1,0 +1,17 @@
+Traceback (most recent call last):
+  File "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_raf_log_raw_20261012_v1_5080/control/evaluate.py", line 751, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_raf_log_raw_20261012_v1_5080/control/evaluate.py", line 744, in main
+    return native_probe(args.root, args.study, args.arm, args.device)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_raf_log_raw_20261012_v1_5080/control/evaluate.py", line 702, in native_probe
+    plain_grad = torch.autograd.grad(plain["joint_loss"].sum(), tuple(model.parameters()), allow_unused=True)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/leekwanhyeong/miniconda3/envs/ai_env/lib/python3.12/site-packages/torch/autograd/__init__.py", line 532, in grad
+    result = _engine_run_backward(
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/leekwanhyeong/miniconda3/envs/ai_env/lib/python3.12/site-packages/torch/autograd/graph.py", line 869, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: cudnn RNN backward can only be called in training mode

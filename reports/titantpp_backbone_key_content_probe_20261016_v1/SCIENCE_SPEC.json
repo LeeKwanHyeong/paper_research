@@ -1,0 +1,1497 @@
+{
+  "schema": "titantpp_key_content_probe_science_spec_v1",
+  "created_kst": "2026-10-16T05:40:41.144208+09:00",
+  "status": "specified_implementation_and_independent_review_pending",
+  "campaign": "titantpp_backbone_key_content_probe_20261016_v1",
+  "purpose": "학습된 KeyOnly3의 과거 K 내용 차분을 제거하되 각 위치에서 실제로 가용한 tap 계수 합과 잠재 상수 응답을 유지하여, 직전 과거 tap 삭제 진단에 함께 바뀌었던 두 성분을 구분한다.",
+  "authorization": "2026-10-15 CNN backbone 반복 개선·실패 진단 사전승인과 2026-10-16 부모의 이 네 명세 파일 작성 승인. 기존 CNN·QueryOnly와 기존 원본은 불변이다.",
+  "candidate_only": "titantpp_cnn_key_only_v1",
+  "dataset": "raf_spare_parts",
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "selected_epochs": {
+    "42": 9,
+    "52": 5,
+    "62": 26
+  },
+  "selected_models": [
+    {
+      "job_id": "raf_spare_parts__42__titantpp_cnn_key_only_v1",
+      "seed": 42,
+      "selected_epoch": 9,
+      "arm": "titantpp_cnn_key_only_v1",
+      "checkpoint_path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/inputs/jobs/raf_spare_parts__42__titantpp_cnn_key_only_v1/selected.pt",
+      "checkpoint_raw_sha256": "673a3bd76d9ad509ff58a433b5627c811907508eeae6a84a48d6135dd9030e22",
+      "checkpoint_tensor_sha256": "55ab1e5b97ea04f14b2c5fc62e65eb5166675634f1ab459dde1e6aacdda6da92",
+      "initial_state_sha256": "48122ee3fd29f26b845ed0d0a4ab2142ba195399d76d608525b5cb08cd3aaf41",
+      "metadata_path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/inputs/jobs/raf_spare_parts__42__titantpp_cnn_key_only_v1/checkpoint_metadata.json",
+      "metadata_sha256": "57888411ff8911105548925ded59e071c513933b2bb306b2fa81693dbab28eb3",
+      "history_path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/inputs/jobs/raf_spare_parts__42__titantpp_cnn_key_only_v1/selection_history.json",
+      "history_sha256": "d9c4991e2226c177ee58de988586bdc62cb43befbb7e9345406777c6e7748331"
+    },
+    {
+      "job_id": "raf_spare_parts__52__titantpp_cnn_key_only_v1",
+      "seed": 52,
+      "selected_epoch": 5,
+      "arm": "titantpp_cnn_key_only_v1",
+      "checkpoint_path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/inputs/jobs/raf_spare_parts__52__titantpp_cnn_key_only_v1/selected.pt",
+      "checkpoint_raw_sha256": "8b426e2942889a4c66d6ad159084970faba9bc6560d642857d1bcdfd46a9a1ef",
+      "checkpoint_tensor_sha256": "a8091d26df0d7ae1b33c2e20412b99ea4dd7a14c39df0c03b79e3a2e6bec2674",
+      "initial_state_sha256": "fd1ef968075575cefcf410e02ee3f6e91f5ee50732654cd4b9e143ae3fdae450",
+      "metadata_path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/inputs/jobs/raf_spare_parts__52__titantpp_cnn_key_only_v1/checkpoint_metadata.json",
+      "metadata_sha256": "f97971da8baa42f008c7fe1598783e590cacbb77254c0e31d68c9c6c9df07b0e",
+      "history_path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/inputs/jobs/raf_spare_parts__52__titantpp_cnn_key_only_v1/selection_history.json",
+      "history_sha256": "bb9b7681094f7ac9d01c935e922f1c61b936d619d0dcffdbda2992999d490a73"
+    },
+    {
+      "job_id": "raf_spare_parts__62__titantpp_cnn_key_only_v1",
+      "seed": 62,
+      "selected_epoch": 26,
+      "arm": "titantpp_cnn_key_only_v1",
+      "checkpoint_path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/inputs/jobs/raf_spare_parts__62__titantpp_cnn_key_only_v1/selected.pt",
+      "checkpoint_raw_sha256": "a6f5657e8ec57cf396196577b6d766c223dc5a5c812725f691fff7b211b1390f",
+      "checkpoint_tensor_sha256": "ef072c064244ac875699b8e408c27095a9aff81bfd9387c2f402d79b644aca7b",
+      "initial_state_sha256": "93b0ac647a4e550d7a9b4a4cae7aece53f26929930c4623f1682704d75fce0e6",
+      "metadata_path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/inputs/jobs/raf_spare_parts__62__titantpp_cnn_key_only_v1/checkpoint_metadata.json",
+      "metadata_sha256": "9ed588375b760a6a4087996cdbcc6435ba0e6401a224880649a7bd99c39c1a94",
+      "history_path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/inputs/jobs/raf_spare_parts__62__titantpp_cnn_key_only_v1/selection_history.json",
+      "history_sha256": "f1ea2a6ffad8826bb13da0df99cf57653529046e53b01006f8189e097e268802"
+    }
+  ],
+  "source_file_count": 145,
+  "source_closure": "fc0668016b8eb89752e03d0751e317e77b06d8135c0b82f8b43625e345abf9a3",
+  "source_revision": "322af3f0eb9038dea8bbbd3183ef0a77279d8106",
+  "parent_native_receipt_path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/final_receipt.json",
+  "parent_native_receipt_sha256": "42951c5ffb69639a438a002f0dd9e70eee1f3d8c234ad87b2ad42861c5041ff7",
+  "evidence_pins": {
+    "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/final_receipt.json": "42951c5ffb69639a438a002f0dd9e70eee1f3d8c234ad87b2ad42861c5041ff7",
+    "reports/titantpp_backbone_key_history_probe_20261016_v1/diagnostics_branch_probe_v1/RESULT.json": "953a87fa46e0d70b9c624d01a91df33c052c3a3158eecf8f1473c861c11cb2d7",
+    "reports/titantpp_backbone_key_history_probe_20261016_v1/diagnostics_branch_probe_v1/RECEIPT.json": "d90f3c67217fbe6eb414e1521fa6e63491f0161a302eb8227cf5b934c58a47eb",
+    "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/contract.json": "d3ad3ff325c4849ebad1553bfe7a64269000881e30d61742d6cbcfe8639d9c95"
+  },
+  "parent_prediction_references": {
+    "raf_spare_parts__42__titantpp_cnn_key_only_v1/on_validation": {
+      "receipt_path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/results/raf_spare_parts__42__titantpp_cnn_key_only_v1/on_validation_metrics.json",
+      "receipt_sha256": "e8ca119624b826606e679fc091d17218fc04c250476d747cc30142b8b1daeb95",
+      "manifest_path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/rows/raf_spare_parts__42__titantpp_cnn_key_only_v1/on_validation/manifest.json",
+      "manifest_sha256": "3c64e74eded2e34642f38cb9257cead047e29801ef221c69fdb69d068a0ea6bd",
+      "parts": [
+        {
+          "path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/rows/raf_spare_parts__42__titantpp_cnn_key_only_v1/on_validation/part-00000.parquet",
+          "sha256": "1e1197beded68653ba51610902c1b76480bfaa38ce1d2257c264aa2c876d68c9",
+          "rows": 6690,
+          "bytes": 844140
+        }
+      ],
+      "prediction_rows": 6690,
+      "target_identity_sha256": "df3964a04b161ac96a551fb495882257e5bb6de449c451694db3eb10e71bd11b",
+      "truth_sha256": "41d8b6f43d62e4fc842b1740605aa706c509830dd4179804e8478f5e6757d67d",
+      "recorded_gap_sha256": "57012615dacc3459a9982c48abbec399091447417669c96249cf2e5fccb10efc",
+      "population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      },
+      "predictive_state": {
+        "state_sha256": "55ab1e5b97ea04f14b2c5fc62e65eb5166675634f1ab459dde1e6aacdda6da92",
+        "all_named_buffers_sha256": "80e49bda606342b17960dc52ea708dcb17e7519caad2a5720394999e2bdaab28",
+        "context_cache_sha256": "00426b198ddec292eabe420ba3f7f67f97b06425efbf6aea3b6108b2714ba3f6"
+      },
+      "native_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda:0",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 92000,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-c9adc246-ef66-7906-bc07-6e152fa9952f",
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 33670758400,
+          "multiprocessor_count": 170,
+          "driver_version": "595.99.02",
+          "pci_bus_id": "00000000:02:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "python_executable": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_cnn_gru_resume_dual_20261005_v1_5090/runtime_env/bin/python3.12",
+        "resolved_python_executable": "/opt/miniconda3/envs/ai_env/bin/python3.12"
+      },
+      "metrics": {
+        "split": "validation",
+        "count": 6690,
+        "represented_n": 6690.0,
+        "qty_sse": 7896250.263291199,
+        "qty_absolute_error_sum": 61625.861068725586,
+        "qty_signed_error_sum": -20846.033249616623,
+        "time_nll_sum": 23653.376485991652,
+        "qty_rmse": 34.355588582640685,
+        "qty_mae": 9.211638425818473,
+        "qty_bias": -3.115998990974084,
+        "time_nll": 3.5356317617326836,
+        "quantity_boundaries": [
+          2.0,
+          30.0,
+          60.0,
+          200.0
+        ],
+        "quantity_cells": [
+          {
+            "bin": 0,
+            "count": 3626,
+            "represented_n": 3626.0,
+            "qty_sse": 149863.52788433072,
+            "qty_absolute_error_sum": 7157.632690012455,
+            "qty_signed_error_sum": 6581.754425227642,
+            "time_nll_sum": 12635.05474371282,
+            "qty_rmse": 6.428861595431855,
+            "qty_mae": 1.9739748179846814,
+            "qty_bias": 1.8151556605702268,
+            "time_nll": 3.484571082105025
+          },
+          {
+            "bin": 1,
+            "count": 2555,
+            "represented_n": 2555.0,
+            "qty_sse": 462728.20978056925,
+            "qty_absolute_error_sum": 18338.753405988216,
+            "qty_signed_error_sum": 2957.5000267624855,
+            "time_nll_sum": 9151.073158037927,
+            "qty_rmse": 13.457597535257415,
+            "qty_mae": 7.17759428805801,
+            "qty_bias": 1.1575342570498965,
+            "time_nll": 3.581633329956136
+          },
+          {
+            "bin": 2,
+            "count": 235,
+            "represented_n": 235.0,
+            "qty_sse": 211095.09766435996,
+            "qty_absolute_error_sum": 5938.645339488983,
+            "qty_signed_error_sum": -3592.9516291618347,
+            "time_nll_sum": 848.0250167398315,
+            "qty_rmse": 29.971269765188495,
+            "qty_mae": 25.270831231868012,
+            "qty_bias": -15.289155868773765,
+            "time_nll": 3.6086170925099212
+          },
+          {
+            "bin": 3,
+            "count": 224,
+            "represented_n": 224.0,
+            "qty_sse": 1619435.6334585666,
+            "qty_absolute_error_sum": 16033.094715595245,
+            "qty_signed_error_sum": -12634.60115480423,
+            "time_nll_sum": 846.1506867520601,
+            "qty_rmse": 85.02719190737935,
+            "qty_mae": 71.57631569462163,
+            "qty_bias": -56.40446944109031,
+            "time_nll": 3.7774584230002684
+          },
+          {
+            "bin": 4,
+            "count": 50,
+            "represented_n": 50.0,
+            "qty_sse": 5453127.794503371,
+            "qty_absolute_error_sum": 14157.734917640686,
+            "qty_signed_error_sum": -14157.734917640686,
+            "time_nll_sum": 173.07288074901953,
+            "qty_rmse": 330.2462049593718,
+            "qty_mae": 283.15469835281374,
+            "qty_bias": -283.15469835281374,
+            "time_nll": 3.461457614980391
+          }
+        ],
+        "tail": {
+          "count": 50,
+          "represented_n": 50.0,
+          "qty_sse": 5453127.794503371,
+          "qty_absolute_error_sum": 14157.734917640686,
+          "qty_signed_error_sum": -14157.734917640686,
+          "time_nll_sum": 173.07288074901953,
+          "qty_rmse": 330.2462049593718,
+          "qty_mae": 283.15469835281374,
+          "qty_bias": -283.15469835281374,
+          "time_nll": 3.461457614980391
+        },
+        "tail_definition": "raw_quantity > quantity_boundaries[-1]",
+        "bias_definition": "prediction minus target; target-defined strata are descriptive"
+      }
+    },
+    "raf_spare_parts__42__titantpp_cnn_key_only_v1/on_train": {
+      "receipt_path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/results/raf_spare_parts__42__titantpp_cnn_key_only_v1/on_train_metrics.json",
+      "receipt_sha256": "adfc90bc90d997426a754dacdf2de27aa2046060442bfaf9ca14a0eb12eb80e4",
+      "manifest_path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/rows/raf_spare_parts__42__titantpp_cnn_key_only_v1/on_train/manifest.json",
+      "manifest_sha256": "fcdd870b4260802a8db13c22673b08ee427e442f278add4b020e04704b15b27c",
+      "parts": [
+        {
+          "path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/rows/raf_spare_parts__42__titantpp_cnn_key_only_v1/on_train/part-00000.parquet",
+          "sha256": "cf33906af9fcc6ca62774128c8dfbb053f66422264d804937b78e9737e016dbe",
+          "rows": 8192,
+          "bytes": 868108
+        },
+        {
+          "path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/rows/raf_spare_parts__42__titantpp_cnn_key_only_v1/on_train/part-00001.parquet",
+          "sha256": "6456fb14b0e5b54a6b9f18abda635658a619edb2de0a93167ae5bcc87f29d163",
+          "rows": 8192,
+          "bytes": 867457
+        },
+        {
+          "path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/rows/raf_spare_parts__42__titantpp_cnn_key_only_v1/on_train/part-00002.parquet",
+          "sha256": "0fa7a6620ec0450293746dbf14c99dea4960019d734587762991e975ad0ff512",
+          "rows": 8192,
+          "bytes": 893255
+        },
+        {
+          "path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/rows/raf_spare_parts__42__titantpp_cnn_key_only_v1/on_train/part-00003.parquet",
+          "sha256": "9a7943bed06377af2f2dcfac5c9b87a117d4e8f27574b7e00ea6daead93bda4d",
+          "rows": 1203,
+          "bytes": 145073
+        }
+      ],
+      "prediction_rows": 25779,
+      "target_identity_sha256": "b287a4cc59579753d3dcd73c192adbccf250d9cfc20fd59a8e5a36fbd8592e3e",
+      "truth_sha256": "e5f748786597187867cf17070bdd0ff1274808e9061e6afe0328fb37c7d518ed",
+      "recorded_gap_sha256": "43bdec55e208949bac83449485bfac008f5e077bb01642d54171882291efd3e9",
+      "population": {
+        "target_count": 25779,
+        "target_identity_sha256": "9863e00d51357456e1bf53c0f82f17a867cbbaaf9f296064d1ae23c4392895b2",
+        "target_quantity_sha256": "abbb37aab32b35b029b8705fe6044bd3ed5e8b7239822d40ba7572d0ab6fae22"
+      },
+      "predictive_state": {
+        "state_sha256": "55ab1e5b97ea04f14b2c5fc62e65eb5166675634f1ab459dde1e6aacdda6da92",
+        "all_named_buffers_sha256": "80e49bda606342b17960dc52ea708dcb17e7519caad2a5720394999e2bdaab28",
+        "context_cache_sha256": "00426b198ddec292eabe420ba3f7f67f97b06425efbf6aea3b6108b2714ba3f6"
+      },
+      "native_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda:0",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 92000,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-c9adc246-ef66-7906-bc07-6e152fa9952f",
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 33670758400,
+          "multiprocessor_count": 170,
+          "driver_version": "595.99.02",
+          "pci_bus_id": "00000000:02:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "python_executable": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_cnn_gru_resume_dual_20261005_v1_5090/runtime_env/bin/python3.12",
+        "resolved_python_executable": "/opt/miniconda3/envs/ai_env/bin/python3.12"
+      },
+      "metrics": {
+        "split": "train",
+        "count": 25779,
+        "represented_n": 25779.0,
+        "qty_sse": 54350437.910347216,
+        "qty_absolute_error_sum": 273863.5792040229,
+        "qty_signed_error_sum": -124052.9071058631,
+        "time_nll_sum": 78682.39029411587,
+        "qty_rmse": 45.916469776788816,
+        "qty_mae": 10.623514457660223,
+        "qty_bias": -4.812169095227243,
+        "time_nll": 3.0521893903609865,
+        "quantity_boundaries": [
+          2.0,
+          30.0,
+          60.0,
+          200.0
+        ],
+        "quantity_cells": [
+          {
+            "bin": 0,
+            "count": 13195,
+            "represented_n": 13195.0,
+            "qty_sse": 422672.2354862882,
+            "qty_absolute_error_sum": 28271.758170068264,
+            "qty_signed_error_sum": 26682.14810281992,
+            "time_nll_sum": 40319.371071289315,
+            "qty_rmse": 5.659748892022454,
+            "qty_mae": 2.1426114566175265,
+            "qty_bias": 2.022140818705564,
+            "time_nll": 3.055655253602828
+          },
+          {
+            "bin": 1,
+            "count": 10274,
+            "represented_n": 10274.0,
+            "qty_sse": 1550808.283463225,
+            "qty_absolute_error_sum": 69711.2027361393,
+            "qty_signed_error_sum": 8214.323144674301,
+            "time_nll_sum": 31365.47785981686,
+            "qty_rmse": 12.28596504433365,
+            "qty_mae": 6.785205639102521,
+            "qty_bias": 0.7995253206807769,
+            "time_nll": 3.052898370626519
+          },
+          {
+            "bin": 2,
+            "count": 1040,
+            "represented_n": 1040.0,
+            "qty_sse": 1044660.1349928179,
+            "qty_absolute_error_sum": 28153.159351348877,
+            "qty_signed_error_sum": -18427.83868789673,
+            "time_nll_sum": 3175.181526263032,
+            "qty_rmse": 31.693546646463467,
+            "qty_mae": 27.07034553014315,
+            "qty_bias": -17.719075661439163,
+            "time_nll": 3.0530591598683
+          },
+          {
+            "bin": 3,
+            "count": 1065,
+            "represented_n": 1065.0,
+            "qty_sse": 7051936.488578969,
+            "qty_absolute_error_sum": 74451.42029070854,
+            "qty_signed_error_sum": -67245.50100970268,
+            "time_nll_sum": 3224.2520879965628,
+            "qty_rmse": 81.37282475737423,
+            "qty_mae": 69.90743689268407,
+            "qty_bias": -63.141315502068245,
+            "time_nll": 3.027466749292547
+          },
+          {
+            "bin": 4,
+            "count": 205,
+            "represented_n": 205.0,
+            "qty_sse": 44280360.76782593,
+            "qty_absolute_error_sum": 73276.0386557579,
+            "qty_signed_error_sum": -73276.0386557579,
+            "time_nll_sum": 598.1077487500891,
+            "qty_rmse": 464.7598948307108,
+            "qty_mae": 357.4440910036971,
+            "qty_bias": -357.4440910036971,
+            "time_nll": 2.917598774390678
+          }
+        ],
+        "tail": {
+          "count": 205,
+          "represented_n": 205.0,
+          "qty_sse": 44280360.76782593,
+          "qty_absolute_error_sum": 73276.0386557579,
+          "qty_signed_error_sum": -73276.0386557579,
+          "time_nll_sum": 598.1077487500891,
+          "qty_rmse": 464.7598948307108,
+          "qty_mae": 357.4440910036971,
+          "qty_bias": -357.4440910036971,
+          "time_nll": 2.917598774390678
+        },
+        "tail_definition": "raw_quantity > quantity_boundaries[-1]",
+        "bias_definition": "prediction minus target; target-defined strata are descriptive"
+      }
+    },
+    "raf_spare_parts__52__titantpp_cnn_key_only_v1/on_validation": {
+      "receipt_path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/results/raf_spare_parts__52__titantpp_cnn_key_only_v1/on_validation_metrics.json",
+      "receipt_sha256": "fd1183130e95c3251cda4736a57e4c31acc2bd72ff09acb1765123c067aea93c",
+      "manifest_path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/rows/raf_spare_parts__52__titantpp_cnn_key_only_v1/on_validation/manifest.json",
+      "manifest_sha256": "8973e54a1894040bf080471572f8bbd6c9f84e423217f4433ced0058cf8e65a1",
+      "parts": [
+        {
+          "path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/rows/raf_spare_parts__52__titantpp_cnn_key_only_v1/on_validation/part-00000.parquet",
+          "sha256": "1d032838b20684a9a570490cdc2b11f7a5a74bc59a5ffa0f3ae1012849b39945",
+          "rows": 6690,
+          "bytes": 844148
+        }
+      ],
+      "prediction_rows": 6690,
+      "target_identity_sha256": "df3964a04b161ac96a551fb495882257e5bb6de449c451694db3eb10e71bd11b",
+      "truth_sha256": "41d8b6f43d62e4fc842b1740605aa706c509830dd4179804e8478f5e6757d67d",
+      "recorded_gap_sha256": "57012615dacc3459a9982c48abbec399091447417669c96249cf2e5fccb10efc",
+      "population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      },
+      "predictive_state": {
+        "state_sha256": "a8091d26df0d7ae1b33c2e20412b99ea4dd7a14c39df0c03b79e3a2e6bec2674",
+        "all_named_buffers_sha256": "80e49bda606342b17960dc52ea708dcb17e7519caad2a5720394999e2bdaab28",
+        "context_cache_sha256": "00426b198ddec292eabe420ba3f7f67f97b06425efbf6aea3b6108b2714ba3f6"
+      },
+      "native_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda:0",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 92000,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-c9adc246-ef66-7906-bc07-6e152fa9952f",
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 33670758400,
+          "multiprocessor_count": 170,
+          "driver_version": "595.99.02",
+          "pci_bus_id": "00000000:02:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "python_executable": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_cnn_gru_resume_dual_20261005_v1_5090/runtime_env/bin/python3.12",
+        "resolved_python_executable": "/opt/miniconda3/envs/ai_env/bin/python3.12"
+      },
+      "metrics": {
+        "split": "validation",
+        "count": 6690,
+        "represented_n": 6690.0,
+        "qty_sse": 7841291.462085828,
+        "qty_absolute_error_sum": 62021.432992875576,
+        "qty_signed_error_sum": -20103.661296069622,
+        "time_nll_sum": 23169.918283094525,
+        "qty_rmse": 34.23582041393082,
+        "qty_mae": 9.270767263509054,
+        "qty_bias": -3.0050315838669093,
+        "time_nll": 3.4633659615985835,
+        "quantity_boundaries": [
+          2.0,
+          30.0,
+          60.0,
+          200.0
+        ],
+        "quantity_cells": [
+          {
+            "bin": 0,
+            "count": 3626,
+            "represented_n": 3626.0,
+            "qty_sse": 160914.5038899862,
+            "qty_absolute_error_sum": 7619.493419885635,
+            "qty_signed_error_sum": 7312.147802829742,
+            "time_nll_sum": 12484.168836080693,
+            "qty_rmse": 6.66167890041219,
+            "qty_mae": 2.1013495366479966,
+            "qty_bias": 2.0165879213540383,
+            "time_nll": 3.4429588626808307
+          },
+          {
+            "bin": 1,
+            "count": 2555,
+            "represented_n": 2555.0,
+            "qty_sse": 491136.34698851244,
+            "qty_absolute_error_sum": 18009.165299117565,
+            "qty_signed_error_sum": 2331.8792985081673,
+            "time_nll_sum": 8906.846855362573,
+            "qty_rmse": 13.864543848275302,
+            "qty_mae": 7.048596985955994,
+            "qty_bias": 0.9126729152673845,
+            "time_nll": 3.4860457359540407
+          },
+          {
+            "bin": 2,
+            "count": 235,
+            "represented_n": 235.0,
+            "qty_sse": 238461.3025451677,
+            "qty_absolute_error_sum": 6230.291037082672,
+            "qty_signed_error_sum": -3725.961218357086,
+            "time_nll_sum": 811.8279093549713,
+            "qty_rmse": 31.854810421672795,
+            "qty_mae": 26.511876753543287,
+            "qty_bias": -15.855154120668452,
+            "time_nll": 3.454586848319027
+          },
+          {
+            "bin": 3,
+            "count": 224,
+            "represented_n": 224.0,
+            "qty_sse": 1721053.4383399663,
+            "qty_absolute_error_sum": 16350.82357609272,
+            "qty_signed_error_sum": -12210.067518353462,
+            "time_nll_sum": 803.5844870360672,
+            "qty_rmse": 87.65428841935471,
+            "qty_mae": 72.99474810755679,
+            "qty_bias": -54.50922999264939,
+            "time_nll": 3.5874307456967287
+          },
+          {
+            "bin": 4,
+            "count": 50,
+            "represented_n": 50.0,
+            "qty_sse": 5229725.870322198,
+            "qty_absolute_error_sum": 13811.659660696983,
+            "qty_signed_error_sum": -13811.659660696983,
+            "time_nll_sum": 163.49019526021883,
+            "qty_rmse": 323.4107564791931,
+            "qty_mae": 276.23319321393967,
+            "qty_bias": -276.23319321393967,
+            "time_nll": 3.2698039052043764
+          }
+        ],
+        "tail": {
+          "count": 50,
+          "represented_n": 50.0,
+          "qty_sse": 5229725.870322198,
+          "qty_absolute_error_sum": 13811.659660696983,
+          "qty_signed_error_sum": -13811.659660696983,
+          "time_nll_sum": 163.49019526021883,
+          "qty_rmse": 323.4107564791931,
+          "qty_mae": 276.23319321393967,
+          "qty_bias": -276.23319321393967,
+          "time_nll": 3.2698039052043764
+        },
+        "tail_definition": "raw_quantity > quantity_boundaries[-1]",
+        "bias_definition": "prediction minus target; target-defined strata are descriptive"
+      }
+    },
+    "raf_spare_parts__52__titantpp_cnn_key_only_v1/on_train": {
+      "receipt_path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/results/raf_spare_parts__52__titantpp_cnn_key_only_v1/on_train_metrics.json",
+      "receipt_sha256": "bdd21f32f33a67d70d2bf1f085b96d51b30cf823905c149382fa08815a0cf98f",
+      "manifest_path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/rows/raf_spare_parts__52__titantpp_cnn_key_only_v1/on_train/manifest.json",
+      "manifest_sha256": "32b800ecf24b0837728057c3037b7586baad6ec6f72a32229023e99e6ce27fbf",
+      "parts": [
+        {
+          "path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/rows/raf_spare_parts__52__titantpp_cnn_key_only_v1/on_train/part-00000.parquet",
+          "sha256": "0a4fbc7faef41b335fc1a99979d2e794a5321a72f73c4af0259a5152d2ea4776",
+          "rows": 8192,
+          "bytes": 868226
+        },
+        {
+          "path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/rows/raf_spare_parts__52__titantpp_cnn_key_only_v1/on_train/part-00001.parquet",
+          "sha256": "2c12bf6e580ca80c65799bdf6b881aeb434b12816ad405c7063e4bfd1015dda0",
+          "rows": 8192,
+          "bytes": 867508
+        },
+        {
+          "path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/rows/raf_spare_parts__52__titantpp_cnn_key_only_v1/on_train/part-00002.parquet",
+          "sha256": "93af3e3a328a9e3e28875ef0e57964da161e6bfd15e545098db17e7fb07faf7e",
+          "rows": 8192,
+          "bytes": 893497
+        },
+        {
+          "path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/rows/raf_spare_parts__52__titantpp_cnn_key_only_v1/on_train/part-00003.parquet",
+          "sha256": "08a07d90795b41a865fdcfba85ffc89d6a6ee3c346e23fdf51bbd5edd92f36ea",
+          "rows": 1203,
+          "bytes": 145019
+        }
+      ],
+      "prediction_rows": 25779,
+      "target_identity_sha256": "b287a4cc59579753d3dcd73c192adbccf250d9cfc20fd59a8e5a36fbd8592e3e",
+      "truth_sha256": "e5f748786597187867cf17070bdd0ff1274808e9061e6afe0328fb37c7d518ed",
+      "recorded_gap_sha256": "43bdec55e208949bac83449485bfac008f5e077bb01642d54171882291efd3e9",
+      "population": {
+        "target_count": 25779,
+        "target_identity_sha256": "9863e00d51357456e1bf53c0f82f17a867cbbaaf9f296064d1ae23c4392895b2",
+        "target_quantity_sha256": "abbb37aab32b35b029b8705fe6044bd3ed5e8b7239822d40ba7572d0ab6fae22"
+      },
+      "predictive_state": {
+        "state_sha256": "a8091d26df0d7ae1b33c2e20412b99ea4dd7a14c39df0c03b79e3a2e6bec2674",
+        "all_named_buffers_sha256": "80e49bda606342b17960dc52ea708dcb17e7519caad2a5720394999e2bdaab28",
+        "context_cache_sha256": "00426b198ddec292eabe420ba3f7f67f97b06425efbf6aea3b6108b2714ba3f6"
+      },
+      "native_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda:0",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 92000,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-c9adc246-ef66-7906-bc07-6e152fa9952f",
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 33670758400,
+          "multiprocessor_count": 170,
+          "driver_version": "595.99.02",
+          "pci_bus_id": "00000000:02:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "python_executable": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_cnn_gru_resume_dual_20261005_v1_5090/runtime_env/bin/python3.12",
+        "resolved_python_executable": "/opt/miniconda3/envs/ai_env/bin/python3.12"
+      },
+      "metrics": {
+        "split": "train",
+        "count": 25779,
+        "represented_n": 25779.0,
+        "qty_sse": 53821883.01075384,
+        "qty_absolute_error_sum": 273771.98894906044,
+        "qty_signed_error_sum": -127362.25460290909,
+        "time_nll_sum": 78804.53295218157,
+        "qty_rmse": 45.692656784264265,
+        "qty_mae": 10.61996155588116,
+        "qty_bias": -4.940542868338922,
+        "time_nll": 3.056927458480995,
+        "quantity_boundaries": [
+          2.0,
+          30.0,
+          60.0,
+          200.0
+        ],
+        "quantity_cells": [
+          {
+            "bin": 0,
+            "count": 13195,
+            "represented_n": 13195.0,
+            "qty_sse": 429909.8806470912,
+            "qty_absolute_error_sum": 25971.47479891777,
+            "qty_signed_error_sum": 24680.916885852814,
+            "time_nll_sum": 40406.005805877154,
+            "qty_rmse": 5.708000678246636,
+            "qty_mae": 1.968281530800892,
+            "qty_bias": 1.8704749439827824,
+            "time_nll": 3.062220978088454
+          },
+          {
+            "bin": 1,
+            "count": 10274,
+            "represented_n": 10274.0,
+            "qty_sse": 1851203.4004237643,
+            "qty_absolute_error_sum": 71548.77432584763,
+            "qty_signed_error_sum": 1145.1088781356812,
+            "time_nll_sum": 31405.93114349885,
+            "qty_rmse": 13.423237953355391,
+            "qty_mae": 6.9640621302168215,
+            "qty_bias": 0.11145696691996118,
+            "time_nll": 3.0568358130717197
+          },
+          {
+            "bin": 2,
+            "count": 1040,
+            "represented_n": 1040.0,
+            "qty_sse": 1253648.807917199,
+            "qty_absolute_error_sum": 30154.00918984413,
+            "qty_signed_error_sum": -17990.626667261124,
+            "time_nll_sum": 3175.5982271424164,
+            "qty_rmse": 34.71932525372908,
+            "qty_mae": 28.994239605619356,
+            "qty_bias": -17.29867948775108,
+            "time_nll": 3.053459833790785
+          },
+          {
+            "bin": 3,
+            "count": 1065,
+            "represented_n": 1065.0,
+            "qty_sse": 7177725.591889359,
+            "qty_absolute_error_sum": 74665.07205379009,
+            "qty_signed_error_sum": -63819.002199053764,
+            "time_nll_sum": 3220.0962591339003,
+            "qty_rmse": 82.09536188536232,
+            "qty_mae": 70.10804887679821,
+            "qty_bias": -59.92394572681105,
+            "time_nll": 3.0235645625670426
+          },
+          {
+            "bin": 4,
+            "count": 205,
+            "represented_n": 205.0,
+            "qty_sse": 43109395.32987641,
+            "qty_absolute_error_sum": 71432.65858066082,
+            "qty_signed_error_sum": -71378.6515005827,
+            "time_nll_sum": 596.9015165292096,
+            "qty_rmse": 458.57358549797686,
+            "qty_mae": 348.4519930763942,
+            "qty_bias": -348.18854390528145,
+            "time_nll": 2.9117147147766325
+          }
+        ],
+        "tail": {
+          "count": 205,
+          "represented_n": 205.0,
+          "qty_sse": 43109395.32987641,
+          "qty_absolute_error_sum": 71432.65858066082,
+          "qty_signed_error_sum": -71378.6515005827,
+          "time_nll_sum": 596.9015165292096,
+          "qty_rmse": 458.57358549797686,
+          "qty_mae": 348.4519930763942,
+          "qty_bias": -348.18854390528145,
+          "time_nll": 2.9117147147766325
+        },
+        "tail_definition": "raw_quantity > quantity_boundaries[-1]",
+        "bias_definition": "prediction minus target; target-defined strata are descriptive"
+      }
+    },
+    "raf_spare_parts__62__titantpp_cnn_key_only_v1/on_validation": {
+      "receipt_path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/results/raf_spare_parts__62__titantpp_cnn_key_only_v1/on_validation_metrics.json",
+      "receipt_sha256": "ad5b652cb48c78c2bb925637cb6f403e383f069f43f9a29b4a9ae774d3938b26",
+      "manifest_path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/rows/raf_spare_parts__62__titantpp_cnn_key_only_v1/on_validation/manifest.json",
+      "manifest_sha256": "a50f0e7db4b1189e0cae2ad773742ec4101a0f8fed428340d30a87dee0aefd57",
+      "parts": [
+        {
+          "path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/rows/raf_spare_parts__62__titantpp_cnn_key_only_v1/on_validation/part-00000.parquet",
+          "sha256": "30064cc24a134fa8c239a5594aca8d0c64983bc385c293aceb5e0a917d5fc30b",
+          "rows": 6690,
+          "bytes": 844170
+        }
+      ],
+      "prediction_rows": 6690,
+      "target_identity_sha256": "df3964a04b161ac96a551fb495882257e5bb6de449c451694db3eb10e71bd11b",
+      "truth_sha256": "41d8b6f43d62e4fc842b1740605aa706c509830dd4179804e8478f5e6757d67d",
+      "recorded_gap_sha256": "57012615dacc3459a9982c48abbec399091447417669c96249cf2e5fccb10efc",
+      "population": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      },
+      "predictive_state": {
+        "state_sha256": "ef072c064244ac875699b8e408c27095a9aff81bfd9387c2f402d79b644aca7b",
+        "all_named_buffers_sha256": "80e49bda606342b17960dc52ea708dcb17e7519caad2a5720394999e2bdaab28",
+        "context_cache_sha256": "00426b198ddec292eabe420ba3f7f67f97b06425efbf6aea3b6108b2714ba3f6"
+      },
+      "native_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda:0",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 92000,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-c9adc246-ef66-7906-bc07-6e152fa9952f",
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 33670758400,
+          "multiprocessor_count": 170,
+          "driver_version": "595.99.02",
+          "pci_bus_id": "00000000:02:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "python_executable": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_cnn_gru_resume_dual_20261005_v1_5090/runtime_env/bin/python3.12",
+        "resolved_python_executable": "/opt/miniconda3/envs/ai_env/bin/python3.12"
+      },
+      "metrics": {
+        "split": "validation",
+        "count": 6690,
+        "represented_n": 6690.0,
+        "qty_sse": 7892054.765631518,
+        "qty_absolute_error_sum": 62086.33521914482,
+        "qty_signed_error_sum": -19618.332144260406,
+        "time_nll_sum": 24468.483352673386,
+        "qty_rmse": 34.34646032948157,
+        "qty_mae": 9.280468642622544,
+        "qty_bias": -2.932486120218297,
+        "time_nll": 3.6574713531649308,
+        "quantity_boundaries": [
+          2.0,
+          30.0,
+          60.0,
+          200.0
+        ],
+        "quantity_cells": [
+          {
+            "bin": 0,
+            "count": 3626,
+            "represented_n": 3626.0,
+            "qty_sse": 149544.94572800014,
+            "qty_absolute_error_sum": 7873.264734745026,
+            "qty_signed_error_sum": 7519.956700563431,
+            "time_nll_sum": 13242.513893192416,
+            "qty_rmse": 6.422024674338757,
+            "qty_mae": 2.1713361099682915,
+            "qty_bias": 2.073898703961233,
+            "time_nll": 3.6520998050723708
+          },
+          {
+            "bin": 1,
+            "count": 2555,
+            "represented_n": 2555.0,
+            "qty_sse": 440717.10152564524,
+            "qty_absolute_error_sum": 18012.310131669044,
+            "qty_signed_error_sum": 3399.5262945890427,
+            "time_nll_sum": 9377.407030768602,
+            "qty_rmse": 13.133621596981493,
+            "qty_mae": 7.049827840183579,
+            "qty_bias": 1.330538667158138,
+            "time_nll": 3.6702180159564
+          },
+          {
+            "bin": 2,
+            "count": 235,
+            "represented_n": 235.0,
+            "qty_sse": 204384.07384057916,
+            "qty_absolute_error_sum": 5858.02591753006,
+            "qty_signed_error_sum": -3727.403534412384,
+            "time_nll_sum": 839.5637780866116,
+            "qty_rmse": 29.49100647911835,
+            "qty_mae": 24.927769861830043,
+            "qty_bias": -15.861291635797379,
+            "time_nll": 3.5726118216451557
+          },
+          {
+            "bin": 3,
+            "count": 224,
+            "represented_n": 224.0,
+            "qty_sse": 1691854.812128098,
+            "qty_absolute_error_sum": 16222.180159330368,
+            "qty_signed_error_sum": -12689.857329130173,
+            "time_nll_sum": 833.8195142288596,
+            "qty_rmse": 86.90755587651174,
+            "qty_mae": 72.42044713986772,
+            "qty_bias": -56.6511487907597,
+            "time_nll": 3.722408545664552
+          },
+          {
+            "bin": 4,
+            "count": 50,
+            "represented_n": 50.0,
+            "qty_sse": 5405553.832409195,
+            "qty_absolute_error_sum": 14120.554275870323,
+            "qty_signed_error_sum": -14120.554275870323,
+            "time_nll_sum": 175.17913639688882,
+            "qty_rmse": 328.8024888108116,
+            "qty_mae": 282.4110855174065,
+            "qty_bias": -282.4110855174065,
+            "time_nll": 3.5035827279377765
+          }
+        ],
+        "tail": {
+          "count": 50,
+          "represented_n": 50.0,
+          "qty_sse": 5405553.832409195,
+          "qty_absolute_error_sum": 14120.554275870323,
+          "qty_signed_error_sum": -14120.554275870323,
+          "time_nll_sum": 175.17913639688882,
+          "qty_rmse": 328.8024888108116,
+          "qty_mae": 282.4110855174065,
+          "qty_bias": -282.4110855174065,
+          "time_nll": 3.5035827279377765
+        },
+        "tail_definition": "raw_quantity > quantity_boundaries[-1]",
+        "bias_definition": "prediction minus target; target-defined strata are descriptive"
+      }
+    },
+    "raf_spare_parts__62__titantpp_cnn_key_only_v1/on_train": {
+      "receipt_path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/results/raf_spare_parts__62__titantpp_cnn_key_only_v1/on_train_metrics.json",
+      "receipt_sha256": "2e9a068f894de7d6260513e78e85813599383696be6ea145ba74c0c6ff8dc98a",
+      "manifest_path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/rows/raf_spare_parts__62__titantpp_cnn_key_only_v1/on_train/manifest.json",
+      "manifest_sha256": "b84fa50d271ef8437171ae98d7ff6e6f75a487d9ecfefe4c38382fdbd73c9e67",
+      "parts": [
+        {
+          "path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/rows/raf_spare_parts__62__titantpp_cnn_key_only_v1/on_train/part-00000.parquet",
+          "sha256": "38e3f4b2e3fba0d346848e60d226e28c6dd7cfb8cb11eeedfed27cfcfd5f7c0e",
+          "rows": 8192,
+          "bytes": 868325
+        },
+        {
+          "path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/rows/raf_spare_parts__62__titantpp_cnn_key_only_v1/on_train/part-00001.parquet",
+          "sha256": "f79ca502cf0edb751cd21c806387122282a6086c0cf9808552214ca33513a3d5",
+          "rows": 8192,
+          "bytes": 867496
+        },
+        {
+          "path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/rows/raf_spare_parts__62__titantpp_cnn_key_only_v1/on_train/part-00002.parquet",
+          "sha256": "2042ff7f4a2eb44a2f472ce099edb0d9c986c45d2c5426145c48f10957e96858",
+          "rows": 8192,
+          "bytes": 893554
+        },
+        {
+          "path": "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/rows/raf_spare_parts__62__titantpp_cnn_key_only_v1/on_train/part-00003.parquet",
+          "sha256": "47bbce2a8d45d86429256d88bd19bb3c740982fc961cb63a1cfe3355690644d8",
+          "rows": 1203,
+          "bytes": 145003
+        }
+      ],
+      "prediction_rows": 25779,
+      "target_identity_sha256": "b287a4cc59579753d3dcd73c192adbccf250d9cfc20fd59a8e5a36fbd8592e3e",
+      "truth_sha256": "e5f748786597187867cf17070bdd0ff1274808e9061e6afe0328fb37c7d518ed",
+      "recorded_gap_sha256": "43bdec55e208949bac83449485bfac008f5e077bb01642d54171882291efd3e9",
+      "population": {
+        "target_count": 25779,
+        "target_identity_sha256": "9863e00d51357456e1bf53c0f82f17a867cbbaaf9f296064d1ae23c4392895b2",
+        "target_quantity_sha256": "abbb37aab32b35b029b8705fe6044bd3ed5e8b7239822d40ba7572d0ab6fae22"
+      },
+      "predictive_state": {
+        "state_sha256": "ef072c064244ac875699b8e408c27095a9aff81bfd9387c2f402d79b644aca7b",
+        "all_named_buffers_sha256": "80e49bda606342b17960dc52ea708dcb17e7519caad2a5720394999e2bdaab28",
+        "context_cache_sha256": "00426b198ddec292eabe420ba3f7f67f97b06425efbf6aea3b6108b2714ba3f6"
+      },
+      "native_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda:0",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 92000,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-c9adc246-ef66-7906-bc07-6e152fa9952f",
+          "name": "NVIDIA GeForce RTX 5090",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 33670758400,
+          "multiprocessor_count": 170,
+          "driver_version": "595.99.02",
+          "pci_bus_id": "00000000:02:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "python_executable": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_cnn_gru_resume_dual_20261005_v1_5090/runtime_env/bin/python3.12",
+        "resolved_python_executable": "/opt/miniconda3/envs/ai_env/bin/python3.12"
+      },
+      "metrics": {
+        "split": "train",
+        "count": 25779,
+        "represented_n": 25779.0,
+        "qty_sse": 54493348.64439276,
+        "qty_absolute_error_sum": 272666.1406210661,
+        "qty_signed_error_sum": -135811.36931550503,
+        "time_nll_sum": 78505.95458867589,
+        "qty_rmse": 45.97679724388358,
+        "qty_mae": 10.57706430121673,
+        "qty_bias": -5.268294709473022,
+        "time_nll": 3.0453452262956624,
+        "quantity_boundaries": [
+          2.0,
+          30.0,
+          60.0,
+          200.0
+        ],
+        "quantity_cells": [
+          {
+            "bin": 0,
+            "count": 13195,
+            "represented_n": 13195.0,
+            "qty_sse": 366899.54639119696,
+            "qty_absolute_error_sum": 26266.70878279209,
+            "qty_signed_error_sum": 24699.59568965435,
+            "time_nll_sum": 40254.756698348334,
+            "qty_rmse": 5.273135001022349,
+            "qty_mae": 1.9906562169603708,
+            "qty_bias": 1.8718905410878628,
+            "time_nll": 3.0507583704697487
+          },
+          {
+            "bin": 1,
+            "count": 10274,
+            "represented_n": 10274.0,
+            "qty_sse": 1536685.9487436549,
+            "qty_absolute_error_sum": 67603.11679506302,
+            "qty_signed_error_sum": 949.7915740013123,
+            "time_nll_sum": 31280.28585571952,
+            "qty_rmse": 12.229896435514252,
+            "qty_mae": 6.580019154668388,
+            "qty_bias": 0.09244613334643881,
+            "time_nll": 3.0446063710063775
+          },
+          {
+            "bin": 2,
+            "count": 1040,
+            "represented_n": 1040.0,
+            "qty_sse": 1109962.173437317,
+            "qty_absolute_error_sum": 29148.023180246353,
+            "qty_signed_error_sum": -19911.554987192154,
+            "time_nll_sum": 3157.7693957421693,
+            "qty_rmse": 32.66911876088494,
+            "qty_mae": 28.026945365621494,
+            "qty_bias": -19.145725949223223,
+            "time_nll": 3.036316726675163
+          },
+          {
+            "bin": 3,
+            "count": 1065,
+            "represented_n": 1065.0,
+            "qty_sse": 7385806.410569949,
+            "qty_absolute_error_sum": 76653.43652498722,
+            "qty_signed_error_sum": -68554.34625399113,
+            "time_nll_sum": 3215.728847908249,
+            "qty_rmse": 83.27682446811303,
+            "qty_mae": 71.97505776994105,
+            "qty_bias": -64.37027817276162,
+            "time_nll": 3.0194637069561026
+          },
+          {
+            "bin": 4,
+            "count": 205,
+            "represented_n": 205.0,
+            "qty_sse": 44093994.56525066,
+            "qty_absolute_error_sum": 72994.85533797741,
+            "qty_signed_error_sum": -72994.85533797741,
+            "time_nll_sum": 597.4137909575799,
+            "qty_rmse": 463.7808279951392,
+            "qty_mae": 356.07246506330443,
+            "qty_bias": -356.07246506330443,
+            "time_nll": 2.914213614427219
+          }
+        ],
+        "tail": {
+          "count": 205,
+          "represented_n": 205.0,
+          "qty_sse": 44093994.56525066,
+          "qty_absolute_error_sum": 72994.85533797741,
+          "qty_signed_error_sum": -72994.85533797741,
+          "time_nll_sum": 597.4137909575799,
+          "qty_rmse": 463.7808279951392,
+          "qty_mae": 356.07246506330443,
+          "qty_bias": -356.07246506330443,
+          "time_nll": 2.914213614427219
+        },
+        "tail_definition": "raw_quantity > quantity_boundaries[-1]",
+        "bias_definition": "prediction minus target; target-defined strata are descriptive"
+      }
+    }
+  },
+  "input_identity": {
+    "data": {
+      "path": "inputs/data/raf_spare_parts/train_validation.parquet",
+      "sha256": "d805cad0242078fedfbb87eed18bde9b73d37bfc9b93c6b75aac49087244efa2"
+    },
+    "populations": {
+      "train": {
+        "target_count": 25779,
+        "target_identity_sha256": "9863e00d51357456e1bf53c0f82f17a867cbbaaf9f296064d1ae23c4392895b2",
+        "target_quantity_sha256": "abbb37aab32b35b029b8705fe6044bd3ed5e8b7239822d40ba7572d0ab6fae22"
+      },
+      "validation": {
+        "target_count": 6690,
+        "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+        "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+      }
+    },
+    "split_manifest": {
+      "path": "inputs/data/raf_spare_parts/split_manifest.json",
+      "sha256": "3cd6204667de4e44eda8787d32845bebff7624e1bb255ffd7677f810b8d7b149"
+    }
+  },
+  "original_population_identity": {
+    "train": {
+      "target_count": 25779,
+      "target_identity_sha256": "9863e00d51357456e1bf53c0f82f17a867cbbaaf9f296064d1ae23c4392895b2",
+      "target_quantity_sha256": "abbb37aab32b35b029b8705fe6044bd3ed5e8b7239822d40ba7572d0ab6fae22"
+    },
+    "validation": {
+      "target_count": 6690,
+      "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+      "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+    }
+  },
+  "input_sha256": "d805cad0242078fedfbb87eed18bde9b73d37bfc9b93c6b75aac49087244efa2",
+  "completed_basis": {
+    "history_deletion_minus_original": {
+      "train_row_mean": {
+        "rmse": -0.023754148731865616,
+        "mae": 0.008560965692463895
+      },
+      "validation_row_mean": {
+        "rmse": -0.03918035820373925,
+        "mae": 0.013672083455886034,
+        "time_nll": 0.028070883964222453
+      }
+    },
+    "seed_and_weight_exception": "행 가중 RMSE는 두 split의 3seed 모두 낮아졌지만 공통 개체 동일 가중 Train seed52는 +0.0009356193355785081로 악화했다. MAE는 Train3seed와 Validation42/62에서 악화했고 Validation52만 개선했다. 전체 시간 NLL도 악화했다.",
+    "question_unresolved": "과거 tap 삭제는 과거 내용뿐 아니라 가용 tap 계수 합을 바꿨다. 과거 혼합이 원인이라는 결론이나 다음 gate·정규화·긴 필터의 채택 근거는 아직 없다."
+  },
+  "allowed_splits": [
+    "train",
+    "validation"
+  ],
+  "conditions": [
+    "on",
+    "off"
+  ],
+  "intervention": "replace_available_past_key_content_with_current_preserve_gain",
+  "operator": {
+    "symbols": "K0는 각 event 위치의 현재 공통 K 투영, K1/K2는 같은 관측 segment 안의 직전/그이전 관측 투영이다. I1/I2는 각 event 위치별 실제 가용성이다. 모든 곱은 채널별이다.",
+    "on": "K0 + w0*K0 + I1*w1*K1 + I2*w2*K2",
+    "off": "K0 + w0*K0 + I1*w1*K0 + I2*w2*K0",
+    "on_minus_off": "I1*w1*(K1-K0) + I2*w2*(K2-K0)",
+    "available_tap_gain": "1+w0+I1*w1+I2*w2; on과 off에서 각 위치별로 동일",
+    "boundary": "padding 건너뛰기·withheld segment 초기화·가용 tap mask를 원형 그대로 사용한다. 없는 과거 tap을 만들어 합에 넣지 않는다. 한 관측에서는 on=off, 두 관측에서는 I2=0이다.",
+    "numerical_scope": "DC는 잠재 K가 관측 구간에서 상수인 경우의 응답이다. 같은 실수량이어도 위치·시간 표현이 다른 실제 K가 상수라는 뜻은 아니다. 출력오류는 비선형 attention/head 뒤의 결과이므로 지표 차이를 두 기전의 가산 기여로 단정하지 않는다.",
+    "implementation_requirements": "원형 함수를 원래 values/kernel/sources/available로 먼저 호출하여 형상·index·mask·nonfinite 검사를 유지한다. on은 원형 결과를 그대로 반환한다. off는 가용 과거 source index만 해당 위치의 current source index로 바꾼 임시 clone을 사용하고, 원래 kernel·가용성·누적 순서로 원형 함수를 호출한다. 실제 parameter/kernel/source/available에는 쓰지 않는다. finally에서 모듈 symbol을 복구한다.",
+    "forbidden": "과거 kernel=0, 전체 K=0, 계수 재정규화·나눗셈·clip, 새 gate/norm, 입력/head/메모리 변경, 없는 tap 추가, 실제 checkpoint 저장·재선택은 하지 않는다.",
+    "memory_limitation": "event K가 바뀌면 그대로 둔 memory key와의 softmax 경쟁도 달라질 수 있다. 메모리 텐서 불변은 attention 배분 불변을 뜻하지 않는다.",
+    "function_class_limitation": "충분한 이력에서 현재 K에 곱하는 채널별 상수 배율은 공통 K 투영에 흡수할 수 있다. 경계의 가용 tap 수에 따라 배율이 달라지는 효과는 별도로 남는다. 수준과 차분으로 쓰는 것만으로는 자유로운 선형3tap의 함수집합을 넓히지 않으며 신규 CNN 기여가 아니다. 공통 K 투영으로의 흡수는 해당 평가 함수 수준의 대수적 동등성이다. 초기화·optimizer·weight decay 또는 재학습 성능까지 같다는 뜻은 아니다.",
+    "parameter_vs_effective_coefficient": "원본 w0 파라미터는 불변이다. off의 잔차에 대한 유효 현재계수는 w0+I1*w1+I2*w2이므로 원래 현재tap 배율 w0만을 유지하는 것이 아니다. 보존 대상은 실제 가용 tap 계수 합과 잠재 상수 DC 응답이며, 실제 K 출력의 norm·방향·attention 또는 memory 배분은 보존하지 않는다."
+  },
+  "new_stage_order": [
+    "qualification",
+    "on_validation",
+    "off_train",
+    "off_validation"
+  ],
+  "max_parallel": 3,
+  "phase_counts": {
+    "qualification": 3,
+    "on_validation": 3,
+    "off_train": 3,
+    "off_validation": 3,
+    "new_real_data_workers": 9,
+    "new_actual_workers_including_qualification": 12,
+    "stored_on_train_references": 3,
+    "analysis_condition_split_pairs": 6
+  },
+  "reuse_policy": {
+    "on_train": "부모 진단의 3개 onTrain receipt/manifest/shard/대상/가중치 전체 상태/native Runtime을 SHA와 선택 정보로 결속하여 그대로 재사용한다. 새 onTrain worker를 실행하지 않는다.",
+    "on_validation": "새 onValidation3을 실행하며 부모 onValidation 개별행의 예측값과 시간 손실, 여섯 지표, exact target/truth/history를 모두 고정 허용오차로 재현한다. 전3 통과 전 off 진입은 금지한다.",
+    "off_validation_reference": "재현이 통과한 이번 진단의 새 onValidation 행을 직접 paired reference로 사용한다.",
+    "off_train_reference": "부모의 검증된 onTrain 행만 직접 paired reference로 사용한다. 다른 모델·과거 off 행은 참조하지 않는다.",
+    "old_native_helpers": "완료된 부모 학습·평가·진단 helper를 실행하지 않는다. 기존 완료 파일은 로컬 검증과 저장 on 행 재사용만 허용한다."
+  },
+  "replay_tolerances": {
+    "quantity_prediction": {
+      "rtol": 1e-05,
+      "atol": 1e-05
+    },
+    "recorded_time_nll": {
+      "rtol": 1e-05,
+      "atol": 1e-05
+    },
+    "six_aggregate_metrics": {
+      "rtol": 1e-05,
+      "atol": 1e-05
+    }
+  },
+  "replay_requirements": "새 onValidation과 부모 onValidation은 unique target_id 전체 집합 및 exact truth·관측 history·날짜·gap·condition·stage를 대조한다. 새 off와 대응 on은 target/truth/history가 정확히 같아야 하지만 condition/stage 값은 서로 다르다. 각 행의 condition/stage가 자신의 on/off 역할과 split에 맞는지 따로 검증한다. native population digest와 pure-input exporter digest는 각자의 기존 domain 안에서 검증하며 서로 같다고 가정하지 않는다. 순서가 달라도 명시적 unique target join 뒤 모든 행을 비교한다.",
+  "fresh_process_state": "각 worker는 같은 selected checkpoint를 새 프로세스에서 eval/no-grad로 적재한다. parameter state, 모든 named buffer, context cache의 정확한 세 hash를 실행 전후와 같은 seed의 모든 신규/재사용 조건에서 비교한다. process 간 상태 전달·optimizer step0이다.",
+  "loader": {
+    "batch_size": 128,
+    "num_workers": 0,
+    "drop_last": false,
+    "shuffle": false,
+    "max_seq_len": 84,
+    "lookback_weeks": 84
+  },
+  "analysis": {
+    "primary_contrast": "off−on, 동일 KeyOnly checkpoint/seed/split/target. 양수는 과거 내용을 현재로 대체할 때 오류가 증가함을 뜻한다.",
+    "metrics": [
+      "whole raw quantity RMSE",
+      "whole raw quantity MAE",
+      "Train-fixed q>200 RMSE",
+      "Train-fixed q>200 MAE",
+      "whole recorded positive-integer TimeNLL",
+      "q>200 recorded positive-integer TimeNLL"
+    ],
+    "row_fields": [
+      "condition",
+      "stage",
+      "split",
+      "seed",
+      "target_id",
+      "raw_quantity",
+      "prediction",
+      "signed_error",
+      "absolute_error",
+      "squared_error",
+      "time_nll",
+      "observed_history_sha256"
+    ],
+    "frozen_plan_path": "reports/titantpp_backbone_value_difference_raf3_20261016_v1/diagnostics_paired_regret_v1/PLAN.json",
+    "frozen_plan_sha256": "0708d991be70c3792af95e6266005de2c9cea14d6851fc5aaa731351727ed8b3",
+    "frozen_condition_count": 15,
+    "train_magnitude_cuts": [
+      0.4054651081081645,
+      1.252762968495368
+    ],
+    "weights": [
+      "각 target의 가중치1",
+      "각 기존 cell에서 Train·Validation 공통 개체만 유지; split별 개체 내부 각 행의 가중치1/n(entity,split,cell), 이후 개체 수로 정규화"
+    ],
+    "aggregation": "split·seed별 여섯 지표와 평균·표본SD(ddof1), 부호오차·AE·SE 차이, 지지 표본·제외 행과 seed 예외를 모두 기록한다. 행 가중의 서로 겹치지 않는 cell만 가산 검산하며 서로 다른 공통 개체 집합의 지표는 더하지 않는다. 새 cut·조건 탐색·유리한 seed 제외0이다."
+  },
+  "duplicate_audit": {
+    "models/TPPs/CountAwareTitanLevelHistoryQKV.py": {
+      "lines": [
+        193,
+        214,
+        263,
+        279,
+        288,
+        336
+      ],
+      "overlap": "Q/K/V의 수준 없는 인접 차분에 이력 신뢰도와 Q/K 포화 제약까지 결합한 과거 모델이다. 잠재 수준과 변화의 분리 원리는 새롭지 않다. 현재 K-only의 고정 가중치 진단과는 적용 위치·경계 처리·제약이 다르다.",
+      "sha256": "f4398a442c7872b158039f2346bc18ce5df5b89de97ec4c1c4a0f9291ad136e0"
+    },
+    "models/TPPs/CountAwareTitanValueDifferenceCNN.py": {
+      "lines": [
+        53,
+        88,
+        130,
+        132
+      ],
+      "overlap": "현재 공통 조건에서 V만 두 인접 차분으로 바꾼 루프3이다. K 내용의 고정 계수 대조는 아니지만 차분 표현 자체의 새로움은 주장할 수 없다.",
+      "sha256": "83d6d535e1c7a46eb7528ad1ef5f95cb85c8f0fd423fabc93d79ad509a90e276"
+    },
+    "models/TPPs/CountAwareTitanAdaptiveHistoryCNN.py": {
+      "lines": [
+        40,
+        62,
+        76,
+        94,
+        124
+      ],
+      "overlap": "현재값과 두 차분으로 Q/K/V tap을 상대 재가중한다. 가용 multiplier 평균1은 일반적으로 서로 다른 kernel과 곱한 유효 계수 합 보존이 아니다. 이번 진단을 적응 gate 성공으로 읽거나 같은 가설을 이름만 바꾸어 재학습하지 않는다.",
+      "sha256": "efd5c47be2c6e62a8dba891aa51279c0b6fd789ba2bed42a8f63384a8561a16a"
+    },
+    "models/TPPs/CountAwareTitanMultiLagDetail.py": {
+      "lines": [
+        32,
+        117,
+        150,
+        173,
+        231
+      ],
+      "overlap": "encoder block 사이에서 여러 lag의 수준/차분을 비선형 저차원 분기로 결합한다. 위치·길이·비선형·용량이 달라 현재 K-only 진단의 직접 대조는 아니며 수준/차분 아이디어 자체는 기존에 있다.",
+      "sha256": "4bcbecdadf921df21a4e7fb379962eb4ecec2cfeb2f8ff1edccbb6b418807eae"
+    }
+  },
+  "host": "5090",
+  "gpu_uuid": "GPU-c9adc246-ef66-7906-bc07-6e152fa9952f",
+  "runtime": {
+    "host": "5090",
+    "python": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_cnn_gru_resume_dual_20261005_v1_5090/runtime_env/bin/python3.12",
+    "resolved_python_executable": "/opt/miniconda3/envs/ai_env/bin/python3.12",
+    "python_version": "3.12.13",
+    "torch": "2.11.0+cu130",
+    "cuda": "13.0",
+    "cudnn": 92000,
+    "numpy": "2.4.4",
+    "polars": "1.39.3",
+    "gpu_uuid": "GPU-c9adc246-ef66-7906-bc07-6e152fa9952f",
+    "torch_num_threads": 4,
+    "interop_threads": 1,
+    "dtype": "float32",
+    "deterministic_algorithms": true,
+    "TF32": false,
+    "native": {
+      "gpu": {
+        "compute_capability": [
+          12,
+          0
+        ],
+        "driver_version": "595.99.02",
+        "logical_index": 0,
+        "multiprocessor_count": 170,
+        "name": "NVIDIA GeForce RTX 5090",
+        "pci_bus_id": "00000000:02:00.0",
+        "total_memory_bytes": 33670758400,
+        "uuid": "GPU-c9adc246-ef66-7906-bc07-6e152fa9952f",
+        "visible_device_count": 1
+      },
+      "cudnn_benchmark": false,
+      "cudnn_deterministic": true,
+      "float32_matmul_precision": "highest",
+      "reduced_precision_reduction": {
+        "allow_bf16_reduced_precision_reduction": false,
+        "allow_fp16_reduced_precision_reduction": false
+      },
+      "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13"
+    }
+  },
+  "inherited_absolute_host_deadline": 1792679647.915156,
+  "new_local_bundle": "search_artifacts/titantpp_backbone_key_content_probe_20261016_v1",
+  "new_remote_root": "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_backbone_key_content_probe_20261016_v1_5090",
+  "completion_counts": {
+    "candidate_count": 3,
+    "seed_count": 3,
+    "qualification_count": 3,
+    "data_worker_count": 9,
+    "actual_native_worker_exit0_count": 12,
+    "actual_data_worker_exit0_count": 9,
+    "actual_pipeline_exit0_count": 1,
+    "validation_replay_count": 3,
+    "new_on_train_count": 0,
+    "reused_on_train_count": 3,
+    "off_worker_count": 6
+  },
+  "failure_handling": "시작 전 stdlib source/input/선택/부모원본/운영/승인 SHA를 검증한다. fresh GPU/소유 상태·동일 native Runtime 확인 뒤 exclusive intent로 1회 실행한다. 오류·timeout·미완료 attempt는 원문/transport exit/worker exit와 함께 보존하며 자동 retry/resume/덮어쓰기/기한연장0이다.",
+  "completion": "신규 worker12개 실제exit0, 단일 stage관리 pipeline 실제exit0, 명시적 소유PID/GPU부재 및 exclusive archive/manifest/원본 SHA를 확인한다. supervisor 자신의 OSexit 직접관측 여부는 별도로 적고 추정하지 않는다. 재사용 onTrain3의 원본 검증과 총6 paired 집계/180조건행·12행가산검산까지 완료해야 진단완료다.",
+  "decision_rule": "이 진단은 한 번으로 제한한다. 결과에 따라 수준 배율과 과거 내용 민감도를 구분해, 기존 구현과 중복되지 않는 단일 CNN 가설·대조군의 근거를 검토한다. 같은 DC/삭제 진단을 계속 반복하지 않는다. 개선 임계값이나 새 학습 자동 진입 조건을 만들지 않는다. 반복 seed·두 split·두 가중·시간/큰수량 악화까지 함께 보고 근거가 없으면 설계가 미확정이라고 기록한다.",
+  "interpretation": "현재 공동 학습된 KeyOnly 가중치에 대한 제한된 민감도다. 과거 내용이 오류의 원인이라는 확정, 신규 모델 성능·CNN 성공·독립 일반화·통계 유의성을 주장하지 않는다.",
+  "new_training": false,
+  "optimizer_steps": 0,
+  "held_out_test_evaluated": false,
+  "existing_CNN_inference": false,
+  "existing_QueryOnly_inference": false,
+  "actual_implementation_verified": false,
+  "actual_native_execution_started": false
+}

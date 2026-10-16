@@ -1,0 +1,453 @@
+{
+  "status": "PASS",
+  "created_kst": "2026-10-16T04:12:55.403489+09:00",
+  "open_findings": [],
+  "severity_counts": {
+    "CRITICAL": 0,
+    "HIGH": 0,
+    "MEDIUM": 0,
+    "LOW": 0
+  },
+  "bootstrap_sha256": "ef121faec89e07c08afb5b6c80e539b6f8f0ceba72f14b08b008f004a755d669",
+  "final_receipt_sha256": "f3c6823b69a5ad8f0e3faea727828f291563d88dba0082a4724a2fd263e83f1a",
+  "verified_final_file_count": 287,
+  "archive_checks": {
+    "validation": {
+      "sha256": "2045a4f04fcdb0d63d314f793ee47e853b6f1f225b3822ed8e355b565f981f61",
+      "member_count_including_manifest": 20,
+      "pipeline_completed_kst": "2026-10-16T04:10:24.692478+09:00"
+    },
+    "test": {
+      "sha256": "05ea388265a7a4a24d83987515949f558dd20efe48fc9e167d97cde9a3796e96",
+      "member_count_including_manifest": 20,
+      "pipeline_completed_kst": "2026-10-16T04:10:35.139714+09:00"
+    }
+  },
+  "validation_gate_sha256": "55eb7a1b5b65db3bc307021a22316a9720f95852a5bc07dd15cc16b399ff3d07",
+  "validation_gate_created_kst": "2026-10-16T04:10:25.027277+09:00",
+  "evaluation_completed_kst": "2026-10-16T04:10:35.583264+09:00",
+  "native_worker_exit0_count": 6,
+  "pipeline_exit0_count": 2,
+  "all_Validation_exits_precede_gate_all_Test_starts_follow_gate": true,
+  "fixed_selection_across_Validation_Test": {
+    "42": [
+      5,
+      "7997b2be5c41667ef149cc675fd05b81e22694e04d69b446fa20881c1474ecb2",
+      "0e08fe7d083d23c0f50f30909567bfa7b1e8eca7890d29f85df9da09bdd1f8cd"
+    ],
+    "52": [
+      5,
+      "805f661997cf4f66e52d09c903878eaa8ab32e73b63aa4c3b9bc32ab111697d4",
+      "eb8ccf7c07a54c1fe811ac2d1173040d3902fa551e45aecaf25bb186ea942dd2"
+    ],
+    "62": [
+      22,
+      "9db2326c1d8af90ecdd0bc59ac0abbab104b1d4e22374a55b37375d81fac15ab",
+      "1ee9235b4344459334ea59241d1e2ef36200abb69aa88fb55f0a423de092a128"
+    ]
+  },
+  "population": {
+    "validation": {
+      "count": 6690,
+      "tail_count": 50
+    },
+    "test": {
+      "count": 5226,
+      "tail_count": 39
+    }
+  },
+  "independent_numeric_checks": 242,
+  "independent_arithmetic_method": "math.fsum, sample variance denominator2, per-seed absolute/relative differences, raw SSE/AE/NLL totals and quantity-bin closure; strict four user comparisons",
+  "user_performance_gate": false,
+  "strict_checks": [
+    {
+      "split": "validation",
+      "metric": "qty_rmse",
+      "pass": false,
+      "candidate": {
+        "mean": 34.47538530129493,
+        "sample_sd": 0.08382752408682173,
+        "ddof": 1
+      },
+      "historical_CNN": {
+        "mean": 34.43140831691986,
+        "sample_sd": 0.0732010654996562,
+        "ddof": 1
+      },
+      "external_frontier": {
+        "models": [
+          "s2p2_matched_head"
+        ],
+        "mean": 33.99470373349431,
+        "sample_sd": {
+          "s2p2_matched_head": 0.1261185452077655
+        }
+      },
+      "user_performance_pass": false
+    },
+    {
+      "split": "validation",
+      "metric": "qty_mae",
+      "pass": false,
+      "candidate": {
+        "mean": 9.231898377852827,
+        "sample_sd": 0.025187701363261338,
+        "ddof": 1
+      },
+      "historical_CNN": {
+        "mean": 9.218271236747547,
+        "sample_sd": 0.028001938985035457,
+        "ddof": 1
+      },
+      "external_frontier": {
+        "models": [
+          "rmtpp"
+        ],
+        "mean": 9.136204564111056,
+        "sample_sd": {
+          "rmtpp": 0.055678014468013064
+        }
+      },
+      "user_performance_pass": false
+    },
+    {
+      "split": "test",
+      "metric": "qty_rmse",
+      "pass": true,
+      "candidate": {
+        "mean": 39.535394256836526,
+        "sample_sd": 0.06426479165415978,
+        "ddof": 1
+      },
+      "historical_CNN": {
+        "mean": 39.6006634067701,
+        "sample_sd": 0.023653674541581078,
+        "ddof": 1
+      },
+      "external_frontier": {
+        "models": [
+          "s2p2_matched_head"
+        ],
+        "mean": 39.772935306713876,
+        "sample_sd": {
+          "s2p2_matched_head": 0.1609135618279136
+        }
+      },
+      "user_performance_pass": true
+    },
+    {
+      "split": "test",
+      "metric": "qty_mae",
+      "pass": false,
+      "candidate": {
+        "mean": 10.011759752380344,
+        "sample_sd": 0.06797568954365957,
+        "ddof": 1
+      },
+      "historical_CNN": {
+        "mean": 9.972138203343105,
+        "sample_sd": 0.036427588996541055,
+        "ddof": 1
+      },
+      "external_frontier": {
+        "models": [
+          "rmtpp"
+        ],
+        "mean": 9.90634650459991,
+        "sample_sd": {
+          "rmtpp": 0.037017526200991684
+        }
+      },
+      "user_performance_pass": false
+    }
+  ],
+  "adverse_seed_metric_results": [
+    {
+      "split": "validation",
+      "seed": 42,
+      "metric": "whole_qty_rmse",
+      "delta": 0.037563153088491674
+    },
+    {
+      "split": "validation",
+      "seed": 42,
+      "metric": "tail_qty_rmse",
+      "delta": 3.339001691785313
+    },
+    {
+      "split": "validation",
+      "seed": 42,
+      "metric": "tail_qty_mae",
+      "delta": 4.364747240543352
+    },
+    {
+      "split": "validation",
+      "seed": 52,
+      "metric": "whole_qty_rmse",
+      "delta": 0.0373006439818937
+    },
+    {
+      "split": "validation",
+      "seed": 52,
+      "metric": "whole_qty_mae",
+      "delta": 0.041256183751139375
+    },
+    {
+      "split": "validation",
+      "seed": 52,
+      "metric": "tail_qty_rmse",
+      "delta": 0.010188701842196224
+    },
+    {
+      "split": "validation",
+      "seed": 52,
+      "metric": "tail_qty_mae",
+      "delta": 0.2519306230544771
+    },
+    {
+      "split": "validation",
+      "seed": 62,
+      "metric": "whole_qty_rmse",
+      "delta": 0.057067156054827706
+    },
+    {
+      "split": "validation",
+      "seed": 62,
+      "metric": "whole_qty_mae",
+      "delta": 0.021477678903726982
+    },
+    {
+      "split": "validation",
+      "seed": 62,
+      "metric": "whole_time_nll",
+      "delta": 0.01752845982240281
+    },
+    {
+      "split": "validation",
+      "seed": 62,
+      "metric": "tail_time_nll",
+      "delta": 0.03460450542974591
+    },
+    {
+      "split": "test",
+      "seed": 42,
+      "metric": "tail_qty_rmse",
+      "delta": 2.1975185490637728
+    },
+    {
+      "split": "test",
+      "seed": 42,
+      "metric": "tail_qty_mae",
+      "delta": 3.3238442005255706
+    },
+    {
+      "split": "test",
+      "seed": 52,
+      "metric": "whole_qty_rmse",
+      "delta": 0.031264187492404005
+    },
+    {
+      "split": "test",
+      "seed": 52,
+      "metric": "whole_qty_mae",
+      "delta": 0.05011731175184764
+    },
+    {
+      "split": "test",
+      "seed": 52,
+      "metric": "tail_qty_rmse",
+      "delta": 0.6138396077880657
+    },
+    {
+      "split": "test",
+      "seed": 52,
+      "metric": "tail_qty_mae",
+      "delta": 0.6002350709377424
+    },
+    {
+      "split": "test",
+      "seed": 52,
+      "metric": "tail_time_nll",
+      "delta": 0.01604971471727179
+    },
+    {
+      "split": "test",
+      "seed": 62,
+      "metric": "whole_qty_mae",
+      "delta": 0.12964987946432593
+    },
+    {
+      "split": "test",
+      "seed": 62,
+      "metric": "whole_time_nll",
+      "delta": 0.1545465911085282
+    },
+    {
+      "split": "test",
+      "seed": 62,
+      "metric": "tail_time_nll",
+      "delta": 0.2737024103875547
+    }
+  ],
+  "full_six_metric_summaries": {
+    "validation": [
+      {
+        "dataset": "raf_spare_parts",
+        "arm": "titantpp_cnn",
+        "seed_count": 3,
+        "metrics": {
+          "whole_qty_rmse": {
+            "mean": 34.43140831691986,
+            "sample_sd": 0.0732010654996562
+          },
+          "whole_qty_mae": {
+            "mean": 9.218271236747547,
+            "sample_sd": 0.028001938985035457
+          },
+          "tail_qty_rmse": {
+            "mean": 330.7575986718216,
+            "sample_sd": 2.5539999843151633
+          },
+          "tail_qty_mae": {
+            "mean": 283.55541314919793,
+            "sample_sd": 3.016482394532114
+          },
+          "whole_time_nll": {
+            "mean": 3.497460184563737,
+            "sample_sd": 0.1389917959624318
+          },
+          "tail_time_nll": {
+            "mean": 3.363184196299083,
+            "sample_sd": 0.16836316725337303
+          }
+        }
+      },
+      {
+        "dataset": "raf_spare_parts",
+        "arm": "titantpp_cnn_qk_only_v1",
+        "seed_count": 3,
+        "metrics": {
+          "whole_qty_rmse": {
+            "mean": 34.47538530129493,
+            "sample_sd": 0.08382752408682173
+          },
+          "whole_qty_mae": {
+            "mean": 9.231898377852827,
+            "sample_sd": 0.025187701363261338
+          },
+          "tail_qty_rmse": {
+            "mean": 329.20379719628914,
+            "sample_sd": 4.442474622819987
+          },
+          "tail_qty_mae": {
+            "mean": 281.5904980691274,
+            "sample_sd": 5.57597923133885
+          },
+          "whole_time_nll": {
+            "mean": 3.424133267545773,
+            "sample_sd": 0.0395749472277495
+          },
+          "tail_time_nll": {
+            "mean": 3.292393238302268,
+            "sample_sd": 0.01749844002200268
+          }
+        }
+      }
+    ],
+    "test": [
+      {
+        "dataset": "raf_spare_parts",
+        "arm": "titantpp_cnn",
+        "seed_count": 3,
+        "metrics": {
+          "whole_qty_rmse": {
+            "mean": 39.6006634067701,
+            "sample_sd": 0.023653674541581078
+          },
+          "whole_qty_mae": {
+            "mean": 9.972138203343105,
+            "sample_sd": 0.036427588996541055
+          },
+          "tail_qty_rmse": {
+            "mean": 403.24317539029215,
+            "sample_sd": 1.3620749851031304
+          },
+          "tail_qty_mae": {
+            "mean": 351.19059327117395,
+            "sample_sd": 1.4658699580571581
+          },
+          "whole_time_nll": {
+            "mean": 3.8212681330949,
+            "sample_sd": 0.36152488081055983
+          },
+          "tail_time_nll": {
+            "mean": 3.903627532312531,
+            "sample_sd": 0.3010927122816626
+          }
+        }
+      },
+      {
+        "dataset": "raf_spare_parts",
+        "arm": "titantpp_cnn_qk_only_v1",
+        "seed_count": 3,
+        "metrics": {
+          "whole_qty_rmse": {
+            "mean": 39.535394256836526,
+            "sample_sd": 0.06426479165415978
+          },
+          "whole_qty_mae": {
+            "mean": 10.011759752380344,
+            "sample_sd": 0.06797568954365957
+          },
+          "tail_qty_rmse": {
+            "mean": 401.59359574682645,
+            "sample_sd": 4.018051804189595
+          },
+          "tail_qty_mae": {
+            "mean": 349.62332973724756,
+            "sample_sd": 4.841443634893734
+          },
+          "whole_time_nll": {
+            "mean": 3.6665912874302236,
+            "sample_sd": 0.028503335911194565
+          },
+          "tail_time_nll": {
+            "mean": 3.823347271082431,
+            "sample_sd": 0.19003278427363088
+          }
+        }
+      }
+    ]
+  },
+  "report_sha256": {
+    "THREE_SEED_VALIDATION.json": "4cedbbf75d533e21450d9846042af57ebc9ad92904746d11372aab76077a2578",
+    "THREE_SEED_VALIDATION.md": "94e9fe7c953113da4fbd4f4d764459bc5f75d97abf975ace36c79fd2d9f9a12c",
+    "THREE_SEED_TEST.json": "cf2f8c0d61047a0d54e3a5262821b5c009d2cd4f9fb4457efb5f262743bddbe1",
+    "THREE_SEED_TEST.md": "a2add20937086aba22868a7b6c59ddf04bb89ec6caa4193edee1b21c19d4280c",
+    "EXTERNAL_COMPARISON.json": "65b36ea1fdad0167443df23ab27258cc603860a18adf53bfeee04eac44b9be94",
+    "EXTERNAL_COMPARISON.md": "6f0da13c4c4dd37868cdac343eb580812cc14bf8dac4566035909dc153938908"
+  },
+  "acceptance_criteria": {
+    "all_localSHA_and_archives": true,
+    "actual_native_exits_and_gate3": true,
+    "selection_unchanged": true,
+    "CNN_external_references_only": true,
+    "all_six_metrics_and_adverse_seeds_retained": true,
+    "sampleSD_and_seed_deltas": true,
+    "external_four_strict_criteria": true
+  },
+  "interpretation": "QA verifies completion and arithmetic, not performance success. Test RMSE alone passes both historical CNN and metricwise external frontier; Validation RMSE/MAE and Test MAE fail. Test RMSE worsens for seed52; Test MAE improves only seed42. Test tailRMSE/MAE worsen for42/52; wholeTimeNLL worsens62, tailTimeNLL worsens52/62.",
+  "limits": [
+    "Evaluation-after global GPU idle/PID absence not proven.",
+    "Supervisor wrapper own OS exit not directly observed.",
+    "Historical CNN/external5080 cuDNN91900 versus new5090 cuDNN92000; local coefficient576to384 capacity confound.",
+    "Post-Test-informed exploratory follow-up, no independent generalization, significance or isolated causal proof."
+  ],
+  "remote_calls": 0,
+  "advance_calls": 0,
+  "model_inference_calls": 0,
+  "original_source_or_artifact_modifications": 0,
+  "files_changed": [
+    "reports/titantpp_backbone_qk_only_raf3_20261016_v1/EVALUATION_COMPLETION_INDEPENDENT_QA.json"
+  ]
+}

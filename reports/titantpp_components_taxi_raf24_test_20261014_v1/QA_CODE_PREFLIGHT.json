@@ -1,0 +1,87 @@
+{
+  "status": "PASS",
+  "scope": "Prelaunch code, local synthetic contracts, and old sealed closure only; native audit/real contract/Validation24/Test24 still pending",
+  "observed_KST": "2026-10-14T11:08:53.248469+09:00",
+  "reviewed_files_sha256": {
+    "paper/scripts/run_titantpp_components_taxi_raf24_test_pipeline.py": "e7a3653064489ca1891ef6776cbfcc8f6ca71d23b8b64606397a5237e66c7a72",
+    "paper/scripts/audit_titantpp_components_taxi_raf24_inputs.py": "7e167de51742e3657d17d117a3a54e0d1d0a77e65b0edd4f1c82a41cf31df966",
+    "paper/scripts/advance_titantpp_components_taxi_raf24_test.py": "dedaad8438e5ba5b074305c855ea8289df8cd2ca14f991073e13e5d490a6f93c",
+    "paper/scripts/prepare_titantpp_components_taxi_raf24_frozen_evaluation.py": "9c508a3d4134a0a1c62579df2fd10562db7353f5103e2c983d5e81c3012e9c53",
+    "paper/scripts/evaluate_titantpp_components_taxi_raf24_frozen.py": "7b2f76acf8d6007a41bf95b1919a99764424a23d56b34bd503c2c270c3f69e56",
+    "reports/titantpp_components_taxi_raf24_test_20261014_v1/prepare_original_retrieval.py": "8cb5a2aa5cf182c2c37533d1c2291f5423ff6d91a77c7d04126a004b87d05274",
+    "reports/titantpp_components_taxi_raf24_test_20261014_v1/retrieve_evaluation_results.py": "fe2a9a55c3e87066b9362164c6f0f8a93cd1e66307973b8e89e6ca18ac627b43",
+    "reports/titantpp_components_taxi_raf24_test_20261014_v1/remote_input_deploy.py": "e4c031afff5148add767c71c081949dba56bb91b0f54573c39746be5f87d4ca5",
+    "reports/titantpp_components_taxi_raf24_test_20261014_v1/run_native_evaluation.py": "4e87cbfbbdef95785cc6647c6dda4dbfc1eafe027944766607e44c5538a83693",
+    "reports/titantpp_components_taxi_raf24_test_20261014_v1/retrieve_native_metadata.py": "203cc59877980f6c83dab00e5a0e9c341184e03d15336b36d19f6fe7bab0f5f3",
+    "reports/titantpp_components_taxi_raf24_test_20261014_v1/build_partial_packet.py": "71b8ec7a3df5bb965ccaffe9bf975f67abd3eec94debaed148033bde03bf54ea",
+    "reports/titantpp_components_taxi_raf24_test_20261014_v1/deploy_evaluation_packet.py": "e56446afb0ab51163fce4959f3a104307399ecc86327dbc863317006100808b5",
+    "reports/titantpp_components_taxi_raf24_test_20261014_v1/remote_retrieval.py": "90d5e0aca221c632f7883f516129c79d08a607e3b5fa1c3fb949b0fc431ee46a",
+    "paper/tests/test_titantpp_components_taxi_raf24_evaluator.py": "aef59a436684b345c7a0495f234baa677c33eadd54246b8adc2552a01e8a1e36",
+    "paper/tests/test_titantpp_components_taxi_raf24_inputs.py": "326a4f6cc003dc6c1deab326b841aec6e859cb804ad6092f52107b8cb78affcb",
+    "paper/tests/test_titantpp_components_taxi_raf24_preparation.py": "1628d12c936067ffd8e5a6968e6fce09bbb7b7bdd0f0a5a7649e68b111169e13",
+    "paper/tests/test_titantpp_components_taxi_raf24_pipeline.py": "14b331d70a4828df5495035ca74134e3b95134d01ad52d147baaef6e9a0bef50"
+  },
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "resolved_findings": [
+    {
+      "severity": "HIGH",
+      "file": "paper/scripts/advance_titantpp_components_taxi_raf24_test.py",
+      "line": 51,
+      "description": "Original retrieval producer omitted required job_ids consumed by remote helper",
+      "remediation": "Add approved sorted 24 job_ids; fixed packet independently compared to worker packet; required keys and exact360 files pass. Existing failed transport evidence is preserved."
+    },
+    {
+      "severity": "HIGH",
+      "file": "paper/scripts/advance_titantpp_components_taxi_raf24_test.py",
+      "line": 96,
+      "description": "Remote-only metadata script was called locally without stdin payload",
+      "remediation": "retrieve_native_metadata now invokes transport with root and exact24 refs, checks membership and SHA, then writes exclusively; local fixture passed."
+    },
+    {
+      "severity": "MEDIUM",
+      "file": "reports/titantpp_components_taxi_raf24_test_20261014_v1/run_native_evaluation.py",
+      "line": 40,
+      "description": "Prior streaming SSH path could omit partial transport receipts on interruption or hang indefinitely",
+      "remediation": "Use sealed recorded_run with finite timeout43320, keepalive30/max3; remote child timeout43200 and owned child cleanup; outer helper43500. Timeout and nonzero local fixtures passed."
+    }
+  ],
+  "automated_validation": {
+    "focused_unittest_count": 36,
+    "focused_unittest_status": "PASS",
+    "local_operational_fixture_count": 4,
+    "local_operational_fixtures": [
+      "corrected original retrieval payload equal exact360/24 sealed packet",
+      "timeout partial archive/stderr hashes and unknown remote exit",
+      "nonzero transport actual exit and stderr evidence",
+      "metadata exact24 SHA and exclusive write protection"
+    ],
+    "old395_SHA_unchanged": true,
+    "scientific_evaluator_AST_identical_function_count": 30
+  },
+  "acceptance_criteria": {
+    "only_TaxiRAF24_ids": true,
+    "original_source131_preserved": true,
+    "earliest_strict_finite_Validation_selector": true,
+    "Test_gate_all24_native_Validation_and_actual_exit0": true,
+    "RAF_full_parent_TrainValidation_slice_checked": true,
+    "native_Runtime_GPU_and_parameters_bound": true,
+    "Test_target_and_gap_blocking_and_batch_invariance_tests": true,
+    "all_six_metrics_same_checkpoint": true,
+    "immutable_originals_and_failure_evidence_preserved": true,
+    "remote_source_training_claim_writes": false,
+    "real_contract_review_completed": false,
+    "native_validation_test_completed": false
+  },
+  "files_changed": [
+    "reports/titantpp_components_taxi_raf24_test_20261014_v1/QA_CODE_PREFLIGHT.json"
+  ],
+  "next": [
+    "Review actual native input audit and bound24 contract",
+    "Independently verify native48 exits and result archive manifest after evaluation"
+  ]
+}

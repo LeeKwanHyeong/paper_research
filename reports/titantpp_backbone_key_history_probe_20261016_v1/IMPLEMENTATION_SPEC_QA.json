@@ -1,0 +1,133 @@
+{
+  "schema": "key_history_probe_implementation_spec_qa_v1",
+  "created_kst": "2026-10-16T05:32:46.373406+09:00",
+  "status": "PASS_implementation_spec_alignment",
+  "review_role": "Implementation reviewer independent from exporter/comparison author; reviewer coauthored science specification, therefore NOT an independent scientific-design review.",
+  "scope": "Static exporter/comparison and synthetic tests only; operational supervisor/runtime reviewed separately.",
+  "input_files": {
+    "paper/scripts/export_titantpp_key_history_probe.py": "6ad3b08af22856a276cb1bb168a29271898bde1d9dc6547b5c3ae2fb0eb9bbe6",
+    "paper/scripts/compare_titantpp_key_history_probe.py": "942134e52cdbe881902a2c5f1219550e1ec0842f447ced56270a5c190e33604c",
+    "paper/tests/test_export_titantpp_key_history_probe.py": "3ef9a379b20a33bd78fd5839cec5511cddcb10e5c1bfaa47efdc1cb4c4610308",
+    "paper/tests/test_compare_titantpp_key_history_probe.py": "6a304073ba471e37735441d69e3730f25429d10b0fb03225f299091895da884b",
+    "reports/titantpp_backbone_key_history_probe_20261016_v1/SCIENCE_SPEC.json": "f15ff87dc3f643e86e99d61c5cb6f45eec61d774879edcbab295f03bfc6f535c",
+    "reports/titantpp_backbone_key_history_probe_20261016_v1/NEXT_MECHANISM_ACCEPTANCE.json": "b99147f6ac5cfd6ac02c66d1636848f3abdc93452e2d21e217d80ab3c54bfff9",
+    "paper/scripts/compare_titantpp_value_difference_rows.py": "3844e5f6dd335aa0a0b7421f0d45780784b1f1b4b5f4e980f84827cd47ce475e",
+    "paper/scripts/analyze_titantpp_value_difference_rows.py": "c689918ad4f64913cf1b15894a3e4e177667711675a59e9056e72bfa6400cb33",
+    "models/TPPs/CountAwareTitanQKLocationCNN.py": "a660cd2a1f9ea4d594e2aba64c0d4457d589fc46f2ed7921d252e8f387690b23",
+    "models/TPPs/CountAwareTitanCNNGRU.py": "9d1bcf6c754cbf6216e4929f832d08af60ccf02573edd3b6c1c7a2088115dfc3"
+  },
+  "input_files_unchanged_after": true,
+  "checks": [
+    {
+      "name": "frozen_scope",
+      "status": "PASS",
+      "evidence": "Exporter verify_contract binds current KeyOnly only, seeds42/52/62 epochs9/5/26, source145 closure, Train/Validation input, same5090 GPU/Runtime/deadline, source/operation/input/checkpoint pins before scientific loading."
+    },
+    {
+      "name": "past_taps_only",
+      "status": "PASS",
+      "evidence": "branch_scope first invokes original residual with original arguments, rejects nonfinite original result, clones kernel, zeros rows1/2, preserves row0 exactly and invokes original again. Base K identity addition and common weights unchanged."
+    },
+    {
+      "name": "guards_and_recovery",
+      "status": "PASS",
+      "evidence": "Original shape/mask/index and observed-value guards execute even for removed past taps. Padding/withheld lookup is inherited. Adapter restores original function identity in finally on normal/exception paths; original CNN module binding unchanged."
+    },
+    {
+      "name": "frozen_predictive_state",
+      "status": "PASS",
+      "evidence": "Model eval/requires_gradFalse; selected tensor SHA checked; state_dict, all named buffers and _ctx_mem snapshots compared before/after. Same selected checkpoint in fresh processes; no optimizer, trained-baseline forward or Test stage."
+    },
+    {
+      "name": "new_on_rows_gate",
+      "status": "PASS",
+      "evidence": "onValidation3 reproduces all6 stored metrics, original native population and counts before onTrain3/off. Previous individual rows explicitly absent; new on rows supply reference. Native population audit and new exporter hash domains remain separate."
+    },
+    {
+      "name": "paired_identity",
+      "status": "PASS",
+      "evidence": "New rows carry condition/stage and are checked against their role/split; unique exact same exporter target/truth/history pairing, derived error consistency, shard/manifest/source/checkpoint/receipt hashes; different predictions/time losses allowed."
+    },
+    {
+      "name": "analysis_math",
+      "status": "PASS",
+      "evidence": "Pinned pure arithmetic reuses exactly15 cells, fixedTrainQ25Q75, row and split-common entity weights,3seed sampleSD ddof1.180 per-seed records;90 support records;12 disjoint row partition closures. No summation of different-support common-entity cells; no additiveRMSE claim."
+    },
+    {
+      "name": "interpretation",
+      "status": "PASS",
+      "evidence": "Outputs label off/on rather than originalCNN, preserve whole/tail/time and seed harms, state co-adapted fixed-weight/history-only sensitivity and changed memory-attention allocation. No automatic training decision or newprinciple/causal/generalization claim."
+    }
+  ],
+  "findings": [
+    {
+      "id": "ROW_CONDITION_FIELD",
+      "severity": "minor_spec_alignment",
+      "status": "resolved_before_final_freeze",
+      "original": "condition/stage existed in directory/manifest/receipt but condition requested by SCIENCE_SPEC.analysis.row_fields was absent from individual rows.",
+      "resolution": "Author added condition/stage to new exported rows, explicit per-role/split comparison checks and negative synthetic fixtures; old scientific source/spec unchanged."
+    }
+  ],
+  "open_findings": [],
+  "runs": [
+    {
+      "label": "synthetic_tests",
+      "argv": [
+        "/usr/local/bin/python3",
+        "-m",
+        "pytest",
+        "-p",
+        "no:cacheprovider",
+        "paper/tests/test_export_titantpp_key_history_probe.py",
+        "paper/tests/test_compare_titantpp_key_history_probe.py",
+        "-q"
+      ],
+      "actual_exit_code": 0,
+      "stdout_path": "reports/titantpp_backbone_key_history_probe_20261016_v1/qa_implementation_spec_v1/synthetic_tests.stdout.txt",
+      "stdout_sha256": "5319d482c9fd7eaa936d28fccdeed1bd4f89118a11231a2b3a936848d05196ae",
+      "stderr_path": "reports/titantpp_backbone_key_history_probe_20261016_v1/qa_implementation_spec_v1/synthetic_tests.stderr.txt",
+      "stderr_sha256": "eae3b3ab88ebd007cd93d95595b7a951b2c689b68948b08fd24d8ff83282945e",
+      "stdout": ".................................................. [100%]\n50 passed, 166 subtests passed in 1.47s\n",
+      "stderr_bytes": 414
+    },
+    {
+      "label": "independent_checks",
+      "argv": [
+        "/usr/local/bin/python3",
+        "/tmp/key_history_independent_extra.py"
+      ],
+      "actual_exit_code": 0,
+      "stdout_path": "reports/titantpp_backbone_key_history_probe_20261016_v1/qa_implementation_spec_v1/independent_checks.stdout.txt",
+      "stdout_sha256": "dbc4db667e8f8edcae69d8a6b4dccb2b60723b05df7042aa9b216838bf2a5539",
+      "stderr_path": "reports/titantpp_backbone_key_history_probe_20261016_v1/qa_implementation_spec_v1/independent_checks.stderr.txt",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "{\"status\": \"PASS\", \"random_residual_cases\": 40, \"common_entity_manual_reference\": \"on MAE2/off MAE3.5; onRMSEsqrt4.5/offRMSEsqrt14.5\", \"per_seed_records\": 180, \"support_records\": 90, \"additive_closures\": 12, \"forbidden_stage_cases\": 4, \"source_mutations\": 0, \"real_data_loaded\": false, \"model_forward_count\": 0, \"remote_count\": 0, \"torch\": \"2.14.0\"}\n",
+      "stderr_bytes": 0
+    }
+  ],
+  "independent_additional_checks": {
+    "random_residual_cases": 40,
+    "manual_entity_weight_expected": {
+      "on_mae": 2.0,
+      "off_mae": 3.5,
+      "on_rmse_squared": 4.5,
+      "off_rmse_squared": 14.5
+    },
+    "per_seed_record_count": 180,
+    "support_record_count": 90,
+    "additive_closure_count": 12,
+    "forbidden_stage_cases": 4
+  },
+  "limitations": [
+    "Synthetic local Python3.12/torch2.14.0 differs from planned native torch2.11.0+cu130; this does not certify native Runtime/GPU integration.",
+    "No actual checkpoint loaded, research rows read, full candidate/baseline model forward or remote/native command executed by this review. Pure residual functions used fabricated tensors only.",
+    "Native12 plus qualification3, original onValidation replay and immutable completion remain pending operational gates.",
+    "Operating-stage launch order and final receipt archive verification are owned by separate operational QA."
+  ],
+  "actual_native_execution_by_reviewer": false,
+  "actual_data_inference_by_reviewer": false,
+  "test_data_read": false,
+  "baseline_inference": false,
+  "source_edits_by_reviewer": false,
+  "recommendation": "Proceed to separate operational QA and sealed native qualification/onValidation gates; do not call this native diagnostic completion or a successful new architecture."
+}

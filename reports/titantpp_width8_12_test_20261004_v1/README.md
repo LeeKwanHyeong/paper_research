@@ -34,17 +34,22 @@ python3 reports/titantpp_width8_12_test_20261004_v1/pipeline.py \
 
 위 명령은 계약 형식 예시이며 별도 원격 실행 승인이 아니다. `--dataset-root`를 생략하면 dataset manifest의 기존 상대 경로를 유지한다.
 
-**Intermittent 6개 조건의 후속 Test — 외부 작업 대기**
-- 대상: 폭8·12 × seed42·52·62. 여섯 학습 모두 완료한 뒤 별도 batch 계약을 준비한다.
+**Intermittent 6개 조건의 후속 Validation·Test — 완료**
+
+- 대상: 폭8·12 × seed42·52·62. 여섯 학습 원본을 연결한 별도 batch 계약에서 전체 Validation 6개 gate 후 같은 체크포인트의 Test 6개를 완료했다. 총 12 population 평가는 144.270초였으며 새 학습·epoch 재선택·원시 예측 저장은 없었다.
+- [완료 기록](intermittent/inference_completion.json), [Validation gate](intermittent/validation_gate.json), [Intermittent Test 전체](intermittent/results/TEST_TABLES.md), [Intermittent Test tail](intermittent/results/TEST_TAIL_TABLES.md).
 - `prepare.py --datasets intermittent_frozen_5000 --training-contract <derived-contract> --original-root <original5090-run> --original-root <handoff5080-run>`로 parent와 승인된 derived 계약의 원본을 연결한다.
 - dataset·arm·seed가 과학 조건의 identity다. 운영 host는 원본 provenance에 기록한다. 동결 source closure와 selected tensor identity는 일치해야 한다.
 - `followup.py`의 준비 hook은 로컬 원본 6개가 모두 완료·검증되어야 새 계약과 deployment request를 만든다. 승인된 hourly driver가 원격 원본 회수·preflight·단일 worker 실행을 담당한다. 부분 완료·기존 시도·실패 조건에서 자동 재학습이나 재시도하지 않는다.
 
-**Intermittent 평가 완료 후 세 데이터 비교를 별도 집계한다 — 다음 작업**
-- 폭4·16과 외부 비교군의 기존 Test는 재실행하지 않는다. 원본 집계 `reports/titantpp_completed_validation_test_20261004_v1/results/metrics_per_seed.csv`를 `comparison_receipt.json`의 SHA와 대조해 Test 행만 재사용할 수 있다.
-- 원래 Validation에서 선택한 체크포인트를 기존 Test split에서 평가하는 작업이다. 새로운 독립 Test로 주장하거나 Test 지표로 폭·epoch를 다시 선택하지 않는다.
-- 현재 원고는 수정하지 않는다. 수치의 split, 조건 수, seed 평균과 표본 표준편차를 구분해 기록한다.
-- 이번 Taxi·RAF 집계는 보존하고, `analyze.py --campaign <taxi_raf_attempt3> --campaign <intermittent> --output <new_report_folder>`로 새 결과를 만든다. 전체·tail RMSE/MAE와 정수 간격 Time NLL을 함께 기록한다.
+**Taxi·Intermittent·RAF의 최종 Validation·Test 비교를 별도 집계했다 — 완료**
+
+- [최종 세 데이터 보고서](../titantpp_three_dataset_final_comparison_20261005_v1/README.md), [Validation 전체](../titantpp_three_dataset_final_comparison_20261005_v1/VALIDATION_TABLES.md), [Validation tail](../titantpp_three_dataset_final_comparison_20261005_v1/VALIDATION_TAIL_TABLES.md), [Test 전체](../titantpp_three_dataset_final_comparison_20261005_v1/TEST_TABLES.md), [Test tail](../titantpp_three_dataset_final_comparison_20261005_v1/TEST_TAIL_TABLES.md).
+- 사용자 기준선 폭16, 비교군 폭4, 신규 폭8·12와 S2P2 등 기존 벤치마크·구조 대조를 연결했다. 학습 123조건의 3seed 두 split 전체·TRAIN 기준 tail 및 결정적 수량 기준선은 총 516지표행이다. seed 평균·표본 SD(ddof=1), paired Δ·개선 seed 수·최악 seed와 시간/수량 tradeoff를 기록했다.
+- 원본 공통 집계 `reports/titantpp_completed_validation_test_20261004_v1/results/metrics_per_seed.csv`와 `comparison_receipt.json`의 SHA, split·target/truth·loader, 선택 epoch를 확인했다. 일부 Validation은 직접 raw 예측 대신 동결 selected endpoint와 원래 population reference를 연결한 범위임을 최종 보고서에 명시했다.
+- 원래 Validation에서 선택한 체크포인트를 기존 Test split에서 평가한 결과다. Test로 폭·epoch·사용자 기준선을 다시 선택하지 않았다. 기존 Taxi·RAF 보고서는 그대로 보존했다.
+- 과거 A100 단일 seed42 탐색 4개 arm과 현재 A100 CNN/GRU의 별도 Validation-only 범위는 3seed 통합표에 혼합하지 않았다. 제외 arm·이유·원본 SHA·모든 포함 조건은 [최종 영수증](../titantpp_three_dataset_final_comparison_20261005_v1/comparison_receipt.json)에 보존했다.
+- 기존 `analyze.py`를 보존하고 별도 보고서의 `analyze_reference.py`에서 A100 scope 필터·출력 경로만 보완해 재사용했다. 로컬 스크립트의 8개 집중 검증과 [독립 재계산 검증](../titantpp_three_dataset_final_comparison_20261005_v1/final_verification.json)이 통과했다.
 
 Focused synthetic 검증은 18개 통과했다. Validation 실패 시 Test 차단, 전체 gate 순서, 원본 입력 변경·기존 출력 보호, 순수 집계 저장, Intermittent 일부 완료 차단, deployment path preflight, seed 통계, operational path와 과학 조건 구분, 조건별 시간 제한과 외부 종료 신호의 소유 프로세스 정리를 확인했다. 연구 자료와 GPU는 테스트에서 사용하지 않았다.
 

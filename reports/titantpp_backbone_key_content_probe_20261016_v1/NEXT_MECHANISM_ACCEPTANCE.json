@@ -1,0 +1,71 @@
+{
+  "schema": "titantpp_key_content_probe_acceptance_v1",
+  "created_kst": "2026-10-16T05:40:41.144208+09:00",
+  "spec_sha256": "f8ce822618bc0dcbacda3512215a9e368afb054a26466616cca1089b12d18678",
+  "status": "specified_independent_review_pending",
+  "entry": [
+    "source145/선택KeyOnly3 epoch9/5/26/부모 receipt와 기존 onTrain·onValidation 모든 원본 SHA 검증",
+    "명세·구현·합성 검사 독립검토 통과 뒤만 새 native 경로를 실행",
+    "동일5090 GPU/Runtime/입력, fresh 유휴·소유 확인, 상속 deadline 유지"
+  ],
+  "operator_tests": [
+    "같은 유한 임의 계수에서 off가 각 위치의 가용tap 계수 합 곱하기 현재K와 허용오차 내 일치",
+    "한 관측 on/off 동일; 두 관측은 존재하는 w0+w1만 사용; 세 관측은 w0+w1+w2 사용",
+    "잠재K상수일 때 on/off 동일; 일반 K에서 on−off가 I1*w1*(K1−K0)+I2*w2*(K2−K0)와 일치",
+    "padding 건너뛰기·withheld 초기화·미래/target 차단·batch 일치·메모리 tensor 불변",
+    "원래 past values/kernel/index/mask가 비정상일 때 대체가 오류를 숨기지 않음; 원형 검사를 먼저 호출",
+    "원래 kernel·values·source·available·parameter·buffer·context에 쓰지 않음; finally 복원; numeric0/1 외 강도·중첩 거부",
+    "원본 w0 파라미터 불변과 off 유효 현재계수 w0+I1*w1+I2*w2를 구분하고, 실제 K 출력 norm·방향·attention 배분 보존을 요구하거나 주장하지 않음"
+  ],
+  "stages": [
+    "qualification",
+    "on_validation",
+    "off_train",
+    "off_validation"
+  ],
+  "counts": {
+    "candidate_count": 3,
+    "seed_count": 3,
+    "qualification_count": 3,
+    "data_worker_count": 9,
+    "actual_native_worker_exit0_count": 12,
+    "actual_data_worker_exit0_count": 9,
+    "actual_pipeline_exit0_count": 1,
+    "validation_replay_count": 3,
+    "new_on_train_count": 0,
+    "reused_on_train_count": 3,
+    "off_worker_count": 6
+  },
+  "on_validation_gate": {
+    "all_three_actual_exit0": true,
+    "targets_per_seed": 6690,
+    "six_metrics": true,
+    "prediction_row_replay": true,
+    "time_loss_row_replay": true,
+    "exact_target_truth_history": true,
+    "parent_reference_rows_available": true,
+    "rtol": 1e-05,
+    "atol": 1e-05,
+    "condition_stage_exact_match_scope": "새 onValidation 대 부모 onValidation"
+  },
+  "stored_on_train_gate": {
+    "reference_count": 3,
+    "new_worker_count": 0,
+    "targets_per_seed": 25779,
+    "receipt_manifest_shards_sha": true,
+    "source_selection_runtime_predictive_state_binding": true,
+    "same_target_definition": true
+  },
+  "off_gate": "두 on 조건의 검증이 전3seed 모두 통과한 뒤 offTrain3→offValidation3만 실행. 새off와 대응on target/truth/history exact pair, 유효 예측·시간 손실, state불변을 검증한다. off/on의 condition/stage는 서로 같은 값일 필요가 없으며 각 행이 자신의 역할과 split에 맞는지 검증한다.",
+  "analysis": [
+    "고정15조건·TrainQ25/Q75·두 가중과 포함/제외를 유지",
+    "모든6지표·seed별차이·평균±표본SD·불리한 결과를 기록",
+    "180 per-seed 조건집계·전체6metric12group·행가중 AE/SE/부호오차 가산 검증",
+    "기존 CNN·Query·Test 행을 읽지 않고 지정된 KeyOnly on/off만 집계",
+    "계수합 보존은 잠재상수 응답의 보존이며 실수량 수준이나 오류방향 보장을 뜻하지 않음"
+  ],
+  "receipt": "새worker12/directpipeline1/ownedabsence/원본 archive·manifest·모든 SHA와재사용onTrain3검증을 결속. wrapperownexit는 직접관측일때만true.",
+  "limits": "내용 대체만의 고정 가중치 민감도다. 함수 재매개화 자체는 새로운 CNN이 아니며, 기존 삭제진단과의 출력오류 차이를 가산적인 원인분해로 주장하지 않는다.",
+  "failure": "실패원문·stdout/stderr·실제transport exit 보존. tolerance 조정·재선택·자동재시도·학습진입0. 같은 DC/삭제진단 반복0.",
+  "actual_native_execution_started": false
+}

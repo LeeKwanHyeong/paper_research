@@ -1,0 +1,63 @@
+{
+  "status": "PASS",
+  "review_scope": "local synthetic model and isolated RAF6 preparation/deployment/qualification/training observation/retrieval; no remote execution",
+  "observed_at_utc": "2026-10-15T14:32:50.655506+00:00",
+  "files_changed_by_reviewer": [
+    "reports/titantpp_backbone_location_raf6_20261015_v1/INDEPENDENT_LAUNCH_QA.json"
+  ],
+  "reviewed_files_sha256": {
+    "models/TPPs/CountAwareTitanNonlinearLocationCNN.py": "e683c09954b289a86a07bf56eea3c6d7875c621f2abc370502e0f83bb2d47329",
+    "paper/scripts/run_titantpp_nonlinear_location_cnn.py": "bfe4bd21715129955013686862ba9e56ce2b07b48ba1bc8a7f691bdbd8eb5ca5",
+    "paper/tests/test_titantpp_nonlinear_location_cnn.py": "6adb441f7241bff38d59320c201f55d8b88e3cd5f168842932b9e7f82014e173",
+    "paper/scripts/prepare_titantpp_location_raf6_execution.py": "f5f118940ed8465272c32409064f3cb21b5b5d1e1982c0314aaa838d383168db",
+    "paper/scripts/titantpp_location_raf6_runtime.py": "d58be7308ea144c59e56ac3bd61e6f50e5a670847c07b596d3b3f720297bb754",
+    "paper/scripts/deploy_titantpp_location_raf6.py": "d33ae2495796156efe349af3d15880fb16223d715e7ceae9e50a440fe7ef620a",
+    "paper/scripts/advance_titantpp_location_raf6.py": "2116ac9f82790a1b901ce8ea8cbcf7ce333342e29a7125d751e001661b77f676",
+    "paper/tests/test_titantpp_location_raf6_execution.py": "00b9ddbcc7bd99e8ea2594ca2f21bffc2a2367f828c54d727a30aca7a1577fac",
+    "reports/titantpp_backbone_location_raf6_20261015_v1/EXPERIMENT_PLAN.md": "d6db175569e95df4c6b57f7a9e1531cbdb1a1811072b4445daf4755da6f9d4db"
+  },
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "acceptance": {
+    "two_candidate_arms_three_seeds_no_fresh_CNN": true,
+    "one_branch_1024_equal_initial_weights_and_common_rng": true,
+    "strict_identity_and_checkpoint_replay": true,
+    "common_input_loss_heads_selector_preserved": true,
+    "causal_observed_history_and_padding_synthetic_checks": true,
+    "three_distinct_admission_workers_and_80pct_memory_barriers": true,
+    "permit_manifest_launch_pid_identity_and_exit_binding": true,
+    "duplicate_protection_no_overwrite": true,
+    "historical_CNN_and_prior_Channel_read_only_separate_references": true
+  },
+  "automated_checks": {
+    "model_tests_passed": 44,
+    "runtime_tests_passed": 34,
+    "additional_fabricated_attention_gradient_check": {
+      "maxlen": 84,
+      "registered_parameters_each": 105183,
+      "active_parameters_each": 80451,
+      "all_Q_K_V_projection_gradients_nonzero": true,
+      "value_location_changes_output_but_preserves_first_block_attention_for_fixed_input": true,
+      "query_location_changes_first_block_attention": true
+    },
+    "additional_terminal_counterexamples": {
+      "valid": true,
+      "foreign_training_permit_contract": false,
+      "foreign_dispatcher_exit_contract": false,
+      "foreign_pipeline_launch_sha": false,
+      "selected_binary_mutation": "fails closed with terminal SHA mismatch"
+    }
+  },
+  "limitations": [
+    "Local CPU checks do not establish native GPU/Runtime qualification or scientific improvement.",
+    "Future native Validation/Test evaluation adapter not included in this launch review.",
+    "Value-only denotes added-branch location; Q/K remain trainable and may evolve during training.",
+    "Stored prior Channel has3072 extra parameters versus current1024 and is a descriptive secondary reference.",
+    "Original CNN historical host/runtime differs; no baseline retraining or inference performed.",
+    "No real dataset, checkpoint inference, Test metrics, remote call or source modification performed by reviewer."
+  ]
+}

@@ -1,0 +1,220 @@
+{
+  "aggregate": {
+    "CNN": {
+      "Large_MAE": {
+        "mean": 283.55541314919793,
+        "sample_sd": 3.016482394532114
+      },
+      "Large_RMSE": {
+        "mean": 330.7575986718216,
+        "sample_sd": 2.5539999843151633
+      },
+      "Large_TimeNLL": {
+        "mean": 3.363184196299083,
+        "sample_sd": 0.16836316725337303
+      },
+      "MAE": {
+        "mean": 9.218271236747547,
+        "sample_sd": 0.028001938985035457
+      },
+      "RMSE": {
+        "mean": 34.43140831691986,
+        "sample_sd": 0.0732010654996562
+      },
+      "TimeNLL": {
+        "mean": 3.497460184563737,
+        "sample_sd": 0.1389917959624318
+      }
+    },
+    "QKOnly": {
+      "Large_MAE": {
+        "mean": 281.5904980691274,
+        "sample_sd": 5.57597923133885
+      },
+      "Large_RMSE": {
+        "mean": 329.20379719628914,
+        "sample_sd": 4.442474622819987
+      },
+      "Large_TimeNLL": {
+        "mean": 3.292393238302268,
+        "sample_sd": 0.01749844002200268
+      },
+      "MAE": {
+        "mean": 9.231898377852827,
+        "sample_sd": 0.025187701363261338
+      },
+      "RMSE": {
+        "mean": 34.47538530129493,
+        "sample_sd": 0.08382752408682173
+      },
+      "TimeNLL": {
+        "mean": 3.424133267545773,
+        "sample_sd": 0.0395749472277495
+      }
+    }
+  },
+  "baseline_reference_count": 3,
+  "comparison_runtime_limitation": "QK-only candidates use5090/cuDNN92000; historical CNN3 uses5080/cuDNN91900. This runtime difference is not removed by retraining the baseline.",
+  "constraint_limitation": "Q/K-only local CNN removes the V local filter (576 to384 coefficients), including capacity and jointly learned path changes. Not a causal proof or a continuation of the fixed-weight off checkpoint.",
+  "dataset": "raf_spare_parts",
+  "held_out_test_evaluated": false,
+  "interpretation": "Post-Test-informed exploratory follow-up; not independent generalization or causal proof.",
+  "new_fit_count": 3,
+  "primary_contrast": "QKOnly−storedCNN: Q/K-only local mixing versus historical CNN, including removing the V local filter and capacity reduction; not causal proof.",
+  "rows": [
+    {
+      "Large_MAE": 283.0381588172913,
+      "Large_RMSE": 330.71090336840933,
+      "Large_TimeNLL": 3.556554896696149,
+      "MAE": 9.23111022291162,
+      "RMSE": 34.420452618672016,
+      "TimeNLL": 3.645686557273062,
+      "arm": "CNN",
+      "best_epoch": 9,
+      "seed": 42
+    },
+    {
+      "Large_MAE": 280.83100461244584,
+      "Large_RMSE": 328.2272665116951,
+      "Large_TimeNLL": 3.2838765691547476,
+      "MAE": 9.18615195937399,
+      "RMSE": 34.36430259009707,
+      "TimeNLL": 3.476642646905188,
+      "arm": "CNN",
+      "best_epoch": 5,
+      "seed": 52
+    },
+    {
+      "Large_MAE": 286.7970760178566,
+      "Large_RMSE": 333.3346261353603,
+      "Large_TimeNLL": 3.249121123046353,
+      "MAE": 9.237551527957033,
+      "RMSE": 34.509469741990486,
+      "TimeNLL": 3.3700513495129614,
+      "arm": "CNN",
+      "best_epoch": 8,
+      "seed": 62
+    },
+    {
+      "Large_MAE": 287.4029060578346,
+      "Large_RMSE": 334.04990506019465,
+      "Large_TimeNLL": 3.3125336813186808,
+      "MAE": 9.209257783572593,
+      "RMSE": 34.45801577176051,
+      "TimeNLL": 3.418660049962109,
+      "arm": "QKOnly",
+      "best_epoch": 5,
+      "seed": 42
+    },
+    {
+      "Large_MAE": 281.0829352355003,
+      "Large_RMSE": 328.2374552135373,
+      "Large_TimeNLL": 3.2809204051120235,
+      "MAE": 9.22740814312513,
+      "RMSE": 34.40160323407896,
+      "TimeNLL": 3.4661599433398456,
+      "arm": "QKOnly",
+      "best_epoch": 5,
+      "seed": 52
+    },
+    {
+      "Large_MAE": 276.28565291404726,
+      "Large_RMSE": 325.3240313151355,
+      "Large_TimeNLL": 3.2837256284760987,
+      "MAE": 9.25902920686076,
+      "RMSE": 34.566536898045314,
+      "TimeNLL": 3.387579809335364,
+      "arm": "QKOnly",
+      "best_epoch": 22,
+      "seed": 62
+    }
+  ],
+  "seed_count": 3,
+  "seed_differences": [
+    {
+      "Large_MAE": {
+        "absolute": 4.364747240543352,
+        "relative_percent": 1.542105579962069
+      },
+      "Large_RMSE": {
+        "absolute": 3.339001691785313,
+        "relative_percent": 1.0096436669539413
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.24402121537746835,
+        "relative_percent": -6.861168250324243
+      },
+      "MAE": {
+        "absolute": -0.02185243933902825,
+        "relative_percent": -0.23672601465412563
+      },
+      "RMSE": {
+        "absolute": 0.037563153088491674,
+        "relative_percent": 0.10913032871658068
+      },
+      "TimeNLL": {
+        "absolute": -0.22702650731095275,
+        "relative_percent": -6.22726347272066
+      },
+      "contrast": "QKOnly−CNN",
+      "seed": 42
+    },
+    {
+      "Large_MAE": {
+        "absolute": 0.2519306230544771,
+        "relative_percent": 0.08970897761169497
+      },
+      "Large_RMSE": {
+        "absolute": 0.010188701842196224,
+        "relative_percent": 0.003104160708669579
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.00295616404272403,
+        "relative_percent": -0.09002055894825946
+      },
+      "MAE": {
+        "absolute": 0.041256183751139375,
+        "relative_percent": 0.44911279427551365
+      },
+      "RMSE": {
+        "absolute": 0.0373006439818937,
+        "relative_percent": 0.10854474315053556
+      },
+      "TimeNLL": {
+        "absolute": -0.010482703565342533,
+        "relative_percent": -0.3015180054433822
+      },
+      "contrast": "QKOnly−CNN",
+      "seed": 52
+    },
+    {
+      "Large_MAE": {
+        "absolute": -10.511423103809364,
+        "relative_percent": -3.6651081837232184
+      },
+      "Large_RMSE": {
+        "absolute": -8.010594820224753,
+        "relative_percent": -2.403169125601676
+      },
+      "Large_TimeNLL": {
+        "absolute": 0.03460450542974591,
+        "relative_percent": 1.065042025804842
+      },
+      "MAE": {
+        "absolute": 0.021477678903726982,
+        "relative_percent": 0.23250402272426582
+      },
+      "RMSE": {
+        "absolute": 0.057067156054827706,
+        "relative_percent": 0.16536665582371857
+      },
+      "TimeNLL": {
+        "absolute": 0.01752845982240281,
+        "relative_percent": 0.5201244136809967
+      },
+      "contrast": "QKOnly−CNN",
+      "seed": 62
+    }
+  ],
+  "split": "validation"
+}

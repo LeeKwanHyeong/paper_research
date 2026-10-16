@@ -1,0 +1,92 @@
+{
+  "status": "PASS",
+  "scope": "Independent local audit of completed native KeyOnly history-tap probe",
+  "final_receipt_sha256": "42951c5ffb69639a438a002f0dd9e70eee1f3d8c234ad87b2ad42861c5041ff7",
+  "bootstrap_sha256": "16d88442ddd8fdb381c934dd65ba503f56fdad627cb648232be7c26f810eb86c",
+  "files_verified": 167,
+  "archive_members_verified": 161,
+  "archive_sha256": "1ab143b2a8a4a31a4e3785f16547ce15d52c4215c45021e78384f522c76bc89b",
+  "manifest_sha256": "04a2fea9f8e89893b7b61feeb28da2e0319558c50abc7b4a33894e0f9f0b11bc",
+  "actual_worker_exit0_count": 15,
+  "qualification_count": 3,
+  "data_worker_exit0_count": 12,
+  "actual_pipeline_exit0_count": 1,
+  "actual_supervisor_child_exit0_count": 1,
+  "distinct_owned_process_absence_count": 16,
+  "all_owned_gpu_absent_at_terminal": true,
+  "three_worker_overlap_and_stage_order": [
+    {
+      "stage": "qualification",
+      "first_start": 1792096417.8359377,
+      "last_finish": 1792096421.6593099,
+      "three_worker_overlap_seconds": 3.6263773441314697
+    },
+    {
+      "stage": "on_validation",
+      "first_start": 1792096421.708142,
+      "last_finish": 1792096425.886688,
+      "three_worker_overlap_seconds": 3.979688882827759
+    },
+    {
+      "stage": "on_train",
+      "first_start": 1792096425.9400532,
+      "last_finish": 1792096432.0378993,
+      "three_worker_overlap_seconds": 5.796789646148682
+    },
+    {
+      "stage": "off_train",
+      "first_start": 1792096432.1165788,
+      "last_finish": 1792096438.6117303,
+      "three_worker_overlap_seconds": 6.2972424030303955
+    },
+    {
+      "stage": "off_validation",
+      "first_start": 1792096438.679038,
+      "last_finish": 1792096442.904731,
+      "three_worker_overlap_seconds": 4.027738094329834
+    }
+  ],
+  "on_validation_scalar_metric_checks": 18,
+  "all_five_stage_initial_states_equal_per_seed": true,
+  "off_pairing_receipts_and_reference_pins_verified": true,
+  "independent_row_pairing_performed": false,
+  "transport": {
+    "actual_transport_exit": 0,
+    "actual_transport_exit_observed": true,
+    "timeout": false,
+    "remote_exit_inferred_from_timeout": false,
+    "stdout_sha256": "1ab143b2a8a4a31a4e3785f16547ce15d52c4215c45021e78384f522c76bc89b",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout_bytes": 21739184,
+    "stderr_bytes": 0,
+    "started_unix": 1792096417.144646,
+    "completed_unix": 1792096443.510401,
+    "automatic_retry": false
+  },
+  "terminal_observed_kst": "2026-10-16T05:34:03.008048+09:00",
+  "local_receipt_completed_kst": "2026-10-16T05:34:03.842594+09:00",
+  "evidence_files": {
+    "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/final_receipt.json": "42951c5ffb69639a438a002f0dd9e70eee1f3d8c234ad87b2ad42861c5041ff7",
+    "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/control/owned_attempt_exit.json": "e2f0c9d1f42240fffc87aaf2441e541c21c721d8aeec0d817dea5d5adeb2a8f6",
+    "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/control/owned_attempt_stderr.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/runtime/terminal.json": "1a0a9253a04fae3603c4ba3199128cb8ab066c58da424a38bb5565c56e848d3d",
+    "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/runtime/pipeline_complete.json": "c2de8f449b23f723044031c5a3b7492162376580b98b036dfc548d67d13a0057",
+    "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/runtime/pipeline_actual_exit.json": "2705db2b2dd19bcc2b07ccfb28730b3fdbf48d17ad3def28b66416a29bf525ab",
+    "search_artifacts/titantpp_backbone_key_history_probe_20261016_v1/retrieval/originals/runtime/supervisor_child_exit.json": "6053825c9f643fcb7e4daba970fb5d84fd45da74b4b28ad3cc0095a6733c4dc8"
+  },
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "remote_calls": 0,
+  "helper_cli_invocations": 0,
+  "inference_calls": 0,
+  "supervisor_own_os_exit_directly_observed": false,
+  "limits": [
+    "GPU absence is the recorded terminal observation only, not a claim about current availability.",
+    "No independent saved-row pairing or numerical tradeoff recomputation in this native-completion audit; subsequent comparator handles full rows.",
+    "Only current KeyOnly Train/Validation artifacts were read; no Test results, CNN or QueryOnly inference."
+  ]
+}

@@ -41,20 +41,28 @@
 
 **9조건의 학습과 결과 연결을 진행한다 — 진행 중**
 
-- **2026-10-04 18:49:44 KST 관측**: 완료0, 실패0, 진행 중3(학습2·준비1), 대기6, 미확인0입니다. 실제 소유 worker와 GPU PID `1159/1161/1163`이 선언된 동시 실행 수3과 일치했습니다.
-- CNN+MLP16의 Taxi·RAF는 저장 checkpoint로 학습을 확인했습니다. Intermittent는 소유 worker와 GPU 등록이 확인됐지만 아직 checkpoint가 없어 준비 중으로 구분합니다. GRU54와 CNN+GRU54의 세 데이터씩, 총6조건은 대기 중입니다.
+- **2026-10-05 08:29:31 KST 실제 관측**: 완료6·실패0·학습 중3·대기0·미확정0입니다. 실제 소유 worker와 GPU PID가 선언된3병렬과 일치했습니다. 과거 관측을 새 시각으로 바꾸지 않았습니다.
+- 완료6조건의 terminal scientific success·소형 기록 원본 SHA·selected/last 전체 Validation replay를 확인했습니다. checkpoint binary 원본 회수와 CPU 재추론 감사는 별도 미완료입니다.
+- [완료6조건 Validation 전체·큰 수량 비교와 원본 검증](../titantpp_cnn_gru_completed_review_20261005_v1/README.md)에 MLP16 seed42 기준선과의 장점·손해를 모두 연결했습니다. 현재 A100의 Test에는 접근하지 않았습니다.
 
 | 데이터 | 후보 | 현재 상태 | 저장 / best epoch |
 |---|---|---|---:|
-| Taxi | CNN+MLP16 | 학습 중 | 1 / 1 |
-| RAF | CNN+MLP16 | 학습 중 | 2 / 1 |
-| Intermittent | CNN+MLP16 | 준비 중, checkpoint 미확인 | — / — |
+| Taxi | CNN+MLP16 | 완료 | 187 / 147 |
+| RAF | CNN+MLP16 | 완료 | 56 / 16 |
+| Intermittent | CNN+MLP16 | 완료 | 47 / 7 |
+| Taxi | GRU54 | 완료 | 134 / 94 |
+| RAF | GRU54 | 완료 | 48 / 8 |
+| Intermittent | GRU54 | 학습 중 | 19 / 10 |
+| Taxi | CNN+GRU54 | 학습 중 | 130 / 126 |
+| RAF | CNN+GRU54 | 완료 | 49 / 9 |
+| Intermittent | CNN+GRU54 | 학습 중 | 7 / 3 |
 
-- 전체 큐의 종료 예상 시간은 미확정입니다. 대기 중인 6조건의 실제 속도와 대기시간이 확인되지 않았으며, 비용·시간 기한을 완료 예상 시각으로 표시하지 않습니다. 자동 재시도·재개·추가 임대는 하지 않습니다.
-- 전체 Validation RMSE·MAE·시간 NLL, 큰 수량 RMSE를 원래 선택 checkpoint의 동일 epoch에서 읽습니다. 큰 수량 기준은 원래 Train 경계 초과: Taxi3449, Intermittent187, RAF200입니다.
-- Train은 기존 수량 구간별 고정 표본과 N/n 가중치를 사용한 진단이며 전체 Train 모집단 결과로 부르지 않습니다. 학습 과정에서 변하는 파라미터의 epoch 평균 손실과 고정 checkpoint 재추론도 구분합니다.
-- 후보별 데이터마다 폭16 대비 개선·손해를 모두 표시합니다. 수량 개선과 시간 악화는 교환 관계로 보고하며, 단일seed 결과로 3seed 안정성·통계적 우월성·논문 효율을 주장하거나 기준선을 자동 변경하지 않습니다.
-- 완료는 terminal success·소형 기록 및 원본 checkpoint SHA·selected/last 전체 Validation replay를 확인한 경우만 집계합니다. CPU binary 재추론 감사는 별도입니다.
+- 현재3병렬 속도와 best 추가 개선 없음 가정의 학습 종료 예상은 Taxi CNN+GRU54 **10/5 10:21:39**, Intermittent GRU54 **10/5 23:28:02**, Intermittent CNN+GRU54 **10/6 03:33:58 KST**입니다. replay·회수·CPU 감사 시간은 제외합니다. 속도와 best가 바뀌면 ETA도 바뀝니다.
+- 두 Intermittent의 현재 ETA는 **10/5 15:17:45 KST 로컬 마감**보다 늦습니다. 전체9조건 완료는 미확정이며 종료 마감은 완료 보장이 아닙니다. 사용자 요청에 따라 기존 학습·관리자를 유지하며 기다립니다. 자동 예산 확대·재개·추가 임대는 하지 않습니다.
+- 경과시간×배정요율 비용은 **약$22.12**로 추정됐으며 청구서 금액이 아닙니다. 소유 관리자 PID48709의 실제 명령과 최근 활동이 확인됐습니다. 최종 회수·비용 보고·Pod 삭제는 아직 완료되지 않았습니다.
+- 전체 Validation RMSE·MAE·시간 NLL과 큰 수량 지표는 동일 선택 epoch에서 읽었습니다. 큰 수량 경계는 원래 Train 기준 엄격 초과: Taxi3449·Intermittent187·RAF200입니다.
+- Train 진단은 고정 표본과 N/n 가중치 결과이며 전체 Train 모집단으로 부르지 않습니다. 단일seed·이종GPU 결과를 3seed 안정성·통계적 우월성·논문 효율 측정으로 해석하지 않습니다. 기준선을 자동 교체하지 않습니다.
+- 초기 **2026-10-04 18:49:44 KST**의 완료0·학습/준비3·대기6 기록은 [초기 관측](initial_observation.json)에 보존합니다. 현재 상태와 구분합니다.
 
 **원본을 회수하고 소유 Pod의 과금을 종료한다 — 다음 작업**
 

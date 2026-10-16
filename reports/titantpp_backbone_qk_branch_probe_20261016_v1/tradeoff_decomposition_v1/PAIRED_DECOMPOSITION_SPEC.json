@@ -1,0 +1,104 @@
+{
+  "schema": "qk_saved_row_tradeoff_decomposition_v1",
+  "status": "specified_before_implementation_and_real_row_execution",
+  "scope": {
+    "splits": [
+      "train",
+      "validation"
+    ],
+    "seeds": [
+      42,
+      52,
+      62
+    ],
+    "epochs": [
+      5,
+      5,
+      22
+    ],
+    "neural_import": false,
+    "inference": false,
+    "remote": false,
+    "Test_or_external_or_CNN_predictions": false,
+    "new_training": false
+  },
+  "native_receipt_sha256": "21f9b868cc9d8833e6540704a8ea76b72bf197eb02b8f603f4c57b114fb4cacb",
+  "bootstrap_sha256": "ca00f33e3f73944110211776867a1b6ddd7c76f995a7d0b4a4fc07ea31d9216f",
+  "prior_analysis_receipt_sha256": "dd4881811a3d27b5fb7b7c759563d101933fa1fb42be089af4e6ed7ddc885bac",
+  "prior_result_sha256": "2155f65eed92298a882f5fa152d9dd2faca78b08ec234e351c950443230b4534",
+  "mathematical_correction": {
+    "supersedes_only": "INTERPRETATION_REVIEW.json minimal_next_diagnostic.outputs suggesting same-target SE-benefit/AE-harm or reverse as substantive categories. Original report bytes are preserved.",
+    "identity": "SEoff-SEon=(AEoff-AEon)*(AEoff+AEon)=2*e*delta+delta^2; e=on_prediction-target, delta=off_prediction-on_prediction.",
+    "consequence": "For a single scalar target AE and SE changes have identical sign in exact arithmetic. Aggregate RMSE/MAE disagreement arises from different magnitudes on improved versus worsened rows, not opposite AE/SE directions on one row."
+  },
+  "row_classification": {
+    "both_improve": "delta_AE < 0, exact float comparison; use this sign for grouping",
+    "both_worsen": "delta_AE > 0",
+    "equal": "delta_AE == 0, including equal error magnitude after sign crossing",
+    "SE_only_or_AE_only": "Mathematically impossible substantive categories. Raw floating arithmetic sign disagreements are counted only as numerical diagnostics and must satisfy fixed identity residual tolerance; never called a performance mechanism.",
+    "numerical_tolerance": {
+      "relative": 1e-09,
+      "absolute": 1e-07,
+      "rule": "abs(identity residual)<=absolute+relative*max(abs(left),sum(abs(each right term))). Tolerance checks arithmetic closure only, not improvement groups or selection."
+    }
+  },
+  "partitions": {
+    "effect": [
+      "both_improve",
+      "both_worsen",
+      "equal"
+    ],
+    "on_error_sign": [
+      "negative",
+      "zero",
+      "positive"
+    ],
+    "prediction_shift_sign": [
+      "negative",
+      "zero",
+      "positive"
+    ],
+    "zero_crossing": [
+      "negative_to_positive",
+      "positive_to_negative",
+      "arrives_zero",
+      "leaves_zero",
+      "zero_to_zero",
+      "no_crossing"
+    ],
+    "quantity": [
+      "non_tail_q_le_200",
+      "tail_q_gt_200"
+    ]
+  },
+  "summaries": [
+    "count",
+    "entity_count",
+    "weight_sum",
+    "on_abs_error_sum",
+    "off_abs_error_sum",
+    "on_squared_error_sum",
+    "off_squared_error_sum",
+    "on_signed_error_sum",
+    "off_signed_error_sum",
+    "prediction_shift_sum",
+    "cross_term_2e_delta_sum",
+    "squared_shift_sum",
+    "delta_AE_sum",
+    "delta_SE_sum",
+    "delta_signed_error_sum",
+    "whole_and_tail_TimeNLL_delta_sum"
+  ],
+  "fixed_history": {
+    "plan_sha256": "0708d991be70c3792af95e6266005de2c9cea14d6851fc5aaa731351727ed8b3",
+    "condition_count": 15,
+    "Train_Q25": 0.4054651081081645,
+    "Train_Q75": 1.252762968495368,
+    "weights": "Original per-condition row weights and Train/Validation common-entity inverse-row-count weights. Compute before new outcome partitions; do not recompute entity support or weights inside a partition.",
+    "consistency": "Reproduced original180 summary records and support/closure must exactly match frozen prior analysis before decomposition."
+  },
+  "closures": "For every seed/split/historycondition/weighting, every new disjoint partition sums to the same parent count, weight mass and all additive fields. History row partitions sum to whole as in original. Weighted conditions with different supports are not summed.",
+  "input_verification": "Pinned prior analysis receipt/result, native final receipt/bootstrap/contract, source143/epochs/selected hashes and all new diagnostic file and row-manifest/shard SHA/bytes. Reconstruct histories only from same pure Train/Validation input; no historical CNN or prior candidate row load. Do not deserialize checkpoint or import neural/native execution modules. Hash verification is byte-only.",
+  "execution": "After independent code review, root runs CLI --receipt-sha with pinned native receipt once. Output result/receipt exclusive; existing evidence untouched. Synthetic tests first; no real-row analysis by implementer.",
+  "decision_limit": "Outcome/error-sign/target-quantity partitions are post-hoc error explanations, never input gates or automatic training-selection criteria. No interpolation/scale search/new bins/new filters/no claimed QK cause."
+}

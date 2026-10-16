@@ -1,0 +1,261 @@
+{
+  "report": "reports/titantpp_history_a100_20261008_v1/STATUS_20261008_175514KST.md",
+  "report_raw_sha256": "6805d406e9eb7b4bf0804aeeb8fc92a2788fff40b8f0e25252e2779819da681f",
+  "snapshot": {
+    "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_contribution_history_a100_parallel3_20261008_v1/hourly_monitor/20261008_175514KST.json",
+    "raw_sha256": "5f34cc11217d1b2bd89126285a40ea2396fb037386d7c5fe37d6c58e8754f478",
+    "observed_unix": 1791449714.0456104
+  },
+  "summary": {
+    "observed_KST": "20261008_175514KST",
+    "counts": {
+      "complete": 0,
+      "training": 2,
+      "running_before_first_save": 1,
+      "waiting": 24,
+      "unconfirmed": 0
+    },
+    "active": [
+      {
+        "job": {
+          "arm": "titantpp_cnn_gru54",
+          "dataset": "yellow_trip_hourly",
+          "host": "a100",
+          "id": "yellow_trip_hourly__42__titantpp_cnn_gru54",
+          "seed": 42
+        },
+        "state": "running_before_first_save",
+        "status": null,
+        "checkpoint_snapshot": "before_first_save",
+        "lease": {
+          "contract_sha256": "4fcf1923c2bfbec8ad7b4bf7af506ee4f9b254dd8695e6b77035dd913b5bc12a",
+          "expires_unix": 1791449799.0443547,
+          "issued_unix": 1791449709.0443547,
+          "job": "yellow_trip_hourly__42__titantpp_cnn_gru54",
+          "supervisor_pid": 1253,
+          "worker_group_pid": 1269
+        },
+        "owned_workers": [
+          {
+            "pid": 1269,
+            "ppid": 1253,
+            "argv": "timeout --signal=TERM --kill-after=15s 100221 /opt/titantpp-history27-venv/bin/python /workspace/titantpp_contribution_history_a100_parallel3_20261008_v1_a100/operation/campaign.py --contract /workspace/titantpp_contribution_history_a100_parallel3_20261008_v1_a100/execution_contract.json --host a100 --mode fit --job yellow_trip_hourly__42__titantpp_cnn_gru54 --deadline 1791549766"
+          },
+          {
+            "pid": 1270,
+            "ppid": 1269,
+            "argv": "/opt/titantpp-history27-venv/bin/python /workspace/titantpp_contribution_history_a100_parallel3_20261008_v1_a100/operation/campaign.py --contract /workspace/titantpp_contribution_history_a100_parallel3_20261008_v1_a100/execution_contract.json --host a100 --mode fit --job yellow_trip_hourly__42__titantpp_cnn_gru54 --deadline 1791549766"
+          }
+        ]
+      },
+      {
+        "job": {
+          "arm": "titantpp_cnn_gru54_correction_disabled",
+          "dataset": "yellow_trip_hourly",
+          "host": "a100",
+          "id": "yellow_trip_hourly__42__titantpp_cnn_gru54_correction_disabled",
+          "seed": 42
+        },
+        "state": "training",
+        "status": {
+          "deadline_unix": 1791549766.0,
+          "epoch": 2,
+          "global_steps": 600,
+          "job": {
+            "arm": "titantpp_cnn_gru54_correction_disabled",
+            "dataset": "yellow_trip_hourly",
+            "host": "a100",
+            "id": "yellow_trip_hourly__42__titantpp_cnn_gru54_correction_disabled",
+            "seed": 42
+          },
+          "status": "training",
+          "updated_unix": 1791449694.28363
+        },
+        "saved_epoch": 2,
+        "best_epoch": 1,
+        "selected_history": {
+          "epoch": 1,
+          "train_all_finite": true,
+          "train_batch_count": 300,
+          "train_batch_joint_max": 5.851516355445153,
+          "train_batch_joint_p50": 0.8379867514905369,
+          "train_batch_joint_p95": 1.354098948690415,
+          "train_batch_joint_p99": 5.605631979011597,
+          "train_event_count": 38393,
+          "train_gradient_clip_count": 292,
+          "train_gradient_clip_fraction": 0.9733333333333334,
+          "train_joint_objective": 0.9963386525893768,
+          "train_max_per_event_time_nll": 54.21508398673491,
+          "train_pre_clip_grad_norm_max": 40.09843063354492,
+          "train_pre_clip_grad_norm_mean": 4.244199422299862,
+          "train_quantity_loss": 0.35043879402923883,
+          "train_time_nll": 0.6458998585601364,
+          "train_time_sigma": 0.5995739698410034,
+          "val_joint_objective": 0.8855539077600336,
+          "val_log_qty_mse": 0.2203920951262647,
+          "val_qty_mae": 53.15231364905603,
+          "val_qty_rmse": 166.3539813831731,
+          "val_quantity_distribution_nll": 0.0,
+          "val_quantity_location_huber": 0.0,
+          "val_quantity_scale_mean": 0.0,
+          "val_quantity_train_loss": 0.2203920951262647,
+          "val_tail_aux_loss": 0.0,
+          "val_tail_count": 0,
+          "val_time_nll": 0.6651618126337688
+        },
+        "checkpoint_receipt": {
+          "contract_sha256": "4fcf1923c2bfbec8ad7b4bf7af506ee4f9b254dd8695e6b77035dd913b5bc12a",
+          "epoch": 2,
+          "files": {
+            "epoch_timing.json": "406641f4d1c9795f84e12a23dee7c7336f617ddddd0d4bedd2bd01395503425b",
+            "exposure.json": "d694ece4b1f1979d868bc4ee06e56ec750c8391236e5913880192cb76e72bb58",
+            "history.json": "1a100ef123e64566f077144505a71872485b499a89da47bc50a107c18a6b2a65",
+            "last_epoch_state.pt": "754ada80097e751fc2b39897998b6845cb82676bdaab03efee22d00cb4cba117",
+            "train.log": "424d989ffc797e3b687c42cddc56488bd72842b5287898986121f06f3822e8d8"
+          },
+          "mac_ack_required": false,
+          "time": 1791449694.2675538
+        },
+        "eta": {
+          "median_epoch_seconds": 71.85369314067066,
+          "sample_count": 2,
+          "unchanged_best_seconds": 2802.2940324861556,
+          "max300_seconds": 21412.400555919856
+        },
+        "lease": {
+          "contract_sha256": "4fcf1923c2bfbec8ad7b4bf7af506ee4f9b254dd8695e6b77035dd913b5bc12a",
+          "expires_unix": 1791449799.0443547,
+          "issued_unix": 1791449709.0443547,
+          "job": "yellow_trip_hourly__42__titantpp_cnn_gru54_correction_disabled",
+          "supervisor_pid": 1253,
+          "worker_group_pid": 1275
+        },
+        "owned_workers": [
+          {
+            "pid": 1275,
+            "ppid": 1253,
+            "argv": "timeout --signal=TERM --kill-after=15s 100221 /opt/titantpp-history27-venv/bin/python /workspace/titantpp_contribution_history_a100_parallel3_20261008_v1_a100/operation/campaign.py --contract /workspace/titantpp_contribution_history_a100_parallel3_20261008_v1_a100/execution_contract.json --host a100 --mode fit --job yellow_trip_hourly__42__titantpp_cnn_gru54_correction_disabled --deadline 1791549766"
+          },
+          {
+            "pid": 1276,
+            "ppid": 1275,
+            "argv": "/opt/titantpp-history27-venv/bin/python /workspace/titantpp_contribution_history_a100_parallel3_20261008_v1_a100/operation/campaign.py --contract /workspace/titantpp_contribution_history_a100_parallel3_20261008_v1_a100/execution_contract.json --host a100 --mode fit --job yellow_trip_hourly__42__titantpp_cnn_gru54_correction_disabled --deadline 1791549766"
+          }
+        ]
+      },
+      {
+        "job": {
+          "arm": "titantpp_cnn_gru54_current_only",
+          "dataset": "yellow_trip_hourly",
+          "host": "a100",
+          "id": "yellow_trip_hourly__42__titantpp_cnn_gru54_current_only",
+          "seed": 42
+        },
+        "state": "training",
+        "status": {
+          "deadline_unix": 1791549766.0,
+          "epoch": 2,
+          "global_steps": 600,
+          "job": {
+            "arm": "titantpp_cnn_gru54_current_only",
+            "dataset": "yellow_trip_hourly",
+            "host": "a100",
+            "id": "yellow_trip_hourly__42__titantpp_cnn_gru54_current_only",
+            "seed": 42
+          },
+          "status": "training",
+          "updated_unix": 1791449704.9758027
+        },
+        "saved_epoch": 2,
+        "best_epoch": 2,
+        "selected_history": {
+          "epoch": 2,
+          "train_all_finite": true,
+          "train_batch_count": 300,
+          "train_batch_joint_max": 1.1374628611210185,
+          "train_batch_joint_p50": 0.8019926769927014,
+          "train_batch_joint_p95": 1.0051611933353772,
+          "train_batch_joint_p99": 1.076211246657822,
+          "train_event_count": 38393,
+          "train_gradient_clip_count": 290,
+          "train_gradient_clip_fraction": 0.9666666666666667,
+          "train_joint_objective": 0.805111132224749,
+          "train_max_per_event_time_nll": 16.739482506896838,
+          "train_pre_clip_grad_norm_max": 8.805521965026855,
+          "train_pre_clip_grad_norm_mean": 2.5630876833200453,
+          "train_quantity_loss": 0.18575447613997995,
+          "train_time_nll": 0.619356656084769,
+          "train_time_sigma": 0.6009649634361267,
+          "val_joint_objective": 0.846568055695998,
+          "val_log_qty_mse": 0.1864927677166041,
+          "val_qty_mae": 40.17094505828074,
+          "val_qty_rmse": 128.07776281293138,
+          "val_quantity_distribution_nll": 0.0,
+          "val_quantity_location_huber": 0.0,
+          "val_quantity_scale_mean": 0.0,
+          "val_quantity_train_loss": 0.1864927677166041,
+          "val_tail_aux_loss": 0.0,
+          "val_tail_count": 0,
+          "val_time_nll": 0.660075287979394
+        },
+        "checkpoint_receipt": {
+          "contract_sha256": "4fcf1923c2bfbec8ad7b4bf7af506ee4f9b254dd8695e6b77035dd913b5bc12a",
+          "epoch": 2,
+          "files": {
+            "epoch_timing.json": "849609b2558b4b39c78f1015422d0bcaf6c06fd45febe274e4dda0611f1f09f4",
+            "exposure.json": "d694ece4b1f1979d868bc4ee06e56ec750c8391236e5913880192cb76e72bb58",
+            "history.json": "5ba350c7950247af8c477f0d74d8ff99b79011337b0e01305c4d434e510e18c8",
+            "last_epoch_state.pt": "cf7cfa4e41b5c0f70580be3354f2955b3bbdbccc96e07ebfaf47bf85f6c00fe7",
+            "train.log": "efca6fbef9052d08f0e124c93701b7f2ea3d50d5118e646347655b97473ef234"
+          },
+          "mac_ack_required": false,
+          "time": 1791449704.9630566
+        },
+        "eta": {
+          "median_epoch_seconds": 77.20142475143075,
+          "sample_count": 2,
+          "unchanged_best_seconds": 3088.05699005723,
+          "max300_seconds": 23006.024575926363
+        },
+        "lease": {
+          "contract_sha256": "4fcf1923c2bfbec8ad7b4bf7af506ee4f9b254dd8695e6b77035dd913b5bc12a",
+          "expires_unix": 1791449804.1721506,
+          "issued_unix": 1791449714.1721506,
+          "job": "yellow_trip_hourly__42__titantpp_cnn_gru54_current_only",
+          "supervisor_pid": 1253,
+          "worker_group_pid": 1281
+        },
+        "owned_workers": [
+          {
+            "pid": 1281,
+            "ppid": 1253,
+            "argv": "timeout --signal=TERM --kill-after=15s 100221 /opt/titantpp-history27-venv/bin/python /workspace/titantpp_contribution_history_a100_parallel3_20261008_v1_a100/operation/campaign.py --contract /workspace/titantpp_contribution_history_a100_parallel3_20261008_v1_a100/execution_contract.json --host a100 --mode fit --job yellow_trip_hourly__42__titantpp_cnn_gru54_current_only --deadline 1791549766"
+          },
+          {
+            "pid": 1282,
+            "ppid": 1281,
+            "argv": "/opt/titantpp-history27-venv/bin/python /workspace/titantpp_contribution_history_a100_parallel3_20261008_v1_a100/operation/campaign.py --contract /workspace/titantpp_contribution_history_a100_parallel3_20261008_v1_a100/execution_contract.json --host a100 --mode fit --job yellow_trip_hourly__42__titantpp_cnn_gru54_current_only --deadline 1791549766"
+          }
+        ]
+      }
+    ],
+    "failure": null,
+    "pipeline": {
+      "child_timeout_pid": 1252,
+      "contract_sha256": "4fcf1923c2bfbec8ad7b4bf7af506ee4f9b254dd8695e6b77035dd913b5bc12a",
+      "deadline_unix": 1791549766,
+      "phase": "dispatch",
+      "pipeline_pid": 659,
+      "pipeline_ppid": 658,
+      "updated_unix": 1791449709.7209802
+    },
+    "maximum_total_usd": 50,
+    "estimated_running_cost_usd": 0.6175388625061806
+  },
+  "native_three_worker_pass": true,
+  "actual_training_gpu_PIDs": [
+    1270,
+    1276,
+    1282
+  ]
+}

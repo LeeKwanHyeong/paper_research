@@ -1,0 +1,80 @@
+{
+  "status": "PASS",
+  "created_kst": "2026-10-16T04:45:40.100918+09:00",
+  "scope": "Independent static science/code review and synthetic-only arithmetic/provenance-entry tests. Actual saved-row CLI not executed.",
+  "summary": "No unresolved CRITICAL/HIGH/MEDIUM findings. Same-row AE/SE sign correction, two algebraic identities, parent-fixed weights, exact zero categories and exclusive output gates verified.",
+  "severity_counts": {
+    "CRITICAL": 0,
+    "HIGH": 0,
+    "MEDIUM": 0,
+    "LOW": 0
+  },
+  "findings": [],
+  "reviewed_file_sha256": {
+    "paper/scripts/analyze_titantpp_qk_probe_error_tradeoff.py": "e98cec077cb61a6c4a65c2527d52521cc924432767a2cc71a0ca6d8b292ff206",
+    "paper/tests/test_titantpp_qk_probe_error_tradeoff.py": "6bf2932cc829bfb048c3f7140eabe21f214cfc88686d14aeef32af96dd5601ec",
+    "reports/titantpp_backbone_qk_branch_probe_20261016_v1/tradeoff_decomposition_v1/PAIRED_DECOMPOSITION_SPEC.json": "85bb16175995a2444c01fa3b09934d7fe2fda43fc0ddb76a72c05ff3ecf095d9"
+  },
+  "actual_test_run": {
+    "command": [
+      "/usr/local/bin/python3",
+      "-m",
+      "pytest",
+      "-p",
+      "no:cacheprovider",
+      "paper/tests/test_titantpp_qk_probe_error_tradeoff.py",
+      "-q"
+    ],
+    "actual_exit": 0,
+    "started_unix": 1792093475.044828,
+    "completed_unix": 1792093476.014049,
+    "stdout_sha256": "3be72dde622e56ab03a3338fdae9ecc8d9c52f20bb463384a2cf10b158753b3a",
+    "stderr_sha256": "eae3b3ab88ebd007cd93d95595b7a951b2c689b68948b08fd24d8ff83282945e"
+  },
+  "pytest_tests_passed": 13,
+  "pytest_subtests_passed": 16,
+  "random_trials_within_suite": 30,
+  "independent_extra_checks": [
+    "foreign_receipt_rejected_before_file_access",
+    "existing_output_rejected_before_input_read",
+    "missing_weights_rejected",
+    "independent_180_cohorts_900_disjoint_partition_closures",
+    "independent_three_seed_sampleSD_and_empty_support",
+    "pure_module_imports_do_not_load_torch"
+  ],
+  "evidence_sha256": {
+    "/private/tmp/qk_tradeoff_independent_20261016/stdout.txt": "3be72dde622e56ab03a3338fdae9ecc8d9c52f20bb463384a2cf10b158753b3a",
+    "/private/tmp/qk_tradeoff_independent_20261016/extra_checks.json": "85d7e06545aeb2bcf75c35285edcbc0c2d273edfa95ce04013ed1df0f9cfedc2",
+    "/private/tmp/qk_tradeoff_independent_20261016/stderr.txt": "eae3b3ab88ebd007cd93d95595b7a951b2c689b68948b08fd24d8ff83282945e",
+    "/private/tmp/qk_tradeoff_independent_20261016/receipt.json": "37472b69ec23f7d0e74951001b3d89e5f85eb901db89d1a6a6b2acbc3b808a5d"
+  },
+  "acceptance_criteria": {
+    "two_scalar_squared_error_identities": true,
+    "same_row_opposite_AE_SE_effect_not_treated_as_real_group": true,
+    "near_zero_not_threshold_reclassified": true,
+    "crossing_categories_cover_exact_zero": true,
+    "weights_and_common_entities_frozen_before_outcome_partition": true,
+    "180_seed_split_cell_weight_records_and900_partition_closures_synthetic": true,
+    "sample_SD_ddof1_empty_support_retained": true,
+    "pinned_native_prior_result_contract_source143_and_selected_lineage_before_actual_analysis": true,
+    "one_to_one_target_truth_history_join_reuses_pinned_guard": true,
+    "prior180_summary_and_support_exact_reproduction_required": true,
+    "nonfinite_missing_weights_foreign_receipt_prior_output_rejected": true,
+    "only_current_on_off_train_validation_no_neural_import_inference_remote": true,
+    "post_hoc_target_partitions_not_promoted_to_gate_or_internal_cause": true,
+    "original_interpretation_bytes_preserved": true
+  },
+  "limitations": [
+    "Actual current saved rows were not loaded or aggregated by QA; root must run the one-shot CLI and verify resulting numerical closures and receipt afterward.",
+    "The synthetic suite has30 random scalar trials plus targeted boundary cases; it is not a mathematical proof for arbitrary floating-point extremes. Fixed closure tolerance is predeclared and is not used to reclassify effect signs.",
+    "Byte hashes of checkpoints are allowed; no checkpoint deserialization/model forward/native tool invocation occurs in this analysis.",
+    "The reviewed report provides per-seed contributions but does not identify Q versus K mechanisms or authorize training."
+  ],
+  "files_changed": [
+    "reports/titantpp_backbone_qk_branch_probe_20261016_v1/tradeoff_decomposition_v1/INDEPENDENT_LOCAL_QA.json"
+  ],
+  "qa_remote_calls": 0,
+  "qa_model_inference": 0,
+  "qa_actual_saved_row_analysis": 0,
+  "implementation_source_modifications": 0
+}

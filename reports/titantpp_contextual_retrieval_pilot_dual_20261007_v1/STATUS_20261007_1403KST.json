@@ -1,0 +1,202 @@
+{
+  "schema": "titantpp_retrieval_pilot_blocked_status_v1",
+  "recorded_utc": "2026-10-07T05:06:23.937674+00:00",
+  "scope": "Validation_only_existing_observations_no_new_evaluation",
+  "canonical_sha256": "5372f2ec93c98e6b45ecf37d2b19ae1375a838fdfd9eb8a9c4f3a908456e7953",
+  "status": "manual_action_required_no_automatic_retry",
+  "counts": {
+    "5090": {
+      "complete": 2,
+      "failed_timeout": 1,
+      "running": 0,
+      "waiting": 2,
+      "uncertain": 0
+    },
+    "5080": {
+      "complete": 0,
+      "failed_training": 0,
+      "running": 0,
+      "waiting": 5,
+      "uncertain": 0
+    }
+  },
+  "5090": {
+    "observed_utc": "2026-10-07T05:03:39.662245+00:00",
+    "fixed_timeout_exit": 124,
+    "supervisor_exit": 1,
+    "owned_and_GPU_processes_absent": true,
+    "rows": [
+      {
+        "arm": "titantpp_retrieval_mean",
+        "state": "complete",
+        "seed": 42,
+        "saved_epoch": 120,
+        "selected_epoch": 80,
+        "fullValidation": {
+          "count": 8268,
+          "qty_rmse": 84.87842608710935,
+          "qty_mae": 26.735983475826476,
+          "time_nll": 1.2058462601924136
+        },
+        "tailValidation": {
+          "count": 79,
+          "qty_rmse": 427.84336054820886,
+          "qty_mae": 333.2410316950158,
+          "time_nll": 6.977623186465628e-34
+        }
+      },
+      {
+        "arm": "titantpp_retrieval_weighted",
+        "state": "complete",
+        "seed": 42,
+        "saved_epoch": 99,
+        "selected_epoch": 59,
+        "fullValidation": {
+          "count": 8268,
+          "qty_rmse": 86.25292526948844,
+          "qty_mae": 28.197570710018976,
+          "time_nll": 1.0081824878253591
+        },
+        "tailValidation": {
+          "count": 79,
+          "qty_rmse": 411.5227260920591,
+          "qty_mae": 317.1895489270174,
+          "time_nll": 3.4598170037381346e-31
+        }
+      },
+      {
+        "arm": "titantpp_retrieval_fixed",
+        "state": "timeout_failed",
+        "seed": 42,
+        "saved_epoch": 148,
+        "selected_epoch": 120,
+        "fullValidation": {
+          "count": null,
+          "qty_rmse": null,
+          "qty_mae": null,
+          "time_nll": null
+        },
+        "tailValidation": {
+          "count": null,
+          "qty_rmse": null,
+          "qty_mae": null,
+          "time_nll": null
+        }
+      },
+      {
+        "arm": "titantpp_retrieval_adaptive",
+        "state": "waiting",
+        "seed": 42,
+        "saved_epoch": null,
+        "selected_epoch": null,
+        "fullValidation": {
+          "count": null,
+          "qty_rmse": null,
+          "qty_mae": null,
+          "time_nll": null
+        },
+        "tailValidation": {
+          "count": null,
+          "qty_rmse": null,
+          "qty_mae": null,
+          "time_nll": null
+        }
+      },
+      {
+        "arm": "titantpp_retrieval_generic",
+        "state": "waiting",
+        "seed": 42,
+        "saved_epoch": null,
+        "selected_epoch": null,
+        "fullValidation": {
+          "count": null,
+          "qty_rmse": null,
+          "qty_mae": null,
+          "time_nll": null
+        },
+        "tailValidation": {
+          "count": null,
+          "qty_rmse": null,
+          "qty_mae": null,
+          "time_nll": null
+        }
+      }
+    ]
+  },
+  "5080": {
+    "qualification_observed_utc": "2026-10-07T05:02:54.157994+00:00",
+    "native_PASS": true,
+    "qualification_exit": 0,
+    "owned_and_GPU_processes_absent": true,
+    "activation_error": "ValueError: Native qualification exit observation is stale",
+    "launch_intent_present": false,
+    "training_permit_present": false,
+    "launch_receipt_present": false,
+    "local_readback_saved_unix_from_filename": 1791349372.178051,
+    "server_observed_unix": 1791349374.1579943,
+    "server_observation_ahead_of_local_readback_seconds": 1.9799432754516602,
+    "inference": "Clock offset is consistent with negative age rejection; no server clock or sealed helper changed."
+  },
+  "weighted_vs_mean_percent": {
+    "fullValidation.qty_rmse": 1.619374022049458,
+    "fullValidation.qty_mae": 5.466741986559076,
+    "fullValidation.time_nll": -16.392120529155495,
+    "tailValidation.qty_rmse": -3.8146284273846476,
+    "tailValidation.qty_mae": -4.816778620073647
+  },
+  "ETA": "No active training. Queue ETA undetermined; no other-arm/GPU speed copied.",
+  "finalizer": {
+    "status": "pending_verified_all10",
+    "remote_calls": 0,
+    "retrieval_started": false
+  },
+  "executions_this_cycle": {
+    "activate_5080": 1,
+    "observer_helper": 1,
+    "finalizer": 1,
+    "additional_SSH": 0,
+    "retry": 0
+  },
+  "held_out_test_evaluated": false,
+  "CPU_binary_reinference_audit_complete": false,
+  "independent_evaluation_complete": false,
+  "original_archive_retrieval_complete": false,
+  "sources": [
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_contextual_retrieval_pilot_dual_20261007_v1/hourly_monitor/20261007T050338075209Z/5090/snapshot.json",
+      "raw_sha256": "694aa2fa827fd64d27a05ded5e4b6a72bb49198a0d1a46da07bdeb410f8f218b"
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_contextual_retrieval_pilot_dual_20261007_v1/hourly_monitor/20261007T050338075209Z/5090/analysis.json",
+      "raw_sha256": "e6c271e98d48213017ab005569f49e338e743b371cd8ae5212ec17f9ea3db747"
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_contextual_retrieval_pilot_dual_20261007_v1/hourly/20261007T050335641340Z_1791349418354258000.json",
+      "raw_sha256": "f2c3f0210c019787b5e73527ff1218a067ca0a324f9a9a9234b86f3bc0d9c3c9"
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_contextual_retrieval_pilot_dual_20261007_v1/hourly/20261007T050335641340Z_1791349418354258000.md",
+      "raw_sha256": "f07b31002ef1e7eeab39e9072c3382d5f8bf55e0aba3918d1070d06dec8b8d7a"
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_contextual_retrieval_pilot_dual_20261007_v1/qualification/5080/1791349372178051000.json",
+      "raw_sha256": "30c967990443250efeea133ca1a8fe4a9111f45a463f7272d25e8ad55dcbc0d0"
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_contextual_retrieval_pilot_dual_20261007_v1/qualification/5080/receipt.json",
+      "raw_sha256": "6f08fc50f56cbd845ac17d4a8b0c92c225df14ca849c5c73abc353f5548e59a2"
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_contextual_retrieval_pilot_dual_20261007_v1/hourly_monitor/finalizer_pending/1791349437232317000.json",
+      "raw_sha256": "9805017a05f2f3d9e182598899b2c558dc3ad3f9570c7f2146ba109ff5b6661f"
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_contextual_retrieval_pilot_dual_20261007_v1/current.json",
+      "raw_sha256": "fa4194cb9c294cbaf6f76e5e5966174a692a38565bc77511245ad56fae1a2912"
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_contextual_retrieval_pilot_dual_20261007_v1/execution_contract.json",
+      "raw_sha256": "7ac5b7855911fe699fbdb2b4992e0539009e5a8e3ff34e66ca33a7628f52a913"
+    }
+  ]
+}

@@ -1,0 +1,220 @@
+{
+  "aggregate": {
+    "CNN": {
+      "Large_MAE": {
+        "mean": 283.55541314919793,
+        "sample_sd": 3.016482394532114
+      },
+      "Large_RMSE": {
+        "mean": 330.7575986718216,
+        "sample_sd": 2.5539999843151633
+      },
+      "Large_TimeNLL": {
+        "mean": 3.363184196299083,
+        "sample_sd": 0.16836316725337303
+      },
+      "MAE": {
+        "mean": 9.218271236747547,
+        "sample_sd": 0.028001938985035457
+      },
+      "RMSE": {
+        "mean": 34.43140831691986,
+        "sample_sd": 0.0732010654996562
+      },
+      "TimeNLL": {
+        "mean": 3.497460184563737,
+        "sample_sd": 0.1389917959624318
+      }
+    },
+    "ValueDifference": {
+      "Large_MAE": {
+        "mean": 279.35115667621295,
+        "sample_sd": 3.546117534700235
+      },
+      "Large_RMSE": {
+        "mean": 327.3924641673613,
+        "sample_sd": 2.5234674748490526
+      },
+      "Large_TimeNLL": {
+        "mean": 3.3354134504619983,
+        "sample_sd": 0.09257557262138831
+      },
+      "MAE": {
+        "mean": 9.250620570432861,
+        "sample_sd": 0.032364706101474204
+      },
+      "RMSE": {
+        "mean": 34.44580623658982,
+        "sample_sd": 0.06778862854185297
+      },
+      "TimeNLL": {
+        "mean": 3.471717340068605,
+        "sample_sd": 0.06516145426662255
+      }
+    }
+  },
+  "baseline_reference_count": 3,
+  "comparison_runtime_limitation": "V-difference candidates use5090/cuDNN92000; historical CNN3 uses5080/cuDNN91900. This runtime difference is not removed by retraining the baseline.",
+  "constraint_limitation": "V-only observed differences change degrees of freedom (576 to512), prefix boundaries and optimizer parameterization together. No isolated causal attribution.",
+  "dataset": "raf_spare_parts",
+  "held_out_test_evaluated": false,
+  "interpretation": "Post-Test-informed exploratory follow-up; not independent generalization or causal proof.",
+  "new_fit_count": 3,
+  "primary_contrast": "ValueDifference−storedCNN: usefulness of the complete V-only constraint, including fewer degrees of freedom, boundary handling and optimizer parameterization; not causal proof.",
+  "rows": [
+    {
+      "Large_MAE": 283.0381588172913,
+      "Large_RMSE": 330.71090336840933,
+      "Large_TimeNLL": 3.556554896696149,
+      "MAE": 9.23111022291162,
+      "RMSE": 34.420452618672016,
+      "TimeNLL": 3.645686557273062,
+      "arm": "CNN",
+      "best_epoch": 9,
+      "seed": 42
+    },
+    {
+      "Large_MAE": 280.83100461244584,
+      "Large_RMSE": 328.2272665116951,
+      "Large_TimeNLL": 3.2838765691547476,
+      "MAE": 9.18615195937399,
+      "RMSE": 34.36430259009707,
+      "TimeNLL": 3.476642646905188,
+      "arm": "CNN",
+      "best_epoch": 5,
+      "seed": 52
+    },
+    {
+      "Large_MAE": 286.7970760178566,
+      "Large_RMSE": 333.3346261353603,
+      "Large_TimeNLL": 3.249121123046353,
+      "MAE": 9.237551527957033,
+      "RMSE": 34.509469741990486,
+      "TimeNLL": 3.3700513495129614,
+      "arm": "CNN",
+      "best_epoch": 8,
+      "seed": 62
+    },
+    {
+      "Large_MAE": 281.31575651049616,
+      "Large_RMSE": 329.19338481898194,
+      "Large_TimeNLL": 3.44216083364297,
+      "MAE": 9.26609049041175,
+      "RMSE": 34.410016011520284,
+      "TimeNLL": 3.539216736818214,
+      "arm": "ValueDifference",
+      "best_epoch": 9,
+      "seed": 42
+    },
+    {
+      "Large_MAE": 281.4801603746414,
+      "Large_RMSE": 328.47578853287865,
+      "Large_TimeNLL": 3.277142434684872,
+      "MAE": 9.213424018787162,
+      "RMSE": 34.40341376332378,
+      "TimeNLL": 3.46675806893916,
+      "arm": "ValueDifference",
+      "best_epoch": 5,
+      "seed": 52
+    },
+    {
+      "Large_MAE": 275.2575531435013,
+      "Large_RMSE": 324.5082191502234,
+      "Large_TimeNLL": 3.2869370830581532,
+      "MAE": 9.27234720209967,
+      "RMSE": 34.52398893492539,
+      "TimeNLL": 3.409177214448442,
+      "arm": "ValueDifference",
+      "best_epoch": 22,
+      "seed": 62
+    }
+  ],
+  "seed_count": 3,
+  "seed_differences": [
+    {
+      "Large_MAE": {
+        "absolute": -1.722402306795118,
+        "relative_percent": -0.608540669566387
+      },
+      "Large_RMSE": {
+        "absolute": -1.5175185494273933,
+        "relative_percent": -0.458865593474821
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.11439406305317901,
+        "relative_percent": -3.2164289987325945
+      },
+      "MAE": {
+        "absolute": 0.034980267500129614,
+        "relative_percent": 0.37893889960612287
+      },
+      "RMSE": {
+        "absolute": -0.010436607151731891,
+        "relative_percent": -0.03032094687235565
+      },
+      "TimeNLL": {
+        "absolute": -0.10646982045484776,
+        "relative_percent": -2.920432647794224
+      },
+      "contrast": "ValueDifference−CNN",
+      "seed": 42
+    },
+    {
+      "Large_MAE": {
+        "absolute": 0.6491557621955621,
+        "relative_percent": 0.23115530391361672
+      },
+      "Large_RMSE": {
+        "absolute": 0.24852202118353262,
+        "relative_percent": 0.07571644605420906
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.006734134469875475,
+        "relative_percent": -0.20506661343878724
+      },
+      "MAE": {
+        "absolute": 0.027272059413171235,
+        "relative_percent": 0.2968823021193495
+      },
+      "RMSE": {
+        "absolute": 0.03911117322671487,
+        "relative_percent": 0.11381337690230248
+      },
+      "TimeNLL": {
+        "absolute": -0.00988457796602793,
+        "relative_percent": -0.28431389043757227
+      },
+      "contrast": "ValueDifference−CNN",
+      "seed": 52
+    },
+    {
+      "Large_MAE": {
+        "absolute": -11.539522874355328,
+        "relative_percent": -4.023584561802454
+      },
+      "Large_RMSE": {
+        "absolute": -8.826406985136884,
+        "relative_percent": -2.6479118258637384
+      },
+      "Large_TimeNLL": {
+        "absolute": 0.03781596001180043,
+        "relative_percent": 1.1638827418149453
+      },
+      "MAE": {
+        "absolute": 0.03479567414263762,
+        "relative_percent": 0.37667637400809173
+      },
+      "RMSE": {
+        "absolute": 0.014519192934905334,
+        "relative_percent": 0.04207306876477052
+      },
+      "TimeNLL": {
+        "absolute": 0.039125864935480426,
+        "relative_percent": 1.1609872039823632
+      },
+      "contrast": "ValueDifference−CNN",
+      "seed": 62
+    }
+  ],
+  "split": "validation"
+}

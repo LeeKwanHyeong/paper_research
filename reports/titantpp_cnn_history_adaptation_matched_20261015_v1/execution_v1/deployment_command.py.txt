@@ -1,0 +1,30 @@
+ROOT='/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_cnn_history_taxi6_20261015_v1_5080'
+ARCHIVE_SHA='0ea8f965c51045c099fc424b22fac07465ce170d1d12db365527251f80017947'
+MANIFEST_SHA='bb3d00fce51582f56148f500e69b11eed6afe4fbe406d6e648ce5324d184a7e7'
+COMMIT='597d4a333222d486198bafad08c0f77b9a1d380e'
+
+import os,sys,json,hashlib,tarfile,io,subprocess,shlex,time
+from pathlib import Path
+root=Path(ROOT);blob=sys.stdin.buffer.read()
+assert hashlib.sha256(blob).hexdigest()==ARCHIVE_SHA
+assert not root.exists()
+out=subprocess.check_output(['nvidia-smi','--query-compute-apps=gpu_uuid,pid','--format=csv,noheader,nounits'],text=True)
+assert not any('GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6' in row for row in out.splitlines()),'Pinned GPU busy'
+root.mkdir(parents=False,exist_ok=False)
+with tarfile.open(fileobj=io.BytesIO(blob),mode='r:gz') as t:
+ for m in t.getmembers():
+  p=Path(m.name);assert m.isfile() and not p.is_absolute() and '..' not in p.parts
+  target=root/p;target.parent.mkdir(parents=True,exist_ok=True)
+  with target.open('xb') as f:f.write(t.extractfile(m).read())
+h=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+assert h(root/'deployment_manifest.json')==MANIFEST_SHA
+manifest=json.loads((root/'deployment_manifest.json').read_text())
+for n,d in manifest['files'].items():assert h(root/n)==d,n
+c=json.loads((root/'execution_contract.json').read_text());host=c['hosts']['5080'];env=dict(os.environ);env.update(host['environment'])
+(root/'cache/matplotlib').mkdir(parents=True,exist_ok=True)
+command=[host['python'],str(root/'operation/runtime.py'),'--contract',str(root/'execution_contract.json'),'--host','5080','--mode','pipeline']
+wrapper='import subprocess,json,time,sys,os; from pathlib import Path; root=Path('+repr(str(root))+'); cmd='+repr(command)+'; log=(root/"pipeline.log").open("xb"); p=subprocess.Popen(cmd,cwd=root/"source",stdout=log,stderr=subprocess.STDOUT); rc=p.wait(); log.close(); receipt={"returncode":rc,"actual_child_exit_observed":True,"pid":p.pid,"observer_pid":os.getpid(),"argv":cmd,"observed_unix":time.time()}; (root/"pipeline_exit.json").open("x").write(json.dumps(receipt,sort_keys=True,indent=2)+"\\n"); sys.exit(rc)'
+launch=shlex.join(['env',*[k+'='+v for k,v in host['environment'].items()],'/usr/bin/python3','-c',wrapper])
+(root/'deployment_receipt.json').write_text(json.dumps({'archive_sha256':ARCHIVE_SHA,'manifest_sha256':MANIFEST_SHA,'source_commit':COMMIT,'installed_unix':time.time(),'file_count':len(manifest['files']),'launch_command':launch},indent=2))
+subprocess.run([host['tmux_binary'],'new-session','-d','-s',host['tmux'],launch],check=True)
+print(json.dumps({'status':'qualification_pipeline_started','root':str(root),'session':host['tmux'],'installed_files':len(manifest['files']),'started_unix':time.time()}))

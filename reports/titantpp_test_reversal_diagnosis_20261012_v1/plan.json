@@ -1,0 +1,253 @@
+{
+  "schema": "titantpp_test_reversal_minimum_plan_v1",
+  "created_unix": 1791767162.898869,
+  "mode": "analysis_and_plan_only",
+  "project": "/Users/igwanhyeong/PycharmProjects/paper_research",
+  "branch": "codex/contextual-retrieval-pilot-20261007",
+  "source_contract_sha256": "f7fe042869e239a369c4ca77aa0c519bad1cde40d10688f6538e51ef803c183c",
+  "frozen_science_revision": "57da14a2a7a5687e1bdef7d3164f3e8c0051da59",
+  "existing_test_is_independent": false,
+  "execution_performed": {
+    "training": 0,
+    "model_inference": 0,
+    "remote_calls": 0,
+    "manuscript_edit": 0
+  },
+  "immediate_recommendation": {
+    "new_training_fits": 0,
+    "selected_checkpoint_diagnostic_count": 27,
+    "validation_and_test_split_passes": 54,
+    "requires_new_execution_approval": true
+  },
+  "conditional_counts": {
+    "dependency_settings": 18,
+    "dependency_validation_test_passes": 36,
+    "raf_factorial_fresh_fits": 12,
+    "taxi_intermittent_extension_fresh_fits": 24,
+    "retrieval_search_fits_in_initial_plan": 0
+  },
+  "artifact_location_note": "Project reports path used; .agents is read-only and prior results are preserved.",
+  "tasks": [
+    {
+      "id": "diagnosis",
+      "agent": "data-analyst",
+      "title": "기존 수량 오류·입력 구성·학습 기록을 검증한다",
+      "status": "완료",
+      "priority": "P0",
+      "dependencies": [],
+      "target": "기존 Test36 bundle 중 history27과 원래 Train/Validation 기록",
+      "acceptance_criteria": [
+        "18 paired 수량 분해와36 split-pair identity를 검증한다",
+        "frozen loader 적격 대상과 native truth/history digest가 일치한다",
+        "원본 history27 SHA·최초 strict 최소 선택·종료를 검증한다",
+        "사실과 원인 후보를 구분하고 새 학습·추론·원격 호출은0이다"
+      ],
+      "security_testing": "기존 원본 보존, 동결 source와 현재 코드 혼용 금지",
+      "new_fits": 0,
+      "new_split_passes": 0
+    },
+    {
+      "id": "telemetry_contract",
+      "agent": "pm-planner",
+      "title": "선택27개의 오류·보정 출력 계측 계약을 확정한다",
+      "status": "다음 작업",
+      "priority": "P0",
+      "dependencies": [
+        "diagnosis"
+      ],
+      "target": "새 격리 diagnostic contract; 5080 기존 native Runtime 후보",
+      "acceptance_criteria": [
+        "27 selected ID·checkpoint/input/source SHA와 target/truth/history digest를 고정한다",
+        "계측 정의·재현 허용오차·prefix-only·정지·원본 회수 계약을 고정한다",
+        "Validation 우선 gate와54 split pass 범위를 명시한다",
+        "실행 승인 범위를 구체적으로 제시한다"
+      ],
+      "security_testing": "승인 전 계측 runner·GPU 실행0, Runtime/credentials/checkpoint 변경0",
+      "new_fits": 0,
+      "new_split_passes": 0
+    },
+    {
+      "id": "telemetry",
+      "agent": "worker",
+      "title": "저장 모델의 구간별 오류와 보정 출력을 계측한다",
+      "status": "승인 필요",
+      "priority": "P0",
+      "dependencies": [
+        "telemetry_contract"
+      ],
+      "target": "5080 GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6; 새 격리 root",
+      "acceptance_criteria": [
+        "Validation27 정상 재현 후 같은 입력 규칙의 Test27을 진단용 평가한다",
+        "전체 digest·지표와 저장 가중치 불변을 검사한다",
+        "모든 seed·controls의 series/history/gap별 오류를 포함한다",
+        "CNN/GRU norm을 head 출력·시간 위치/scale과 연결하고 미확인을 남긴다"
+      ],
+      "security_testing": "model.eval, gradient/optimizer0, no Test checkpoint reselection, mismatch/nonfinite stop, retry0",
+      "new_fits": 0,
+      "checkpoint_count": 27,
+      "new_split_passes": 54
+    },
+    {
+      "id": "dependency_probes",
+      "agent": "worker",
+      "title": "필요한 경우에만 저장 full의 CNN 또는 GRU를 우회한다",
+      "status": "승인 필요",
+      "conditional": true,
+      "condition": "telemetry 이후 경로 출력 의존성을 구분할 필요가 남은 경우",
+      "priority": "P1",
+      "dependencies": [
+        "telemetry"
+      ],
+      "target": "동결 full9, 같은5080 계측 Runtime",
+      "acceptance_criteria": [
+        "CNN-only bypass/GRU-only bypass18개 설정을 식별한다",
+        "정상 경로 재현과 개입 경로를 검증한다",
+        "untrained intervention과 independently trained ablation을 구분한다",
+        "좋은 seed·모든 지표·정상 Test 기준선을 보존한다"
+      ],
+      "security_testing": "가중치 불변, OOD intervention 범위 표기, Test 튜닝 금지",
+      "new_fits": 0,
+      "inference_settings": 18,
+      "new_split_passes": 36
+    },
+    {
+      "id": "raf_factorial_contract",
+      "agent": "pm-planner",
+      "title": "구성요소별 기여가 필요한 경우 RAF 네 구조의 새 학습 계약을 고정한다",
+      "status": "다음 작업",
+      "conditional": true,
+      "condition": "telemetry 후 CNN·GRU 각각의 기여를 논문 핵심으로 유지하는 경우; probes는 선택 사항",
+      "priority": "P1",
+      "dependencies": [
+        "telemetry"
+      ],
+      "target": "RAF4arms×3seeds fresh; 같은5080 GPU/Runtime",
+      "acceptance_criteria": [
+        "off/off,CNN-only,GRU-only,full을 MLP16 대체 없이 정의한다",
+        "RAFcap84·공통 초기 tensor/RNG/shuffle·loss/selector를 고정한다",
+        "예상 활성78851/79427/103583/104159개를 native에서 확인한다",
+        "12fresh이며 과거A100/RTX 재사용을 matched factorial로 세지 않는다",
+        "최대3동시·lease·전체예산·회수·stop을 새 계약에 명시한다"
+      ],
+      "security_testing": "새 학습 승인 전 실행0; 과거 결과 보존, arm별 active capacity 차이 공개",
+      "new_fits": 0
+    },
+    {
+      "id": "raf_factorial",
+      "agent": "worker",
+      "title": "승인된 경우 RAF 네 구조를 같은 환경에서 새로 학습한다",
+      "status": "승인 필요",
+      "conditional": true,
+      "condition": "raf_factorial_contract와 새 학습 실행 승인",
+      "priority": "P1",
+      "dependencies": [
+        "raf_factorial_contract"
+      ],
+      "target": "RAF4arms×3seeds(42,52,62), 같은5080; 새 격리 root",
+      "acceptance_criteria": [
+        "12fresh native qualification·실제종료·manifest SHA를 확인한다",
+        "선택은Validation 최초 strict 최소 rawRMSE만 사용한다",
+        "전체/큰수량 RMSE·MAE·TimeNLL 및 seed평균/표본SD를 함께 보고한다",
+        "Test결과는 사후 선택한 구조 탐색으로 공개한다",
+        "불리한 결과·capacity·backbone적응·concurrency 차이를 남긴다"
+      ],
+      "security_testing": "max300/min40/patience40/B128; fresh/no automatic retry or resume; no shared Runtime change",
+      "new_fits": 12
+    },
+    {
+      "id": "freeze_and_fresh_contract",
+      "agent": "pm-planner",
+      "title": "최종 모델과 미노출 자료 확인 계약을 동결한다",
+      "status": "다음 작업",
+      "priority": "P1",
+      "dependencies": [
+        "telemetry"
+      ],
+      "conditional_dependencies": [
+        "raf_factorial if selected"
+      ],
+      "target": "기존모델 유지 여부와 미사용 자료·기간; 별도 평가 계약",
+      "acceptance_criteria": [
+        "선택한 구조 작업 완료 또는 생략을 결정한다",
+        "자료사용이력·전처리 호환성을 확인한다",
+        "최종checkpoint·비교군·여섯지표·정지조건을 성과열람 전에 고정한다",
+        "기존Test를 재명명하지 않고 CPU감사와 독립확인을 구분한다"
+      ],
+      "security_testing": "신규 자료 다운로드/평가는 별도 승인 범위, 모델 바뀌면checkpoint목록 새로 고정",
+      "new_fits": 0
+    },
+    {
+      "id": "fresh_confirmation",
+      "agent": "worker",
+      "title": "승인된 미노출 자료에서 동결 모델을 확인한다",
+      "status": "승인 필요",
+      "priority": "P1",
+      "dependencies": [
+        "freeze_and_fresh_contract"
+      ],
+      "target": "새 미노출 기간·자료와 동결checkpoint; scope not yet fixed",
+      "acceptance_criteria": [
+        "고정계약에서 결과를 보고하고 다시튜닝하면개발자료로 재분류한다",
+        "단순기준선과 시간·큰수량손해도 보존한다",
+        "Taxi 한기간을 전체자료 일반화로 확대하지 않는다"
+      ],
+      "security_testing": "새자료확인후Test기반재선택 금지; Runtime/인증변경0",
+      "new_fits": 0,
+      "new_split_passes": null
+    },
+    {
+      "id": "manuscript",
+      "agent": "docs-curator",
+      "title": "조건부 이득과 적용 예외에 맞춰 원고 주장을 정리한다",
+      "status": "다음 작업",
+      "priority": "P1",
+      "dependencies": [
+        "diagnosis"
+      ],
+      "conditional_dependencies": [
+        "telemetry for final causal wording",
+        "raf_factorial if component claim retained",
+        "fresh_confirmation for independent claim"
+      ],
+      "target": "paper/titantpp_pakdd2027_cnn_gru_submission_draft_20261008_v1/main.tex",
+      "acceptance_criteria": [
+        "Validation/Test·선택checkpoint·source를 분리한다",
+        "mean prototype 설명 유지, 미완료검색의 현재형·빈Results비중을 줄인다",
+        "seed반전·RAF·시간·큰수량·단순기준선예외를 모두 반영한다",
+        "구성별필요성·전반적우월성·독립확인을 근거밖으로 확대하지 않는다",
+        "내장LaTeX컴파일·배치를검증한다"
+      ],
+      "security_testing": "공통main.tex직렬, 현재계획에서는편집0, 원본/기존저자변경보존",
+      "new_fits": 0
+    }
+  ],
+  "parallelization": {
+    "allowed": [
+      "independent evidence/contract QA",
+      "literature/references review in separate files"
+    ],
+    "serial": [
+      "shared telemetry contract and runner",
+      "same GPU fit scheduling",
+      "main.tex final editing",
+      "model freeze before fresh result access"
+    ]
+  },
+  "not_authorized_now": [
+    "new GPU inference",
+    "fresh model training",
+    "new data performance access",
+    "SSH",
+    "checkpoint reselection",
+    "Runtime/driver/credential changes",
+    "new cloud resource creation"
+  ],
+  "unresolved": [
+    "exact telemetry contract and tolerated numerical replay error",
+    "which causal component claim will be retained",
+    "need for conditional RAF training",
+    "unexposed data availability/usage history/compatibility",
+    "execution time and cost",
+    "PAKDD submission rules at final submission"
+  ]
+}

@@ -1,0 +1,759 @@
+{
+  "aggregate": {
+    "CNN": {
+      "Large_MAE": {
+        "mean": 283.55541314919793,
+        "sample_sd": 3.016482394532114
+      },
+      "Large_RMSE": {
+        "mean": 330.7575986718216,
+        "sample_sd": 2.5539999843151633
+      },
+      "Large_TimeNLL": {
+        "mean": 3.363184196299083,
+        "sample_sd": 0.16836316725337303
+      },
+      "MAE": {
+        "mean": 9.218271236747547,
+        "sample_sd": 0.028001938985035457
+      },
+      "RMSE": {
+        "mean": 34.43140831691986,
+        "sample_sd": 0.0732010654996562
+      },
+      "TimeNLL": {
+        "mean": 3.497460184563737,
+        "sample_sd": 0.1389917959624318
+      }
+    },
+    "Query": {
+      "Large_MAE": {
+        "mean": 280.41440661470097,
+        "sample_sd": 1.4420863397417256
+      },
+      "Large_RMSE": {
+        "mean": 328.5313119279525,
+        "sample_sd": 0.6827423252827446
+      },
+      "Large_TimeNLL": {
+        "mean": 3.3380237374573105,
+        "sample_sd": 0.09685756310546105
+      },
+      "MAE": {
+        "mean": 9.241207884426549,
+        "sample_sd": 0.035806391022049536
+      },
+      "RMSE": {
+        "mean": 34.55775442201707,
+        "sample_sd": 0.0882151120879921
+      },
+      "TimeNLL": {
+        "mean": 3.4746872543030376,
+        "sample_sd": 0.06724897013810845
+      }
+    },
+    "StoredChannel": {
+      "Large_MAE": {
+        "mean": 280.58706756949425,
+        "sample_sd": 1.9817510821895552
+      },
+      "Large_RMSE": {
+        "mean": 328.7834560876723,
+        "sample_sd": 1.1946174641088403
+      },
+      "Large_TimeNLL": {
+        "mean": 3.3430424560676157,
+        "sample_sd": 0.09551161449008565
+      },
+      "MAE": {
+        "mean": 9.238867192753643,
+        "sample_sd": 0.037860705071532275
+      },
+      "RMSE": {
+        "mean": 34.561703160665026,
+        "sample_sd": 0.07261719772325786
+      },
+      "TimeNLL": {
+        "mean": 3.4835163627131016,
+        "sample_sd": 0.06389024442153562
+      }
+    },
+    "Value": {
+      "Large_MAE": {
+        "mean": 281.12934935967127,
+        "sample_sd": 0.5834284311490204
+      },
+      "Large_RMSE": {
+        "mean": 328.7303709637319,
+        "sample_sd": 0.950352677175189
+      },
+      "Large_TimeNLL": {
+        "mean": 3.4192849442014603,
+        "sample_sd": 0.1321550627097169
+      },
+      "MAE": {
+        "mean": 9.26781944857347,
+        "sample_sd": 0.04092582379895198
+      },
+      "RMSE": {
+        "mean": 34.45234834162046,
+        "sample_sd": 0.05659114313466597
+      },
+      "TimeNLL": {
+        "mean": 3.581407969510353,
+        "sample_sd": 0.12939541137604518
+      }
+    }
+  },
+  "baseline_reference_count": 3,
+  "comparison_runtime_limitation": "Candidates use 5090/cuDNN92000; historical CNN3 uses 5080/cuDNN91900. Candidate−CNN includes this runtime difference; Value−Query is same-runtime.",
+  "dataset": "raf_spare_parts",
+  "held_out_test_evaluated": false,
+  "interpretation": "Post-Test-informed exploratory follow-up; not independent generalization or causal proof.",
+  "new_fit_count": 6,
+  "primary_contrast": "Value−Query: one identically initialized 1024-parameter branch; only Q versus V location differs",
+  "rows": [
+    {
+      "Large_MAE": 283.0381588172913,
+      "Large_RMSE": 330.71090336840933,
+      "Large_TimeNLL": 3.556554896696149,
+      "MAE": 9.23111022291162,
+      "RMSE": 34.420452618672016,
+      "TimeNLL": 3.645686557273062,
+      "arm": "CNN",
+      "best_epoch": 9,
+      "seed": 42
+    },
+    {
+      "Large_MAE": 280.83100461244584,
+      "Large_RMSE": 328.2272665116951,
+      "Large_TimeNLL": 3.2838765691547476,
+      "MAE": 9.18615195937399,
+      "RMSE": 34.36430259009707,
+      "TimeNLL": 3.476642646905188,
+      "arm": "CNN",
+      "best_epoch": 5,
+      "seed": 52
+    },
+    {
+      "Large_MAE": 286.7970760178566,
+      "Large_RMSE": 333.3346261353603,
+      "Large_TimeNLL": 3.249121123046353,
+      "MAE": 9.237551527957033,
+      "RMSE": 34.509469741990486,
+      "TimeNLL": 3.3700513495129614,
+      "arm": "CNN",
+      "best_epoch": 8,
+      "seed": 62
+    },
+    {
+      "Large_MAE": 279.69489399313926,
+      "Large_RMSE": 328.71954778977215,
+      "Large_TimeNLL": 3.452910849476964,
+      "MAE": 9.280973861454491,
+      "RMSE": 34.54578743875161,
+      "TimeNLL": 3.55323160779179,
+      "arm": "StoredChannel",
+      "best_epoch": 9,
+      "seed": 42
+    },
+    {
+      "Large_MAE": 282.8580809545517,
+      "Large_RMSE": 330.00874492674427,
+      "Large_TimeNLL": 3.279791372941976,
+      "MAE": 9.207630326270344,
+      "RMSE": 34.49836393365764,
+      "TimeNLL": 3.469558543640713,
+      "arm": "StoredChannel",
+      "best_epoch": 5,
+      "seed": 52
+    },
+    {
+      "Large_MAE": 279.2082277607918,
+      "Large_RMSE": 327.62207554650035,
+      "Large_TimeNLL": 3.2964251457839073,
+      "MAE": 9.227997390536093,
+      "RMSE": 34.64095810958583,
+      "TimeNLL": 3.4277589367068018,
+      "arm": "StoredChannel",
+      "best_epoch": 22,
+      "seed": 62
+    },
+    {
+      "Large_MAE": 279.3310443127155,
+      "Large_RMSE": 328.35693375205074,
+      "Large_TimeNLL": 3.4498056886791404,
+      "MAE": 9.280117783337966,
+      "RMSE": 34.54209048913385,
+      "TimeNLL": 3.5461243309043664,
+      "arm": "Query",
+      "best_epoch": 9,
+      "seed": 42
+    },
+    {
+      "Large_MAE": 282.0512396287918,
+      "Large_RMSE": 329.2843322794825,
+      "Large_TimeNLL": 3.2789730044967396,
+      "MAE": 9.209644571619362,
+      "RMSE": 34.478420529857566,
+      "TimeNLL": 3.4653312282048945,
+      "arm": "Query",
+      "best_epoch": 5,
+      "seed": 52
+    },
+    {
+      "Large_MAE": 279.86093590259554,
+      "Large_RMSE": 327.95266975232425,
+      "Large_TimeNLL": 3.2852925191960516,
+      "MAE": 9.23386129832232,
+      "RMSE": 34.652752247059794,
+      "TimeNLL": 3.4126062037998515,
+      "arm": "Query",
+      "best_epoch": 22,
+      "seed": 62
+    },
+    {
+      "Large_MAE": 281.7846028804779,
+      "Large_RMSE": 329.82101644123594,
+      "Large_TimeNLL": 3.4519198663121364,
+      "MAE": 9.261440018670264,
+      "RMSE": 34.46056439061203,
+      "TimeNLL": 3.55307774208727,
+      "arm": "Value",
+      "best_epoch": 9,
+      "seed": 42
+    },
+    {
+      "Large_MAE": 280.9372617149353,
+      "Large_RMSE": 328.0799789963063,
+      "Large_TimeNLL": 3.2738699154156192,
+      "MAE": 9.230457958743889,
+      "RMSE": 34.39209826616896,
+      "TimeNLL": 3.4685249775855125,
+      "arm": "Value",
+      "best_epoch": 5,
+      "seed": 52
+    },
+    {
+      "Large_MAE": 280.6661834836006,
+      "Large_RMSE": 328.2901174536535,
+      "Large_TimeNLL": 3.532065050876625,
+      "MAE": 9.311560368306255,
+      "RMSE": 34.50438236808039,
+      "TimeNLL": 3.7226211888582763,
+      "arm": "Value",
+      "best_epoch": 26,
+      "seed": 62
+    }
+  ],
+  "seed_count": 3,
+  "seed_differences": [
+    {
+      "Large_MAE": {
+        "absolute": -3.7071145045757703,
+        "relative_percent": -1.3097578503430034
+      },
+      "Large_RMSE": {
+        "absolute": -2.3539696163585972,
+        "relative_percent": -0.7117907490749689
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.10674920801700871,
+        "relative_percent": -3.001477866015032
+      },
+      "MAE": {
+        "absolute": 0.04900756042634491,
+        "relative_percent": 0.5308956262347309
+      },
+      "RMSE": {
+        "absolute": 0.12163787046183216,
+        "relative_percent": 0.3533883525861814
+      },
+      "TimeNLL": {
+        "absolute": -0.0995622263686955,
+        "relative_percent": -2.7309595820867023
+      },
+      "contrast": "Query−CNN",
+      "seed": 42
+    },
+    {
+      "Large_MAE": {
+        "absolute": -1.2535559368133704,
+        "relative_percent": -0.44289290958205196
+      },
+      "Large_RMSE": {
+        "absolute": -0.8898869271733929,
+        "relative_percent": -0.26908303237346426
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.10463503038401267,
+        "relative_percent": -2.9420333278480553
+      },
+      "MAE": {
+        "absolute": 0.03032979575864303,
+        "relative_percent": 0.3285606500869685
+      },
+      "RMSE": {
+        "absolute": 0.04011177194001192,
+        "relative_percent": 0.11653470215627712
+      },
+      "TimeNLL": {
+        "absolute": -0.092608815185792,
+        "relative_percent": -2.5402297682734
+      },
+      "contrast": "Value−CNN",
+      "seed": 42
+    },
+    {
+      "Large_MAE": {
+        "absolute": 2.4535585677624,
+        "relative_percent": 0.8783694536349502
+      },
+      "Large_RMSE": {
+        "absolute": 1.4640826891852043,
+        "relative_percent": 0.4458814596833713
+      },
+      "Large_TimeNLL": {
+        "absolute": 0.0021141776329960393,
+        "relative_percent": 0.06128396274416008
+      },
+      "MAE": {
+        "absolute": -0.01867776466770188,
+        "relative_percent": -0.20126646130760287
+      },
+      "RMSE": {
+        "absolute": -0.08152609852182024,
+        "relative_percent": -0.23601958470772488
+      },
+      "TimeNLL": {
+        "absolute": 0.006953411182903491,
+        "relative_percent": 0.19608481074125694
+      },
+      "contrast": "Value−Query",
+      "seed": 42
+    },
+    {
+      "Large_MAE": {
+        "absolute": -2.4535585677624,
+        "relative_percent": -0.870721303677158
+      },
+      "Large_RMSE": {
+        "absolute": -1.4640826891852043,
+        "relative_percent": -0.44390218215401667
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.0021141776329960393,
+        "relative_percent": -0.061246428505732496
+      },
+      "MAE": {
+        "absolute": 0.01867776466770188,
+        "relative_percent": 0.2016723601302726
+      },
+      "RMSE": {
+        "absolute": 0.08152609852182024,
+        "relative_percent": 0.23657795501466053
+      },
+      "TimeNLL": {
+        "absolute": -0.006953411182903491,
+        "relative_percent": -0.1957010706672205
+      },
+      "contrast": "Query−Value",
+      "seed": 42
+    },
+    {
+      "Large_MAE": {
+        "absolute": -0.36384968042375476,
+        "relative_percent": -0.1300880667605894
+      },
+      "Large_RMSE": {
+        "absolute": -0.3626140377214142,
+        "relative_percent": -0.11031106612294282
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.003105160797823636,
+        "relative_percent": -0.08992878568799412
+      },
+      "MAE": {
+        "absolute": -0.0008560781165254383,
+        "relative_percent": -0.009224011718003867
+      },
+      "RMSE": {
+        "absolute": -0.003696949617761902,
+        "relative_percent": -0.010701593137271674
+      },
+      "TimeNLL": {
+        "absolute": -0.00710727688742363,
+        "relative_percent": -0.20002289948784271
+      },
+      "contrast": "Query−StoredChannel",
+      "seed": 42
+    },
+    {
+      "Large_MAE": {
+        "absolute": 2.089708887338645,
+        "relative_percent": 0.7471387330331115
+      },
+      "Large_RMSE": {
+        "absolute": 1.1014686514637901,
+        "relative_percent": 0.33507853696860723
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.0009909831648275969,
+        "relative_percent": -0.02869993486735135
+      },
+      "MAE": {
+        "absolute": -0.019533842784227318,
+        "relative_percent": -0.21047190818363132
+      },
+      "RMSE": {
+        "absolute": -0.08522304813958215,
+        "relative_percent": -0.24669591998931686
+      },
+      "TimeNLL": {
+        "absolute": -0.0001538657045201397,
+        "relative_percent": -0.004330303270485706
+      },
+      "contrast": "Value−StoredChannel",
+      "seed": 42
+    },
+    {
+      "Large_MAE": {
+        "absolute": 1.2202350163459528,
+        "relative_percent": 0.4345086533553904
+      },
+      "Large_RMSE": {
+        "absolute": 1.0570657677873783,
+        "relative_percent": 0.32205300279332943
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.004903564658008008,
+        "relative_percent": -0.1493224411680662
+      },
+      "MAE": {
+        "absolute": 0.023492612245371802,
+        "relative_percent": 0.25573942548815354
+      },
+      "RMSE": {
+        "absolute": 0.11411793976049722,
+        "relative_percent": 0.332082804419791
+      },
+      "TimeNLL": {
+        "absolute": -0.011311418700293618,
+        "relative_percent": -0.3253546553127263
+      },
+      "contrast": "Query−CNN",
+      "seed": 52
+    },
+    {
+      "Large_MAE": {
+        "absolute": 0.10625710248945097,
+        "relative_percent": 0.0378366707180671
+      },
+      "Large_RMSE": {
+        "absolute": -0.14728751538882534,
+        "relative_percent": -0.04487363799910795
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.010006653739128346,
+        "relative_percent": -0.30472076304938606
+      },
+      "MAE": {
+        "absolute": 0.04430599936989843,
+        "relative_percent": 0.48231293762440386
+      },
+      "RMSE": {
+        "absolute": 0.027795676071889375,
+        "relative_percent": 0.08088531987231247
+      },
+      "TimeNLL": {
+        "absolute": -0.008117669319675613,
+        "relative_percent": -0.23349162235301174
+      },
+      "contrast": "Value−CNN",
+      "seed": 52
+    },
+    {
+      "Large_MAE": {
+        "absolute": -1.1139779138565018,
+        "relative_percent": -0.39495586522598175
+      },
+      "Large_RMSE": {
+        "absolute": -1.2043532831762036,
+        "relative_percent": -0.36574873600545316
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.005103089081120338,
+        "relative_percent": -0.15563071346186838
+      },
+      "MAE": {
+        "absolute": 0.020813387124526628,
+        "relative_percent": 0.22599555240889108
+      },
+      "RMSE": {
+        "absolute": -0.08632226368860785,
+        "relative_percent": -0.25036606190777977
+      },
+      "TimeNLL": {
+        "absolute": 0.003193749380618005,
+        "relative_percent": 0.09216288921023073
+      },
+      "contrast": "Value−Query",
+      "seed": 52
+    },
+    {
+      "Large_MAE": {
+        "absolute": 1.1139779138565018,
+        "relative_percent": 0.3965219519320459
+      },
+      "Large_RMSE": {
+        "absolute": 1.2043532831762036,
+        "relative_percent": 0.36709136804405945
+      },
+      "Large_TimeNLL": {
+        "absolute": 0.005103089081120338,
+        "relative_percent": 0.15587330019105228
+      },
+      "MAE": {
+        "absolute": -0.020813387124526628,
+        "relative_percent": -0.22548596415858635
+      },
+      "RMSE": {
+        "absolute": 0.08632226368860785,
+        "relative_percent": 0.25099446687008886
+      },
+      "TimeNLL": {
+        "absolute": -0.003193749380618005,
+        "relative_percent": -0.09207802743981441
+      },
+      "contrast": "Query−Value",
+      "seed": 52
+    },
+    {
+      "Large_MAE": {
+        "absolute": -0.8068413257599332,
+        "relative_percent": -0.28524598732944545
+      },
+      "Large_RMSE": {
+        "absolute": -0.7244126472617722,
+        "relative_percent": -0.21951316696852327
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.000818368445236306,
+        "relative_percent": -0.02495184455901013
+      },
+      "MAE": {
+        "absolute": 0.0020142453490183954,
+        "relative_percent": 0.021875827738995345
+      },
+      "RMSE": {
+        "absolute": -0.01994340380007742,
+        "relative_percent": -0.0578097090007797
+      },
+      "TimeNLL": {
+        "absolute": -0.004227315435818557,
+        "relative_percent": -0.1218401529372295
+      },
+      "contrast": "Query−StoredChannel",
+      "seed": 52
+    },
+    {
+      "Large_MAE": {
+        "absolute": -1.920819239616435,
+        "relative_percent": -0.6790752567981478
+      },
+      "Large_RMSE": {
+        "absolute": -1.9287659304379758,
+        "relative_percent": -0.5844590363404235
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.005921457526356644,
+        "relative_percent": -0.18054372528716944
+      },
+      "MAE": {
+        "absolute": 0.022827632473545023,
+        "relative_percent": 0.24792081854562917
+      },
+      "RMSE": {
+        "absolute": -0.10626566748868527,
+        "relative_percent": -0.3080310350167339
+      },
+      "TimeNLL": {
+        "absolute": -0.0010335660552005521,
+        "relative_percent": -0.029789555132163872
+      },
+      "contrast": "Value−StoredChannel",
+      "seed": 52
+    },
+    {
+      "Large_MAE": {
+        "absolute": -6.936140115261082,
+        "relative_percent": -2.418483553447812
+      },
+      "Large_RMSE": {
+        "absolute": -5.381956383036027,
+        "relative_percent": -1.6145806529113857
+      },
+      "Large_TimeNLL": {
+        "absolute": 0.036171396149698776,
+        "relative_percent": 1.1132670891562433
+      },
+      "MAE": {
+        "absolute": -0.0036902296347118835,
+        "relative_percent": -0.03994813586201463
+      },
+      "RMSE": {
+        "absolute": 0.14328250506930829,
+        "relative_percent": 0.415197643257221
+      },
+      "TimeNLL": {
+        "absolute": 0.0425548542868901,
+        "relative_percent": 1.2627360794677538
+      },
+      "contrast": "Query−CNN",
+      "seed": 62
+    },
+    {
+      "Large_MAE": {
+        "absolute": -6.13089253425602,
+        "relative_percent": -2.1377109625323714
+      },
+      "Large_RMSE": {
+        "absolute": -5.044508681706759,
+        "relative_percent": -1.5133467351388477
+      },
+      "Large_TimeNLL": {
+        "absolute": 0.2829439278302721,
+        "relative_percent": 8.708321946612624
+      },
+      "MAE": {
+        "absolute": 0.07400884034922228,
+        "relative_percent": 0.8011737755966813
+      },
+      "RMSE": {
+        "absolute": -0.005087373910093618,
+        "relative_percent": -0.014741964881318924
+      },
+      "TimeNLL": {
+        "absolute": 0.35256983934531494,
+        "relative_percent": 10.46185362713444
+      },
+      "contrast": "Value−CNN",
+      "seed": 62
+    },
+    {
+      "Large_MAE": {
+        "absolute": 0.8052475810050623,
+        "relative_percent": 0.2877313257057518
+      },
+      "Large_RMSE": {
+        "absolute": 0.3374477013292676,
+        "relative_percent": 0.1028952444827219
+      },
+      "Large_TimeNLL": {
+        "absolute": 0.24677253168057334,
+        "relative_percent": 7.511432550942568
+      },
+      "MAE": {
+        "absolute": 0.07769906998393417,
+        "relative_percent": 0.8414580582670343
+      },
+      "RMSE": {
+        "absolute": -0.1483698789794019,
+        "relative_percent": -0.42816189006167826
+      },
+      "TimeNLL": {
+        "absolute": 0.31001498505842484,
+        "relative_percent": 9.084405482039823
+      },
+      "contrast": "Value−Query",
+      "seed": 62
+    },
+    {
+      "Large_MAE": {
+        "absolute": -0.8052475810050623,
+        "relative_percent": -0.2869058078213805
+      },
+      "Large_RMSE": {
+        "absolute": -0.3374477013292676,
+        "relative_percent": -0.10278947899700541
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.24677253168057334,
+        "relative_percent": -6.986636093220501
+      },
+      "MAE": {
+        "absolute": -0.07769906998393417,
+        "relative_percent": -0.8344366240528106
+      },
+      "RMSE": {
+        "absolute": 0.1483698789794019,
+        "relative_percent": 0.4300029990296455
+      },
+      "TimeNLL": {
+        "absolute": -0.31001498505842484,
+        "relative_percent": -8.327868169511657
+      },
+      "contrast": "Query−Value",
+      "seed": 62
+    },
+    {
+      "Large_MAE": {
+        "absolute": 0.652708141803771,
+        "relative_percent": 0.23377109873816854
+      },
+      "Large_RMSE": {
+        "absolute": 0.33059420582389976,
+        "relative_percent": 0.10090718254331356
+      },
+      "Large_TimeNLL": {
+        "absolute": -0.011132626587855743,
+        "relative_percent": -0.33771816727263637
+      },
+      "MAE": {
+        "absolute": 0.00586390778622814,
+        "relative_percent": 0.06354474907244724
+      },
+      "RMSE": {
+        "absolute": 0.011794137473962962,
+        "relative_percent": 0.034046799273427984
+      },
+      "TimeNLL": {
+        "absolute": -0.015152732906950295,
+        "relative_percent": -0.442059467621378
+      },
+      "contrast": "Query−StoredChannel",
+      "seed": 62
+    },
+    {
+      "Large_MAE": {
+        "absolute": 1.4579557228088333,
+        "relative_percent": 0.5221750571254365
+      },
+      "Large_RMSE": {
+        "absolute": 0.6680419071531674,
+        "relative_percent": 0.20390625571821402
+      },
+      "Large_TimeNLL": {
+        "absolute": 0.2356399050927176,
+        "relative_percent": 7.148346911322969
+      },
+      "MAE": {
+        "absolute": 0.0835629777701623,
+        "relative_percent": 0.9055375097511572
+      },
+      "RMSE": {
+        "absolute": -0.13657574150543894,
+        "relative_percent": -0.3942608662075249
+      },
+      "TimeNLL": {
+        "absolute": 0.29486225215147455,
+        "relative_percent": 8.602187539907975
+      },
+      "contrast": "Value−StoredChannel",
+      "seed": 62
+    }
+  ],
+  "split": "validation",
+  "stored_channel_limitation": "Stored prior QKV Channel has 3072 added parameters and three nonlinear branches; Q/Value each has 1024 and one branch. This descriptive contrast does not isolate location.",
+  "stored_channel_reference_count": 3
+}

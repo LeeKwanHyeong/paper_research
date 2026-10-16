@@ -1,0 +1,761 @@
+--- before_revision/main.tex
++++ main.tex
+@@ -36,15 +36,17 @@
+ \end{abstract}
+ 
+ \section{Introduction}
+-A demand forecast must often answer two questions: when will the next event occur, and how large will it be? The answers are related, but errors in them have different consequences. A model may estimate ordinary events well while missing the quantities that dominate replenishment or capacity decisions. It may also improve quantity estimates at the expense of timing likelihood. Joint prediction therefore calls for an account of both outcomes, even when quantity is the primary objective.
+-
+-Neural event models represent observed history through recurrence, attention, or a continuous-time state. RMTPP learns a recurrent history embedding~\cite{du2016rmtpp}; attentive neural Hawkes models use time-conditioned attention~\cite{yang2022anhp}; S2P2 uses a continuous-time state-space formulation~\cite{chang2025s2p2}. Such encoders already carry information about earlier events. The question here is narrower than whether history matters: \emph{does an explicit correction through recent observed states help after a history-aware encoder is already in place?}
++Intermittent demand alternates between periods without demand and nonzero observations whose sizes can vary. Forecasting therefore requires an account of both the interval to the next demand and its quantity. Croston's method separates demand size from the interval between nonzero observations~\cite{croston1972forecasting}; later renewal models place this event-based description within a probabilistic framework~\cite{turkmen2021renewal}.
++
++Temporal point processes provide a natural representation of event arrivals. Several neural formulations, including RMTPP and Transformer Hawkes Process, predict categorical event types alongside their occurrence times~\cite{du2016rmtpp,zuo2020thp}. Demand quantity has a numerical magnitude, however, and a type-classification objective does not directly account for the size of a quantity error. The distinction concerns categorical types versus numerical values, rather than discrete versus continuous data: demand counts can themselves be integer-valued. Point processes are not restricted to categorical marks. Deep renewal models already address demand size and arrival intervals, while mixed-attribute event models support numerical attributes~\cite{turkmen2021renewal,draxler2025flextpp}.
++
++Our question concerns the representation of observed history within this numerical prediction task. Recurrence, attention, and continuous-time states already summarize earlier events~\cite{mei2017nhp,yang2022anhp,chang2025s2p2}. Yet this does not determine whether a separate path through recent observed states improves quantity prediction. We ask whether an explicit correction adds useful structure beyond a history-aware encoder and a control with the same active parameter budget. All arms receive numerical event inputs and share quantity and timing output heads, so their comparison concerns the correction and retrieval paths.
+ 
+ We investigate this question with \method. The representative CNN+GRU54 model combines two forms of correction. A local path adjusts attention queries, keys, and values using the current and two preceding observed positions. A recurrent path adds a projected GRU state between the two attention blocks. The suffix 54 denotes the GRU state width. Both paths are residual, allowing the initial model to retain the shared encoder computation. They provide a particular way to reuse history, rather than supplying information unavailable to the causal encoder.
+ 
+ An earlier MLP version gives a reason to examine the correction more closely. Across Taxi, Intermittent, and RAF Spare Parts, switching on its explicit previous-state path improved overall quantity RMSE in all 18 comparisons formed by three seeds and two prototype settings. Yet the strongest quantity gains came with worse timing likelihood on Taxi. Moreover, adding prototypes to the corrected model did not improve quantity RMSE consistently across datasets. This pattern motivates two separate questions: the value of an explicit history path, and the value of the rule used to retrieve from a learned prototype bank.
+ 
+-The distinction matters for attribution. Removing the history path also removes parameters, so that comparison alone cannot identify the benefit of its input. We therefore include a control with the same number of active correction parameters that operates only on the current position. For retrieval, we compare uniform averaging, similarity weighting, separately normalized time and quantity queries, and a general learned query. Only the last two introduce query parameters, and their budgets are matched. The encoder, output heads, and model-selection rule are shared in each study.
++The distinction matters for attribution. Removing the history path also removes parameters, so that comparison alone cannot identify the benefit of its input. We therefore include a control with the same number of active correction parameters that operates only on the current position. For retrieval, we compare uniform averaging, similarity weighting, separately normalized time and quantity queries, and a general learned query. Only the last two introduce query parameters, and their budgets are matched. Each study uses the same encoder architecture, output-head definitions, and model-selection rule; each arm is trained independently. Quantity is the primary selection objective, while timing likelihood, large-quantity errors, and computational cost describe the accompanying tradeoffs.
+ 
+ This paper makes three contributions:
+ \begin{enumerate}
+@@ -55,14 +57,20 @@
+ The empirical analysis in this version concerns the MLP study. The representative CNN+GRU comparisons and the supplementary Instacart architecture comparison are specified separately, so that a result for one architecture is not treated as evidence for another.
+ 
+ \section{Related Work}
+-\paragraph{Encoding event history.}
+-RMTPP embeds marked event history with a recurrent network and conditions the next event on that representation~\cite{du2016rmtpp}. Transformer attention provides a different route for combining sequence states~\cite{vaswani2017attention}, and attentive neural Hawkes models adapt attention to irregular event times~\cite{yang2022anhp}. More recently, S2P2 models marked event sequences through a continuous-time state-space model~\cite{chang2025s2p2}. These approaches differ in how history evolves and how it is read at prediction time. Our study holds a causal attention backbone fixed and asks whether an additional local and recurrent path is useful within it. A recurrent correction is not, by itself, a new class of history encoder.
+-
+-\paragraph{Event size and timing.}
+-Deep renewal processes jointly address intermittent event occurrence and demand size~\cite{turkmen2021renewal}. This is particularly relevant when the mark is a quantity rather than a category. Our evaluation emphasizes raw quantity error and reports timing likelihood at the same selected checkpoint. The recorded intervals are discrete, so the time head assigns probability mass to recorded bins rather than evaluating a continuous density at an integer. Comparisons with other event models must retain this distinction: a common-head adaptation and a model's native marked-event likelihood answer different evaluation questions.
+-
+-\paragraph{Learned memory and retrieval.}
+-Persistent memory augments self-attention with learned, input-independent key--value entries~\cite{sukhbaatar2019memory}. Product-key memory likewise retrieves learned values from a parameterized memory~\cite{lample2019product}. \method{} uses persistent entries inside attention and a separate bank of 64 learned prototypes after the encoder. The latter is a static parameter bank, not a store of past event records. Our retrieval question concerns the query: whether separately normalizing time and quantity views helps compared with a joint learned query using the same summaries. Top-$k$ selection and learned memory slots are established components of this design.
++\paragraph{Intermittent demand and numerical quantities.}
++Croston models nonzero demand sizes and interdemand intervals separately~\cite{croston1972forecasting}. The Syntetos--Boylan adjustment addresses bias in its demand-rate estimate~\cite{syntetos2005accuracy}, whereas Teunter, Syntetos, and Babai model occurrence probability to respond to the risk of inventory obsolescence~\cite{teunter2011obsolescence}. Deep renewal processes extend the size--interval representation with learned conditional distributions~\cite{turkmen2021renewal}. DeepAR instead learns autoregressive probabilistic forecasts across related time series~\cite{salinas2020deepar}. These approaches establish numerical demand prediction as an existing research problem. Our target is the next event's quantity and recorded gap; forecasting demand accumulated over a fixed calendar horizon would require an additional aggregation procedure.
++
++\paragraph{Neural event-history encoders.}
++Hawkes processes describe self-excitation and mutual excitation in event arrivals~\cite{hawkes1971spectra}. Neural TPPs replace fixed history summaries with learned representations and conditional distributions~\cite{shchur2021review}. RMTPP uses a recurrent embedding~\cite{du2016rmtpp}, and the Neural Hawkes Process introduces continuous-time LSTM states~\cite{mei2017nhp}. THP, SAHP, and AttNHP apply attention to event histories and irregular timing~\cite{zuo2020thp,zhang2020sahp,yang2022anhp}; S2P2 develops a continuous-time state-space architecture~\cite{chang2025s2p2}. These models already represent dependencies across events. We hold a causal attention backbone fixed and test an additional path through observed states. Neither recurrence nor attention alone constitutes the proposed distinction.
++
++\paragraph{Distributions and evaluation targets.}
++Fully neural intensity models parameterize a cumulative hazard~\cite{omi2019fully}, while intensity-free models directly specify conditional inter-event distributions~\cite{shchur2020intensityfree}. FlexTPP further treats events with mixed discrete and continuous attributes~\cite{draxler2025flextpp}. These formulations preclude a general claim that TPP marks must be categorical. Our quantity head is a numerical regressor, and our time head assigns probability mass to recorded interval bins. Common-head encoder adaptations therefore answer a different comparison from native marked-event likelihoods. Point forecast errors and probabilistic scores also assess different properties~\cite{hyndman2006accuracy,gneiting2007proper}; we report raw-quantity RMSE and MAE alongside timing NLL at the same quantity-selected checkpoint.
++
++\paragraph{Residual correction.}
++Residual networks establish additive transformation paths~\cite{he2016residual}, and bottleneck adapters apply compact residual modules in transfer learning~\cite{houlsby2019adapters}. ReZero initializes a scalar residual gate at zero~\cite{bachlechner2021rezero}. Our zero-initialized local kernels and recurrent output projection preserve the initial base computation through different parameterizations, and the entire event model is trained jointly. The architectural question is whether direct access to recent observed states adds value within a causal attention encoder. The current-only control retains the active parameter count but changes the inputs and operations of the correction path, so the comparison does not isolate parameter count from every possible optimization effect.
++
++\paragraph{Memory and prototype retrieval.}
++Memory networks learn to read from memory representations~\cite{sukhbaatar2015memory}. Persistent memory adds input-independent key--value entries to attention~\cite{sukhbaatar2019memory}, and product-key memory retrieves learned values from a parameter bank~\cite{lample2019product}. Titans includes a contextual neural memory whose parameters are updated at test time~\cite{behrouz2025titans}. In \method, learned parameters remain fixed during inference; only sequence states and queries depend on the observed prefix. Its persistent attention entries and post-encoder prototypes are separate banks. The retrieval study tests separate normalization of time and quantity queries against a joint learned query with the same summaries and parameter budget. It does not claim the invention of learned memory or top-$k$ retrieval.
+ 
+ \section{Method}
+ \subsection{Prediction Task and Causal Encoder}
+@@ -72,7 +80,7 @@
+ \begin{equation}
+  e_i=W_e[\log(1+\Delta_i),\log(1+q_i)]^\top+b_e+p_i,
+ \end{equation}
+-where $p_i$ is a learned position embedding. These two input values are not standardized by training-set moments. The backbone has two pre-normalized causal attention blocks, hidden width 64, four attention heads, a feed-forward width of 128, and dropout 0.1. Each block also contains 16 learned persistent key--value entries. These entries are distinct from the prototype bank used after the encoder.
++where $p_i$ is a learned position embedding. These two input values are not standardized by training-set moments. The backbone uses Transformer attention~\cite{vaswani2017attention} in two pre-normalized causal blocks, with hidden width 64, four attention heads, a feed-forward width of 128, and dropout 0.1. Each block also contains 16 learned persistent key--value entries. These entries are distinct from the prototype bank used after the encoder.
+ 
+ Figure~\ref{fig:architecture} shows where the corrections enter. In the first block, the local correction is applied after layer normalization and the query, key, and value projections, before causal attention. The block then completes its attention residual and feed-forward residual. Its output $b_i$ is passed through the recurrent correction before entering the second block. Let $h_i$ denote the resulting second-block output.
+ 
+@@ -210,7 +218,7 @@
+ 
+ \section{Experimental Design}
+ \subsection{Datasets and Model Selection}
+-Taxi, Intermittent, and RAF Spare Parts form the core study. Instacart provides a supplementary architecture comparison. Table~\ref{tab:data} gives the eligible target populations and input windows. Lookback is measured in each dataset's native time bins. The inclusive window ends at the last observed event; the target is appended before truncation to the sequence cap, which includes that target. Large-quantity thresholds are fixed from the training data.
++Taxi, Intermittent, and RAF Spare Parts form the core study. Instacart provides a supplementary architecture comparison. Table~\ref{tab:data} gives the eligible target populations and input windows. Lookback is measured in each dataset's native time bins. The inclusive window ends at the last observed event; the target is appended before truncation to the sequence cap, which includes that target. Large-quantity thresholds are fixed from the training data. Appendix~\ref{app:data-characteristics} gives the event definitions and training distributions; Appendix~\ref{app:lag} examines associations across observed-event lags.
+ 
+ \begin{table}[t]
+ \caption{Target populations and sequence construction. $q_{\rm large}$ is a strict lower bound for the large-quantity subset. Scale $s$ is used by the time distribution.}
+@@ -231,7 +239,7 @@
+ 
+ The representative experiments use AdamW~\cite{loshchilov2019adamw}, learning rate $10^{-3}$, weight decay 0.01, batch size 128, and gradient clipping at one. Training lasts at least 40 and at most 300 epochs, with patience 40. Each fit retains the first strictly improving finite minimum of overall raw-quantity RMSE on the full validation set. Ties retain the earlier checkpoint. This rule is shared by the completed MLP study and the new comparisons; neither timing likelihood nor large-quantity error changes the selected epoch.
+ 
+-We evaluate quantity RMSE, quantity MAE, and recorded-time NLL on all validation targets and on the large-quantity subset. All six metrics come from that one checkpoint. Three-seed summaries use the arithmetic mean and sample standard deviation. Time scores are interpreted within a dataset, since the recorded units and distributions differ.
++We evaluate quantity RMSE, quantity MAE, and recorded-time NLL on all validation targets and on the large-quantity subset. All six metrics come from that one checkpoint. Three-seed summaries use the arithmetic mean and sample standard deviation. Time scores are interpreted within a dataset, since the recorded units and distributions differ. Appendix~\ref{app:strata} specifies partitions by quantity and usable history, including how their errors contribute to an aggregate difference.
+ 
+ \subsection{Comparisons and Their Scope}
+ \paragraph{Completed MLP correction study.}
+@@ -304,42 +312,99 @@
+ \section{Conclusion}
+ We examined explicit history correction within a causal attention model. The completed MLP analysis finds consistent quantity improvements across paired runs, together with timing and large-quantity costs that limit a broader performance claim. Its prototype results are less consistent. The CNN+GRU architecture and matched controls carry these observations into two focused questions: whether an explicit local and recurrent path adds value, and whether separate time and quantity queries improve prototype retrieval. Those comparisons, followed by an unexposed evaluation, will determine how far the present evidence extends.
+ 
+-\begin{thebibliography}{9}
++\begin{thebibliography}{28}
++\bibitem{bachlechner2021rezero}
++Bachlechner, T., Majumder, B. P., Mao, H., Cottrell, G., McAuley, J.: \href{https://proceedings.mlr.press/v161/bachlechner21a.html}{ReZero is all you need: fast convergence at large depth}. Proceedings of the Thirty-Seventh Conference on Uncertainty in Artificial Intelligence \textbf{161}, 1352--1361 (2021).
++
++\bibitem{behrouz2025titans}
++Behrouz, A., Zhong, P., Mirrokni, V.: \href{https://papers.nips.cc/paper_files/paper/2025/hash/a4ca07aa108036f80cbb5b82285fd4b1-Abstract-Conference.html}{Titans: Learning to Memorize at Test Time}. Advances in Neural Information Processing Systems 38, 125925--125962 (2025). \doi{10.52202/085713-3786}
++
+ \bibitem{chang2025s2p2}
+ Chang, Y., Boyd, A., Xiao, C., Kass-Hout, T., Bhatia, P., Smyth, P., Warrington, A.:
+-Deep continuous-time state-space models for marked event sequences. In: Advances in Neural Information Processing Systems, vol. 38 (2025).
+-\url{https://arxiv.org/abs/2412.19634}
++\href{https://arxiv.org/abs/2412.19634}{Deep continuous-time state-space models for marked event sequences}. In: Advances in Neural Information Processing Systems, vol. 38 (2025).
++
+ \bibitem{cho2014gru}
+ Cho, K., van Merri\"enboer, B., G\"ul\c{c}ehre, \c{C}., Bahdanau, D., Bougares, F., Schwenk, H., Bengio, Y.:
+-Learning phrase representations using RNN encoder--decoder for statistical machine translation. In: EMNLP (2014).
+-\url{https://arxiv.org/abs/1406.1078}
++\href{https://arxiv.org/abs/1406.1078}{Learning phrase representations using RNN encoder--decoder for statistical machine translation}. In: EMNLP (2014).
++
++\bibitem{croston1972forecasting}
++Croston, J. D.: \href{https://link.springer.com/article/10.1057/jors.1972.50}{Forecasting and Stock Control for Intermittent Demands}. Journal of the Operational Research Society \textbf{23}(3), 289--303 (1972). \doi{10.1057/jors.1972.50}
++
++\bibitem{draxler2025flextpp}
++Draxler, F., Meng, Y., Nelson, K., Laskowski, L., Yang, Y., Karaletsos, T., et al.: \href{https://proceedings.nips.cc/paper_files/paper/2025/hash/a6c7515ac435277dc92b75a07bb2257c-Abstract-Conference.html}{Transformers for Mixed-type Event Sequences}. Advances in Neural Information Processing Systems 38, 127441--127473 (2025). \doi{10.52202/085713-3833}
++
+ \bibitem{du2016rmtpp}
+ Du, N., Dai, H., Trivedi, R., Upadhyay, U., Gomez-Rodriguez, M., Song, L.:
+-Recurrent marked temporal point processes: Embedding event history to vector. In: KDD, pp. 1555--1564 (2016).
+-\doi{10.1145/2939672.2939875}
++\href{https://doi.org/10.1145/2939672.2939875}{Recurrent marked temporal point processes: Embedding event history to vector}. In: KDD, pp. 1555--1564 (2016). \doi{10.1145/2939672.2939875}
++
++\bibitem{gneiting2007proper}
++Gneiting, T., Raftery, A. E.: \href{https://doi.org/10.1198/016214506000001437}{Strictly Proper Scoring Rules, Prediction, and Estimation}. Journal of the American Statistical Association \textbf{102}(477), 359--378 (2007). \doi{10.1198/016214506000001437}
++
++\bibitem{hawkes1971spectra}
++Hawkes, A. G.: \href{https://academic.oup.com/biomet/article-abstract/58/1/83/224809}{Spectra of some self-exciting and mutually exciting point processes}. Biometrika \textbf{58}(1), 83--90 (1971). \doi{10.1093/biomet/58.1.83}
++
++\bibitem{he2016residual}
++He, K., Zhang, X., Ren, S., Sun, J.: \href{https://openaccess.thecvf.com/content_cvpr_2016/html/He_Deep_Residual_Learning_CVPR_2016_paper.html}{Deep Residual Learning for Image Recognition}. Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition, 770--778 (2016). \doi{10.1109/CVPR.2016.90}
++
++\bibitem{houlsby2019adapters}
++Houlsby, N., Giurgiu, A., Jastrzebski, S., Morrone, B., De Laroussilhe, Q., Gesmundo, A., et al.: \href{https://proceedings.mlr.press/v97/houlsby19a.html}{Parameter-Efficient Transfer Learning for NLP}. Proceedings of the 36th International Conference on Machine Learning \textbf{97}, 2790--2799 (2019).
++
++\bibitem{hyndman2006accuracy}
++Hyndman, R. J., Koehler, A. B.: \href{https://doi.org/10.1016/j.ijforecast.2006.03.001}{Another look at measures of forecast accuracy}. International Journal of Forecasting \textbf{22}(4), 679--688 (2006). \doi{10.1016/j.ijforecast.2006.03.001}
++
+ \bibitem{lample2019product}
+ Lample, G., Sablayrolles, A., Ranzato, M., Denoyer, L., J\'egou, H.:
+-Large memory layers with product keys. In: Advances in Neural Information Processing Systems, vol. 32 (2019).
+-\url{https://papers.neurips.cc/paper/9061-large-memory-layers-with-product-keys}
++\href{https://papers.neurips.cc/paper/9061-large-memory-layers-with-product-keys}{Large memory layers with product keys}. In: Advances in Neural Information Processing Systems, vol. 32 (2019).
++
+ \bibitem{loshchilov2019adamw}
+-Loshchilov, I., Hutter, F.: Decoupled weight decay regularization. In: ICLR (2019).
+-\url{https://arxiv.org/abs/1711.05101}
++Loshchilov, I., Hutter, F.:
++\href{https://arxiv.org/abs/1711.05101}{Decoupled weight decay regularization}. In: ICLR (2019).
++
++\bibitem{mei2017nhp}
++Mei, H., Eisner, J.: \href{https://papers.nips.cc/paper_files/paper/2017/hash/6463c88460bd63bbe256e495c63aa40b-Abstract.html}{The Neural Hawkes Process: A Neurally Self-Modulating Multivariate Point Process}. Advances in Neural Information Processing Systems 30 (2017).
++
++\bibitem{omi2019fully}
++Omi, T., Ueda, N., Aihara, K.: \href{https://proceedings.neurips.cc/paper/2019/hash/39e4973ba3321b80f37d9b55f63ed8b8-Abstract.html}{Fully Neural Network based Model for General Temporal Point Processes}. Advances in Neural Information Processing Systems 32 (2019).
++
++\bibitem{salinas2020deepar}
++Salinas, D., Flunkert, V., Gasthaus, J., Januschowski, T.: \href{https://www.sciencedirect.com/science/article/pii/S0169207019301888}{DeepAR: Probabilistic forecasting with autoregressive recurrent networks}. International Journal of Forecasting \textbf{36}(3), 1181--1191 (2020). \doi{10.1016/j.ijforecast.2019.07.001}
++
++\bibitem{shchur2020intensityfree}
++Shchur, O., Bilo\v{s}, M., G\"{u}nnemann, S.: \href{https://openreview.net/forum?id=HygOjhEYDH}{Intensity-Free Learning of Temporal Point Processes}. International Conference on Learning Representations (2020).
++
++\bibitem{shchur2021review}
++Shchur, O., T\"{u}rkmen, A. C., Januschowski, T., G\"{u}nnemann, S.: \href{https://www.ijcai.org/proceedings/2021/623}{Neural Temporal Point Processes: A Review}. Proceedings of the Thirtieth International Joint Conference on Artificial Intelligence, 4585--4593 (2021). \doi{10.24963/ijcai.2021/623}
++
++\bibitem{sukhbaatar2015memory}
++Sukhbaatar, S., Szlam, A., Weston, J., Fergus, R.: \href{https://proceedings.neurips.cc/paper/2015/hash/8fb21ee7a2207526da55a679f0332de2-Abstract.html}{End-To-End Memory Networks}. Advances in Neural Information Processing Systems 28 (2015).
++
+ \bibitem{sukhbaatar2019memory}
+ Sukhbaatar, S., Grave, E., Lample, G., J\'egou, H., Joulin, A.:
+-Augmenting self-attention with persistent memory. arXiv:1907.01470 (2019).
+-\url{https://arxiv.org/abs/1907.01470}
++\href{https://arxiv.org/abs/1907.01470}{Augmenting self-attention with persistent memory}. arXiv:1907.01470 (2019).
++
++\bibitem{syntetos2005accuracy}
++Syntetos, A. A., Boylan, J. E.: \href{https://www.sciencedirect.com/science/article/pii/S0169207004000792}{The accuracy of intermittent demand estimates}. International Journal of Forecasting \textbf{21}(2), 303--314 (2005). \doi{10.1016/j.ijforecast.2004.10.001}
++
++\bibitem{teunter2011obsolescence}
++Teunter, R. H., Syntetos, A. A., Babai, M. Z.: \href{https://www.sciencedirect.com/science/article/pii/S0377221711004437}{Intermittent demand: Linking forecasting to inventory obsolescence}. European Journal of Operational Research \textbf{214}(3), 606--615 (2011). \doi{10.1016/j.ejor.2011.05.018}
++
+ \bibitem{turkmen2021renewal}
+ T\"urkmen, A.C., Januschowski, T., Wang, Y., Cemgil, A.T.:
+-Forecasting intermittent and sparse time series: A unified probabilistic framework via deep renewal processes. PLOS ONE 16(11), e0259764 (2021).
+-\doi{10.1371/journal.pone.0259764}
++\href{https://doi.org/10.1371/journal.pone.0259764}{Forecasting intermittent and sparse time series: A unified probabilistic framework via deep renewal processes}. PLOS ONE 16(11), e0259764 (2021). \doi{10.1371/journal.pone.0259764}
++
+ \bibitem{vaswani2017attention}
+ Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A.N., Kaiser, \L{}., Polosukhin, I.:
+-Attention is all you need. In: Advances in Neural Information Processing Systems, vol. 30 (2017).
+-\url{https://arxiv.org/abs/1706.03762}
++\href{https://arxiv.org/abs/1706.03762}{Attention is all you need}. In: Advances in Neural Information Processing Systems, vol. 30 (2017).
++
+ \bibitem{yang2022anhp}
+ Yang, C., Mei, H., Eisner, J.:
+-Transformer embeddings of irregularly spaced events and their participants. In: ICLR (2022).
+-\url{https://www.cs.jhu.edu/~jason/papers/yang+al.iclr22.pdf}
++\href{https://www.cs.jhu.edu/~jason/papers/yang+al.iclr22.pdf}{Transformer embeddings of irregularly spaced events and their participants}. In: ICLR (2022).
++
++\bibitem{zhang2020sahp}
++Zhang, Q., Lipani, A., Kirnap, O., Yilmaz, E.: \href{https://proceedings.mlr.press/v119/zhang20q.html}{Self-Attentive Hawkes Process}. Proceedings of the 37th International Conference on Machine Learning \textbf{119}, 11183--11193 (2020).
++
++\bibitem{zuo2020thp}
++Zuo, S., Jiang, H., Li, Z., Zhao, T., Zha, H.: \href{https://proceedings.mlr.press/v119/zuo20a.html}{Transformer Hawkes Process}. Proceedings of the 37th International Conference on Machine Learning \textbf{119}, 11692--11702 (2020).
+ \end{thebibliography}
+ 
+ \clearpage
+@@ -387,4 +452,561 @@
+ \bottomrule
+ \end{tabular}
+ \end{table}
++\clearpage
++% Appendix additions prepared from train-only aggregate sources.
++% Source bindings and scope: appendix_evidence.json and appendix_evidence.md.
++\section{Data definitions and training distributions}
++\label{app:data-characteristics}
++Taxi events record pickup counts in active spatial-cell hours. Intermittent
++events contain positive site--part order quantities, and RAF events contain
++positive monthly spare-parts demands. Instacart aggregates product rows for
++each user on the same recorded activity day, so its quantity measures basket
++size rather than physical units. Empty calendar periods extend the interval
++between events instead of creating zero-quantity targets. The recorded units
++are hours, weeks, months, and days, respectively. Instacart intervals are
++top-coded at 30 days.
++
++Table~\ref{tab:train-characteristics} describes the frozen training
++populations. Quantity summaries include every training event, whereas gap
++and usable-history summaries exclude each series' first event because it
++has no predecessor for prediction. Quantiles select the nearest observed
++value. Each summary weights events or prediction targets equally within
++its population, rather than weighting series equally.
++
++Usable history counts the observed predecessor events retained for a target
++after both window restrictions. The inclusive recorded-time window ends at
++the last observed event. Appending the target before sequence truncation
++reserves one position for it, so at most the sequence cap minus one observed
++events remain. Neither the target nor padding contributes to usable history.
++Table~\ref{tab:data} specifies the windows and caps. The train descriptions
++therefore characterize the same input contract across the MLP and CNN+GRU
++studies, although those architectures process the retained events differently.
++
++\begin{table}[htbp]
++\caption{Training-only event characteristics. Quantity summaries include all
++training events; gap, usable-history, and adjacent-pair summaries describe
++targets after excluding the first event of each series. Correlation is
++defined in Appendix~\ref{app:lag}.}
++\label{tab:train-characteristics}
++\centering\small
++\setlength{\tabcolsep}{4pt}
++\begin{tabular}{@{}lrrrr@{}}
++\toprule
++Characteristic & Taxi & Intermittent & RAF & Instacart\\
++\midrule
++Time unit & Hour & Week & Month & Day\\
++Training series & 131 & 5,000 & 5,000 & 206,209\\
++Training event rows & 38,524 & 398,824 & 30,779 & 2,197,401\\
++Training targets & 38,393 & 393,824 & 25,779 & 1,991,192\\
++Quantity: median & 7 & 2 & 2 & 8\\
++Quantity: 95th percentile & 1,562 & 46 & 60 & 25\\
++Quantity: 99th percentile & 3,449 & 187 & 200 & 35\\
++Quantity: maximum & 6,322 & 477 & 2,062 & 175\\
++Recorded gap: median & 1 & 3 & 6 & 7\\
++Recorded gap: 95th percentile & 5 & 5 & 23 & 30\\
++Usable history: median & 129 & 40 & 3 & 5\\
++Usable history: 95th percentile & 168 & 144 & 8 & 14\\
++History $\leq7$ events (\%) & 2.41 & 8.89 & 93.58 & 72.13\\
++Within-series log correlation & 0.749 & 0.928 & -0.105 & 0.037\\
++Equal adjacent quantities (\%) & 20.33 & 61.99 & 33.30 & 10.24\\
++\bottomrule
++\end{tabular}
++\end{table}
++
++\begin{figure}[htbp]
++\centering
++\begin{tikzpicture}[x=.047cm,y=.75cm,font=\scriptsize]
++\definecolor{profileblue}{RGB}{40,101,138}
++\draw[gray!25] (0,-.4)--(0,3.55);
++\node[below] at (0,-.4) {0};
++\draw[gray!25] (32,-.4)--(32,3.55);
++\node[below] at (32,-.4) {32};
++\draw[gray!25] (64,-.4)--(64,3.55);
++\node[below] at (64,-.4) {64};
++\draw[gray!25] (96,-.4)--(96,3.55);
++\node[below] at (96,-.4) {96};
++\draw[gray!25] (128,-.4)--(128,3.55);
++\node[below] at (128,-.4) {128};
++\draw[gray!25] (160,-.4)--(160,3.55);
++\node[below] at (160,-.4) {160};
++\draw[gray!25] (192,-.4)--(192,3.55);
++\node[below] at (192,-.4) {192};
++\node[anchor=east] at (-3,3) {Taxi};
++\draw[profileblue,line width=.6pt] (14.0,3)--(168.0,3);
++\draw[profileblue,line width=4pt] (60.0,3)--(168.0,3);
++\filldraw[draw=profileblue,fill=white] (129.0,3) circle[radius=2pt];
++\node[anchor=west,text=profileblue] at (131.0,3.27) {median 129};
++\node[anchor=east] at (-3,2) {Intermittent};
++\draw[profileblue,line width=.6pt] (4.0,2)--(144.0,2);
++\draw[profileblue,line width=4pt] (20.0,2)--(72.0,2);
++\filldraw[draw=profileblue,fill=white] (40.0,2) circle[radius=2pt];
++\node[anchor=west,text=profileblue] at (42.0,2.27) {median 40};
++\node[anchor=east] at (-3,1) {RAF};
++\draw[profileblue,line width=.6pt] (1.0,1)--(8.0,1);
++\draw[profileblue,line width=4pt] (2.0,1)--(5.0,1);
++\filldraw[draw=profileblue,fill=white] (3.0,1) circle[radius=2pt];
++\node[anchor=west,text=profileblue] at (5.0,1.27) {median 3};
++\node[anchor=east] at (-3,0) {Instacart};
++\draw[profileblue,line width=.6pt] (1.0,0)--(14.0,0);
++\draw[profileblue,line width=4pt] (3.0,0)--(8.0,0);
++\filldraw[draw=profileblue,fill=white] (5.0,0) circle[radius=2pt];
++\node[anchor=west,text=profileblue] at (7.0,0.27) {median 5};
++\node at (96,-1.05) {Usable observed events per training target};
++\end{tikzpicture}
++\caption{Available training history under the frozen input windows. Thin
++lines span the 5th--95th percentiles, thick lines the 25th--75th percentiles,
++and circles mark medians. These target-weighted distributions characterize
++input availability, not model performance.}
++\label{fig:train-history}
++\Description{Training-history distributions for four datasets. Taxi and
++Intermittent supply longer observed histories than RAF and Instacart.}
++\end{figure}
++
++Figure~\ref{fig:train-history} indicates substantial differences in available
++history. The median spans 129 observed events on Taxi and 40 on Intermittent,
++compared with three on RAF and five on Instacart. Thus an equal nominal
++sequence cap would not imply equal evidence per prediction. These training
++distributions describe the input populations; they neither measure which
++events a trained model retains nor determine its forecasting error.
++
++\section{Event-lag association in the training data}
++\label{app:lag}
++For series $e$ and event lag $\ell$, pair
++$x^{(\ell)}_{e,j}=\log(1+q_{e,j-\ell})$ with
++$y^{(\ell)}_{e,j}=\log(1+q_{e,j})$ whenever both events belong to that
++training series. Each lag counts observed events in sequence order.
++It does not denote elapsed calendar time. The descriptive calculation
++includes the complete training sequence, without the model's recorded-time
++window or sequence-length cap.
++
++Let $\bar x_e^{(\ell)}$ and $\bar y_e^{(\ell)}$ be the separate means
++of the predecessor and successor members of those pairs. The statistic is
++\begin{equation}
++ r_{\ell}=\operatorname{Corr}\!\left(
++ x^{(\ell)}_{e,j}-\bar x_e^{(\ell)},\,
++ y^{(\ell)}_{e,j}-\bar y_e^{(\ell)}\right),
++ \label{eq:train-lag-correlation}
++\end{equation}
++where correlation pools the centered pairs across series. Centering removes
++between-series differences in mean log quantity, but each pair still
++contributes to the pooled sums. This statistic is consequently different
++from an average of series-specific correlations. The lag-one column
++corresponds to the adjacent log correlation in
++Table~\ref{tab:train-characteristics}.
++% Generated from reports/titantpp_train_lag_heatmap_20261002_v1/analysis.json.
++\begin{figure}[htbp]
++\centering
++\begin{tikzpicture}[x=1.90cm,y=1.10cm,font=\footnotesize]
++\node at (2.5,4.70) {Event lag $\ell$};
++\node at (0.5,4.30) {1};
++\node at (1.5,4.30) {2};
++\node at (2.5,4.30) {4};
++\node at (3.5,4.30) {8};
++\node at (4.5,4.30) {16};
++\node[anchor=east] at (-.10,3.5) {Taxi};
++\definecolor{lagcell00}{HTML}{5C8AA5}
++\filldraw[fill=lagcell00,draw=white,line width=.6pt] (0,3) rectangle (1,4);
++\node[text=black,font=\bfseries\small] at (0.5,3.73) {$0.749$};
++\node[text=black,font=\footnotesize] at (0.5,3.44) {P: 38,393};
++\node[text=black,font=\footnotesize] at (0.5,3.20) {S: 131};
++\definecolor{lagcell01}{HTML}{86A8BC}
++\filldraw[fill=lagcell01,draw=white,line width=.6pt] (1,3) rectangle (2,4);
++\node[text=black,font=\bfseries\small] at (1.5,3.73) {$0.546$};
++\node[text=black,font=\footnotesize] at (1.5,3.44) {P: 38,262};
++\node[text=black,font=\footnotesize] at (1.5,3.20) {S: 131};
++\definecolor{lagcell02}{HTML}{DCE4E9}
++\filldraw[fill=lagcell02,draw=white,line width=.6pt] (2,3) rectangle (3,4);
++\node[text=black,font=\bfseries\small] at (2.5,3.73) {$0.136$};
++\node[text=black,font=\footnotesize] at (2.5,3.44) {P: 38,000};
++\node[text=black,font=\footnotesize] at (2.5,3.20) {S: 131};
++\definecolor{lagcell03}{HTML}{EBDDCF}
++\filldraw[fill=lagcell03,draw=white,line width=.6pt] (3,3) rectangle (4,4);
++\node[text=black,font=\bfseries\small] at (3.5,3.73) {$-0.191$};
++\node[text=black,font=\footnotesize] at (3.5,3.44) {P: 37,476};
++\node[text=black,font=\footnotesize] at (3.5,3.20) {S: 131};
++\definecolor{lagcell04}{HTML}{EEE3D8}
++\filldraw[fill=lagcell04,draw=white,line width=.6pt] (4,3) rectangle (5,4);
++\node[text=black,font=\bfseries\small] at (4.5,3.73) {$-0.150$};
++\node[text=black,font=\footnotesize] at (4.5,3.44) {P: 36,428};
++\node[text=black,font=\footnotesize] at (4.5,3.20) {S: 131};
++\node[anchor=east] at (-.10,2.5) {Intermittent};
++\definecolor{lagcell10}{HTML}{376F92}
++\filldraw[fill=lagcell10,draw=white,line width=.6pt] (0,2) rectangle (1,3);
++\node[text=white,font=\bfseries\small] at (0.5,2.73) {$0.928$};
++\node[text=white,font=\footnotesize] at (0.5,2.44) {P: 393,824};
++\node[text=white,font=\footnotesize] at (0.5,2.20) {S: 5,000};
++\definecolor{lagcell11}{HTML}{3B7294}
++\filldraw[fill=lagcell11,draw=white,line width=.6pt] (1,2) rectangle (2,3);
++\node[text=white,font=\bfseries\small] at (1.5,2.73) {$0.910$};
++\node[text=white,font=\footnotesize] at (1.5,2.44) {P: 388,824};
++\node[text=white,font=\footnotesize] at (1.5,2.20) {S: 5,000};
++\definecolor{lagcell12}{HTML}{4A7D9C}
++\filldraw[fill=lagcell12,draw=white,line width=.6pt] (2,2) rectangle (3,3);
++\node[text=black,font=\bfseries\small] at (2.5,2.73) {$0.834$};
++\node[text=black,font=\footnotesize] at (2.5,2.44) {P: 378,824};
++\node[text=black,font=\footnotesize] at (2.5,2.20) {S: 5,000};
++\definecolor{lagcell13}{HTML}{6691AB}
++\filldraw[fill=lagcell13,draw=white,line width=.6pt] (3,2) rectangle (4,3);
++\node[text=black,font=\bfseries\small] at (3.5,2.73) {$0.700$};
++\node[text=black,font=\footnotesize] at (3.5,2.44) {P: 358,824};
++\node[text=black,font=\footnotesize] at (3.5,2.20) {S: 5,000};
++\definecolor{lagcell14}{HTML}{95B2C4}
++\filldraw[fill=lagcell14,draw=white,line width=.6pt] (4,2) rectangle (5,3);
++\node[text=black,font=\bfseries\small] at (4.5,2.73) {$0.473$};
++\node[text=black,font=\footnotesize] at (4.5,2.44) {P: 318,836};
++\node[text=black,font=\footnotesize] at (4.5,2.20) {S: 4,983};
++\node[anchor=east] at (-.10,1.5) {RAF};
++\definecolor{lagcell20}{HTML}{F1E9E1}
++\filldraw[fill=lagcell20,draw=white,line width=.6pt] (0,1) rectangle (1,2);
++\node[text=black,font=\bfseries\small] at (0.5,1.73) {$-0.105$};
++\node[text=black,font=\footnotesize] at (0.5,1.44) {P: 25,779};
++\node[text=black,font=\footnotesize] at (0.5,1.20) {S: 5,000};
++\definecolor{lagcell21}{HTML}{F0E6DD}
++\filldraw[fill=lagcell21,draw=white,line width=.6pt] (1,1) rectangle (2,2);
++\node[text=black,font=\bfseries\small] at (1.5,1.73) {$-0.127$};
++\node[text=black,font=\footnotesize] at (1.5,1.44) {P: 20,779};
++\node[text=black,font=\footnotesize] at (1.5,1.20) {S: 4,857};
++\definecolor{lagcell22}{HTML}{F4F0EC}
++\filldraw[fill=lagcell22,draw=white,line width=.6pt] (2,1) rectangle (3,2);
++\node[text=black,font=\bfseries\small] at (2.5,1.73) {$-0.055$};
++\node[text=black,font=\footnotesize] at (2.5,1.44) {P: 11,567};
++\node[text=black,font=\footnotesize] at (2.5,1.20) {S: 3,639};
++\definecolor{lagcell23}{HTML}{F5F2EF}
++\filldraw[fill=lagcell23,draw=white,line width=.6pt] (3,1) rectangle (4,2);
++\node[text=black,font=\bfseries\small] at (3.5,1.73) {$-0.043$};
++\node[text=black,font=\footnotesize] at (3.5,1.44) {P: 1,655};
++\node[text=black,font=\footnotesize] at (3.5,1.20) {S: 846};
++\definecolor{lagcell24}{HTML}{E1E1E1}
++\filldraw[fill=lagcell24,draw=white,line width=.6pt] (4,1) rectangle (5,2);
++\node[text=black,font=\bfseries\small] at (4.5,1.73) {NA};
++\node[text=black,font=\footnotesize] at (4.5,1.44) {P: 0};
++\node[text=black,font=\footnotesize] at (4.5,1.20) {S: 0};
++\node[anchor=east] at (-.10,0.5) {Instacart};
++\definecolor{lagcell30}{HTML}{F0F2F4}
++\filldraw[fill=lagcell30,draw=white,line width=.6pt] (0,0) rectangle (1,1);
++\node[text=black,font=\bfseries\small] at (0.5,0.73) {$0.037$};
++\node[text=black,font=\footnotesize] at (0.5,0.44) {P: 1,991,192};
++\node[text=black,font=\footnotesize] at (0.5,0.20) {S: 205,934};
++\definecolor{lagcell31}{HTML}{EEF1F3}
++\filldraw[fill=lagcell31,draw=white,line width=.6pt] (1,0) rectangle (2,1);
++\node[text=black,font=\bfseries\small] at (1.5,0.73) {$0.049$};
++\node[text=black,font=\footnotesize] at (1.5,0.44) {P: 1,785,258};
++\node[text=black,font=\footnotesize] at (1.5,0.20) {S: 174,097};
++\definecolor{lagcell32}{HTML}{F3F4F5}
++\filldraw[fill=lagcell32,draw=white,line width=.6pt] (2,0) rectangle (3,1);
++\node[text=black,font=\bfseries\small] at (2.5,0.73) {$0.025$};
++\node[text=black,font=\footnotesize] at (2.5,0.44) {P: 1,455,330};
++\node[text=black,font=\footnotesize] at (2.5,0.20) {S: 127,226};
++\definecolor{lagcell33}{HTML}{F8F8F8}
++\filldraw[fill=lagcell33,draw=white,line width=.6pt] (3,0) rectangle (4,1);
++\node[text=black,font=\bfseries\small] at (3.5,0.73) {$-0.002$};
++\node[text=black,font=\footnotesize] at (3.5,0.44) {P: 1,015,220};
++\node[text=black,font=\footnotesize] at (3.5,0.20) {S: 83,611};
++\definecolor{lagcell34}{HTML}{F7F5F4}
++\filldraw[fill=lagcell34,draw=white,line width=.6pt] (4,0) rectangle (5,1);
++\node[text=black,font=\bfseries\small] at (4.5,0.73) {$-0.018$};
++\node[text=black,font=\footnotesize] at (4.5,0.44) {P: 536,635};
++\node[text=black,font=\footnotesize] at (4.5,0.20) {S: 38,640};
++\node at (2.5,-.35) {P: event pairs; S: series with at least one pair};
++\definecolor{lagbar0}{HTML}{B76C25}
++\fill[lagbar0] (1.2500,-.80) rectangle (1.2750,-.62);
++\definecolor{lagbar1}{HTML}{B86F29}
++\fill[lagbar1] (1.2750,-.80) rectangle (1.3000,-.62);
++\definecolor{lagbar2}{HTML}{B9722E}
++\fill[lagbar2] (1.3000,-.80) rectangle (1.3250,-.62);
++\definecolor{lagbar3}{HTML}{BB7532}
++\fill[lagbar3] (1.3250,-.80) rectangle (1.3500,-.62);
++\definecolor{lagbar4}{HTML}{BC7836}
++\fill[lagbar4] (1.3500,-.80) rectangle (1.3750,-.62);
++\definecolor{lagbar5}{HTML}{BD7B3A}
++\fill[lagbar5] (1.3750,-.80) rectangle (1.4000,-.62);
++\definecolor{lagbar6}{HTML}{BF7D3F}
++\fill[lagbar6] (1.4000,-.80) rectangle (1.4250,-.62);
++\definecolor{lagbar7}{HTML}{C08043}
++\fill[lagbar7] (1.4250,-.80) rectangle (1.4500,-.62);
++\definecolor{lagbar8}{HTML}{C18347}
++\fill[lagbar8] (1.4500,-.80) rectangle (1.4750,-.62);
++\definecolor{lagbar9}{HTML}{C3864B}
++\fill[lagbar9] (1.4750,-.80) rectangle (1.5000,-.62);
++\definecolor{lagbar10}{HTML}{C48950}
++\fill[lagbar10] (1.5000,-.80) rectangle (1.5250,-.62);
++\definecolor{lagbar11}{HTML}{C58B54}
++\fill[lagbar11] (1.5250,-.80) rectangle (1.5500,-.62);
++\definecolor{lagbar12}{HTML}{C68E58}
++\fill[lagbar12] (1.5500,-.80) rectangle (1.5750,-.62);
++\definecolor{lagbar13}{HTML}{C8915D}
++\fill[lagbar13] (1.5750,-.80) rectangle (1.6000,-.62);
++\definecolor{lagbar14}{HTML}{C99461}
++\fill[lagbar14] (1.6000,-.80) rectangle (1.6250,-.62);
++\definecolor{lagbar15}{HTML}{CA9765}
++\fill[lagbar15] (1.6250,-.80) rectangle (1.6500,-.62);
++\definecolor{lagbar16}{HTML}{CC9A69}
++\fill[lagbar16] (1.6500,-.80) rectangle (1.6750,-.62);
++\definecolor{lagbar17}{HTML}{CD9C6E}
++\fill[lagbar17] (1.6750,-.80) rectangle (1.7000,-.62);
++\definecolor{lagbar18}{HTML}{CE9F72}
++\fill[lagbar18] (1.7000,-.80) rectangle (1.7250,-.62);
++\definecolor{lagbar19}{HTML}{D0A276}
++\fill[lagbar19] (1.7250,-.80) rectangle (1.7500,-.62);
++\definecolor{lagbar20}{HTML}{D1A57A}
++\fill[lagbar20] (1.7500,-.80) rectangle (1.7750,-.62);
++\definecolor{lagbar21}{HTML}{D2A87F}
++\fill[lagbar21] (1.7750,-.80) rectangle (1.8000,-.62);
++\definecolor{lagbar22}{HTML}{D4AA83}
++\fill[lagbar22] (1.8000,-.80) rectangle (1.8250,-.62);
++\definecolor{lagbar23}{HTML}{D5AD87}
++\fill[lagbar23] (1.8250,-.80) rectangle (1.8500,-.62);
++\definecolor{lagbar24}{HTML}{D6B08B}
++\fill[lagbar24] (1.8500,-.80) rectangle (1.8750,-.62);
++\definecolor{lagbar25}{HTML}{D8B390}
++\fill[lagbar25] (1.8750,-.80) rectangle (1.9000,-.62);
++\definecolor{lagbar26}{HTML}{D9B694}
++\fill[lagbar26] (1.9000,-.80) rectangle (1.9250,-.62);
++\definecolor{lagbar27}{HTML}{DAB998}
++\fill[lagbar27] (1.9250,-.80) rectangle (1.9500,-.62);
++\definecolor{lagbar28}{HTML}{DCBB9C}
++\fill[lagbar28] (1.9500,-.80) rectangle (1.9750,-.62);
++\definecolor{lagbar29}{HTML}{DDBEA1}
++\fill[lagbar29] (1.9750,-.80) rectangle (2.0000,-.62);
++\definecolor{lagbar30}{HTML}{DEC1A5}
++\fill[lagbar30] (2.0000,-.80) rectangle (2.0250,-.62);
++\definecolor{lagbar31}{HTML}{E0C4A9}
++\fill[lagbar31] (2.0250,-.80) rectangle (2.0500,-.62);
++\definecolor{lagbar32}{HTML}{E1C7AD}
++\fill[lagbar32] (2.0500,-.80) rectangle (2.0750,-.62);
++\definecolor{lagbar33}{HTML}{E2C9B2}
++\fill[lagbar33] (2.0750,-.80) rectangle (2.1000,-.62);
++\definecolor{lagbar34}{HTML}{E4CCB6}
++\fill[lagbar34] (2.1000,-.80) rectangle (2.1250,-.62);
++\definecolor{lagbar35}{HTML}{E5CFBA}
++\fill[lagbar35] (2.1250,-.80) rectangle (2.1500,-.62);
++\definecolor{lagbar36}{HTML}{E6D2BE}
++\fill[lagbar36] (2.1500,-.80) rectangle (2.1750,-.62);
++\definecolor{lagbar37}{HTML}{E8D5C3}
++\fill[lagbar37] (2.1750,-.80) rectangle (2.2000,-.62);
++\definecolor{lagbar38}{HTML}{E9D8C7}
++\fill[lagbar38] (2.2000,-.80) rectangle (2.2250,-.62);
++\definecolor{lagbar39}{HTML}{EADACB}
++\fill[lagbar39] (2.2250,-.80) rectangle (2.2500,-.62);
++\definecolor{lagbar40}{HTML}{EBDDD0}
++\fill[lagbar40] (2.2500,-.80) rectangle (2.2750,-.62);
++\definecolor{lagbar41}{HTML}{EDE0D4}
++\fill[lagbar41] (2.2750,-.80) rectangle (2.3000,-.62);
++\definecolor{lagbar42}{HTML}{EEE3D8}
++\fill[lagbar42] (2.3000,-.80) rectangle (2.3250,-.62);
++\definecolor{lagbar43}{HTML}{EFE6DC}
++\fill[lagbar43] (2.3250,-.80) rectangle (2.3500,-.62);
++\definecolor{lagbar44}{HTML}{F1E8E1}
++\fill[lagbar44] (2.3500,-.80) rectangle (2.3750,-.62);
++\definecolor{lagbar45}{HTML}{F2EBE5}
++\fill[lagbar45] (2.3750,-.80) rectangle (2.4000,-.62);
++\definecolor{lagbar46}{HTML}{F3EEE9}
++\fill[lagbar46] (2.4000,-.80) rectangle (2.4250,-.62);
++\definecolor{lagbar47}{HTML}{F5F1ED}
++\fill[lagbar47] (2.4250,-.80) rectangle (2.4500,-.62);
++\definecolor{lagbar48}{HTML}{F6F4F2}
++\fill[lagbar48] (2.4500,-.80) rectangle (2.4750,-.62);
++\definecolor{lagbar49}{HTML}{F7F7F6}
++\fill[lagbar49] (2.4750,-.80) rectangle (2.5000,-.62);
++\definecolor{lagbar50}{HTML}{F6F7F7}
++\fill[lagbar50] (2.5000,-.80) rectangle (2.5250,-.62);
++\definecolor{lagbar51}{HTML}{F2F4F5}
++\fill[lagbar51] (2.5250,-.80) rectangle (2.5500,-.62);
++\definecolor{lagbar52}{HTML}{EEF1F2}
++\fill[lagbar52] (2.5500,-.80) rectangle (2.5750,-.62);
++\definecolor{lagbar53}{HTML}{E9EEF0}
++\fill[lagbar53] (2.5750,-.80) rectangle (2.6000,-.62);
++\definecolor{lagbar54}{HTML}{E5EBEE}
++\fill[lagbar54] (2.6000,-.80) rectangle (2.6250,-.62);
++\definecolor{lagbar55}{HTML}{E1E8EC}
++\fill[lagbar55] (2.6250,-.80) rectangle (2.6500,-.62);
++\definecolor{lagbar56}{HTML}{DDE5EA}
++\fill[lagbar56] (2.6500,-.80) rectangle (2.6750,-.62);
++\definecolor{lagbar57}{HTML}{D9E2E7}
++\fill[lagbar57] (2.6750,-.80) rectangle (2.7000,-.62);
++\definecolor{lagbar58}{HTML}{D5DFE5}
++\fill[lagbar58] (2.7000,-.80) rectangle (2.7250,-.62);
++\definecolor{lagbar59}{HTML}{D0DCE3}
++\fill[lagbar59] (2.7250,-.80) rectangle (2.7500,-.62);
++\definecolor{lagbar60}{HTML}{CCD9E1}
++\fill[lagbar60] (2.7500,-.80) rectangle (2.7750,-.62);
++\definecolor{lagbar61}{HTML}{C8D6DF}
++\fill[lagbar61] (2.7750,-.80) rectangle (2.8000,-.62);
++\definecolor{lagbar62}{HTML}{C4D3DC}
++\fill[lagbar62] (2.8000,-.80) rectangle (2.8250,-.62);
++\definecolor{lagbar63}{HTML}{C0D0DA}
++\fill[lagbar63] (2.8250,-.80) rectangle (2.8500,-.62);
++\definecolor{lagbar64}{HTML}{BCCDD8}
++\fill[lagbar64] (2.8500,-.80) rectangle (2.8750,-.62);
++\definecolor{lagbar65}{HTML}{B8CAD6}
++\fill[lagbar65] (2.8750,-.80) rectangle (2.9000,-.62);
++\definecolor{lagbar66}{HTML}{B3C7D4}
++\fill[lagbar66] (2.9000,-.80) rectangle (2.9250,-.62);
++\definecolor{lagbar67}{HTML}{AFC5D2}
++\fill[lagbar67] (2.9250,-.80) rectangle (2.9500,-.62);
++\definecolor{lagbar68}{HTML}{ABC2CF}
++\fill[lagbar68] (2.9500,-.80) rectangle (2.9750,-.62);
++\definecolor{lagbar69}{HTML}{A7BFCD}
++\fill[lagbar69] (2.9750,-.80) rectangle (3.0000,-.62);
++\definecolor{lagbar70}{HTML}{A3BCCB}
++\fill[lagbar70] (3.0000,-.80) rectangle (3.0250,-.62);
++\definecolor{lagbar71}{HTML}{9FB9C9}
++\fill[lagbar71] (3.0250,-.80) rectangle (3.0500,-.62);
++\definecolor{lagbar72}{HTML}{9AB6C6}
++\fill[lagbar72] (3.0500,-.80) rectangle (3.0750,-.62);
++\definecolor{lagbar73}{HTML}{96B3C4}
++\fill[lagbar73] (3.0750,-.80) rectangle (3.1000,-.62);
++\definecolor{lagbar74}{HTML}{92B0C2}
++\fill[lagbar74] (3.1000,-.80) rectangle (3.1250,-.62);
++\definecolor{lagbar75}{HTML}{8EADC0}
++\fill[lagbar75] (3.1250,-.80) rectangle (3.1500,-.62);
++\definecolor{lagbar76}{HTML}{8AAABE}
++\fill[lagbar76] (3.1500,-.80) rectangle (3.1750,-.62);
++\definecolor{lagbar77}{HTML}{86A7BB}
++\fill[lagbar77] (3.1750,-.80) rectangle (3.2000,-.62);
++\definecolor{lagbar78}{HTML}{81A4B9}
++\fill[lagbar78] (3.2000,-.80) rectangle (3.2250,-.62);
++\definecolor{lagbar79}{HTML}{7DA1B7}
++\fill[lagbar79] (3.2250,-.80) rectangle (3.2500,-.62);
++\definecolor{lagbar80}{HTML}{799EB5}
++\fill[lagbar80] (3.2500,-.80) rectangle (3.2750,-.62);
++\definecolor{lagbar81}{HTML}{759BB3}
++\fill[lagbar81] (3.2750,-.80) rectangle (3.3000,-.62);
++\definecolor{lagbar82}{HTML}{7198B0}
++\fill[lagbar82] (3.3000,-.80) rectangle (3.3250,-.62);
++\definecolor{lagbar83}{HTML}{6D96AE}
++\fill[lagbar83] (3.3250,-.80) rectangle (3.3500,-.62);
++\definecolor{lagbar84}{HTML}{6893AC}
++\fill[lagbar84] (3.3500,-.80) rectangle (3.3750,-.62);
++\definecolor{lagbar85}{HTML}{6490AA}
++\fill[lagbar85] (3.3750,-.80) rectangle (3.4000,-.62);
++\definecolor{lagbar86}{HTML}{608DA8}
++\fill[lagbar86] (3.4000,-.80) rectangle (3.4250,-.62);
++\definecolor{lagbar87}{HTML}{5C8AA5}
++\fill[lagbar87] (3.4250,-.80) rectangle (3.4500,-.62);
++\definecolor{lagbar88}{HTML}{5887A3}
++\fill[lagbar88] (3.4500,-.80) rectangle (3.4750,-.62);
++\definecolor{lagbar89}{HTML}{5484A1}
++\fill[lagbar89] (3.4750,-.80) rectangle (3.5000,-.62);
++\definecolor{lagbar90}{HTML}{50819F}
++\fill[lagbar90] (3.5000,-.80) rectangle (3.5250,-.62);
++\definecolor{lagbar91}{HTML}{4B7E9D}
++\fill[lagbar91] (3.5250,-.80) rectangle (3.5500,-.62);
++\definecolor{lagbar92}{HTML}{477B9A}
++\fill[lagbar92] (3.5500,-.80) rectangle (3.5750,-.62);
++\definecolor{lagbar93}{HTML}{437898}
++\fill[lagbar93] (3.5750,-.80) rectangle (3.6000,-.62);
++\definecolor{lagbar94}{HTML}{3F7596}
++\fill[lagbar94] (3.6000,-.80) rectangle (3.6250,-.62);
++\definecolor{lagbar95}{HTML}{3B7294}
++\fill[lagbar95] (3.6250,-.80) rectangle (3.6500,-.62);
++\definecolor{lagbar96}{HTML}{376F92}
++\fill[lagbar96] (3.6500,-.80) rectangle (3.6750,-.62);
++\definecolor{lagbar97}{HTML}{326C90}
++\fill[lagbar97] (3.6750,-.80) rectangle (3.7000,-.62);
++\definecolor{lagbar98}{HTML}{2E698D}
++\fill[lagbar98] (3.7000,-.80) rectangle (3.7250,-.62);
++\definecolor{lagbar99}{HTML}{2A668B}
++\fill[lagbar99] (3.7250,-.80) rectangle (3.7500,-.62);
++\node[below] at (1.25,-.81) {$-1$};
++\node[below] at (2.5,-.81) {$0$};
++\node[below] at (3.75,-.81) {$1$};
++\node[anchor=east] at (1.08,-.71) {$r_{\ell}$};
++\end{tikzpicture}
++\caption{Train-only within-series log-quantity correlation at event lags 1, 2, 4, 8, and 16. Each cell reports $r_{\ell}$, the number of event pairs (P), and the number of contributing series (S). All cells share the color scale $[-1,1]$; gray NA denotes no available pairs. Pair counts include constant and single-pair series, which contribute zero to one or both centered sums of squares. Pairs cover complete training sequences without input-window or sequence-cap restrictions.}
++\label{fig:train-lag-correlation}
++\Description{A four-by-five heatmap. Taxi correlation declines from 0.749 at lag one to negative values at lags eight and sixteen. Intermittent remains positive, declining from 0.928 to 0.473. RAF has small negative correlations through lag eight and no pairs at lag sixteen. Instacart correlations remain close to zero. Pair and series counts are printed in every cell.}
++\end{figure}
++
++Taxi's association declines with event lag, while Intermittent retains
++positive association over the displayed range. RAF supplies comparatively
++few long-lag pairs, and Instacart's correlations remain close to zero.
++Counts in Figure~\ref{fig:train-lag-correlation} matter because the available
++series and pairs change with lag. A series with one pair contributes zero
++to both centered sums of squares. Constant pairs also provide no variation,
++and a zero pooled denominator leaves the correlation undefined.
++RAF's negative values therefore describe these centered samples without
++establishing a general law of negative dependence.
++
++An archived sensitivity calculation restricts every lag to the same series
++with at least 20 training events. This cohort retains 131 Taxi series,
++4,968 Intermittent series, and 31,020 Instacart series; RAF supplies none.
++Instacart's lag-one and lag-two correlations increase to 0.074 and 0.092
++in this cohort. The change cautions against treating the full-population
++profile as invariant to series composition.
++
++Event-lag association provides a descriptive motivation for examining local
++and recurrent history paths. It does not measure the contribution of either
++path. CNN+GRU54 processes contextual states within the retained input window,
++whereas Eq.~\eqref{eq:train-lag-correlation} describes unconditional
++log-quantity pairs across complete training sequences. Neither the sign nor
++the magnitude of $r_{\ell}$ establishes a correction gain, a preferred
++recurrent width, or an architectural ranking. Those claims depend on the
++matched validation comparisons specified in the main text.
++
++\section{Diagnostic partitions and aggregation}
++\label{app:strata}
++\subsection{Quantity and usable-history partitions}
++Stratification distinguishes a change in errors within a group from a change
++in that group's contribution to the aggregate. The quantity boundaries are
++the training-derived 50th, 90th, 95th, and 99th percentiles, namely
++$(7,686,1562,3449)$ for Taxi, $(2,31,46,187)$ for Intermittent,
++$(2,30,60,200)$ for RAF, and $(8,20,25,35)$ for Instacart.
++Each upper boundary belongs to the lower bin, so the last bin agrees with
++the strict large-quantity threshold in Table~\ref{tab:data}.
++
++The stored history partitions divide Taxi, Intermittent, and RAF at 64 and
++128 usable events, and Instacart at 1, 3, 7, 15, and 31. They permit
++within-dataset diagnosis, although they do not define identical groups
++across datasets. Their resolution also depends on the sequence cap.
++Empty strata remain explicit and receive no estimated error. For a fixed
++dataset, every comparison arm and seed must share target membership and
++partition boundaries.
++
++All strata inherit the checkpoint selected by minimum overall validation
++quantity RMSE. Neither a favorable bin nor a timing score changes that
++selection. A prespecified control remains fixed across bins; if an external
++comparator is selected by aggregate validation RMSE, that same comparator
++also remains fixed. These rules prevent a separate best-model choice within
++each subgroup. The definitions below specify the diagnostic procedure and
++introduce no additional CNN+GRU performance results.
++
++\subsection{Per-seed errors and additive contributions}
++For model $m$, seed $s$, and a nonempty stratum $b$ containing $N_b$
++targets, define
++\begin{align}
++ \mathrm{SSE}_{m,s,b}&=\sum_{i\in b}(\widehat q_{m,s,i}-q_i)^2,\\
++ \mathrm{MAE}_{m,s,b}&=\frac{1}{N_b}\sum_{i\in b}
++       |\widehat q_{m,s,i}-q_i|,\qquad
++ \mathrm{RMSE}_{m,s,b}=\sqrt{\frac{\mathrm{SSE}_{m,s,b}}{N_b}}.
++ \label{eq:stratum-errors}
++\end{align}
++Compute each metric within a seed before averaging over
++$\mathcal S=\{42,52,62\}$. Sample standard deviations describe the dispersion
++of these seed-level metrics. The count $N_b$ refers to targets in one seed,
++rather than repeated copies of the same target across seeds.
++
++Let $M$ denote the focal model, $C$ its fixed comparator, and
++$N=\sum_bN_b$. The contributions of bin $b$ to the aggregate differences are
++\begin{align}
++ C_b^{\rm MSE}&=\frac{1}{|\mathcal S|N}\sum_{s\in\mathcal S}
++  (\mathrm{SSE}_{M,s,b}-\mathrm{SSE}_{C,s,b}),
++  \label{eq:strata-mse-contribution}\\
++ C_b^{\rm MAE}&=\frac{N_b}{N|\mathcal S|}\sum_{s\in\mathcal S}
++  (\mathrm{MAE}_{M,s,b}-\mathrm{MAE}_{C,s,b}).
++  \label{eq:strata-mae-contribution}
++\end{align}
++Summing these contributions across bins recovers the mean of the seeds'
++overall MSE or MAE differences. Negative values favor $M$. The MSE sum is
++not the difference between squared mean RMSEs, and binwise RMSE differences
++do not supply an additive decomposition. Empty bins contribute zero to the
++aggregate through their zero target count, without an estimated bin metric.
++
++Because each contribution includes target share, a small group with large
++errors can offset gains across a larger group. Reporting both within-bin
++errors and contributions distinguishes these cases without attributing the
++difference to a single data characteristic. A model-specific decomposition
++requires that model's selected-checkpoint validation records. Historical
++MLP decompositions cannot substitute for CNN+GRU54 results.
++
+ \end{document}

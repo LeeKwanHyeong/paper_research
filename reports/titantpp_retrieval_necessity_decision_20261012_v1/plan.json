@@ -1,0 +1,297 @@
+{
+  "project_name": "paper_research",
+  "request": "현재 결과·논문 주장 기준 검색 실험 필요성 판단과 조건부 최소 구성·진행 순서 정리",
+  "date_KST": "2026-10-12",
+  "scope": "planning_only",
+  "recommendation": {
+    "required_new_retrieval_fits_for_current_claim": 0,
+    "reason": "현재 핵심 기여는prototype mean readout이 유지된 backbone에서의 결합 이력보정 개발효과이며 검색규칙 우위를 요구하지 않음",
+    "alternative": "검색을별도기여로유지할때만네arm공통mean계약"
+  },
+  "architecture_decisions": [
+    {
+      "decision": "보정중심논문으로집중",
+      "rationale": "완료결과와중심주장일치;검색추가로미노출평가공백/기존불리한지표해결을가정하지않음",
+      "alternatives_considered": [
+        "새검색0fit",
+        "단일dataset4arm3seed12파일럿",
+        "축소2dataset4arm3seed24",
+        "원래3dataset4arm3seed36",
+        "prototype유무18조건별도질문"
+      ]
+    }
+  ],
+  "conditional_design": {
+    "datasets": [
+      "yellow_trip_hourly",
+      "intermittent_frozen_5000",
+      "raf_spare_parts"
+    ],
+    "seeds": [
+      42,
+      52,
+      62
+    ],
+    "arms": [
+      "mean",
+      "weighted",
+      "fixed",
+      "general512"
+    ],
+    "scientific_conditions": 36,
+    "fresh_fit_safe_budget": 36,
+    "confirmed_reusable_means": 0,
+    "potential_reusable_means": [
+      {
+        "host": "5090",
+        "dataset": "intermittent_frozen_5000",
+        "seed": 42
+      },
+      {
+        "host": "5090",
+        "dataset": "intermittent_frozen_5000",
+        "seed": 52
+      },
+      {
+        "host": "5090",
+        "dataset": "intermittent_frozen_5000",
+        "seed": 62
+      },
+      {
+        "host": "5080",
+        "dataset": "raf_spare_parts",
+        "seed": 62
+      }
+    ],
+    "new_fits_if_all_4_reuse_bridges_pass": 32,
+    "reuse_bridge_required": true,
+    "original_Q2_preserved": true,
+    "metrics": [
+      "overall_qty_mae",
+      "overall_qty_rmse",
+      "overall_time_nll",
+      "tail_qty_mae",
+      "tail_qty_rmse",
+      "tail_time_nll"
+    ],
+    "batch": 128,
+    "min_epochs": 40,
+    "max_epochs": 300,
+    "patience": 40,
+    "selector": "first_strict_finite_min_full_validation_raw_quantity_RMSE",
+    "cost_warmup": 5,
+    "cost_measure": 20,
+    "cost_ratios_max": {
+      "inference": 1.2,
+      "training_step": 1.3,
+      "peak_allocated": 1.2
+    },
+    "cost_lengths_contract": "64/256",
+    "RAF_actual_frozen_cost_lengths": [
+      64,
+      84
+    ],
+    "cost_length_resolution_status": "blocked_until_contract_reconciled",
+    "workers_per_host_proposed_max": 3,
+    "existing_prepared_workers_per_host": 1,
+    "execution_pattern": "same GPU dataset/seed; mean fresh complete or reuse verified; then weighted/fixed/general512 max3 concurrent; next group only after natural terminal",
+    "runtime_live_state": "not_observed",
+    "eta_and_money": "unconfirmed",
+    "training_authorized_by_current_request": false,
+    "arm_training": "independent end-to-end; shared common initialization and frozen inputs, not shared learned encoder/prototypes",
+    "summary_query_inputs": "time/quantity 4+4 summaries from previous32 observed entries, fixed/general512 only",
+    "RAF256_code_feasibility": {
+      "status": "code_path_verified_native_unexecuted",
+      "model_build_and_data_max_seq_len": 84,
+      "operation_synthetic_length_proposal": 256,
+      "position_implementation": "interpolate existing84-position parameter table; no added Parameter or RNG consumption",
+      "changing_model_build_to256_forbidden_same_science": true,
+      "would_add_parameters": 11008,
+      "native_finite_memory_cost_verified": false
+    }
+  },
+  "tasks": [
+    {
+      "id": "claims_decision",
+      "agent": "root+qa-reviewer",
+      "title": "현재주장과검색필요성을구분한다",
+      "status": "완료",
+      "priority": 1,
+      "dependencies": [],
+      "estimated_complexity": "medium",
+      "scope": [
+        "reports/titantpp_retrieval_necessity_decision_20261012_v1/"
+      ],
+      "acceptance_criteria": [
+        "원본SHA와현재source일치",
+        "핵심기여3개와검색질문구분",
+        "0/12/24/36조건해석및한계명시"
+      ],
+      "artifacts_expected": [
+        "README.md",
+        "evidence.json",
+        "claims_review.md"
+      ]
+    },
+    {
+      "id": "focus_manuscript",
+      "agent": "root academic writing",
+      "title": "실제mean readout을보존하고미완료검색기여를정리한다",
+      "status": "다음 작업",
+      "priority": 2,
+      "dependencies": [
+        "claims_decision"
+      ],
+      "estimated_complexity": "medium",
+      "scope": [
+        "paper/titantpp_pakdd2027_cnn_gru_submission_draft_20261008_v1/"
+      ],
+      "acceptance_criteria": [
+        "현재조건부이력보정주장유지",
+        "실제prototype재현정보보존",
+        "미완료검색의현재형·빈Results비중정리",
+        "동일열린tex내장컴파일성공"
+      ],
+      "artifacts_expected": [
+        "후속원고편집diff/검증;이번에는미작성"
+      ]
+    },
+    {
+      "id": "reproducibility_contract",
+      "agent": "root+qa-reviewer",
+      "title": "CPU감사와미노출평가의재현·접근범위를각각고정한다",
+      "status": "다음 작업; 실행 승인 필요",
+      "priority": 3,
+      "dependencies": [
+        "focus_manuscript"
+      ],
+      "estimated_complexity": "medium",
+      "scope": [
+        "reports/"
+      ],
+      "acceptance_criteria": [
+        "frozen source와savedbinary재추론범위",
+        "실제미노출자료확보가능성",
+        "heldout접근및실행승인경계",
+        "기존Validation을독립평가로바꾸지않음"
+      ],
+      "artifacts_expected": [
+        "별도CPU감사/평가계획"
+      ]
+    },
+    {
+      "id": "source_literature_checks",
+      "agent": "research-explorer",
+      "title": "주장·서지·재현성출처를독립문서에서대조한다",
+      "status": "다음 작업",
+      "priority": 2,
+      "dependencies": [
+        "claims_decision"
+      ],
+      "estimated_complexity": "medium",
+      "scope": [
+        "reports/"
+      ],
+      "acceptance_criteria": [
+        "핵심주장과원문관계",
+        "28문헌출처재현정보구분",
+        "Test성과열람0"
+      ],
+      "artifacts_expected": [
+        "독립문헌·출처점검"
+      ]
+    },
+    {
+      "id": "retrieval_common_contract",
+      "agent": "root+explorer+qa-reviewer",
+      "title": "검색을별도기여로유지할때만공통mean과자원·비용계약을고정한다",
+      "status": "승인 필요;조건부,비용길이차단",
+      "priority": 3,
+      "dependencies": [
+        "claims_decision"
+      ],
+      "estimated_complexity": "high",
+      "scope": [
+        "reports/"
+      ],
+      "acceptance_criteria": [
+        "포함범위명시",
+        "36조건과0확정reuse/4후보연결",
+        "oldpointer/workers1갱신안",
+        "RAF84/256불일치해결계약",
+        "대상GPU/Runtime/예산/3worker/회수중단범위사용자승인"
+      ],
+      "artifacts_expected": [
+        "미실행자원·mean bridge계약"
+      ]
+    },
+    {
+      "id": "retrieval_conditional_execute",
+      "agent": "future approved execution session",
+      "title": "승인된검색비교만qualify·학습·회수·집계한다",
+      "status": "승인 필요;이번실행0",
+      "priority": 4,
+      "dependencies": [
+        "retrieval_common_contract"
+      ],
+      "estimated_complexity": "high",
+      "scope": [
+        "future dedicated approved bundle only"
+      ],
+      "acceptance_criteria": [
+        "native parity단독비용·admission",
+        "같은GPU4arm묶음",
+        "불리한여섯지표·표본SD·Q2/비용보고",
+        "immutable원본·실제종료·retrievalclaim보존"
+      ],
+      "artifacts_expected": [
+        "승인후의qualification/training/terminal/Validation원본"
+      ]
+    },
+    {
+      "id": "final_editorial",
+      "agent": "root author-review",
+      "title": "확정범위에맞춰문헌·부록·제출분량을정리한다",
+      "status": "다음 작업",
+      "priority": 4,
+      "dependencies": [
+        "focus_manuscript",
+        "reproducibility_contract",
+        "source_literature_checks"
+      ],
+      "estimated_complexity": "medium",
+      "scope": [
+        "paper/titantpp_pakdd2027_cnn_gru_submission_draft_20261008_v1/"
+      ],
+      "acceptance_criteria": [
+        "실제제출규정확인",
+        "같은문서컴파일·시각검토",
+        "저자최종검토"
+      ],
+      "artifacts_expected": [
+        "후속최종초안및검증"
+      ]
+    }
+  ],
+  "parallelism": {
+    "parallel": [
+      "독립서지·출처점검",
+      "미노출데이터메타데이터가능성확인"
+    ],
+    "serial": [
+      "공통평가/source/reuse비용계약",
+      "같은main.tex편집",
+      "승인→native검증→학습→원본회수→집계"
+    ]
+  },
+  "operations_this_turn": {
+    "tex_edit": 0,
+    "code_edit": 0,
+    "SSH": 0,
+    "GPU_training": 0,
+    "inference": 0,
+    "heldout_or_mixed_read": 0,
+    "automation_change": 0,
+    "PDF_export": 0
+  }
+}

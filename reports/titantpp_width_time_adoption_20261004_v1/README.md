@@ -77,11 +77,13 @@ Intermittent validation 표본의 경우 seed42는 location 교체 항 +0.17381,
 - 코드: [diagnose_titantpp_width_time_train_validation.py](/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/diagnose_titantpp_width_time_train_validation.py)
 - 검증: [verification.json](/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_width_time_adoption_20261004_v1/verification.json). 표본 경계·희귀 시간구간 보존·가중치·상호작용 합·비유한 값 거부·유한모집단 표준오차의 **계약 테스트9개 통과**.
 
-## 남은 작업
+## 현재 기준선과 남은 작업
 
-**폭8·12의 실제 용량 대조를 완료한다 — 진행 중인 캠페인과 연결**
-- 대상: 5080·5090의 Taxi·Intermittent·RAF × 폭8/12 × seed42/52/62. 이 보고서의 원격 실행 상태는 별도 launch receipt가 기준이다. 이미 완료한 폭4/16 학습은 재사용한다.
-- 동일 selected checkpoint의 전체·body·큰 수량 RMSE, MAE, 시간 NLL과 각 seed를 대조하고 불리한 조건도 남긴다. 완료 조건은18조건의 원본·선택·validation 재평가 검증이다.
+**폭8·12의 실제 용량 대조를 연결한다 — 완료된 현재 기준선**
+- 대상: Taxi·Intermittent·RAF × 폭8/12 × seed42/52/62의 고유18조건. 5080의 Taxi·RAF12개, 5090의 Intermittent seed42/52 4개, 시작 전 예약으로 5080에 이관한 Intermittent seed62 2개를 원본에 연결했다. 이미 완료한 폭4/16의 Validation18개는 재사용한다.
+- [폭8·12 원본 검증과 3seed Validation 비교](/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_history_capacity_comparison_20261004_v1/README.md)에서18/18 terminal·파일/체크포인트 SHA·최초 최소 raw RMSE 선택·selected/last Validation replay를 검증했다. 전체·body·큰 수량 RMSE, 전체·큰 수량 MAE, 시간 NLL의 평균·표본 표준편차와 seed별 차이·가장 불리한 seed를 기록했다. 기존4/18 스냅샷은 보존한다.
+- 함께 개선된 후보는 없고 일부 수량 개선은 MAE 또는 시간 손해를 동반한다. 사전 고정 기준과 사용자 기준선 폭16은 유지한다. 이번 원본 집계의 독립 CPU 재추론은 별도 미완료이며 Train은 원래 고정 표본의 `N_bin/n_bin` 가중 진단으로 구분한다.
+- 이번 Validation-only 원본 연결은 별도의 [3데이터 최종 Validation·Test 비교](/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_three_dataset_final_comparison_20261005_v1/README.md)에 전달한다. 이 시간 진단과 원본 검증 보고서는 Test 성능을 혼합하지 않는다.
 
 **CNN·GRU 대조에서 무엇을 해결할지 연결한다 — 다음 작업**
 - 대상: Encoder1 및 중간 보정의 설계 계약. 수량 표현을 개선하면서 시간 성능과 seed 안정성을 숨기지 않는 것을 확인 목표로 둔다.

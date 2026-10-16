@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-02T22:30:51.010621+00:00",
+  "route": "retrospective_locked_test_reevaluation",
+  "datasets": [
+    {
+      "dataset": "intermittent_frozen_5000",
+      "path": "/home/leekwanhyeong/workspace/paper_research/sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+      "sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+      "split_manifest": {
+        "path": "sample_data/intermittent_v2/intermittent_frozen_5000_split_manifest.json",
+        "sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04",
+        "operation": "byte_hash_only"
+      },
+      "populations": {
+        "train": {
+          "target_count": 393824,
+          "entity_count": 5000,
+          "ordered_entity_seq_recorded_date_sha256": "8485183618ace677e21296f891d13c8b3b1193b4d9e80b4ad71748fa3fae4bd3",
+          "recorded_date_min": 20180129,
+          "recorded_date_max": 20280313
+        },
+        "validation": {
+          "target_count": 86285,
+          "entity_count": 5000,
+          "ordered_entity_seq_recorded_date_sha256": "368dd772f3f83db193271700ef60731f4f90255fd88db0615b2a4607e5a1c652",
+          "recorded_date_min": 20201102,
+          "recorded_date_max": 20290226
+        },
+        "test": {
+          "target_count": 88019,
+          "entity_count": 5000,
+          "ordered_entity_seq_recorded_date_sha256": "07302dff3c8dd42dd66838f4fae80a1aaffe606fa10fce8ab64222039b27c2f1",
+          "recorded_date_min": 20210913,
+          "recorded_date_max": 20300318
+        }
+      },
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 520,
+        "max_seq_len": 256,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "selection": "all existing noninitial targets of each frozen split; no new entity/date filtering"
+    }
+  ],
+  "target_definition": "canonical frozen loader next observed event after at least one history event",
+  "date_shift": {
+    "dataset": "intermittent_frozen_5000",
+    "status": "user_confirmed_constant_offset_for_security_and_deidentification",
+    "evidence": "reports/titantpp_intermittent_date_shift_note_20261003_v1/confirmation.json"
+  },
+  "not_independent_untouched_data": true
+}

@@ -1,0 +1,390 @@
+--- before/main.tex
++++ /Users/igwanhyeong/PycharmProjects/paper_research/paper/titantpp_pakdd2027_cnn_gru_submission_draft_20261008_v1/main.tex
+@@ -33,7 +33,7 @@
+ \maketitle
+ 
+ \begin{abstract}
+-Event forecasting requires predicting how much will occur as well as when it will occur. We study whether an explicit history path adds value within a causal attention model. TitanTPP's representative CNN+GRU54 architecture corrects attention queries, keys, and values with three observed positions, then adds a gated recurrent residual between attention blocks. Completed three-seed validation comparisons with six common-head encoder adaptations place CNN+GRU54 lowest by mean quantity MAE and RMSE on Taxi and Intermittent. Against the strongest external reference by mean RMSE on each dataset, the reductions are 16.54\% and 32.17\%. S2P2 attains lower mean RMSE on RAF, and other encoders attain better timing scores on all three datasets. Separate controls compare the full correction with removal and a current-only path of equal active parameter count, then examine prototype retrieval with matched query budgets. Those controlled comparisons remain under evaluation. The completed performance panel and earlier MLP observations are development-validation evidence from separate training campaigns.
++Event forecasting requires predicting how much will occur as well as when it will occur. We examine an explicit history path within a causal attention model. TitanTPP's representative CNN+GRU54 architecture corrects attention queries, keys, and values with three observed positions, then adds a recurrent residual between attention blocks. In completed three-seed validation comparisons, CNN+GRU54 attains the lowest mean quantity MAE and RMSE among six common-head encoder adaptations on Taxi and Intermittent, while RAF favors S2P2 by RMSE. A separate 27-condition study compares full correction with bypass and an equal-active-parameter current-only control. Full correction lowers overall quantity RMSE against both controls in every seed on Taxi and Intermittent, but fails this consistency criterion on RAF. Nine Instacart fits yield smaller mean quantity errors for CNN+GRU54 than for MLP8 and MLP12, with a seed-level exception and worse mean overall timing NLL. Large-quantity and timing losses qualify the correction gains. Prototype-retrieval controls remain pending, and these development-validation results do not establish independent generalization.
+ \keywords{Event forecasting \and Quantity prediction \and History correction \and Temporal point processes}
+ \end{abstract}
+ 
+@@ -48,15 +48,15 @@
+ 
+ An earlier MLP8 version gives a reason to examine the correction more closely. Across Taxi, Intermittent, and RAF Spare Parts, switching on its explicit previous-state path improved overall quantity RMSE in all 18 comparisons formed by three seeds and two prototype settings. Yet the strongest quantity gains came with worse timing likelihood on Taxi. Moreover, adding prototypes to the corrected model did not improve quantity RMSE consistently across datasets. This pattern motivates two separate questions: the value of an explicit history path, and the value of the rule used to retrieve from a learned prototype bank.
+ 
+-The distinction matters for attribution. Removing the history path also removes parameters, so that comparison alone cannot identify the benefit of its input. We therefore include a control with the same number of active correction parameters that operates only on the current position. For retrieval, we compare uniform averaging, similarity weighting, separately normalized time and quantity queries, and a general learned query. Only the last two introduce query parameters, and their budgets are matched. Within each correction or retrieval study, the arms share the encoder architecture, output-head definitions, and model-selection rule, but are trained independently. Quantity is the primary selection objective, while timing likelihood, large-quantity errors, and computational cost describe the accompanying tradeoffs.
++The distinction matters for attribution. Bypassing the correction removes its active trainable capacity, so that comparison alone cannot identify the benefit of explicit history input. We therefore include a control with the same number of active correction parameters that operates only on the current position. For retrieval, we compare uniform averaging, similarity weighting, separately normalized time and quantity queries, and a general learned query. Only the last two introduce query parameters, and their budgets are matched. Within each correction or retrieval study, the arms share the encoder architecture, output-head definitions, and model-selection rule, but are trained independently. Quantity is the primary selection objective, while timing likelihood, large-quantity errors, and computational cost describe the accompanying tradeoffs.
+ 
+ This paper makes three contributions:
+ \begin{enumerate}
+ \item We describe a local and recurrent correction architecture for next-event quantity prediction within a causal attention model, including the observation rules that prevent access to the target event.
+-\item We formulate controlled comparisons for explicit history input and prototype retrieval, separating these questions from extra parameter count and from the choice of output distribution.
+-\item We report completed CNN+GRU54 comparisons with six common-head encoder adaptations across three datasets and seeds. Quantity gains on Taxi and Intermittent coexist with timing costs and a different ranking on RAF. Earlier MLP4 and MLP8 findings provide supporting evidence in the appendices.
++\item We evaluate explicit history correction against bypass and a current-only control with the same active parameter count, while retaining one quantity-based selection rule and reporting timing and large-quantity tradeoffs.
++\item We report completed CNN+GRU54 comparisons with six common-head encoder adaptations across three datasets and seeds, followed by a three-seed Instacart architecture comparison. Quantity rankings and timing costs depend on the dataset. Earlier MLP4 and MLP8 findings remain supporting evidence in the appendices.
+ \end{enumerate}
+-The completed representative-model comparison establishes its performance under the common evaluation contract. The correction and retrieval controls address attribution separately and remain under evaluation, as does the supplementary three-seed Instacart comparison.
++The external-encoder panel describes performance under a common evaluation contract, and the completed correction controls test the combined local and recurrent path separately. Instacart provides a supplementary architecture comparison. Matched prototype-retrieval controls remain a planned development study.
+ 
+ \section{Related Work}
+ \paragraph{Intermittent demand and numerical quantities.}
+@@ -170,7 +170,7 @@
+ The correction states are maintained separately for each input sequence. Resetting them leaves the causal attention mask and persistent entries unchanged. The returned state is passed to prototype retrieval and the forecasting heads.
+ 
+ \paragraph{What the controls isolate.}
+-The correction-removal variant bypasses both optional paths. The current-only control retains their parameter shapes, initialization, and observation-count masks, but removes direct reads of earlier positions. In Eq.~\eqref{eq:local}, the three bases become $X_i$, $\tanh(X_i)$, and $\GELU(X_i)$, with the original one-, two-, and three-observation eligibility. For the recurrent component, the current-only control starts from zero at each position and applies two GRU updates using the same current input $u_i$. Its projected output is used only when $n_i\geq2$.
++The correction-removal variant bypasses both optional paths. Its correction modules remain registered but frozen, contributing zero active trainable correction parameters. The current-only control retains their parameter shapes, initialization, and observation-count masks, but removes direct reads of earlier positions. In Eq.~\eqref{eq:local}, the three bases become $X_i$, $\tanh(X_i)$, and $\GELU(X_i)$, with the original one-, two-, and three-observation eligibility. For the recurrent component, the current-only control starts from zero at each position and applies two GRU updates using the same current input $u_i$. Its projected output is used only when $n_i\geq2$.
+ 
+ The full and current-only paths both contain 25,308 active correction parameters. Their computations nevertheless differ: the current-only control uses nonlinear bases and repeated current-input updates. It also receives $b_i$, which already summarizes a prefix through attention. Consequently, this comparison isolates a particular explicit history path against a current-position path; it does not compare a model with history against one without history, or identify the effect of a single lag in isolation.
+ 
+@@ -221,7 +221,7 @@
+ \draw[a] (joint) -- (g); \draw[a] (g) -- (gs);
+ 
+ \end{tikzpicture}
+-\caption{The matched retrieval comparison. Both rules select four of 64 prototypes and use softmax weights. The fixed rule constrains two normalized views to equal score contributions; the general query learns a joint projection before normalization.}
++\caption{The planned matched retrieval comparison. Both rules select four of 64 prototypes and use softmax weights. The fixed rule constrains two normalized views to equal score contributions; the general query learns a joint projection before normalization.}
+ \label{fig:retrieval}
+ \Description{Separate normalized time and quantity queries compared with a joint normalized query, each with 512 additional parameters.}
+ \end{figure}
+@@ -292,12 +292,17 @@
+ 
+ S2P2 uses two width-64 layers with state size 16, complex dynamics, backward zero-order hold, and relative-time inputs. Its affine-doubling recurrence takes $O(L\log L)$ work for a length-$L$ sequence. AttNHP uses two width-64 layers, one attention head, and 16 time features. Both expose the state immediately after the last observed event to the common heads; neither receives the target event time. Parameter counts and hardware are not matched across all external models, so this comparison does not establish relative structural efficiency. Two nonlearned quantity references repeat the last observed quantity or average quantities within the same input window. Neither supplies a timing distribution.
+ 
+-\paragraph{Correction and retrieval controls.}
+-The correction study trains CNN+GRU54, correction removal, and the current-only control on each core dataset and seed, giving 27 fresh fits. The retrieval study adds weighted, fixed, and general-query variants, with the nine full-correction fits from that correction study reused as the mean baseline. It requires 27 further fits. These baseline fits are distinct from the nine completed runs in the external comparison. The general query contains 512 added parameters, matching fixed retrieval and differing from the 521-parameter control in the earlier exploratory pilot.
+-
+-For each dataset and seed, all arms in these controlled studies run on the same GPU and software environment. Taxi and RAF are assigned to RTX 5080, and Intermittent to RTX 5090. A preliminary implementation check compared CNN+GRU54 with mean retrieval on RTX 5080. Its 83 bitwise checks covered initialization, synthetic sequences, and the first three updates on a shared Taxi training batch. This establishes a limited implementation baseline rather than equivalence of past training trajectories.
+-
+-The supplementary Instacart study compares MLP8, MLP12, and CNN+GRU54 across three seeds, adding nine fresh fits. Together, the Instacart, correction, and retrieval studies specify 63 new fits. Instacart extends the architecture comparison to a fourth dataset, while the core studies test the two mechanisms. The completed MLP4 external panel and MLP8 correction study remain supporting observations in Appendices~\ref{app:legacy-external} and~\ref{app:metrics}.
++\paragraph{Completed correction and architecture studies.}
++The correction study compares full CNN+GRU54 correction, correction bypass, and the current-only control on each core dataset and seed. Its 27 distinct conditions are complete. Fifteen conditions completed on A100, three RAF seed-62 conditions on RTX 5080, and nine Intermittent conditions on RTX 5090. The RAF seed-42 full and current-only fits resumed across two physical A100 GPUs after an operational interruption, whereas correction bypass had already completed. Frozen initialization, inputs, loss, optimizer, and checkpoint selection were retained. This migration limits hardware matching for that seed. Appendix~\ref{app:history-completed} records the selected and final saved epochs.
++
++Within each RTX dataset--seed group, the three arms shared one GPU and Runtime. Seeds nevertheless span hardware and software environments, including cuDNN versions 91900 on RTX 5080 and 92000 on RTX 5090. The nine full-correction fits in this study are kept separate from the nine representative-model fits in Table~\ref{tab:external-cnngru}; their means are neither pooled nor substituted between panels.
++
++The supplementary Instacart study also completed nine conditions, comprising MLP8, MLP12, and CNN+GRU54 for seeds 42, 52, and 62. Seeds 42 and 62 ran on RTX 5080, and seed 52 on RTX 5090, with all three architectures sharing one GPU within each seed. The architectures contain 89,859, 96,003, and 102,879 trainable parameters, respectively. Their frozen inputs, common heads, objective, and selection rule agree, but their correction modules and parameter budgets differ. This is an architecture comparison rather than an equal-budget correction ablation. Appendix~\ref{app:instacart-completed} retains all six metrics and checkpoint records.
++
++\paragraph{Pending retrieval comparison.}
++The retrieval design compares mean, weighted, fixed, and general-query variants. Fixed and general query each add 512 parameters, whereas the earlier exploratory pilot's general-query control contained 521. A preliminary implementation check on RTX 5080 established 83 bitwise agreements for initialization, synthetic sequences, and the first three updates on a shared Taxi training batch. Its scope does not extend to complete training trajectories.
++
++The completed correction and Instacart studies account for 36 conditions. Retrieval remains pending a common-GPU mean baseline and a new resource contract. The completed A100 full runs are not treated as RTX-matched mean baselines. The additional fit count depends on that baseline contract, so the earlier 63-fit plan does not describe a completed or currently executing campaign.
+ 
+ \paragraph{Decision criteria and computational cost.}
+ The correction criterion requires the full model to attain lower overall quantity RMSE than both controls in every seed on the same two or more core datasets. The fixed-retrieval criterion requires corresponding improvements over mean, weighted, and the general-query control. These are descriptive consistency criteria, not significance tests.
+@@ -347,31 +352,91 @@
+ \end{tabular}
+ \end{table}
+ 
+-On RAF, S2P2 attains lower mean RMSE, 33.9947 versus 34.1841 for CNN+GRU54. RMTPP also attains lower mean MAE, 9.1362 versus 9.2062. The quantity ranking therefore depends on the dataset. This completed comparison does not yet include a three-seed CNN+GRU54 result for Instacart.
++On RAF, S2P2 attains lower mean RMSE, 33.9947 versus 34.1841 for CNN+GRU54. RMTPP also attains lower mean MAE, 9.1362 versus 9.2062. The quantity ranking therefore depends on the dataset. The supplementary Instacart architecture comparison appears separately in Section~\ref{sec:instacart-results}, without extending this external-encoder panel to a new campaign.
+ 
+ Timing scores limit the quantity advantage. On Taxi, CNN+GRU54 records time NLL 1.4684, compared with 0.6516 for NHP. On Intermittent, the corresponding scores are 0.3025 for CNN+GRU54 and 0.2349 for S2P2. NHP also records lower time NLL on RAF, 3.3889 versus 3.5464. Each score comes from the same checkpoint as its row's quantity errors, so none substitutes an independently selected timing checkpoint.
+ 
+ The nonlearned references provide a further check. CNN+GRU54 attains lower RMSE than both rules on Taxi and RAF. On Intermittent, repeating the last quantity yields lower MAE, 0.5647 versus 0.7022, and slightly lower RMSE, 1.7078 versus 1.7296. Thus the lower errors against learned encoder adaptations do not establish superiority over every simple predictor. Appendix~\ref{app:legacy-external} retains the numerical reference values, and Appendix~\ref{app:cnngru-records} reports all six CNN+GRU54 metrics, including the large-quantity subsets.
+ 
+ \subsection{Additional effect of explicit history correction}
+-The full, correction-removal, and current-only CNN+GRU54 comparison is under evaluation. The completed performance panel establishes the full model's position among the tested encoders, but cannot attribute that position to the correction path. Attribution requires the paired controls described in Section~4, including their large-quantity errors, timing scores, and computational costs.
+-
+-The earlier MLP8 study motivates this comparison. Its correction improved overall quantity RMSE in all 18 paired comparisons, with timing and large-quantity exceptions retained in Appendix~\ref{app:metrics}. That finding concerns the MLP path. It does not establish the effect of the local and recurrent paths in CNN+GRU54.
++\label{sec:history-results}
++Table~\ref{tab:history-cnngru} reports the completed 27-condition correction study. Against both correction bypass and current-only, full correction lowers overall quantity RMSE in all three seeds on Taxi and Intermittent. These two datasets meet the predeclared consistency criterion. Although full correction also attains lower mean RMSE on RAF, seed 52 favors both controls: full RMSE is 34.4012, compared with 34.3415 for bypass and 34.3349 for current-only. RAF therefore fails the seedwise criterion. Across the 18 full-versus-control comparisons, 16 favor full correction by overall RMSE.
++
++\begin{table}[t]
++\caption{Completed CNN+GRU54 correction study. Entries are mean $\pm$ sample SD over seeds 42, 52, and 62 at each fit\textquotesingle s earliest minimum overall quantity-RMSE checkpoint. These full-model fits form a separate campaign from Table~\ref{tab:external-cnngru}. Bold marks the lowest mean within a dataset and column. RAF seed 42 includes physical A100 migration.}
++\label{tab:history-cnngru}
++\centering\small
++\setlength{\tabcolsep}{4pt}
++\begin{tabular}{@{}lrrr@{}}
++\toprule
++Arm & Quantity MAE & Quantity RMSE & Time NLL\\
++\midrule
++\multicolumn{4}{l}{\textit{Taxi}}\\
++Full & $\mathbf{25.6347\pm1.0220}$ & $\mathbf{80.4089\pm2.9830}$ & $1.2721\pm0.1648$\\
++Correction bypass & $28.2757\pm0.4683$ & $87.6117\pm1.4166$ & $0.9544\pm0.1116$\\
++Current-only & $28.1968\pm0.3279$ & $88.0008\pm1.3758$ & $\mathbf{0.8206\pm0.2261}$\\
++\midrule
++\multicolumn{4}{l}{\textit{Intermittent}}\\
++Full & $\mathbf{0.7057\pm0.0148}$ & $\mathbf{1.6957\pm0.0423}$ & $0.4097\pm0.1818$\\
++Correction bypass & $0.7449\pm0.0276$ & $1.7409\pm0.0279$ & $\mathbf{0.3430\pm0.0405}$\\
++Current-only & $0.7532\pm0.0227$ & $1.7562\pm0.0574$ & $0.3479\pm0.0244$\\
++\midrule
++\multicolumn{4}{l}{\textit{RAF}}\\
++Full & $\mathbf{9.2021\pm0.0801}$ & $\mathbf{34.1711\pm0.2121}$ & $3.5481\pm0.0634$\\
++Correction bypass & $9.2676\pm0.0325$ & $34.2964\pm0.0846$ & $3.5891\pm0.1286$\\
++Current-only & $9.3667\pm0.1663$ & $34.3109\pm0.1010$ & $\mathbf{3.4693\pm0.1006}$\\
++\bottomrule
++\end{tabular}
++\end{table}
++
++The quantity advantage carries costs. Full correction raises overall time NLL in 11 of the 18 comparisons, including all six Taxi comparisons. Large-quantity RMSE and MAE each worsen in ten comparisons. On Intermittent, for example, full correction attains mean overall RMSE 1.6957 versus 1.7409 for bypass, but large-quantity RMSE rises to 8.2968 versus 7.8753. On RAF, the corresponding large-quantity means are 327.6237 and 324.7870. These metrics inherit the same quantity-selected checkpoint. Appendix~\ref{app:history-completed} retains all six metrics and the adverse seedwise differences rather than selecting a separate favorable timing or tail epoch.
++
++The results support the tested combined correction path within development validation. Both full and current-only contain 25,308 active correction parameters, yet their input operations and recurrent depth differ. Because the current contextual state already includes prefix history, this control does not remove history from the entire model. The comparison also does not identify the contribution of the CNN or GRU separately. RAF seed 42's physical GPU migration and cross-seed Runtime differences limit hardware matching. Concurrent training durations do not establish structural efficiency.
++
++The earlier MLP8 study remains a separate observation in Appendix~\ref{app:metrics}. Its 18 correction gains concern that MLP path and are not substituted for the CNN+GRU54 controls.
++
++\subsection{Supplementary Instacart architecture comparison}
++\label{sec:instacart-results}
++The nine completed Instacart fits extend the architecture comparison to basket quantities on 503,733 validation targets. CNN+GRU54 attains the lowest mean overall quantity RMSE and MAE among the three variants in Table~\ref{tab:instacart-architecture}. Its mean RMSE is 5.8774, compared with 5.8854 for MLP8 and 5.8801 for MLP12. The gaps are small relative to the reported seed dispersions. For seed 52, MLP12 attains lower overall and large-quantity RMSE and MAE than CNN+GRU54. Each quantity metric consequently favors CNN+GRU54 in five of the six seedwise comparisons, rather than in every comparison.
++
++\begin{table}[t]
++\caption{Completed Instacart architecture comparison on 503,733 validation targets. Each architecture contributes three seeds and all columns inherit its quantity-RMSE-selected checkpoint. Entries are mean $\pm$ sample SD. Bold marks the lowest mean in each column. These variants have different parameter counts.}
++\label{tab:instacart-architecture}
++\centering\small
++\setlength{\tabcolsep}{4pt}
++\begin{tabular}{@{}lrrr@{}}
++\toprule
++Architecture & Quantity MAE & Quantity RMSE & Time NLL\\
++\midrule
++MLP8 & $3.9910\pm0.0028$ & $5.8854\pm0.0135$ & $2.8075\pm0.0040$\\
++MLP12 & $3.9906\pm0.0025$ & $5.8801\pm0.0169$ & $\mathbf{2.8072\pm0.0050}$\\
++CNN+GRU54 & $\mathbf{3.9872\pm0.0041}$ & $\mathbf{5.8774\pm0.0095}$ & $2.8108\pm0.0090$\\
++\bottomrule
++\end{tabular}
++\end{table}
++
++For the 6,036 targets with quantity above 35, CNN+GRU54 attains mean RMSE 24.4380 and MAE 21.7822, compared with RMSE 24.6355 and 24.6683 for MLP8 and MLP12. Its large-quantity time NLL is lower in all six seedwise comparisons. Mean overall time NLL, however, rises to 2.8108 from 2.8075 and 2.8072. The seed-62 CNN+GRU54 fit incurs higher overall time NLL than both MLP variants. Appendix~\ref{app:instacart-completed} reports both populations at the same selected checkpoints.
++
++Instacart therefore supplies a modest architecture-level quantity advantage with explicit exceptions. Different parameter counts prevent attribution to an equal-budget history intervention, and this study does not test prototype retrieval. Its results are not merged with the earlier MLP4 external comparison in Appendix~\ref{app:legacy-external}.
+ 
+ \subsection{Additional effect of prototype retrieval}
+-The matched CNN+GRU54 retrieval comparison is also under evaluation. It compares mean, weighted, fixed, and general-query retrieval, retaining the same encoder and output-head definitions. A fixed-query gain over mean alone would not identify the value of separating time and quantity queries, because weighting and general query learning remain alternative explanations. No completed three-dataset result for this matched comparison is reported here.
++The matched CNN+GRU54 retrieval comparison remains pending a common-GPU baseline and resource contract. It compares mean, weighted, fixed, and general-query retrieval, retaining the same encoder and output-head definitions. A fixed-query gain over mean alone would not identify the value of separating time and quantity queries, because weighting and general query learning remain alternative explanations. No completed three-dataset result for this matched comparison is reported here.
+ 
+ \section{Discussion}
+-The completed CNN+GRU54 results support a bounded performance claim. Under common numerical inputs and output heads, its mean quantity errors are lower than those of the six tested encoder adaptations on Taxi and Intermittent. RAF favors S2P2 by mean RMSE, and timing scores favor other encoders on all three datasets. The same representative architecture is retained throughout, without selecting a different TitanTPP variant for each dataset.
+-
+-These performance differences and the correction mechanism answer separate questions. CNN+GRU54 reads three local positions and carries a recurrent state across the observed prefix. A successful full-versus-current-only comparison would support that combined path, rather than a claim that one preceding state alone explains the gain. Equal active parameter counts narrow the capacity explanation but do not remove differences in operations, depth, or optimization. The earlier MLP8 findings in Appendix~\ref{app:metrics} motivate this experiment without replacing it.
+-
+-The retrieval hypothesis is narrower still. Fixed split-query scoring can be expressed as a concatenated dot product. A benefit over the matched general query would support the tested separate-normalization constraint, not the invention of a fundamentally new memory mechanism. Earlier exploratory observations informed this hypothesis, making the new comparison a development study rather than independent confirmation.
+-
+-The completed panel combines separately trained models and reused seed-42 CNN+GRU54 runs across hardware. Its agreement in task and selection rules permits a descriptive comparison, but does not establish matched initialization or hardware efficiency. All performance reported here comes from validation evidence used during research. An independently unexposed evaluation remains outstanding, and three-seed summaries do not establish statistical significance.
++The completed CNN+GRU54 results support two bounded findings. In the external-encoder panel, its mean quantity errors are lower than those of the six tested common-head adaptations on Taxi and Intermittent, while RAF favors S2P2 by mean RMSE. The separate correction study favors the full path against both controls in every seed on Taxi and Intermittent, with a seed-level failure on RAF. Retaining one representative architecture across datasets avoids a different best-variant choice for each result.
++
++This correction finding concerns the combined local and recurrent computation. Equal active parameter counts narrow a capacity explanation, but current-only changes the nonlinear bases and repeated-input updates. Its current hidden state also contains prefix history. The controls consequently distinguish the tested computational paths without identifying a unique lag or separating CNN and GRU effects. Earlier MLP8 results provide context rather than the mechanism evidence for CNN+GRU54.
++
++Instacart supplies a smaller quantity difference. CNN+GRU54's lower mean errors coexist with a seed-52 MLP12 advantage and higher mean overall timing NLL. These variants differ in parameter count, and their limited mean gaps do not establish a statistically significant architectural advantage. Training-history length and event-lag associations in the appendices describe data characteristics rather than causes of the observed model ranking.
++
++Quantity gains do not imply uniformly better forecasting. The correction study includes 11 overall timing losses and ten losses each for large-quantity RMSE and MAE among 18 comparisons. All scores come from quantity-selected checkpoints. Reporting these exceptions prevents the primary quantity criterion from concealing timing and rare-target costs.
++
++The retrieval hypothesis remains distinct. Fixed split-query scoring can be expressed as a concatenated dot product, and a future advantage over the budget-matched general query would support the tested separate-normalization constraint. No completed CNN+GRU54 retrieval effect is established here. A100 full fits also cannot substitute for an RTX common-GPU mean baseline.
++
++The external panel and correction study combine preserved and separately trained runs across hardware. RAF seed 42's correction trajectories include physical A100 migration, and seed summaries span Runtime differences. Task and selection agreement permit descriptive comparisons but do not establish hardware efficiency. All reported performance derives from validation evidence already encountered during research. CPU binary re-inference audits and an independently unexposed evaluation remain outstanding, and three-seed summaries do not establish statistical significance.
+ 
+ \section{Conclusion}
+-TitanTPP augments a causal attention encoder with local and recurrent history correction. Completed CNN+GRU54 runs attain lower mean quantity errors than six common-head encoder adaptations on Taxi and Intermittent, while S2P2 attains lower mean RMSE on RAF. Timing scores also qualify the quantity gains. The separate controls will test whether correction and retrieval changes provide additional gains, together with their timing and computational costs. Earlier MLP4 and MLP8 results remain supporting evidence for the research questions, with their full comparisons preserved in the appendices.
++TitanTPP augments a causal attention encoder with local and recurrent history correction. Completed CNN+GRU54 runs attain lower mean quantity errors than six common-head encoder adaptations on Taxi and Intermittent, while S2P2 attains lower mean RMSE on RAF. The completed correction study supports the full path against bypass and an equal-active-parameter current-only control in every seed on Taxi and Intermittent. RAF fails the same criterion, and timing and large-quantity losses remain substantial qualifications. Instacart supplies a smaller mean quantity advantage over MLP8 and MLP12 with a seed-level exception and worse mean overall timing NLL. Matched retrieval and independent evaluation remain pending. These results support a bounded development-validation claim for the combined correction path.
+ 
+ \begin{thebibliography}{28}
+ \bibitem{bachlechner2021rezero}
+@@ -473,7 +538,7 @@
+ \renewcommand{\theHsection}{\Alph{section}}
+ \section{Completed CNN+GRU54 records}
+ \label{app:cnngru-records}
+-Table~\ref{tab:cnngru-epochs} identifies the nine completed representative-model fits used in Table~\ref{tab:external-cnngru}. Seeds 42, 52, and 62 each contribute once per dataset. Seed-42 reuse preserves the original checkpoint selection, including the resumed Intermittent trajectory. These are distinct from the fresh full-correction fits in the subsequent contribution study.
++Table~\ref{tab:cnngru-epochs} identifies the nine completed representative-model fits used in Table~\ref{tab:external-cnngru}. Seeds 42, 52, and 62 each contribute once per dataset. Seed-42 reuse preserves the original checkpoint selection, including the resumed Intermittent trajectory. These representative-model records remain separate from the full-correction campaign summarized in Appendix~\ref{app:history-completed}.
+ 
+ \begin{table}[htbp]
+ \caption{Selected and final saved epochs for completed CNN+GRU54 fits. A100 runs are preserved originals. Intermittent seed 42 completed epochs 1--12 on A100 and 13--52 on RTX 5090, retaining the selected epoch-12 checkpoint.}
+@@ -614,7 +679,7 @@
+ \section{Earlier MLP8 correction study}
+ \label{app:metrics}
+ \subsection{Architecture and controls}
+-The initial study crosses prototype removal/addition ($P_0/P_1$) with correction removal/addition ($H_0/H_1$), giving a $2\times2$ comparison. It places an MLP correction between the first and second attention blocks, with no local Q/K/V correction; prototype retrieval follows the second block. Thus it differs from both correction paths in CNN+GRU54. Eight bias-free branches each map the concatenated current and immediately preceding observed states through $128\!\to\!8\!\to\!64$, and their outputs are averaged. The branches become eligible after more than 1, 2, 4, 8, 16, 32, 64, or 128 observations. These are eligibility thresholds, not eight different history lags.
++The initial study varies prototype use ($P_0/P_1$) and MLP correction ($H_0/H_1$) in a $2\times2$ comparison. It places an MLP correction between the first and second attention blocks, with no local Q/K/V correction; prototype retrieval follows the second block. Thus it differs from both correction paths in CNN+GRU54. Eight bias-free branches each map the concatenated current and immediately preceding observed states through $128\!\to\!8\!\to\!64$, and their outputs are averaged. The branches become eligible after more than 1, 2, 4, 8, 16, 32, 64, or 128 observations. These are eligibility thresholds, not eight different history lags.
+ 
+ The correction contains 12,288 parameters; the 64-slot prototype bank contains 4,096. Two additional controls test alternatives to these components. $P_1H_C$ replaces the correction with eight current-state branches of width 12, matching its parameter count. $P_FH_1$ replaces the prototype residual with a bias-free $64\!\to\!32\!\to\!64$ feed-forward residual, also using 4,096 parameters. All six arms retain the backbone's persistent attention entries. The six arms, three datasets, and seeds 42, 52, and 62 produce 54 completed fits.
+ 
+@@ -654,9 +719,7 @@
+ 
+ The historical technical checks do not show that prototype retrieval is cheaper than its parameter-matched substitute. On RTX 5080, the measured step time for $P_1H_1$ is 36.46\,ms versus 25.34\,ms for $P_FH_1$ at length 256, and 14.15\,ms versus 11.49\,ms at length 84. On RTX 5090 at length 256, the corresponding times are 23.11 and 17.74\,ms. These checks use the median of three synthetic optimizer steps, without discarded warm-up, and include gradient-copy and verification work. They are limited technical measurements, not pure throughput or inference benchmarks, and do not implement the new retrieval cost protocol.
+ 
+-\subsection{Archived Instacart observation}
+-The archived observation of 8 October 2026, 14:38 KST contains one completed Instacart fit: MLP8, seed 52, on RTX 5090. It selected epoch 15 and stopped after epoch 55, with overall quantity RMSE 5.884, MAE 3.994, and time NLL 2.812. For the 6,036 large-quantity targets, the same checkpoint gives RMSE 24.665, MAE 22.088, and time NLL 2.900. This is a single-fit observation, not a three-seed architecture comparison; final collection of the complete stage remains outstanding. It cannot rank MLP8, MLP12, and CNN+GRU54.
+-
++The completed Instacart architecture comparison is reported in Section~\ref{sec:instacart-results} and Appendix~\ref{app:instacart-completed}. It supersedes the earlier single-fit monitoring observation without replacing the core-dataset MLP8 study preserved here.
+ 
+ \subsection{Full validation metrics}
+ All entries in Table~\ref{tab:allmetrics} are means and sample standard deviations over seeds 42, 52, and 62. Each fit contributes metrics from its first minimum-overall-quantity-RMSE checkpoint. The large subsets use the strict training-derived thresholds in Table~\ref{tab:data}. Values are rounded to three decimals except for time NLLs below 0.001, which use scientific notation with the standard deviation on the line beneath the mean. No metric in this table comes from the representative CNN+GRU experiment.
+@@ -1256,4 +1319,182 @@
+ requires that model's selected-checkpoint validation records. Historical
+ MLP decompositions cannot substitute for CNN+GRU54 results.
+ 
++\clearpage
++\section{Completed CNN+GRU54 correction records}
++\label{app:history-completed}
++This appendix records the separate 27-condition correction campaign. Full, correction bypass, and current-only each contribute seeds 42, 52, and 62 on every core dataset. Selection follows the earliest strictly improving finite minimum of full-validation raw-quantity RMSE. The large subsets contain 79 Taxi, 1,141 Intermittent, and 50 RAF targets, with identical target membership across arms and seeds. Neither time NLL nor large-quantity error determines an additional checkpoint.
++
++\begin{table}[htbp]
++\caption{Selected and final saved epochs for the correction study. F denotes full, B denotes correction bypass, and C denotes current-only. Each entry is selected/final. A100 denotes the preserved completed campaign records, not a common RTX cost baseline. RAF seed 42 full/current-only resumed across physical A100 GPUs.}
++\label{tab:history-epochs}
++\centering\small
++\begin{tabular}{@{}lrcccl@{}}
++\toprule
++Dataset & Seed & F & B & C & Execution\\
++\midrule
++Taxi & 42 & 126/166 & 141/181 & 82/122 & A100\\
++ & 52 & 74/114 & 68/108 & 19/59 & A100\\
++ & 62 & 84/124 & 92/132 & 43/83 & A100\\
++\midrule
++Intermittent & 42 & 15/55 & 30/70 & 6/46 & RTX 5090\\
++ & 52 & 11/51 & 13/53 & 56/96 & RTX 5090\\
++ & 62 & 13/53 & 5/45 & 38/78 & RTX 5090\\
++\midrule
++RAF & 42 & 9/49 & 9/49 & 9/49 & A100 $\to$ A100 (F/C)\\
++ & 52 & 5/45 & 5/45 & 43/83 & A100\\
++ & 62 & 20/60 & 26/66 & 22/62 & RTX 5080\\
++\bottomrule
++\end{tabular}
++\end{table}
++
++Full and current-only each contain 25,308 active correction parameters. Bypass retains the registered modules but freezes them and does not execute either correction path. The recurrent output projection and local kernels are zero-initialized under the frozen source contract. Fifteen conditions completed on A100 and twelve on RTX. Operational interruptions and checkpoint transport do not create additional scientific conditions. RAF seed 42 full/current-only retained the saved state and selection history through migration. Hardware-segment timings remain separate and concurrent fit wall time is not a structural efficiency estimate.
++
++\begin{table}[htbp]
++\caption{Completed correction study on Taxi. Mean $\pm$ sample SD over three seeds at the same selected checkpoint for all and large-quantity populations. These campaign values do not replace Table~\ref{tab:external-cnngru}.}
++\label{tab:history-six-yellow_trip_hourly}
++\centering\small
++\setlength{\tabcolsep}{3pt}
++\renewcommand{\arraystretch}{1.12}
++\begin{tabular}{@{}llrrr@{}}
++\toprule
++Arm & Population & Quantity MAE & Quantity RMSE & Time NLL\\
++\midrule
++Full & All & $25.6347\pm1.0220$ & $80.4089\pm2.9830$ & $1.2721\pm0.1648$\\
++ & Large & $306.0319\pm42.7071$ & $394.7608\pm42.1609$ & $\begin{gathered}8.061\!\times\!10^{-16}\\{\scriptstyle\pm\,1.396\!\times\!10^{-15}}\end{gathered}$\\
++\midrule
++Correction bypass & All & $28.2757\pm0.4683$ & $87.6117\pm1.4166$ & $0.9544\pm0.1116$\\
++ & Large & $315.6244\pm3.7287$ & $402.0961\pm10.2204$ & $\begin{gathered}4.214\!\times\!10^{-16}\\{\scriptstyle\pm\,7.298\!\times\!10^{-16}}\end{gathered}$\\
++\midrule
++Current-only & All & $28.1968\pm0.3279$ & $88.0008\pm1.3758$ & $0.8206\pm0.2261$\\
++ & Large & $303.2394\pm24.8923$ & $386.7095\pm30.9643$ & $\begin{gathered}1.669\!\times\!10^{-24}\\{\scriptstyle\pm\,2.891\!\times\!10^{-24}}\end{gathered}$\\
++\bottomrule
++\end{tabular}
++\end{table}
++
++\begin{table}[htbp]
++\caption{Completed correction study on Intermittent. Mean $\pm$ sample SD over three seeds at the same selected checkpoint for all and large-quantity populations. These campaign values do not replace Table~\ref{tab:external-cnngru}.}
++\label{tab:history-six-intermittent_frozen_5000}
++\centering\small
++\setlength{\tabcolsep}{3pt}
++\renewcommand{\arraystretch}{1.12}
++\begin{tabular}{@{}llrrr@{}}
++\toprule
++Arm & Population & Quantity MAE & Quantity RMSE & Time NLL\\
++\midrule
++Full & All & $0.7057\pm0.0148$ & $1.6957\pm0.0423$ & $0.4097\pm0.1818$\\
++ & Large & $6.4667\pm0.4364$ & $8.2968\pm0.6547$ & $\begin{gathered}9.239\!\times\!10^{-5}\\{\scriptstyle\pm\,1.527\!\times\!10^{-4}}\end{gathered}$\\
++\midrule
++Correction bypass & All & $0.7449\pm0.0276$ & $1.7409\pm0.0279$ & $0.3430\pm0.0405$\\
++ & Large & $5.8346\pm0.5149$ & $7.8753\pm0.3017$ & $\begin{gathered}6.101\!\times\!10^{-7}\\{\scriptstyle\pm\,1.031\!\times\!10^{-6}}\end{gathered}$\\
++\midrule
++Current-only & All & $0.7532\pm0.0227$ & $1.7562\pm0.0574$ & $0.3479\pm0.0244$\\
++ & Large & $6.4383\pm0.1763$ & $8.2016\pm0.2010$ & $\begin{gathered}5.550\!\times\!10^{-9}\\{\scriptstyle\pm\,9.612\!\times\!10^{-9}}\end{gathered}$\\
++\bottomrule
++\end{tabular}
++\end{table}
++
++\begin{table}[htbp]
++\caption{Completed correction study on RAF. Mean $\pm$ sample SD over three seeds at the same selected checkpoint for all and large-quantity populations. These campaign values do not replace Table~\ref{tab:external-cnngru}.}
++\label{tab:history-six-raf_spare_parts}
++\centering\small
++\setlength{\tabcolsep}{3pt}
++\renewcommand{\arraystretch}{1.12}
++\begin{tabular}{@{}llrrr@{}}
++\toprule
++Arm & Population & Quantity MAE & Quantity RMSE & Time NLL\\
++\midrule
++Full & All & $9.2021\pm0.0801$ & $34.1711\pm0.2121$ & $3.5481\pm0.0634$\\
++ & Large & $280.7816\pm7.5080$ & $327.6237\pm6.6540$ & $3.5037\pm0.2080$\\
++\midrule
++Correction bypass & All & $9.2676\pm0.0325$ & $34.2964\pm0.0846$ & $3.5891\pm0.1286$\\
++ & Large & $277.9862\pm7.0989$ & $324.7870\pm6.8087$ & $3.4519\pm0.1400$\\
++\midrule
++Current-only & All & $9.3667\pm0.1663$ & $34.3109\pm0.1010$ & $3.4693\pm0.1006$\\
++ & Large & $276.1454\pm6.7053$ & $323.6122\pm6.5116$ & $3.4010\pm0.0764$\\
++\bottomrule
++\end{tabular}
++\end{table}
++
++\clearpage
++\subsection{Adverse paired differences}
++Table~\ref{tab:history-adverse} records how often full correction has a higher metric than each control. Counts refer to seedwise paired differences, not differences between the rounded means. A timing or large-quantity loss remains part of the result even when overall RMSE improves.
++
++\begin{table}[htbp]
++\caption{Number of adverse differences (full minus control $>0$) in the completed correction study. Each control contributes three seed comparisons per dataset.}
++\label{tab:history-adverse}
++\centering\small
++\setlength{\tabcolsep}{3pt}
++\begin{tabular}{@{}llrrrrrr@{}}
++\toprule
++ & & \multicolumn{3}{c}{All} & \multicolumn{3}{c}{Large}\\
++\cmidrule(lr){3-5}\cmidrule(l){6-8}
++Dataset & Control & MAE & RMSE & NLL & MAE & RMSE & NLL\\
++\midrule
++Taxi & Bypass & 0 & 0 & 3 & 1 & 1 & 2\\
++Taxi & Current-only & 0 & 0 & 3 & 2 & 2 & 1\\
++\midrule
++Intermittent & Bypass & 0 & 0 & 1 & 2 & 2 & 2\\
++Intermittent & Current-only & 0 & 0 & 1 & 2 & 2 & 2\\
++\midrule
++RAF & Bypass & 1 & 1 & 1 & 1 & 1 & 1\\
++RAF & Current-only & 0 & 1 & 2 & 2 & 2 & 2\\
++\bottomrule
++\end{tabular}
++\end{table}
++
++These counts retain the RAF seed-52 RMSE failure against both controls, all six Taxi overall time-NLL losses, and large-quantity losses despite some overall quantity gains. The full six-metric records and first-minimum checkpoint histories are retained in the completed Validation ledger. The criterion in Section~4 is a development consistency rule, not a significance or independent-confirmation test.
++
++\clearpage
++\section{Completed Instacart architecture records}
++\label{app:instacart-completed}
++The nine fits compare MLP8, MLP12, and CNN+GRU54 over seeds 42, 52, and 62. The evaluation population contains 503,733 targets and 6,036 large-quantity targets with $q>35$. Each seed repeats the same target population. Recorded intervals are measured in days, top-coded at 30, and scored with time scale seven. These are recorded integer-bin NLLs, not the older clamped time-loss field. Selection and all six metrics inherit the same full-validation quantity-RMSE checkpoint.
++
++\begin{table}[htbp]
++\caption{Selected and final saved epochs for the completed Instacart architecture study. All three architectures share one GPU within each seed. Cross-seed Runtime differences and unequal parameter budgets remain.}
++\label{tab:instacart-epochs}
++\centering\small
++\begin{tabular}{@{}lrcrl@{}}
++\toprule
++Architecture & Seed & Selected & Final & Execution\\
++\midrule
++MLP8 & 42 & 30 & 70 & RTX 5080\\
++ & 52 & 15 & 55 & RTX 5090\\
++ & 62 & 35 & 75 & RTX 5080\\
++\midrule
++MLP12 & 42 & 28 & 68 & RTX 5080\\
++ & 52 & 15 & 55 & RTX 5090\\
++ & 62 & 35 & 75 & RTX 5080\\
++\midrule
++CNN+GRU54 & 42 & 30 & 70 & RTX 5080\\
++ & 52 & 15 & 55 & RTX 5090\\
++ & 62 & 1 & 41 & RTX 5080\\
++\bottomrule
++\end{tabular}
++\end{table}
++
++\begin{table}[htbp]
++\caption{Completed Instacart six-metric comparison. Entries are mean $\pm$ sample SD over seeds 42, 52, and 62. All and large-quantity rows share the same selected checkpoint within each fit.}
++\label{tab:instacart-six}
++\centering\small
++\setlength{\tabcolsep}{3pt}
++\renewcommand{\arraystretch}{1.12}
++\begin{tabular}{@{}llrrr@{}}
++\toprule
++Arm & Population & Quantity MAE & Quantity RMSE & Time NLL\\
++\midrule
++MLP8 & All & $3.9910\pm0.0028$ & $5.8854\pm0.0135$ & $2.8075\pm0.0040$\\
++ & Large & $22.0238\pm0.4187$ & $24.6355\pm0.3367$ & $2.8579\pm0.0451$\\
++\midrule
++MLP12 & All & $3.9906\pm0.0025$ & $5.8801\pm0.0169$ & $2.8072\pm0.0050$\\
++ & Large & $22.1032\pm0.2647$ & $24.6683\pm0.2247$ & $2.8559\pm0.0461$\\
++\midrule
++CNN+GRU54 & All & $3.9872\pm0.0041$ & $5.8774\pm0.0095$ & $2.8108\pm0.0090$\\
++ & Large & $21.7822\pm0.2505$ & $24.4380\pm0.2012$ & $2.8476\pm0.0444$\\
++\bottomrule
++\end{tabular}
++\end{table}
++ 
++CNN+GRU54 has lower overall and large-quantity RMSE and MAE than MLP8 in each seed. Against MLP12, seed 52 instead favors MLP12 on all four quantity metrics. CNN+GRU54 lowers large-quantity time NLL in every paired comparison, but seed 62 raises overall time NLL against both MLP variants. These exceptions remain in the aggregate and do not support a uniform architecture ranking.
++
++The frozen Instacart science revision differs from the correction-campaign revision, but its 126 source files match the corresponding files in the correction study\textquotesingle s 129-file closure, including the CNN+GRU and common-head implementations. Native checks record 89,859, 96,003, and 102,879 trainable parameters for MLP8, MLP12, and CNN+GRU54. Binary checkpoint bytes and complete endpoint records were collected and SHA-verified. No CPU binary re-inference or independent evaluation is inferred from that integrity check.
+ \end{document}

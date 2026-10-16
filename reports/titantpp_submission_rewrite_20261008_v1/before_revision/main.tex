@@ -1,0 +1,510 @@
+% Internal anonymous LNCS working draft, 8 October 2026.
+% Pending result cells must be filled from verified originals.
+\documentclass[runningheads]{llncs}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,booktabs}
+\newcommand{\method}{TitanTPP}
+\newcommand{\softplus}{\operatorname{softplus}}
+\newcommand{\Nrm}{\operatorname{N}}
+\begin{document}
+\title{Explicit Local and Recurrent History Correction for Event Quantity Prediction}
+\titlerunning{Explicit History Correction for Event Quantities}
+\author{Anonymous}
+\authorrunning{Anonymous}
+\institute{Anonymous institution}
+\maketitle
+
+\begin{abstract}
+An event encoder can summarize earlier observations, but this does not
+establish whether a separate path from recent observations improves
+quantity prediction. We examine this question in a two-block causal
+encoder for next-event quantity and recorded-time prediction.
+A local three-position correction modifies the first block's query,
+key, and value projections; a recurrent residual connects the first
+and second blocks. Controls remove this path or replace its
+cross-position inputs with current-position operations at the same
+active parameter count. A separate study tests fixed combination
+of time- and quantity-conditioned prototype scores against uniform,
+similarity-weighted, and parameter-matched general-query retrieval.
+The protocol fixes observable histories, output heads, checkpoint
+selection, and training rules on three core datasets; Instacart
+supplies a supplementary architecture comparison. The new
+representative comparisons and independent evaluation are pending.
+This draft therefore states hypotheses and protocol, without a
+superiority claim.
+\keywords{Event sequences \and Quantity forecasting \and
+History correction \and Temporal point processes}
+\end{abstract}
+
+\section{Introduction}
+Irregular demand sequences require both next-event quantity and
+recorded time to be predicted. Recurrent and attention-based encoders
+already condition these predictions on event history. We ask whether
+an additional explicit local and recurrent path improves quantity
+prediction within such an encoder. A full correction is compared
+with its removal and with a current-position control of equal active
+parameter count. The latter retains shared causal attention, so it
+remains history-aware.
+
+A secondary question asks whether separate time- and quantity-query
+normalization, followed by fixed score combination, improves
+prototype retrieval. We compare it with top-four averaging,
+similarity weighting, and a general query under the same information
+and extra-parameter budget. The prototype bank is learned on Train
+and stays static during evaluation; it is not an online store of
+observed events.
+
+A completed MLP8 validation study motivates these questions but
+does not prove them for the representative CNN+GRU54 architecture.
+Its matched history-on/off pairs improved overall quantity RMSE in
+18 of 18 cases, yet this comparison also changed capacity and
+some quantity-selected checkpoints worsened timing likelihood.
+The new study retains unfavorable quantity-tail, time, and cost
+outcomes. It uses one representative model specification across
+the core datasets rather than choosing a different winner for
+each dataset.
+
+\section{Related Work}
+RMTPP summarizes event history in recurrent hidden vectors
+\cite{du2016rmtpp}; deep renewal models predict demand size
+and interdemand time from recurrent representations
+\cite{turkmen2021renewal}. Attention-based A-NHP models
+irregular event histories with temporal attention and residual
+layers \cite{yang2022anhp}. S2P2 combines continuous-time
+dynamics with event impulses and nonlinear residual
+transformations \cite{chang2025s2p2}. History, residual
+connections, and joint time--quantity modeling are thus
+established ideas. An event quantity can itself be regarded
+as a mark even without a categorical event-type ID.
+
+Persistent-memory attention adds learned, input-independent
+vectors \cite{sukhbaatar2019memory}, and product-key memory
+selects learned slots sparsely \cite{lample2019product}.
+The present study does not claim novelty for top-k retrieval
+or learned static slots. Its retrieval hypothesis concerns
+the specified split-query constraint under matched budgets.
+
+For a later external comparison, the inspected S2P2 adapter
+projects observed numerical gaps and quantities into the
+S2P2 history encoder, reads its state immediately after the
+last observed event, and attaches the shared prediction heads.
+It is a common-head history-encoder adaptation, not a
+reproduction of S2P2's native marked likelihood. Historical
+external runs require separate source, population, Runtime,
+head, and selection audits before they can substantiate a
+claim about the representative architecture.
+
+\section{Prediction Task and Shared Heads}
+Let $\mathcal H_j=\{(\Delta_i,q_i)\}_{i\le j}$ be the observed
+prefix. Position $j$ is the last observed event, and $j+1$
+the withheld target. Its quantity and gap do not enter the
+TitanTPP encoder readout. The input embedding is
+\begin{equation}
+ e_i=W_{\mathrm{in}}
+ [\log(1+\Delta_i),\log(1+q_i)]^\top+b_{\mathrm{in}}+p_i .
+ \label{eq:embedding}
+\end{equation}
+Here $p_i$ is learned positional information. These features
+are not Train-z-scored. Two pre-normalized causal attention
+blocks have width 64, four heads, feedforward width 128,
+dropout 0.1, and 16 learned persistent attention tokens
+per block. The persistent tokens differ from the 64 prototype
+vectors applied after the encoder.
+
+For final representation $z_j$, the quantity head produces
+\begin{equation}
+ \widehat\ell_{j+1}=\softplus(w_q^\top z_j+b_q),\qquad
+ \widehat q_{j+1}=\exp(\widehat\ell_{j+1})-1 .
+ \label{eq:quantity}
+\end{equation}
+Training compares $\widehat\ell_{j+1}$ with
+$\log(1+q_{j+1})$ by squared error. Raw-unit evaluation
+uses Eq.~\ref{eq:quantity}, with no later inverse Train
+standardization.
+
+The timing head predicts location $\mu_j$ and scale
+$\sigma_j=10^{-3}+\softplus(w_\sigma^\top z_j+b_\sigma)$.
+A latent duration $T=s\exp(\mu_j+\sigma_j\epsilon)$,
+$\epsilon\sim\mathcal N(0,1)$, is recorded as the positive
+integer $D=\max(1,\operatorname{round}(T))$.
+For standard normal CDF $\Phi$, its probability mass is
+\begin{align}
+ p_j(1)&=\Phi\left(\frac{\log(1.5/s)-\mu_j}{\sigma_j}\right),
+ \label{eq:p1}\\
+ p_j(d)&=\Phi\left(\frac{\log((d+0.5)/s)-\mu_j}{\sigma_j}\right)
+ -\Phi\left(\frac{\log((d-0.5)/s)-\mu_j}{\sigma_j}\right),
+ \quad d\ge2. \label{eq:pd}
+\end{align}
+The core datasets have no upper top-code. Instacart
+top-codes at 30 and uses the upper survival mass.
+The target loss adds $-\log p_j(D_{j+1})$ to the log-quantity
+squared error, with unit quantity coefficient and no
+tail-weighted loss.
+
+\section{Explicit History Correction}
+The first block projects normalized inputs into queries,
+keys, and values. For each $X\in\{Q,K,V\}$, it applies
+\begin{equation}
+ \widetilde X_i=X_i+
+ \sum_{\ell=0}^{2}a_{i\ell}\kappa^X_\ell
+ \odot X_{s_\ell(i)} .
+ \label{eq:local}
+\end{equation}
+Here $s_0(i)=i$; $s_1(i)$ and $s_2(i)$ select the preceding
+two observed positions in the current segment.
+Eligibility $a_{i\ell}$ requires at least $\ell+1$
+observed positions. Each depthwise kernel has 64
+bias-free coefficients. Persistent key and value tokens
+enter after this local operation. Let $b_i$ be the
+complete first attention block output, including its
+feedforward residual.
+
+A width-54 recurrent path connects the blocks:
+\begin{equation}
+ u_i=A b_i,\quad r_i=\operatorname{GRU}(u_i,r_{i-1}),
+ \quad c_i=\mathbf1[n_i\ge2]B r_i,\quad
+ \widetilde b_i=b_i+c_i .
+ \label{eq:gru}
+\end{equation}
+The matrices map $64\!\to\!54$ and $54\!\to\!64$.
+The count $n_i$ includes the current observed position
+in its segment; recurrent state begins at zero at
+each segment boundary. The second block receives
+$\widetilde b_i$. Thus the residual contains the
+recurrent state updated by the current observation.
+Padding contributes no correction; a valid withheld
+position resets local eligibility and recurrent state.
+This reset does not introduce an additional segment
+mask into the shared causal attention.
+
+The full path contains $3\cdot3\cdot64=576$ local
+coefficients and 24,732 recurrent-path parameters:
+25,308 active correction parameters in total.
+\emph{Disabled} bypasses and freezes the path while
+preserving both attention blocks, persistent tokens,
+mean prototype retrieval, and prediction heads.
+\emph{Current-only} retains the same correction
+tensors. Its three local source values all come
+from the current position:
+\[X_i,\quad\tanh(X_i),\quad\operatorname{GELU}(X_i).\]
+Its recurrent state starts at zero independently at
+each position and processes the current $u_i$ twice,
+with no state carried between positions.
+This allows its recurrent weights to participate.
+The first-block $b_i$ already contains prefix context,
+whereas the local $X_i$ is computed before the first
+attention operation. The equal parameter count does
+not equalize functional capacity, depth, or cost.
+A positive comparison would support the combined
+three-position and recurrent correction path; it
+would not isolate lag one, CNN, or GRU alone.
+
+\section{Static Prototype Retrieval}
+Let $M=\{m_k\}_{k=1}^{64}$ be train-learned
+vectors of width 64. Define normalization by
+\[\Nrm(v)=\frac{v}{\max(\|v\|_2,\varepsilon)}.\]
+The normalized slot supplies its key; the same
+unnormalized slot supplies its value. For second-block
+output $h_j$, mean retrieval scores each slot by
+\[s_{jk}=\Nrm(h_j)^\top\Nrm(m_k).\]
+It selects the four highest-scoring slots $I_j$
+and returns
+\begin{equation}
+ z_j^{\mathrm{mean}}=
+ h_j+\tfrac14\sum_{k\in I_j}m_k .
+ \label{eq:mean}
+\end{equation}
+Weighted retrieval replaces $\tfrac14$ with softmax
+weights over those same four scores. Neither arm adds
+query parameters.
+
+The learned-query arms summarize the most recent
+32 observed positions in the current segment, including
+the current event. Each of time and quantity contributes
+four features: last standardized value, mean,
+population standard deviation, and last-minus-previous
+difference. Positive time gaps use $\log(\Delta_i/s)$;
+quantities use $\log(1+q_i)$, including zero quantities.
+Train statistics standardize these points. Missing
+features are zero. Write the views as
+$\phi_j^t,\phi_j^q\in\mathbb R^4$.
+
+The fixed arm learns
+$W_t,W_q\in\mathbb R^{4\times64}$ and scores
+\begin{align}
+ q_j^t&=h_j+\phi_j^tW_t,\quad
+ q_j^q=h_j+\phi_j^qW_q,\nonumber\\
+ s_{jk}^{\mathrm{fixed}}
+ &=\tfrac12\Nrm(q_j^t)^\top\Nrm(m_k)
+ +\tfrac12\Nrm(q_j^q)^\top\Nrm(m_k).
+ \label{eq:fixed}
+\end{align}
+The general arm learns $W\in\mathbb R^{8\times64}$:
+\begin{equation}
+ q_j=h_j+\tfrac12[\phi_j^t,\phi_j^q]W,\quad
+ s_{jk}^{\mathrm{general}}=
+ \Nrm(q_j)^\top\Nrm(m_k).
+ \label{eq:general}
+\end{equation}
+Both add exactly 512 active parameters, select
+four slots, and use a temperature-one softmax
+for value aggregation. An earlier 521-parameter
+general-query pilot is not this matched control.
+The fixed score also equals one-half of the dot
+product of the concatenated separately normalized
+queries and duplicated normalized key. This
+algebraic relation narrows the hypothesis to the
+effect of the normalization and query constraint;
+the labels "time" and "quantity" do not establish
+semantic disentanglement. Every arm is fitted end
+to end, so fitted encoder and slot values can differ.
+
+\section{Experimental Design}
+\subsection{Datasets, stages, and training}
+The core study covers Taxi, Intermittent, and
+RAF Spare Parts. Instacart is supplementary.
+Table~\ref{tab:data} records frozen eligible
+target populations. The legacy loader field
+named \texttt{lookback\_weeks} counts each dataset's
+native discrete time bins. Its inclusive window
+ends at the last observed event; the next target
+is appended before left-truncation to the
+sequence cap. The cap includes the target.
+Large-quantity thresholds were fixed from Train.
+
+\begin{table}[t]
+\caption{Frozen task populations and windows.
+"Large" is strictly above the Train boundary.}
+\label{tab:data}
+\centering\small
+\begin{tabular}{lrrrll}
+\toprule
+Dataset & Train & Validation & Cap & Lookback & Large\\
+\midrule
+Taxi & 38,393 & 8,268 & 256 & 168 hourly bins & $q>3449$\\
+Intermittent & 393,824 & 86,285 & 256 &
+520 weekly bins & $q>187$\\
+RAF Spare Parts & 25,779 & 6,690 & 84 &
+84 monthly bins & $q>200$\\
+Instacart & 1,991,192 & 503,733 & 64 &
+52 daily bins & $q>35$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The campaign specifies 63 new fits in
+three sequential stages (Table~\ref{tab:design}).
+Instacart compares widths 8 and 12 with CNN+GRU54
+across seeds 42, 52, and 62: nine fresh fits.
+Historical width-16 checkpoints are reference
+material, not new paired runs. The main correction
+study trains full, disabled, and current-only
+variants across three core datasets and three
+seeds: 27 fresh fits. Retrieval trains weighted,
+fixed, and general512 across the same datasets
+and seeds: another 27. It reuses the nine new
+full-correction fits as mean retrieval, exactly
+once each. Same-dataset and same-seed arms
+share a GPU and Runtime. Host timing is reported
+separately.
+
+\begin{table}[t]
+\caption{Predeclared comparison. Status is the
+writing-time record, not a live GPU observation.}
+\label{tab:design}
+\centering\small
+\begin{tabular}{p{0.21\textwidth}p{0.46\textwidth}p{0.2\textwidth}}
+\toprule
+Stage & Arms and role & New fits/status\\
+\midrule
+Instacart & Width 8/12/CNN+GRU54;
+architecture context & 9; in progress\\
+Correction & Full/disabled/current-only;
+primary claim & 27; pending\\
+Retrieval & Weighted/fixed/general512;
+full history reused as mean & 27; pending\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All fits use batch size 128, AdamW with learning
+rate 0.001 and weight decay 0.01, gradient clipping
+at 1, minimum 40 and maximum 300 epochs, and
+patience 40. There is no warm start or automatic
+retry. Checkpoint selection retains the first
+strictly improving finite minimum of overall
+raw-quantity RMSE on full Validation; ties keep
+the earlier epoch. Neither a tail score nor
+time likelihood changes that choice. A resource
+timeout is not a completed scientific fit.
+
+\subsection{Metrics, cost, and decisions}
+At the quantity-selected checkpoint, report quantity
+RMSE, quantity MAE, and recorded-time negative
+log-likelihood both on all Validation targets and
+on the large-quantity subset. All six values refer
+to one selected epoch. Preserve each seed and
+report three-seed means, sample standard
+deviations, adverse cases, selected and final
+saved epochs, fit time, and measured cost.
+Recorded-time scores from different units
+are not pooled.
+
+The correction hypothesis receives developmental
+support only if full has strictly lower overall
+raw-quantity RMSE than \emph{both} controls for
+all three seeds in the same two or more core
+datasets. The retrieval hypothesis requires
+fixed to beat mean, weighted, and general512
+by the corresponding criterion. It also requires
+cost eligibility on that dataset's GPU for
+both lengths 64 and 256. Under batch 128,
+five warm-up and twenty measured iterations,
+relative to mean, inference time must rise
+no more than 20\%, training-step time no
+more than 30\%, and peak allocation no more
+than 20\%. Technically successful but
+over-budget arms remain in the report.
+
+The supplementary Instacart study compares
+architectures; it does not directly test either
+correction or retrieval contribution. A result
+below the strongest comparator would constrain
+a universal superiority claim, while the
+predeclared core comparisons would still decide
+the two mechanism questions.
+
+\section{Results and Interpretation}
+\noindent\textbf{Writing-time status.}
+The MLP8 Validation study and a limited parity
+check between CNN+GRU54 and mean retrieval
+are completed background evidence. The
+representative correction and fixed-retrieval
+comparisons are pending. Tables~\ref{tab:results}
+and~\ref{tab:cost} contain \emph{pending}
+entries so that no new performance result is
+invented. The final version must fill them
+from verified original checkpoints and report
+every seed.
+
+\begin{table}[t]
+\caption{Reserved Validation comparison. All
+metrics must come from each fit's quantity-selected
+checkpoint, with per-seed results in the final version.}
+\label{tab:results}
+\centering\small
+\begin{tabular}{@{}p{0.35\textwidth}p{0.22\textwidth}p{0.31\textwidth}@{}}
+\toprule
+Comparison & Overall quantity &
+Large quantity and time\\
+\midrule
+Full vs.\ correction controls &
+pending & pending\\
+Fixed vs.\ retrieval controls &
+pending & pending\\
+Instacart architectures &
+pending & pending\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\caption{Reserved same-GPU cost audit. Each
+length requires inference, step, and peak allocation.}
+\label{tab:cost}
+\centering\small
+\begin{tabular}{@{}p{0.17\textwidth}p{0.34\textwidth}p{0.34\textwidth}@{}}
+\toprule
+Arm & Length 64: inference, step, peak &
+Length 256: inference, step, peak\\
+\midrule
+Mean & pending & pending\\
+Weighted & pending & pending\\
+Fixed & pending & pending\\
+General512 & pending & pending\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Discussion and Limitations}
+An improvement over correction removal alone
+would leave active capacity as a plausible
+explanation. The current-only control narrows
+this uncertainty, although equal parameters
+do not equalize the operations or computation.
+Even a successful comparison would support
+the specified local-and-recurrent package,
+not a lag-one-only or CNN-only effect.
+Likewise, fixed retrieval has an equivalent
+concatenated dot-product expression, so
+performance must be attributed narrowly
+to the tested constraint and protocol.
+
+Development Validation is not untouched
+evaluation. Earlier observations informed
+the fixed-retrieval hypothesis, and historical
+test partitions have prior research exposure.
+A new independent assessment needs a verified
+unexposed period or dataset, a frozen model
+and selector, and an access-history audit
+before outcomes are read. The 63-fit
+campaign does not refit external S2P2.
+Any final external table must distinguish
+common-head adaptations from native model
+likelihoods and disclose weaker comparisons.
+
+Quantity selection may worsen timing
+likelihood or rare large-quantity errors.
+We therefore retain the same-epoch six
+metrics and measured costs without setting
+a favorable time threshold after the fact.
+The sign-consistency rules do not by
+themselves establish statistical significance
+or universal external superiority.
+
+\section{Conclusion}
+This manuscript draft specifies a primary
+test of explicit local and recurrent
+correction within an already history-aware
+event encoder. A separate matched-budget
+study tests split-query static-prototype
+retrieval. The eventual empirical
+contribution depends on verified
+three-seed comparisons, timing and cost
+tradeoffs, and later independent
+evaluation. Pending experimental outcomes
+cannot yet support a final performance
+claim.
+
+\begin{thebibliography}{6}
+\bibitem{du2016rmtpp}
+Du, N., Dai, H., Trivedi, R., Upadhyay, U.,
+Gomez-Rodriguez, M., Song, L.:
+Recurrent marked temporal point processes:
+Embedding event history to vector.
+In: KDD, pp. 1555--1564 (2016)
+\bibitem{turkmen2021renewal}
+T\"urkmen, A.C., Januschowski, T., Wang, Y., Cemgil, A.T.:
+Forecasting intermittent and sparse time series:
+A unified probabilistic framework via deep renewal processes.
+PLOS ONE 16(11), e0259764 (2021)
+\bibitem{yang2022anhp}
+Yang, C., Mei, H., Eisner, J.:
+Transformer embeddings of irregularly spaced events
+and their participants. In: ICLR (2022)
+\bibitem{chang2025s2p2}
+Chang, Y., Boyd, A., Xiao, C., Kass-Hout, T.,
+Bhatia, P., Smyth, P., Warrington, A.:
+Deep continuous-time state-space models for marked
+event sequences. In: NeurIPS 38 (2025)
+\bibitem{sukhbaatar2019memory}
+Sukhbaatar, S., Grave, E., Lample, G., J\'egou, H.,
+Joulin, A.: Augmenting self-attention with
+persistent memory. arXiv:1907.01470 (2019)
+\bibitem{lample2019product}
+Lample, G., Sablayrolles, A., Ranzato, M.,
+Denoyer, L., J\'egou, H.:
+Large memory layers with product keys.
+In: NeurIPS (2019)
+\end{thebibliography}
+\end{document}
