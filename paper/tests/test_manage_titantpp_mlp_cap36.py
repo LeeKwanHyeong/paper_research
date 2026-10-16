@@ -4,6 +4,7 @@ import io
 import json
 from pathlib import Path
 import shlex
+import subprocess
 import sys
 import tarfile
 from types import ModuleType, SimpleNamespace
@@ -21,6 +22,8 @@ def setup(tmp_path, monkeypatch):
     monkeypatch.setattr(m, "BUNDLE", tmp_path / "bundle")
     monkeypatch.setattr(m, "REPORT", tmp_path / "report")
     monkeypatch.setattr(m, "PARENT", tmp_path / "parent.json")
+    monkeypatch.setattr(m, "PREVIOUS_BUNDLE", tmp_path / "v1")
+    monkeypatch.setattr(m, "PREVIOUS_REPORT", tmp_path / "v1_report")
     for h in c["hosts"].values():
         h.update(tmux="new-session", tmux_binary="/bin/tmux")
     m.write(m.PARENT, {"hosts": c["hosts"]})
@@ -67,24 +70,39 @@ def test_prepare_is_exclusive_and_packs_only_snapshot_inputs(setup, monkeypatch)
         files[name] = m.sha(path)
     monkeypatch.setattr(m, "source_snapshot", lambda: {"base_git_revision": "fixed", "files": files,
                                                        "files_sha256": m.canonical(files)})
-    module = ModuleType("paper.scripts.prepare_titantpp_mlp_cap36_data")
-
-    def prepare_data(output):
-        path = output / "inputs/data/admitted.txt"
-        path.parent.mkdir(parents=True)
-        path.write_text("separate Cap data\n")
-        return {"datasets": [{"dataset_id": d} for d in ("yellow_trip_hourly", "raf_spare_parts", "intermittent_frozen_5000")],
-                "input_files": {"inputs/data/admitted.txt": m.sha(path)}, "data_receipt": {"status": "prepared"}}
-
-    module.prepare_datasets = prepare_data
-    monkeypatch.setitem(sys.modules, module.__name__, module)
+    old_input = m.PREVIOUS_BUNDLE / "input_snapshot/inputs/data/admitted.txt"
+    old_input.parent.mkdir(parents=True)
+    old_input.write_text("separate Cap data\n")
+    previous = deepcopy(setup)
+    previous.update(jobs=m.build_jobs(), datasets=[{"dataset_id": d} for d in
+        ("yellow_trip_hourly", "raf_spare_parts", "intermittent_frozen_5000")],
+        input_files={"inputs/data/admitted.txt": m.sha(old_input)}, data_receipt={"status": "prepared"},
+        parent_runtime_contract={"path": str(m.PARENT), "sha256": m.sha(m.PARENT)},
+        source={"base_git_revision": "v1", "files": files, "files_sha256": m.canonical(files)},
+        architecture={"arms": list(m.runtime.ARMS), "type": "four_existing_mlp_structures_on_separate_cap_data",
+            "model_architecture_changed": False, "shared_input": "Train-Q3-capped observed and target quantities; log1p unchanged",
+            "shared_loss_head_memory": "unchanged", "checkpoint_warmstart": False})
+    previous["training"]["monitor"] = "validation_raw_quantity_rmse"
+    m.write(m.PREVIOUS_BUNDLE / "execution_contract.json", previous)
+    (m.PREVIOUS_BUNDLE / "deployment.tar.gz").write_bytes(b"preserved v1 archive")
+    m.write(m.PREVIOUS_REPORT / "PREPARED.json", {
+        "contract_sha256": m.sha(m.PREVIOUS_BUNDLE / "execution_contract.json"),
+        "canonical_contract_sha256": m.canonical(previous),
+        "archive_sha256": m.sha(m.PREVIOUS_BUNDLE / "deployment.tar.gz")})
+    before = {str(p): p.read_bytes() for p in m.PREVIOUS_BUNDLE.rglob("*") if p.is_file()}
     result = m.prepare()
     assert result["planned_fit_count"] == 36 and result["host_fit_counts"] == {"5080": 16, "5090": 20}
     c = m.verify_local(archive=True)
     assert c["hosts"]["5090"]["python"] == setup["hosts"]["5090"]["python"]
+    assert all(Path(path).read_bytes() == raw for path, raw in before.items())
+    assert c["hosts"]["5080"]["wait_predecessor"]["contract_sha256"] == m.canonical(previous)
+    assert all("_v2_" in h["root"] for h in c["hosts"].values())
+    for key in ("datasets", "input_files", "jobs", "training", "limits", "architecture"):
+        assert c[key] == previous[key]
     with tarfile.open(m.BUNDLE / "deployment.tar.gz") as archive:
-        assert set(archive.getnames()) == {"execution_contract.json", "source/inputs/data/admitted.txt",
+        assert set(archive.getnames()) == {"execution_contract.json", "source/inputs/data/admitted.txt", "source/sample_data",
                                           *("source/" + p for p in files)}
+        assert archive.getmember("source/sample_data").isdir()
     with pytest.raises(ValueError, match="Existing"):
         m.prepare()
     (m.BUNDLE / "deployment.tar.gz").write_bytes(b"changed")
@@ -112,6 +130,15 @@ def test_deploy_one_install_and_launch_with_correct_wait_policy(setup, monkeypat
     supervisor = words[words.index("-c") + 1]
     compile(supervisor, "supervisor", "exec")
     assert repr(mode) in supervisor and "actual_os_returncode" in supervisor
+    # Run the generated supervisor around a mock child; inspect actual file bytes.
+    monkeypatch.setattr(m.subprocess, "Popen", lambda *args, **kwargs: SimpleNamespace(pid=123, wait=lambda: 1))
+    with pytest.raises(SystemExit) as exit_info:
+        exec(compile(supervisor, "supervisor", "exec"), {})
+    assert exit_info.value.code == 1
+    output = Path(setup["hosts"][host]["root"]) / "dispatcher_exit.json"
+    raw = output.read_bytes()
+    assert raw.endswith(b"\n") and not raw.endswith(b"\\n")
+    assert json.loads(raw)["actual_os_returncode"] == 1
     if host == "5080":
         assert not any("--mode qualify" in command for command in calls)
     else:
@@ -119,6 +146,33 @@ def test_deploy_one_install_and_launch_with_correct_wait_policy(setup, monkeypat
     with pytest.raises(FileExistsError):
         m.deploy(host)
     assert len(calls) == count
+
+
+def test_extracted_package_resolves_root_without_repository_ancestor(setup):
+    actual_pathing = Path(__file__).resolve().parents[2] / "simple_lab_test/common/pathing.py"
+    names = ("models/example.py", "utils/example.py", "simple_lab_test/common/pathing.py")
+    files = {}
+    for name in names:
+        path = m.ROOT / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(actual_pathing.read_bytes() if name.endswith("pathing.py") else b"# synthetic source\n")
+        files[name] = m.sha(path)
+    m.BUNDLE.mkdir()
+    m.write(m.BUNDLE / "execution_contract.json", {"synthetic_fixture": True})
+    archive = m.package_archive({"input_files": {}}, {"files": files})
+    extracted = m.ROOT / "isolated_extract"
+    m.safe_extract(archive, extracted)
+    source = extracted / "source"
+    assert list((source / "sample_data").iterdir()) == []
+    code = ("import importlib.util,pathlib; "
+        f"p=pathlib.Path({str(source / 'simple_lab_test/common/pathing.py')!r}); "
+        "s=importlib.util.spec_from_file_location('isolated_pathing',p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
+        f"assert m.resolve_project_root(p)==pathlib.Path({str(source)!r}); print('isolated_root_ok')")
+    good = subprocess.run([sys.executable, "-I", "-c", code], cwd=m.ROOT, capture_output=True, text=True)
+    assert good.returncode == 0 and good.stdout.strip() == "isolated_root_ok", good.stderr
+    (source / "sample_data").rmdir()
+    missing = subprocess.run([sys.executable, "-I", "-c", code], cwd=m.ROOT, capture_output=True, text=True)
+    assert missing.returncode != 0 and "Could not locate" in missing.stderr
 
 
 def test_failed_transport_keeps_original_bytes(setup):

@@ -257,3 +257,94 @@ def test_stage_timeout_cleans_only_its_own_children(contract, monkeypatch):
     assert result["status"] == "failed" and len(launched) == 3
     assert cleaned == [1000, 1001, 1002]
     assert all(e["timeout"] is True and e["actual_os_returncode"] == -15 for e in result["exits"].values())
+
+
+def predecessor_fixture(c, *, terminal=False):
+    old = Path(c["hosts"]["5080"]["root"]).parent / "v1_5080"
+    old.mkdir()
+    previous = deepcopy(c)
+    previous["hosts"]["5080"].update(root=str(old), source_root=str(old / "source"))
+    r.write(old / "execution_contract.json", previous)
+    digest = r.sha_json(previous)
+    c["hosts"]["5080"]["wait_predecessor"] = {"root": str(old),
+        "contract_raw_sha256": r.sha_file(old / "execution_contract.json"),
+        "contract_sha256": digest, "required_outcome": "failed_before_scientific_start"}
+    r.write(old / "wait_start.json", {"host": "5080", "contract_sha256": digest})
+    if terminal:
+        finish_predecessor(old, digest)
+    return old, digest
+
+
+def finish_predecessor(old, digest):
+    r.write(old / "wait_failure.json", {"host": "5080", "contract_sha256": digest,
+        "traceback": "Native qualification child failed: missing project root sentinel"})
+    r.write(old / "dispatcher_exit.json", {"pid": 4321, "actual_os_returncode": 1})
+
+
+def test_predecessor_barrier_prevents_gpu_query_and_qualification_until_real_failure(contract, monkeypatch):
+    target = contract["hosts"]["5080"]
+    old, digest = predecessor_fixture(contract)
+    monkeypatch.chdir(target["source_root"])
+    clock, calls = [100.], []
+    monkeypatch.setattr(r.time, "monotonic", lambda: clock[0])
+
+    def sleep(seconds):
+        calls.append(("wait_predecessor", seconds))
+        clock[0] += seconds
+        finish_predecessor(old, digest)
+
+    monkeypatch.setattr(r.time, "sleep", sleep)
+    monkeypatch.setattr(r, "gpu_snapshot", lambda uuid: calls.append(("gpu", uuid)) or {"compute_pids": []})
+    monkeypatch.setattr(r, "qualify_child", lambda *args: calls.append(("qualify", args[-1])))
+    monkeypatch.setattr(r, "dispatch", lambda *args, **kwargs: calls.append(("dispatch", kwargs["queue_started"])) or 0)
+    assert r.wait_dispatch(contract, "5080", Path(target["root"]) / "execution_contract.json") == 0
+    assert calls == [("wait_predecessor", 60), ("gpu", "GPU-5080"), ("qualify", 604740.), ("dispatch", 100.)]
+    evidence = r.read(Path(target["root"]) / "predecessor_verified.json")
+    assert evidence["scientific_start_absent"] and evidence["actual_os_returncode"] == 1
+    assert all(r.sha_file(path) == digest for path, digest in evidence["files"].items())
+
+
+@pytest.mark.parametrize("artifact", ["start.json", "run", "dispatch_attempt.json", "final_receipt.json"])
+def test_predecessor_scientific_start_blocks_v2_even_with_failed_exit(contract, artifact):
+    old, _ = predecessor_fixture(contract, terminal=True)
+    if artifact == "run":
+        (old / artifact).mkdir()
+    else:
+        r.write(old / artifact, {"preserved": True})
+    before = {str(p): p.read_bytes() for p in old.rglob("*") if p.is_file()}
+    with pytest.raises(ValueError, match="scientific start"):
+        r.predecessor_failure(contract, "5080")
+    assert all(Path(path).read_bytes() == raw for path, raw in before.items())
+
+
+@pytest.mark.parametrize("code", [0, None, "1", True])
+def test_predecessor_requires_actual_nonzero_integer_exit(contract, code):
+    old, _ = predecessor_fixture(contract, terminal=True)
+    r.write(old / "dispatcher_exit.json", {"actual_os_returncode": code})
+    with pytest.raises(ValueError, match="actual failed"):
+        r.predecessor_failure(contract, "5080")
+
+
+def test_predecessor_partial_failure_waits_with_no_gpu_work_and_fixed_deadline(contract, monkeypatch):
+    target = contract["hosts"]["5080"]
+    old, digest = predecessor_fixture(contract)
+    r.write(old / "wait_failure.json", {"host": "5080", "contract_sha256": digest, "traceback": "preserved"})
+    monkeypatch.chdir(target["source_root"])
+    clock = [0.]
+    monkeypatch.setattr(r.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(r.time, "sleep", lambda _: clock.__setitem__(0, 604800.))
+    monkeypatch.setattr(r, "gpu_snapshot", lambda _: pytest.fail("GPU query before predecessor termination"))
+    monkeypatch.setattr(r, "qualify_child", lambda *args: pytest.fail("Qualification before predecessor termination"))
+    with pytest.raises(ValueError, match="deadline"):
+        r.wait_dispatch(contract, "5080", Path("/contract.json"))
+    assert r.read(Path(target["root"]) / "waiting.json")["status"] == "waiting_for_predecessor_failure"
+
+
+def test_missing_root_marker_fails_before_gpu_qualification(contract, monkeypatch):
+    target = contract["hosts"]["5090"]
+    contract["packaging"] = {"required_empty_source_directories": ["sample_data"]}
+    monkeypatch.chdir(target["source_root"])
+    monkeypatch.setattr(r, "gpu_snapshot", lambda _: pytest.fail("Missing marker must fail before GPU access"))
+    with pytest.raises(ValueError, match="source root directory"):
+        r.qualify(contract, "5090")
+    assert not (Path(target["root"]) / "qualification_attempt.json").exists()

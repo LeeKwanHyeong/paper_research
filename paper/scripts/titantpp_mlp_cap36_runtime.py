@@ -54,6 +54,12 @@ def validate_contract(contract, host):
     require(all(Path(target[k]).is_absolute() for k in ("root", "source_root", "python")), "Host path must be absolute")
     require(Path(target["source_root"]) == Path(target["root"]) / "source", "Expected isolated source directory")
     require(contract["hosts"]["5080"]["root"] != contract["hosts"]["5090"]["root"], "Host roots must differ")
+    if "wait_predecessor" in target:
+        predecessor = target["wait_predecessor"]
+        require(host == "5080" and Path(predecessor["root"]).is_absolute()
+                and predecessor["root"] != target["root"]
+                and predecessor["required_outcome"] == "failed_before_scientific_start",
+                "Invalid predecessor wait contract")
     assigned = [j for j in jobs if j["host"] == host]
     require(assigned, "Host has no assigned jobs")
     return assigned
@@ -67,6 +73,8 @@ def qualify(contract, host):
     require(not any((root / p).exists() for p in ("qualification.json", "start.json", "run", "dispatch_attempt.json")),
             "Existing qualification/start/run; no automatic retry")
     verify_files(contract, source)
+    for name in contract.get("packaging", {}).get("required_empty_source_directories", []):
+        require(local_path(source, name).is_dir(), "Required source root directory missing: " + name)
     write(root / "qualification_attempt.json", {"host": host, "started_at": now(),
           "contract_sha256": sha_json(contract)}, exclusive=True)
     gpu = gpu_snapshot(target["gpu_uuid"])
@@ -296,6 +304,36 @@ def qualify_child(contract, host, contract_path, remaining_seconds):
     require(code == 0 and not timed_out, "Native qualification child failed or timed out")
 
 
+def predecessor_failure(contract, host):
+    """Return None until the old wait child exited; never admit overlapping work."""
+    binding = contract["hosts"][host].get("wait_predecessor")
+    if binding is None:
+        return {"status": "not_required"}
+    root = Path(binding["root"])
+    path = root / "execution_contract.json"
+    require(sha_file(path) == binding["contract_raw_sha256"], "Predecessor contract SHA changed")
+    previous = read(path)
+    require(sha_json(previous) == binding["contract_sha256"] and previous["hosts"][host]["root"] == str(root),
+            "Predecessor contract identity changed")
+    require(not any((root / name).exists() for name in ("start.json", "run", "dispatch_attempt.json", "final_receipt.json")),
+            "Predecessor scientific start detected; v2 must not launch")
+    paths = {name: root / name for name in ("wait_start.json", "wait_failure.json", "dispatcher_exit.json")}
+    if not all(p.exists() for p in paths.values()):
+        return None
+    for name in ("wait_start.json", "wait_failure.json"):
+        value = read(paths[name])
+        require(value["host"] == host and value["contract_sha256"] == binding["contract_sha256"],
+                "Predecessor wait identity changed")
+    failure = read(paths["wait_failure.json"])
+    require(isinstance(failure.get("traceback"), str) and failure["traceback"], "Predecessor failure reason missing")
+    exited = read(paths["dispatcher_exit.json"])
+    require(type(exited.get("actual_os_returncode")) is int and exited["actual_os_returncode"] != 0,
+            "Predecessor did not report actual failed dispatcher exit")
+    return {"status": "failed_before_scientific_start_verified", "root": str(root), "observed_at": now(),
+        "actual_os_returncode": exited["actual_os_returncode"], "scientific_start_absent": True,
+        "files": {str(path): sha_file(path) for path in (path, *paths.values())}}
+
+
 def wait_dispatch(contract, host, contract_path):
     """Wait without CUDA imports; retain the same queue deadline after admission."""
     validate_contract(contract, host)
@@ -311,6 +349,18 @@ def wait_dispatch(contract, host, contract_path):
              "queue_wall_seconds": contract["limits"]["queue_wall_seconds"], "poll_seconds": 60}
     write(root / "wait_start.json", start, exclusive=True)
     try:
+        while True:
+            elapsed = time.monotonic() - started
+            require(elapsed < contract["limits"]["queue_wall_seconds"], "Queue deadline expired while waiting for predecessor")
+            predecessor = predecessor_failure(contract, host)
+            if predecessor is not None:
+                if predecessor["status"] != "not_required":
+                    write(root / "predecessor_verified.json", predecessor, exclusive=True)
+                break
+            write(root / "waiting.json", {**start, "status": "waiting_for_predecessor_failure",
+                "predecessor_root": target["wait_predecessor"]["root"], "observed_at": now(),
+                "elapsed_seconds": elapsed, "training_started": False, "native_synthetic_started": False})
+            time.sleep(min(60, contract["limits"]["queue_wall_seconds"] - elapsed))
         while True:
             elapsed = time.monotonic() - started
             require(elapsed < contract["limits"]["queue_wall_seconds"], "Queue deadline expired while waiting for GPU")

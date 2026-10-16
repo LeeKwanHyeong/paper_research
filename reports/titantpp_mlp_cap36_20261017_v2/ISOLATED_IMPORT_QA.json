@@ -1,0 +1,74 @@
+{
+  "schema": "cap36_isolated_import_qa_v1",
+  "status": "PASS_bounded_local_import",
+  "recorded_at": "2026-10-16T16:00:47.625748+00:00",
+  "scope": "Completed local import check of v1 deployment archive Python snapshot plus one temporary empty sample_data directory; not a check of the actual v2 archive.",
+  "actual_v2_archive_tested": false,
+  "source_changed": false,
+  "remote_operations": 0,
+  "scientific_runs": 0,
+  "model_construction": 0,
+  "model_inference": 0,
+  "real_dataset_materialized": false,
+  "real_checkpoint_loaded": false,
+  "archive": {
+    "path": "search_artifacts/titantpp_mlp_cap36_20261017_v1/deployment.tar.gz",
+    "sha256": "959c05ef02fb280dab2dbc8c34ceb080735327877ac3ea5919d8b88958b30e72",
+    "contract_raw_sha256": "266122f1a71ae8104b42ae1433ff442a78776ac865d8c3b7395653f4d0d5d1b2",
+    "source_revision": "ab8d2f20068e526c4696b6e71250adf2aed3b847",
+    "source_files_sha256": "83d888784103749f11c699f4122ade59e8a22018027a4502186b96309d86c148",
+    "declared_source_count": 941,
+    "source_members_missing": [],
+    "source_members_sha_revalidated": true,
+    "declared_input_count": 9,
+    "input_members_missing": [],
+    "input_content_loaded": false,
+    "original_sample_data_marker_present": false
+  },
+  "execution": {
+    "cwd": "/Users/igwanhyeong/PycharmProjects/paper_research",
+    "exact_command": "PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 - <<'PY'\nfrom pathlib import Path\nimport os, json, subprocess, sys, tarfile, tempfile\narchive=Path('search_artifacts/titantpp_mlp_cap36_20261017_v1/deployment.tar.gz').resolve()\nwith tempfile.TemporaryDirectory(prefix='cap36_packaging_smoke_') as td:\n    dest=Path(td)\n    with tarfile.open(archive) as tar:\n        names=[m.name for m in tar.getmembers()]\n        selected=[m for m in tar.getmembers() if m.isfile() and m.name.startswith('source/') and m.name.endswith('.py')]\n        assert all(not Path(m.name).is_absolute() and '..' not in Path(m.name).parts for m in selected)\n        tar.extractall(dest,members=selected,filter='data')\n    source=dest/'source'\n    (source/'sample_data').mkdir()\n    code=r'''\nimport json,sys\nfrom pathlib import Path\nsource=Path(sys.argv[1]).resolve()\nsys.path.insert(0,str(source))\nopened=[]\ndef audit(event,args):\n    if event=='open' and isinstance(args[0],str):\n        p=Path(args[0])\n        if p.suffix in ('.parquet','.csv','.npz','.npy','.pt','.pth'):\n            raise RuntimeError('Unexpected scientific input access: '+str(p))\n        if p.suffix in ('.json','.yaml','.yml','.txt','.ini','.cfg'):\n            opened.append(str(p))\nsys.addaudithook(audit)\nfrom paper.scripts import run_titantpp_mlp_cap36 as runner\nrunner.install_hooks()\nfrom paper.scripts import run_multilag_detail_execution as base\nfrom paper.scripts.count_aware_tpp_backbone import training\nfrom paper.scripts import titantpp_mlp_cap36_runtime as runtime\nfrom paper.scripts.run_count_aware_tpp_backbone_control import parse_args\nfrom paper.scripts.run_taxi_quantity_interface_ablation import make_loader\nfrom simple_lab_test.common.pathing import resolve_project_root\nassert resolve_project_root(base.__file__)==source\nproject_modules={name:str(Path(m.__file__).resolve()) for name,m in tuple(sys.modules.items()) if getattr(m,'__file__',None) and name.split('.')[0] in ('models','utils','data_loader','simple_lab_test','paper')}\nassert all(Path(p).is_relative_to(source) for p in project_modules.values()),project_modules\nrepo_resources=[p for p in opened if Path(p).is_relative_to(source)]\nassert not repo_resources,repo_resources\nprint(json.dumps({'status':'passed','source_python_files':len(list(source.rglob('*.py'))),'imported_project_modules':len(project_modules),'root_resolved_to_extracted_archive':True,'extra_directory':'sample_data','repo_nonpython_resource_reads':repo_resources,'scientific_input_reads':0,'model_inference':False,'root_git_present':(source/'.git').exists(),'historical_contracts_present':(source/'paper/contracts').exists()}))\n'''\n    env={**os.environ,'PYTHONDONTWRITEBYTECODE':'1','MPLCONFIGDIR':str(dest/'mplcache'),'XDG_CACHE_HOME':str(dest/'cache')}\n    result=subprocess.run([sys.executable,'-I','-c',code,str(source)],cwd=source,env=env,text=True,capture_output=True,timeout=90)\n    print(json.dumps({'archive_has_sample_data_member':any(n=='source/sample_data' or n.startswith('source/sample_data/') for n in names),'returncode':result.returncode,'stdout':result.stdout,'stderr':result.stderr[-2000:]}))\n    raise SystemExit(result.returncode)\nPY",
+    "actual_exit_code": 0,
+    "subprocess_actual_exit_code": 0,
+    "stdout": "{\"status\": \"passed\", \"source_python_files\": 941, \"imported_project_modules\": 90, \"root_resolved_to_extracted_archive\": true, \"extra_directory\": \"sample_data\", \"repo_nonpython_resource_reads\": [], \"scientific_input_reads\": 0, \"model_inference\": false, \"root_git_present\": false, \"historical_contracts_present\": false}\n",
+    "stderr": "Matplotlib is building the font cache; this may take a moment.\n",
+    "tool_session_id": 86249,
+    "completion_output_chunk_id": "ead02b"
+  },
+  "result": {
+    "status": "passed",
+    "source_python_files": 941,
+    "imported_project_modules": 90,
+    "root_resolved_to_extracted_archive": true,
+    "extra_directory": "sample_data",
+    "repo_nonpython_resource_reads": [],
+    "scientific_input_reads": 0,
+    "model_inference": false,
+    "root_git_present": false,
+    "historical_contracts_present": false
+  },
+  "evidence": {
+    "archive_inventory_output_chunk_id": "98a909",
+    "source_sha_verification_output_chunk_id": "1a77f1",
+    "raw_transport_files_saved": false,
+    "provenance": "Original tool output retained in the parent/subagent conversation; stdout above is the captured output, not a repeated test."
+  },
+  "findings": [
+    {
+      "severity": "resolved_in_proposed_packaging",
+      "finding": "ROOT_SENTINELS requires models, utils and sample_data to exist; sample_data content is not required.",
+      "source": "simple_lab_test/common/pathing.py:16,38"
+    },
+    {
+      "severity": "none_additional_found_in_bounded_scope",
+      "finding": "With the temporary sample_data directory, all exercised imports succeeded without .git, paper/contracts or any other repository non-Python resource read."
+    }
+  ],
+  "limitations": [
+    "This does not validate the actual v2 archive, native GPU/runtime, complete training/evaluation execution or scientific input contents.",
+    "Resource audit covers exercised imports; dormant code paths in imported legacy modules are not claimed to be dependency-free.",
+    "Native libraries and their package resources come from the already installed local Python environment.",
+    "Matplotlib creates its font cache under the temporary directory; this is not a missing project artifact."
+  ],
+  "recommended_v2_smoke": "Extract the actual v2 archive unchanged, require models/utils/sample_data to exist, execute the same import probe under python -I, and assert root resolution and all project module __file__ paths stay inside the extracted source. No model creation or real input access is necessary. Do not rerun this v1 simulation solely for documentation."
+}

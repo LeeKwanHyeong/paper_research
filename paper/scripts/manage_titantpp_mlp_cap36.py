@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 import shlex
+import shutil
 import subprocess
 import tarfile
 from types import SimpleNamespace
@@ -18,14 +19,18 @@ from types import SimpleNamespace
 from paper.scripts import titantpp_mlp_cap36_runtime as runtime
 
 ROOT = Path(__file__).resolve().parents[2]
-NAME = "titantpp_mlp_cap36_20261017_v1"
+NAME = "titantpp_mlp_cap36_20261017_v2"
+PREVIOUS_NAME = "titantpp_mlp_cap36_20261017_v1"
 BUNDLE = ROOT / "search_artifacts" / NAME
 REPORT = ROOT / "reports" / NAME
+PREVIOUS_BUNDLE = ROOT / "search_artifacts" / PREVIOUS_NAME
+PREVIOUS_REPORT = ROOT / "reports" / PREVIOUS_NAME
 PARENT = ROOT / "search_artifacts/titantpp_time_quantity_cross_precheck6_20261016_v1/execution_contract.json"
 MODULE = "paper.scripts.titantpp_mlp_cap36_runtime"
 SOURCE_DIRECTORIES = ("models", "data_loader", "utils", "paper/scripts", "simple_lab_test")
 REQUIRED_NEW_SOURCE = ("paper/scripts/manage_titantpp_mlp_cap36.py", "paper/scripts/titantpp_mlp_cap36_runtime.py",
                        "paper/scripts/run_titantpp_mlp_cap36.py", "paper/scripts/prepare_titantpp_mlp_cap36_data.py")
+PACKAGING_REPAIR_FILES = set(REQUIRED_NEW_SOURCE[:2])
 read, sha, canonical, require = runtime.read, runtime.sha_file, runtime.sha_json, runtime.require
 
 
@@ -60,20 +65,59 @@ def build_jobs():
     return jobs
 
 
+def previous_contract(source):
+    """Bind the repair to preserved v1 science, without changing its evidence."""
+    path = PREVIOUS_BUNDLE / "execution_contract.json"
+    receipt = read(PREVIOUS_REPORT / "PREPARED.json")
+    require(sha(path) == receipt["contract_sha256"], "Previous prepared contract SHA changed")
+    previous = read(path)
+    require(canonical(previous) == receipt["canonical_contract_sha256"], "Previous canonical contract changed")
+    require(set(source["files"]) == set(previous["source"]["files"]), "Packaging repair must preserve source inventory")
+    require(all(source["files"][name] == digest for name, digest in previous["source"]["files"].items()
+                if name not in PACKAGING_REPAIR_FILES), "Packaging repair changed scientific source")
+    require(sha(PREVIOUS_BUNDLE / "deployment.tar.gz") == receipt["archive_sha256"], "Previous archive SHA changed")
+    return previous
+
+
+def package_archive(contract, source):
+    archive_path = BUNDLE / "deployment.tar.gz"
+    with archive_path.open("xb") as raw, tarfile.open(fileobj=raw, mode="w:gz") as archive:
+        archive.add(BUNDLE / "execution_contract.json", arcname="execution_contract.json")
+        for name in source["files"]:
+            archive.add(ROOT / name, arcname="source/" + name)
+        for name in contract["input_files"]:
+            archive.add(BUNDLE / "input_snapshot" / name, arcname="source/" + name)
+        # Root discovery needs the directory, not the repository's sample data.
+        marker = tarfile.TarInfo("source/sample_data")
+        marker.type, marker.mode = tarfile.DIRTYPE, 0o755
+        archive.addfile(marker)
+    return archive_path
+
+
 def prepare():
     require(not BUNDLE.exists(), "Existing Cap36 bundle; no overwrite or retry")
     source = source_snapshot()
-    parent = read(PARENT)
+    previous = previous_contract(source)
+    require(sha(PARENT) == previous["parent_runtime_contract"]["sha256"], "Original Runtime parent SHA changed")
     BUNDLE.mkdir(parents=True, exist_ok=False)
-    # A failed data preparation leaves this exclusive bundle for inspection.
-    from paper.scripts.prepare_titantpp_mlp_cap36_data import prepare_datasets
-    prepared_data = prepare_datasets(BUNDLE / "input_snapshot")
-    hosts = deepcopy(parent["hosts"])
+    # Reuse exactly the already prepared Cap bytes and scientific definitions.
+    for name, digest in previous["input_files"].items():
+        origin = runtime.local_path(PREVIOUS_BUNDLE / "input_snapshot", name)
+        require(sha(origin) == digest, "Previous Cap input SHA changed")
+        destination = runtime.local_path(BUNDLE / "input_snapshot", name)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        with origin.open("rb") as src, destination.open("xb") as dst:
+            shutil.copyfileobj(src, dst)
+    prepared_data = {key: deepcopy(previous[key]) for key in ("datasets", "input_files", "data_receipt")}
+    hosts = deepcopy(previous["hosts"])
     for host, h in hosts.items():
         root = f"/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/{NAME}_{host}"
-        h.update(root=root, source_root=root + "/source", tmux=f"mlp_cap36_{host}_20261017_v1")
+        h.update(root=root, source_root=root + "/source", tmux=f"mlp_cap36_{host}_20261017_v2")
         h["environment"].update(SOURCE_REVISION=source["base_git_revision"], PYTHONPATH=h["source_root"],
             MPLCONFIGDIR=root + "/cache/matplotlib", XDG_CACHE_HOME=root + "/cache")
+    hosts["5080"]["wait_predecessor"] = {"root": previous["hosts"]["5080"]["root"],
+        "contract_raw_sha256": sha(PREVIOUS_BUNDLE / "execution_contract.json"),
+        "contract_sha256": canonical(previous), "required_outcome": "failed_before_scientific_start"}
     architecture = {"arms": list(runtime.ARMS), "type": "four_existing_mlp_structures_on_separate_cap_data",
         "model_architecture_changed": False, "shared_input": "Train-Q3-capped observed and target quantities; log1p unchanged",
         "shared_loss_head_memory": "unchanged", "checkpoint_warmstart": False}
@@ -92,18 +136,19 @@ def prepare():
         "comparison": {"scope": "Cap models only; do not compare raw-data metrics as Cap baselines",
                        "seeds": [42, 52, 62], "sample_sd_ddof": 1},
         "parent_runtime_contract": {"path": str(PARENT), "sha256": sha(PARENT)}}
+    contract["packaging"] = {"required_empty_source_directories": ["sample_data"],
+        "repair_of": {"path": str(PREVIOUS_BUNDLE / "execution_contract.json"),
+                      "sha256": sha(PREVIOUS_BUNDLE / "execution_contract.json")},
+        "reason": "Preserve empty sample_data root-discovery sentinel; no scientific change"}
+    contract["execution"]["5080_launch"] = "wait for v1 actual failure before scientific start, then fresh GPU idle and qualification"
+    for key in ("jobs", "datasets", "input_files", "architecture", "training", "limits"):
+        require(contract[key] == previous[key], "Packaging repair changed scientific contract: " + key)
     for host in hosts:
         runtime.validate_contract(contract, host)
     for name, digest in contract["input_files"].items():
         require(sha(runtime.local_path(BUNDLE / "input_snapshot", name)) == digest, "Prepared Cap input SHA changed")
     write(BUNDLE / "execution_contract.json", contract)
-    archive_path = BUNDLE / "deployment.tar.gz"
-    with archive_path.open("xb") as raw, tarfile.open(fileobj=raw, mode="w:gz") as archive:
-        archive.add(BUNDLE / "execution_contract.json", arcname="execution_contract.json")
-        for name in source["files"]:
-            archive.add(ROOT / name, arcname="source/" + name)
-        for name in contract["input_files"]:
-            archive.add(BUNDLE / "input_snapshot" / name, arcname="source/" + name)
+    archive_path = package_archive(contract, source)
     receipt = {"status": "prepared", "created_at": now(), "source_revision": source["base_git_revision"],
         "source_file_count": len(source["files"]), "contract_sha256": sha(BUNDLE / "execution_contract.json"),
         "canonical_contract_sha256": canonical(contract), "archive_sha256": sha(archive_path),

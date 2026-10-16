@@ -1,0 +1,101 @@
+{
+  "schema": "titantpp_mlp_cap36_packaging_failure_qa_v1",
+  "status": "FAIL_DEPLOYMENT_PACKAGING",
+  "created_at": "2026-10-16T15:59:15.669330+00:00",
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [
+      {
+        "file": "paper/scripts/manage_titantpp_mlp_cap36.py",
+        "line": 99,
+        "archive_source_sha256": "2d6f4f2f922a795080db6441496dc279412ce91c6f470e3b6cd6f2f503d9b080",
+        "description": "Deployment archive omits source/sample_data, which the inherited project-root resolver requires. Actual 5090 qualification fails during core import, before scientific training.",
+        "dependency_file": "simple_lab_test/common/pathing.py",
+        "dependency_lines": [
+          16,
+          38,
+          42
+        ],
+        "fix": "In a separately versioned package, add an empty source/sample_data directory or data-free tracked marker and validate an extracted archive import from outside the repository. Do not alter archived v1 or change shared pathing/source.",
+        "example_remediation_code": "marker = tarfile.TarInfo('source/sample_data'); marker.type = tarfile.DIRTYPE; marker.mode = 0o755; archive.addfile(marker)"
+      }
+    ],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "archive": {
+    "sha256": "959c05ef02fb280dab2dbc8c34ceb080735327877ac3ea5919d8b88958b30e72",
+    "members": 951,
+    "sample_data_members": [],
+    "archived_source_sha256": {
+      "source/simple_lab_test/common/pathing.py": "f3e6e8832f12bd0fef0fd9b7a23a4f5d16626581e54ebeeb10f4f965f8e2f1c1",
+      "source/paper/scripts/manage_titantpp_mlp_cap36.py": "2d6f4f2f922a795080db6441496dc279412ce91c6f470e3b6cd6f2f503d9b080",
+      "source/paper/scripts/run_titantpp_mlp_cap36.py": "a58d3cb2bdc2baa842949e534a31f931632d87b360a202a3aea01b5e43dec9ef"
+    },
+    "matches_prepared_archive_sha": true
+  },
+  "native_failure_evidence": {
+    "host": "5090",
+    "observed_at": "2026-10-16T15:53:23.815510+00:00",
+    "actual_transport_exit": 1,
+    "transport_timeout": false,
+    "stdout_bytes": 0,
+    "stderr_bytes": 4501,
+    "last_error": "RuntimeError: Could not locate the paper_research project root.",
+    "failure_stage": "qualify -> synthetic_check -> core import -> pathing root resolution",
+    "cap_scientific_fits_started": 0,
+    "cap_test_started": 0,
+    "qualification_completed": false,
+    "reason_for_zero_fits": "deploy executes qualification synchronously and only launches dispatch after success; qualification returned exit1 before any model fit"
+  },
+  "host_5080_last_observed_scope": {
+    "observed_at": "2026-10-16T15:54:37.143058+00:00",
+    "job_count": 16,
+    "all_stage_maps_empty": true,
+    "waiting_state": "waiting_for_idle_gpu",
+    "training_started": false,
+    "native_synthetic_started": false,
+    "gpu_compute_pids": [
+      239994,
+      243548
+    ],
+    "cap_scientific_fits_observed": 0,
+    "cap_test_observed": 0,
+    "limitation": "Historical recorded observation only; not proof of current global idleness or a later state."
+  },
+  "prior_qa_gap": {
+    "existing_qa_preserved": true,
+    "prior_qa_sha256": {
+      "reports/titantpp_mlp_cap36_20261017_v1/INDEPENDENT_QA.json": "24a34c2ae1a3b5023699000300e8b934e96e3dcaa5596fd80585e3a0248e681b",
+      "reports/titantpp_mlp_cap36_20261017_v1/INDEPENDENT_QA.md": "5a4893bb8f774c9286316eb223545c4cdfe645622add7cabf3fd8341ff163791"
+    },
+    "missed_check": "isolated extracted deployment archive import and required non-Python root sentinel coverage",
+    "interpretation": "Previous PASS covered data transformations and local mocked lifecycle code. It did not establish deployed import completeness; this discovered deployment blocker supersedes deployment readiness, without rewriting earlier evidence."
+  },
+  "evidence_sha256": {
+    "reports/titantpp_mlp_cap36_20261017_v1/PREPARED.json": "de6ae7bfe799ab6d40260e85ccfa7f167d1c74a45bdad882fd8b7ea4b12a70ca",
+    "search_artifacts/titantpp_mlp_cap36_20261017_v1/deployment.tar.gz": "959c05ef02fb280dab2dbc8c34ceb080735327877ac3ea5919d8b88958b30e72",
+    "search_artifacts/titantpp_mlp_cap36_20261017_v1/transport/5090/20261016T155323815081Z_qualify.json": "d751b67e5494bce39d52069b1f2a9b670d664b4180577a5a32dae9690fae8c56",
+    "search_artifacts/titantpp_mlp_cap36_20261017_v1/transport/5090/20261016T155323815081Z_qualify.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "search_artifacts/titantpp_mlp_cap36_20261017_v1/transport/5090/20261016T155323815081Z_qualify.stderr": "85bdddd0e89fbade2aa7bced63b5b497247a1d8fb41c3990244515fac419f6b9",
+    "search_artifacts/titantpp_mlp_cap36_20261017_v1/transport/5080/20261016T155437173678Z_status.stdout": "56cd6123dac6fdb0dca80b6f0c8727076ac8bb162d8f2721f5ab0fd53a9c602b",
+    "search_artifacts/titantpp_mlp_cap36_20261017_v1/transport/5080/20261016T155437173678Z_status.json": "f696cc72861b31020c0352de91a36eb3d3104dbd8bbef6a4b21f21b878591046"
+  },
+  "review_actions": {
+    "remote_calls": 0,
+    "training": 0,
+    "model_inference": 0,
+    "source_modifications": 0,
+    "new_files": [
+      "PACKAGING_FAILURE_QA.json",
+      "PACKAGING_FAILURE_QA.md"
+    ]
+  },
+  "required_v2_acceptance": [
+    "Preserve original archive, transport stdout/stderr and attempts.",
+    "Create a new versioned package with data-free root sentinel.",
+    "Test imports in an extracted isolated archive, not repository cwd/PYTHONPATH.",
+    "Reverify source/input/archive SHA and new qualification before any scientific fit.",
+    "Handle existing 5080 wait ownership explicitly; do not assume it has already exited."
+  ]
+}

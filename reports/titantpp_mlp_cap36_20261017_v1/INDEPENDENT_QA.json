@@ -1,0 +1,175 @@
+{
+  "schema": "titantpp_mlp_cap36_independent_qa_v1",
+  "status": "PASS",
+  "reviewed_at": "2026-10-16T15:51:15.254712+00:00",
+  "reviewer": "independent_subagent_cap_data_qa",
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "reviewed_files_sha256": {
+    "paper/scripts/prepare_titantpp_mlp_cap36_data.py": "d4b795f8772d7bf8e7a29c4c261f3868ae32526564114baf3f01e393b1e76a34",
+    "paper/tests/test_titantpp_mlp_cap36_data.py": "dfd7247324a4d3f1ebc7c9ced19747864edb724decf4d7446ed7beb14e2285e3",
+    "paper/scripts/titantpp_mlp_cap36_runtime.py": "b4aea1e407fa7ab2f47c4082658ea81adb0f1f39cee75359782569db6ed69b27",
+    "paper/tests/test_titantpp_mlp_cap36_runtime.py": "2e736b590a67100303faa42a1c667d954670934dcfd645d8519aee2eb7e8ea6c",
+    "paper/scripts/manage_titantpp_mlp_cap36.py": "2d6f4f2f922a795080db6441496dc279412ce91c6f470e3b6cd6f2f503d9b080",
+    "paper/tests/test_manage_titantpp_mlp_cap36.py": "ac269a50f890abbc28aea0a09bcb1895ad3993df3c660c928c938ce94f7d9780",
+    "paper/scripts/run_titantpp_mlp_cap36.py": "a58d3cb2bdc2baa842949e534a31f931632d87b360a202a3aea01b5e43dec9ef",
+    "paper/tests/test_titantpp_mlp_cap36_runner.py": "121b0563cb29b44eb0939842312cdcc7eead5c061199691210c6a687637bea5d",
+    "reports/titantpp_mlp_cap36_20261017_v1/SOURCE_COMPARISON.json": "76d0a9e057e29f8f3d5c395791a831a85cd27b9eec83e4a278dbd7270e1f47e1",
+    "models/TPPs/CountAwareTitanHistoryWidth.py": "2a903290810070bdfe72a355a98ff09790b02858a6853e94a7a4a87336afc6f7",
+    "search_artifacts/titantpp_history_width16_replication_20261003_v1/frozen_source/models/TPPs/CountAwareTitanHistoryWidth.py": "75f43447b39aecfc1113bf7213d88272b8821beec6655612f8573ff5fc113174"
+  },
+  "source_files_modified": false,
+  "tests_executed_by_reviewer": [
+    {
+      "scope": "data helper",
+      "tests": 2,
+      "subtests": 6,
+      "actual_exit": 0
+    },
+    {
+      "scope": "runtime earlier reviewed version",
+      "tests": 15,
+      "actual_exit": 0
+    },
+    {
+      "scope": "independent runtime mock scenarios",
+      "tests": 2,
+      "actual_exit": 0,
+      "checks": [
+        "unknown GPU prevents further admission without terminating existing children",
+        "timeout terminates only owned child process groups"
+      ]
+    },
+    {
+      "scope": "manager",
+      "tests": 14,
+      "actual_exit": 0
+    }
+  ],
+  "actual_data_independent_check": {
+    "actual_exit": 0,
+    "temporary_snapshot_removed": true,
+    "dataset_count": 3,
+    "copied_file_count": 9,
+    "checks": [
+      "copied files SHA match input inventory",
+      "Train/Validation-only input contains no Test rows",
+      "Train log1p mean/std independently computed with NumPy",
+      "Train target RMS independently recomputed",
+      "all Train quantity SHA differs from target quantity SHA as intended",
+      "Train/Validation exact target identity/count unchanged from raw parent",
+      "Train/Validation target dt SHA unchanged",
+      "parent time statistics/model/loader preserved",
+      "base.prepare_admitted_data passes for each dataset with held_out_materialized false"
+    ],
+    "target_counts": {
+      "intermittent_frozen_5000": {
+        "train": 393824,
+        "validation": 86285,
+        "test": 88019
+      },
+      "yellow_trip_hourly": {
+        "train": 38393,
+        "validation": 8268,
+        "test": 8327
+      },
+      "raf_spare_parts": {
+        "train": 25779,
+        "validation": 6690,
+        "test": 5226
+      }
+    },
+    "quantity_boundaries": {
+      "intermittent_frozen_5000": [
+        2,
+        20,
+        20,
+        20
+      ],
+      "yellow_trip_hourly": [
+        7,
+        65,
+        65,
+        65
+      ],
+      "raf_spare_parts": [
+        2,
+        10,
+        10,
+        10
+      ]
+    },
+    "final_polars_nearest_quantile_recheck": true,
+    "strict_tail_count_all_splits": 0,
+    "cap_fixed_thresholds": {
+      "intermittent_frozen_5000": 20,
+      "yellow_trip_hourly": 65,
+      "raf_spare_parts": 10
+    }
+  },
+  "manager_checks": [
+    "source snapshot rejects changed tracked Python and requires committed operating files",
+    "parent Python/GPU/tmux paths inherited without mutation",
+    "36 jobs assigned 16/20 while keeping all four arms per dataset/seed on same host",
+    "5080 waits for existing work to finish; 5090 qualifies then dispatches",
+    "exclusive local attempt and fresh remote root prevent duplicate deploy",
+    "terminal transport collection checks all assigned workers and dispatcher exit0 and PID/GPU absence",
+    "archive rejects path escape, absolute paths, links and duplicate entries",
+    "rechecks terminal artifact manifest and every scientific receipt file SHA",
+    "timeout preserves raw bytes and uses null for unobserved remote exit",
+    "generated collection observation serializes valid JSON newline"
+  ],
+  "validation_gate_scope": "all assigned jobs per host; not a global 36-fit barrier",
+  "worker_final_review": {
+    "status": "PASS_read_only_review",
+    "source_editing_stopped_confirmed_by_parent": true,
+    "historical_width16_file_bytes_identical": false,
+    "historical_width16_source_diff": "Existing width8/12 generalization and width-parametric metadata/route; width16 arithmetic, default initialization and operation order retained. No new model source edit in this task.",
+    "historical_width16_equivalence_test_present": true,
+    "historical_width16_test_checks": [
+      "initial full state exact",
+      "post-construction RNG exact",
+      "nonzero correction output forward exact",
+      "backward gradient exact"
+    ],
+    "worker_full_path_test_checks": [
+      "all four existing arms",
+      "fabricated rows only",
+      "actual loader and two-epoch test-only CPU fit",
+      "selected checkpoint Validation replay",
+      "host Validation gate",
+      "same checkpoint Test",
+      "empty strict tail and cap-hit metrics"
+    ],
+    "reported_worker_test_result": {
+      "tests": 18,
+      "elapsed_seconds": 11.026,
+      "actual_exit": 0,
+      "evidence_origin": "parent message from worker final validation; not independently rerun by reviewer",
+      "raw_test_receipt_binding": "parent integrated suite receipt will bind final tests separately"
+    },
+    "native_execution_performed": false
+  },
+  "limitations": [
+    "No native GPU qualification, remote connection, scientific training or real-data inference performed by reviewer.",
+    "Test data used only for target identity/count, fixed Cap verification and hashes; no Test model performance evaluated.",
+    "CPU synthetic results do not establish native GPU memory admission or reproducibility.",
+    "Cap metrics are not directly comparable with old raw-target metrics; existing CNN and raw results unchanged.",
+    "Empty strict q>p99 tail remains N/A; cap-hit q==cap is separate.",
+    "Temporary check first failed because the QA harness compared a three-field population view with a richer metadata dictionary; corrected to compare matching keys and passed. This was not a product finding."
+  ],
+  "acceptance_criteria": {
+    "no_existing_cnn_or_original_data_modification": true,
+    "train_only_statistics_and_time_identity": true,
+    "capped_inputs_targets_and_exact_split_population": true,
+    "host_maximum_three_and_exclusive_launch": true,
+    "validation_before_test_per_host": true,
+    "terminal_and_artifact_verification_before_collection": true,
+    "final_worker_code_review": true,
+    "native_gpu_qualification": "not performed; next execution gate"
+  }
+}
