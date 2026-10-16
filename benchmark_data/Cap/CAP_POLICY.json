@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "variant": "dataset_train_q3_cap_v1",
+  "authorized_scope": "Create separate capped Intermittent, RAF and Taxi datasets for a later comparison; no training in this preparation step.",
+  "quantity_rule": "q_cap = min(q_original, Q3_train)",
+  "quantile": 0.75,
+  "quantile_interpolation": "linear",
+  "fit_population": "all original train event rows, including the first event of each entity",
+  "fit_weighting": "one weight per event row; pooled within each dataset",
+  "cap_scope": "one separate cap per dataset, shared across all entities and splits",
+  "apply_to_splits": ["train", "validation", "test"],
+  "expected_caps": {"intermittent": 20.0, "raf": 10.0, "taxi": 65.0},
+  "preserve": ["original files", "event rows", "entity set", "row order", "event times", "time gaps", "chronological split labels", "non-quantity metadata"],
+  "recompute_columns": ["demand_qty", "log_qty", "log10_qty", "raw_order", "mark", "scale_residual", "z"],
+  "refit_train_statistics": true,
+  "raw_quantity_side_channel_in_model_inputs": false,
+  "test_used_for_threshold_selection": false,
+  "held_out_predictions_evaluated": false,
+  "new_training_executed": false,
+  "existing_experiments_changed": false,
+  "comparison_target": "capped quantity; not the uncapped quantity benchmark"
+}

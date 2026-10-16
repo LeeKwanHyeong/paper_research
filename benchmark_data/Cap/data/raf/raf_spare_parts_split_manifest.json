@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-16T09:16:04.100783+00:00",
+  "dataset_id": "raf",
+  "canonical_dataset_id": "raf_spare_parts",
+  "quantity_column": "demand_qty",
+  "entity_column": "oper_part_no",
+  "order_column": "seq",
+  "transformation": {
+    "cap_value": 10.0,
+    "quantile": 0.75,
+    "quantile_method": "linear",
+    "quantile_fit_population": "all_train_events_including_first_event",
+    "fitted_on": "train",
+    "test_used_for_threshold_selection": false
+  },
+  "magnitude_rule": {
+    "scale_base": 2.0,
+    "min_order": 0,
+    "max_order": 3,
+    "fitted_on": "train",
+    "parent_method_preserved": true
+  },
+  "parent_manifest": {
+    "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_split_manifest.json",
+    "sha256": "cd2458aa3809014aa74b8a121572a74e3d86dc520a690335d79a1e5150899e27",
+    "size_bytes": 2549
+  },
+  "source": {
+    "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_with_split.parquet",
+    "sha256": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d",
+    "size_bytes": 402801
+  },
+  "artifacts": {
+    "with_split": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/Cap/data/raf/raf_spare_parts_with_split.parquet",
+      "sha256": "1812f5a137a4ef2cef446d31c50c1a9b853f0e87e5f853d80e2e3140f02d455d",
+      "size_bytes": 294539
+    },
+    "train": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/Cap/data/raf/raf_spare_parts_train.parquet",
+      "sha256": "c2de47583d604a9b18b06862e70159c1b6e15a9a68a9d3dcc75094b57423f582",
+      "size_bytes": 223131
+    },
+    "validation": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/Cap/data/raf/raf_spare_parts_validation.parquet",
+      "sha256": "c091d005a7ae3cf8e588b53b20d7bd31b4c2d33dd4273942f6e6bc64e62401f5",
+      "size_bytes": 69590
+    },
+    "test": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/Cap/data/raf/raf_spare_parts_test.parquet",
+      "sha256": "0283307fe0384402f96e6093d8e561889caa83b07cebea3bca0aec0c1582dac0",
+      "size_bytes": 56244
+    },
+    "train_validation": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/Cap/data/raf/raf_spare_parts_train_validation.parquet",
+      "sha256": "2fee198e077437635eb98554737746a7a4aa54bd94d45d5eadfcea79b859a8d1",
+      "size_bytes": 267144
+    }
+  },
+  "split_counts": {
+    "train": 30779,
+    "validation": 6690,
+    "test": 5226
+  },
+  "next_event_target_counts": {
+    "train": 25779,
+    "validation": 6690,
+    "test": 5226
+  },
+  "split_labels_and_boundaries_preserved": true,
+  "parent_split_method": "global chronological month boundary",
+  "parent_boundaries": {
+    "test": "2001-12 through 2002-12",
+    "train": "1996-01 through 2000-10",
+    "validation": "2000-11 through 2001-11"
+  },
+  "held_out_test_evaluated": false,
+  "model_training_performed": false
+}

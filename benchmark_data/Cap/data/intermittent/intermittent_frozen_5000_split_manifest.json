@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-16T09:16:04.100783+00:00",
+  "dataset_id": "intermittent",
+  "canonical_dataset_id": "intermittent",
+  "quantity_column": "demand_qty",
+  "entity_column": "oper_part_no",
+  "order_column": "seq",
+  "transformation": {
+    "cap_value": 20.0,
+    "quantile": 0.75,
+    "quantile_method": "linear",
+    "quantile_fit_population": "all_train_events_including_first_event",
+    "fitted_on": "train",
+    "test_used_for_threshold_selection": false
+  },
+  "magnitude_rule": {
+    "scale_base": 2.0,
+    "min_order": 0,
+    "max_order": 4,
+    "fitted_on": "train",
+    "parent_method_preserved": true
+  },
+  "parent_manifest": {
+    "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/data/main/intermittent_v2/intermittent_frozen_5000_split_manifest.json",
+    "sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04",
+    "size_bytes": 4876
+  },
+  "source": {
+    "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/data/main/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+    "sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+    "size_bytes": 2146184
+  },
+  "artifacts": {
+    "with_split": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/Cap/data/intermittent/intermittent_frozen_5000_with_split.parquet",
+      "sha256": "15ae7033084786f72cc344d43df4e36fcac31d744bd10550a7d6e6af597deec2",
+      "size_bytes": 1588620
+    },
+    "train": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/Cap/data/intermittent/intermittent_frozen_5000_train.parquet",
+      "sha256": "d32675849a425b52892ea06eac3c93910eab229a7d00d75e5353281c124f6438",
+      "size_bytes": 1109905
+    },
+    "validation": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/Cap/data/intermittent/intermittent_frozen_5000_validation.parquet",
+      "sha256": "55c59cced9897a20055e271cc0a28c8c275058df82529758b3b9f7bbdbceec81",
+      "size_bytes": 278537
+    },
+    "test": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/Cap/data/intermittent/intermittent_frozen_5000_test.parquet",
+      "sha256": "dbd38fc514a1f6414984e4525aedcb32bb1e6b1a1e5dba39512bf798cf6b972c",
+      "size_bytes": 355059
+    },
+    "train_validation": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/Cap/data/intermittent/intermittent_frozen_5000_train_validation.parquet",
+      "sha256": "cf582352f06770c8d72f6a5682fb29f5148529a3702f289f8ef9e12137cecdf8",
+      "size_bytes": 1382336
+    }
+  },
+  "split_counts": {
+    "train": 398824,
+    "validation": 86285,
+    "test": 88019
+  },
+  "next_event_target_counts": {
+    "train": 393824,
+    "validation": 86285,
+    "test": 88019
+  },
+  "split_labels_and_boundaries_preserved": true,
+  "parent_split_method": "parent chronological split labels preserved",
+  "parent_boundaries": null,
+  "held_out_test_evaluated": false,
+  "model_training_performed": false
+}

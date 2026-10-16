@@ -1,0 +1,132 @@
+{
+  "status": "PASS",
+  "created_at": "2026-10-16T09:17:41.465799+00:00",
+  "scope": "independent data transformation verification only",
+  "files_changed": [
+    "benchmark_data/Cap/VERIFICATION.json",
+    "benchmark_data/Cap/VERIFICATION.md"
+  ],
+  "issues": [],
+  "findings_by_severity": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "input_bindings": {
+    "CAP_POLICY.json": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/Cap/CAP_POLICY.json",
+      "sha256": "11e88ffb11d639554128d7310182da0b6ab7d4cc33325ebe701abf224292ea86"
+    },
+    "manifest.json": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/Cap/manifest.json",
+      "sha256": "a2104f03b744f56ade795f1008c5f85be93ce9de0f1421905a092d374e906514"
+    },
+    "COMPARISON.json": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/Cap/COMPARISON.json",
+      "sha256": "cc93e385d472e095f55090638d7651094823afceaa2cdb490972f04338e930d9"
+    },
+    "COMPARISON.md": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/Cap/COMPARISON.md",
+      "sha256": "ab9b7d87dd737d1f96df549faf9e09e2eb3cc6119154817fc2dcc1b0c2755f03"
+    }
+  },
+  "builder": {
+    "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/scripts/build_q3_cap.py",
+    "sha256": "b61a4917f1a82346bd631b1b41a0e4c05bff47608fd0a18483058305c075aa50"
+  },
+  "tests": {
+    "path": "benchmark_data/tests/test_q3_cap.py",
+    "passed": 12,
+    "exit_code": 0,
+    "initial_command_path_error": "benchmark_data/scripts/test_q3_cap.py nonexistent; no tests ran; corrected tests path passed"
+  },
+  "verified_sha_count": 27,
+  "verified_full_dataset_rows": 670942,
+  "parquet_files_verified": 15,
+  "split_manifests_verified": 3,
+  "source_current_sha_matches_before_after_build_manifest": true,
+  "threshold_fit_only_train_all_events": true,
+  "test_access": "mechanical transform verification only; no performance evaluation",
+  "datasets": {
+    "intermittent": {
+      "cap": 20.0,
+      "all_rows": 573128,
+      "unchanged_nonquantity_columns": 5,
+      "recomputed_quantity_columns": 7,
+      "splits": {
+        "train": {
+          "rows": 398824,
+          "changed_rows": 99295
+        },
+        "validation": {
+          "rows": 86285,
+          "changed_rows": 28360
+        },
+        "test": {
+          "rows": 88019,
+          "changed_rows": 19564
+        }
+      },
+      "max_order": 4
+    },
+    "taxi": {
+      "cap": 65.0,
+      "all_rows": 55119,
+      "unchanged_nonquantity_columns": 9,
+      "recomputed_quantity_columns": 7,
+      "splits": {
+        "train": {
+          "rows": 38524,
+          "changed_rows": 9581
+        },
+        "validation": {
+          "rows": 8268,
+          "changed_rows": 1918
+        },
+        "test": {
+          "rows": 8327,
+          "changed_rows": 2020
+        }
+      },
+      "max_order": 1
+    },
+    "raf": {
+      "cap": 10.0,
+      "all_rows": 42695,
+      "unchanged_nonquantity_columns": 5,
+      "recomputed_quantity_columns": 7,
+      "splits": {
+        "train": {
+          "rows": 30779,
+          "changed_rows": 6108
+        },
+        "validation": {
+          "rows": 6690,
+          "changed_rows": 1192
+        },
+        "test": {
+          "rows": 5226,
+          "changed_rows": 996
+        }
+      },
+      "max_order": 3
+    }
+  },
+  "acceptance_criteria": {
+    "policy_expected_caps_match": true,
+    "independent_train_linear_quantile": true,
+    "exact_minimum_transform": true,
+    "quantity_derived_formulas": true,
+    "original_schema_types_metadata_order_nonquantity_columns_preserved": true,
+    "split_files_exact_subsets": true,
+    "all_manifest_files_sha_match": true,
+    "source_and_parent_manifest_sha_match": true,
+    "new_manifest_timestamp_and_explicit_parent_paths": true
+  },
+  "limitations": [
+    "Source pre-build SHA is checked against the recorded build manifest; this review did not observe the earlier pre-build read itself.",
+    "No training, inference, model-loader compatibility run, or Test performance evaluation performed.",
+    "Requested .agents execution protocol path is absent; .agents files were not created or changed."
+  ]
+}

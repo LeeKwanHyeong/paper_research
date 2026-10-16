@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-16T09:16:04.100783+00:00",
+  "dataset_id": "taxi",
+  "canonical_dataset_id": "yellow_trip_hourly",
+  "quantity_column": "demand_qty",
+  "entity_column": "oper_part_no",
+  "order_column": "seq",
+  "transformation": {
+    "cap_value": 65.0,
+    "quantile": 0.75,
+    "quantile_method": "linear",
+    "quantile_fit_population": "all_train_events_including_first_event",
+    "fitted_on": "train",
+    "test_used_for_threshold_selection": false
+  },
+  "magnitude_rule": {
+    "scale_base": 10.0,
+    "min_order": 0,
+    "max_order": 1,
+    "fitted_on": "train",
+    "parent_method_preserved": true
+  },
+  "parent_manifest": {
+    "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/data/auxiliary/yellow_trip_hourly/yellow_trip_hourly_split_manifest.json",
+    "sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85",
+    "size_bytes": 3331
+  },
+  "source": {
+    "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/data/auxiliary/yellow_trip_hourly/yellow_trip_hourly_with_split.parquet",
+    "sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+    "size_bytes": 544394
+  },
+  "artifacts": {
+    "with_split": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/Cap/data/taxi/yellow_trip_hourly_with_split.parquet",
+      "sha256": "d5e56667b056d5db57244cc72b8483bcdc71c26de7bceda02d955b1a6865aea0",
+      "size_bytes": 299748
+    },
+    "train": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/Cap/data/taxi/yellow_trip_hourly_train.parquet",
+      "sha256": "4f4e86925995959ebabcaf44e810751d798ff7166411035da8faa4a012ac813d",
+      "size_bytes": 220440
+    },
+    "validation": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/Cap/data/taxi/yellow_trip_hourly_validation.parquet",
+      "sha256": "c3ac4d1109efc7be3b4f681ef1a9a9d3a3144805dbb6d1c578efa115e28b9c85",
+      "size_bytes": 50663
+    },
+    "test": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/Cap/data/taxi/yellow_trip_hourly_test.parquet",
+      "sha256": "090f6e9fcbc84e5bd131952c2e0d6ad88433dbad42a586bdfe21da742e6d945f",
+      "size_bytes": 49461
+    },
+    "train_validation": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/benchmark_data/Cap/data/taxi/yellow_trip_hourly_train_validation.parquet",
+      "sha256": "a2d94ecc31ebf016b75f49ff91b9d6c48f267b9d4f3c253552e1d5aee03c1d15",
+      "size_bytes": 252167
+    }
+  },
+  "split_counts": {
+    "train": 38524,
+    "validation": 8268,
+    "test": 8327
+  },
+  "next_event_target_counts": {
+    "train": 38393,
+    "validation": 8268,
+    "test": 8327
+  },
+  "split_labels_and_boundaries_preserved": true,
+  "parent_split_method": "parent chronological split labels preserved",
+  "parent_boundaries": null,
+  "held_out_test_evaluated": false,
+  "model_training_performed": false
+}
