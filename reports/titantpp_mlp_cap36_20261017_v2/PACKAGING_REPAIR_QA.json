@@ -1,0 +1,105 @@
+{
+  "schema": "titantpp_mlp_cap36_packaging_repair_independent_qa_v1",
+  "status": "PASS_LOCAL_REPAIR_REVIEW",
+  "reviewed_at": "2026-10-16T16:03:40.285664+00:00",
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "reviewed_source_sha256": {
+    "paper/scripts/manage_titantpp_mlp_cap36.py": "509bd117fbc7bb1a78fdd3885a86a5b4845d391e16091dc6136fab86b84fd427",
+    "paper/scripts/titantpp_mlp_cap36_runtime.py": "732414d9c02edd07db9e659df252b7e68c14dd245fe4e41b2915faa6f54bc2f5",
+    "paper/tests/test_manage_titantpp_mlp_cap36.py": "67e525fd7b7a99d2ed45524dbc7a55e7d28613f12d878ccb568333cd15649e3d",
+    "paper/tests/test_titantpp_mlp_cap36_runtime.py": "1fcb1de12072433ebebdd91447f44732cc19165051d3125a922d4345a076ead2"
+  },
+  "failure_record_sha256": "2eeb34c1cd77922de7baba2a0460dc3c5905982b7e84ae58682daf6cf11443c2",
+  "prior_qa_unchanged": true,
+  "automated_checks": {
+    "independently_run_manager_runtime_tests": 43,
+    "actual_exit": 0,
+    "elapsed_seconds": 0.49,
+    "parent_reported_full_suite": {
+      "tests": 73,
+      "subtests": 24,
+      "actual_exit": 0,
+      "independently_reexecuted": false
+    }
+  },
+  "scientific_preservation_check": {
+    "v1_source_file_count": 941,
+    "unchanged_nonoperational_source_count": 939,
+    "only_changed_source_paths": [
+      "paper/scripts/manage_titantpp_mlp_cap36.py",
+      "paper/scripts/titantpp_mlp_cap36_runtime.py"
+    ],
+    "unchanged_cap_input_file_count": 9,
+    "method": "Each current file and preserved input snapshot rehashed against v1 execution contract; not merely relying on changed file list.",
+    "contract_repair_guard": [
+      "identical jobs/datasets/input_files/architecture/training/limits",
+      "identical source inventory except manager/runtime content",
+      "same parent Runtime contract SHA",
+      "copy prepared Cap bytes; no statistics or threshold recalculation"
+    ]
+  },
+  "isolated_archive_import": {
+    "status": "passed",
+    "actual_exit": 0,
+    "mode": "local Python -I -B, temporary extraction outside project, canonical resolved paths",
+    "archive_base": "search_artifacts/titantpp_mlp_cap36_20261017_v1/deployment.tar.gz",
+    "archive_base_sha256": "959c05ef02fb280dab2dbc8c34ceb080735327877ac3ea5919d8b88958b30e72",
+    "temporary_changes": [
+      "replace only manager/runtime with reviewed v2 source",
+      "create empty source/sample_data"
+    ],
+    "imports": [
+      "paper.scripts.count_aware_tpp_backbone.core",
+      "paper.scripts.count_aware_tpp_backbone.training",
+      "paper.scripts.run_titantpp_mlp_cap36",
+      "paper.scripts.manage_titantpp_mlp_cap36",
+      "simple_lab_test.common.pathing"
+    ],
+    "all_import_paths_within_isolated_root": true,
+    "root_resolver_returns_isolated_source": true,
+    "manager_v2_name_verified": true,
+    "model_constructed": false,
+    "research_data_read": false,
+    "gpu_access": false,
+    "temporary_extraction_removed": true,
+    "qa_harness_first_attempt": {
+      "actual_exit": 1,
+      "reason": "After successful imports, QA assertion compared resolved /private/var path with unresolved /var temp alias. Corrected harness resolves both paths; this was not an import/product failure.",
+      "raw_preserved": true
+    }
+  },
+  "predecessor_checks": [
+    "v2 5080 binds v1 contract raw/canonical SHA and root",
+    "wait_start/wait_failure identity checked",
+    "actual nonzero integer dispatcher exit required; null/zero/string/bool rejected",
+    "start/run/dispatch_attempt/final receipt presence blocks v2 scientific execution",
+    "no GPU query or qualification until predecessor failure barrier passes",
+    "same queue clock includes predecessor wait and qualification",
+    "no writes, kill or retry against v1 root"
+  ],
+  "packaging_checks": [
+    "new v2 bundle/root/tmux paths",
+    "source/sample_data is empty tar directory, no sample dataset copied",
+    "qualification checks marker before GPU access",
+    "isolated root regression includes marker-present success and marker-absent failure",
+    "generated supervisor mock actually writes JSON ending in byte10, not literal backslash-n"
+  ],
+  "evidence_sha256": {
+    "reports/titantpp_mlp_cap36_20261017_v2/PACKAGING_REPAIR_IMPORT.stderr": "a9ba37515d032e4f4c39f2ad6371a1b4d3bf6951aff67366c49f2ec74abb99fd",
+    "reports/titantpp_mlp_cap36_20261017_v2/PACKAGING_REPAIR_IMPORT_ATTEMPT2.stderr": "cace1071573ef725e762e8856427937617c8c67e5d0784c45c0e854e56a803a8",
+    "reports/titantpp_mlp_cap36_20261017_v2/PACKAGING_REPAIR_IMPORT_ATTEMPT2.stdout": "de1f9986e31a2eb2e16b8eb8195e3be4168fdb8767d65f32a5338ce36d80f95f",
+    "reports/titantpp_mlp_cap36_20261017_v2/PACKAGING_REPAIR_IMPORT.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "scope_limits": [
+    "This is local repair verification, not a successful native GPU qualification or scientific training result.",
+    "Actual v2 archive preparation/deployment/native checks remain subsequent owner work.",
+    "The old 5080 wait may still be active; v2 waits for its actual failed exit and cannot treat this local review as termination proof.",
+    "Parent fullsuite result is reported separately, not claimed as independently rerun."
+  ],
+  "source_files_modified_by_reviewer": false
+}

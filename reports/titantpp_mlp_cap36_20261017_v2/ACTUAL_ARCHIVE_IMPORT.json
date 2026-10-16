@@ -1,0 +1,19 @@
+{
+  "actual_exit": 0,
+  "observed_at": "2026-10-16T16:04:19.624854+00:00",
+  "archive_sha256": "c1843cab71f981648604e6d4c63754ccacf1123a613c92a5741ff7e0c95bbbf0",
+  "archive_modified": false,
+  "extracted_files_added_or_modified": false,
+  "source_files_verified": 941,
+  "input_file_sha_verified": 9,
+  "command_template": [
+    "/usr/local/bin/python3",
+    "-I",
+    "-B",
+    "-c",
+    "\nimport sys,json\nfrom pathlib import Path\nroot=Path(sys.argv[1]).resolve(); sys.path.insert(0,str(root))\nassert all((root / x).is_dir() for x in ('models','utils','sample_data'))\ndef audit(event,args):\n    if event=='open' and isinstance(args[0],str) and Path(args[0]).suffix in ('.parquet','.csv','.npz','.npy','.pt','.pth'):\n        raise RuntimeError('Unexpected scientific input read')\nsys.addaudithook(audit)\nfrom paper.scripts import run_titantpp_mlp_cap36 as runner\nrunner.install_hooks()\nfrom paper.scripts import run_multilag_detail_execution as base\nfrom paper.scripts.count_aware_tpp_backbone import training\nfrom paper.scripts import titantpp_mlp_cap36_runtime,manage_titantpp_mlp_cap36\nfrom paper.scripts.run_count_aware_tpp_backbone_control import parse_args\nfrom paper.scripts.run_taxi_quantity_interface_ablation import make_loader\nfrom simple_lab_test.common.pathing import resolve_project_root\nassert resolve_project_root(base.__file__).resolve()==root\nmodules={n:str(Path(v.__file__).resolve()) for n,v in tuple(sys.modules.items()) if getattr(v,'__file__',None) and n.split('.')[0] in ('models','utils','data_loader','simple_lab_test','paper')}\nassert all(Path(p).is_relative_to(root) for p in modules.values())\nprint(json.dumps({'status':'passed','project_modules':len(modules),'root_and_module_paths_match':True,'scientific_input_reads':0,'model_inference':False}))\n",
+    "<extracted-source>"
+  ],
+  "stdout_sha256": "0bf3c06a5fa7c71601af0b0b97f86b96e9bc50059a3a115aaa6c7c44593d2d47",
+  "stderr_sha256": "cace1071573ef725e762e8856427937617c8c67e5d0784c45c0e854e56a803a8"
+}
