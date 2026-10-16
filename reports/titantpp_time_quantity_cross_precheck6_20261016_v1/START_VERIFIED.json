@@ -1,0 +1,83 @@
+{
+  "status": "training_started_verified",
+  "completed": 0,
+  "running": 6,
+  "waiting": 0,
+  "seed": 42,
+  "source_revision": "743691743837c0b1b66460923565c64f09659982",
+  "held_out_test_evaluated": false,
+  "historical_baseline_inferred": false,
+  "hosts": [
+    {
+      "host": "5080",
+      "observed_utc": "2026-10-16T08:53:18.237609+00:00",
+      "evidence": "reports/titantpp_time_quantity_cross_precheck6_20261016_v1/observations/20261016T085318269494Z_5080.json",
+      "evidence_sha256": "393300148e3fcb3a7e5f8780eedbcc3d519a23896ba84ab59274f6eeacf558bd",
+      "jobs": [
+        {
+          "id": "yellow_trip_hourly__titantpp_history16_pointwise_fusion_v1__seed42",
+          "label": "Taxi",
+          "arm": "titantpp_history16_pointwise_fusion_v1",
+          "pid": 230404,
+          "status": "training",
+          "saved_epochs": 0,
+          "best_epoch": null
+        },
+        {
+          "id": "yellow_trip_hourly__titantpp_history16_cross_fusion_v1__seed42",
+          "label": "Taxi",
+          "arm": "titantpp_history16_cross_fusion_v1",
+          "pid": 230405,
+          "status": "training",
+          "saved_epochs": 0,
+          "best_epoch": null
+        },
+        {
+          "id": "intermittent_frozen_5000__titantpp_history16_pointwise_fusion_v1__seed42",
+          "label": "Intermittent",
+          "arm": "titantpp_history16_pointwise_fusion_v1",
+          "pid": 230406,
+          "status": "training",
+          "saved_epochs": 0,
+          "best_epoch": null
+        }
+      ]
+    },
+    {
+      "host": "5090",
+      "observed_utc": "2026-10-16T08:53:20.582318+00:00",
+      "evidence": "reports/titantpp_time_quantity_cross_precheck6_20261016_v1/observations/20261016T085320606065Z_5090.json",
+      "evidence_sha256": "d7c5116870ef82bbc8300c6468c0542726e22a3f6c4b7f3f3f74a659b98e25e6",
+      "jobs": [
+        {
+          "id": "raf_spare_parts__titantpp_history16_pointwise_fusion_v1__seed42",
+          "label": "RAF",
+          "arm": "titantpp_history16_pointwise_fusion_v1",
+          "pid": 4189961,
+          "status": "training",
+          "saved_epochs": 2,
+          "best_epoch": 1
+        },
+        {
+          "id": "raf_spare_parts__titantpp_history16_cross_fusion_v1__seed42",
+          "label": "RAF",
+          "arm": "titantpp_history16_cross_fusion_v1",
+          "pid": 4189962,
+          "status": "training",
+          "saved_epochs": 2,
+          "best_epoch": 1
+        },
+        {
+          "id": "intermittent_frozen_5000__titantpp_history16_cross_fusion_v1__seed42",
+          "label": "Intermittent",
+          "arm": "titantpp_history16_cross_fusion_v1",
+          "pid": 4189963,
+          "status": "training",
+          "saved_epochs": 0,
+          "best_epoch": null
+        }
+      ]
+    }
+  ],
+  "next": "After training ends collect each host once and compare stored Validation summaries; no scheduler or continuous polling."
+}

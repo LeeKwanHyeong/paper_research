@@ -19,7 +19,7 @@
 - checkpoint는 전체 Validation raw 수량 RMSE의 최초 엄격한 유한 최소 epoch로 선택한다. MAE는 같은 checkpoint에서 읽는다. 새 학습은 fresh fit이며 기존 checkpoint에서 시작하지 않는다.
 - fit별 36시간 제한, 자동 retry/resume 없음. 실패 원문을 보존한다. 공용 Runtime 설치·변경은 하지 않는다.
 
-## 두 전용 GPU에서 병렬 실행 — 다음 작업
+## 두 전용 GPU에서 병렬 실행 — 진행 중
 
 | 서버 | 배정 | 동시 fit |
 |---|---|---:|
@@ -27,6 +27,12 @@
 | 5090 / cuDNN92000 | RAF 대조군·Cross, Intermittent Cross | 3 |
 
 두 서버의 유휴 GPU와 기존 Runtime, 입력 동일성, 새 모델의 유한 손실·인과 mask·checkpoint 저장을 확인한 뒤 새 실험 경로에서 시작한다. 검사 범위를 과거 실험 전체 감사로 확대하지 않는다.
+
+실제 시작 확인: 2026-10-16 17:53:18 KST(5080), 17:53:20 KST(5090).
+서버마다 3개씩 총6개 worker PID와 GPU 점유를 확인했다. RAF 두 후보는 저장2epoch,
+나머지는 첫 epoch 진행 중이었다. `START_VERIFIED.json`과 `observations/`에 원시 관측을 보존한다.
+로컬 집중25검사와 두 서버의 full-batch 합성 검사가 통과했으며 코드 커밋은
+`743691743837c0b1b66460923565c64f09659982`다. 이 시점에 완료된 실데이터 fit은 없다.
 
 Intermittent 두 후보는 GPU·cuDNN이 달라 결과를 해당 환경 차이가 섞인 예비 비교로 한정한다. Taxi·RAF 후보 쌍은 각각 같은 서버에서 비교한다.
 
