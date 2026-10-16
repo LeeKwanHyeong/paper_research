@@ -1,0 +1,14 @@
+{
+  "status": "local_launcher_read_error_before_first_dispatch",
+  "host": "5090",
+  "error_type": "json.decoder.JSONDecodeError",
+  "error_original": "Expecting value: line 1 column 1 (char 0)",
+  "location": "paper/scripts/manage_titantpp_cross_fusion_seed_extension.py:178",
+  "cause": "The runtime admit CLI writes qualification.json without stdout; the original manager attempted json.loads on empty stdout.",
+  "install_actual_exit": 0,
+  "admit_actual_exit": 0,
+  "model_training_failure": false,
+  "old_runtime_contract_source_unchanged": true,
+  "first_dispatch_not_called": true,
+  "correction": "Separate local launcher_v2 reads and validates the stored remote qualification after confirming no previous start; admission is not rerun."
+}
