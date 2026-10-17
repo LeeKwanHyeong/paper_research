@@ -1,0 +1,1017 @@
+{
+  "status": "PASS",
+  "created_at_utc": "2026-10-17T23:29:03.420223+00:00",
+  "reviewer": "independent Cap36 completion audit subagent",
+  "scope": "Read-only local evidence plus saved-prediction aggregation; no inference, training, evaluation, SSH, test execution or source edits",
+  "final_receipt": {
+    "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/final_receipt.json",
+    "sha256": "a4d2cab80f9e57224460e8146675f6d64a0ac6b7be81f3aae7f33177080e5c15",
+    "expected_fields": {
+      "status": "complete",
+      "new_fit_count": 36,
+      "candidate_test_count": 36,
+      "validation_replay_count": 36,
+      "candidate_fit_count": 36,
+      "comparison_model_count": 36,
+      "baseline_reference_count": 0,
+      "seed_count": 3,
+      "dataset_count": 3,
+      "arm_count": 4,
+      "actual_training_worker_exit0_count": 36,
+      "actual_evaluation_worker_exit0_count": 72,
+      "actual_dispatcher_exit0_count": 2,
+      "held_out_test_evaluated": true,
+      "historical_cnn_retrained": false,
+      "historical_cnn_reevaluated": false,
+      "raw_data_baselines_used": false,
+      "supervisor_own_exit_directly_observed": false
+    }
+  },
+  "checks": {
+    "files_SHA": 1130,
+    "report_SHA": 4,
+    "original_receipts": 72,
+    "summary_metrics": 216,
+    "seed_difference_metrics": 810,
+    "comparison_summaries": 270,
+    "saved_prediction_files": 72,
+    "saved_prediction_rows": 2433780,
+    "saved_prediction_group_metrics": 432
+  },
+  "metric_numeric_tolerance": {
+    "relative": 1e-10,
+    "absolute": 1e-10
+  },
+  "maximum_absolute_saved_prediction_metric_difference": {
+    "qty_rmse": 1.7763568394002505e-15,
+    "qty_mae": 0.0,
+    "time_nll": 2.842170943040401e-14
+  },
+  "group_support": [
+    {
+      "split": "validation",
+      "dataset": "intermittent_frozen_5000",
+      "overall": 86285,
+      "tail": 0,
+      "cap_hit": 28916
+    },
+    {
+      "split": "validation",
+      "dataset": "yellow_trip_hourly",
+      "overall": 8268,
+      "tail": 0,
+      "cap_hit": 1929
+    },
+    {
+      "split": "validation",
+      "dataset": "raf_spare_parts",
+      "overall": 6690,
+      "tail": 0,
+      "cap_hit": 1675
+    },
+    {
+      "split": "test",
+      "dataset": "intermittent_frozen_5000",
+      "overall": 88019,
+      "tail": 0,
+      "cap_hit": 20249
+    },
+    {
+      "split": "test",
+      "dataset": "yellow_trip_hourly",
+      "overall": 8327,
+      "tail": 0,
+      "cap_hit": 2034
+    },
+    {
+      "split": "test",
+      "dataset": "raf_spare_parts",
+      "overall": 5226,
+      "tail": 0,
+      "cap_hit": 1395
+    }
+  ],
+  "overall_three_seed_summary": [
+    {
+      "split": "validation",
+      "dataset": "intermittent_frozen_5000",
+      "arm": "MLP4",
+      "rmse": {
+        "mean": 0.43723133243028794,
+        "sample_sd": 0.011913889560100751,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 0.2676630354340243,
+        "sample_sd": 0.012769860841724608,
+        "seed_count": 3,
+        "status": "available"
+      }
+    },
+    {
+      "split": "validation",
+      "dataset": "intermittent_frozen_5000",
+      "arm": "MLP16",
+      "rmse": {
+        "mean": 0.449955972497193,
+        "sample_sd": 0.02738084383782309,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 0.27309305424029023,
+        "sample_sd": 0.01120775326403927,
+        "seed_count": 3,
+        "status": "available"
+      }
+    },
+    {
+      "split": "validation",
+      "dataset": "intermittent_frozen_5000",
+      "arm": "AllAvailable",
+      "rmse": {
+        "mean": 0.4142301803020935,
+        "sample_sd": 0.004588377175319571,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 0.26181006171820265,
+        "sample_sd": 0.005689038893788438,
+        "seed_count": 3,
+        "status": "available"
+      }
+    },
+    {
+      "split": "validation",
+      "dataset": "intermittent_frozen_5000",
+      "arm": "CurrentOnly",
+      "rmse": {
+        "mean": 0.46132714185358303,
+        "sample_sd": 0.026299558447299747,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 0.2796153916183138,
+        "sample_sd": 0.019263481209349766,
+        "seed_count": 3,
+        "status": "available"
+      }
+    },
+    {
+      "split": "validation",
+      "dataset": "yellow_trip_hourly",
+      "arm": "MLP4",
+      "rmse": {
+        "mean": 6.043985065220029,
+        "sample_sd": 0.06443602934603442,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 3.090208598112045,
+        "sample_sd": 0.08446376900180624,
+        "seed_count": 3,
+        "status": "available"
+      }
+    },
+    {
+      "split": "validation",
+      "dataset": "yellow_trip_hourly",
+      "arm": "MLP16",
+      "rmse": {
+        "mean": 6.097847987726753,
+        "sample_sd": 0.0637892219268485,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 3.233058668885706,
+        "sample_sd": 0.25196410834401606,
+        "seed_count": 3,
+        "status": "available"
+      }
+    },
+    {
+      "split": "validation",
+      "dataset": "yellow_trip_hourly",
+      "arm": "AllAvailable",
+      "rmse": {
+        "mean": 6.0651324604437225,
+        "sample_sd": 0.13459245063173692,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 3.2201709992158722,
+        "sample_sd": 0.20219086408591994,
+        "seed_count": 3,
+        "status": "available"
+      }
+    },
+    {
+      "split": "validation",
+      "dataset": "yellow_trip_hourly",
+      "arm": "CurrentOnly",
+      "rmse": {
+        "mean": 6.065106532246436,
+        "sample_sd": 0.10621027048253823,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 3.0265351171609645,
+        "sample_sd": 0.07797213834835738,
+        "seed_count": 3,
+        "status": "available"
+      }
+    },
+    {
+      "split": "validation",
+      "dataset": "raf_spare_parts",
+      "arm": "MLP4",
+      "rmse": {
+        "mean": 2.606551336882177,
+        "sample_sd": 0.011188462553349803,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 1.8633571904098802,
+        "sample_sd": 0.020546449236155805,
+        "seed_count": 3,
+        "status": "available"
+      }
+    },
+    {
+      "split": "validation",
+      "dataset": "raf_spare_parts",
+      "arm": "MLP16",
+      "rmse": {
+        "mean": 2.6075679035865615,
+        "sample_sd": 0.010649352267732035,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 1.835864806282146,
+        "sample_sd": 0.04672184381230437,
+        "seed_count": 3,
+        "status": "available"
+      }
+    },
+    {
+      "split": "validation",
+      "dataset": "raf_spare_parts",
+      "arm": "AllAvailable",
+      "rmse": {
+        "mean": 2.6112367117539494,
+        "sample_sd": 0.008253383727755432,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 1.8536009540917806,
+        "sample_sd": 0.03735353539727632,
+        "seed_count": 3,
+        "status": "available"
+      }
+    },
+    {
+      "split": "validation",
+      "dataset": "raf_spare_parts",
+      "arm": "CurrentOnly",
+      "rmse": {
+        "mean": 2.612902530197026,
+        "sample_sd": 0.00902456569012506,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 1.8852782302521685,
+        "sample_sd": 0.01549884055217871,
+        "seed_count": 3,
+        "status": "available"
+      }
+    },
+    {
+      "split": "test",
+      "dataset": "intermittent_frozen_5000",
+      "arm": "MLP4",
+      "rmse": {
+        "mean": 1.5275326966974974,
+        "sample_sd": 0.1473885975398315,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 0.6632008995778664,
+        "sample_sd": 0.03468428250640177,
+        "seed_count": 3,
+        "status": "available"
+      }
+    },
+    {
+      "split": "test",
+      "dataset": "intermittent_frozen_5000",
+      "arm": "MLP16",
+      "rmse": {
+        "mean": 1.537937477722306,
+        "sample_sd": 0.04918096350207295,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 0.6756198027592735,
+        "sample_sd": 0.035439394070450776,
+        "seed_count": 3,
+        "status": "available"
+      }
+    },
+    {
+      "split": "test",
+      "dataset": "intermittent_frozen_5000",
+      "arm": "AllAvailable",
+      "rmse": {
+        "mean": 1.4850315985767857,
+        "sample_sd": 0.045988194347782424,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 0.6338991663874793,
+        "sample_sd": 0.019446477991981202,
+        "seed_count": 3,
+        "status": "available"
+      }
+    },
+    {
+      "split": "test",
+      "dataset": "intermittent_frozen_5000",
+      "arm": "CurrentOnly",
+      "rmse": {
+        "mean": 1.4544673255697587,
+        "sample_sd": 0.15688855545570712,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 0.6778655476020296,
+        "sample_sd": 0.04888472824055998,
+        "seed_count": 3,
+        "status": "available"
+      }
+    },
+    {
+      "split": "test",
+      "dataset": "yellow_trip_hourly",
+      "arm": "MLP4",
+      "rmse": {
+        "mean": 6.1653564109246535,
+        "sample_sd": 0.20607922546815982,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 3.4371633901902814,
+        "sample_sd": 0.14195661152897823,
+        "seed_count": 3,
+        "status": "available"
+      }
+    },
+    {
+      "split": "test",
+      "dataset": "yellow_trip_hourly",
+      "arm": "MLP16",
+      "rmse": {
+        "mean": 6.1076857037069665,
+        "sample_sd": 0.31357317037282956,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 3.5045143452877374,
+        "sample_sd": 0.14092568728481597,
+        "seed_count": 3,
+        "status": "available"
+      }
+    },
+    {
+      "split": "test",
+      "dataset": "yellow_trip_hourly",
+      "arm": "AllAvailable",
+      "rmse": {
+        "mean": 6.203777968874562,
+        "sample_sd": 0.2811065187264907,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 3.540543373861008,
+        "sample_sd": 0.23034290022622975,
+        "seed_count": 3,
+        "status": "available"
+      }
+    },
+    {
+      "split": "test",
+      "dataset": "yellow_trip_hourly",
+      "arm": "CurrentOnly",
+      "rmse": {
+        "mean": 6.324195510010991,
+        "sample_sd": 0.19944938626885392,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 3.5700018514501126,
+        "sample_sd": 0.09632271571256418,
+        "seed_count": 3,
+        "status": "available"
+      }
+    },
+    {
+      "split": "test",
+      "dataset": "raf_spare_parts",
+      "arm": "MLP4",
+      "rmse": {
+        "mean": 2.7024525686988152,
+        "sample_sd": 0.023392959208802033,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 1.9153349195714051,
+        "sample_sd": 0.013455110420900073,
+        "seed_count": 3,
+        "status": "available"
+      }
+    },
+    {
+      "split": "test",
+      "dataset": "raf_spare_parts",
+      "arm": "MLP16",
+      "rmse": {
+        "mean": 2.6937917933035687,
+        "sample_sd": 0.013963315788514584,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 1.88794553833419,
+        "sample_sd": 0.03641494747678909,
+        "seed_count": 3,
+        "status": "available"
+      }
+    },
+    {
+      "split": "test",
+      "dataset": "raf_spare_parts",
+      "arm": "AllAvailable",
+      "rmse": {
+        "mean": 2.702397257549551,
+        "sample_sd": 0.026733457926821223,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 1.9028751865031237,
+        "sample_sd": 0.037319351530719344,
+        "seed_count": 3,
+        "status": "available"
+      }
+    },
+    {
+      "split": "test",
+      "dataset": "raf_spare_parts",
+      "arm": "CurrentOnly",
+      "rmse": {
+        "mean": 2.702015983915876,
+        "sample_sd": 0.01771704331347574,
+        "seed_count": 3,
+        "status": "available"
+      },
+      "mae": {
+        "mean": 1.9376490774553397,
+        "sample_sd": 0.009035290663436427,
+        "seed_count": 3,
+        "status": "available"
+      }
+    }
+  ],
+  "saved_prediction_evidence": [
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/intermittent_frozen_5000__titantpp_history_mlp__seed42/validation_predictions.jsonl.gz",
+      "sha256": "e43e84c1e7005b809d4c76aa168e851b0e416aebf785dca984ea7511e66253a2",
+      "rows": 86285,
+      "cap_hit_count": 28916,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/intermittent_frozen_5000__titantpp_history_mlp__seed52/validation_predictions.jsonl.gz",
+      "sha256": "abaac4a45a9c85f8600642fb69efeec86bc067d75a8cf443cf7b2f2f36254d91",
+      "rows": 86285,
+      "cap_hit_count": 28916,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/intermittent_frozen_5000__titantpp_history_mlp__seed62/validation_predictions.jsonl.gz",
+      "sha256": "1ac64bf12cac5cf762d5cd1cb5f5fe1f2fe0739db0fe4ba3e9e3919cf7c36cea",
+      "rows": 86285,
+      "cap_hit_count": 28916,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/intermittent_frozen_5000__titantpp_history_mlp_width16__seed42/validation_predictions.jsonl.gz",
+      "sha256": "b2dfb8801bf0791566ba1bdbb9c70bb184f10b9836434423972dbec018d42049",
+      "rows": 86285,
+      "cap_hit_count": 28916,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/intermittent_frozen_5000__titantpp_history_mlp_width16__seed52/validation_predictions.jsonl.gz",
+      "sha256": "7a944a3ee3320006839311fd4dcb37e80695a8b10255a6940d445facdec15298",
+      "rows": 86285,
+      "cap_hit_count": 28916,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/intermittent_frozen_5000__titantpp_history_mlp_width16__seed62/validation_predictions.jsonl.gz",
+      "sha256": "7e2cd74e7f05bcce7876c097077df2f2652c38e091c50d3ce6edcfc4511a5c55",
+      "rows": 86285,
+      "cap_hit_count": 28916,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/intermittent_frozen_5000__titantpp_all_available_history_mlp__seed42/validation_predictions.jsonl.gz",
+      "sha256": "ce5f03eb9475b50f017da60103eca2d906883b4c1b157b0ab8717f16e796d996",
+      "rows": 86285,
+      "cap_hit_count": 28916,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/intermittent_frozen_5000__titantpp_all_available_history_mlp__seed52/validation_predictions.jsonl.gz",
+      "sha256": "ad722933b0e7f188dc337e0b742ad0198748c7a988cead2c271557f5c6d2b31d",
+      "rows": 86285,
+      "cap_hit_count": 28916,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/intermittent_frozen_5000__titantpp_all_available_history_mlp__seed62/validation_predictions.jsonl.gz",
+      "sha256": "3b598c343701e843a6514f6a0ed7e8bcb0b569ea0c35a4ddbf85a99da58ebee3",
+      "rows": 86285,
+      "cap_hit_count": 28916,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/intermittent_frozen_5000__titantpp_current_only_param_matched__seed42/validation_predictions.jsonl.gz",
+      "sha256": "261b3dbe4fe5a6b5e7bc09624ab05749997f56b564d1f72a51f2e359456a6be4",
+      "rows": 86285,
+      "cap_hit_count": 28916,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/intermittent_frozen_5000__titantpp_current_only_param_matched__seed52/validation_predictions.jsonl.gz",
+      "sha256": "4462fb1da6daad712557ee64c9cc6aa34ba90e03feae676fb3aad37ecbc79afd",
+      "rows": 86285,
+      "cap_hit_count": 28916,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/intermittent_frozen_5000__titantpp_current_only_param_matched__seed62/validation_predictions.jsonl.gz",
+      "sha256": "afe64e2d7444bbc8665b4a226103e8eb46e098b65eda92038bbf41765e7b2146",
+      "rows": 86285,
+      "cap_hit_count": 28916,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_history_mlp__seed42/validation_predictions.jsonl.gz",
+      "sha256": "c44119886512c9d4269214168b0c0cffe737bc73d705cafe0ee2abc4c4668810",
+      "rows": 8268,
+      "cap_hit_count": 1929,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_history_mlp__seed52/validation_predictions.jsonl.gz",
+      "sha256": "b8eea8d742ad36145f8321377df25cf768f7c5c9eeac6ddd7068a5249f991b63",
+      "rows": 8268,
+      "cap_hit_count": 1929,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_history_mlp__seed62/validation_predictions.jsonl.gz",
+      "sha256": "27914b00f7da5158222cf72e1f17967464f9ed572be338a5cc2d174feff67f14",
+      "rows": 8268,
+      "cap_hit_count": 1929,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_history_mlp_width16__seed42/validation_predictions.jsonl.gz",
+      "sha256": "49e31e7822ed6373bc8ca80587c90e99e3be12b12bd8d3454f14f2e4d4f50db3",
+      "rows": 8268,
+      "cap_hit_count": 1929,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_history_mlp_width16__seed52/validation_predictions.jsonl.gz",
+      "sha256": "7bf4532663cf7183c07de63121c1c739c3b997c5abf2b5afdcf9463cbaa351f2",
+      "rows": 8268,
+      "cap_hit_count": 1929,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_history_mlp_width16__seed62/validation_predictions.jsonl.gz",
+      "sha256": "d35388d83b95e243b2bd768264f9bb3ba8a23efb933e1b8526e8d866c14bcb40",
+      "rows": 8268,
+      "cap_hit_count": 1929,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_all_available_history_mlp__seed42/validation_predictions.jsonl.gz",
+      "sha256": "6c62a547d4f79e8ba47345c333c178b530f521fb886a44b93cd0e58694ddfcdc",
+      "rows": 8268,
+      "cap_hit_count": 1929,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_all_available_history_mlp__seed52/validation_predictions.jsonl.gz",
+      "sha256": "d08fb2b768e8531f77d3961baed8daae65103574d3d7f17dcb38f74b5f7d4d7d",
+      "rows": 8268,
+      "cap_hit_count": 1929,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_all_available_history_mlp__seed62/validation_predictions.jsonl.gz",
+      "sha256": "898d8b2d29312ccce33bab53a4c893f5f048abddbcbcd820ce511d22f6aa0130",
+      "rows": 8268,
+      "cap_hit_count": 1929,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_current_only_param_matched__seed42/validation_predictions.jsonl.gz",
+      "sha256": "a089690cdae7db953c1ebb5bf3d33396e36e7d7e801214a93206b15f7df436e9",
+      "rows": 8268,
+      "cap_hit_count": 1929,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_current_only_param_matched__seed52/validation_predictions.jsonl.gz",
+      "sha256": "213f71a7a2d37af012cd2d0ce9e271f971e325aab32ec384fc53104095442305",
+      "rows": 8268,
+      "cap_hit_count": 1929,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_current_only_param_matched__seed62/validation_predictions.jsonl.gz",
+      "sha256": "4ca1ab1a3f63073c0bd71e782912bb9fd07b3affb77fa7956c83382604529fad",
+      "rows": 8268,
+      "cap_hit_count": 1929,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_history_mlp__seed42/validation_predictions.jsonl.gz",
+      "sha256": "d40913201bf557bb1ad352ca92da32875cce30523415130bebb572961986ebc5",
+      "rows": 6690,
+      "cap_hit_count": 1675,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_history_mlp__seed52/validation_predictions.jsonl.gz",
+      "sha256": "c64478f3de0635dc3a109848bbe9be39cbde439fe2a6273a5d79ee47eab6659f",
+      "rows": 6690,
+      "cap_hit_count": 1675,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_history_mlp__seed62/validation_predictions.jsonl.gz",
+      "sha256": "1a79729b857effadf8ab8e954a77632fe928b1e09ec11838d0ffbdc579954ff9",
+      "rows": 6690,
+      "cap_hit_count": 1675,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_history_mlp_width16__seed42/validation_predictions.jsonl.gz",
+      "sha256": "74615eeba2ab6e5e959c067b9ec3895d29df450d6544ee79038b8e89f97636c1",
+      "rows": 6690,
+      "cap_hit_count": 1675,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_history_mlp_width16__seed52/validation_predictions.jsonl.gz",
+      "sha256": "0f8a73efdd964c3ecb68e08590bf77f211e7e9acff06f0a2c46e3035b4fb3e6f",
+      "rows": 6690,
+      "cap_hit_count": 1675,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_history_mlp_width16__seed62/validation_predictions.jsonl.gz",
+      "sha256": "2a3a10d59d375d7321dcf660769eec56395edd7f4a878f3fd1019fcb9c073134",
+      "rows": 6690,
+      "cap_hit_count": 1675,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_all_available_history_mlp__seed42/validation_predictions.jsonl.gz",
+      "sha256": "44248d80461888e0420ccc3f30150f015f074ec312331c04706d5400f3245974",
+      "rows": 6690,
+      "cap_hit_count": 1675,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_all_available_history_mlp__seed52/validation_predictions.jsonl.gz",
+      "sha256": "51ad55dee27bc89990a99f26209fc00cd7b48ae82c0ac8abcd0df3b519ac23e3",
+      "rows": 6690,
+      "cap_hit_count": 1675,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_all_available_history_mlp__seed62/validation_predictions.jsonl.gz",
+      "sha256": "5a3452852db3124ae17d53cf36a908a83591c36eb2ef8c05b3c74f12164ef576",
+      "rows": 6690,
+      "cap_hit_count": 1675,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_current_only_param_matched__seed42/validation_predictions.jsonl.gz",
+      "sha256": "558d367ebdc23978cab80d61ca9dd6b5997e78c7ae2d6e0258546ed610864cf5",
+      "rows": 6690,
+      "cap_hit_count": 1675,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_current_only_param_matched__seed52/validation_predictions.jsonl.gz",
+      "sha256": "2fd9fbf31ce9d79024977c31196f4737d7978716bd87f28df5b03aeff696a437",
+      "rows": 6690,
+      "cap_hit_count": 1675,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_current_only_param_matched__seed62/validation_predictions.jsonl.gz",
+      "sha256": "fc6d144c559f98189e273a17e679b390b36cba24a242561fae96e625aa05ee32",
+      "rows": 6690,
+      "cap_hit_count": 1675,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/intermittent_frozen_5000__titantpp_history_mlp__seed42/test_predictions.jsonl.gz",
+      "sha256": "0136f6f8a9855a50d500e5fc3f900714f75ef7cfab5e905bfb6bec20c3e945eb",
+      "rows": 88019,
+      "cap_hit_count": 20249,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/intermittent_frozen_5000__titantpp_history_mlp__seed52/test_predictions.jsonl.gz",
+      "sha256": "58322ee33a07f03699d37b762fa097a2e7d3407ceee0411db2d68f96e93d4af0",
+      "rows": 88019,
+      "cap_hit_count": 20249,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/intermittent_frozen_5000__titantpp_history_mlp__seed62/test_predictions.jsonl.gz",
+      "sha256": "ed144c0725a22ba37e28b38a4848cb0acc4c71054a95fb1757adfe70cd258a71",
+      "rows": 88019,
+      "cap_hit_count": 20249,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/intermittent_frozen_5000__titantpp_history_mlp_width16__seed42/test_predictions.jsonl.gz",
+      "sha256": "167edde4d160ffb7f4a47d99501ce698a3ae97f613510a325bfe15a51a135ea7",
+      "rows": 88019,
+      "cap_hit_count": 20249,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/intermittent_frozen_5000__titantpp_history_mlp_width16__seed52/test_predictions.jsonl.gz",
+      "sha256": "d969f3d11824773d8f54405e236ac6edc14533a6dac3f9acc4dd2df95f8d2803",
+      "rows": 88019,
+      "cap_hit_count": 20249,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/intermittent_frozen_5000__titantpp_history_mlp_width16__seed62/test_predictions.jsonl.gz",
+      "sha256": "eda8410ef90b80d63a5aad5aa9aa9cf160443ecde17702ed481fc488da3de19f",
+      "rows": 88019,
+      "cap_hit_count": 20249,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/intermittent_frozen_5000__titantpp_all_available_history_mlp__seed42/test_predictions.jsonl.gz",
+      "sha256": "9228058b79195ce6c215a673a492ddaff817875f7063c9211b54d000b298c63c",
+      "rows": 88019,
+      "cap_hit_count": 20249,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/intermittent_frozen_5000__titantpp_all_available_history_mlp__seed52/test_predictions.jsonl.gz",
+      "sha256": "e73e19fea83f6b56a757bf0a079f06c347246b32a39fb00b53dbb3adc86a83ca",
+      "rows": 88019,
+      "cap_hit_count": 20249,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/intermittent_frozen_5000__titantpp_all_available_history_mlp__seed62/test_predictions.jsonl.gz",
+      "sha256": "d911bdf4273bd19f53b912f24079536ba8ec2b74b61993055e049e5d68ef5dfd",
+      "rows": 88019,
+      "cap_hit_count": 20249,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/intermittent_frozen_5000__titantpp_current_only_param_matched__seed42/test_predictions.jsonl.gz",
+      "sha256": "5a24cb9bf1a50805663c65ebb180c7996087fe30b8a1a452db80a075644831e4",
+      "rows": 88019,
+      "cap_hit_count": 20249,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/intermittent_frozen_5000__titantpp_current_only_param_matched__seed52/test_predictions.jsonl.gz",
+      "sha256": "c72d0dc80f0b45524d35095a826a16fd68b3d162bf111a47bd5c2d7b42f94ef1",
+      "rows": 88019,
+      "cap_hit_count": 20249,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/intermittent_frozen_5000__titantpp_current_only_param_matched__seed62/test_predictions.jsonl.gz",
+      "sha256": "a7cead0f19e5cc7ab47f7c0c265f608e7b3e8eabbc87545dd548449ffa93aa8d",
+      "rows": 88019,
+      "cap_hit_count": 20249,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_history_mlp__seed42/test_predictions.jsonl.gz",
+      "sha256": "b52ecc11490311332f6c6d5d342b8a4b85bc978a6ceeea44a910289c0d55d05f",
+      "rows": 8327,
+      "cap_hit_count": 2034,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_history_mlp__seed52/test_predictions.jsonl.gz",
+      "sha256": "dcc0c62e36a95990ce3cd9cf21d6cdefbe709b955dc768d35adb4f1713dd9dfd",
+      "rows": 8327,
+      "cap_hit_count": 2034,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_history_mlp__seed62/test_predictions.jsonl.gz",
+      "sha256": "42b65b88088838c4fa7498b27720c6e97c6b3fe1888882e026399a6a912a9a02",
+      "rows": 8327,
+      "cap_hit_count": 2034,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_history_mlp_width16__seed42/test_predictions.jsonl.gz",
+      "sha256": "e3623419fde57ee2881de7e8ad64288dabad2b63807bd7514c3ff8488f306cc2",
+      "rows": 8327,
+      "cap_hit_count": 2034,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_history_mlp_width16__seed52/test_predictions.jsonl.gz",
+      "sha256": "6a9e7322095ffb1a1b200d8d1019fcad7f9656da939a16f9b0f9c22ea21aa5a9",
+      "rows": 8327,
+      "cap_hit_count": 2034,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_history_mlp_width16__seed62/test_predictions.jsonl.gz",
+      "sha256": "2ca5838574c6c757383d76fb34a30869495f80c64833bee49bd97fc83ab0ebfb",
+      "rows": 8327,
+      "cap_hit_count": 2034,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_all_available_history_mlp__seed42/test_predictions.jsonl.gz",
+      "sha256": "1d5c3157d0d52ec1ba93f49b46c265b77fdd5a86106e657a2e5e97de512fe435",
+      "rows": 8327,
+      "cap_hit_count": 2034,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_all_available_history_mlp__seed52/test_predictions.jsonl.gz",
+      "sha256": "b8849fc2e31a415464bf624187c11b6c135fbc147dc67c9d961f8f477dc9141e",
+      "rows": 8327,
+      "cap_hit_count": 2034,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_all_available_history_mlp__seed62/test_predictions.jsonl.gz",
+      "sha256": "9d713fdce7e67995f879c5d7c606c76c6690e5fa63672c010199c1524b85c9b4",
+      "rows": 8327,
+      "cap_hit_count": 2034,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_current_only_param_matched__seed42/test_predictions.jsonl.gz",
+      "sha256": "665c06572f67d031271d9c2d3f6929334c4ab391ac695ff20f57fcfc4164fd20",
+      "rows": 8327,
+      "cap_hit_count": 2034,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_current_only_param_matched__seed52/test_predictions.jsonl.gz",
+      "sha256": "4e6ecb3385a6be99e32b0c79f8c453fe85595bf28e383b73b74c9c7c8ee23d81",
+      "rows": 8327,
+      "cap_hit_count": 2034,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5080/originals/run/yellow_trip_hourly__titantpp_current_only_param_matched__seed62/test_predictions.jsonl.gz",
+      "sha256": "92a03cdfe5f86acc71086b845bffe4bbdc7a636575f4878076376b63d6c15746",
+      "rows": 8327,
+      "cap_hit_count": 2034,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_history_mlp__seed42/test_predictions.jsonl.gz",
+      "sha256": "16f61fc0b281914bbdba864b9ce1ac1760723904fb5829ce0e7f23d9b3978f5b",
+      "rows": 5226,
+      "cap_hit_count": 1395,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_history_mlp__seed52/test_predictions.jsonl.gz",
+      "sha256": "d424447a811cfd6adfd382aa07a91efab2b2917742031283b63ff7d2390e349f",
+      "rows": 5226,
+      "cap_hit_count": 1395,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_history_mlp__seed62/test_predictions.jsonl.gz",
+      "sha256": "70f3558abbfb1e82b3cfeb6587b9bcb90d7abf8561a572a6f49bf9a60bb79d83",
+      "rows": 5226,
+      "cap_hit_count": 1395,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_history_mlp_width16__seed42/test_predictions.jsonl.gz",
+      "sha256": "cbf96d76ed606412ccf22645440cbb620a70d05674cbd3e985a41a0ec8a8f97a",
+      "rows": 5226,
+      "cap_hit_count": 1395,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_history_mlp_width16__seed52/test_predictions.jsonl.gz",
+      "sha256": "93a79a1ae9772f657067ef92e01990f6a91025fe7df11c131706436874372fef",
+      "rows": 5226,
+      "cap_hit_count": 1395,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_history_mlp_width16__seed62/test_predictions.jsonl.gz",
+      "sha256": "07b349991ca308de40a2051b3a47bf4f8232482a7c4ee476e39703a46c9db235",
+      "rows": 5226,
+      "cap_hit_count": 1395,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_all_available_history_mlp__seed42/test_predictions.jsonl.gz",
+      "sha256": "39d0d9a02780203492a0764af7c385935ed4a04a5458ce1d2d8ad8297acab620",
+      "rows": 5226,
+      "cap_hit_count": 1395,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_all_available_history_mlp__seed52/test_predictions.jsonl.gz",
+      "sha256": "2abc84c865defa6b3bc8ec58ae04e252cb4d44091750e3000a25f641423a3509",
+      "rows": 5226,
+      "cap_hit_count": 1395,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_all_available_history_mlp__seed62/test_predictions.jsonl.gz",
+      "sha256": "3ebf30602ddecf2127321595bdef9107506fb62f06e8c1fc31061da2bb3bb89f",
+      "rows": 5226,
+      "cap_hit_count": 1395,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_current_only_param_matched__seed42/test_predictions.jsonl.gz",
+      "sha256": "7978d118ada63fea554291f67821c893de847b672ea9ea0891356878fac894f4",
+      "rows": 5226,
+      "cap_hit_count": 1395,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_current_only_param_matched__seed52/test_predictions.jsonl.gz",
+      "sha256": "cd3211112d1b1f0b58e79a0828e662dfd0d8f61f5be6b4afa09483da7549ae2f",
+      "rows": 5226,
+      "cap_hit_count": 1395,
+      "tail_count": 0
+    },
+    {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/retrieval/5090/originals/run/raf_spare_parts__titantpp_current_only_param_matched__seed62/test_predictions.jsonl.gz",
+      "sha256": "814e4b2a6ce643beee3894f7fd944aa9799e3004b5968c4ffe3f519a9034950b",
+      "rows": 5226,
+      "cap_hit_count": 1395,
+      "tail_count": 0
+    }
+  ],
+  "findings": [],
+  "limitations": [
+    "Q3-capped truth is a changed target; raw-data performance comparisons are not established.",
+    "Existing CNN/raw baselines were not retrained or reevaluated.",
+    "Intermittent seed42 uses5080/cuDNN91900;52/62use5090/cuDNN92000;all4arms within each dataset/seed sharehost.",
+    "Supervisor own OSexit is not directly observed."
+  ]
+}
