@@ -1,0 +1,1518 @@
+{
+  "status": "analysis_complete",
+  "created_at": "2026-10-17T23:37:10.239508+00:00",
+  "input_files": {
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_mlp_cap36_20261017_v2/THREE_SEED_VALIDATION.json": "10135efd21dff641975f4a51ae06ac08e5420a254e86e8e2cc69ad6da0dbd895",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_mlp_cap36_20261017_v2/THREE_SEED_TEST.json": "02685517c937df905350b4e0715f935fc5eee43e8acc1c62c8e72dcbd3eb5b49",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_mlp_cap36_20261017_v2/FINAL_RESULT_QA.json": "6314dd41bbf127cad664b7940a4fae4b8379e804d715fd090750fd65fba35755"
+  },
+  "source_files": {
+    "models/TPPs/CountAwareTitanCoreAblation.py": "b34b61aadc7a2c91e000493caf2497fc89549a499082ca77ebbc3ed7cab2b120",
+    "models/TPPs/CountAwareTitanHistoryWidth.py": "2a903290810070bdfe72a355a98ff09790b02858a6853e94a7a4a87336afc6f7",
+    "models/TPPs/CountAwareTitanHistoryControls.py": "60ce1ea2675e9f516f3d09663d893a39e4825ede5a2ab5a703779dcb158e640b",
+    "models/TPPs/CountAwareTitanMultiLagDetail.py": "4bcbecdadf921df21a4e7fb379962eb4ecec2cfeb2f8ff1edccbb6b418807eae"
+  },
+  "corrected_architecture_semantics": {
+    "MLP4": "Current+immediate-previous first-encoder hidden;8branch eligibility at observed counts>1,2,4,8,16,32,64,128;width4;6144 addedweights.",
+    "MLP16": "Same input and eligibility;width16;24576 addedweights.",
+    "AllAvailable": "Same current+immediateprevious input,width4,6144 addedweights;all8branches eligible once immediateprevious exists. No wholehistory pooling or added longerlag inputs.",
+    "CurrentOnly": "Added branch uses only current first-encoder hidden;width6 and6144 addedweights;original8eligibility thresholds retained. Shared attention/memory retains causalhistory."
+  },
+  "all_overall_seed_contrasts": [
+    {
+      "dataset": "yellow_trip_hourly",
+      "contrast": "MLP16−MLP4",
+      "seeds": [
+        {
+          "seed": 42,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.1132032197583781,
+                "relative_percent": 1.8756000139838531,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.4441620629725964,
+                "relative_percent": 14.530843121162372,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": 0.05270293489248079,
+                "relative_percent": 0.8496097717147925,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.25871356644234744,
+                "relative_percent": 7.740409255145174,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 52,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.04213152037383505,
+                "relative_percent": 0.7040497777955943,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.02699265218496194,
+                "relative_percent": -0.8915371249610579,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": -0.1955004123112314,
+                "relative_percent": -3.2896020583783057,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.02593910009817746,
+                "relative_percent": -0.7699936773149109,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 62,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.00625402738795966,
+                "relative_percent": 0.10232016848233272,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.011380801533349416,
+                "relative_percent": 0.3571805806077265,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": -0.030214644234310306,
+                "relative_percent": -0.4758289989157319,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.03072160105180144,
+                "relative_percent": -0.853289538535601,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        }
+      ],
+      "four_metric_consistent_improved_seeds": []
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "contrast": "AllAvailable−MLP4",
+      "seeds": [
+        {
+          "seed": 42,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": -0.06697361659543244,
+                "relative_percent": -1.109647910112959,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.0610693397949329,
+                "relative_percent": -1.9978946201172467,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": -0.3073476895927296,
+                "relative_percent": -4.954669050683231,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.06756940653333565,
+                "relative_percent": -2.0215981206066687,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": true
+        },
+        {
+          "seed": 52,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.023749843915748414,
+                "relative_percent": 0.3968779712480305,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.24945819844326422,
+                "relative_percent": 8.239325410267625,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": 0.32585897733204394,
+                "relative_percent": 5.483090034951085,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.29488480315140286,
+                "relative_percent": 8.753558647116908,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 62,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.10666595835076631,
+                "relative_percent": 1.7451280835117269,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.20149834466315042,
+                "relative_percent": 6.323921520587172,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": 0.09675338611041084,
+                "relative_percent": 1.5237004446454956,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.0828245543941124,
+                "relative_percent": 2.30044409727223,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        }
+      ],
+      "four_metric_consistent_improved_seeds": [
+        42
+      ]
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "contrast": "CurrentOnly−MLP4",
+      "seeds": [
+        {
+          "seed": 42,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": -0.022077336689008575,
+                "relative_percent": -0.36578688389793895,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.11666936972000563,
+                "relative_percent": -3.8168597675819265,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": 0.31431968814196143,
+                "relative_percent": 5.067062755282286,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.317380838188301,
+                "relative_percent": 9.49566584814526,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 52,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.01039596290499567,
+                "relative_percent": 0.1737244540023515,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.02056860063003363,
+                "relative_percent": 0.6793578839351181,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": 0.17615249838934055,
+                "relative_percent": 2.964042962567018,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.09949556116555591,
+                "relative_percent": 2.9534930945333717,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 62,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.07504577486323605,
+                "relative_percent": 1.2278002399984136,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.0949196737632696,
+                "relative_percent": -2.979004957296948,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": -0.013954889272288717,
+                "relative_percent": -0.21976565207651197,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.01836101557436276,
+                "relative_percent": -0.5099754560341929,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        }
+      ],
+      "four_metric_consistent_improved_seeds": []
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "contrast": "AllAvailable−MLP16",
+      "seeds": [
+        {
+          "seed": 42,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": -0.18017683635381054,
+                "relative_percent": -2.930287452232964,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.5052314027675293,
+                "relative_percent": -14.431691316367802,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": -0.3600506244852104,
+                "relative_percent": -5.7553805468724235,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.3262829729756831,
+                "relative_percent": -9.060674117762046,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": true
+        },
+        {
+          "seed": 52,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": -0.018381676458086638,
+                "relative_percent": -0.3050242837555602,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.27645085062822616,
+                "relative_percent": 9.21299984920697,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": 0.5213593896432753,
+                "relative_percent": 9.071095021886833,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.3208239032495803,
+                "relative_percent": 9.597452098775719,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 62,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.10041193096280665,
+                "relative_percent": 1.641128709368956,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.190117543129801,
+                "relative_percent": 5.945504751587666,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": 0.12696803034472115,
+                "relative_percent": 2.009089272935962,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.11354615544591384,
+                "relative_percent": 3.1808757155222014,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        }
+      ],
+      "four_metric_consistent_improved_seeds": [
+        42
+      ]
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "contrast": "CurrentOnly−MLP16",
+      "seeds": [
+        {
+          "seed": 42,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": -0.13528055644738668,
+                "relative_percent": -2.200121420216549,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.560831432692602,
+                "relative_percent": -16.01987935191766,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": 0.26161675324948064,
+                "relative_percent": 4.1819229574752,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.05866727174595354,
+                "relative_percent": 1.629153448678089,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 52,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": -0.03173555746883938,
+                "relative_percent": -0.5266176732349994,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.04756125281499557,
+                "relative_percent": 1.585026105063138,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": 0.37165291070057194,
+                "relative_percent": 6.466362618754062,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.12543466126373337,
+                "relative_percent": 3.7523798595153894,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 62,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.06879174747527639,
+                "relative_percent": 1.1243296555182578,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.10630047529661901,
+                "relative_percent": -3.324311741923661,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": 0.01625975496202159,
+                "relative_percent": 0.25728759583079597,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.01236058547743868,
+                "relative_percent": 0.34626875758509884,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        }
+      ],
+      "four_metric_consistent_improved_seeds": []
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "contrast": "MLP16−MLP4",
+      "seeds": [
+        {
+          "seed": 42,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.0050924072828841815,
+                "relative_percent": 0.19566123158951754,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.036074635595840565,
+                "relative_percent": -1.943891529067886,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": -0.0038168313431818923,
+                "relative_percent": -0.14177421674630572,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.03821450130856463,
+                "relative_percent": -1.9950206386808649,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 52,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": -0.000999072705559989,
+                "relative_percent": -0.038458060978883574,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.0019047892325305682,
+                "relative_percent": 0.10096342559608415,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": -0.0025950468106938906,
+                "relative_percent": -0.09661578519959256,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.00020729037842159848,
+                "relative_percent": -0.010747619053176755,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 62,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": -0.0010436344641702178,
+                "relative_percent": -0.039846081001560056,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.04830730601989264,
+                "relative_percent": -2.6145073990891494,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": -0.01957044803186392,
+                "relative_percent": -0.7170703941943977,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.04374635202465882,
+                "relative_percent": -2.3002592279350345,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": true
+        }
+      ],
+      "four_metric_consistent_improved_seeds": [
+        62
+      ]
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "contrast": "AllAvailable−MLP4",
+      "seeds": [
+        {
+          "seed": 42,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.007415054666517484,
+                "relative_percent": 0.28490233552817873,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.01762985571973874,
+                "relative_percent": 0.9499895598734912,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": 0.03385845168662582,
+                "relative_percent": 1.2576545926475988,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.022897993861328736,
+                "relative_percent": 1.1954093020572885,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 52,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.00579847772814146,
+                "relative_percent": 0.223205186982433,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.009749330194898098,
+                "relative_percent": -0.5167636171675253,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": -0.012553017433841962,
+                "relative_percent": -0.46735944453754164,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.022458917716887905,
+                "relative_percent": -1.1644529466622027,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 62,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.0008425922206583003,
+                "relative_percent": 0.03217026557505392,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.03714923447913998,
+                "relative_percent": -2.010605774128927,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": -0.02147136770057667,
+                "relative_percent": -0.786720982364704,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.03781827534928528,
+                "relative_percent": -1.9885506523548797,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        }
+      ],
+      "four_metric_consistent_improved_seeds": []
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "contrast": "CurrentOnly−MLP4",
+      "seeds": [
+        {
+          "seed": 42,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.005823779325569323,
+                "relative_percent": 0.22376211721641653,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.02356015279866841,
+                "relative_percent": 1.2695452273440888,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": -5.970610147576494e-05,
+                "relative_percent": -0.002217752111793699,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.023552422408531948,
+                "relative_percent": 1.229574302606955,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 52,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.009110001343348273,
+                "relative_percent": 0.3506781690966357,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.01625209905997882,
+                "relative_percent": 0.8614431277745204,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": 0.005502594875798739,
+                "relative_percent": 0.20486625611905432,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.01719450136276679,
+                "relative_percent": 0.8915027888100517,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 62,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.004119799275629443,
+                "relative_percent": 0.15729439883668403,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.025950867668217414,
+                "relative_percent": 1.4045232723886143,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": -0.006752643123140167,
+                "relative_percent": -0.24742001094100846,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.026195549880504654,
+                "relative_percent": 1.377407544965077,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        }
+      ],
+      "four_metric_consistent_improved_seeds": []
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "contrast": "AllAvailable−MLP16",
+      "seeds": [
+        {
+          "seed": 42,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.002322647383633303,
+                "relative_percent": 0.08906683467300222,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.053704491315579306,
+                "relative_percent": 2.9512501914138713,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": 0.037675283029807716,
+                "relative_percent": 1.401415655462797,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.061112495169893366,
+                "relative_percent": 3.2553753508542247,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 52,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.006797550433701449,
+                "relative_percent": 0.261763917288248,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.011654119427428666,
+                "relative_percent": -0.6171039934323499,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": -0.009957970623148071,
+                "relative_percent": -0.37110220264492744,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.022251627338466307,
+                "relative_percent": -1.153829336790668,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 62,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.001886226684828518,
+                "relative_percent": 0.07204505370707172,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.011158071540752657,
+                "relative_percent": 0.6201145661757159,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": -0.0019009196687127528,
+                "relative_percent": -0.07015363914708009,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.005928076675373539,
+                "relative_percent": 0.3190474950259857,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        }
+      ],
+      "four_metric_consistent_improved_seeds": []
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "contrast": "CurrentOnly−MLP16",
+      "seeds": [
+        {
+          "seed": 42,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.0007313720426851411,
+                "relative_percent": 0.028046010457426277,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.059634788394508975,
+                "relative_percent": 3.2771408191918714,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": 0.0037571252417061274,
+                "relative_percent": 0.13975460062491493,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.06176692371709658,
+                "relative_percent": 3.290235825059019,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 52,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.010109074048908262,
+                "relative_percent": 0.3892859419004376,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.014347309827448251,
+                "relative_percent": 0.7597126702418725,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": 0.00809764168649263,
+                "relative_percent": 0.3017736022539897,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.017401791741188388,
+                "relative_percent": 0.9023473887231047,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 62,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.005163433739799661,
+                "relative_percent": 0.19721906390619867,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.07425817368811005,
+                "relative_percent": 4.126929549915501,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": 0.012817804908723751,
+                "relative_percent": 0.473042430474298,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.06994190190516347,
+                "relative_percent": 3.7642543816775995,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        }
+      ],
+      "four_metric_consistent_improved_seeds": []
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "contrast": "MLP16−MLP4",
+      "seeds": [
+        {
+          "seed": 42,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.00033690355717103104,
+                "relative_percent": 0.07942716371607503,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.0187824571969204,
+                "relative_percent": 7.423694008202871,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": -0.2162518648347347,
+                "relative_percent": -12.738165067207126,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.05025606824976858,
+                "relative_percent": -7.258262936396727,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 52,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": -0.001056569603283597,
+                "relative_percent": -0.23610730338375047,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.01379956464305454,
+                "relative_percent": -4.992719787951861,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": 0.11525788775414725,
+                "relative_percent": 7.969925768912092,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.040395919528006585,
+                "relative_percent": 6.008225733989286,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 62,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.03889358624682765,
+                "relative_percent": 8.838812497827014,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.011307163864931968,
+                "relative_percent": 4.132909283339578,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": 0.1322083201550135,
+                "relative_percent": 9.188988083325711,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.04711685826598311,
+                "relative_percent": 7.540372915563009,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        }
+      ],
+      "four_metric_consistent_improved_seeds": []
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "contrast": "AllAvailable−MLP4",
+      "seeds": [
+        {
+          "seed": 42,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": -0.013098587935617467,
+                "relative_percent": -3.0880757007962876,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.002528515226520256,
+                "relative_percent": 0.999385923788814,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": -0.2646984846796976,
+                "relative_percent": -15.59187937392531,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.0782961280982547,
+                "relative_percent": -11.307965474230055,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 52,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": -0.03536587575013683,
+                "relative_percent": -7.903068126528617,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.009762104074157951,
+                "relative_percent": -3.5319556409067543,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": 0.07396506837743666,
+                "relative_percent": 5.114583617202077,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.019368825949352075,
+                "relative_percent": -2.8807929084365913,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 62,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": -0.020538992698828973,
+                "relative_percent": -4.667615483105383,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.010325332299827295,
+                "relative_percent": -3.7740376123733634,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": 0.06323012194012545,
+                "relative_percent": 4.394737308013601,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.009759754476445504,
+                "relative_percent": 1.5619077974446731,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        }
+      ],
+      "four_metric_consistent_improved_seeds": []
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "contrast": "CurrentOnly−MLP4",
+      "seeds": [
+        {
+          "seed": 42,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.03243721557889023,
+                "relative_percent": 7.647280586503904,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.014740088194334089,
+                "relative_percent": 5.82596319860649,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": -0.09618810336253225,
+                "relative_percent": -5.665893050540361,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.013439397130024178,
+                "relative_percent": 1.9409930277786942,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 52,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": -0.009786260145208225,
+                "relative_percent": -2.186895672482059,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.0071363796279833025,
+                "relative_percent": -2.581961438972039,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": 0.026475460069818713,
+                "relative_percent": 1.8307419610564464,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.03399658992445198,
+                "relative_percent": 5.056431165290342,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 62,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.049636472836203205,
+                "relative_percent": 11.280201153691985,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.028253359986517623,
+                "relative_percent": 10.326955120546154,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": -0.14948347009050256,
+                "relative_percent": -10.389677621690248,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.0034420429819868037,
+                "relative_percent": -0.5508492847519761,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        }
+      ],
+      "four_metric_consistent_improved_seeds": []
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "contrast": "AllAvailable−MLP16",
+      "seeds": [
+        {
+          "seed": 42,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": -0.013435491492788498,
+                "relative_percent": -3.1649890035149446,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.016253941970400143,
+                "relative_percent": -5.980345531520725,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": -0.0484466198449629,
+                "relative_percent": -3.270289134896205,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.02804005984848612,
+                "relative_percent": -4.366645122309926,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": true
+        },
+        {
+          "seed": 52,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": -0.034309306146853236,
+                "relative_percent": -7.685105919493568,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.004037460568896589,
+                "relative_percent": 1.5375286438942424,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": -0.04129281937671059,
+                "relative_percent": -2.6445717466003464,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.05976474547735866,
+                "relative_percent": -8.385215940441688,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 62,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": -0.05943257894565662,
+                "relative_percent": -12.409569409076433,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.021632496164759263,
+                "relative_percent": -7.59312973211821,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": -0.06897819821488804,
+                "relative_percent": -4.390782311906269,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.037357103789537605,
+                "relative_percent": -5.55927504809047,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": true
+        }
+      ],
+      "four_metric_consistent_improved_seeds": [
+        42,
+        62
+      ]
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "contrast": "CurrentOnly−MLP16",
+      "seeds": [
+        {
+          "seed": 42,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.0321003120217192,
+                "relative_percent": 7.561847261983093,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.00404236900258631,
+                "relative_percent": -1.487316950275773,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": 0.12006376147220243,
+                "relative_percent": 8.104656545571924,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.06369546537979276,
+                "relative_percent": 9.91921895733576,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 52,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": -0.008729690541924628,
+                "relative_percent": -1.9554052236420751,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.006663185015071238,
+                "relative_percent": 2.5374459131965623,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": -0.08878242768432854,
+                "relative_percent": -5.68601280785849,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.006399329603554604,
+                "relative_percent": -0.8978497301589776,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        },
+        {
+          "seed": 62,
+          "differences": {
+            "validation": {
+              "qty_rmse": {
+                "absolute": 0.010742886589375555,
+                "relative_percent": 2.2431232019494094,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": 0.016946196121585655,
+                "relative_percent": 5.9482116459004715,
+                "status": "available"
+              }
+            },
+            "test": {
+              "qty_rmse": {
+                "absolute": -0.28169179024551605,
+                "relative_percent": -17.930989240485346,
+                "status": "available"
+              },
+              "qty_mae": {
+                "absolute": -0.05055890124796991,
+                "relative_percent": -7.5238926376682125,
+                "status": "available"
+              }
+            }
+          },
+          "all_four_improved": false
+        }
+      ],
+      "four_metric_consistent_improved_seeds": []
+    }
+  ],
+  "interpretation": {
+    "priority_1": {
+      "dataset": "Intermittent",
+      "candidate": "AllAvailable",
+      "decision": "follow_up_stored_predictions_only_not_adopt_common_backbone",
+      "grounds": "Allfour Val/Test RMSE/MAE means lower thanMLP4 andMLP16;Testbothmetrics lower thanMLP16 all3seeds.",
+      "exceptions": "vsMLP4:no seed improvesallfour;TestRMSE52/62worse,ValMAE42worse,TestMAE62worse.",
+      "mechanism_question": "Branch eligibility/activebranch count at shortobserved histories;not more distant history."
+    },
+    "priority_2": {
+      "dataset": "RAF",
+      "candidate": "MLP16",
+      "decision": "retain_capacity_candidate_with_validation_exception",
+      "grounds": "vsMLP4 TestRMSE/MAE better all3seeds.",
+      "exceptions": "ValRMSEmean+0.0010165667;ValRMSE42andValMAE52worse."
+    },
+    "Taxi": {
+      "candidate": "MLP4",
+      "decision": "keep_reference_no_replacement",
+      "grounds": "Nootherarm improvesallfourmeans.",
+      "exceptions": "MLP16TestRMSEmeanbetterbutTestMAEmeanworse;AllAvailablebothsplitbothmetricsbetter42andworse52/62."
+    },
+    "CurrentOnly": {
+      "decision": "low_priority",
+      "grounds": "InterTestRMSEmeanbestbutValandTestMAEunfavorable;RAFMAEworseallseedsbothsplits;TaxiTestbothworseMLP16allseeds."
+    },
+    "global_decision": "No sharedwinner acrossallthreedatasets;no additionaltraining launched. NoCapexternalcomparisonmodels evaluated."
+  },
+  "new_training": false,
+  "new_inference": false,
+  "remote_calls": 0
+}
