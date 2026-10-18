@@ -1,0 +1,44 @@
+{
+  "schema": "titantpp_time_quantity_balance_decision_v1",
+  "status": "diagnostic_complete_training_decision_pending",
+  "at_utc": "2026-10-18T01:21:08.462404+00:00",
+  "completed": {
+    "external_cap27_paused": true,
+    "training_complete_before_pause": 11,
+    "training_paused": 6,
+    "not_started": 10,
+    "mlp16_diagnostic_conditions": 18,
+    "fresh_conditions": 9,
+    "selected_conditions": 9,
+    "train_batches": 54,
+    "forward_calls": 54,
+    "autograd_calls": 216,
+    "optimizer_steps": 0,
+    "test_evaluations": 0,
+    "historical_cnn_inferences": 0
+  },
+  "confirmed_in_this_sample": {
+    "selected_log_mse_quantity_to_time_shared_norm_medians": {
+      "Taxi": 1.3265405612445973,
+      "RAF": 3.2241391914813224,
+      "Intermittent": 0.05419431131089621
+    },
+    "uniform_time_gradient_dominance_supported": false,
+    "fresh_quantity_to_shared_gradient_all_zero": true,
+    "cap_normalized_raw_mse_relative_norm_decreased_in_each_dataset": true
+  },
+  "interpretation": "Fixed-state, training-mode CPU Train-batch local sensitivity. No claim about full training trajectory, AdamW effective update, causal error mechanism, optimal weights, or performance improvement. Alternative losses were evaluated at log-MSE-trained selected weights.",
+  "next_work": "Separate objective form from time/quantity weighting in a concrete training comparison; do not infer one universally optimal coefficient from this diagnostic.",
+  "automatic_actions": {
+    "resume_external_cap27": false,
+    "extend_existing_wall_time_limits": false,
+    "start_18_new_loss_fits": false,
+    "change_backbone_input_or_head": false
+  },
+  "reports": {
+    "report": "REPORT.md",
+    "summary": "BALANCE_SUMMARY.json",
+    "batch_rows": "BALANCE_PER_BATCH.csv",
+    "seed_rows": "BALANCE_PER_SEED.csv"
+  }
+}
