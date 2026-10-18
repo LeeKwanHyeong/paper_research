@@ -1,0 +1,244 @@
+{
+  "status": "PASS_final_results_independent_qa",
+  "verified_at": "2026-10-18T23:03:57.903971+00:00",
+  "checks": 7359,
+  "open_findings": [],
+  "counts": {
+    "hash_bindings": 2791,
+    "original_files": 689,
+    "dispatcher_exit0": 4,
+    "stage_exit0": 54,
+    "native_validation_pass": 27,
+    "checkpoint_loaded_without_inference": 27,
+    "zero_head_tensor_and_proof_verified": 9,
+    "baseline_verified": 9
+  },
+  "comparison": {
+    "exact_models": 36,
+    "baseline_references": 9,
+    "new_fits": 27,
+    "summary_rows": 108,
+    "seed_difference_rows": 486,
+    "decision_rows": 9,
+    "cohorts": [
+      "overall",
+      "cap_hit q==cap",
+      "tail q>cap empty N/A"
+    ]
+  },
+  "seed_exceptions_and_mean_deltas": [
+    {
+      "dataset": "yellow_trip_hourly",
+      "alpha": 0.0,
+      "mean_delta_vs1": {
+        "qty_rmse": -0.10263650908276745,
+        "qty_mae": -0.11845387577039723,
+        "time_nll": 0.48369771852188204
+      },
+      "worsened_seeds_vs1": {
+        "qty_rmse": [],
+        "qty_mae": [
+          52
+        ],
+        "time_nll": [
+          42,
+          52,
+          62
+        ]
+      }
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "alpha": 0.1,
+      "mean_delta_vs1": {
+        "qty_rmse": -0.09584792136203024,
+        "qty_mae": -0.07948692665381163,
+        "time_nll": -0.007801473073294818
+      },
+      "worsened_seeds_vs1": {
+        "qty_rmse": [
+          52
+        ],
+        "qty_mae": [
+          52
+        ],
+        "time_nll": [
+          52,
+          62
+        ]
+      }
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "alpha": 10.0,
+      "mean_delta_vs1": {
+        "qty_rmse": -0.09925146275969254,
+        "qty_mae": -0.17740286350817325,
+        "time_nll": 0.1663554667169963
+      },
+      "worsened_seeds_vs1": {
+        "qty_rmse": [
+          52
+        ],
+        "qty_mae": [
+          52
+        ],
+        "time_nll": [
+          42,
+          52,
+          62
+        ]
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "alpha": 0.0,
+      "mean_delta_vs1": {
+        "qty_rmse": -0.00031861217068351877,
+        "qty_mae": 0.01855386387191138,
+        "time_nll": -0.04887085321860152
+      },
+      "worsened_seeds_vs1": {
+        "qty_rmse": [
+          42,
+          52
+        ],
+        "qty_mae": [
+          42,
+          62
+        ],
+        "time_nll": [
+          42
+        ]
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "alpha": 0.1,
+      "mean_delta_vs1": {
+        "qty_rmse": 0.0035818022743918654,
+        "qty_mae": 0.030996972150213464,
+        "time_nll": 0.005096051035302196
+      },
+      "worsened_seeds_vs1": {
+        "qty_rmse": [
+          42,
+          52
+        ],
+        "qty_mae": [
+          42,
+          62
+        ],
+        "time_nll": [
+          42
+        ]
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "alpha": 10.0,
+      "mean_delta_vs1": {
+        "qty_rmse": 0.02019820690426455,
+        "qty_mae": 0.007593319249141306,
+        "time_nll": 0.18063944125032183
+      },
+      "worsened_seeds_vs1": {
+        "qty_rmse": [
+          42,
+          52,
+          62
+        ],
+        "qty_mae": [
+          62
+        ],
+        "time_nll": [
+          42,
+          52
+        ]
+      }
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "alpha": 0.0,
+      "mean_delta_vs1": {
+        "qty_rmse": -0.12381552154600073,
+        "qty_mae": -0.10140058654356426,
+        "time_nll": 1.4933879676214459
+      },
+      "worsened_seeds_vs1": {
+        "qty_rmse": [],
+        "qty_mae": [],
+        "time_nll": [
+          42,
+          52,
+          62
+        ]
+      }
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "alpha": 0.1,
+      "mean_delta_vs1": {
+        "qty_rmse": -0.06965960771164431,
+        "qty_mae": -0.0542071994275119,
+        "time_nll": 0.04365162321395272
+      },
+      "worsened_seeds_vs1": {
+        "qty_rmse": [],
+        "qty_mae": [],
+        "time_nll": [
+          42,
+          52,
+          62
+        ]
+      }
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "alpha": 10.0,
+      "mean_delta_vs1": {
+        "qty_rmse": 0.07978237073417077,
+        "qty_mae": 0.055395109350999894,
+        "time_nll": 0.09378640571087371
+      },
+      "worsened_seeds_vs1": {
+        "qty_rmse": [
+          42,
+          52,
+          62
+        ],
+        "qty_mae": [
+          42,
+          52,
+          62
+        ],
+        "time_nll": [
+          42,
+          52,
+          62
+        ]
+      }
+    }
+  ],
+  "method": "Independent fsum/3 mean, sqrt(sum squared centered deviations/2) sample SD, direct paired subtraction and relative division; original metrics recomputed from SSE/AE/timeNLL sums. No comparator function was called. First strict finite history minimum and same-checkpoint metrics bound to native Validation receipts. Selected checkpoint files loaded locally only for metadata/tensor hashes; no model built or inference performed.",
+  "limitations": [
+    "No remote operation or new inference; source references are immutable local originals.",
+    "Time-head no-gradient/no-optimizer-state per-step claims are bound actual-training guard receipts; selected checkpoint time-head tensors independently rehashed against their initial/final proof. This review does not replay historical optimizer steps.",
+    "TimeNLL is positive-integer observation NLL, not physical-time prediction MAE/RMSE. Alpha0 is an untrained-time-head diagnostic; shared representation can change.",
+    "No new Test result; Validation differences do not establish common-model superiority or a unique cause.",
+    "Historical observed completion and collection PID absence are not a new present-time GPU-idle observation."
+  ],
+  "scope": {
+    "project_edits": 0,
+    "remote_calls": 0,
+    "new_inference": 0,
+    "new_training": 0,
+    "test_access": 0
+  },
+  "verified_artifact_sha256": {
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_time_weight_mlp18_20261018_v1/retrieval/final_receipt.json": "1936f40b15b5c247562e153ed8637ef7dca22cbcac5506b7e45a675e8ed33722",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_time_zero_mlp9_20261018_v1/retrieval/final_receipt.json": "6820861b68f9d44fc66b1faf6d614f89b3d8405a11e871fac076af46148d86fb",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_time_zero_mlp9_20261018_v1/comparison_v1/FOUR_WEIGHT_VALIDATION.json": "128c9a6e1695e9d8de4f38331824251b021b047585551a42e1527c1d4a18f64f",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_time_zero_mlp9_20261018_v1/comparison_v1/FOUR_WEIGHT_VALIDATION.md": "1ad0cb036b3a532c7ca8aac5fb96449ee8e5e3a37204bff3f8481651215e57e2"
+  }
+}
