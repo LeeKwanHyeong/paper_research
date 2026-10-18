@@ -1,0 +1,73 @@
+{
+  "status": "PASS_design_with_required_checks",
+  "created_at": "2026-10-18T04:55:24.939356+00:00",
+  "scope": "Independent design review only; no source inspection, code edits, remote calls, inference or training in this task.",
+  "architectural_concern": "Determine whether removing time-objective gradients helps the fixed Cap MLP16 quantity task, while preserving the observed time inputs and shared representation. This is an objective ablation, not an input ablation or new backbone.",
+  "recommendation": "Use the exact existing quantity_loss tensor as joint objective for alpha0. Preserve common initialization/RNG, model/input/head/optimizer settings, budget and Validation rawRMSE selection.",
+  "options": [
+    {
+      "option": "quantity_loss directly",
+      "recommended": true,
+      "effect": "No time-loss computational connection; time-exclusive parameters must have grad=None and remain unchanged under AdamW. Shared parameters still learn from quantity.",
+      "cost": "Small new conditional objective path and explicit optimizer equivalence/state tests; existing stage and queue infrastructure reusable."
+    },
+    {
+      "option": "0 * time_loss + quantity_loss",
+      "recommended": false,
+      "effect": "Can produce materialized zero time-head gradients, allowing AdamW weight decay or residual optimizer state to change time-exclusive parameters; 0*nonfinite can also yield nonfinite joint.",
+      "cost": "Slightly shorter implementation but changes the meaning and complicates interpretation."
+    }
+  ],
+  "critical_design_findings": [],
+  "required_checks_before_launch": [
+    {
+      "id": "objective_disconnect",
+      "check": "Identity/equality test that alpha0 joint is quantity_loss itself; demonstrate time-exclusive grad is None after backward, and exact time-exclusive parameter/optimizer-state invariance after multiple optimizer steps. Use zero_grad(set_to_none=True); no warm start or resumed optimizer state."
+    },
+    {
+      "id": "parameter_partition",
+      "check": "Time-exclusive versus shared parameters must be defined from actual usage. Do not freeze common embeddings/encoder or remove observed time inputs. Shared representation and any shared state may change through quantity learning."
+    },
+    {
+      "id": "initialization_fairness",
+      "check": "Retain the full existing model construction and RNG consumption so common initial tensors and data order match alpha1/.1/10. Do not remove time-head construction or reseed selectively."
+    },
+    {
+      "id": "gradient_clipping",
+      "check": "Preserve the existing global clipping rule. Changed gradient norms and clipping frequency are consequences of objective removal and must be reported; this is not a claim that only direct gradient direction changes."
+    },
+    {
+      "id": "diagnostic_time_nll",
+      "check": "Keep unweighted recorded positive-integer TimeNLL as an explicitly untrained-time-head diagnostic. Initial time-head tensors may encode Train-derived initialization and are not necessarily random. Its output can change as shared h changes. Do not interpret its comparison as a trained time-prediction baseline or evidence that time information was removed."
+    },
+    {
+      "id": "finite_policy",
+      "check": "Keep quantity loss/joint/quantity predictions finite requirements. Specify how an undefined or nonfinite diagnostic TimeNLL is reported: do not replace it with zero or silently discard the run. A nonfinite value in the unused time branch must not contaminate joint through multiplication by zero. Any diagnostic failure should remain explicit and separate from quantity training success."
+    },
+    {
+      "id": "host_admission",
+      "check": "Per host, require the predecessor18 assigned training and Validation stages complete, actual dispatcher exit0, and all predecessor-owned processes/GPU entries absent. Global GPU emptiness is not the requirement because the explicitly expected externalCap27 paused contexts remain. Validate those old identities remain T; reject unknown GPU owners."
+    },
+    {
+      "id": "bounded_wait",
+      "check": "New CPU waiter must not create CUDA context, run GPU qualification or start scientific workers before the host gate. Finite waiting must honor inherited absolute deadline; waiting does not restart the host budget. Gate failure/timeout must preserve evidence and stop without repeated launch, source overwrite or old signals."
+    },
+    {
+      "id": "exclusive_launch",
+      "check": "After the gate, fresh ownership/free-memory qualification then exclusive launch intent; no race-prone duplicate workers. At most3 new scientific workers per host. Keep all old claims/source/checkpoints immutable."
+    },
+    {
+      "id": "validation_only",
+      "check": "Nine new fits exactly3datasets×seed42/52/62, planned4/5 split across5080/5090; same first strict finite fullValidation rawRMSE minimum, same-epoch MAE and TimeNLL, no Test and no baseline/CNN reexecution."
+    }
+  ],
+  "interpretation_boundaries": [
+    "This contrasts joint-task training with quantity-only optimization while retaining time-history information. It does not isolate a backbone contribution.",
+    "A gain cannot by itself identify gradient conflict as the unique cause: task regularization, global clipping and AdamW updates also change.",
+    "Quantity RMSE/MAE can improve or trade off; evaluate both with all seeds and sample SD. Do not force success from one metric.",
+    "Alpha0 TimeNLL is descriptive for an untrained time head on a quantity-trained shared representation; a quantity gain does not establish a usable joint quantity/time model.",
+    "Existing alpha1/.1/10 are reused as fixed references; no re-selection using Test.",
+    "Respect current Cap27 inherited absolute deadlines; no automatic extension for wait or new9."
+  ],
+  "next_review": "Implementation and synthetic checks are pending; this design review does not certify their completion or authorize a claim that native qualification passed."
+}

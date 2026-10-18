@@ -1,0 +1,60 @@
+test_actual_proof_rejects_missing_or_changed_head_state (paper.tests.test_titantpp_time_zero_mlp9.QuantityOnlyLifecycleTests.test_actual_proof_rejects_missing_or_changed_head_state) ... ok
+test_alpha_and_quantity_only_metadata_tamper_rejected (paper.tests.test_titantpp_time_zero_mlp9.QuantityOnlyLifecycleTests.test_alpha_and_quantity_only_metadata_tamper_rejected) ... ok
+test_full_fabricated_training_checkpoint_validation_and_actual_head_proof (paper.tests.test_titantpp_time_zero_mlp9.QuantityOnlyLifecycleTests.test_full_fabricated_training_checkpoint_validation_and_actual_head_proof) ... 
+  test_full_fabricated_training_checkpoint_validation_and_actual_head_proof (paper.tests.test_titantpp_time_zero_mlp9.QuantityOnlyLifecycleTests.test_full_fabricated_training_checkpoint_validation_and_actual_head_proof) (alpha=0.0) ... ERROR
+test_full_fabricated_training_checkpoint_validation_and_actual_head_proof (paper.tests.test_titantpp_time_zero_mlp9.QuantityOnlyLifecycleTests.test_full_fabricated_training_checkpoint_validation_and_actual_head_proof) ... ERROR
+test_private_adapter_does_not_change_original_worker_globals (paper.tests.test_titantpp_time_zero_mlp9.QuantityOnlyLifecycleTests.test_private_adapter_does_not_change_original_worker_globals) ... ok
+test_synthetic_admission_and_validation_only_scope (paper.tests.test_titantpp_time_zero_mlp9.QuantityOnlyLifecycleTests.test_synthetic_admission_and_validation_only_scope) ... ok
+test_joint_is_quantity_object_and_time_gradient_is_none (paper.tests.test_titantpp_time_zero_mlp9.QuantityOnlyObjectiveTests.test_joint_is_quantity_object_and_time_gradient_is_none) ... ok
+test_nonfinite_unused_time_is_preserved_not_sanitized (paper.tests.test_titantpp_time_zero_mlp9.QuantityOnlyObjectiveTests.test_nonfinite_unused_time_is_preserved_not_sanitized) ... ok
+test_nonzero_or_foreign_quantity_objective_rejected (paper.tests.test_titantpp_time_zero_mlp9.QuantityOnlyObjectiveTests.test_nonzero_or_foreign_quantity_objective_rejected) ... ok
+test_original_fresh_initial_tensors_rng_and_metadata_are_identical (paper.tests.test_titantpp_time_zero_mlp9.QuantityOnlyObjectiveTests.test_original_fresh_initial_tensors_rng_and_metadata_are_identical) ... ok
+test_real_mlp16_two_step_quantity_oracle_exact_and_time_head_fixed (paper.tests.test_titantpp_time_zero_mlp9.QuantityOnlyObjectiveTests.test_real_mlp16_two_step_quantity_oracle_exact_and_time_head_fixed) ... ok
+
+======================================================================
+ERROR: test_full_fabricated_training_checkpoint_validation_and_actual_head_proof (paper.tests.test_titantpp_time_zero_mlp9.QuantityOnlyLifecycleTests.test_full_fabricated_training_checkpoint_validation_and_actual_head_proof) (alpha=0.0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/igwanhyeong/PycharmProjects/paper_research/paper/tests/test_titantpp_time_weight_mlp18.py", line 282, in test_fabricated_full_train_selected_checkpoint_validation_only
+    validation = worker.run_stage(c, "5090", job["id"], "validation")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py", line 1204, in _execute_mock_call
+    result = effect(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/igwanhyeong/PycharmProjects/paper_research/paper/tests/test_titantpp_time_zero_mlp9.py", line 140, in run
+    value = original_run(*args, **kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/run_titantpp_time_zero_mlp9.py", line 282, in run_stage
+    return inherited.run_stage(contract, host, job_id, stage)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/run_titantpp_mlp_cap36.py", line 396, in run_stage
+    verify_train_receipt(contract, host, job, root, tr)
+  File "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/run_titantpp_time_zero_mlp9.py", line 202, in verify_train_receipt
+    validate_weight_binding(receipt, 0.)
+  File "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/run_titantpp_time_zero_mlp9.py", line 161, in validate_weight_binding
+    _ORIGINAL_IDENTITY_VALIDATOR(payload, alpha)
+  File "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/run_titantpp_time_weight_mlp18.py", line 88, in validate_weight_binding
+    require(interface.get("time_weight_identity") == identity
+  File "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/run_titantpp_mlp_cap36.py", line 42, in require
+    raise ValueError(message)
+ValueError: Time-weight interface/resume binding mismatch
+
+======================================================================
+ERROR: test_full_fabricated_training_checkpoint_validation_and_actual_head_proof (paper.tests.test_titantpp_time_zero_mlp9.QuantityOnlyLifecycleTests.test_full_fabricated_training_checkpoint_validation_and_actual_head_proof)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/igwanhyeong/PycharmProjects/paper_research/paper/tests/test_titantpp_time_zero_mlp9.py", line 146, in test_full_fabricated_training_checkpoint_validation_and_actual_head_proof
+    validation = next(r for r in captured if r["stage"] == "validation")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+StopIteration
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.972s
+
+FAILED (errors=2)
