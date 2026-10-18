@@ -1,0 +1,34 @@
+{
+  "created_kst": "2026-10-18T09:23:52.868407+09:00",
+  "scope": "Stored uncapped and Q3-capped four MLP structures plus existing matched-head external models; full Validation/Test; descriptive only",
+  "user_authorized_heldout_comparison": true,
+  "arms": [
+    "titantpp_history_mlp",
+    "titantpp_history_mlp_width16",
+    "titantpp_all_available_history_mlp",
+    "titantpp_current_only_param_matched"
+  ],
+  "best_definitions": {
+    "primary": "Within each task/dataset choose the same arm with minimum mean fullValidation RMSE over seeds42/52/62; retain its paired MAE and Test results. Ties mean MAE then model name. Descriptive selection, not prospective confirmation.",
+    "secondary": "For each split and each metric separately, show minimum 3seed mean among the fixed four MLP arms or fixed external6; identify model. Test minima are retrospective and not a newly selected validated model."
+  },
+  "comparability": {
+    "cap_vs_uncapped": "different observed inputs and targets; no difference/percentage gain or superiority computed",
+    "uncapped_mlp_vs_external": "only population-compatible, same split and 3seed stored results; retain matched-head/runtime/provenance limits",
+    "cap_external": "missing unless stored capped external results identified; never substitute raw external scores"
+  },
+  "seed_aggregation": "mean and sample SD ddof1; include all3seeds including worse results",
+  "metrics": "overall raw quantity RMSE and MAE, time_nll auxiliary when directly available; no pooled raw errors across datasets",
+  "cap_inputs": {
+    "reports/titantpp_mlp_cap36_20261017_v2/THREE_SEED_VALIDATION.json": "10135efd21dff641975f4a51ae06ac08e5420a254e86e8e2cc69ad6da0dbd895",
+    "reports/titantpp_mlp_cap36_20261017_v2/THREE_SEED_TEST.json": "02685517c937df905350b4e0715f935fc5eee43e8acc1c62c8e72dcbd3eb5b49",
+    "reports/titantpp_mlp_cap36_20261017_v2/STRUCTURE_DECISION.json": "919cd6a70ed076fc77a66995466f41902e4f0968baee3359105e23643d6c961e"
+  },
+  "new_training": false,
+  "new_inference": false,
+  "remote_server_calls": 0,
+  "cnn_modified": false,
+  "manuscript_modified": false,
+  "prior_test_results_known": true,
+  "statistical_significance_claim": false
+}
