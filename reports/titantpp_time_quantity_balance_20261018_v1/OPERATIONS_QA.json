@@ -1,0 +1,39 @@
+{
+  "status": "PASS_bounded_static_operations_review",
+  "reviewed_at": "2026-10-18T01:15:59.317779+00:00",
+  "manager_sha256": "1c201d00b4d323cd2f699c35d25df7a33ad21586771138a5394cb576dfb2aa36",
+  "worker_sha256": "6ff29f9df05c82058d15d9fd3e99995fa064deaabd464b024fa6a552fbadb48c",
+  "worker_qa_sha256": "0895b9b8777f81adda95b285b5fe4ad79e6893ae9431a82149979336a698d970",
+  "checks": {
+    "manager_ast_parse": true,
+    "generated_controller_ast_compile": true,
+    "child_signal_calls": [
+      "os.killpg(process.pid, signal.SIGTERM)",
+      "os.killpg(process.pid, signal.SIGKILL)"
+    ],
+    "prior_campaign_signal_calls": 0,
+    "read_only_paused_identity_and_complete_descendant_validation": true,
+    "new_sibling_install_root_and_cache_paths": true,
+    "child_pythonhashseed_bound_to_job_seed": true,
+    "cuda_visible_devices_empty_and_explicit_cpu_worker": true,
+    "maximum_cpu_child_concurrency": 3,
+    "child_timeout_seconds": 300,
+    "controller_budget_seconds": 900,
+    "fresh_selected_exact_batch_target_and_tensor_identity_gate": true,
+    "source_input_checkpoint_package_hash_before_after": true,
+    "exclusive_attempt_results_and_raw_transport_preserved": true,
+    "automatic_retry_or_resume": false
+  },
+  "open_launch_blockers": [],
+  "limitations": [
+    "Static operations review only: no remote execution by reviewer.",
+    "Native successful worker exit/runtime/model state and final exact inventory must be verified after collection.",
+    "Timeout cleanup sends TERM/KILL only to a process group owned by a newly launched diagnostic child, never the paused campaign.",
+    "Existing campaign wall-clock deadlines continue while CUDA contexts/VRAM remain allocated.",
+    "Controller waits for bounded active children; the nominal host budget includes per-child timeout cleanup and is not a strict OS hard wall-clock kill."
+  ],
+  "artifacts_modified": [
+    "Only this newly created OPERATIONS_QA.json"
+  ],
+  "next_validation": "Verify exactly18 approved fresh/selected conditions,3batches each, matching raw exits and collected result hashes; independently check native reported norms and summaries."
+}

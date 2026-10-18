@@ -1,0 +1,63 @@
+{
+  "status": "PASS_bounded_worker_review_and_local_synthetic_checks",
+  "reviewed_at": "2026-10-18T01:14:36.820475+00:00",
+  "source_files": {
+    "paper/scripts/probe_titantpp_time_quantity_balance.py": "6ff29f9df05c82058d15d9fd3e99995fa064deaabd464b024fa6a552fbadb48c",
+    "paper/tests/test_titantpp_time_quantity_balance_probe.py": "80119ff11be0d30bfa57cee19cbf663a3c3bd6351d7a7f4fc2ad9142c78fee28",
+    "reports/titantpp_time_quantity_balance_20261018_v1/PAUSE_COMPLETENESS_QA_5080.json": "15a78bd8b24d0774b892adaa78990f395214453e2bd118be93ac8d544e88f56b",
+    "reports/titantpp_time_quantity_balance_20261018_v1/PAUSE_COMPLETENESS_QA_5090.json": "5432c63ff2d27fe0b4d0b068b172223b1900873e9db35e567d3ca40f65e91afd",
+    "reports/titantpp_time_quantity_balance_20261018_v1/EXPERIMENT_PLAN.md": "2bf1027e43df1c938a0a0c5476630725722d4f05c7759b4f0b3b14f4fec28a5a"
+  },
+  "independent_test_execution": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 MPLCONFIGDIR=/tmp/titantpp_balance_qa_mpl /usr/local/bin/python3 -m unittest paper.tests.test_titantpp_time_quantity_balance_probe",
+    "actual_exit_code": 0,
+    "tests": 18,
+    "elapsed_reported_seconds": 9.318,
+    "combined_tool_output": ".......\nFontconfig error: No writable cache directories\n\t/opt/homebrew/var/cache/fontconfig\n\t/Users/igwanhyeong/.cache/fontconfig\n\t/Users/igwanhyeong/.fontconfig\nMatplotlib is building the font cache; this may take a moment.\n...........\n----------------------------------------------------------------------\nRan 18 tests in 9.318s\n\nOK\n",
+    "output_note": "Concatenated two exec PTY output chunks; Fontconfig warning was nonfatal."
+  },
+  "independent_arithmetic": {
+    "random_cases": 37,
+    "scalar_comparisons": 444,
+    "mismatches": 0,
+    "max_abs_difference": 1.7763568394002505e-15,
+    "method": "Python random and math.fsum on flattened vectors; independent norm/dot/cosine/joint/norm-equality formulas compared with probe tensor implementation."
+  },
+  "actual_mlp16_type_check": {
+    "source": "Existing Cap36 RAF seed42 contract model constructed locally without inference",
+    "torch": "2.14.0",
+    "parameter_tensor_count": 52,
+    "parameter_dtypes": [
+      "torch.float32"
+    ],
+    "complex_parameters": 0,
+    "complex_buffers": 0,
+    "quantity_head_weight_all_zero": true
+  },
+  "pause_review": {
+    "initial_finding": "Single exact-argv scan could miss a forked pre-exec child after dispatcher SIGSTOP.",
+    "resolution": "Parent performed independent read-only post-pause all-direct-child verification; both hosts exactly three worker children and dispatcher have unchanged identity and state T.",
+    "post_pause_observation_utc": "2026-10-18T01:11:13+00:00",
+    "remote_calls_by_reviewer": 0,
+    "cuda_contexts_vram_retained": true,
+    "wall_clock_deadlines_continue": true,
+    "automatic_resume": false
+  },
+  "review_findings_open": [],
+  "confirmed": [
+    "Four loss gradients share one training-mode forward graph and dropout realization.",
+    "Train-only loader population and per-batch targets are checked.",
+    "Selected checkpoint byte/tensor/model/seed/input/head metadata are bound; no reselection.",
+    "Autograd does not write parameter .grad; values/context and caller RNG restoration are checked.",
+    "None graph participation and numerical zero gradients are separate; zero-norm cosine and equality lambda are undefined.",
+    "Cap normalized raw MSE uses C squared and raw MAE uses C.",
+    "No optimizer, clipping, training, Validation/Test inference, model/source modification, or remote operation by reviewer."
+  ],
+  "interpretation_limits": [
+    "Fresh quantity head zero initialization makes quantity-to-shared-backbone gradients exactly zero; this does not demonstrate time-loss domination throughout training.",
+    "Selected checkpoint and three Train batches measure local sensitivities with freshly seeded dropout, not historical training RNG, AdamW updates, optimal lambda, or performance improvement.",
+    "Local synthetic checks used torch2.14.0 CPU; actual native torch2.11 CPU execution remains to be verified by parent.",
+    "No complex parameters occur in the approved MLP16 model; generic extension to complex parameters would require abs-squared/conjugate norm handling.",
+    "Manager deployment and actual native outputs are outside this worker review and remain pending."
+  ]
+}
