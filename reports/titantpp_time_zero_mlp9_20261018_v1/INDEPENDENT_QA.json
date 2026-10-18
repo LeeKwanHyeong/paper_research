@@ -1,0 +1,71 @@
+{
+  "status": "PASS_local_implementation_review",
+  "checked_at": "2026-10-18T05:07:53.126141+00:00",
+  "open_blocking_findings": [],
+  "new_files_sha256": {
+    "paper/scripts/run_titantpp_time_zero_mlp9.py": "2bcc15dec157ff8d0c6aa82198714ba2895e9c5d62d2b1c5d13b930a8ce9c86b",
+    "paper/scripts/titantpp_time_zero_mlp9_runtime.py": "b6bbf93285709b678ebe0dc50836cca7a991c1cc6a741403249fe8440eea46ea",
+    "paper/scripts/manage_titantpp_time_zero_mlp9.py": "44aef256d35e849e607a69eaadd1ad61c0d7a762461a0212aeabea530c08c3bd",
+    "paper/scripts/compare_titantpp_time_zero_mlp9.py": "b6d268fc3418ee2c7fe894f13c5b1b64c5b42c0918bf0bb8bd613d0e4f8eb83a",
+    "paper/tests/test_titantpp_time_zero_mlp9.py": "3e1f90387fd5d3f68ffaf37b6c6dbe230dd8d17b5fbc70f130bdce9b13c2200e",
+    "paper/tests/test_titantpp_time_zero_mlp9_operations.py": "21bbff170c3ab937cfd71e16bf52b9ec9106872ae98e2b023dfa8ee71ec74130",
+    "paper/tests/test_titantpp_time_zero_mlp9_comparison.py": "06bcb456e2ab339565f030fa748be83d79c55bfdfea50154da029f14f6e96d52"
+  },
+  "new_files_unchanged_before_after": true,
+  "sealed_parent_source_count": 944,
+  "sealed_parent_source_unchanged_before_after": true,
+  "new_deployment_source_expected_count": 947,
+  "test_command": [
+    "/usr/local/bin/python3",
+    "-m",
+    "pytest",
+    "-q",
+    "paper/tests/test_titantpp_time_zero_mlp9.py",
+    "paper/tests/test_titantpp_time_zero_mlp9_operations.py",
+    "paper/tests/test_titantpp_time_zero_mlp9_comparison.py"
+  ],
+  "actual_process_exit": 0,
+  "stdout": {
+    "path": "/tmp/time_zero9_IMPL_QA.stdout",
+    "sha256": "cc431ee3a84f7f59aa0ce5db95e13b0ba4a769e33887fe2472a8a195e43bd3ed",
+    "text": "..........................................................  [100%]\n58 passed, 13 subtests passed in 10.71s\n"
+  },
+  "stderr": {
+    "path": "/tmp/time_zero9_IMPL_QA.stderr",
+    "sha256": "eae3b3ab88ebd007cd93d95595b7a951b2c689b68948b08fd24d8ff83282945e",
+    "text": "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/fs/__init__.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.\n  __import__(\"pkg_resources\").declare_namespace(__name__)  # type: ignore\n"
+  },
+  "additional_pure_comparison_check": {
+    "records": 36,
+    "summary_rows": 108,
+    "seed_difference_rows": 486,
+    "decisions": 9,
+    "alpha0_numeric_three_metric_gain_is_retained": true,
+    "alpha0_joint_training_claim_is_separate": true
+  },
+  "reviewed_paths": [
+    "quantity_loss tensor directly, no multiplication by zero in joint",
+    "Actual every-step time-exclusive gradients None, exact time-head tensor hashes and AdamW state absence",
+    "Private adapter and all common original construction/RNG preserved; prior source module globals restored",
+    "Checkpoint versus fit proof uses state/policy equality with permissible checkpoint steps <= completed steps; selected state hashes verified",
+    "Full synthetic best epoch1 / stop epoch2 train-checkpoint-Validation flow covered",
+    "Parent assigned train+Validation/dispatcher actual exit0 and all original worker/PID/GPU absence gate before GPU qualification",
+    "CPU wait is standard-library-only; own identity stored and checked, failure/dead wait is not labeled healthy",
+    "Existing paused external process identity/T state/descendant set verified; no old signals or source writes",
+    "Matrix9 with host4/5, max3 scientific children, inherited absolute deadline includes waiting",
+    "Only TrainVal6 inputs and original944 + new3 deployment files; no new Test",
+    "Final36 records and matched target/host, all seed differences/ddof1; alpha0 diagnostic TimeNLL retained numerically without joint-training claim"
+  ],
+  "interpretation": "Quantity-only objective ablation with time inputs retained; not a backbone modification or proof of unique gradient-conflict causation.",
+  "limitations": [
+    "No native qualification, real-data training, new inference, remote process checks or Test access by this reviewer.",
+    "Native qualification memory admission uses sequential full-shape peak×3 rather than measured simultaneous3 synthetic peak.",
+    "Earlier local fixture/adapter errors were repaired before this final review; LOCAL_TESTS explicitly states one initial stderr was overwritten and only traceback excerpt+exit/metadata survive. This was local synthetic work, not a scientific-data fit.",
+    "Unused nonfinite TimeNLL is preserved rather than sanitized; diagnostic failure may prevent a complete all-metric endpoint and must not be represented as successful finite time prediction."
+  ],
+  "files_modified_by_reviewer": [
+    "/tmp/time_zero9_IMPL_QA.json",
+    "/tmp/time_zero9_IMPL_QA.stdout",
+    "/tmp/time_zero9_IMPL_QA.stderr"
+  ]
+}
