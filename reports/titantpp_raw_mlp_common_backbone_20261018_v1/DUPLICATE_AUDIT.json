@@ -1,0 +1,69 @@
+{
+  "status": "bounded_source_duplicate_audit_complete_hypothesis_unvalidated",
+  "scope": "read-only source and pure Train/Validation prior-design documents; no prediction rows analyzed by this audit",
+  "prohibited_actions_performed": false,
+  "architecture_problem": "All four MLP corrections use a first-encoder contextual state; determine whether an additional direct current-observation route to the late backbone is functionally distinct from prior changes. Prediction errors do not establish internal information loss.",
+  "role_config": {
+    "configured_model": "gpt-6-astra",
+    "configured_reasoning": "high",
+    "actual_loaded_model": "not independently observable"
+  },
+  "candidate": {
+    "name": "late_current_observation_embedding_reinjection",
+    "status": "hypothesis_only_no_implementation_or_training_found_in_bounded_search",
+    "formula": "e0=input_proj(existing continuous_features(observed_dt,observed_quantity)); h2=unchanged two-block HistoryMLP backbone; z=LMM(h2+P(e0)); P=B GELU(A .), zero B at initialization",
+    "minimal_control": "z_control=LMM(h2+P(h2)); same P width, parameter count, zero-output initialization, insertion and common backbone; retain original no-extra-branch reference",
+    "scope_limit": "Exact bypass pattern not found in inspected files, not repository-wide or literature novelty proof",
+    "risks": [
+      "Original encoder already has identity residual routes; do not claim it discards current quantity",
+      "P(e0) uses low-rank current input while P(h2) uses contextual features; same nominal parameter count is not equal function space",
+      "Changing the input to unchanged LMM can change retrieval choices; do not call memory allocation unchanged",
+      "Observed decline support in Validation with mixed Train evidence is hypothesis motivation only; under/overforecasting may reflect unpredictable future reversals",
+      "No current target quantity or future information may enter the route"
+    ]
+  },
+  "alternatives": {
+    "shared_W": {
+      "status": "already proposed 2026-10-17, not found implemented here",
+      "reason_not_new": "Would repeat documented hypothesis; alters feature sharing rather than information route"
+    },
+    "serial_pair_MLP": {
+      "status": "already proposed 2026-10-16, not found implemented here",
+      "reason_not_new": "Would repeat documented width8+8 serial-versus16 parallel comparison"
+    },
+    "richer_channel_interaction": {
+      "status": "not recommended without exact formulation",
+      "reason": "Existing pair MLP already mixes64 channels; cross_product and channel-joint CNN/cross-fusion cover several obvious interaction forms"
+    }
+  },
+  "validation_needed": [
+    "Main analysis must establish observed-history defined common cohort and seed support without target-conditioned selection",
+    "Prospective contract must specify base width and bottleneck rank before new results",
+    "Synthetic causal/mask/withheld-boundary, zero-init equivalence and common-loss/head checks before any future fit",
+    "Report all dataset/seed mean and dispersion and observed-rise/reversal countereffects; compare contextual capacity control"
+  ],
+  "files": {
+    "reports/titantpp_mlp_train_validation_mechanism_20261017_v1/STRUCTURE_AUDIT.md": "0c0dc682498e5248574bad0ee783dabaa64d471d6f349a127450e5ff6dd02f3e",
+    "reports/titantpp_mlp_train_validation_mechanism_20261017_v1/HYPOTHESIS.md": "b10fa1f4a15c884145cd95929a042e423d6a0e387ac49471b04d7dfb23fce25d",
+    "reports/titantpp_history_mlp_reassessment_20261016_v1/HYPOTHESIS.md": "31ee9777f10cf391e96b07f2a856ac80b31d481315610a406b1c41c25ec382d3",
+    "models/TPPs/CountAwareTitanCoreAblation.py": "b34b61aadc7a2c91e000493caf2497fc89549a499082ca77ebbc3ed7cab2b120",
+    "models/TPPs/CountAwareTitanHistoryControls.py": "60ce1ea2675e9f516f3d09663d893a39e4825ede5a2ab5a703779dcb158e640b",
+    "models/TPPs/CountAwareTitanHistoryWidth.py": "2a903290810070bdfe72a355a98ff09790b02858a6853e94a7a4a87336afc6f7",
+    "models/TPPs/CountAwareTitanMultiLagDetail.py": "4bcbecdadf921df21a4e7fb379962eb4ecec2cfeb2f8ff1edccbb6b418807eae",
+    "models/TPPs/CountAwareTitanActiveBranchNorm.py": "14ebe590a4190276fd789bb2608520d14e031c79e98afe08511fef4aeb13d7e9",
+    "models/TPPs/CountAwareTitanMLPCandidates.py": "eb88a42aa092bb173ccbf0139a1a8469542e5a4cb5f25fd23b098d60f2ca841a",
+    "models/TPPs/CountAwareTitanCrossFusion.py": "a309cac0f145d5f7534f4a77adc50f8dc18fd06a74268af0fd36602d79b38f0b",
+    "models/TPPs/CountAwareTitanGRUControls.py": "2b98bd74dd1b07c7b71fc39814d5cd45933da8b97ec4e3816abf06e2aa18f554",
+    "models/TPPs/CountAwareTitanLevelHistoryQKV.py": "f4398a442c7872b158039f2346bc18ce5df5b89de97ec4c1c4a0f9291ad136e0",
+    "models/TPPs/CountAwareTitanAdaptiveHistoryCNN.py": "efd5c47be2c6e62a8dba891aa51279c0b6fd789ba2bed42a8f63384a8561a16a",
+    "models/TPPs/CountAwareTitanPostAttentionFFN.py": "b7c6e0e08dd609fe12240ff76163ae565f3caf6877d335e396ae08935a0d8fbf",
+    "models/TPPs/CountAwareTitanArchitectureContribution.py": "0c586378e11d6f1aacd128786cfaa52e33310f043495056864357eebe43a193b",
+    "models/TPPs/CountAwareTitanSuccessorMemory.py": "0616885eb8318f1823734b91563f2d261a9916f0d33ea9b7d57d6e1f0ae60ffb",
+    "models/TPPs/CountAwareTitanTaskRoutedMemory.py": "c94ce1c29de676af5d5655ba4f05fc238b991052eeaaffd74af23b58d6c0a333",
+    "models/TPPs/CountAwareTitanLocalGate.py": "3f235b761b33f7367cfbc5303f320d23b0cd97bad121903a67ae06de358f7b30",
+    "models/TPPs/CountAwareTitanPairMessage.py": "79c1e7f1da3b22f6a3bbaf606e5e915ff1eab39e2adc849c472c58f1a562508e",
+    "models/TPPs/CountAwareTitanStateTransport.py": "9e6e1d7ef30af63f993fb005bfe18c7146288981a1179ce9ede2ea79521c48a0",
+    "models/Titan/backbone.py": "f3531234235a9f50de05cf36c80b0a742a45709145d49555440249c814a20e98",
+    ".codex/agents/architecture-reviewer.toml": "9c2dc9e10a2ebe6e0061d341cfc5e1386c3354832416e18cd4e3dc0cecf7a37f"
+  }
+}

@@ -1,0 +1,790 @@
+{
+  "schema": "raw_mlp_common_backbone_coverage_audit_v1",
+  "created_kst": "2026-10-18T09:03:34.061481+09:00",
+  "status": "complete_bounded_coverage_audit",
+  "scope": "Original uncapped stored Train/Validation evidence only; no inference, training, SSH, Test reads or source edits",
+  "original_input_manifests": [
+    {
+      "path": "reports/titantpp_mlp_train_validation_mechanism_20261017_v1/ROW_INPUT_MANIFEST.json",
+      "sha256": "518d1560dfc4c0d379203cd31d70a0bcf2bef273564ef62fb7d8f49bc1f2901a",
+      "verified_file_count": 86,
+      "all_match": true
+    },
+    {
+      "path": "reports/titantpp_mlp_train_validation_mechanism_20261017_v1/ENDPOINT_INPUT_MANIFEST.json",
+      "sha256": "ac4a6d65b08156d46bd361775280b545627cf19e240b6884792de4c6529707e7",
+      "verified_file_count": 36,
+      "all_match": true
+    }
+  ],
+  "original_input_file_sha_verified_count": 122,
+  "same_native_four_arm_qualification_available": false,
+  "same_native_three_arm_qualification_available": true,
+  "same_native_three_arm_qualification_models": [
+    "titantpp_history_mlp",
+    "titantpp_all_available_history_mlp",
+    "titantpp_current_only_param_matched"
+  ],
+  "qualification_entries": [
+    {
+      "dataset": "yellow_trip_hourly",
+      "model": "titantpp_history_mlp",
+      "seed": 42,
+      "receipt_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/yellow_trip_hourly__titantpp_history_mlp__seed42/receipt.json",
+      "receipt_sha256": "7267e66d096600f630467468744aecc4d9a99d87b3936e2960acd4fe74427154",
+      "exists": true,
+      "usable_for_same_native_qualification_comparison": true,
+      "split": "validation",
+      "evaluation_scope": "validation_qualification",
+      "full_population": false,
+      "heldout_read": false,
+      "rows": 512,
+      "target_index_start": 0,
+      "target_index_end": 511,
+      "selected_epoch": 60,
+      "checkpoint_path": "search_artifacts/titantpp_core_ablation_20260928_v1/monitor/20260928T195732Z/terminal_5080/run/yellow_trip_hourly/seed_42/runs/titantpp_history_mlp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "59d6b44f842e953f8b20621d6ffbf7c7a7457cd5931a0866289ba3662728bf05",
+      "checkpoint_binary_sha_reverified": true,
+      "state_tensor_sha256": "40d6c662664a83ead3c7daaa18e74483378428d6f84f51500a3800c553ad7a7b",
+      "state_digest_matched_prior_source_inventory": true,
+      "source_closure_sha256": "e21c45b5f095d258e62998ce818b07bef38ff2cfff6bc408b3594bd1adba9265",
+      "selection_and_source_matched_prior_source_inventory": true,
+      "data_file_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+      "target_identity_sha256": "58eb7dcf481d2d831d9e3ccebc52f1059a441864dcdc24ec4fd24bb4de01a91c",
+      "truth_sha256": "ae9fc2299a2ef85560e3c9bc1facab78748c37b70cf6461acda3ccbabbe63d58",
+      "parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/yellow_trip_hourly__titantpp_history_mlp__seed42/predictions/part-00000.parquet",
+          "sha256": "b33d40374c7c6d776ef3629c594f721462836b363372598c30414941e3e47ad8",
+          "rows": 512
+        }
+      ],
+      "runtime": {
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "device": "cuda",
+        "device_type": "cuda",
+        "cudnn": 91900,
+        "threads": 4,
+        "interop_threads": 1,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        }
+      }
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "model": "titantpp_history_mlp_width16",
+      "seed": 42,
+      "receipt_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/yellow_trip_hourly__titantpp_history_mlp_width16__seed42/receipt.json",
+      "exists": false,
+      "usable_for_same_native_qualification_comparison": false
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "model": "titantpp_all_available_history_mlp",
+      "seed": 42,
+      "receipt_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/yellow_trip_hourly__titantpp_all_available_history_mlp__seed42/receipt.json",
+      "receipt_sha256": "5f18d4c53aa879a5419ff472c667495cbe5a4f66b9cafabbb105cf208e8dd67c",
+      "exists": true,
+      "usable_for_same_native_qualification_comparison": true,
+      "split": "validation",
+      "evaluation_scope": "validation_qualification",
+      "full_population": false,
+      "heldout_read": false,
+      "rows": 512,
+      "target_index_start": 0,
+      "target_index_end": 511,
+      "selected_epoch": 163,
+      "checkpoint_path": "search_artifacts/titantpp_pakdd_extension_20261001_v1/prelaunch_v2/retrieved/completed13_20261002_v1/5080/original/run/yellow_trip_hourly__42__titantpp_all_available_history_mlp/runs/titantpp_all_available_history_mlp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "ab56d8ac2574130e53159dbed5474dbe9c44071c21b03aafae89aab55a78d5b2",
+      "checkpoint_binary_sha_reverified": true,
+      "state_tensor_sha256": "9da6d8979a97d34dd665f9572c8f58838b548252f62f3165fe52b82b137c9bec",
+      "state_digest_matched_prior_source_inventory": true,
+      "source_closure_sha256": "989153f9eea2dac6a790835ab1b7c502fc9c0461829800915a6c602166b6ea92",
+      "selection_and_source_matched_prior_source_inventory": true,
+      "data_file_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+      "target_identity_sha256": "58eb7dcf481d2d831d9e3ccebc52f1059a441864dcdc24ec4fd24bb4de01a91c",
+      "truth_sha256": "ae9fc2299a2ef85560e3c9bc1facab78748c37b70cf6461acda3ccbabbe63d58",
+      "parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/yellow_trip_hourly__titantpp_all_available_history_mlp__seed42/predictions/part-00000.parquet",
+          "sha256": "f55460895369ef930b0deed4da44895bdd105b8d2ca49c6e87e03e6ad6d0e806",
+          "rows": 512
+        }
+      ],
+      "runtime": {
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "device": "cuda",
+        "device_type": "cuda",
+        "cudnn": 91900,
+        "threads": 4,
+        "interop_threads": 1,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        }
+      }
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "model": "titantpp_current_only_param_matched",
+      "seed": 42,
+      "receipt_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/yellow_trip_hourly__titantpp_current_only_param_matched__seed42/receipt.json",
+      "receipt_sha256": "0c58c7287a13fbfd4c4c9b8f80629b97a2a7aa693364ef3ea700b48e8f2e476c",
+      "exists": true,
+      "usable_for_same_native_qualification_comparison": true,
+      "split": "validation",
+      "evaluation_scope": "validation_qualification",
+      "full_population": false,
+      "heldout_read": false,
+      "rows": 512,
+      "target_index_start": 0,
+      "target_index_end": 511,
+      "selected_epoch": 35,
+      "checkpoint_path": "search_artifacts/titantpp_pakdd_extension_20261001_v1/prelaunch_v2/retrieved/completed13_20261002_v1/5080/original/run/yellow_trip_hourly__42__titantpp_current_only_param_matched/runs/titantpp_current_only_param_matched/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "264b5a415e4906b90d85a8798a12bc91fb308d46b46b337045605432234c9498",
+      "checkpoint_binary_sha_reverified": true,
+      "state_tensor_sha256": "202a571843e9493eea17712a5782e56c814ae67ac261264921f418f2a8343fbe",
+      "state_digest_matched_prior_source_inventory": true,
+      "source_closure_sha256": "989153f9eea2dac6a790835ab1b7c502fc9c0461829800915a6c602166b6ea92",
+      "selection_and_source_matched_prior_source_inventory": true,
+      "data_file_sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+      "target_identity_sha256": "58eb7dcf481d2d831d9e3ccebc52f1059a441864dcdc24ec4fd24bb4de01a91c",
+      "truth_sha256": "ae9fc2299a2ef85560e3c9bc1facab78748c37b70cf6461acda3ccbabbe63d58",
+      "parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/yellow_trip_hourly__titantpp_current_only_param_matched__seed42/predictions/part-00000.parquet",
+          "sha256": "a7f24871468e4beab91cb25c592cdf935c55c32f94e00c7e22be41990c1376bf",
+          "rows": 512
+        }
+      ],
+      "runtime": {
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "device": "cuda",
+        "device_type": "cuda",
+        "cudnn": 91900,
+        "threads": 4,
+        "interop_threads": 1,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        }
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "titantpp_history_mlp",
+      "seed": 42,
+      "receipt_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/raf_spare_parts__titantpp_history_mlp__seed42/receipt.json",
+      "receipt_sha256": "c4defdc2742896eae250a5d5b504dd62036f8630716b11276f72d50308ce4d5d",
+      "exists": true,
+      "usable_for_same_native_qualification_comparison": true,
+      "split": "validation",
+      "evaluation_scope": "validation_qualification",
+      "full_population": false,
+      "heldout_read": false,
+      "rows": 512,
+      "target_index_start": 0,
+      "target_index_end": 511,
+      "selected_epoch": 9,
+      "checkpoint_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__titantpp_history_mlp/runs/titantpp_history_mlp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "cb304b70d4ec0374c80c53ba0ad13e356c1e7098c311c5bafe0efd010ea8bba9",
+      "checkpoint_binary_sha_reverified": true,
+      "state_tensor_sha256": "989f7bd5e9c59991cf92eb19c67b92860bfa3c46280e646cec13f102b512b067",
+      "state_digest_matched_prior_source_inventory": true,
+      "source_closure_sha256": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "selection_and_source_matched_prior_source_inventory": true,
+      "data_file_sha256": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d",
+      "target_identity_sha256": "4bf77b4ee7b28487c58f6b2d763041410f7185c5c7feb824253813b3c4bec7a8",
+      "truth_sha256": "c7d5803f1763e196dd43e3fa5bd178c2822db299df2d96a63bc961511e0bcf01",
+      "parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/raf_spare_parts__titantpp_history_mlp__seed42/predictions/part-00000.parquet",
+          "sha256": "cd4d6a6d905e521cc290acb309e0151aae2abf83b5c681fb8b6b9f3aeda5ba87",
+          "rows": 512
+        }
+      ],
+      "runtime": {
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "device": "cuda",
+        "device_type": "cuda",
+        "cudnn": 91900,
+        "threads": 4,
+        "interop_threads": 1,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        }
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "titantpp_history_mlp_width16",
+      "seed": 42,
+      "receipt_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/raf_spare_parts__titantpp_history_mlp_width16__seed42/receipt.json",
+      "exists": false,
+      "usable_for_same_native_qualification_comparison": false
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "titantpp_all_available_history_mlp",
+      "seed": 42,
+      "receipt_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/raf_spare_parts__titantpp_all_available_history_mlp__seed42/receipt.json",
+      "receipt_sha256": "5a0d37858059b92aceb0384f242638754bbe25def2ef1515c2d7e27f6db15ffc",
+      "exists": true,
+      "usable_for_same_native_qualification_comparison": true,
+      "split": "validation",
+      "evaluation_scope": "validation_qualification",
+      "full_population": false,
+      "heldout_read": false,
+      "rows": 512,
+      "target_index_start": 0,
+      "target_index_end": 511,
+      "selected_epoch": 9,
+      "checkpoint_path": "search_artifacts/titantpp_completed22_audit_20261002_v1/retrieved/5080/original/run/raf_spare_parts__42__titantpp_all_available_history_mlp/runs/titantpp_all_available_history_mlp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "6db72e2dd6af5fb0d463eb2321ff074b6cbaf9b5b9ac2a0fdb323faf1d25bcfb",
+      "checkpoint_binary_sha_reverified": true,
+      "state_tensor_sha256": "221f2cc28a5e1fbf89516e718fdafbedcb7119b126565f1389bf7c3b49eb41b8",
+      "state_digest_matched_prior_source_inventory": true,
+      "source_closure_sha256": "989153f9eea2dac6a790835ab1b7c502fc9c0461829800915a6c602166b6ea92",
+      "selection_and_source_matched_prior_source_inventory": true,
+      "data_file_sha256": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d",
+      "target_identity_sha256": "4bf77b4ee7b28487c58f6b2d763041410f7185c5c7feb824253813b3c4bec7a8",
+      "truth_sha256": "c7d5803f1763e196dd43e3fa5bd178c2822db299df2d96a63bc961511e0bcf01",
+      "parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/raf_spare_parts__titantpp_all_available_history_mlp__seed42/predictions/part-00000.parquet",
+          "sha256": "3f724fc4d1eb72690ab3df75e1e7bef524e0e14e159280f10bff7cbf3bb25f96",
+          "rows": 512
+        }
+      ],
+      "runtime": {
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "device": "cuda",
+        "device_type": "cuda",
+        "cudnn": 91900,
+        "threads": 4,
+        "interop_threads": 1,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        }
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "titantpp_current_only_param_matched",
+      "seed": 42,
+      "receipt_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/raf_spare_parts__titantpp_current_only_param_matched__seed42/receipt.json",
+      "receipt_sha256": "952ac783603044b464940e0a7242c7fa7c773eb964331ce805ed1aedde93ed4c",
+      "exists": true,
+      "usable_for_same_native_qualification_comparison": true,
+      "split": "validation",
+      "evaluation_scope": "validation_qualification",
+      "full_population": false,
+      "heldout_read": false,
+      "rows": 512,
+      "target_index_start": 0,
+      "target_index_end": 511,
+      "selected_epoch": 5,
+      "checkpoint_path": "search_artifacts/titantpp_completed22_audit_20261002_v1/retrieved/5080/original/run/raf_spare_parts__42__titantpp_current_only_param_matched/runs/titantpp_current_only_param_matched/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "07ffe3e3d25fbfa7886bbb85eaba407b487b85e8b9bbfc929ab676cfb434219e",
+      "checkpoint_binary_sha_reverified": true,
+      "state_tensor_sha256": "fd2414384e7dde2f7947dcbcb48f10ba6812ae9327f4c30b92706d3b0d63f85d",
+      "state_digest_matched_prior_source_inventory": true,
+      "source_closure_sha256": "989153f9eea2dac6a790835ab1b7c502fc9c0461829800915a6c602166b6ea92",
+      "selection_and_source_matched_prior_source_inventory": true,
+      "data_file_sha256": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d",
+      "target_identity_sha256": "4bf77b4ee7b28487c58f6b2d763041410f7185c5c7feb824253813b3c4bec7a8",
+      "truth_sha256": "c7d5803f1763e196dd43e3fa5bd178c2822db299df2d96a63bc961511e0bcf01",
+      "parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/raf_spare_parts__titantpp_current_only_param_matched__seed42/predictions/part-00000.parquet",
+          "sha256": "020bcca3fbf833ac3a3e284bd2a201e81aa42b0c8315062f69712abaf18feadf",
+          "rows": 512
+        }
+      ],
+      "runtime": {
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "device": "cuda",
+        "device_type": "cuda",
+        "cudnn": 91900,
+        "threads": 4,
+        "interop_threads": 1,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        }
+      }
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "model": "titantpp_history_mlp",
+      "seed": 42,
+      "receipt_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/intermittent_frozen_5000__titantpp_history_mlp__seed42/receipt.json",
+      "receipt_sha256": "69938c521fe6ad399c721bf68f32894b84ce720f8be55d28c58b69336d98fed0",
+      "exists": true,
+      "usable_for_same_native_qualification_comparison": true,
+      "split": "validation",
+      "evaluation_scope": "validation_qualification",
+      "full_population": false,
+      "heldout_read": false,
+      "rows": 512,
+      "target_index_start": 0,
+      "target_index_end": 511,
+      "selected_epoch": 10,
+      "checkpoint_path": "search_artifacts/titantpp_core_ablation_20260928_v1/monitor/20260928T195732Z/terminal_5080/run/intermittent_frozen_5000/seed_42/runs/titantpp_history_mlp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "623f3e68b0554310dda9d54ec81c14add9f31eb945d366b23f37a357859630aa",
+      "checkpoint_binary_sha_reverified": true,
+      "state_tensor_sha256": "02f67170b6789fd9c28b60f706b444b53951b382456d3f10efb377a7473f4d1c",
+      "state_digest_matched_prior_source_inventory": true,
+      "source_closure_sha256": "e21c45b5f095d258e62998ce818b07bef38ff2cfff6bc408b3594bd1adba9265",
+      "selection_and_source_matched_prior_source_inventory": true,
+      "data_file_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+      "target_identity_sha256": "c184f6f9a980d37769f7b3fc72f1fa1badcd928a6ff1cb4b1c8cf6f77f5e80c2",
+      "truth_sha256": "dd6cd57aa8b52b138ba29fcd3ff2b972787da0c6c10898a668dda6c2299dc049",
+      "parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/intermittent_frozen_5000__titantpp_history_mlp__seed42/predictions/part-00000.parquet",
+          "sha256": "f052659aac7bd4123a9630fda0a2fe786252d2f6518684468c5a93c0db2f53dd",
+          "rows": 512
+        }
+      ],
+      "runtime": {
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "device": "cuda",
+        "device_type": "cuda",
+        "cudnn": 91900,
+        "threads": 4,
+        "interop_threads": 1,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        }
+      }
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "model": "titantpp_history_mlp_width16",
+      "seed": 42,
+      "receipt_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/intermittent_frozen_5000__titantpp_history_mlp_width16__seed42/receipt.json",
+      "exists": false,
+      "usable_for_same_native_qualification_comparison": false
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "model": "titantpp_all_available_history_mlp",
+      "seed": 42,
+      "receipt_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/intermittent_frozen_5000__titantpp_all_available_history_mlp__seed42/receipt.json",
+      "receipt_sha256": "72dfea77947742f8637316da09e46e6d56b2963e68df792a77f58e07bf5a1bf1",
+      "exists": true,
+      "usable_for_same_native_qualification_comparison": true,
+      "split": "validation",
+      "evaluation_scope": "validation_qualification",
+      "full_population": false,
+      "heldout_read": false,
+      "rows": 512,
+      "target_index_start": 0,
+      "target_index_end": 511,
+      "selected_epoch": 10,
+      "checkpoint_path": "search_artifacts/titantpp_pakdd_extension_20261001_v1/prelaunch_v2/retrieved/completed13_20261002_v1/5080/original/run/intermittent_frozen_5000__42__titantpp_all_available_history_mlp/runs/titantpp_all_available_history_mlp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "2ec1b81f9e39142e404ca73614a599221d64724043c7f62e32e910667fe53e50",
+      "checkpoint_binary_sha_reverified": true,
+      "state_tensor_sha256": "1529b012dc3dd3f3f3110ee398484bdaf720d029c192795c1689a23f798ccea4",
+      "state_digest_matched_prior_source_inventory": true,
+      "source_closure_sha256": "989153f9eea2dac6a790835ab1b7c502fc9c0461829800915a6c602166b6ea92",
+      "selection_and_source_matched_prior_source_inventory": true,
+      "data_file_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+      "target_identity_sha256": "c184f6f9a980d37769f7b3fc72f1fa1badcd928a6ff1cb4b1c8cf6f77f5e80c2",
+      "truth_sha256": "dd6cd57aa8b52b138ba29fcd3ff2b972787da0c6c10898a668dda6c2299dc049",
+      "parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/intermittent_frozen_5000__titantpp_all_available_history_mlp__seed42/predictions/part-00000.parquet",
+          "sha256": "f83fc4e51f16c62bbac54efb357fbd93c03303ddcd08cff873a1cf80db25f8cc",
+          "rows": 512
+        }
+      ],
+      "runtime": {
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "device": "cuda",
+        "device_type": "cuda",
+        "cudnn": 91900,
+        "threads": 4,
+        "interop_threads": 1,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        }
+      }
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "model": "titantpp_current_only_param_matched",
+      "seed": 42,
+      "receipt_path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/intermittent_frozen_5000__titantpp_current_only_param_matched__seed42/receipt.json",
+      "receipt_sha256": "2c65726df4c894b5d2cd01d971f79305ef98cb81e5094eedff6a94de56391d88",
+      "exists": true,
+      "usable_for_same_native_qualification_comparison": true,
+      "split": "validation",
+      "evaluation_scope": "validation_qualification",
+      "full_population": false,
+      "heldout_read": false,
+      "rows": 512,
+      "target_index_start": 0,
+      "target_index_end": 511,
+      "selected_epoch": 21,
+      "checkpoint_path": "search_artifacts/titantpp_pakdd_extension_20261001_v1/prelaunch_v2/retrieved/completed13_20261002_v1/5080/original/run/intermittent_frozen_5000__42__titantpp_current_only_param_matched/runs/titantpp_current_only_param_matched/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "bd09a45a72fecb87fda05abefb9afe4372d432caf0b72e5016b53c0409b6927c",
+      "checkpoint_binary_sha_reverified": true,
+      "state_tensor_sha256": "f6f8ef521c8ee9f8f969d1849b1b43f4237049c026cf23f253e31fa0ee5b445e",
+      "state_digest_matched_prior_source_inventory": true,
+      "source_closure_sha256": "989153f9eea2dac6a790835ab1b7c502fc9c0461829800915a6c602166b6ea92",
+      "selection_and_source_matched_prior_source_inventory": true,
+      "data_file_sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+      "target_identity_sha256": "c184f6f9a980d37769f7b3fc72f1fa1badcd928a6ff1cb4b1c8cf6f77f5e80c2",
+      "truth_sha256": "dd6cd57aa8b52b138ba29fcd3ff2b972787da0c6c10898a668dda6c2299dc049",
+      "parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/intermittent_frozen_5000__titantpp_current_only_param_matched__seed42/predictions/part-00000.parquet",
+          "sha256": "fc6efa66e0273ff124aa9b7106f2aab893466a9578c33ef790a7b7fe54b7448e",
+          "rows": 512
+        }
+      ],
+      "runtime": {
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "device": "cuda",
+        "device_type": "cuda",
+        "cudnn": 91900,
+        "threads": 4,
+        "interop_threads": 1,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        }
+      }
+    }
+  ],
+  "pairing_checks": [
+    {
+      "dataset": "yellow_trip_hourly",
+      "left": "titantpp_history_mlp",
+      "right": "titantpp_all_available_history_mlp",
+      "paired_n": 512,
+      "equality_checks": {
+        "target_index": true,
+        "target_id": true,
+        "entity_id": true,
+        "seq": true,
+        "split": true,
+        "raw_quantity": true,
+        "recorded_gap": true,
+        "last_quantity": true,
+        "mean_quantity": true,
+        "history_length": true
+      },
+      "all_requested_target_truth_history_fields_exact": true
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "left": "titantpp_history_mlp",
+      "right": "titantpp_current_only_param_matched",
+      "paired_n": 512,
+      "equality_checks": {
+        "target_index": true,
+        "target_id": true,
+        "entity_id": true,
+        "seq": true,
+        "split": true,
+        "raw_quantity": true,
+        "recorded_gap": true,
+        "last_quantity": true,
+        "mean_quantity": true,
+        "history_length": true
+      },
+      "all_requested_target_truth_history_fields_exact": true
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "left": "titantpp_all_available_history_mlp",
+      "right": "titantpp_current_only_param_matched",
+      "paired_n": 512,
+      "equality_checks": {
+        "target_index": true,
+        "target_id": true,
+        "entity_id": true,
+        "seq": true,
+        "split": true,
+        "raw_quantity": true,
+        "recorded_gap": true,
+        "last_quantity": true,
+        "mean_quantity": true,
+        "history_length": true
+      },
+      "all_requested_target_truth_history_fields_exact": true
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "left": "titantpp_history_mlp",
+      "right": "titantpp_all_available_history_mlp",
+      "paired_n": 512,
+      "equality_checks": {
+        "target_index": true,
+        "target_id": true,
+        "entity_id": true,
+        "seq": true,
+        "split": true,
+        "raw_quantity": true,
+        "recorded_gap": true,
+        "last_quantity": true,
+        "mean_quantity": true,
+        "history_length": true
+      },
+      "all_requested_target_truth_history_fields_exact": true
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "left": "titantpp_history_mlp",
+      "right": "titantpp_current_only_param_matched",
+      "paired_n": 512,
+      "equality_checks": {
+        "target_index": true,
+        "target_id": true,
+        "entity_id": true,
+        "seq": true,
+        "split": true,
+        "raw_quantity": true,
+        "recorded_gap": true,
+        "last_quantity": true,
+        "mean_quantity": true,
+        "history_length": true
+      },
+      "all_requested_target_truth_history_fields_exact": true
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "left": "titantpp_all_available_history_mlp",
+      "right": "titantpp_current_only_param_matched",
+      "paired_n": 512,
+      "equality_checks": {
+        "target_index": true,
+        "target_id": true,
+        "entity_id": true,
+        "seq": true,
+        "split": true,
+        "raw_quantity": true,
+        "recorded_gap": true,
+        "last_quantity": true,
+        "mean_quantity": true,
+        "history_length": true
+      },
+      "all_requested_target_truth_history_fields_exact": true
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "left": "titantpp_history_mlp",
+      "right": "titantpp_all_available_history_mlp",
+      "paired_n": 512,
+      "equality_checks": {
+        "target_index": true,
+        "target_id": true,
+        "entity_id": true,
+        "seq": true,
+        "split": true,
+        "raw_quantity": true,
+        "recorded_gap": true,
+        "last_quantity": true,
+        "mean_quantity": true,
+        "history_length": true
+      },
+      "all_requested_target_truth_history_fields_exact": true
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "left": "titantpp_history_mlp",
+      "right": "titantpp_current_only_param_matched",
+      "paired_n": 512,
+      "equality_checks": {
+        "target_index": true,
+        "target_id": true,
+        "entity_id": true,
+        "seq": true,
+        "split": true,
+        "raw_quantity": true,
+        "recorded_gap": true,
+        "last_quantity": true,
+        "mean_quantity": true,
+        "history_length": true
+      },
+      "all_requested_target_truth_history_fields_exact": true
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "left": "titantpp_all_available_history_mlp",
+      "right": "titantpp_current_only_param_matched",
+      "paired_n": 512,
+      "equality_checks": {
+        "target_index": true,
+        "target_id": true,
+        "entity_id": true,
+        "seq": true,
+        "split": true,
+        "raw_quantity": true,
+        "recorded_gap": true,
+        "last_quantity": true,
+        "mean_quantity": true,
+        "history_length": true
+      },
+      "all_requested_target_truth_history_fields_exact": true
+    }
+  ],
+  "qualification_input_sha256": {
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/yellow_trip_hourly__titantpp_history_mlp__seed42/receipt.json": "7267e66d096600f630467468744aecc4d9a99d87b3936e2960acd4fe74427154",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/yellow_trip_hourly__titantpp_history_mlp__seed42/predictions/part-00000.parquet": "b33d40374c7c6d776ef3629c594f721462836b363372598c30414941e3e47ad8",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/yellow_trip_hourly__titantpp_all_available_history_mlp__seed42/receipt.json": "5f18d4c53aa879a5419ff472c667495cbe5a4f66b9cafabbb105cf208e8dd67c",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/yellow_trip_hourly__titantpp_all_available_history_mlp__seed42/predictions/part-00000.parquet": "f55460895369ef930b0deed4da44895bdd105b8d2ca49c6e87e03e6ad6d0e806",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/yellow_trip_hourly__titantpp_current_only_param_matched__seed42/receipt.json": "0c58c7287a13fbfd4c4c9b8f80629b97a2a7aa693364ef3ea700b48e8f2e476c",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/yellow_trip_hourly__titantpp_current_only_param_matched__seed42/predictions/part-00000.parquet": "a7f24871468e4beab91cb25c592cdf935c55c32f94e00c7e22be41990c1376bf",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/raf_spare_parts__titantpp_history_mlp__seed42/receipt.json": "c4defdc2742896eae250a5d5b504dd62036f8630716b11276f72d50308ce4d5d",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/raf_spare_parts__titantpp_history_mlp__seed42/predictions/part-00000.parquet": "cd4d6a6d905e521cc290acb309e0151aae2abf83b5c681fb8b6b9f3aeda5ba87",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/raf_spare_parts__titantpp_all_available_history_mlp__seed42/receipt.json": "5a0d37858059b92aceb0384f242638754bbe25def2ef1515c2d7e27f6db15ffc",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/raf_spare_parts__titantpp_all_available_history_mlp__seed42/predictions/part-00000.parquet": "3f724fc4d1eb72690ab3df75e1e7bef524e0e14e159280f10bff7cbf3bb25f96",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/raf_spare_parts__titantpp_current_only_param_matched__seed42/receipt.json": "952ac783603044b464940e0a7242c7fa7c773eb964331ce805ed1aedde93ed4c",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/raf_spare_parts__titantpp_current_only_param_matched__seed42/predictions/part-00000.parquet": "020bcca3fbf833ac3a3e284bd2a201e81aa42b0c8315062f69712abaf18feadf",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/intermittent_frozen_5000__titantpp_history_mlp__seed42/receipt.json": "69938c521fe6ad399c721bf68f32894b84ce720f8be55d28c58b69336d98fed0",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/intermittent_frozen_5000__titantpp_history_mlp__seed42/predictions/part-00000.parquet": "f052659aac7bd4123a9630fda0a2fe786252d2f6518684468c5a93c0db2f53dd",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/intermittent_frozen_5000__titantpp_all_available_history_mlp__seed42/receipt.json": "72dfea77947742f8637316da09e46e6d56b2963e68df792a77f58e07bf5a1bf1",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/intermittent_frozen_5000__titantpp_all_available_history_mlp__seed42/predictions/part-00000.parquet": "f83fc4e51f16c62bbac54efb357fbd93c03303ddcd08cff873a1cf80db25f8cc",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/intermittent_frozen_5000__titantpp_current_only_param_matched__seed42/receipt.json": "2c65726df4c894b5d2cd01d971f79305ef98cb81e5094eedff6a94de56391d88",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/qualification_cuda/attempt1/intermittent_frozen_5000__titantpp_current_only_param_matched__seed42/predictions/part-00000.parquet": "fc6efa66e0273ff124aa9b7106f2aab893466a9578c33ef790a7b7fe54b7448e"
+  },
+  "qualification_row_schema": {
+    "target_index": "Int64",
+    "target_id": "String",
+    "entity_id": "String",
+    "seq": "Int64",
+    "split": "String",
+    "recorded_date": "String",
+    "time_bucket": "String",
+    "site_id": "String",
+    "raw_quantity": "Float64",
+    "predicted_raw_quantity": "Float64",
+    "recorded_gap": "Float64",
+    "time_nll": "Float64",
+    "history_length": "Int64",
+    "last_quantity": "Float64",
+    "mean_quantity": "Float64"
+  },
+  "limits": [
+    "MLP16 qualification receipt absent for all three datasets at the exact native qualification path.",
+    "Three-arm qualification covers first 512 Validation targets only (max_batches=4,batch_size=128), not a random or full population sample.",
+    "No extra MLP16 Train or CurrentOnly Train stored rows found; MLP4/structural controls seed52/62 individual rows not found.",
+    "MLP4 and AllAvailable Train/Validation available as seed42 weighted stratified diagnostic samples; full Validation rows only MLP4 seed42 and MLP16 seeds42/52/62.",
+    "MLP16 Taxi/RAF seed42 full Validation rows use macOS CPU Torch2.14.0, versus native three-arm qualification Linux CUDA Torch2.11.0/cuDNN91900. Intermittent MLP16 full Validation is native but not part of this exact qualification cohort.",
+    "State digest equality was checked against existing source inventory metadata, not recomputed by loading model/checkpoint. Binary checkpoint SHA was recomputed without model import."
+  ],
+  "new_training_count": 0,
+  "new_inference_count": 0,
+  "remote_execution_count": 0,
+  "historical_cnn_accessed_or_changed": false,
+  "test_opened": false
+}

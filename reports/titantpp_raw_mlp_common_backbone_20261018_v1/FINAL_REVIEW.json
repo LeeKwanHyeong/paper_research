@@ -1,0 +1,45 @@
+{
+  "status": "PASS_with_scope_limits",
+  "reviewed_at_kst": "2026-10-18T09:11:35.958634+09:00",
+  "scope": "Independent final architecture/interpretation consistency review. No raw prediction recomputation in this review; existing independent descriptive QA receipt inspected. No new source, model, training, inference or remote operations.",
+  "reviewed_file_sha256": {
+    "REPORT.md": "4055fc121192e539fc2a10b1f29a0aa3f6e82f64f85d507a62b100ab82eb81f1",
+    "DECISION.json": "c4b62167603ae3ea6c2f63fb90f3b6a8491dd4a584e5caeb1cb1d0b472d02c42",
+    "DUPLICATE_AUDIT.json": "f40f2023a5be6bd6f5af7d4a99d3d20b2f1d0fa29fdb65dbbb5f2ee7382fdf6d",
+    "DUPLICATE_AUDIT.md": "425985c29879fc4df4d1016b5cc003d35b65ea5209506cb18ece5e8efa312f18",
+    "ROW_ANALYSIS_QA.json": "ec724c4a29ee7d2bade905bffd541bc60df71b4a8d9656d1f2b522b6c3cd431d",
+    "ENDPOINT_QA.json": "1ea914207034dfab431911cad59dc2b525e19c66d21246822a491b1c2d790106"
+  },
+  "checks": {
+    "parameter_count_64x8_plus8x64_equals1024": true,
+    "hypothesis_base_MLP4_same_across_datasets": true,
+    "candidate_LMM_h2_plus_P_e0": true,
+    "control_LMM_h2_plus_P_h2": true,
+    "training_deferred": true,
+    "no_new_inference_or_remote": true,
+    "cnn_preserved": true,
+    "causal_mechanism_unconfirmed": true,
+    "incidental_notion_exposure_disclosed": true,
+    "source_residual_route_limitation_disclosed": true,
+    "memory_retrieval_change_limitation_disclosed": true,
+    "prior_proposals_not_renamed_as_new": true,
+    "descriptive_row_QA_receipt_pass": true,
+    "opposite_composition_directions_reflected": true
+  },
+  "blocking_findings": [],
+  "optional_clarification": [
+    {
+      "severity": "low",
+      "location": "REPORT.md candidate paragraph",
+      "detail": "Explicitly call the 1024 matching nominal parameter count: e0 originates from two observed features, h2 is contextual, so effective function space and gradient routes are not equal. Already disclosed in DUPLICATE_AUDIT.md; not blocking."
+    }
+  ],
+  "evidence_limits": [
+    "Nonduplication is bounded to inspected code and prior design documents, not literature novelty proof.",
+    "Direction reversals and small/sparse common support undermine a common information-loss diagnosis.",
+    "Raw Train coverage missing for MLP16 and CurrentOnly; several controls/seeds lack individual rows.",
+    "Existing Notion Cap/Test summary exposure was disclosed and excluded from new numeric input; review does not claim complete held-out blindness.",
+    "Future native evaluation still requires a separate prospective contract and user decision; architecture note is not a training approval."
+  ],
+  "post_review_edit_policy": "This receipt binds these versions. Root may append QA paragraph or optional nominal-capacity clarification; any numerical or hypothesis change requires renewed review."
+}

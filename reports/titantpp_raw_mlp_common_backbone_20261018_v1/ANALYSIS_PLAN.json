@@ -1,0 +1,58 @@
+{
+  "created_at": "2026-10-18T00:04:10.697650+00:00",
+  "objective": "Analyze uncapped stored Train/Validation MLP4/16/two controls across three datasets, identify descriptive common errors and one functionally untried backbone hypothesis; no training decision in this task.",
+  "scope": {
+    "datasets": [
+      "yellow_trip_hourly",
+      "raf_spare_parts",
+      "intermittent_frozen_5000"
+    ],
+    "arms": [
+      "titantpp_history_mlp",
+      "titantpp_history_mlp_width16",
+      "titantpp_all_available_history_mlp",
+      "titantpp_current_only_param_matched"
+    ],
+    "allowed_splits": [
+      "train",
+      "validation"
+    ],
+    "cap_data_used": false,
+    "new_training": false,
+    "new_inference": false,
+    "remote_calls": 0,
+    "cnn_modified": false,
+    "heldout_read": false
+  },
+  "input_manifests": {
+    "reports/titantpp_mlp_train_validation_mechanism_20261017_v1/ROW_INPUT_MANIFEST.json": "518d1560dfc4c0d379203cd31d70a0bcf2bef273564ef62fb7d8f49bc1f2901a",
+    "reports/titantpp_mlp_train_validation_mechanism_20261017_v1/ENDPOINT_INPUT_MANIFEST.json": "ac4a6d65b08156d46bd361775280b545627cf19e240b6884792de4c6529707e7",
+    "reports/titantpp_mlp_train_validation_mechanism_20261017_v1/ROW_COVERAGE.json": "5b194a686f178ce254d3e91e56519bf088794ec3d7382b407ea3d2fa95062137"
+  },
+  "auxiliary_manifest": "COVERAGE_AUDIT.json; only pure validation qualification receipts/shards; first512 native rows not representative",
+  "coverage_policy": "No imputation/new inference for missing MLP16/CurrentOnly Train or MLP4/controls52/62 individual rows. Full Validation endpoint36, full row12cohorts, stratified sample12cohorts and qualification9cohorts reported separately.",
+  "predefined_conditions": {
+    "recent_history_regime": "drop if log1p(last)-log1p(mean)<-log(2);rise if>log(2);middle otherwise. Same thresholds as prior analysis.",
+    "truth_bins": "Existing frozen Train quantity bounds per dataset, diagnostic only never model inputs.",
+    "active_branch_count": "sum(history_length>t) for t in [1,2,4,8,16,32,64,128]",
+    "minimum_support_flag_only": {
+      "rows": 30,
+      "entities": 5
+    },
+    "all_groups_retained": true
+  },
+  "new_checks": [
+    "Absolute error/bias of stored models vs observed-last and observed-mean deterministic references, no inference.",
+    "Drop/middle and rise/middle standardization within predefined cells: truthbin;exacttruth;entity×truthbin×activebranches;entity×exacttruth×activebranches.",
+    "Common cell mass=min(weighted mass in each regime); both regime distributions standardized to same cells. Row-overlap and equal-entity weighting. Zero-common-support reported N/A.",
+    "MLP16−MLP4 seed42 full Validation and AllAvailable−MLP4 weighted Train/Validation paired targets; aux qualification3models512 only."
+  ],
+  "method_limits": [
+    "Truth-conditioned strata are retrospective diagnosis, not causal identification/predictive routing.",
+    "Matched common-support findings do not apply to excluded targets.",
+    "CPU/native provenance and sparse support remain visible.",
+    "Prior Test and Cap knowledge already exists; this fresh analysis does not open their files and is exploratory, not blinded confirmation.",
+    "No pooled raw metrics across datasets; no p-values, significance or causal attribution."
+  ],
+  "hypothesis_selection": "Choose at most one architecture axis after duplicate audit and actual descriptive evidence. If evidence is limited label design-level only; do not claim causes or force newtraining."
+}

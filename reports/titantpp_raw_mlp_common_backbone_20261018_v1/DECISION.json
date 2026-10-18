@@ -1,0 +1,51 @@
+{
+  "status": "analysis_complete_training_deferred",
+  "scope": "uncapped_saved_train_validation_only",
+  "common_backbone_failure_identified": false,
+  "naive_drop_overprediction_survives_composition_check": false,
+  "matched_low_quantity_comparisons": [
+    {
+      "dataset": "yellow_trip_hourly",
+      "crude_delta_mae": 9.74480282107329,
+      "standardized_delta_mae": -0.6553283006364603,
+      "drop_n": 465,
+      "middle_n": 724,
+      "entities": 29
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "crude_delta_mae": 3.1880729891102844,
+      "standardized_delta_mae": -3.9343437565697563,
+      "drop_n": 46,
+      "middle_n": 46,
+      "entities": 45
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "crude_delta_mae": 0.4050330454243872,
+      "standardized_delta_mae": 0.004681586317332509,
+      "drop_n": 47,
+      "middle_n": 139,
+      "entities": 7
+    }
+  ],
+  "hypothesis": {
+    "name": "late_reuse_of_current_observation_embedding",
+    "duplicate_audit": "no exact functional duplicate found in bounded inspected sources",
+    "evidence": "design-level only; common error mechanism not established",
+    "base": "MLP4 common across datasets",
+    "candidate": "LMM(h2+P(e0))",
+    "control": "LMM(h2+P(h2))",
+    "proposed_P": "bias-free64→8→64 GELU/output-zero-init;1024weights each",
+    "implemented": false
+  },
+  "new_training_count": 0,
+  "new_inference_count": 0,
+  "remote_execution_count": 0,
+  "cnn_modified": false,
+  "local_heldout_prediction_files_opened": 0,
+  "incidental_existing_notion_cap_test_history_visible": true,
+  "statistical_tests": 0,
+  "fallacy_review_coverage": "11/11",
+  "recommendation": "Do not auto-start training from this evidence; user decides after reading results"
+}
