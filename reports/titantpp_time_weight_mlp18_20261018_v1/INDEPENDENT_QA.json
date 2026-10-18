@@ -1,0 +1,102 @@
+{
+  "status": "PASS_local_independent_review",
+  "created_at": "2026-10-18T01:36:35.684749+00:00",
+  "open_launch_blocking_findings": [],
+  "files_sha256": {
+    "paper/scripts/run_titantpp_time_weight_mlp18.py": "0e8e9af6e89595235bf6c052f6a762a4427027825487157239485a04625a5ebc",
+    "paper/scripts/titantpp_time_weight_mlp18_runtime.py": "8b951c104fb83af2ab636254652488a6018d38400c30d4650f8db2927c3fb9ad",
+    "paper/scripts/manage_titantpp_time_weight_mlp18.py": "52927a3c889c03c9cacfc60511a662ec54a9b850c9555f4e5d48c87e0e6eb127",
+    "paper/scripts/compare_titantpp_time_weight_mlp18.py": "b6c52c3c9d5530b43ac240bae8de8e80d4f0172df306b710b797196bbb66766b",
+    "paper/tests/test_titantpp_time_weight_mlp18.py": "1d2309611ecb644bf123bd17756c330cfe3ed080bf8756c072d84c72bfd40ac5",
+    "paper/tests/test_titantpp_time_weight_mlp18_operations.py": "6f5e6934839c9bc1a114340aaf0b383607a3ddb4f1ee497454e11849dc292ed5"
+  },
+  "scope": {
+    "project_source_edits": 0,
+    "remote_operations": 0,
+    "research_training": 0,
+    "test_split_evaluations": 0,
+    "historical_cnn_changes": 0
+  },
+  "independent_checks": {
+    "scientific_suite": {
+      "tests": 13,
+      "actual_exit_code": 0,
+      "coverage": [
+        "alpha1 AdamW/state/RNG equivalence",
+        "exact alpha scaling and unweighted telemetry",
+        "fresh initialization equivalence",
+        "alpha metadata binding and tamper rejection",
+        "first strict finite Validation rawRMSE selection",
+        "synthetic two epoch train/checkpoint/Validation replay for both alpha arms",
+        "Test stage rejection",
+        "hook restoration"
+      ]
+    },
+    "operations_suite": {
+      "tests": 27,
+      "actual_exit_code": 0,
+      "duration_seconds": 0.33,
+      "includes_actual_generated_supervisor_and_collection_json_roundtrip": true
+    },
+    "pure_comparison": {
+      "fabricated_records": 27,
+      "scalar_and_decision_checks": 921,
+      "invalid_cases_rejected": 6,
+      "summary_rows": 81,
+      "difference_rows": 243,
+      "decisions": 6,
+      "status": "PASS"
+    },
+    "generated_newline_independent_ast": {
+      "supervisor_suffix_ord": [
+        10
+      ],
+      "collection_suffix_ord": [
+        10
+      ],
+      "status": "PASS"
+    }
+  },
+  "review_conclusions": [
+    "Only time-loss coefficient changes; quantity objective, input, model, head, memory, selector and budget remain fixed.",
+    "Stored alpha1 references are reused without retraining or reevaluation.",
+    "New candidate Test execution is rejected; this campaign is Validation-only.",
+    "Paused external workers are identity checked; new runtime does not signal or resume them.",
+    "Current Cap27 absolute host deadlines are inherited without extension.",
+    "Quantity improvement and three-metric Pareto improvement are distinguished; worsening TimeNLL remains a tradeoff."
+  ],
+  "resolved_findings": [
+    {
+      "finding": "Base process identity lacked state required by pause checks.",
+      "resolution": "New runtime wrapper reads state/ppid and verifies unchanged start_ticks; existing source untouched."
+    },
+    {
+      "finding": "Potential literal backslash-n in generated JSON programs.",
+      "classification": "withdrawn_false_alarm",
+      "resolution": "Actual generated source AST and execution regression establish real newline byte10; operational source unchanged."
+    }
+  ],
+  "limitations": [
+    "Native GPU admission and actual training have not been performed by this reviewer.",
+    "Qualification uses sequential full-shape synthetic peak memory with a conservative factor for three workers, not a measured concurrent three-process peak. Actual launch admission remains necessary.",
+    "This loss-weight comparison tests objective weighting, not a backbone improvement claim."
+  ],
+  "evidence_logs": {
+    "/tmp/time_weight18_independent_test.stdout": {
+      "sha256": "1aad62945b32f2fa9d0b823c123f26dde3642bebb7f33aa9895b878b063a27fc",
+      "text": "[time-weight] alpha=0.1 train_weighted_joint=0.36637339 train_unweighted_joint=0.99093386 unweighted_time=0.69395607 existing_log_mse=0.29697779\n[epoch 001] backbone=titantpp_history_mlp_width16 variant=count_only_log_regression seed=42 train_joint=0.36637339 train_time=0.69395607 batch_p99=0.36637339 grad_norm=4.95973825 clip_fraction=1.000000 val_joint=0.62606107 time_nll=1.99619008 log_qty_mse=0.42644206 tail_aux=0.00000000 qty_mae=4.01616549\n[time-weight] alpha=0.1 train_weighted_joint=0.32925269 train_unweighted_joint=0.90710212 unweighted_time=0.64205491 existing_log_mse=0.26504720\n[epoch 002] backbone=titantpp_history_mlp_width16 variant=count_only_log_regression seed=42 train_joint=0.32925269 train_time=0.64205491 batch_p99=0.32925269 grad_norm=4.58385086 clip_fraction=1.000000 val_joint=0.61549144 time_nll=1.84385548 log_qty_mse=0.43110590 tail_aux=0.00000000 qty_mae=4.03607702\n[time-weight] alpha=10 train_weighted_joint=7.23653853 train_unweighted_joint=0.99093386 unweighted_time=0.69395607 existing_log_mse=0.29697779\n[epoch 001] backbone=titantpp_history_mlp_width16 variant=count_only_log_regression seed=42 train_joint=7.23653853 train_time=0.69395607 batch_p99=7.23653853 grad_norm=45.61009979 clip_fraction=1.000000 val_joint=20.38770163 time_nll=1.99612595 log_qty_mse=0.42644215 tail_aux=0.00000000 qty_mae=4.01616573\n[time-weight] alpha=10 train_weighted_joint=6.68551102 train_unweighted_joint=0.90709368 unweighted_time=0.64204637 existing_log_mse=0.26504731\n[epoch 002] backbone=titantpp_history_mlp_width16 variant=count_only_log_regression seed=42 train_joint=6.68551102 train_time=0.64204637 batch_p99=6.68551102 grad_norm=15.82061195 clip_fraction=1.000000 val_joint=19.16973713 time_nll=1.87394878 log_qty_mse=0.43024935 tail_aux=0.00000000 qty_mae=4.03441334\n[time-weight] alpha=1 train_weighted_joint=1.58742997 train_unweighted_joint=1.58742997 unweighted_time=1.48625749 existing_log_mse=0.10117248\n"
+    },
+    "/tmp/time_weight18_independent_test.stderr": {
+      "sha256": "a01d9bd12e52eb16ce26b104547e20237194b09c4902dbe242d1f06b98cde54b",
+      "text": ".............\n----------------------------------------------------------------------\nRan 13 tests in 1.100s\n\nOK\n"
+    },
+    "/tmp/time_weight_operations_27_tests.stdout": {
+      "sha256": "d01352fc24c293a7e25b3aee7f86d0bea2aa06b1a8181dc5d5150c3bb7d7da95",
+      "text": "...........................                                              [100%]\n27 passed in 0.32s\n"
+    },
+    "/tmp/time_weight_operations_27_tests.stderr": {
+      "sha256": "eae3b3ab88ebd007cd93d95595b7a951b2c689b68948b08fd24d8ff83282945e",
+      "text": "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/fs/__init__.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.\n  __import__(\"pkg_resources\").declare_namespace(__name__)  # type: ignore\n"
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "status": "PASS_with_explicit_launch_conditions",
+  "reviewed_at": "2026-10-18T01:26:46.790563+00:00",
+  "scope": "Read-only design review; no remote or source edits",
+  "question": "Does changing the time term weight alone alter the fixed Cap MLP16 Validation tradeoff?",
+  "recommended_design": {
+    "quantity_objective": "existing log1p MSE",
+    "training_scalar": "alpha_time * mean(time_NLL) + mean(quantity_log_MSE)",
+    "new_alpha_time": [
+      0.1,
+      10.0
+    ],
+    "stored_baseline_alpha_time": 1.0,
+    "datasets": [
+      "Taxi",
+      "RAF",
+      "Intermittent"
+    ],
+    "seeds": [
+      42,
+      52,
+      62
+    ],
+    "new_fit_count": 18,
+    "existing_baseline_fit_count": 9,
+    "evaluation": "Validation only; full Validation raw RMSE first strict finite minimum checkpoint",
+    "new_test_evaluation": false
+  },
+  "alternatives": [
+    {
+      "design": "Single alpha=.1, nine new fits",
+      "cost": "Half the training cost",
+      "limitation": "Tests only reduced time weighting despite opposite observed median imbalance across datasets."
+    },
+    {
+      "design": "Same alpha=.1/10 on all datasets, eighteen new fits",
+      "cost": "Twice the one-arm cost; no dataset-specific tuning",
+      "benefit": "Tests both directions relative to stored alpha1 without fitting weights to the small gradient probe."
+    },
+    {
+      "design": "Dataset-specific gradient-norm equality alpha",
+      "recommendation": "Do not use in this bounded experiment",
+      "reason": "Derived from selected checkpoints and three Train batches; introduces additional tuning and does not account for AdamW or the training trajectory."
+    }
+  ],
+  "launch_conditions": [
+    "Source941/input/log1p/head/memory/model/budget/seed/rawRMSE selection remain unchanged; inherited baseline is never retrained or reevaluated.",
+    "Synthetic alpha1 run must match the prior training scalar, gradients, initial state/RNG, update and selection behavior; alpha is bound into checkpoint/resume identity and logs.",
+    "Do not renormalize alpha*time+quantity or replace with time+quantity/alpha: overall objective scaling interacts with global clipping, AdamW epsilon and weight decay.",
+    "Each new condition may retain the approved36h limit from its own start, but existing host absolute168h deadline and paused Cap27 deadlines must not reset or extend.",
+    "Before launching, exact paused process identity and stopped state form an allowed retained-GPU-context set. New3-worker native admission must fit actual remaining memory; no signals or resource reclamation from paused jobs.",
+    "Report all candidate/seed RMSE,MAE and TimeNLL tradeoffs; no winner-only reporting or causal/generalization claims."
+  ],
+  "interpretation": "This tests joint-objective weighting, not a new backbone contribution or an optimal loss weight. Batch-gradient imbalance is a motivation, not an established causal mechanism.",
+  "artifacts_created": [
+    "/tmp/titantpp_time_weight18_design_qa.json"
+  ]
+}
