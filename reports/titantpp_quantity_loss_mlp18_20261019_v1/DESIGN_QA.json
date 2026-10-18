@@ -1,0 +1,92 @@
+{
+  "status": "PASS_design_with_implementation_checks_pending",
+  "created_at": "2026-10-18T23:26:33.852100+00:00",
+  "scope": "Design-only independent review; project edits, remote calls, commits, inference and Test evaluation are zero.",
+  "problem": "On the fixed Cap MLP16 quantity-only model, compare the existing log-space squared loss against literal quantity-unit squared and absolute losses, without conflating the result with a backbone change.",
+  "approved_design": {
+    "new_conditions": 18,
+    "stored_log_loss_alpha0_references": 9,
+    "datasets": 3,
+    "seeds": [
+      42,
+      52,
+      62
+    ],
+    "new_objectives": {
+      "raw_mse": "mean((existing_predicted_quantity - capped_target_quantity)^2) over the same valid targets",
+      "raw_mae": "mean(abs(existing_predicted_quantity - capped_target_quantity)) over the same valid targets"
+    },
+    "extra_quantity_scale_normalization": false,
+    "time_objective_connection": false,
+    "observed_time_inputs_retained": true,
+    "new_test_evaluation": false
+  },
+  "material_options": [
+    {
+      "option": "Literal raw-unit MSE and MAE (approved)",
+      "recommended_for_this_request": true,
+      "benefit": "Directly compares the requested quantity-unit objectives and retains a simple, auditable definition.",
+      "tradeoff": "Magnitude, outlier emphasis, gradient norms and clipping frequency change together. Fixed learning rate does not equate effective update sizes or optimization difficulty.",
+      "implementation_cost": "Small objective branch plus strict identity/gradient/state and synthetic full-flow checks; reuse training and queue."
+    },
+    {
+      "option": "Scale-normalized raw objectives or tuned per-loss learning rate",
+      "recommended_for_this_request": false,
+      "benefit": "Could separately study loss-scale sensitivity.",
+      "tradeoff": "Changes the approved literal-objective comparison and introduces additional design choices or tuning; would require a distinct later experiment.",
+      "implementation_cost": "Additional scale contract/control arms and validation budget; do not add now."
+    }
+  ],
+  "open_critical_design_findings": [],
+  "required_implementation_checks": [
+    {
+      "id": "quantity_definition",
+      "check": "Use the canonical existing differentiable point prediction in quantity units and the same Cap target/mask. Here raw means original quantity units of the Cap dataset, not uncapped target data. Do not introduce new output clipping, cap clipping, inverse-link formula, normalization, target reconstruction or changed dtype/precision policy."
+    },
+    {
+      "id": "reduction_identity",
+      "check": "Match the existing target population and reduction: same valid events, same per-batch mean and dataset-weighted telemetry. MSE has no square root and no one-half coefficient; MAE has no smoothing or Huber transition. At zero residual, preserve the pinned framework absolute-value subgradient convention."
+    },
+    {
+      "id": "time_graph_absence",
+      "check": "joint must be the chosen quantity loss tensor itself, not quantity plus zero times TimeNLL. Every optimizer update must preserve time-exclusive grad=None, absent AdamW state and exact time-head tensor values. Shared weights and time inputs remain learnable through quantity."
+    },
+    {
+      "id": "metadata_and_replay",
+      "check": "Bind raw_mse/raw_mae identity consistently into jobs, histories, selected/terminal checkpoints, train and Validation receipts, and replay verification. Existing head family name may be inherited, but objective metadata must not falsely label the optimized loss as log-MSE. Report the unchanged log loss only as an auxiliary metric if retained."
+    },
+    {
+      "id": "fresh_equivalence",
+      "check": "All model tensors, construction/RNG consumption, data order, head initialization, AdamW settings, clip threshold and budget remain identical across new losses and the fixed log-loss reference. No baseline warm start, retry or retraining."
+    },
+    {
+      "id": "finite_policy",
+      "check": "Literal raw MSE can produce larger gradients and objective values. Preserve nonfinite values/errors explicitly; do not silently normalize, clip predictions/residuals or alter optimization to rescue an arm. Keep unused TimeNLL diagnostic failures distinct from quantity-objective failures."
+    },
+    {
+      "id": "selection",
+      "check": "All arms including MAE training select the first strict finite minimum full-Validation quantity RMSE. Read MAE and TimeNLL from that same checkpoint. This tests each objective under the common RMSE selector, not each arm individually optimized for its preferred reporting metric."
+    },
+    {
+      "id": "baseline_and_host",
+      "check": "Use the stored completed alpha0 log-loss9 references only, SHA-bound to selected checkpoints and native Validation. The same dataset/seed stays on its previous host; new18 split8 on5080 and10 on5090, with at most3 new workers each."
+    },
+    {
+      "id": "execution_boundary",
+      "check": "Keep the inherited absolute host deadline and existing per-fit limits. Start only after the prior queues on that host have verified completion and owned PID/GPU absence; allow only the exact still-paused external process identities. No old signals, claim deletion, runtime mutation or source947 changes."
+    },
+    {
+      "id": "comparison",
+      "check": "Compare27 endpoints (stored9 plus new18), same target/host/cohorts and3seed mean/sampleSD. Include every seed and worsening case; overall,cap-hit and empty above-cap tail remain distinct. No dataset pooling or best-Test selection."
+    }
+  ],
+  "scientific_interpretation": [
+    "This is an objective-function comparison with a fixed backbone; it cannot establish a backbone contribution.",
+    "Changing log-MSE to raw MSE/MAE jointly changes prediction-scale emphasis, gradient magnitude, curvature/subgradient behavior, clipping and AdamW trajectories. Improvement is not proof that input log1p was wrong or that curvature alone caused earlier errors.",
+    "Raw MSE aligns the training target error units with quantity RMSE, while raw MAE aligns with quantity MAE; neither guarantees lower validation error under finite data, a constrained model, optimization and the shared RMSE checkpoint selector.",
+    "Raw MAE is less sensitive to the magnitude of an individual residual than MSE, but cannot be claimed to improve both RMSE and MAE or every quantity cohort in advance.",
+    "TimeNLL remains a diagnostic of the time-loss-untrained head. Its values must not be discarded or mistaken for a trained time forecast; shared representations may change despite unchanged time-head tensors.",
+    "The results remain Cap-data Validation comparisons. They do not demonstrate performance on uncapped quantities or new Test generalization."
+  ],
+  "next_step": "Review only the newly prepared worker/runtime/manager/comparator and run their focused synthetic tests after implementation freezes. No design blocker requires a new user permission question."
+}

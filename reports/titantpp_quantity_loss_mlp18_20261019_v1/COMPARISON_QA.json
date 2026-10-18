@@ -1,0 +1,65 @@
+{
+  "status": "PASS_independent_comparison_arithmetic_and_stored_baseline_binding",
+  "created_at": "2026-10-18T23:31:13.289016+00:00",
+  "scope": "Read-only local review and reproducible synthetic aggregate tests. No main/prepare/remote/training/inference/Test. Project files unchanged.",
+  "file_sha256": {
+    "paper/scripts/compare_titantpp_quantity_loss_mlp18.py": "f507e6915143aa4a176b0b543011debea816ed950b39e98db031d3d08995da36",
+    "tests/test_titantpp_quantity_loss_comparison.py": "2da6a9b169c345df5d333522633680c774f48614661c28900fcb64b9a06666c6",
+    "reports/titantpp_quantity_loss_mlp18_20261019_v1/SCIENCE_SPEC.json": "4ed76d74bc81ed839b9fc13189a0e96f759e123371cce87659d2a75a52548952",
+    "reports/titantpp_quantity_loss_mlp18_20261019_v1/EXPERIMENT_PLAN.md": "fc6f5a1054746a46682e255fad650cd28ca4650ab013008653317aa0b6464d39"
+  },
+  "synthetic_trials": 50,
+  "rng_seed": 191025,
+  "per_trial_counts": {
+    "records": 27,
+    "summary": 81,
+    "seed_differences": 243,
+    "decisions": 6
+  },
+  "independent_arithmetic_checks": 86250,
+  "method": "Production aggregate output compared against math.fsum means, explicit sum((x-mean)^2)/(n-1) square roots, direct scalar differences and sign predicates; no copying production arithmetic helpers.",
+  "worsened_rows_retained": 4105,
+  "zero_denominator_relative_na_checks": 994,
+  "invalid_cases_rejected": [
+    "missing",
+    "duplicate_replaces_missing",
+    "extra_duplicate",
+    "mismatched_target",
+    "mismatched_host",
+    "nonzero_alpha",
+    "trained_time_head",
+    "different_loss_population",
+    "different_seed_population",
+    "nonfinite",
+    "negative_qty",
+    "empty_tail_numeric",
+    "boolean_metric"
+  ],
+  "existing_tests": {
+    "exit_code": 0,
+    "stdout_path": "/tmp/quantity_loss18_COMPARISON_QA.stdout",
+    "stderr_path": "/tmp/quantity_loss18_COMPARISON_QA.stderr",
+    "stderr": "test_arithmetic_matches_closed_form_and_empty_population (test_titantpp_quantity_loss_comparison.ComparisonTests.test_arithmetic_matches_closed_form_and_empty_population) ... ok\ntest_different_population_is_rejected (test_titantpp_quantity_loss_comparison.ComparisonTests.test_different_population_is_rejected) ... ok\ntest_different_target_host_scope_or_head_policy_is_rejected (test_titantpp_quantity_loss_comparison.ComparisonTests.test_different_target_host_scope_or_head_policy_is_rejected) ... ok\ntest_duplicate_missing_condition_is_rejected (test_titantpp_quantity_loss_comparison.ComparisonTests.test_duplicate_missing_condition_is_rejected) ... ok\ntest_nonfinite_negative_or_fake_empty_metrics_are_rejected (test_titantpp_quantity_loss_comparison.ComparisonTests.test_nonfinite_negative_or_fake_empty_metrics_are_rejected) ... ok\ntest_zero_reference_relative_difference_is_na_and_worsening_preserved (test_titantpp_quantity_loss_comparison.ComparisonTests.test_zero_reference_relative_difference_is_na_and_worsening_preserved) ... ok\n\n----------------------------------------------------------------------\nRan 6 tests in 0.002s\n\nOK\n"
+  },
+  "baseline_refs": {
+    "count": 9,
+    "exact_dataset_seed_matrix": true,
+    "same_host_mapping": true,
+    "selected_binary_SHA_verified": true,
+    "receipt_metrics_target_SHA_binding": true,
+    "manager_archive_original_completion_validation_selection_verifier_passed": true,
+    "retraining_or_inference": false
+  },
+  "interpretation_review": [
+    "Literal Cap-unit raw MSE/MAE, no additional normalization; same input/head/backbone and selector documented.",
+    "TimeNLL remains reported numerically but marked diagnostic for quantity-only trained models.",
+    "All seed worsening retained; RMSE and MAE must both strictly improve for quantity decision.",
+    "No dataset pooling, Test, external superiority, backbone or isolated-curvature attribution."
+  ],
+  "open_blocking_findings": [],
+  "limitations": [
+    "New scientific worker/runtime/manager launch implementation QA pending their final freeze.",
+    "No new actual training or selected Validation endpoints exist in this arithmetic test.",
+    "This verifies the comparator and existing nine stored endpoints, not future native reproducibility."
+  ]
+}
