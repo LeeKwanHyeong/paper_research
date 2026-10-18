@@ -1,0 +1,160 @@
+{
+  "schema": "large_quantity_loss_head_analysis_v1",
+  "status": "complete_code_and_algebra_review",
+  "scope": {
+    "new_training": false,
+    "new_inference": false,
+    "remote_calls": false,
+    "running_cap27_modified": false,
+    "existing_results_modified": false,
+    "held_out_results_read": false,
+    "prediction_rows_analyzed_here": false
+  },
+  "source_revision": "e33f540c02b5de69fcd75e84375ec0f5c6a89bd3",
+  "contract_path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp_cap36_20261017_v2/execution_contract.json",
+  "contract_sha256": "48bfbfeb75085af687b9055d9fe31f6cf1d7c6709ba3d2f37662360380133f4d",
+  "source_evidence": {
+    "models/TPPs/CountAwareTPP.py": {
+      "sha256": "9348e4ad18aea3c12e532cf1403fecd5f8a7af2d932f9c1019ddd8b3b48e4c1c",
+      "matches_cap36_source_contract": true
+    },
+    "models/TPPs/CountAwareFactory.py": {
+      "sha256": "9f039520a11638bef417890abf9055a3fb3115f5ebb85b54b8640575fb8e9246",
+      "matches_cap36_source_contract": true
+    },
+    "models/TPPs/CountAwareTitanMultiLagDetail.py": {
+      "sha256": "4bcbecdadf921df21a4e7fb379962eb4ecec2cfeb2f8ff1edccbb6b418807eae",
+      "matches_cap36_source_contract": true
+    },
+    "models/TPPs/CountAwareTitanCoreAblation.py": {
+      "sha256": "b34b61aadc7a2c91e000493caf2497fc89549a499082ca77ebbc3ed7cab2b120",
+      "matches_cap36_source_contract": true
+    },
+    "models/TPPs/CountAwareTitanHistoryWidth.py": {
+      "sha256": "2a903290810070bdfe72a355a98ff09790b02858a6853e94a7a4a87336afc6f7",
+      "matches_cap36_source_contract": true
+    },
+    "models/TPPs/CountAwareTitanHistoryControls.py": {
+      "sha256": "60ce1ea2675e9f516f3d09663d893a39e4825ede5a2ab5a703779dcb158e640b",
+      "matches_cap36_source_contract": true
+    },
+    "models/TPPs/CountAwareTitanMLPCandidates.py": {
+      "sha256": "eb88a42aa092bb173ccbf0139a1a8469542e5a4cb5f25fd23b098d60f2ca841a",
+      "matches_cap36_source_contract": true
+    },
+    "paper/scripts/count_aware_tpp_backbone/core.py": {
+      "sha256": "c5cc72a265a05199868332c9beaa32ce9568afaf5f4cfa0930b836215ab36084",
+      "matches_cap36_source_contract": true
+    },
+    "paper/scripts/count_aware_tpp_backbone/training.py": {
+      "sha256": "964ed6fb569acad9d1da0887398da7c770724623277ed688a4e841af4285f6ab",
+      "matches_cap36_source_contract": true
+    },
+    "paper/scripts/run_titantpp_mlp_cap36.py": {
+      "sha256": "a58d3cb2bdc2baa842949e534a31f931632d87b360a202a3aea01b5e43dec9ef",
+      "matches_cap36_source_contract": true
+    }
+  },
+  "active_variant": "count_only_log_regression",
+  "input_transform": "[log1p(dt),log1p(q)] with mask; no train-zscore in common continuous_features",
+  "quantity_loss": "(softplus(a)-log1p(q))^2; not standardized by train_log_std",
+  "quantity_output": "expm1(softplus(a)); mathematically exp(a), subject to floating point/softplus threshold implementation",
+  "prediction_upper_cap": null,
+  "train_log_mean_use": "quantity_head initial bias only for this active quantity route",
+  "train_log_std_use": "validated constructor argument; quantity scale initialization only for inactive optional lognormal variant",
+  "joint_objective": "recorded positive-integer duration NLL + 1.0*log quantity MSE",
+  "checkpoint_selector": "first strict finite minimum full Validation raw quantity RMSE; this is selection, not raw-MSE training",
+  "mathematical_estimands": {
+    "log_mse_unrestricted_population_optimum": "exp(E[log(1+Q)|X])-1",
+    "raw_mse_optimum": "E[Q|X]",
+    "raw_mae_optimum": "any conditional median(Q|X)",
+    "jensen": "exp(E[log(1+Q)|X])-1 <= E[Q|X] when expectation exists",
+    "median_caveat": "The log-MSE inverse mean is not generally the raw conditional median; symmetry of log(1+Q)|X is a sufficient extra condition. No Gaussian assumption or variance correction is implemented here.",
+    "finite_model_caveat": "Joint training, finite capacity, regularization, optimization, early stopping and selected checkpoint need not attain population optimum."
+  },
+  "derivatives": {
+    "raw_prediction": "dL/dp=2*log((1+p)/(1+q))/(1+p)",
+    "linear_head": "dL/da=2*(softplus(a)-log1p(q))*sigmoid(a)",
+    "local_same_absolute_error": "L(q+delta,q) approximately delta^2/(1+q)^2 for |delta| << 1+q",
+    "same_relative_error": "For p=(1+r)q and q large, L tends to log(1+r)^2; r>-1"
+  },
+  "synthetic_examples": [
+    {
+      "truth": 10,
+      "prediction": 9,
+      "absolute_error": 1,
+      "raw_squared_error": 1,
+      "log_mse": 0.009084030374332717,
+      "d_loss_d_raw_prediction": -0.019062035960864955,
+      "d_loss_d_linear_head": -0.1715583236477846,
+      "synthetic_algebra_example_not_data": true
+    },
+    {
+      "truth": 1000,
+      "prediction": 999,
+      "absolute_error": 1,
+      "raw_squared_error": 1,
+      "log_mse": 9.99000915834233e-07,
+      "d_loss_d_raw_prediction": -1.9990006661672055e-06,
+      "d_loss_d_linear_head": -0.0019970016655010384,
+      "synthetic_algebra_example_not_data": true
+    },
+    {
+      "truth": 10,
+      "prediction": 5,
+      "absolute_error": 5,
+      "raw_squared_error": 25,
+      "log_mse": 0.36740061236983235,
+      "d_loss_d_raw_prediction": -0.2020452678567719,
+      "d_loss_d_linear_head": -1.0102263392838595,
+      "synthetic_algebra_example_not_data": true
+    },
+    {
+      "truth": 1000,
+      "prediction": 500,
+      "absolute_error": 500,
+      "raw_squared_error": 250000,
+      "log_mse": 0.4790697927760287,
+      "d_loss_d_raw_prediction": -0.0027630685757698836,
+      "d_loss_d_linear_head": -1.3815342878849417,
+      "synthetic_algebra_example_not_data": true
+    }
+  ],
+  "cap_task": {
+    "policy_path": "benchmark_data/Cap/CAP_POLICY.json",
+    "policy_sha256": "11e88ffb11d639554128d7310182da0b6ab7d4cc33325ebe701abf224292ea86",
+    "transform": "Qc=min(Q,C), C=pooled original Train-event Q75 per dataset",
+    "caps": {
+      "intermittent_frozen_5000": 20.0,
+      "yellow_trip_hourly": 65.0,
+      "raf_spare_parts": 10.0
+    },
+    "cap_mass": "P(Qc=C|X)=P(Q>=C|X); includes naturally equal-C events and capped higher events",
+    "strict_tail": "Qc>C empty by construction; N/A not zero error",
+    "prediction_clipping": false,
+    "not_identifiable": "Raw values above C and differences in capped histories cannot be recovered from capped quantity alone; no inference of impossible prediction under uncapped history."
+  },
+  "diagnostic_priority": [
+    "Compare stored Train/Validation signed error, AE, SSE, log error by fixed Train quantity bins with support, entity composition and seeds; truth-bin underprediction alone is not conditional calibration evidence.",
+    "Calibration by prediction/history-only groups fixed from Train; show raw and log mean residual, cap-hit vs below-cap, stable vs abrupt change with sample counts.",
+    "Separate high-tail underprediction from rare overprediction and error concentration; compare across arms with identical target rows.",
+    "Use stored epoch curves to distinguish persistent Train+Val misfit from Val-only gap; do not add inference or change checkpoint."
+  ],
+  "decision": "Do not attribute all errors to log1p or model complexity. Finish existing Cap27 unchanged; code confirms objective/metric estimand mismatch but row evidence is required before proposing any new objective/head experiment.",
+  "external_sources": [
+    {
+      "url": "https://scikit-learn.org/stable/modules/model_evaluation.html",
+      "support": "absolute-error median and squared-error/mean distinction"
+    },
+    {
+      "url": "https://otexts.com/fpp3/toolbox.html",
+      "support": "transformed forecast back-transformation and bias-adjustment caveat; formulas above are separately derived for log1p"
+    }
+  ],
+  "older_raw_experiment_reference": {
+    "manifest": "search_artifacts/model_enhancement_direct_raw_qty_q012_inter_seed42_e50_0713/experiment_manifest.json",
+    "registered_scope": "Intermittent seed42 50epochs marked TitanTPP small_lmm direct_raw_qty; global/causalRevIN/shrinkageRevIN",
+    "current_mlp4_16_input_only_ablation": false,
+    "performance_read_this_review": false
+  }
+}

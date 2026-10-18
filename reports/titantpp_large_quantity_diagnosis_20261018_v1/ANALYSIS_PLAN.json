@@ -1,0 +1,33 @@
+{
+  "objective": "Explain large-quantity error using stored Train/Validation evidence while authorized Cap external27 training continues unchanged.",
+  "scope": {
+    "official_reference_data": "Train-Q3-capped inputs and quantities (historical directory name Cap)",
+    "previous_data_label": "상한 적용 전 데이터",
+    "allowed_splits": ["train", "validation"],
+    "official_cap_models": "stored MLP4/MLP16/AllAvailable/CurrentOnly, seeds42/52/62, Validation36",
+    "uncapped_coverage": "MLP4seed42 fullValidation and MLP16seeds42/52/62 where stored; MLP4/AllAvailableseed42 weighted stratified Train/Validation samples labelled separately",
+    "new_training": false,
+    "new_model_inference": false,
+    "remote_execution": false,
+    "existing_cnn_modified": false,
+    "running_cap27_modified": false,
+    "test_predictions_opened": false
+  },
+  "fixed_thresholds": {"official_train_q3": {"Taxi":65,"RAF":10,"Intermittent":20}, "previous_train_q99": {"Taxi":3449,"RAF":200,"Intermittent":187}},
+  "questions": [
+    "Is the official ceiling group actually harder than the below-ceiling group for each model and seed?",
+    "How concentrated is pre-ceiling error in Train-defined upper tails, and does signed error agree across datasets?",
+    "Do high target quantities follow high observed quantities or abrupt jumps?",
+    "Does a deterministic previous-observation reference expose information the learned model is not using effectively?",
+    "Which training objective and inverse transform are actually executed, and how do they relate to quantity RMSE/MAE?"
+  ],
+  "analysis_rules": [
+    "Verify stored input hashes and exact target population; preserve all seed exceptions.",
+    "Keep target-conditioned retrospective diagnosis distinct from observable-context conditioning and causal explanations.",
+    "No comparison of raw RMSE differences between different capped and uncapped targets.",
+    "No pooled raw metric across datasets; sample SD ddof1; weighted Train sample is not a full Train evaluation.",
+    "Conditional transition variability from last quantity alone does not prove irreducible unpredictability.",
+    "A log-loss mathematical mismatch does not establish that log1p input is the sole or principal empirical cause.",
+    "Do not interpret parameter count, tail sparsity, errors, or correlations as causal proof or statistical significance."
+  ]
+}
