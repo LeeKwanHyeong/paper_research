@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_quantity_loss_mlp18_20261019_v1_5090/source/paper/scripts/titantpp_quantity_loss_mlp18_runtime.py", line 588, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_quantity_loss_mlp18_20261019_v1_5090/source/paper/scripts/titantpp_quantity_loss_mlp18_runtime.py", line 581, in main
+    output = qualify(contract, args.host) if args.mode == "qualify" else status(contract, args.host)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_quantity_loss_mlp18_20261019_v1_5090/source/paper/scripts/titantpp_quantity_loss_mlp18_runtime.py", line 214, in qualify
+    concurrent = qualify_three_concurrent(contract,host)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_quantity_loss_mlp18_20261019_v1_5090/source/paper/scripts/titantpp_quantity_loss_mlp18_runtime.py", line 181, in qualify_three_concurrent
+    gpu,paused=gpu_state(contract,host)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_quantity_loss_mlp18_20261019_v1_5090/source/paper/scripts/titantpp_quantity_loss_mlp18_runtime.py", line 122, in gpu_state
+    require(set(gpu["compute_pids"]) <= allowed, "Unidentified GPU process; no new work")
+  File "/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_quantity_loss_mlp18_20261019_v1_5090/source/paper/scripts/titantpp_cross_fusion_precheck_runtime.py", line 26, in require
+    raise ValueError(message)
+ValueError: Unidentified GPU process; no new work

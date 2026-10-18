@@ -1,0 +1,30 @@
+{
+  "status": "qualification_failed_before_scientific_training",
+  "new_fit_count": 0,
+  "new_validation_count": 0,
+  "new_test_count": 0,
+  "hosts": {
+    "5080": {
+      "qualification_exit": 1,
+      "qualification_pid": 417152,
+      "native_synthetic_child_count": 6,
+      "native_synthetic_exit0_count": 6,
+      "failure_receipt_sha256": "553dbbf83b8f334d8ca5e64109f542b256fb493561d48a6ea048d1e792da7989",
+      "admission_receipt_sha256": "cd79fd626162f0b0796603fd8b5245bbbd17a513f20613b4a13254154150fccf"
+    },
+    "5090": {
+      "qualification_exit": 1,
+      "qualification_pid": 1296747,
+      "native_synthetic_child_count": 6,
+      "native_synthetic_exit0_count": 6,
+      "failure_receipt_sha256": "91795a1e6aabfb40979d5a8a8cf52c5fe2878fa6b7155b6cbd4d76f640f51390",
+      "admission_receipt_sha256": "51ee012469389d84e64b43c2ec962afbe9da44b184d1d94d64f02808784fc136"
+    }
+  },
+  "confirmed_failure": "qualify_three_concurrent post-synthetic GPU ownership check raised Unidentified GPU process",
+  "code_defect": "qualify process used CUDA itself before the check but its identity was not in the GPU ownership allowlist",
+  "causal_limit": "The exception omitted the actual unexpected GPU PID list; historical extra GPU PID was not directly observed. V2 will record the bound owner and GPU list.",
+  "v1_restarted": false,
+  "v1_overwritten": false,
+  "next_action": "isolated v2 operations-only correction with identical scientific worker/specification"
+}
