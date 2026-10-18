@@ -1,0 +1,88 @@
+{
+  "status": "PASS_observed_start_evidence",
+  "created_at": "2026-10-18T01:42:19.781678+00:00",
+  "scope": "Local read-only verification of stored start observations; no new remote observation, inference or training.",
+  "checks": 3863,
+  "open_findings": [],
+  "archive_source_files_verified": 944,
+  "archive_input_files_verified": 6,
+  "stored_epoch_rows_checked": 48,
+  "maximum_weighted_loss_absolute_discrepancy": 3.552713678800501e-14,
+  "hosts": {
+    "5080": {
+      "observed_at": "2026-10-18T01:40:21.394580+00:00",
+      "dispatcher_pid": 356170,
+      "dispatcher_start_ticks": 68411562,
+      "workers": [
+        {
+          "job_id": "yellow_trip_hourly__titantpp_history_mlp_width16__seed42__alpha0p1",
+          "pid": 356191,
+          "start_ticks": 68411577,
+          "saved_epochs": 2
+        },
+        {
+          "job_id": "yellow_trip_hourly__titantpp_history_mlp_width16__seed42__alpha10",
+          "pid": 356192,
+          "start_ticks": 68411577,
+          "saved_epochs": 2
+        },
+        {
+          "job_id": "yellow_trip_hourly__titantpp_history_mlp_width16__seed52__alpha0p1",
+          "pid": 356193,
+          "start_ticks": 68411578,
+          "saved_epochs": 2
+        }
+      ],
+      "pending": 5,
+      "old_processes_unchanged_stopped": 4,
+      "gpu_uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+      "qualification_raw_sha256": "1233555dc36e05d5eb404e3d2a8af6c15466da9846156a692798cdc26804aea3"
+    },
+    "5090": {
+      "observed_at": "2026-10-18T01:40:21.468593+00:00",
+      "dispatcher_pid": 3595148,
+      "dispatcher_start_ticks": 68644453,
+      "workers": [
+        {
+          "job_id": "raf_spare_parts__titantpp_history_mlp_width16__seed42__alpha0p1",
+          "pid": 3595159,
+          "start_ticks": 68644470,
+          "saved_epochs": 14
+        },
+        {
+          "job_id": "raf_spare_parts__titantpp_history_mlp_width16__seed42__alpha10",
+          "pid": 3595160,
+          "start_ticks": 68644470,
+          "saved_epochs": 14
+        },
+        {
+          "job_id": "raf_spare_parts__titantpp_history_mlp_width16__seed52__alpha0p1",
+          "pid": 3595161,
+          "start_ticks": 68644470,
+          "saved_epochs": 14
+        }
+      ],
+      "pending": 7,
+      "old_processes_unchanged_stopped": 4,
+      "gpu_uuid": "GPU-c9adc246-ef66-7906-bc07-6e152fa9952f",
+      "qualification_raw_sha256": "869839b107fee3027cc2823c8d2b2a85aa59e587690855efcb2249c8867433c0"
+    }
+  },
+  "evidence_sha256": {
+    "search_artifacts/titantpp_time_weight_mlp18_20261018_v1/execution_contract.json": "ce93dceefa7d1b4f960243893393d5f15a8f7bb0576eb73d489d12d47d7f32d8",
+    "reports/titantpp_time_weight_mlp18_20261018_v1/PREPARED.json": "628e56aaecb68bc1362099dc2e82581c6fba40cc85170a18cb32db6f632b569c",
+    "reports/titantpp_time_weight_mlp18_20261018_v1/observations/20261018T014021464384Z_5080.json": "8c1480bd2cd031d6ff03b8f2dd13f0ed04abf272c16ada82e8bd1be99c0a357b",
+    "reports/titantpp_time_weight_mlp18_20261018_v1/LAUNCHED_5080.json": "7ec024e5389a4884ee6d9024eb1eb7ef60f927f0ada4ab35093509a586cef12d",
+    "search_artifacts/titantpp_time_weight_mlp18_20261018_v1/transport/5080/20261018T014021460802Z_status.json": "32e1902d685c8e39ef82b4f7a0d420ae87eaab4072c0946663311dee29494c46",
+    "reports/titantpp_time_weight_mlp18_20261018_v1/observations/20261018T014021555341Z_5090.json": "484f7ca8128400fa602cc53883dcbbcec9b3a71e0913b47df2807cb992e94263",
+    "reports/titantpp_time_weight_mlp18_20261018_v1/LAUNCHED_5090.json": "7dfeb93545fed79e6f6e565e488a5d7aa1830ec0d5bf2fb37bbf7f03bc647efa",
+    "search_artifacts/titantpp_time_weight_mlp18_20261018_v1/transport/5090/20261018T014021553763Z_status.json": "9eb2c19b620ba12695169225383955c4a1605e927764fa6907801470f7e9f099"
+  },
+  "limitations": [
+    "Start receipt records dispatcher PID but no original dispatcher start_ticks; the current observed start_ticks is recorded, and argv/cwd/host/contract/PID establish the saved observation identity. Original dispatcher start_ticks continuity cannot be independently compared to a launch-time ticks field.",
+    "Qualification uses sequential full-shape GPU synthetic memory peaks, not measured simultaneous three-worker peak. The saved observation independently shows all three actual worker PIDs on each GPU.",
+    "Remote source/input binding relies on hash-checked archived code performing verify_files before qualification and status; this review did not reread remote files.",
+    "These are 2026-10-18 10:40:21 KST observations, not current live state or evidence of completion or improved predictive performance.",
+    "Supervisor own OS exit is not observed; training is ongoing."
+  ]
+}
