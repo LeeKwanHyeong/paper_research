@@ -1,0 +1,59 @@
+{
+  "schema": "titantpp_mlp16_late_path_design_v1",
+  "status": "local_preparation_only_training_not_started",
+  "question": "Does reusing each available observed event's pre-position input embedding after both encoder blocks, with the usual final observed state used for prediction, improve quantity prediction beyond the same-nominal-capacity contextual hidden path?",
+  "base_model": "titantpp_history_mlp_width16",
+  "arms": {
+    "titantpp_mlp16_late_observation_v1": "LMM(h2 + P(e0))",
+    "titantpp_mlp16_late_hidden_v1": "LMM(h2 + P(h2))"
+  },
+  "e0": "Existing continuous_features then encoder.input_proj, before positional embeddings or attention, at each available observed event; never a future target",
+  "h2": "Unchanged two attention blocks with the existing eight width16 current/previous history MLP branches between blocks",
+  "path": {
+    "hidden_dim": 64,
+    "rank": 8,
+    "rank_field_meaning": "bottleneck width 8, not a rank bound on the nonlinear map",
+    "bias": false,
+    "activation": "gelu_exact_erf",
+    "additional_parameter_count_per_arm": 1024,
+    "output_projection_initialization": "zeros",
+    "new_initialization_rng": "forked_cpu_rng_preserves_common_state_and_global_rng; new path tensors also identical between arms at the same seed",
+    "insertion": "after_encoder2_before_existing_static_hard_lmm",
+    "mask": "valid AND memory_write_mask when supplied; absent, padded and withheld values cannot enter the new path",
+    "common_heads_and_memory_modules_changed": false
+  },
+  "scope": {
+    "implementation": "new isolated model, synthetic tests and local preparation evidence only",
+    "data": "future Cap Taxi/RAF/Intermittent; no real data read for model preparation",
+    "seeds_if_later_authorized": [42, 52, 62],
+    "planned_new_candidate_fit_count_if_later_authorized": 18,
+    "training_authorized_by_this_design_file": false,
+    "new_training_started": false,
+    "native_gpu_verified": false,
+    "test_authorized": false,
+    "historical_cnn_change_retrain_inference_evaluation": false,
+    "current_quantity_loss18_and_raw_time27_pipelines_changed": false
+  },
+  "fixed_for_model_preparation": {
+    "quantity_input": "inherited log1p nonnegative quantity",
+    "time_input": "inherited log1p nonnegative interval; raw-time option not silently adopted",
+    "quantity_and_time_head": "inherited unchanged",
+    "memory": "inherited static_hard_lmm, no extra memory or gate",
+    "no_new_revin_normalization_or_loss": true,
+    "fresh_initialization": "common tensors must match parent MLP16 for the same seed; no learned checkpoint warmstart"
+  },
+  "pending_before_any_training": [
+    "Complete current quantity-loss comparison and authorized raw-time27 follow-up without altering either pipeline",
+    "Choose one shared input/loss/time-weight condition for both new arms and any reference; no dataset-specific arm or loss selection",
+    "User decides new training after preparation results; then create a separate execution contract and native qualification"
+  ],
+  "future_selection": "first strict finite minimum full Validation raw quantity RMSE, first epoch tie; MAE at that same checkpoint",
+  "future_acceptance": "Predeclared same-condition comparisons against MLP16 and hidden-path control on all three datasets, reporting both metrics, sample SD and all seed exceptions; no Test claim from Validation",
+  "limits": [
+    "Common information loss has not been established; existing residual paths already carry input information",
+    "Matched nominal parameter count does not match source rank, functional capacity or gradient paths",
+    "Changing the pre-LMM state may change memory retrieval despite unchanged memory modules",
+    "This extends the preserved 2026-10-18 untrained MLP4 proposal to the currently requested MLP16 base; not a newly discovered residual principle",
+    "CPU synthetic success does not establish native GPU compatibility or predictive improvement"
+  ]
+}
