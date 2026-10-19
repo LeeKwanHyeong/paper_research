@@ -1,0 +1,312 @@
+{
+  "schema": "titantpp_shared_history_cap_science_v1",
+  "status": "design_frozen_local_preparation_only",
+  "created_at": "2026-10-19T12:47:31.970946+00:00",
+  "research_question": "Does a common nonlinear current/previous relation basis improve Validation across Cap3 datasets relative to a prefix-parameter-matched independent history MLP?",
+  "material_passport": {
+    "origin_skill": "academic-research-suite:experiment-agent",
+    "origin_mode": "preparation_and_local_validation",
+    "source_analysis": "reports/titantpp_mlp_train_validation_mechanism_20261017_v1/HYPOTHESIS.md",
+    "source_analysis_data_scope": "original_uncapped_Train_Validation_only_not_direct_Cap_evidence",
+    "verification_status": "design_reviewed_not_trained"
+  },
+  "parent_condition": {
+    "contract_path": "search_artifacts/titantpp_mlp16_late_path18_20261019_v2/execution_contract.json",
+    "contract_raw_sha256": "67bfcad872b68886bf1de09879e031e055c70063bafbf4aa0db42b4ae5ca6fc7",
+    "source_files_sha256": "57dca469664c78d008ba9dd091c1b5ee55d4236fa60cbd18a5b0a828a3f5c94a",
+    "source_file_count": 963,
+    "common_condition": {
+      "time_input": "log1p",
+      "loss_mode": "log_mse",
+      "time_alpha": 0.0
+    }
+  },
+  "arms": [
+    "titantpp_history_mlp_shared15_v1",
+    "titantpp_history_mlp_prefix_capacity_v1"
+  ],
+  "architecture": {
+    "hidden_dim": 64,
+    "correction_input_dim": 128,
+    "branch_count": 8,
+    "branch_thresholds": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64,
+      128
+    ],
+    "context": "current and immediate preceding observed encoder1 states",
+    "shared": {
+      "arm": "titantpp_history_mlp_shared15_v1",
+      "input_transform_count": 1,
+      "input_width": 15,
+      "output_widths": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "formula": "sum_j A_ij B_j GELU(W_shared [c_i;p_i]) / 8"
+    },
+    "independent": {
+      "arm": "titantpp_history_mlp_prefix_capacity_v1",
+      "input_transform_count": 8,
+      "branch_widths": [
+        15,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "formula": "sum_j A_ij B_j GELU(W_j [c_i;p_i]) / 8"
+    },
+    "correction_trainable_parameter_count": 9600,
+    "reference_mlp16_correction_parameter_count": 24576,
+    "bias": false,
+    "activation": "exact GELU",
+    "residual_divisor": 8,
+    "encoder_blocks": 2,
+    "static_hard_lmm": "unchanged",
+    "persistent_encoder_memory": "unchanged",
+    "first_and_second_encoder": "unchanged",
+    "input_feature_transform": {
+      "time": "log1p_nonnegative_float32",
+      "quantity": "log1p_nonnegative_float32"
+    },
+    "initializer": {
+      "input": "existing default Linear initialization within forked CPU RNG",
+      "output": "zero",
+      "common_parameter_buffer_and_caller_rng": "bitwise same as existing MLP16 under same seed/config"
+    },
+    "warm_start": false
+  },
+  "parameter_matching": {
+    "decision": "shared15 versus prefix-matched independent[15,5x7]; supersedes preliminary shared12/uniform5 design before any actual experiment",
+    "rank_selection_rule": "shared rank is largest positive multiple of3 not exceeding prior rank16, hence15; no outcome-driven width search",
+    "registered_correction_parameters": 9600,
+    "active_prefix_parameters": [
+      0,
+      2880,
+      3840,
+      4800,
+      5760,
+      6720,
+      7680,
+      8640,
+      9600
+    ],
+    "proof": "shared 128*r + k*64*r; independent 192*(r+(k-1)*r/3); equal for r divisible by3, k>=1; no active branches gives0",
+    "same_functional_capacity_claim": false,
+    "remaining_differences": [
+      "shared nonlinear basis versus independent bases",
+      "different branch widths and aggregate feature/Jacobian rank",
+      "shared gradient accumulation and optimization coupling",
+      "per-dataset exposure to branch thresholds"
+    ],
+    "rank_upper_bound": {
+      "shared": "min(64,15)",
+      "independent": "min(64,15+5*(k-1)) for k>=1"
+    },
+    "no_dummy_parameters": true,
+    "data_exposure": {
+      "raf_max_seq_len": 84,
+      "raf_branch128_available": false,
+      "raf_max_potentially_active_prefix": 7,
+      "raf_potentially_used_correction_parameters_both": 8640,
+      "actual_per_example_exposure": "depends on observed history and withheld reset; not guaranteed all branches active in real data"
+    }
+  },
+  "datasets": [
+    {
+      "dataset_id": "intermittent_frozen_5000",
+      "cap_value": 20.0,
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 520,
+        "max_seq_len": 256,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "model": {
+        "hidden_dim": 64,
+        "lambda_log_qty": 1.0,
+        "lambda_tail": 0.0,
+        "quantity_variant": "count_only_log_regression",
+        "time_head_lr_multiplier": 1.0,
+        "time_head_mode": "heteroscedastic_lognormal_duration",
+        "time_initial_location": -0.21389036220110552,
+        "time_initial_scale": 0.6816420108412236,
+        "time_observation_contract": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "week"
+        },
+        "time_scale": 3.0,
+        "time_sigma_floor": 0.001
+      },
+      "optimizer": {
+        "grad_clip": 1.0,
+        "lr": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.01
+      }
+    },
+    {
+      "dataset_id": "yellow_trip_hourly",
+      "cap_value": 65.0,
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 168,
+        "max_seq_len": 256,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "model": {
+        "hidden_dim": 64,
+        "lambda_log_qty": 1.0,
+        "lambda_tail": 0.0,
+        "quantity_variant": "count_only_log_regression",
+        "time_head_lr_multiplier": 1.0,
+        "time_head_mode": "heteroscedastic_lognormal_duration",
+        "time_initial_location": 0.2357508697949888,
+        "time_initial_scale": 0.5898045019331329,
+        "time_observation_contract": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "hour"
+        },
+        "time_scale": 1.0,
+        "time_sigma_floor": 0.001
+      },
+      "optimizer": {
+        "grad_clip": 1.0,
+        "lr": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.01
+      }
+    },
+    {
+      "dataset_id": "raf_spare_parts",
+      "cap_value": 10.0,
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 84,
+        "max_seq_len": 84,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "model": {
+        "hidden_dim": 64,
+        "lambda_log_qty": 1.0,
+        "lambda_tail": 0.0,
+        "quantity_variant": "count_only_log_regression",
+        "time_head_lr_multiplier": 1.0,
+        "time_head_mode": "heteroscedastic_lognormal_duration",
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_observation_contract": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "time_scale": 6.0,
+        "time_sigma_floor": 0.001
+      },
+      "optimizer": {
+        "grad_clip": 1.0,
+        "lr": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.01
+      }
+    }
+  ],
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "planned_new_fit_count": 18,
+  "reference_only_fit_count": 9,
+  "training": {
+    "maximum_epochs": 300,
+    "minimum_epochs": 40,
+    "patience": 40,
+    "batch_size": 128,
+    "monitor": "validation_raw_quantity_rmse",
+    "optimizer": "unchanged AdamW lr0.001 weight_decay0.01 clip1",
+    "quantity_loss": "existing log-MSE",
+    "time_alpha": 0.0,
+    "time_loss_graph_contribution": "excluded; time head remains untrained",
+    "input_statistics_and_cap": "fixed parent Train-only values",
+    "early_stopping_and_selection": "first strictly minimal finite fullValidation raw quantity RMSE; same checkpoint MAE"
+  },
+  "validation": {
+    "scope": "Validation only",
+    "metrics": [
+      "overall raw quantity RMSE",
+      "overall raw quantity MAE",
+      "cap-hit RMSE",
+      "cap-hit MAE",
+      "overall recorded positive-integer TimeNLL diagnostic",
+      "cap-hit recorded positive-integer TimeNLL diagnostic"
+    ],
+    "tail_q_greater_than_cap": "N/A_empty on capped targets; never silently remove",
+    "statistics": "dataset-specific mean and sample SD ddof1; all seed differences absolute/relative",
+    "contrasts": [
+      "shared15 - existing MLP16",
+      "prefix_capacity - existing MLP16",
+      "shared15 - prefix_capacity"
+    ],
+    "no_cross_dataset_raw_error_pooling": true,
+    "success_for_followup": "both RMSE and MAE three-seed means lower than both stored MLP16 and matched control in each of all three datasets; report every seed regression; no statistical significance claim",
+    "if_only_beats_mlp16": "insufficient to attribute added evidence to shared structure if control is equally good or better"
+  },
+  "authorization": {
+    "contract_implementation_local_synthetic_validation": true,
+    "real_data_training": false,
+    "real_data_inference": false,
+    "remote_execution": false,
+    "native_gpu_qualification": false,
+    "test_evaluation": false,
+    "automation_creation": false
+  },
+  "preservation": {
+    "current_5080_5090_training_unchanged": true,
+    "old_sources_results_claims_failures_checkpoints_unchanged": true,
+    "historical_cnn_retrained": false,
+    "historical_cnn_reevaluated": false,
+    "common_inputs_loss_head_memory_unchanged": true
+  },
+  "required_local_checks": [
+    "exact total and active-prefix parameter counts0..8",
+    "shared parameter identity versus independent tensors",
+    "k1 functional equivalence under copied weights",
+    "all128 branch synthetic length129 exposure",
+    "padding skips and withheld-history reset",
+    "causality and target blocking",
+    "zero-output initial residual and common tensor/RNG equivalence",
+    "actual shared and independent parameter gradients after initial zero-output step",
+    "checkpoint cross-arm/label/tensor metadata validation",
+    "real existing engine synthetic2epoch save selection and replay",
+    "time-head no gradient/optimizer state/weight change",
+    "no permission route enabling real data or server execution",
+    "all old source/input/reference SHA unchanged"
+  ]
+}
