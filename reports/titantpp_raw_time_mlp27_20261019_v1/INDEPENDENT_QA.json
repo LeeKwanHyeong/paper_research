@@ -1,0 +1,82 @@
+{
+  "status": "PASS_bounded_local_implementation_review",
+  "created_at": "2026-10-19T00:20:37.367173+00:00",
+  "open_blocking_findings": [],
+  "scope": "신규 raw 시간입력 MLP16 27개 학습 준비의 독립 읽기 검토 및 합성 검증. 실제 학습 시작·완료·효과 판정이 아님.",
+  "code_and_tests_sha256": {
+    "paper/scripts/run_titantpp_raw_time_mlp27.py": "d179f4b9c98e2f06fd8c1f49cb461e1906981fdc14fd3b48e62b1cbf137c3801",
+    "paper/scripts/manage_titantpp_raw_time_mlp27.py": "2b222f338a5ff324b977b9540fa2aa5f4ca1b5de3410b7e5aab35b8a74e13074",
+    "paper/scripts/compare_titantpp_raw_time_mlp27.py": "9245bfbce1d99b7b496cd09dd6019e2be11e68315f6df618b8a8290e456239e8",
+    "paper/scripts/follow_titantpp_raw_time_mlp27.py": "8b2b4206c4a035456ff1be3a5dff5073e9d037b88109a70c0c9edf55f8e6892a",
+    "paper/scripts/titantpp_raw_time_mlp27_runtime.py": "63d81a071e343bf9fd7fdc5f0c3a2fe026f46885cdd3842e7a6e764c95cbef2c",
+    "tests/test_titantpp_raw_time_mlp27.py": "da40dc51f188dcf2e74931c7d8737ccf54b7ea94a8b8486e7e051b7f2351321c",
+    "paper/tests/test_titantpp_raw_time_mlp27_operations.py": "f0df9e7b1e421c68658ac09b74f5226d3b9cf431ea63fc0d651cc28e35a5e7cb",
+    "tests/test_titantpp_raw_time_comparison.py": "30adc761a15e8a17867f6c6ea1890b9a52eb5991445582294e5658efdbf55cb7",
+    "tests/test_titantpp_raw_time_followup.py": "8023b60bef52c644ca8c871aaae67095d1c66063e3e0afda3e1a207df399720c"
+  },
+  "synthetic_tests": {
+    "actual_exit": 0,
+    "passed": 60,
+    "subtests_passed": 9,
+    "elapsed_seconds": 12.141963917005342,
+    "command": [
+      "/usr/local/bin/python3",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "tests/test_titantpp_raw_time_mlp27.py",
+      "paper/tests/test_titantpp_raw_time_mlp27_operations.py",
+      "tests/test_titantpp_raw_time_comparison.py",
+      "tests/test_titantpp_raw_time_followup.py"
+    ],
+    "stdout_path": "/tmp/raw_time27_IMPLEMENTATION_QA.stdout",
+    "stdout_sha256": "9cb45d0ae84714a7d7068db2b97e8031e5a2edeeb7b8ce40a79f9a1fb35f0307",
+    "stderr_path": "/tmp/raw_time27_IMPLEMENTATION_QA.stderr",
+    "stderr_sha256": "eae3b3ab88ebd007cd93d95595b7a951b2c689b68948b08fd24d8ff83282945e",
+    "code_and_test_bytes_unchanged": true
+  },
+  "independent_arithmetic": {
+    "parent_source_files_verified": 952,
+    "synthetic_repetitions": 20,
+    "independent_arithmetic_rows_checked": 8280,
+    "remote_calls": 0,
+    "real_data_inference": 0,
+    "new_test": 0
+  },
+  "parent_source952_unchanged": true,
+  "review_checks": [
+    "관측 시간 continuous_features만 raw 비음수 float32로 변경하고 수량 log1p·관측 mask·시간 target/head scale은 유지한다.",
+    "width factory의 모듈 전역 클래스 연결을 scoped subclass로 바꾸고 실제 training model 타입을 확인한다. selected checkpoint 재현도 같은 factory scope를 사용한다.",
+    "세 seed 초기 tensor·RNG 동일성과 세 loss의 실제 합성 2epoch 학습·선택·Validation 재현을 검사했다.",
+    "alpha0 목적함수는 수량 loss tensor 자체이며 시간 전용 head의 grad None·optimizer state 부재·binary 불변 검증을 상속한다.",
+    "새 prepare는 부모 두 host 종료·선택 checkpoint·회수 archive/manifest·27개 최종 비교의 로컬 SHA 검증 뒤에만 가능하다. finite follow-up은 부모 완료 전 로컬 대기하며 기존 completion을 재실행하지 않는다.",
+    "새 runtime은 5080 12개/5090 15개, loss별 동일 host와 최대3 동시 실행을 유지한다. 각 host의 3loss×3 native 합성 admission과 paused external identity·상속 절대기한 검증을 유지한다.",
+    "27개 새 Validation과 27개 저장 log-time 결과를 dataset/seed/loss/host/target 단위로 짝지어 54개로 비교한다. 162개 평균/표본SD·243개 seed 차이·9개 판정과 악화·빈 tail을 보존한다.",
+    "독립 실행을 위한 source955 staging 증적의 실제 exit0와 stdout/stderr SHA를 검산했다. staging 실행 자체는 root 수행이며 여기서 중복 수행하지 않았다.",
+    "기존 attempt/failure는 자동 retry하지 않고, finite follow-up의 exclusive 디렉터리로 중복 작업을 거부한다."
+  ],
+  "source_staging_evidence": {
+    "path": "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_raw_time_mlp27_20261019_v1/SOURCE_STAGING_CHECK.json",
+    "sha256": "dc78d4b74970631494156e91a34db7a7b2d9eaf8cd9ead715997138a8945d477",
+    "status": "passed",
+    "actual_exit": 0,
+    "source_file_count": 955,
+    "executed_by": "root; independently read and hash checked"
+  },
+  "limits": [
+    "이 검토는 로컬 합성과 코드 검토다. 실제 원격 GPU Runtime·유휴·paused identity·native admission은 부모 완료 뒤 새 진입 시 별도 검증해야 한다.",
+    "raw 시간입력은 입력의 수치 범위와 gradient/clipping 경로를 함께 바꾼다. 성능 차이를 시간정보 보존만의 인과 효과나 backbone 구조 개선으로 확정할 수 없다.",
+    "시간 전용 head는 미학습 상태를 유지하지만 공유 표현은 변하므로 TimeNLL은 진단값이며 물리적 시간 오차나 시간학습 성과가 아니다.",
+    "실제 결과 수치·선택·종료·archive의 최종 독립 검산은 아직 수행 대상이 아니다."
+  ],
+  "side_effects": {
+    "project_source_edits": 0,
+    "remote_calls": 0,
+    "real_data_inference": 0,
+    "training": 0,
+    "held_out_test": 0,
+    "existing_cnn_changes": 0
+  }
+}
