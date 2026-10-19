@@ -1,0 +1,74 @@
+...................F                                                     [100%]
+=================================== FAILURES ===================================
+_____ test_fabricated_three_loss_train_checkpoint_selection_and_validation _____
+
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-87/test_fabricated_three_loss_tra0')
+
+    def test_fabricated_three_loss_train_checkpoint_selection_and_validation(tmp_path):
+        from paper.tests.test_titantpp_quantity_loss_worker import fabricated_contract
+        from paper.scripts.quantity_comparison_runtime import configure_runtime
+        from simple_lab_test.search.common.runner import torch_load_checkpoint
+        configure_runtime('cpu',4);c,data=fabricated_contract(tmp_path);c['schema']=w.CONTRACT_SCHEMA
+        c['architecture'].update(time_input_transform=w.TIME_INPUT_TRANSFORM,quantity_input_transform=w.QUANTITY_INPUT_TRANSFORM)
+        c['jobs']=[{'id':'fabricated_'+mode,'host':'5090','dataset':'raf_spare_parts','seed':42,'arm':w.ARMS[0],'time_alpha':0.,'loss_mode':mode} for mode in w.LOSS_MODES]
+        original_args=w.training_args;original_eval=w._parent.evaluate_selected
+        def tiny(*args,**kwargs):
+            result=original_args(*args,**kwargs)
+            assert (result.epochs,result.min_epochs,result.early_stopping_patience)==(300,40,40)
+            result.epochs=result.min_epochs=result.early_stopping_patience=2;result.device='cpu';return result
+        def cpu_eval(*args,**kwargs):return original_eval(*args,**kwargs,device='cpu')
+        with patch('paper.scripts.quantity_comparison_runtime.configure_runtime',side_effect=lambda *a:configure_runtime('cpu',4)), \
+            patch.object(w,'training_args',side_effect=tiny),patch.object(w._parent,'evaluate_selected',side_effect=cpu_eval):
+            for job in c['jobs']:
+>               train=w.run_stage(c,'5090',job['id'],'train')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_titantpp_raw_time_mlp27.py:153: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+paper/scripts/run_titantpp_raw_time_mlp27.py:232: in run_stage
+    with runtime_hooks(job["loss_mode"]):return inherited.run_stage(contract,host,job_id,stage)
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+paper/scripts/run_titantpp_mlp_cap36.py:378: in run_stage
+    summary, _, _ = training.train_one(args=args, frame=frame, quantity_contract=quantity,
+paper/scripts/count_aware_tpp_backbone/training.py:769: in train_one
+    model.to(args.device)
+../../Library/Python/3.12/lib/python/site-packages/torch/nn/modules/module.py:1388: in to
+    return self._apply(convert)
+           ^^^^^^^^^^^^^^^^^^^^
+../../Library/Python/3.12/lib/python/site-packages/torch/nn/modules/module.py:933: in _apply
+    module._apply(fn)
+../../Library/Python/3.12/lib/python/site-packages/torch/nn/modules/module.py:966: in _apply
+    param_applied = fn(param)
+                    ^^^^^^^^^
+../../Library/Python/3.12/lib/python/site-packages/torch/nn/modules/module.py:1374: in convert
+    return t.to(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _lazy_init():
+        global _initialized, _queued_calls
+        if is_initialized() or hasattr(_tls, "is_initializing"):
+            return
+        with _initialization_lock:
+            # We be double-checked locking, boys!  This is OK because
+            # the above test was GIL protected anyway.  The inner test
+            # is for when a thread blocked on some other thread which was
+            # doing the initialization; when they get the lock, they will
+            # find there is nothing left to do.
+            if is_initialized():
+                return
+            # It is important to prevent other threads from entering _lazy_init
+            # immediately, while we are still guaranteed to have the GIL, because some
+            # of the C calls we make below will release the GIL
+            if _is_in_bad_fork():
+                raise RuntimeError(
+                    "Cannot re-initialize CUDA in forked subprocess. To use CUDA with "
+                    "multiprocessing, you must use the 'spawn' start method"
+                )
+            if not hasattr(torch._C, "_cuda_getDeviceCount"):
+>               raise AssertionError("Torch not compiled with CUDA enabled")
+E               AssertionError: Torch not compiled with CUDA enabled
+
+../../Library/Python/3.12/lib/python/site-packages/torch/cuda/__init__.py:584: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_titantpp_raw_time_mlp27.py::test_fabricated_three_loss_train_checkpoint_selection_and_validation
+1 failed, 19 passed in 10.37s
