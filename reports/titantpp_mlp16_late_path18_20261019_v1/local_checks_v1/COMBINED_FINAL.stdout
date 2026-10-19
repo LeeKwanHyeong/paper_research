@@ -1,0 +1,99 @@
+..................................................................F...................................... [ 92%]
+.........                                                            [100%]
+=================================== FAILURES ===================================
+_______ MainTests.test_local_verified_archive_reporting_and_no_overwrite _______
+
+self = <test_titantpp_late_path18_comparison.MainTests testMethod=test_local_verified_archive_reporting_and_no_overwrite>
+
+    def test_local_verified_archive_reporting_and_no_overwrite(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            module = ModuleType("paper.scripts.manage_titantpp_late_path18")
+            module.BUNDLE, module.REPORT = root / "bundle", root / "reports"
+            module.sha = lambda path: hashlib.sha256(Path(path).read_bytes()).hexdigest()
+            module.read = lambda path: json.loads(Path(path).read_text())
+            def write(path, payload):
+                path = Path(path)
+                path.parent.mkdir(parents=True, exist_ok=True)
+                with path.open("x") as stream:
+                    json.dump(payload, stream, allow_nan=False, sort_keys=True)
+            module.write = write
+            module.runtime = SimpleNamespace(local_path=lambda base, name: Path(base) / name)
+            rows = with_metric_metadata(arm_records())
+            jobs, refs, terminal_by_host = [], [], {}
+            for index, row in enumerate(rows):
+                if row["model"] == comparison.BASELINE:
+                    path = root / "references" / f"{index}.json"
+                    write(path, row)
+                    refs.append({**row, "path": str(path), "sha256": module.sha(path)})
+                    continue
+                job = {**row, "arm": row["model"], "id": f"job{index}"}
+                jobs.append(job)
+            contract = {"evaluation_scope": "validation_only", "held_out_test_authorized": False,
+                "common_condition": deepcopy(comparison.REFERENCE_CONDITION), "jobs": jobs,
+                "baseline_validation_references": refs}
+            module.verify_local = lambda: contract
+            module.baseline_validation_references = lambda: refs
+            for host in ("5080", "5090"):
+                retrieval = module.BUNDLE / "retrieval" / host
+                originals = retrieval / "originals"
+                inventory = {}
+                local_jobs = [job for job in jobs if job["host"] == host]
+                for job in local_jobs:
+                    receipt = {**job, "status": "complete", "validation_replay_passed": True,
+                        "held_out_test_evaluated": False, "time_input_transform": "log1p_nonnegative_float32",
+                        "quantity_input_transform": "log1p_nonnegative_float32"}
+                    path = originals / "run" / job["id"] / "validation_receipt.json"
+                    write(path, receipt)
+                    inventory[str(path.relative_to(originals))] = module.sha(path)
+                write(originals / "dispatcher_exit.json", {"actual_os_returncode": 0})
+                inventory["dispatcher_exit.json"] = module.sha(originals / "dispatcher_exit.json")
+                terminal_by_host[host] = {"stages": {stage: {"exits": {
+                    job["id"]: {"actual_os_returncode": 0, "timeout": False} for job in local_jobs}}
+                    for stage in ("train", "validation")}}
+                write(retrieval / "manifest.json", {"files": inventory})
+                (retrieval / "original.tar.gz").write_bytes(b"synthetic archive; collector is mocked")
+                write(retrieval / "receipt.json", {"status": "complete", "file_count": len(inventory),
+                    "archive_sha256": module.sha(retrieval / "original.tar.gz"),
+                    "manifest_sha256": module.sha(retrieval / "manifest.json")})
+            module.verify_collected = lambda contract, host, originals: terminal_by_host[host]
+            with patch.dict(sys.modules, {module.__name__: module}), patch(
+                    "paper.scripts.compare_titantpp_time_zero_mlp9.verify_zero_proof", return_value={"synthetic": True}):
+>               result = comparison.main()
+                         ^^^^^^^^^^^^^^^^^
+
+tests/test_titantpp_late_path18_comparison.py:325: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+paper/scripts/select_compare_titantpp_late_path18.py:286: in main
+    contract = manager.verify_local()
+               ^^^^^^^^^^^^^^^^^^^^^^
+paper/scripts/manage_titantpp_quantity_loss_mlp18.py:237: in verify_local
+    receipt = read(REPORT / "PREPARED.json")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+paper/scripts/titantpp_cross_fusion_precheck_runtime.py:47: in read
+    return json.loads(Path(path).read_text())
+                      ^^^^^^^^^^^^^^^^^^^^^^
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_mlp16_late_path18_20261019_v1/PREPARED.json')
+mode = 'r', buffering = -1, encoding = 'locale', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_mlp16_late_path18_20261019_v1/PREPARED.json'
+
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py:1013: FileNotFoundError
+=========================== short test summary info ============================
+FAILED tests/test_titantpp_late_path18_comparison.py::MainTests::test_local_verified_archive_reporting_and_no_overwrite
+1 failed, 113 passed, 115 subtests passed in 6.59s

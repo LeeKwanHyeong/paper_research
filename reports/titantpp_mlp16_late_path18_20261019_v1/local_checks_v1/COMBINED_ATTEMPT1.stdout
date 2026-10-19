@@ -1,0 +1,79 @@
+..................................................... [ 64%]
+..................F........F.                             [100%]
+=================================== FAILURES ===================================
+____ FollowupTests.test_gate_failure_recorded_once_without_retry_or_prepare ____
+
+self = <test_titantpp_late_path18_followup.FollowupTests testMethod=test_gate_failure_recorded_once_without_retry_or_prepare>
+
+    def test_gate_failure_recorded_once_without_retry_or_prepare(self):
+        with TemporaryDirectory() as directory:
+            report = Path(directory)
+            with patch.object(f, "REPORT", report), patch.object(f, "verify_ready", return_value={}), \
+                    patch.object(f, "wait_for_parent", side_effect=ValueError("parent not verified")) as wait:
+                with self.assertRaisesRegex(ValueError, "parent not verified"):
+>                   f.main(["--mode", "advance"])
+
+tests/test_titantpp_late_path18_followup.py:157: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+paper/scripts/follow_titantpp_late_path18.py:187: in main
+    "ready_sha256": sha(READY), "code_sha256": sha(__file__),
+                    ^^^^^^^^^^
+paper/scripts/follow_titantpp_late_path18.py:37: in sha
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py:1019: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_mlp16_late_path18_20261019_v1/LOCAL_READY.json'
+
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py:1013: FileNotFoundError
+___________ FollowupTests.test_ready_hashes_scope_and_parent_binding ___________
+
+self = <test_titantpp_late_path18_followup.FollowupTests testMethod=test_ready_hashes_scope_and_parent_binding>
+
+    def test_ready_hashes_scope_and_parent_binding(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory); parent = root / "parent"
+            dump(parent / "LOCAL_READY.json", {"status": "parent frozen"})
+            dump(parent / "FOLLOWUP_STARTED.json", start_record())
+            (root / "new.py").write_text("new code\n")
+            ready = {"status": "locally_verified_waiting_for_raw_time27", "new_fit_count": 18,
+                "baseline_reference_count": 9, "held_out_test_authorized": False,
+                "files": {"new.py": f.sha(root / "new.py")},
+                "parent_followup_start_sha256": f.sha(parent / "FOLLOWUP_STARTED.json")}
+            path = root / "ready.json"; dump(path, ready)
+            with patch.object(f, "ROOT", root), patch.object(f, "PARENT_REPORT", parent), \
+                    patch.object(f, "PARENT_READY_SHA", f.sha(parent / "LOCAL_READY.json")):
+>               self.assertEqual(f.verify_ready(path), ready)
+                                 ^^^^^^^^^^^^^^^^^^^^
+
+tests/test_titantpp_late_path18_followup.py:120: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+paper/scripts/follow_titantpp_late_path18.py:60: in verify_ready
+    require(target.is_relative_to(ROOT) and sha(target) == digest,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ok = False, message = 'Prepared evidence/source changed: new.py'
+
+    def require(ok, message):
+        if not ok:
+>           raise ValueError(message)
+E           ValueError: Prepared evidence/source changed: new.py
+
+paper/scripts/follow_titantpp_late_path18.py:29: ValueError
+=========================== short test summary info ============================
+FAILED tests/test_titantpp_late_path18_followup.py::FollowupTests::test_gate_failure_recorded_once_without_retry_or_prepare
+FAILED tests/test_titantpp_late_path18_followup.py::FollowupTests::test_ready_hashes_scope_and_parent_binding
+2 failed, 80 passed, 106 subtests passed in 4.92s

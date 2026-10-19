@@ -1,0 +1,66 @@
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/fs/__init__.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  __import__("pkg_resources").declare_namespace(__name__)  # type: ignore
+........FFF.....................                                         [100%]
+=================================== FAILURES ===================================
+_____ test_exact_quantity_gradient_optimizer_time_head_guard[raw-log_mse] ______
+
+mode = 'log_mse', time_input = 'raw'
+
+    @pytest.mark.parametrize('mode',w.LOSS_MODES)
+    @pytest.mark.parametrize('time_input',w.TIME_INPUTS)
+    def test_exact_quantity_gradient_optimizer_time_head_guard(mode,time_input):
+        for arm in w.ARMS:
+            result=w.quantity_oracle(mode,'cpu',arm=arm,time_input=time_input)
+            assert result['loss_formula_and_adamw_oracle_exact']
+>           assert result['time_input_transform']==w.TIME_INPUT_TRANSFORMS[time_input]
+E           AssertionError: assert 'log1p_nonnegative_float32' == 'raw_nonnegative_float32'
+E             
+E             - raw_nonnegative_float32
+E             ? ^^^
+E             + log1p_nonnegative_float32
+E             ? ^^^^^
+
+paper/tests/test_titantpp_late_path18_worker.py:50: AssertionError
+_____ test_exact_quantity_gradient_optimizer_time_head_guard[raw-raw_mse] ______
+
+mode = 'raw_mse', time_input = 'raw'
+
+    @pytest.mark.parametrize('mode',w.LOSS_MODES)
+    @pytest.mark.parametrize('time_input',w.TIME_INPUTS)
+    def test_exact_quantity_gradient_optimizer_time_head_guard(mode,time_input):
+        for arm in w.ARMS:
+            result=w.quantity_oracle(mode,'cpu',arm=arm,time_input=time_input)
+            assert result['loss_formula_and_adamw_oracle_exact']
+>           assert result['time_input_transform']==w.TIME_INPUT_TRANSFORMS[time_input]
+E           AssertionError: assert 'log1p_nonnegative_float32' == 'raw_nonnegative_float32'
+E             
+E             - raw_nonnegative_float32
+E             ? ^^^
+E             + log1p_nonnegative_float32
+E             ? ^^^^^
+
+paper/tests/test_titantpp_late_path18_worker.py:50: AssertionError
+_____ test_exact_quantity_gradient_optimizer_time_head_guard[raw-raw_mae] ______
+
+mode = 'raw_mae', time_input = 'raw'
+
+    @pytest.mark.parametrize('mode',w.LOSS_MODES)
+    @pytest.mark.parametrize('time_input',w.TIME_INPUTS)
+    def test_exact_quantity_gradient_optimizer_time_head_guard(mode,time_input):
+        for arm in w.ARMS:
+            result=w.quantity_oracle(mode,'cpu',arm=arm,time_input=time_input)
+            assert result['loss_formula_and_adamw_oracle_exact']
+>           assert result['time_input_transform']==w.TIME_INPUT_TRANSFORMS[time_input]
+E           AssertionError: assert 'log1p_nonnegative_float32' == 'raw_nonnegative_float32'
+E             
+E             - raw_nonnegative_float32
+E             ? ^^^
+E             + log1p_nonnegative_float32
+E             ? ^^^^^
+
+paper/tests/test_titantpp_late_path18_worker.py:50: AssertionError
+=========================== short test summary info ============================
+FAILED paper/tests/test_titantpp_late_path18_worker.py::test_exact_quantity_gradient_optimizer_time_head_guard[raw-log_mse]
+FAILED paper/tests/test_titantpp_late_path18_worker.py::test_exact_quantity_gradient_optimizer_time_head_guard[raw-raw_mse]
+FAILED paper/tests/test_titantpp_late_path18_worker.py::test_exact_quantity_gradient_optimizer_time_head_guard[raw-raw_mae]
+3 failed, 29 passed in 4.38s
