@@ -1,0 +1,123 @@
+{
+  "schema": "titantpp_late_path18_fixed_inputs_science_v2",
+  "authorization": "2026-10-19 user deferred time-input27; after current loss comparison completes, fix time and quantity inputs to existing log1p and choose one shared loss, train two backbone candidates x Cap3datasets x3seeds, max3per5080/5090; historicalCNN unchanged",
+  "preparation_model_spec": "reports/titantpp_mlp16_late_observation_path_20261019_v1/SCIENCE_SPEC.json",
+  "preparation_model_sha256": "a8759bd93c265c486289f14ebe34d8ae14d693b2a75e070d04c655406e599a0e",
+  "new_fit_count": 18,
+  "validation_replay_count": 18,
+  "stored_baseline_count": 9,
+  "comparison_model_count": 27,
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "common_condition_selection": {
+    "fixed_time_input": "log1p",
+    "fixed_quantity_input": "log1p",
+    "time_alpha": 0,
+    "loss_candidates": [
+      "log_mse",
+      "raw_mse",
+      "raw_mae"
+    ],
+    "required_complete_loss_endpoints": 27,
+    "fixed_reference_condition": {
+      "time_input": "log1p",
+      "loss_mode": "log_mse"
+    },
+    "primary": "mean across3datasets of condition3seedmeanRMSE / fixedreference3seedmeanRMSE",
+    "secondary": "mean across3datasets of condition3seedmeanMAE / fixedreference3seedmeanMAE",
+    "tie_order_loss": [
+      "log_mse",
+      "raw_mse",
+      "raw_mae"
+    ],
+    "exact_ties_no_tolerance": true,
+    "raw_errors_pooled_across_datasets": false,
+    "one_loss_for_both_arms_all_datasets_all_seeds": true,
+    "raw_time_endpoints_required_or_used": 0,
+    "selection_is_not_success_or_independent_evaluation": true
+  },
+  "model": {
+    "base": "titantpp_history_mlp_width16",
+    "arms": [
+      "titantpp_mlp16_late_observation_v1",
+      "titantpp_mlp16_late_hidden_v1"
+    ],
+    "bottleneck_width": 8,
+    "extra_parameters_per_arm": 1024,
+    "output_zero_initialization": true,
+    "common_initial_weights_and_rng_preserved": true,
+    "insertion": "after_encoder2_before_static_lmm",
+    "observation_source": "input projection before positional embedding; all available observed positions, final observed state for prediction",
+    "hidden_source": "post_encoder2_hidden",
+    "head_and_memory_modules_unchanged": true
+  },
+  "training": {
+    "maximum_epochs": 300,
+    "minimum_epochs": 40,
+    "patience": 40,
+    "batch_size": 128,
+    "optimizer": "AdamW",
+    "learning_rate": 0.001,
+    "weight_decay": 0.01,
+    "gradient_clip": 1,
+    "checkpoint_monitor": "validation_raw_quantity_rmse",
+    "checkpoint_selection": "first strict finite minimum full Validation raw quantity RMSE; MAE same checkpoint",
+    "checkpoint_warmstart": false
+  },
+  "hosts": {
+    "5080": {
+      "datasets_and_seeds": {
+        "yellow_trip_hourly": [
+          42,
+          52,
+          62
+        ],
+        "intermittent_frozen_5000": [
+          42
+        ]
+      },
+      "new_fit_count": 8,
+      "maximum_concurrent_workers": 3,
+      "absolute_host_deadline_unix": 1792888885.911408
+    },
+    "5090": {
+      "datasets_and_seeds": {
+        "raf_spare_parts": [
+          42,
+          52,
+          62
+        ],
+        "intermittent_frozen_5000": [
+          52,
+          62
+        ]
+      },
+      "new_fit_count": 10,
+      "maximum_concurrent_workers": 3,
+      "absolute_host_deadline_unix": 1792888885.815062
+    }
+  },
+  "gates": [
+    "Existing loss18 training/replay/collection/final27comparison and all source/selected checkpoints/original archive/manifest/terminal actualexit SHA verified; raw-time27 is not a dependency",
+    "Both old local finite waits remain identity-verified stopped and have no experiment bundle; current loss finisher69408 remains untouched",
+    "new isolated root, fresh real GPU/Runtime/input/owner verification, both arm CPU/native synthetic and3concurrent admission before first launch",
+    "all18train and selectedValidation18 actualexit0 + dispatcher2exit0 + explicitowner/GPUabsence before hostonce collection",
+    "allarchive/manifest/original/selectedcheckpoint/resultSHA and pureaggregation verified before finalcomparison"
+  ],
+  "failure_policy": "preserve originals/attempt/failure; no automatic retry, resume, restart, claim deletion, deadlines extension or signals to old campaigns",
+  "recurring_automation": false,
+  "historical_cnn_changed_retrained_reevaluated": false,
+  "existing_parent_queues_changed": false,
+  "held_out_test_authorized": false,
+  "reporting": [
+    "overall and cap_hit quantityRMSE/MAE and recordedpositiveintegerTimeNLL; tailq>cap emptyN/A",
+    "3seed mean/sampleSD ddof1; allseed absolute/relative differences observation−MLP16,hidden−MLP16,observation−hidden; worsenedseedsexplicit",
+    "timeheaduntrained alpha0 diagnosticTimeNLL, not temporal prediction improvement",
+    "same host per matchingseed; 5080cuDNN91900/5090cuDNN92000 separate",
+    "same nominal capacity only; memoryretrieval andgradientpaths maychange; no informationloss cause/newresidual principle/generalization/significance claim"
+  ],
+  "superseded_local_waits": "Raw-time27 and late-path18 v1 local waits identity-verified and SIGSTOP T, no remote signals; original scripts/preparations unchanged."
+}
