@@ -1,0 +1,76 @@
+{
+  "status": "PASS",
+  "scope": "narrow pre-fit v2 proc ownership fix and isolated manager/comparison routing",
+  "created_at": "2026-10-19T13:16:06.588576+00:00",
+  "summary": "17 independent regression tests passed; no verified CRITICAL/HIGH/MEDIUM/LOW findings. Existing v1 970 source hashes and prior failure/QA evidence remain unchanged.",
+  "command": [
+    "/usr/local/bin/python3",
+    "-m",
+    "pytest",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/paper/tests/test_titantpp_shared_history_cap_execution_v2_runtime.py",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/paper/tests/test_titantpp_shared_history_cap_execution_v2_manager.py",
+    "-q",
+    "-p",
+    "no:cacheprovider"
+  ],
+  "actual_exit_code": 0,
+  "tests_passed": 17,
+  "elapsed_seconds": 1.2666514169832226,
+  "source_and_tests_before": {
+    "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/manage_titantpp_shared_history_cap_execution_v2.py": "5808d28f072e3d5c1b59e97769134d079e6e2d36ad68cf35df939df40532b5fa",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/titantpp_shared_history_cap_execution_v2_runtime.py": "a78cfa0a86c96a0a835765b01b9060444fd4bbe22d1bfd802cc7294fa1749953",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/compare_titantpp_shared_history_cap_execution_v2.py": "9b6a5883240eb56f378bf9badedf2121ef4acd616f47ee4b1f161e7fd8109a79",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/paper/tests/test_titantpp_shared_history_cap_execution_v2_runtime.py": "0a3f47467f78357fb29b9dd93c3a39158c974c1242429f801ae87721ce85f5a8",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/paper/tests/test_titantpp_shared_history_cap_execution_v2_manager.py": "5c6216f7660a912a9a5d6f7afed6fad1cc6023e9db0d41b0a4e3aa37c822fa95"
+  },
+  "source_and_tests_after": {
+    "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/manage_titantpp_shared_history_cap_execution_v2.py": "5808d28f072e3d5c1b59e97769134d079e6e2d36ad68cf35df939df40532b5fa",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/titantpp_shared_history_cap_execution_v2_runtime.py": "a78cfa0a86c96a0a835765b01b9060444fd4bbe22d1bfd802cc7294fa1749953",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/compare_titantpp_shared_history_cap_execution_v2.py": "9b6a5883240eb56f378bf9badedf2121ef4acd616f47ee4b1f161e7fd8109a79",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/paper/tests/test_titantpp_shared_history_cap_execution_v2_runtime.py": "0a3f47467f78357fb29b9dd93c3a39158c974c1242429f801ae87721ce85f5a8",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/paper/tests/test_titantpp_shared_history_cap_execution_v2_manager.py": "5c6216f7660a912a9a5d6f7afed6fad1cc6023e9db0d41b0a4e3aa37c822fa95"
+  },
+  "preserved_v1_source_count": 970,
+  "preserved_v1_contract_sha256": "12517316c1c0fd57426e4088ef5ad2a79eff248fdecec4eadb0141ba8d97c390",
+  "preserved_prior_evidence": {
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_history_mlp_shared_cap_20261019_v1/execution_v1/INDEPENDENT_QA.json": "216942ce58617ff4380e33a4b81752f8ca756a38f2e99eeca8cc8b2fd9d7a945",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_history_mlp_shared_cap_20261019_v1/execution_v1/INDEPENDENT_QA.md": "441b3640d288ec9818f136deb937287ee0e9d218e3a4cce65035b2dbb49575c6",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_history_mlp_shared_cap_20261019_v1/execution_v1/LAUNCH_FAILURE_ORIGINAL.json": "c34a30244afc564d7e085da05eccb165fecc459a36b8752f8b948fac6a198da7"
+  },
+  "raw_logs": {
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_history_mlp_shared_cap_20261019_v1/execution_v2/independent_tests.stdout": "55edd56c0eccfcf8072c4acb116f54fe16913c3f9a3632fd2e04010dac72002b",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_history_mlp_shared_cap_20261019_v1/execution_v2/independent_tests.stderr": "eae3b3ab88ebd007cd93d95595b7a951b2c689b68948b08fd24d8ff83282945e"
+  },
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "acceptance_criteria": {
+    "original_proc1_permission_failure_reproduced": true,
+    "only_first_predecessor_scan_same_uid": true,
+    "same_uid_permission_failure_still_blocks": true,
+    "known_predecessor_python_still_blocks": true,
+    "unknown_gpu_process_still_blocks": true,
+    "global_enumerator_restored_before_gpu_and_paused_descendants": true,
+    "hook_restored_on_early_failure": true,
+    "main_globals_use_corrected_gate": true,
+    "v2_new_root_and_completion_route": true,
+    "same_science_dataset_input_head_loss_seed_budget": true,
+    "v1_970_source_unchanged": true,
+    "v1_failure_and_qa_unchanged": true,
+    "new_source_before_after_equal": true
+  },
+  "files_changed_by_review": [
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_history_mlp_shared_cap_20261019_v1/execution_v2/INDEPENDENT_QA.json",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_history_mlp_shared_cap_20261019_v1/execution_v2/INDEPENDENT_QA.md",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_history_mlp_shared_cap_20261019_v1/execution_v2/independent_tests.stdout",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_history_mlp_shared_cap_20261019_v1/execution_v2/independent_tests.stderr"
+  ],
+  "limitations": [
+    "Local fabricated process tests only; no SSH/native GPU qualification/real-data fit by reviewer.",
+    "The v1 remote attempt failed before training; this review verifies the local correction and new v2 routing, not native launch success.",
+    "Earlier 84 tests +23 subtests evidence remains preserved; unchanged science/worker/comparison math were not rerun in this narrow regression."
+  ]
+}
