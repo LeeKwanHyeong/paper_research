@@ -1,0 +1,65 @@
+{
+  "status": "PASS_local_packaging_repair",
+  "reviewed_at_utc": "2026-10-19T11:23:39.265022+00:00",
+  "review_scope": [
+    "paper/scripts/manage_titantpp_late_path18_5090_recovery.py",
+    "paper/scripts/run_titantpp_late_path18_recovery.py",
+    "paper/scripts/titantpp_late_path18_5090_recovery_runtime.py",
+    "paper/scripts/manage_titantpp_late_path18_5090_recovery_v2.py",
+    "paper/tests/test_titantpp_late_path18_recovery_v2_packaging.py"
+  ],
+  "files_changed_by_reviewer": [],
+  "command": [
+    "/usr/local/bin/python3",
+    "-m",
+    "pytest",
+    "paper/tests/test_titantpp_late_path18_recovery_v2_packaging.py",
+    "-q",
+    "-p",
+    "no:cacheprovider"
+  ],
+  "actual_exit_code": 0,
+  "test_summary": "..............                                                           [100%]\n14 passed in 4.19s",
+  "logs": {
+    "INDEPENDENT_PACKAGING_QA.stdout.log": {
+      "bytes": 99,
+      "sha256": "fabc351fd86479e030a5a5f70069b92e51ecf4f0bf52d7c0b93085dfb060ce40"
+    },
+    "INDEPENDENT_PACKAGING_QA.stderr.log": {
+      "bytes": 414,
+      "sha256": "eae3b3ab88ebd007cd93d95595b7a951b2c689b68948b08fd24d8ff83282945e"
+    }
+  },
+  "reviewed_file_sha256": {
+    "paper/scripts/manage_titantpp_late_path18_5090_recovery.py": "be1de7b185a1f2c49cc01ee2e163ae6fea115f52e4e73230f77929e4bae1b9ce",
+    "paper/scripts/run_titantpp_late_path18_recovery.py": "912403adc0d2de7c4d304b3edd459aee66da59f8aa39bc5019924b10e3a9e27d",
+    "paper/scripts/titantpp_late_path18_5090_recovery_runtime.py": "4edc46490bf67c4bb47f8b7fc9b217347afc0802c98aa4f1a6066010078de377",
+    "paper/scripts/manage_titantpp_late_path18_5090_recovery_v2.py": "f67d9f7f906ea6027d9bc313e221c6c58708e5afd8a857f0480bb3342270494b",
+    "paper/tests/test_titantpp_late_path18_recovery_v2_packaging.py": "5bf6e44f1d7e152db22743980a719a2b7ea754849ec3377c1c70320722caf035"
+  },
+  "source_unchanged_before_after_tests": true,
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "acceptance": {
+    "original_v1_manager_worker_runtime_bytes_preserved": true,
+    "scientific_source963_and_input6_export_sha_preserved": true,
+    "old_export_reproduces_frozen_resolver_failure": true,
+    "new_export_same_remote_installer_frozen_resolver_success": true,
+    "only_empty_sample_data_directory_added_to_scientific_layout": true,
+    "recovery_schema_science_jobs_deadlines_unchanged": true,
+    "new_manager_operation_filename_runtime_compatible": true,
+    "v2_root_tmux_and_collector_import_consistent": true,
+    "existing_root_rejected_and_no_original_overwrite": true,
+    "v1_failure_diagnosis_sha_and_raw_evidence_bound": true,
+    "resume3_fresh1_referenceRAF6_validation10_preserved": true
+  },
+  "limitations": [
+    "Local synthetic and actual exported-layout checks only; no SSH, native qualification, training, Validation or collection executed by reviewer.",
+    "Previous 80 local recovery tests establish the unchanged worker/runtime/terminal core; this review adds 14 isolated packaging tests.",
+    "Native qualification must still pass in the new isolated root before recovery workers start."
+  ]
+}
