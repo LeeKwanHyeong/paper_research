@@ -1,0 +1,3752 @@
+{
+  "schema": "shared_raw_raf3_stored_test_references_v1",
+  "status": "verified_stored_test_references",
+  "created_at_utc": "2026-10-20T02:00:58.072767+00:00",
+  "dataset": "raf_spare_parts",
+  "data_variant": "original_uncapped",
+  "reference_count": 21,
+  "baseline_reference_count": 3,
+  "external_reference_count": 18,
+  "seed_count": 3,
+  "models": [
+    "titantpp_history_mlp_width16",
+    "rmtpp",
+    "thp",
+    "nhp",
+    "sahp",
+    "s2p2_matched_head",
+    "attnhp_matched_head"
+  ],
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "data": {
+    "path": "benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_with_split.parquet",
+    "sha256": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d",
+    "split_manifest_path": "benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_split_manifest.json",
+    "split_manifest_sha256": "cd2458aa3809014aa74b8a121572a74e3d86dc520a690335d79a1e5150899e27"
+  },
+  "populations": {
+    "validation": {
+      "target_count": 6690,
+      "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+      "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba",
+      "recorded_time_sha256": "c059684ffaf11e4f5a25b8c357d8c05fe1bba95de2fea32c76a0ab87cc5eb17b",
+      "component_time_sha256": "57012615dacc3459a9982c48abbec399091447417669c96249cf2e5fccb10efc"
+    },
+    "test": {
+      "target_count": 5226,
+      "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+      "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482",
+      "recorded_time_sha256": "baa947aab5976d004fbc8310b25c610fdfe31556563fd2e478d43733bb4cc342",
+      "component_time_sha256": "421c7ce582434e3e589386bbac3cff19a7a0b63bfbdf3ab5724d66703a246a0d"
+    }
+  },
+  "legacy_test_population": {
+    "count": 5226,
+    "target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+    "truth_sha256": "108685c1dd684e00940b315b341bbc36c0a6b7c41efa91609c1f0f6535daec62",
+    "truth_digest_fields": [
+      "target_index",
+      "target_id",
+      "entity_id",
+      "seq",
+      "split",
+      "recorded_date",
+      "time_bucket",
+      "site_id",
+      "raw_quantity",
+      "recorded_gap",
+      "history_length",
+      "last_quantity",
+      "mean_quantity"
+    ]
+  },
+  "references": [
+    {
+      "dataset": "raf_spare_parts",
+      "model": "titantpp_history_mlp_width16",
+      "seed": 42,
+      "split": "test",
+      "selected_epoch": 9,
+      "selection_rule": "first strict finite minimum fullValidation raw quantity RMSE; MAE uses identical checkpoint",
+      "metrics": {
+        "overall": {
+          "count": 5226,
+          "qty_rmse": 40.40673512381125,
+          "qty_mae": 10.246339602884186,
+          "time_nll": 3.9989547840607624,
+          "qty_bias": -3.1318565795374154
+        },
+        "tail": {
+          "count": 39,
+          "qty_rmse": 415.6407682159079,
+          "qty_mae": 372.56931531123627,
+          "time_nll": 4.604514689650299,
+          "qty_bias": -372.56931531123627
+        }
+      },
+      "tail_threshold": 200.0,
+      "tail_rule": "raw quantity > Train-frozen200",
+      "time_metric": "recorded_positive_integer_time_nll",
+      "data_variant": "original_uncapped",
+      "quantity_capping_applied": false,
+      "time_alpha": 1.0,
+      "quantity_loss": "log_mse",
+      "time_head": {
+        "mode": "heteroscedastic_lognormal_duration",
+        "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+        "time_scale": 6.0,
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_sigma_floor": 0.001,
+        "time_location_transform": "identity",
+        "time_scale_conditioning": "linear_hidden",
+        "time_scale_transform": "softplus_plus_floor",
+        "time_scale_weight_initialization": "zeros",
+        "slope_parameterized": false,
+        "jacobian_correction": true,
+        "wd_clamp": 0.0,
+        "observation_likelihood": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "reported_metric": "recorded_positive_integer_time_nll"
+      },
+      "training_host": "5080",
+      "evaluation_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cpu",
+        "device_type": "cpu",
+        "python": "3.12.10",
+        "torch": "2.14.0",
+        "numpy": "2.3.1",
+        "polars": "1.31.0",
+        "cuda": null,
+        "cudnn": null,
+        "gpu": null,
+        "platform": "macOS-26.6.2-arm64-arm-64bit",
+        "machine": "arm64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": null,
+          "NVIDIA_TF32_OVERRIDE": null,
+          "CUDA_VISIBLE_DEVICES": "",
+          "CUDA_DEVICE_ORDER": null,
+          "OMP_NUM_THREADS": null,
+          "MKL_NUM_THREADS": null,
+          "OPENBLAS_NUM_THREADS": null,
+          "PYTHONHASHSEED": null
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "cuda_device": null,
+        "cpu_peak_rss_bytes": 648183808,
+        "cuda_peak_allocated_bytes": 0,
+        "cuda_peak_reserved_bytes": 0
+      },
+      "path": "reports/titantpp_width16_test_20261003_v1/runs/test/raf_spare_parts/receipt.json",
+      "sha256": "3405bc96c7e1bb61be29693a636fda8d4ad70dd9353864ea52bb0a4ac53ff947",
+      "checkpoint_path": "reports/titantpp_width16_test_20261003_v1/original/raf_spare_parts__42__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "e48ec120baf2a806e2613a36dfca46444306d4595047f39442f4e47c8eb36adf",
+      "state_tensor_sha256": "b4ed8316834a25e7bb19b6d817a215804a5404f4e214480fe286648cce634454",
+      "history_path": "reports/titantpp_width16_test_20261003_v1/original/raf_spare_parts__42__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_42/history.json",
+      "history_sha256": "5e7c8521c05e536348ba30b9a213470c1c0564f023026c07c35a69aa875fd2cf",
+      "source_closure_sha256": "ce779bc7e8d7a616365cd49d5f868d782b1273a5bdc01649f71399bc87b09d3b",
+      "prediction_parts": [
+        {
+          "path": "reports/titantpp_width16_test_20261003_v1/runs/test/raf_spare_parts/predictions/part-00000.parquet",
+          "sha256": "d2d8c3acfa7f1fcef8e86ae593a21c4f0f0a636d81d78d6913c7e701346ec8a8",
+          "rows": 5226
+        }
+      ],
+      "target_identity": {
+        "target_count": 5226,
+        "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+        "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482"
+      },
+      "recorded_time_sha256": "baa947aab5976d004fbc8310b25c610fdfe31556563fd2e478d43733bb4cc342",
+      "legacy_target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+      "legacy_truth_sha256": "108685c1dd684e00940b315b341bbc36c0a6b7c41efa91609c1f0f6535daec62",
+      "legacy_truth_digest_fields": [
+        "target_index",
+        "target_id",
+        "entity_id",
+        "seq",
+        "split",
+        "recorded_date",
+        "time_bucket",
+        "site_id",
+        "raw_quantity",
+        "recorded_gap",
+        "history_length",
+        "last_quantity",
+        "mean_quantity"
+      ],
+      "retrained": false,
+      "reevaluated": false,
+      "checks": {
+        "receipt_parts_checkpoint_history_sha_verified": true,
+        "test_rows_match_full_uncapped_data": true,
+        "all21_exact_same_target_order_quantity_time_and_history_truth": true,
+        "validation_first_minimum_checkpoint_preserved": true,
+        "alpha1_joint_equation_all_training_epochs_verified": true
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "titantpp_history_mlp_width16",
+      "seed": 52,
+      "split": "test",
+      "selected_epoch": 5,
+      "selection_rule": "first strict finite minimum fullValidation raw quantity RMSE; MAE uses identical checkpoint",
+      "metrics": {
+        "overall": {
+          "count": 5226,
+          "qty_rmse": 40.266286130271986,
+          "qty_mae": 10.133701294238568,
+          "time_nll": 3.640561738714889,
+          "qty_bias": -3.2143049095263665
+        },
+        "tail": {
+          "count": 39,
+          "qty_rmse": 415.57324530037863,
+          "qty_mae": 369.6436445774176,
+          "time_nll": 3.806080125701543,
+          "qty_bias": -369.6436445774176
+        }
+      },
+      "tail_threshold": 200.0,
+      "tail_rule": "raw quantity > Train-frozen200",
+      "time_metric": "recorded_positive_integer_time_nll",
+      "data_variant": "original_uncapped",
+      "quantity_capping_applied": false,
+      "time_alpha": 1.0,
+      "quantity_loss": "log_mse",
+      "time_head": {
+        "mode": "heteroscedastic_lognormal_duration",
+        "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+        "time_scale": 6.0,
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_sigma_floor": 0.001,
+        "time_location_transform": "identity",
+        "time_scale_conditioning": "linear_hidden",
+        "time_scale_transform": "softplus_plus_floor",
+        "time_scale_weight_initialization": "zeros",
+        "slope_parameterized": false,
+        "jacobian_correction": true,
+        "wd_clamp": 0.0,
+        "observation_likelihood": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "reported_metric": "recorded_positive_integer_time_nll"
+      },
+      "training_host": "5080",
+      "evaluation_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 91900,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "cuda_device": "NVIDIA GeForce RTX 5080",
+        "cpu_peak_rss_bytes": 2358153216,
+        "cuda_peak_allocated_bytes": 99221504,
+        "cuda_peak_reserved_bytes": 121634816
+      },
+      "path": "reports/titantpp_completed_validation_test_20261004_v1/width16/runs/test/raf_spare_parts__titantpp_history_mlp_width16__seed52/receipt.json",
+      "sha256": "86134f4b1d436cd78e4efaf8ab49e064d197b6757ed81379d44f3579490a43fb",
+      "checkpoint_path": "reports/titantpp_completed_validation_test_20261004_v1/width16/original/raf_spare_parts__52__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "331e15b60b75036addd8523734d997efa582fadaf85567859f5f1a5ede6e8c8a",
+      "state_tensor_sha256": "6a26377b54e773dcac86958d839a06c55008b43bf3a1955ba025d0ef91225e6a",
+      "history_path": "reports/titantpp_completed_validation_test_20261004_v1/width16/original/raf_spare_parts__52__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_52/history.json",
+      "history_sha256": "3f4569d26536289d8b6f9916fad088fe61d2b715f14975be9d26d4ed32a2614c",
+      "source_closure_sha256": "4a383e8457c846772e9ca8499de500a814f5108679630b20de1daf69012ce912",
+      "prediction_parts": [
+        {
+          "path": "reports/titantpp_completed_validation_test_20261004_v1/width16/runs/test/raf_spare_parts__titantpp_history_mlp_width16__seed52/predictions/part-00000.parquet",
+          "sha256": "276007af95dd6750b4703c43666a198cf5a835fb73fed19960e9944f10c2c5a5",
+          "rows": 5226
+        }
+      ],
+      "target_identity": {
+        "target_count": 5226,
+        "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+        "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482"
+      },
+      "recorded_time_sha256": "baa947aab5976d004fbc8310b25c610fdfe31556563fd2e478d43733bb4cc342",
+      "legacy_target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+      "legacy_truth_sha256": "108685c1dd684e00940b315b341bbc36c0a6b7c41efa91609c1f0f6535daec62",
+      "legacy_truth_digest_fields": [
+        "target_index",
+        "target_id",
+        "entity_id",
+        "seq",
+        "split",
+        "recorded_date",
+        "time_bucket",
+        "site_id",
+        "raw_quantity",
+        "recorded_gap",
+        "history_length",
+        "last_quantity",
+        "mean_quantity"
+      ],
+      "retrained": false,
+      "reevaluated": false,
+      "checks": {
+        "receipt_parts_checkpoint_history_sha_verified": true,
+        "test_rows_match_full_uncapped_data": true,
+        "all21_exact_same_target_order_quantity_time_and_history_truth": true,
+        "validation_first_minimum_checkpoint_preserved": true,
+        "alpha1_joint_equation_all_training_epochs_verified": true
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "titantpp_history_mlp_width16",
+      "seed": 62,
+      "split": "test",
+      "selected_epoch": 19,
+      "selection_rule": "first strict finite minimum fullValidation raw quantity RMSE; MAE uses identical checkpoint",
+      "metrics": {
+        "overall": {
+          "count": 5226,
+          "qty_rmse": 40.07043669243289,
+          "qty_mae": 10.066799012628316,
+          "time_nll": 4.0199148028550855,
+          "qty_bias": -3.6470444384453353
+        },
+        "tail": {
+          "count": 39,
+          "qty_rmse": 411.0780929198749,
+          "qty_mae": 367.4947294944372,
+          "time_nll": 3.994866075802777,
+          "qty_bias": -367.4947294944372
+        }
+      },
+      "tail_threshold": 200.0,
+      "tail_rule": "raw quantity > Train-frozen200",
+      "time_metric": "recorded_positive_integer_time_nll",
+      "data_variant": "original_uncapped",
+      "quantity_capping_applied": false,
+      "time_alpha": 1.0,
+      "quantity_loss": "log_mse",
+      "time_head": {
+        "mode": "heteroscedastic_lognormal_duration",
+        "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+        "time_scale": 6.0,
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_sigma_floor": 0.001,
+        "time_location_transform": "identity",
+        "time_scale_conditioning": "linear_hidden",
+        "time_scale_transform": "softplus_plus_floor",
+        "time_scale_weight_initialization": "zeros",
+        "slope_parameterized": false,
+        "jacobian_correction": true,
+        "wd_clamp": 0.0,
+        "observation_likelihood": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "reported_metric": "recorded_positive_integer_time_nll"
+      },
+      "training_host": "5080",
+      "evaluation_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 91900,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "cuda_device": "NVIDIA GeForce RTX 5080",
+        "cpu_peak_rss_bytes": 2358726656,
+        "cuda_peak_allocated_bytes": 99221504,
+        "cuda_peak_reserved_bytes": 121634816
+      },
+      "path": "reports/titantpp_completed_validation_test_20261004_v1/width16/runs/test/raf_spare_parts__titantpp_history_mlp_width16__seed62/receipt.json",
+      "sha256": "eadd6052de6ba64011ea8ee72b74145c7406a3646a6c7e9f367822e4110faebb",
+      "checkpoint_path": "reports/titantpp_completed_validation_test_20261004_v1/width16/original/raf_spare_parts__62__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "ea98f3691e4fef6317dff28ea99bf01fdb94d6c3ea7a8634bcfda2c31570a00e",
+      "state_tensor_sha256": "a3eff759aff84447d45cdadeb653ae49221408329d4fedad38fe27742e2d1591",
+      "history_path": "reports/titantpp_completed_validation_test_20261004_v1/width16/original/raf_spare_parts__62__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_62/history.json",
+      "history_sha256": "cbe3860664338c5cff2d8f8d86d12e1086acd6e29e2f790ffdfd670762a304db",
+      "source_closure_sha256": "4a383e8457c846772e9ca8499de500a814f5108679630b20de1daf69012ce912",
+      "prediction_parts": [
+        {
+          "path": "reports/titantpp_completed_validation_test_20261004_v1/width16/runs/test/raf_spare_parts__titantpp_history_mlp_width16__seed62/predictions/part-00000.parquet",
+          "sha256": "c35652fec133c5a8c748577ab28a014901fb90fe897068e319d35f8bd11fcbd5",
+          "rows": 5226
+        }
+      ],
+      "target_identity": {
+        "target_count": 5226,
+        "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+        "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482"
+      },
+      "recorded_time_sha256": "baa947aab5976d004fbc8310b25c610fdfe31556563fd2e478d43733bb4cc342",
+      "legacy_target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+      "legacy_truth_sha256": "108685c1dd684e00940b315b341bbc36c0a6b7c41efa91609c1f0f6535daec62",
+      "legacy_truth_digest_fields": [
+        "target_index",
+        "target_id",
+        "entity_id",
+        "seq",
+        "split",
+        "recorded_date",
+        "time_bucket",
+        "site_id",
+        "raw_quantity",
+        "recorded_gap",
+        "history_length",
+        "last_quantity",
+        "mean_quantity"
+      ],
+      "retrained": false,
+      "reevaluated": false,
+      "checks": {
+        "receipt_parts_checkpoint_history_sha_verified": true,
+        "test_rows_match_full_uncapped_data": true,
+        "all21_exact_same_target_order_quantity_time_and_history_truth": true,
+        "validation_first_minimum_checkpoint_preserved": true,
+        "alpha1_joint_equation_all_training_epochs_verified": true
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "rmtpp",
+      "seed": 42,
+      "split": "test",
+      "selected_epoch": 30,
+      "selection_rule": "first strict finite minimum fullValidation raw quantity RMSE; MAE uses identical checkpoint",
+      "metrics": {
+        "overall": {
+          "count": 5226,
+          "qty_rmse": 40.58470419121696,
+          "qty_mae": 9.866791756854312,
+          "time_nll": 4.3019165243851125,
+          "qty_bias": -4.629925700322997
+        },
+        "tail": {
+          "count": 39,
+          "qty_rmse": 422.1013469676815,
+          "qty_mae": 378.88554268616895,
+          "time_nll": 4.277888857588556,
+          "qty_bias": -378.88554268616895
+        }
+      },
+      "tail_threshold": 200.0,
+      "tail_rule": "raw quantity > Train-frozen200",
+      "time_metric": "recorded_positive_integer_time_nll",
+      "data_variant": "original_uncapped",
+      "quantity_capping_applied": false,
+      "time_alpha": 1.0,
+      "quantity_loss": "log_mse",
+      "time_head": {
+        "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+        "jacobian_correction": true,
+        "mode": "heteroscedastic_lognormal_duration",
+        "observation_likelihood": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "reported_metric": "recorded_positive_integer_time_nll",
+        "slope_parameterized": false,
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_location_transform": "identity",
+        "time_scale": 6.0,
+        "time_scale_conditioning": "linear_hidden",
+        "time_scale_transform": "softplus_plus_floor",
+        "time_scale_weight_initialization": "zeros",
+        "time_sigma_floor": 0.001,
+        "wd_clamp": 0.0
+      },
+      "training_host": "5080",
+      "evaluation_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 91900,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "cuda_device": "NVIDIA GeForce RTX 5080",
+        "cpu_peak_rss_bytes": 2207047680,
+        "cuda_peak_allocated_bytes": 98789888,
+        "cuda_peak_reserved_bytes": 113246208
+      },
+      "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__rmtpp__seed42/receipt.json",
+      "sha256": "cbf2320fff950f34bc124da7f7418e08f2dad8dff9fdc32107e530762e38b8c8",
+      "checkpoint_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/runs/rmtpp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "d069a2867cf39eecca277b843f3d177e095a9025305b6abf28b93887090ae602",
+      "state_tensor_sha256": "efd769f0217e3799e0465a156de8b16220ba057360d3db72ee14f2fb511f1113",
+      "history_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/runs/rmtpp/count_only_log_regression/seed_42/history.json",
+      "history_sha256": "b70710a8e7057f4e2ede5ecdf094835565976e42a5dfcf6fbb7c1cf991e9353e",
+      "source_closure_sha256": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "prediction_parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__rmtpp__seed42/predictions/part-00000.parquet",
+          "sha256": "f177d12cd2c7fe6f9739db00417f0317bcd7a9bbd0521a4e5762951192f876e8",
+          "rows": 5226
+        }
+      ],
+      "target_identity": {
+        "target_count": 5226,
+        "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+        "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482"
+      },
+      "recorded_time_sha256": "baa947aab5976d004fbc8310b25c610fdfe31556563fd2e478d43733bb4cc342",
+      "legacy_target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+      "legacy_truth_sha256": "108685c1dd684e00940b315b341bbc36c0a6b7c41efa91609c1f0f6535daec62",
+      "legacy_truth_digest_fields": [
+        "target_index",
+        "target_id",
+        "entity_id",
+        "seq",
+        "split",
+        "recorded_date",
+        "time_bucket",
+        "site_id",
+        "raw_quantity",
+        "recorded_gap",
+        "history_length",
+        "last_quantity",
+        "mean_quantity"
+      ],
+      "retrained": false,
+      "reevaluated": false,
+      "checks": {
+        "receipt_parts_checkpoint_history_sha_verified": true,
+        "test_rows_match_full_uncapped_data": true,
+        "all21_exact_same_target_order_quantity_time_and_history_truth": true,
+        "validation_first_minimum_checkpoint_preserved": true,
+        "alpha1_joint_equation_all_training_epochs_verified": true
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "rmtpp",
+      "seed": 52,
+      "split": "test",
+      "selected_epoch": 15,
+      "selection_rule": "first strict finite minimum fullValidation raw quantity RMSE; MAE uses identical checkpoint",
+      "metrics": {
+        "overall": {
+          "count": 5226,
+          "qty_rmse": 40.1849505956864,
+          "qty_mae": 9.940154690784464,
+          "time_nll": 3.767174707856142,
+          "qty_bias": -3.9070615905753687
+        },
+        "tail": {
+          "count": 39,
+          "qty_rmse": 416.09102296687473,
+          "qty_mae": 371.70264676901013,
+          "time_nll": 3.969704708501213,
+          "qty_bias": -371.70264676901013
+        }
+      },
+      "tail_threshold": 200.0,
+      "tail_rule": "raw quantity > Train-frozen200",
+      "time_metric": "recorded_positive_integer_time_nll",
+      "data_variant": "original_uncapped",
+      "quantity_capping_applied": false,
+      "time_alpha": 1.0,
+      "quantity_loss": "log_mse",
+      "time_head": {
+        "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+        "jacobian_correction": true,
+        "mode": "heteroscedastic_lognormal_duration",
+        "observation_likelihood": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "reported_metric": "recorded_positive_integer_time_nll",
+        "slope_parameterized": false,
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_location_transform": "identity",
+        "time_scale": 6.0,
+        "time_scale_conditioning": "linear_hidden",
+        "time_scale_transform": "softplus_plus_floor",
+        "time_scale_weight_initialization": "zeros",
+        "time_sigma_floor": 0.001,
+        "wd_clamp": 0.0
+      },
+      "training_host": "5080",
+      "evaluation_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 91900,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "cuda_device": "NVIDIA GeForce RTX 5080",
+        "cpu_peak_rss_bytes": 2208092160,
+        "cuda_peak_allocated_bytes": 98789888,
+        "cuda_peak_reserved_bytes": 113246208
+      },
+      "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__rmtpp__seed52/receipt.json",
+      "sha256": "fa87b1bc33219d098b4fa95e2b67e1ed2af2c707e7ed2754bf8300b85ca2d3e6",
+      "checkpoint_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/runs/rmtpp/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "6ba914b44ba249c330fe55e2be5bd6ddcfa5eead613e9beb38e20519e9528719",
+      "state_tensor_sha256": "c2bf8d5b9b713b7a61bbfca8848b0a0a397473ac3db8433046ee48f904b69a0c",
+      "history_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/runs/rmtpp/count_only_log_regression/seed_52/history.json",
+      "history_sha256": "017642815b0ed95f9695f4e430f3f53650e4c609518c18cee9c468607acdd135",
+      "source_closure_sha256": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "prediction_parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__rmtpp__seed52/predictions/part-00000.parquet",
+          "sha256": "461849236db76db01aee90c303a5abcc57f6b38a2ace104eba19b5393272df01",
+          "rows": 5226
+        }
+      ],
+      "target_identity": {
+        "target_count": 5226,
+        "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+        "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482"
+      },
+      "recorded_time_sha256": "baa947aab5976d004fbc8310b25c610fdfe31556563fd2e478d43733bb4cc342",
+      "legacy_target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+      "legacy_truth_sha256": "108685c1dd684e00940b315b341bbc36c0a6b7c41efa91609c1f0f6535daec62",
+      "legacy_truth_digest_fields": [
+        "target_index",
+        "target_id",
+        "entity_id",
+        "seq",
+        "split",
+        "recorded_date",
+        "time_bucket",
+        "site_id",
+        "raw_quantity",
+        "recorded_gap",
+        "history_length",
+        "last_quantity",
+        "mean_quantity"
+      ],
+      "retrained": false,
+      "reevaluated": false,
+      "checks": {
+        "receipt_parts_checkpoint_history_sha_verified": true,
+        "test_rows_match_full_uncapped_data": true,
+        "all21_exact_same_target_order_quantity_time_and_history_truth": true,
+        "validation_first_minimum_checkpoint_preserved": true,
+        "alpha1_joint_equation_all_training_epochs_verified": true
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "rmtpp",
+      "seed": 62,
+      "split": "test",
+      "selected_epoch": 8,
+      "selection_rule": "first strict finite minimum fullValidation raw quantity RMSE; MAE uses identical checkpoint",
+      "metrics": {
+        "overall": {
+          "count": 5226,
+          "qty_rmse": 40.619842594941325,
+          "qty_mae": 9.912093066160951,
+          "time_nll": 3.6301718271109094,
+          "qty_bias": -4.0951956684134085
+        },
+        "tail": {
+          "count": 39,
+          "qty_rmse": 423.6133761036948,
+          "qty_mae": 379.8157405364208,
+          "time_nll": 3.752112600669012,
+          "qty_bias": -379.8157405364208
+        }
+      },
+      "tail_threshold": 200.0,
+      "tail_rule": "raw quantity > Train-frozen200",
+      "time_metric": "recorded_positive_integer_time_nll",
+      "data_variant": "original_uncapped",
+      "quantity_capping_applied": false,
+      "time_alpha": 1.0,
+      "quantity_loss": "log_mse",
+      "time_head": {
+        "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+        "jacobian_correction": true,
+        "mode": "heteroscedastic_lognormal_duration",
+        "observation_likelihood": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "reported_metric": "recorded_positive_integer_time_nll",
+        "slope_parameterized": false,
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_location_transform": "identity",
+        "time_scale": 6.0,
+        "time_scale_conditioning": "linear_hidden",
+        "time_scale_transform": "softplus_plus_floor",
+        "time_scale_weight_initialization": "zeros",
+        "time_sigma_floor": 0.001,
+        "wd_clamp": 0.0
+      },
+      "training_host": "5080",
+      "evaluation_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 91900,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "cuda_device": "NVIDIA GeForce RTX 5080",
+        "cpu_peak_rss_bytes": 2205749248,
+        "cuda_peak_allocated_bytes": 98789888,
+        "cuda_peak_reserved_bytes": 113246208
+      },
+      "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__rmtpp__seed62/receipt.json",
+      "sha256": "82429f9daf4a736e6e936cef005ae148ae83d780a122b992bfc4d239da7c4354",
+      "checkpoint_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/runs/rmtpp/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "59defbbdf5b85946bd3439f25197c6ee8a213e6d9851b8ab1ab267a4330591c9",
+      "state_tensor_sha256": "8630ebfbeba763ad1c8661d98d2d8edc7532f90ea80d8c79a9673de7a9186770",
+      "history_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/runs/rmtpp/count_only_log_regression/seed_62/history.json",
+      "history_sha256": "2d668327b8d4f7ed60b079e8b6a009fb14db4a0f34ba3029feb9b58660de01f8",
+      "source_closure_sha256": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "prediction_parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__rmtpp__seed62/predictions/part-00000.parquet",
+          "sha256": "5aa0f81bf9185c6175116472591538cb7489ab1689c5b32795c581fc28e48fd9",
+          "rows": 5226
+        }
+      ],
+      "target_identity": {
+        "target_count": 5226,
+        "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+        "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482"
+      },
+      "recorded_time_sha256": "baa947aab5976d004fbc8310b25c610fdfe31556563fd2e478d43733bb4cc342",
+      "legacy_target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+      "legacy_truth_sha256": "108685c1dd684e00940b315b341bbc36c0a6b7c41efa91609c1f0f6535daec62",
+      "legacy_truth_digest_fields": [
+        "target_index",
+        "target_id",
+        "entity_id",
+        "seq",
+        "split",
+        "recorded_date",
+        "time_bucket",
+        "site_id",
+        "raw_quantity",
+        "recorded_gap",
+        "history_length",
+        "last_quantity",
+        "mean_quantity"
+      ],
+      "retrained": false,
+      "reevaluated": false,
+      "checks": {
+        "receipt_parts_checkpoint_history_sha_verified": true,
+        "test_rows_match_full_uncapped_data": true,
+        "all21_exact_same_target_order_quantity_time_and_history_truth": true,
+        "validation_first_minimum_checkpoint_preserved": true,
+        "alpha1_joint_equation_all_training_epochs_verified": true
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "thp",
+      "seed": 42,
+      "split": "test",
+      "selected_epoch": 50,
+      "selection_rule": "first strict finite minimum fullValidation raw quantity RMSE; MAE uses identical checkpoint",
+      "metrics": {
+        "overall": {
+          "count": 5226,
+          "qty_rmse": 40.342827168634535,
+          "qty_mae": 10.077917111659023,
+          "time_nll": 3.4436813760968734,
+          "qty_bias": -3.827553498507732
+        },
+        "tail": {
+          "count": 39,
+          "qty_rmse": 416.77681899991734,
+          "qty_mae": 372.2449299249894,
+          "time_nll": 3.598653679585293,
+          "qty_bias": -372.2449299249894
+        }
+      },
+      "tail_threshold": 200.0,
+      "tail_rule": "raw quantity > Train-frozen200",
+      "time_metric": "recorded_positive_integer_time_nll",
+      "data_variant": "original_uncapped",
+      "quantity_capping_applied": false,
+      "time_alpha": 1.0,
+      "quantity_loss": "log_mse",
+      "time_head": {
+        "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+        "jacobian_correction": true,
+        "mode": "heteroscedastic_lognormal_duration",
+        "observation_likelihood": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "reported_metric": "recorded_positive_integer_time_nll",
+        "slope_parameterized": false,
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_location_transform": "identity",
+        "time_scale": 6.0,
+        "time_scale_conditioning": "linear_hidden",
+        "time_scale_transform": "softplus_plus_floor",
+        "time_scale_weight_initialization": "zeros",
+        "time_sigma_floor": 0.001,
+        "wd_clamp": 0.0
+      },
+      "training_host": "5080",
+      "evaluation_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 91900,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "cuda_device": "NVIDIA GeForce RTX 5080",
+        "cpu_peak_rss_bytes": 2246950912,
+        "cuda_peak_allocated_bytes": 99253760,
+        "cuda_peak_reserved_bytes": 123731968
+      },
+      "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__thp__seed42/receipt.json",
+      "sha256": "07ae164dc6c6f468adf23d6f64e62ea9fc8b0baf3f358985e6d21f6ed1fcb159",
+      "checkpoint_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/runs/thp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "785697214e53580212ef628dd9f12711f8b4deb0f787b777f90e80cb4dc5c0df",
+      "state_tensor_sha256": "acdd9c4aac9eb1577117c66280776ae7ebcb22b2da974e9b78860e7bbfbf66a8",
+      "history_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/runs/thp/count_only_log_regression/seed_42/history.json",
+      "history_sha256": "ce6295849e5500679f0450ec00f17720ba1c36c2a62ce7b15bcce30c9878933e",
+      "source_closure_sha256": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "prediction_parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__thp__seed42/predictions/part-00000.parquet",
+          "sha256": "1e60b96de8de05845c238d988738d37d4ff1acf77a90989d4aa49d97a8f3635a",
+          "rows": 5226
+        }
+      ],
+      "target_identity": {
+        "target_count": 5226,
+        "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+        "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482"
+      },
+      "recorded_time_sha256": "baa947aab5976d004fbc8310b25c610fdfe31556563fd2e478d43733bb4cc342",
+      "legacy_target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+      "legacy_truth_sha256": "108685c1dd684e00940b315b341bbc36c0a6b7c41efa91609c1f0f6535daec62",
+      "legacy_truth_digest_fields": [
+        "target_index",
+        "target_id",
+        "entity_id",
+        "seq",
+        "split",
+        "recorded_date",
+        "time_bucket",
+        "site_id",
+        "raw_quantity",
+        "recorded_gap",
+        "history_length",
+        "last_quantity",
+        "mean_quantity"
+      ],
+      "retrained": false,
+      "reevaluated": false,
+      "checks": {
+        "receipt_parts_checkpoint_history_sha_verified": true,
+        "test_rows_match_full_uncapped_data": true,
+        "all21_exact_same_target_order_quantity_time_and_history_truth": true,
+        "validation_first_minimum_checkpoint_preserved": true,
+        "alpha1_joint_equation_all_training_epochs_verified": true
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "thp",
+      "seed": 52,
+      "split": "test",
+      "selected_epoch": 15,
+      "selection_rule": "first strict finite minimum fullValidation raw quantity RMSE; MAE uses identical checkpoint",
+      "metrics": {
+        "overall": {
+          "count": 5226,
+          "qty_rmse": 40.892272333280985,
+          "qty_mae": 9.918315602316055,
+          "time_nll": 3.440449419046007,
+          "qty_bias": -4.670344816739651
+        },
+        "tail": {
+          "count": 39,
+          "qty_rmse": 425.5520922980311,
+          "qty_mae": 381.3194869603866,
+          "time_nll": 3.542817828429407,
+          "qty_bias": -381.3194869603866
+        }
+      },
+      "tail_threshold": 200.0,
+      "tail_rule": "raw quantity > Train-frozen200",
+      "time_metric": "recorded_positive_integer_time_nll",
+      "data_variant": "original_uncapped",
+      "quantity_capping_applied": false,
+      "time_alpha": 1.0,
+      "quantity_loss": "log_mse",
+      "time_head": {
+        "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+        "jacobian_correction": true,
+        "mode": "heteroscedastic_lognormal_duration",
+        "observation_likelihood": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "reported_metric": "recorded_positive_integer_time_nll",
+        "slope_parameterized": false,
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_location_transform": "identity",
+        "time_scale": 6.0,
+        "time_scale_conditioning": "linear_hidden",
+        "time_scale_transform": "softplus_plus_floor",
+        "time_scale_weight_initialization": "zeros",
+        "time_sigma_floor": 0.001,
+        "wd_clamp": 0.0
+      },
+      "training_host": "5080",
+      "evaluation_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 91900,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "cuda_device": "NVIDIA GeForce RTX 5080",
+        "cpu_peak_rss_bytes": 2246766592,
+        "cuda_peak_allocated_bytes": 99253760,
+        "cuda_peak_reserved_bytes": 123731968
+      },
+      "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__thp__seed52/receipt.json",
+      "sha256": "964ebb36044a50b3b996ceb6828d016a2dc71e55748a5dfefdb7350f5f7f427c",
+      "checkpoint_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/runs/thp/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "63bdacfda65177be8dcb23c2fccedebe515e11118340707986b4dc1bb5ea734a",
+      "state_tensor_sha256": "52bbfe537ef1a57ef5fa89c01128da4338104b2c623857d5b345b724c80ed36c",
+      "history_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/runs/thp/count_only_log_regression/seed_52/history.json",
+      "history_sha256": "47c0a485a5c45b6917cd30798166a78646cb84611c9f42a0c9c2e56b575b6c1e",
+      "source_closure_sha256": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "prediction_parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__thp__seed52/predictions/part-00000.parquet",
+          "sha256": "215ee5b793b871b4cf90164db4570b33f71e73f6e2a5c5de636467cda178fcd1",
+          "rows": 5226
+        }
+      ],
+      "target_identity": {
+        "target_count": 5226,
+        "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+        "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482"
+      },
+      "recorded_time_sha256": "baa947aab5976d004fbc8310b25c610fdfe31556563fd2e478d43733bb4cc342",
+      "legacy_target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+      "legacy_truth_sha256": "108685c1dd684e00940b315b341bbc36c0a6b7c41efa91609c1f0f6535daec62",
+      "legacy_truth_digest_fields": [
+        "target_index",
+        "target_id",
+        "entity_id",
+        "seq",
+        "split",
+        "recorded_date",
+        "time_bucket",
+        "site_id",
+        "raw_quantity",
+        "recorded_gap",
+        "history_length",
+        "last_quantity",
+        "mean_quantity"
+      ],
+      "retrained": false,
+      "reevaluated": false,
+      "checks": {
+        "receipt_parts_checkpoint_history_sha_verified": true,
+        "test_rows_match_full_uncapped_data": true,
+        "all21_exact_same_target_order_quantity_time_and_history_truth": true,
+        "validation_first_minimum_checkpoint_preserved": true,
+        "alpha1_joint_equation_all_training_epochs_verified": true
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "thp",
+      "seed": 62,
+      "split": "test",
+      "selected_epoch": 20,
+      "selection_rule": "first strict finite minimum fullValidation raw quantity RMSE; MAE uses identical checkpoint",
+      "metrics": {
+        "overall": {
+          "count": 5226,
+          "qty_rmse": 40.430174494434205,
+          "qty_mae": 10.37261828870277,
+          "time_nll": 3.4846491837988425,
+          "qty_bias": -2.4817924136135527
+        },
+        "tail": {
+          "count": 39,
+          "qty_rmse": 418.7643304284945,
+          "qty_mae": 374.4997785519331,
+          "time_nll": 3.646913475002726,
+          "qty_bias": -374.4997785519331
+        }
+      },
+      "tail_threshold": 200.0,
+      "tail_rule": "raw quantity > Train-frozen200",
+      "time_metric": "recorded_positive_integer_time_nll",
+      "data_variant": "original_uncapped",
+      "quantity_capping_applied": false,
+      "time_alpha": 1.0,
+      "quantity_loss": "log_mse",
+      "time_head": {
+        "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+        "jacobian_correction": true,
+        "mode": "heteroscedastic_lognormal_duration",
+        "observation_likelihood": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "reported_metric": "recorded_positive_integer_time_nll",
+        "slope_parameterized": false,
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_location_transform": "identity",
+        "time_scale": 6.0,
+        "time_scale_conditioning": "linear_hidden",
+        "time_scale_transform": "softplus_plus_floor",
+        "time_scale_weight_initialization": "zeros",
+        "time_sigma_floor": 0.001,
+        "wd_clamp": 0.0
+      },
+      "training_host": "5080",
+      "evaluation_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 91900,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "cuda_device": "NVIDIA GeForce RTX 5080",
+        "cpu_peak_rss_bytes": 2249027584,
+        "cuda_peak_allocated_bytes": 99253760,
+        "cuda_peak_reserved_bytes": 123731968
+      },
+      "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__thp__seed62/receipt.json",
+      "sha256": "24deb671ef6da61936a905535aadf6044c21741bd32a3450a48df35c187dd8a1",
+      "checkpoint_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/runs/thp/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "03595a64a334525a55690f37dc07c59a8c9d20556f02b57374cbb13e235a40b3",
+      "state_tensor_sha256": "bd777039312ae93888fe72927ecbf61ecb36e62bd5880858de82b31b61d668d4",
+      "history_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/runs/thp/count_only_log_regression/seed_62/history.json",
+      "history_sha256": "4a0b7c34041ec4570fe8c3505b61dd612fd8f95a34a7004eb3d5fc91f21c0c32",
+      "source_closure_sha256": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "prediction_parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__thp__seed62/predictions/part-00000.parquet",
+          "sha256": "634d68dc5b68514108a4322efa1d132601b7153807f91d845352a5d0d0143282",
+          "rows": 5226
+        }
+      ],
+      "target_identity": {
+        "target_count": 5226,
+        "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+        "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482"
+      },
+      "recorded_time_sha256": "baa947aab5976d004fbc8310b25c610fdfe31556563fd2e478d43733bb4cc342",
+      "legacy_target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+      "legacy_truth_sha256": "108685c1dd684e00940b315b341bbc36c0a6b7c41efa91609c1f0f6535daec62",
+      "legacy_truth_digest_fields": [
+        "target_index",
+        "target_id",
+        "entity_id",
+        "seq",
+        "split",
+        "recorded_date",
+        "time_bucket",
+        "site_id",
+        "raw_quantity",
+        "recorded_gap",
+        "history_length",
+        "last_quantity",
+        "mean_quantity"
+      ],
+      "retrained": false,
+      "reevaluated": false,
+      "checks": {
+        "receipt_parts_checkpoint_history_sha_verified": true,
+        "test_rows_match_full_uncapped_data": true,
+        "all21_exact_same_target_order_quantity_time_and_history_truth": true,
+        "validation_first_minimum_checkpoint_preserved": true,
+        "alpha1_joint_equation_all_training_epochs_verified": true
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "nhp",
+      "seed": 42,
+      "split": "test",
+      "selected_epoch": 4,
+      "selection_rule": "first strict finite minimum fullValidation raw quantity RMSE; MAE uses identical checkpoint",
+      "metrics": {
+        "overall": {
+          "count": 5226,
+          "qty_rmse": 41.94148444629708,
+          "qty_mae": 9.895699388169714,
+          "time_nll": 3.4306222157828206,
+          "qty_bias": -6.153050754520111
+        },
+        "tail": {
+          "count": 39,
+          "qty_rmse": 437.77220577253576,
+          "qty_mae": 395.73788574414374,
+          "time_nll": 3.531156058202769,
+          "qty_bias": -395.73788574414374
+        }
+      },
+      "tail_threshold": 200.0,
+      "tail_rule": "raw quantity > Train-frozen200",
+      "time_metric": "recorded_positive_integer_time_nll",
+      "data_variant": "original_uncapped",
+      "quantity_capping_applied": false,
+      "time_alpha": 1.0,
+      "quantity_loss": "log_mse",
+      "time_head": {
+        "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+        "jacobian_correction": true,
+        "mode": "heteroscedastic_lognormal_duration",
+        "observation_likelihood": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "reported_metric": "recorded_positive_integer_time_nll",
+        "slope_parameterized": false,
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_location_transform": "identity",
+        "time_scale": 6.0,
+        "time_scale_conditioning": "linear_hidden",
+        "time_scale_transform": "softplus_plus_floor",
+        "time_scale_weight_initialization": "zeros",
+        "time_sigma_floor": 0.001,
+        "wd_clamp": 0.0
+      },
+      "training_host": "5080",
+      "evaluation_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 91900,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "cuda_device": "NVIDIA GeForce RTX 5080",
+        "cpu_peak_rss_bytes": 2195980288,
+        "cuda_peak_allocated_bytes": 41452032,
+        "cuda_peak_reserved_bytes": 60817408
+      },
+      "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__nhp__seed42/receipt.json",
+      "sha256": "07414ddc054be0ac61f81fe16d8b7c70c924a343180cdc36b0cb4621a1c4c23b",
+      "checkpoint_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/runs/nhp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "a9819262affac578986d3b8e2598eeab2af2e7c21dd00e60ef8beb28b0591a17",
+      "state_tensor_sha256": "a240a8388acfc1818f640bcb89fdbd0ed85e891a44b99f1026360bd5fa0c552a",
+      "history_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/runs/nhp/count_only_log_regression/seed_42/history.json",
+      "history_sha256": "0c2cde5812f84f561557a5655ee9ef448452c906dba7010a1d3c0865645eae7d",
+      "source_closure_sha256": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "prediction_parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__nhp__seed42/predictions/part-00000.parquet",
+          "sha256": "ba5855d5af922911e6a8584a62002bd538661956e12fd235882b5e3ddf8f6538",
+          "rows": 5226
+        }
+      ],
+      "target_identity": {
+        "target_count": 5226,
+        "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+        "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482"
+      },
+      "recorded_time_sha256": "baa947aab5976d004fbc8310b25c610fdfe31556563fd2e478d43733bb4cc342",
+      "legacy_target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+      "legacy_truth_sha256": "108685c1dd684e00940b315b341bbc36c0a6b7c41efa91609c1f0f6535daec62",
+      "legacy_truth_digest_fields": [
+        "target_index",
+        "target_id",
+        "entity_id",
+        "seq",
+        "split",
+        "recorded_date",
+        "time_bucket",
+        "site_id",
+        "raw_quantity",
+        "recorded_gap",
+        "history_length",
+        "last_quantity",
+        "mean_quantity"
+      ],
+      "retrained": false,
+      "reevaluated": false,
+      "checks": {
+        "receipt_parts_checkpoint_history_sha_verified": true,
+        "test_rows_match_full_uncapped_data": true,
+        "all21_exact_same_target_order_quantity_time_and_history_truth": true,
+        "validation_first_minimum_checkpoint_preserved": true,
+        "alpha1_joint_equation_all_training_epochs_verified": true
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "nhp",
+      "seed": 52,
+      "split": "test",
+      "selected_epoch": 15,
+      "selection_rule": "first strict finite minimum fullValidation raw quantity RMSE; MAE uses identical checkpoint",
+      "metrics": {
+        "overall": {
+          "count": 5226,
+          "qty_rmse": 42.072563560628176,
+          "qty_mae": 9.93777734467776,
+          "time_nll": 3.6606820043998862,
+          "qty_bias": -6.6312435023227145
+        },
+        "tail": {
+          "count": 39,
+          "qty_rmse": 437.13485959423787,
+          "qty_mae": 394.9277110772255,
+          "time_nll": 3.99532976085978,
+          "qty_bias": -394.9277110772255
+        }
+      },
+      "tail_threshold": 200.0,
+      "tail_rule": "raw quantity > Train-frozen200",
+      "time_metric": "recorded_positive_integer_time_nll",
+      "data_variant": "original_uncapped",
+      "quantity_capping_applied": false,
+      "time_alpha": 1.0,
+      "quantity_loss": "log_mse",
+      "time_head": {
+        "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+        "jacobian_correction": true,
+        "mode": "heteroscedastic_lognormal_duration",
+        "observation_likelihood": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "reported_metric": "recorded_positive_integer_time_nll",
+        "slope_parameterized": false,
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_location_transform": "identity",
+        "time_scale": 6.0,
+        "time_scale_conditioning": "linear_hidden",
+        "time_scale_transform": "softplus_plus_floor",
+        "time_scale_weight_initialization": "zeros",
+        "time_sigma_floor": 0.001,
+        "wd_clamp": 0.0
+      },
+      "training_host": "5080",
+      "evaluation_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 91900,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "cuda_device": "NVIDIA GeForce RTX 5080",
+        "cpu_peak_rss_bytes": 2194485248,
+        "cuda_peak_allocated_bytes": 41452032,
+        "cuda_peak_reserved_bytes": 60817408
+      },
+      "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__nhp__seed52/receipt.json",
+      "sha256": "58d9e4594996d987ba18bf8464de788d18c33b3a1a7f2595ee8b5fe9d2c4931c",
+      "checkpoint_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/runs/nhp/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "a5a4907e0914aa68f35174651b03dbf332caaf885314b206892417da6c365e5a",
+      "state_tensor_sha256": "3c16eb84eed9323174f3febd41a6477fe81af21897713f97d6f4713a4eecfbab",
+      "history_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/runs/nhp/count_only_log_regression/seed_52/history.json",
+      "history_sha256": "f0c5ebdb4acdee6892e6fd6c25dc0e15ea38d47cda8d990e49dca2e5c1234451",
+      "source_closure_sha256": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "prediction_parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__nhp__seed52/predictions/part-00000.parquet",
+          "sha256": "828bf5c6f24c08b3af3b6d36cff7900c559b809656b68ba826e2671b8d74fdb5",
+          "rows": 5226
+        }
+      ],
+      "target_identity": {
+        "target_count": 5226,
+        "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+        "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482"
+      },
+      "recorded_time_sha256": "baa947aab5976d004fbc8310b25c610fdfe31556563fd2e478d43733bb4cc342",
+      "legacy_target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+      "legacy_truth_sha256": "108685c1dd684e00940b315b341bbc36c0a6b7c41efa91609c1f0f6535daec62",
+      "legacy_truth_digest_fields": [
+        "target_index",
+        "target_id",
+        "entity_id",
+        "seq",
+        "split",
+        "recorded_date",
+        "time_bucket",
+        "site_id",
+        "raw_quantity",
+        "recorded_gap",
+        "history_length",
+        "last_quantity",
+        "mean_quantity"
+      ],
+      "retrained": false,
+      "reevaluated": false,
+      "checks": {
+        "receipt_parts_checkpoint_history_sha_verified": true,
+        "test_rows_match_full_uncapped_data": true,
+        "all21_exact_same_target_order_quantity_time_and_history_truth": true,
+        "validation_first_minimum_checkpoint_preserved": true,
+        "alpha1_joint_equation_all_training_epochs_verified": true
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "nhp",
+      "seed": 62,
+      "split": "test",
+      "selected_epoch": 8,
+      "selection_rule": "first strict finite minimum fullValidation raw quantity RMSE; MAE uses identical checkpoint",
+      "metrics": {
+        "overall": {
+          "count": 5226,
+          "qty_rmse": 42.51494073179416,
+          "qty_mae": 10.073958651183712,
+          "time_nll": 3.6792930917943574,
+          "qty_bias": -6.727477541268214
+        },
+        "tail": {
+          "count": 39,
+          "qty_rmse": 441.48170175515617,
+          "qty_mae": 399.06867650839,
+          "time_nll": 3.7876402239628644,
+          "qty_bias": -399.06867650839
+        }
+      },
+      "tail_threshold": 200.0,
+      "tail_rule": "raw quantity > Train-frozen200",
+      "time_metric": "recorded_positive_integer_time_nll",
+      "data_variant": "original_uncapped",
+      "quantity_capping_applied": false,
+      "time_alpha": 1.0,
+      "quantity_loss": "log_mse",
+      "time_head": {
+        "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+        "jacobian_correction": true,
+        "mode": "heteroscedastic_lognormal_duration",
+        "observation_likelihood": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "reported_metric": "recorded_positive_integer_time_nll",
+        "slope_parameterized": false,
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_location_transform": "identity",
+        "time_scale": 6.0,
+        "time_scale_conditioning": "linear_hidden",
+        "time_scale_transform": "softplus_plus_floor",
+        "time_scale_weight_initialization": "zeros",
+        "time_sigma_floor": 0.001,
+        "wd_clamp": 0.0
+      },
+      "training_host": "5080",
+      "evaluation_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 91900,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "cuda_device": "NVIDIA GeForce RTX 5080",
+        "cpu_peak_rss_bytes": 2194669568,
+        "cuda_peak_allocated_bytes": 41452032,
+        "cuda_peak_reserved_bytes": 60817408
+      },
+      "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__nhp__seed62/receipt.json",
+      "sha256": "dc357d4aa23e638e4b93226ec44ae3f0e7d0e956c3a8658aada199de00dcba4a",
+      "checkpoint_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/runs/nhp/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "c39aa02752d73bf78744f1357db172117adf632ff81be12bd73022e01a48d077",
+      "state_tensor_sha256": "1a3d61519c01f7a8e61cf0fe82dd47228a643436d83c66f5bd619ecafae05e75",
+      "history_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/runs/nhp/count_only_log_regression/seed_62/history.json",
+      "history_sha256": "92b5e4b8860bc02bb7a697160734cc9df3fbe9a1fd5031cfdbaf3d7ffadcc766",
+      "source_closure_sha256": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "prediction_parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__nhp__seed62/predictions/part-00000.parquet",
+          "sha256": "a5684a3e8d30cf8b23a5fad3e9e9a8e4fc299b55d09ebc916a22bbaa48862a87",
+          "rows": 5226
+        }
+      ],
+      "target_identity": {
+        "target_count": 5226,
+        "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+        "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482"
+      },
+      "recorded_time_sha256": "baa947aab5976d004fbc8310b25c610fdfe31556563fd2e478d43733bb4cc342",
+      "legacy_target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+      "legacy_truth_sha256": "108685c1dd684e00940b315b341bbc36c0a6b7c41efa91609c1f0f6535daec62",
+      "legacy_truth_digest_fields": [
+        "target_index",
+        "target_id",
+        "entity_id",
+        "seq",
+        "split",
+        "recorded_date",
+        "time_bucket",
+        "site_id",
+        "raw_quantity",
+        "recorded_gap",
+        "history_length",
+        "last_quantity",
+        "mean_quantity"
+      ],
+      "retrained": false,
+      "reevaluated": false,
+      "checks": {
+        "receipt_parts_checkpoint_history_sha_verified": true,
+        "test_rows_match_full_uncapped_data": true,
+        "all21_exact_same_target_order_quantity_time_and_history_truth": true,
+        "validation_first_minimum_checkpoint_preserved": true,
+        "alpha1_joint_equation_all_training_epochs_verified": true
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "sahp",
+      "seed": 42,
+      "split": "test",
+      "selected_epoch": 30,
+      "selection_rule": "first strict finite minimum fullValidation raw quantity RMSE; MAE uses identical checkpoint",
+      "metrics": {
+        "overall": {
+          "count": 5226,
+          "qty_rmse": 41.14184605008441,
+          "qty_mae": 10.308732378656181,
+          "time_nll": 4.259172268173699,
+          "qty_bias": -4.203434350182168
+        },
+        "tail": {
+          "count": 39,
+          "qty_rmse": 424.6876372247218,
+          "qty_mae": 380.61338208883234,
+          "time_nll": 3.742417536577814,
+          "qty_bias": -380.61338208883234
+        }
+      },
+      "tail_threshold": 200.0,
+      "tail_rule": "raw quantity > Train-frozen200",
+      "time_metric": "recorded_positive_integer_time_nll",
+      "data_variant": "original_uncapped",
+      "quantity_capping_applied": false,
+      "time_alpha": 1.0,
+      "quantity_loss": "log_mse",
+      "time_head": {
+        "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+        "jacobian_correction": true,
+        "mode": "heteroscedastic_lognormal_duration",
+        "observation_likelihood": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "reported_metric": "recorded_positive_integer_time_nll",
+        "slope_parameterized": false,
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_location_transform": "identity",
+        "time_scale": 6.0,
+        "time_scale_conditioning": "linear_hidden",
+        "time_scale_transform": "softplus_plus_floor",
+        "time_scale_weight_initialization": "zeros",
+        "time_sigma_floor": 0.001,
+        "wd_clamp": 0.0
+      },
+      "training_host": "5080",
+      "evaluation_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 91900,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "cuda_device": "NVIDIA GeForce RTX 5080",
+        "cpu_peak_rss_bytes": 2270162944,
+        "cuda_peak_allocated_bytes": 94077440,
+        "cuda_peak_reserved_bytes": 123731968
+      },
+      "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__sahp__seed42/receipt.json",
+      "sha256": "f90f46974c51f1f28e4775f0d1bb914854c5c3ab94873d1ba5b9b2f4c18761eb",
+      "checkpoint_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/runs/sahp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "d9f92eecf1cfc0c973ffe556b84e8a57a64440bdffd41b4bb33619c58df16847",
+      "state_tensor_sha256": "7b8fe619d991a3564a54957a1f57bf4119485c80d09a48e05afd468d567b35ab",
+      "history_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/runs/sahp/count_only_log_regression/seed_42/history.json",
+      "history_sha256": "ff1bc9ecc2cc8c673e05f0b18fdf6b67d71154be6bd488ad47500418a6dca27b",
+      "source_closure_sha256": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "prediction_parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__sahp__seed42/predictions/part-00000.parquet",
+          "sha256": "c53db3f5821851d901c3cf463584ead3d2ddf21b2f3a7096b0e790924e92aa55",
+          "rows": 5226
+        }
+      ],
+      "target_identity": {
+        "target_count": 5226,
+        "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+        "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482"
+      },
+      "recorded_time_sha256": "baa947aab5976d004fbc8310b25c610fdfe31556563fd2e478d43733bb4cc342",
+      "legacy_target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+      "legacy_truth_sha256": "108685c1dd684e00940b315b341bbc36c0a6b7c41efa91609c1f0f6535daec62",
+      "legacy_truth_digest_fields": [
+        "target_index",
+        "target_id",
+        "entity_id",
+        "seq",
+        "split",
+        "recorded_date",
+        "time_bucket",
+        "site_id",
+        "raw_quantity",
+        "recorded_gap",
+        "history_length",
+        "last_quantity",
+        "mean_quantity"
+      ],
+      "retrained": false,
+      "reevaluated": false,
+      "checks": {
+        "receipt_parts_checkpoint_history_sha_verified": true,
+        "test_rows_match_full_uncapped_data": true,
+        "all21_exact_same_target_order_quantity_time_and_history_truth": true,
+        "validation_first_minimum_checkpoint_preserved": true,
+        "alpha1_joint_equation_all_training_epochs_verified": true
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "sahp",
+      "seed": 52,
+      "split": "test",
+      "selected_epoch": 9,
+      "selection_rule": "first strict finite minimum fullValidation raw quantity RMSE; MAE uses identical checkpoint",
+      "metrics": {
+        "overall": {
+          "count": 5226,
+          "qty_rmse": 41.13708428087978,
+          "qty_mae": 10.143258589052214,
+          "time_nll": 4.06571036487404,
+          "qty_bias": -3.751094395567802
+        },
+        "tail": {
+          "count": 39,
+          "qty_rmse": 429.2171048619302,
+          "qty_mae": 386.8077774781447,
+          "time_nll": 3.760538927154486,
+          "qty_bias": -386.8077774781447
+        }
+      },
+      "tail_threshold": 200.0,
+      "tail_rule": "raw quantity > Train-frozen200",
+      "time_metric": "recorded_positive_integer_time_nll",
+      "data_variant": "original_uncapped",
+      "quantity_capping_applied": false,
+      "time_alpha": 1.0,
+      "quantity_loss": "log_mse",
+      "time_head": {
+        "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+        "jacobian_correction": true,
+        "mode": "heteroscedastic_lognormal_duration",
+        "observation_likelihood": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "reported_metric": "recorded_positive_integer_time_nll",
+        "slope_parameterized": false,
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_location_transform": "identity",
+        "time_scale": 6.0,
+        "time_scale_conditioning": "linear_hidden",
+        "time_scale_transform": "softplus_plus_floor",
+        "time_scale_weight_initialization": "zeros",
+        "time_sigma_floor": 0.001,
+        "wd_clamp": 0.0
+      },
+      "training_host": "5080",
+      "evaluation_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 91900,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "cuda_device": "NVIDIA GeForce RTX 5080",
+        "cpu_peak_rss_bytes": 2268762112,
+        "cuda_peak_allocated_bytes": 94077440,
+        "cuda_peak_reserved_bytes": 123731968
+      },
+      "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__sahp__seed52/receipt.json",
+      "sha256": "ab5ca2181e4398b7f70abbd85db24678c9e7ff3e75b9e01a7e110274aa8dcdd7",
+      "checkpoint_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/runs/sahp/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "b1b92c528a1201c458bcbd005371364afa4c44e437ba1fd5f5134afa9f24c48e",
+      "state_tensor_sha256": "4d1e2682d3244d8bc5a608f2ff9804fbaea4878629b559d29a783eef93c81cfe",
+      "history_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/runs/sahp/count_only_log_regression/seed_52/history.json",
+      "history_sha256": "fb6abded4a9649218a9b8ab1bcde78c147bf178b4b2e9311b7549eab381e748c",
+      "source_closure_sha256": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "prediction_parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__sahp__seed52/predictions/part-00000.parquet",
+          "sha256": "c5ecc163b31d15326fce8b9eb886b0292a7df60322e26905fb79a780a088552b",
+          "rows": 5226
+        }
+      ],
+      "target_identity": {
+        "target_count": 5226,
+        "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+        "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482"
+      },
+      "recorded_time_sha256": "baa947aab5976d004fbc8310b25c610fdfe31556563fd2e478d43733bb4cc342",
+      "legacy_target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+      "legacy_truth_sha256": "108685c1dd684e00940b315b341bbc36c0a6b7c41efa91609c1f0f6535daec62",
+      "legacy_truth_digest_fields": [
+        "target_index",
+        "target_id",
+        "entity_id",
+        "seq",
+        "split",
+        "recorded_date",
+        "time_bucket",
+        "site_id",
+        "raw_quantity",
+        "recorded_gap",
+        "history_length",
+        "last_quantity",
+        "mean_quantity"
+      ],
+      "retrained": false,
+      "reevaluated": false,
+      "checks": {
+        "receipt_parts_checkpoint_history_sha_verified": true,
+        "test_rows_match_full_uncapped_data": true,
+        "all21_exact_same_target_order_quantity_time_and_history_truth": true,
+        "validation_first_minimum_checkpoint_preserved": true,
+        "alpha1_joint_equation_all_training_epochs_verified": true
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "sahp",
+      "seed": 62,
+      "split": "test",
+      "selected_epoch": 20,
+      "selection_rule": "first strict finite minimum fullValidation raw quantity RMSE; MAE uses identical checkpoint",
+      "metrics": {
+        "overall": {
+          "count": 5226,
+          "qty_rmse": 40.869102506054794,
+          "qty_mae": 10.332938430845806,
+          "time_nll": 4.3727924351046195,
+          "qty_bias": -3.3145032595319854
+        },
+        "tail": {
+          "count": 39,
+          "qty_rmse": 422.5314152769756,
+          "qty_mae": 378.7409553161034,
+          "time_nll": 3.964564663360453,
+          "qty_bias": -378.7409553161034
+        }
+      },
+      "tail_threshold": 200.0,
+      "tail_rule": "raw quantity > Train-frozen200",
+      "time_metric": "recorded_positive_integer_time_nll",
+      "data_variant": "original_uncapped",
+      "quantity_capping_applied": false,
+      "time_alpha": 1.0,
+      "quantity_loss": "log_mse",
+      "time_head": {
+        "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+        "jacobian_correction": true,
+        "mode": "heteroscedastic_lognormal_duration",
+        "observation_likelihood": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "reported_metric": "recorded_positive_integer_time_nll",
+        "slope_parameterized": false,
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_location_transform": "identity",
+        "time_scale": 6.0,
+        "time_scale_conditioning": "linear_hidden",
+        "time_scale_transform": "softplus_plus_floor",
+        "time_scale_weight_initialization": "zeros",
+        "time_sigma_floor": 0.001,
+        "wd_clamp": 0.0
+      },
+      "training_host": "5080",
+      "evaluation_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 91900,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "cuda_device": "NVIDIA GeForce RTX 5080",
+        "cpu_peak_rss_bytes": 2270343168,
+        "cuda_peak_allocated_bytes": 94077440,
+        "cuda_peak_reserved_bytes": 123731968
+      },
+      "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__sahp__seed62/receipt.json",
+      "sha256": "ae11166dcd880d9ec99b7c6559725c8cba4f76e4b680fae701c26f0edd369da6",
+      "checkpoint_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/runs/sahp/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "90b6fa7d544dbf5eb52a42408bc634626adc99b4fa973c19c8309813bc525603",
+      "state_tensor_sha256": "22d0320c502d14c48aaa015bbdbbd80f194ea3f32f07bc1072d45c298a675315",
+      "history_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/runs/sahp/count_only_log_regression/seed_62/history.json",
+      "history_sha256": "2775406a48f03902025db12c64bddf37e867451e6aa6504e09a1cd07cbc9e759",
+      "source_closure_sha256": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "prediction_parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__sahp__seed62/predictions/part-00000.parquet",
+          "sha256": "4ec9721655e17d62834f17099d1fa854dea1f51545bba5ce4c109bdcbb09392b",
+          "rows": 5226
+        }
+      ],
+      "target_identity": {
+        "target_count": 5226,
+        "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+        "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482"
+      },
+      "recorded_time_sha256": "baa947aab5976d004fbc8310b25c610fdfe31556563fd2e478d43733bb4cc342",
+      "legacy_target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+      "legacy_truth_sha256": "108685c1dd684e00940b315b341bbc36c0a6b7c41efa91609c1f0f6535daec62",
+      "legacy_truth_digest_fields": [
+        "target_index",
+        "target_id",
+        "entity_id",
+        "seq",
+        "split",
+        "recorded_date",
+        "time_bucket",
+        "site_id",
+        "raw_quantity",
+        "recorded_gap",
+        "history_length",
+        "last_quantity",
+        "mean_quantity"
+      ],
+      "retrained": false,
+      "reevaluated": false,
+      "checks": {
+        "receipt_parts_checkpoint_history_sha_verified": true,
+        "test_rows_match_full_uncapped_data": true,
+        "all21_exact_same_target_order_quantity_time_and_history_truth": true,
+        "validation_first_minimum_checkpoint_preserved": true,
+        "alpha1_joint_equation_all_training_epochs_verified": true
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "s2p2_matched_head",
+      "seed": 42,
+      "split": "test",
+      "selected_epoch": 21,
+      "selection_rule": "first strict finite minimum fullValidation raw quantity RMSE; MAE uses identical checkpoint",
+      "metrics": {
+        "overall": {
+          "count": 5226,
+          "qty_rmse": 39.63737355488605,
+          "qty_mae": 10.258660113280001,
+          "time_nll": 3.6488622819233143,
+          "qty_bias": -2.909082849375644
+        },
+        "tail": {
+          "count": 39,
+          "qty_rmse": 399.63605701898626,
+          "qty_mae": 353.80287865492016,
+          "time_nll": 3.919467680681472,
+          "qty_bias": -353.80287865492016
+        }
+      },
+      "tail_threshold": 200.0,
+      "tail_rule": "raw quantity > Train-frozen200",
+      "time_metric": "recorded_positive_integer_time_nll",
+      "data_variant": "original_uncapped",
+      "quantity_capping_applied": false,
+      "time_alpha": 1.0,
+      "quantity_loss": "log_mse",
+      "time_head": {
+        "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+        "jacobian_correction": true,
+        "mode": "heteroscedastic_lognormal_duration",
+        "observation_likelihood": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "reported_metric": "recorded_positive_integer_time_nll",
+        "slope_parameterized": false,
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_location_transform": "identity",
+        "time_scale": 6.0,
+        "time_scale_conditioning": "linear_hidden",
+        "time_scale_transform": "softplus_plus_floor",
+        "time_scale_weight_initialization": "zeros",
+        "time_sigma_floor": 0.001,
+        "wd_clamp": 0.0
+      },
+      "training_host": "5080",
+      "evaluation_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 91900,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "cuda_device": "NVIDIA GeForce RTX 5080",
+        "cpu_peak_rss_bytes": 2257612800,
+        "cuda_peak_allocated_bytes": 145708544,
+        "cuda_peak_reserved_bytes": 167772160
+      },
+      "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__s2p2_matched_head__seed42/receipt.json",
+      "sha256": "d5b874f94fbfe493d63e238fa20a569a536ecd66308220d5eead470301316673",
+      "checkpoint_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "5571b79df1368b0aad4c72b37a9e4162f7a65ca0aa9cd22a9c5097b0a107186d",
+      "state_tensor_sha256": "7b3c74cb231e02598676383120c4ef3827cf0648e42c6f849cca7f91947287b9",
+      "history_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/history.json",
+      "history_sha256": "498aa293d4ba152f91674d226bf77eb27872c8bcad694abca258b49c3cdfd2de",
+      "source_closure_sha256": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "prediction_parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__s2p2_matched_head__seed42/predictions/part-00000.parquet",
+          "sha256": "6be3b39e9d237bf800845257420bc5240975bd61932b89a492b146dd70053996",
+          "rows": 5226
+        }
+      ],
+      "target_identity": {
+        "target_count": 5226,
+        "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+        "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482"
+      },
+      "recorded_time_sha256": "baa947aab5976d004fbc8310b25c610fdfe31556563fd2e478d43733bb4cc342",
+      "legacy_target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+      "legacy_truth_sha256": "108685c1dd684e00940b315b341bbc36c0a6b7c41efa91609c1f0f6535daec62",
+      "legacy_truth_digest_fields": [
+        "target_index",
+        "target_id",
+        "entity_id",
+        "seq",
+        "split",
+        "recorded_date",
+        "time_bucket",
+        "site_id",
+        "raw_quantity",
+        "recorded_gap",
+        "history_length",
+        "last_quantity",
+        "mean_quantity"
+      ],
+      "retrained": false,
+      "reevaluated": false,
+      "checks": {
+        "receipt_parts_checkpoint_history_sha_verified": true,
+        "test_rows_match_full_uncapped_data": true,
+        "all21_exact_same_target_order_quantity_time_and_history_truth": true,
+        "validation_first_minimum_checkpoint_preserved": true,
+        "alpha1_joint_equation_all_training_epochs_verified": true
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "s2p2_matched_head",
+      "seed": 52,
+      "split": "test",
+      "selected_epoch": 27,
+      "selection_rule": "first strict finite minimum fullValidation raw quantity RMSE; MAE uses identical checkpoint",
+      "metrics": {
+        "overall": {
+          "count": 5226,
+          "qty_rmse": 39.73066877029487,
+          "qty_mae": 10.050110437452132,
+          "time_nll": 3.824797507053261,
+          "qty_bias": -3.298469943809546
+        },
+        "tail": {
+          "count": 39,
+          "qty_rmse": 407.54462334984277,
+          "qty_mae": 361.4723637409699,
+          "time_nll": 3.8976840656550316,
+          "qty_bias": -361.4723637409699
+        }
+      },
+      "tail_threshold": 200.0,
+      "tail_rule": "raw quantity > Train-frozen200",
+      "time_metric": "recorded_positive_integer_time_nll",
+      "data_variant": "original_uncapped",
+      "quantity_capping_applied": false,
+      "time_alpha": 1.0,
+      "quantity_loss": "log_mse",
+      "time_head": {
+        "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+        "jacobian_correction": true,
+        "mode": "heteroscedastic_lognormal_duration",
+        "observation_likelihood": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "reported_metric": "recorded_positive_integer_time_nll",
+        "slope_parameterized": false,
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_location_transform": "identity",
+        "time_scale": 6.0,
+        "time_scale_conditioning": "linear_hidden",
+        "time_scale_transform": "softplus_plus_floor",
+        "time_scale_weight_initialization": "zeros",
+        "time_sigma_floor": 0.001,
+        "wd_clamp": 0.0
+      },
+      "training_host": "5080",
+      "evaluation_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 91900,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "cuda_device": "NVIDIA GeForce RTX 5080",
+        "cpu_peak_rss_bytes": 2257960960,
+        "cuda_peak_allocated_bytes": 145708544,
+        "cuda_peak_reserved_bytes": 167772160
+      },
+      "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__s2p2_matched_head__seed52/receipt.json",
+      "sha256": "dc44005872b02c7f3eaed46c7e475115d88e7ac19c56c18048376b929036d3f9",
+      "checkpoint_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "3e8fa3fb6a0f664e06759ce258e7b0fb7f7320a3c3e809b5eeb954ae88acd5b6",
+      "state_tensor_sha256": "43cd611a4ac28065f00fdd5ed916eec90ce5d7fcba80bc4d2190c566fe56d138",
+      "history_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/history.json",
+      "history_sha256": "a5f4249ec1f90864c76ea49da0135d39d99d813635d4bd2c85e441ff35a29aa4",
+      "source_closure_sha256": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "prediction_parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__s2p2_matched_head__seed52/predictions/part-00000.parquet",
+          "sha256": "d7d259adc66c907e66809f56643f00e6f50c23e806da663ef994eb2a503136c0",
+          "rows": 5226
+        }
+      ],
+      "target_identity": {
+        "target_count": 5226,
+        "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+        "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482"
+      },
+      "recorded_time_sha256": "baa947aab5976d004fbc8310b25c610fdfe31556563fd2e478d43733bb4cc342",
+      "legacy_target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+      "legacy_truth_sha256": "108685c1dd684e00940b315b341bbc36c0a6b7c41efa91609c1f0f6535daec62",
+      "legacy_truth_digest_fields": [
+        "target_index",
+        "target_id",
+        "entity_id",
+        "seq",
+        "split",
+        "recorded_date",
+        "time_bucket",
+        "site_id",
+        "raw_quantity",
+        "recorded_gap",
+        "history_length",
+        "last_quantity",
+        "mean_quantity"
+      ],
+      "retrained": false,
+      "reevaluated": false,
+      "checks": {
+        "receipt_parts_checkpoint_history_sha_verified": true,
+        "test_rows_match_full_uncapped_data": true,
+        "all21_exact_same_target_order_quantity_time_and_history_truth": true,
+        "validation_first_minimum_checkpoint_preserved": true,
+        "alpha1_joint_equation_all_training_epochs_verified": true
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "s2p2_matched_head",
+      "seed": 62,
+      "split": "test",
+      "selected_epoch": 22,
+      "selection_rule": "first strict finite minimum fullValidation raw quantity RMSE; MAE uses identical checkpoint",
+      "metrics": {
+        "overall": {
+          "count": 5226,
+          "qty_rmse": 39.95076359496072,
+          "qty_mae": 9.978644990676944,
+          "time_nll": 3.7509461234862,
+          "qty_bias": -3.649772113703057
+        },
+        "tail": {
+          "count": 39,
+          "qty_rmse": 412.03393133646625,
+          "qty_mae": 366.8890951963571,
+          "time_nll": 3.797084348064653,
+          "qty_bias": -366.8890951963571
+        }
+      },
+      "tail_threshold": 200.0,
+      "tail_rule": "raw quantity > Train-frozen200",
+      "time_metric": "recorded_positive_integer_time_nll",
+      "data_variant": "original_uncapped",
+      "quantity_capping_applied": false,
+      "time_alpha": 1.0,
+      "quantity_loss": "log_mse",
+      "time_head": {
+        "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+        "jacobian_correction": true,
+        "mode": "heteroscedastic_lognormal_duration",
+        "observation_likelihood": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "reported_metric": "recorded_positive_integer_time_nll",
+        "slope_parameterized": false,
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_location_transform": "identity",
+        "time_scale": 6.0,
+        "time_scale_conditioning": "linear_hidden",
+        "time_scale_transform": "softplus_plus_floor",
+        "time_scale_weight_initialization": "zeros",
+        "time_sigma_floor": 0.001,
+        "wd_clamp": 0.0
+      },
+      "training_host": "5080",
+      "evaluation_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 91900,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "cuda_device": "NVIDIA GeForce RTX 5080",
+        "cpu_peak_rss_bytes": 2258366464,
+        "cuda_peak_allocated_bytes": 145708544,
+        "cuda_peak_reserved_bytes": 167772160
+      },
+      "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__s2p2_matched_head__seed62/receipt.json",
+      "sha256": "b3464f7669f58a036bf8afc1f39139ee054cdd5125ca899fbce9c6b83f3eb27e",
+      "checkpoint_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "0619af965a5c3cdfa5c08445cbc4aff02bc8c494e05a45eff90e748b77eec8c9",
+      "state_tensor_sha256": "949c263b3ab62d6bb9af5e2e93ce88944b97e2df014569cc7c5dee8eb7547af2",
+      "history_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/history.json",
+      "history_sha256": "1a8ba22293c13cf541c9018bfb23f1226f9b210d7859adfa8534760764870741",
+      "source_closure_sha256": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "prediction_parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__s2p2_matched_head__seed62/predictions/part-00000.parquet",
+          "sha256": "cfb928adce7266e9154d28f4687738fef1c291136aa07fcef46d906bf34d855e",
+          "rows": 5226
+        }
+      ],
+      "target_identity": {
+        "target_count": 5226,
+        "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+        "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482"
+      },
+      "recorded_time_sha256": "baa947aab5976d004fbc8310b25c610fdfe31556563fd2e478d43733bb4cc342",
+      "legacy_target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+      "legacy_truth_sha256": "108685c1dd684e00940b315b341bbc36c0a6b7c41efa91609c1f0f6535daec62",
+      "legacy_truth_digest_fields": [
+        "target_index",
+        "target_id",
+        "entity_id",
+        "seq",
+        "split",
+        "recorded_date",
+        "time_bucket",
+        "site_id",
+        "raw_quantity",
+        "recorded_gap",
+        "history_length",
+        "last_quantity",
+        "mean_quantity"
+      ],
+      "retrained": false,
+      "reevaluated": false,
+      "checks": {
+        "receipt_parts_checkpoint_history_sha_verified": true,
+        "test_rows_match_full_uncapped_data": true,
+        "all21_exact_same_target_order_quantity_time_and_history_truth": true,
+        "validation_first_minimum_checkpoint_preserved": true,
+        "alpha1_joint_equation_all_training_epochs_verified": true
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "attnhp_matched_head",
+      "seed": 42,
+      "split": "test",
+      "selected_epoch": 50,
+      "selection_rule": "first strict finite minimum fullValidation raw quantity RMSE; MAE uses identical checkpoint",
+      "metrics": {
+        "overall": {
+          "count": 5226,
+          "qty_rmse": 40.16718616737345,
+          "qty_mae": 9.961347623581727,
+          "time_nll": 4.839089945222898,
+          "qty_bias": -4.307550707688699
+        },
+        "tail": {
+          "count": 39,
+          "qty_rmse": 413.88689686932804,
+          "qty_mae": 370.0055921077728,
+          "time_nll": 4.793188426553116,
+          "qty_bias": -370.0055921077728
+        }
+      },
+      "tail_threshold": 200.0,
+      "tail_rule": "raw quantity > Train-frozen200",
+      "time_metric": "recorded_positive_integer_time_nll",
+      "data_variant": "original_uncapped",
+      "quantity_capping_applied": false,
+      "time_alpha": 1.0,
+      "quantity_loss": "log_mse",
+      "time_head": {
+        "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+        "jacobian_correction": true,
+        "mode": "heteroscedastic_lognormal_duration",
+        "observation_likelihood": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "reported_metric": "recorded_positive_integer_time_nll",
+        "slope_parameterized": false,
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_location_transform": "identity",
+        "time_scale": 6.0,
+        "time_scale_conditioning": "linear_hidden",
+        "time_scale_transform": "softplus_plus_floor",
+        "time_scale_weight_initialization": "zeros",
+        "time_sigma_floor": 0.001,
+        "wd_clamp": 0.0
+      },
+      "training_host": "5080",
+      "evaluation_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 91900,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "cuda_device": "NVIDIA GeForce RTX 5080",
+        "cpu_peak_rss_bytes": 2240110592,
+        "cuda_peak_allocated_bytes": 117560320,
+        "cuda_peak_reserved_bytes": 127926272
+      },
+      "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__attnhp_matched_head__seed42/receipt.json",
+      "sha256": "8c4225410f5a30b67fec927e93e8479595ad4ba765485e3dce2bb84940c0cc24",
+      "checkpoint_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "8e7f10b2981d13b2b4be9639a520352dead333e447ab62f74a6eb69c5ccfa54a",
+      "state_tensor_sha256": "f7027315633f5a62be8d66837baf4b94da8965bcf11203bcca5c0c65cd410f8e",
+      "history_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/history.json",
+      "history_sha256": "ba22b5b90126f972689f1e8f42235bb8a924a3039b0e0c351169f5c7f5ba8c03",
+      "source_closure_sha256": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "prediction_parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__attnhp_matched_head__seed42/predictions/part-00000.parquet",
+          "sha256": "b18fcc6faa1711b8cdb6dd4d590f9f84a5c8b90f6afe132e48a6b452402e9ef2",
+          "rows": 5226
+        }
+      ],
+      "target_identity": {
+        "target_count": 5226,
+        "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+        "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482"
+      },
+      "recorded_time_sha256": "baa947aab5976d004fbc8310b25c610fdfe31556563fd2e478d43733bb4cc342",
+      "legacy_target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+      "legacy_truth_sha256": "108685c1dd684e00940b315b341bbc36c0a6b7c41efa91609c1f0f6535daec62",
+      "legacy_truth_digest_fields": [
+        "target_index",
+        "target_id",
+        "entity_id",
+        "seq",
+        "split",
+        "recorded_date",
+        "time_bucket",
+        "site_id",
+        "raw_quantity",
+        "recorded_gap",
+        "history_length",
+        "last_quantity",
+        "mean_quantity"
+      ],
+      "retrained": false,
+      "reevaluated": false,
+      "checks": {
+        "receipt_parts_checkpoint_history_sha_verified": true,
+        "test_rows_match_full_uncapped_data": true,
+        "all21_exact_same_target_order_quantity_time_and_history_truth": true,
+        "validation_first_minimum_checkpoint_preserved": true,
+        "alpha1_joint_equation_all_training_epochs_verified": true
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "attnhp_matched_head",
+      "seed": 52,
+      "split": "test",
+      "selected_epoch": 80,
+      "selection_rule": "first strict finite minimum fullValidation raw quantity RMSE; MAE uses identical checkpoint",
+      "metrics": {
+        "overall": {
+          "count": 5226,
+          "qty_rmse": 40.42379548634199,
+          "qty_mae": 9.974579395654327,
+          "time_nll": 5.141179890216608,
+          "qty_bias": -4.632877251938116
+        },
+        "tail": {
+          "count": 39,
+          "qty_rmse": 416.8880133234148,
+          "qty_mae": 373.1608372651614,
+          "time_nll": 5.312783968940719,
+          "qty_bias": -373.1608372651614
+        }
+      },
+      "tail_threshold": 200.0,
+      "tail_rule": "raw quantity > Train-frozen200",
+      "time_metric": "recorded_positive_integer_time_nll",
+      "data_variant": "original_uncapped",
+      "quantity_capping_applied": false,
+      "time_alpha": 1.0,
+      "quantity_loss": "log_mse",
+      "time_head": {
+        "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+        "jacobian_correction": true,
+        "mode": "heteroscedastic_lognormal_duration",
+        "observation_likelihood": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "reported_metric": "recorded_positive_integer_time_nll",
+        "slope_parameterized": false,
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_location_transform": "identity",
+        "time_scale": 6.0,
+        "time_scale_conditioning": "linear_hidden",
+        "time_scale_transform": "softplus_plus_floor",
+        "time_scale_weight_initialization": "zeros",
+        "time_sigma_floor": 0.001,
+        "wd_clamp": 0.0
+      },
+      "training_host": "5080",
+      "evaluation_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 91900,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "cuda_device": "NVIDIA GeForce RTX 5080",
+        "cpu_peak_rss_bytes": 2240364544,
+        "cuda_peak_allocated_bytes": 117560320,
+        "cuda_peak_reserved_bytes": 127926272
+      },
+      "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__attnhp_matched_head__seed52/receipt.json",
+      "sha256": "ed79bd04cc20ecf2d5faf050797c5e1d957675ee975635b25b3ffeda6b3db265",
+      "checkpoint_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "a2a9e27ac9ec5c577b6d06ed6ec01fb4ff6c0176620570abcb2dfe078a77bac6",
+      "state_tensor_sha256": "eb93f4c2d67215db4d5837a7524a54948352aa4e385a6d0c0b7c6c0fb6d65e94",
+      "history_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/history.json",
+      "history_sha256": "2ae9926cc425d091f92c9ea9f2beba314566d01479475396fa85f21c45a4b0c1",
+      "source_closure_sha256": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "prediction_parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__attnhp_matched_head__seed52/predictions/part-00000.parquet",
+          "sha256": "8f0b6dc46017ae0f7a2dc621735a88acc67bec81fb736eeafa06fc48b06e7073",
+          "rows": 5226
+        }
+      ],
+      "target_identity": {
+        "target_count": 5226,
+        "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+        "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482"
+      },
+      "recorded_time_sha256": "baa947aab5976d004fbc8310b25c610fdfe31556563fd2e478d43733bb4cc342",
+      "legacy_target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+      "legacy_truth_sha256": "108685c1dd684e00940b315b341bbc36c0a6b7c41efa91609c1f0f6535daec62",
+      "legacy_truth_digest_fields": [
+        "target_index",
+        "target_id",
+        "entity_id",
+        "seq",
+        "split",
+        "recorded_date",
+        "time_bucket",
+        "site_id",
+        "raw_quantity",
+        "recorded_gap",
+        "history_length",
+        "last_quantity",
+        "mean_quantity"
+      ],
+      "retrained": false,
+      "reevaluated": false,
+      "checks": {
+        "receipt_parts_checkpoint_history_sha_verified": true,
+        "test_rows_match_full_uncapped_data": true,
+        "all21_exact_same_target_order_quantity_time_and_history_truth": true,
+        "validation_first_minimum_checkpoint_preserved": true,
+        "alpha1_joint_equation_all_training_epochs_verified": true
+      }
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "model": "attnhp_matched_head",
+      "seed": 62,
+      "split": "test",
+      "selected_epoch": 26,
+      "selection_rule": "first strict finite minimum fullValidation raw quantity RMSE; MAE uses identical checkpoint",
+      "metrics": {
+        "overall": {
+          "count": 5226,
+          "qty_rmse": 40.0198918220372,
+          "qty_mae": 10.015874395026497,
+          "time_nll": 4.87204521915236,
+          "qty_bias": -3.662303850950065
+        },
+        "tail": {
+          "count": 39,
+          "qty_rmse": 413.5194250005542,
+          "qty_mae": 370.6269067862095,
+          "time_nll": 4.96313434903525,
+          "qty_bias": -370.6269067862095
+        }
+      },
+      "tail_threshold": 200.0,
+      "tail_rule": "raw quantity > Train-frozen200",
+      "time_metric": "recorded_positive_integer_time_nll",
+      "data_variant": "original_uncapped",
+      "quantity_capping_applied": false,
+      "time_alpha": 1.0,
+      "quantity_loss": "log_mse",
+      "time_head": {
+        "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+        "jacobian_correction": true,
+        "mode": "heteroscedastic_lognormal_duration",
+        "observation_likelihood": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "reported_metric": "recorded_positive_integer_time_nll",
+        "slope_parameterized": false,
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_location_transform": "identity",
+        "time_scale": 6.0,
+        "time_scale_conditioning": "linear_hidden",
+        "time_scale_transform": "softplus_plus_floor",
+        "time_scale_weight_initialization": "zeros",
+        "time_sigma_floor": 0.001,
+        "wd_clamp": 0.0
+      },
+      "training_host": "5080",
+      "evaluation_runtime": {
+        "schema": "jqt_strict_runtime_v2",
+        "device": "cuda",
+        "device_type": "cuda",
+        "python": "3.12.13",
+        "torch": "2.11.0+cu130",
+        "numpy": "2.4.4",
+        "polars": "1.39.3",
+        "cuda": "13.0",
+        "cudnn": 91900,
+        "gpu": {
+          "logical_index": 0,
+          "uuid": "GPU-7500aa5a-f7b0-bf7c-3159-13852192cbc6",
+          "name": "NVIDIA GeForce RTX 5080",
+          "compute_capability": [
+            12,
+            0
+          ],
+          "total_memory_bytes": 16602497024,
+          "multiprocessor_count": 84,
+          "driver_version": "595.84",
+          "pci_bus_id": "00000000:01:00.0",
+          "visible_device_count": 1
+        },
+        "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "threads": 4,
+        "interop_threads": 1,
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": true,
+        "deterministic_warn_only": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "cuda_matmul_tf32": false,
+        "cudnn_tf32": false,
+        "float32_matmul_precision": "highest",
+        "reduced_precision_reduction": {
+          "allow_fp16_reduced_precision_reduction": false,
+          "allow_bf16_reduced_precision_reduction": false
+        },
+        "environment": {
+          "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+          "OMP_NUM_THREADS": "4",
+          "MKL_NUM_THREADS": "4",
+          "OPENBLAS_NUM_THREADS": "4",
+          "PYTHONHASHSEED": "42"
+        },
+        "runtime_helper_sha256": "9511d57e5c6a74956a874f21baa4fcd37211f30a547aec193947bd98eea20b13",
+        "cuda_device": "NVIDIA GeForce RTX 5080",
+        "cpu_peak_rss_bytes": 2241003520,
+        "cuda_peak_allocated_bytes": 117560320,
+        "cuda_peak_reserved_bytes": 127926272
+      },
+      "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__attnhp_matched_head__seed62/receipt.json",
+      "sha256": "65bc20e49db962e650312f83529fce47cd1a205977597a4c04bf2c996a149a71",
+      "checkpoint_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt",
+      "checkpoint_sha256": "24cae8a4a285b2a59739cee1bf059eab5c31e6fae95528e370aa73fe01f77fea",
+      "state_tensor_sha256": "da04743156a19789407098f59032aec4059b2f2877b6880143aee86893ef8081",
+      "history_path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/history.json",
+      "history_sha256": "0d6d0a4bab421455bb876607697bbb9f3b0959691437e6077dcb596444a9f31d",
+      "source_closure_sha256": "1d783b0294a078f384769c4f0bb6f2673823d028bd782b6dd80e140b1d9962f4",
+      "prediction_parts": [
+        {
+          "path": "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__attnhp_matched_head__seed62/predictions/part-00000.parquet",
+          "sha256": "be10992391185dc98fbd6a6f8ddcb39a6b434b9444d014be8718884e5b82fe5f",
+          "rows": 5226
+        }
+      ],
+      "target_identity": {
+        "target_count": 5226,
+        "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+        "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482"
+      },
+      "recorded_time_sha256": "baa947aab5976d004fbc8310b25c610fdfe31556563fd2e478d43733bb4cc342",
+      "legacy_target_identity_sha256": "4a21472b888fc6d0cdf894e76eb2a6dd306d44c7036cba4767eea0a482ae8cc1",
+      "legacy_truth_sha256": "108685c1dd684e00940b315b341bbc36c0a6b7c41efa91609c1f0f6535daec62",
+      "legacy_truth_digest_fields": [
+        "target_index",
+        "target_id",
+        "entity_id",
+        "seq",
+        "split",
+        "recorded_date",
+        "time_bucket",
+        "site_id",
+        "raw_quantity",
+        "recorded_gap",
+        "history_length",
+        "last_quantity",
+        "mean_quantity"
+      ],
+      "retrained": false,
+      "reevaluated": false,
+      "checks": {
+        "receipt_parts_checkpoint_history_sha_verified": true,
+        "test_rows_match_full_uncapped_data": true,
+        "all21_exact_same_target_order_quantity_time_and_history_truth": true,
+        "validation_first_minimum_checkpoint_preserved": true,
+        "alpha1_joint_equation_all_training_epochs_verified": true
+      }
+    }
+  ],
+  "aggregates": {
+    "titantpp_history_mlp_width16": {
+      "overall": {
+        "qty_rmse": {
+          "mean": 40.247819315505375,
+          "sample_sd": 0.1689080405800877,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 10.14894663658369,
+          "sample_sd": 0.09073599745840426,
+          "ddof": 1
+        },
+        "time_nll": {
+          "mean": 3.886477108543579,
+          "sample_sd": 0.21322665742221486,
+          "ddof": 1
+        }
+      },
+      "tail": {
+        "qty_rmse": {
+          "mean": 414.0973688120538,
+          "sample_sd": 2.6149875756588057,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 369.902563127697,
+          "sample_sd": 2.5471816611254234,
+          "ddof": 1
+        },
+        "time_nll": {
+          "mean": 4.135153630384873,
+          "sample_sd": 0.4172947240320422,
+          "ddof": 1
+        }
+      }
+    },
+    "rmtpp": {
+      "overall": {
+        "qty_rmse": {
+          "mean": 40.46316579394823,
+          "sample_sd": 0.2415811442600074,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 9.90634650459991,
+          "sample_sd": 0.037017526200991684,
+          "ddof": 1
+        },
+        "time_nll": {
+          "mean": 3.899754353117388,
+          "sample_sd": 0.3549552877929854,
+          "ddof": 1
+        }
+      },
+      "tail": {
+        "qty_rmse": {
+          "mean": 420.6019153460837,
+          "sample_sd": 3.9790288475509032,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 376.80130999719995,
+          "sample_sd": 4.439999104281956,
+          "ddof": 1
+        },
+        "time_nll": {
+          "mean": 3.99990205558626,
+          "sample_sd": 0.2641856883203792,
+          "ddof": 1
+        }
+      }
+    },
+    "thp": {
+      "overall": {
+        "qty_rmse": {
+          "mean": 40.555091332116575,
+          "sample_sd": 0.295255244645652,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 10.12295033422595,
+          "sample_sd": 0.23047500095589143,
+          "ddof": 1
+        },
+        "time_nll": {
+          "mean": 3.4562599929805744,
+          "sample_sd": 0.024638810910465932,
+          "ddof": 1
+        }
+      },
+      "tail": {
+        "qty_rmse": {
+          "mean": 420.3644139088143,
+          "sample_sd": 4.6012558853145,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 376.021398479103,
+          "sample_sd": 4.72476367125804,
+          "ddof": 1
+        },
+        "time_nll": {
+          "mean": 3.5961283276724756,
+          "sample_sd": 0.052093751646354,
+          "ddof": 1
+        }
+      }
+    },
+    "nhp": {
+      "overall": {
+        "qty_rmse": {
+          "mean": 42.17632957957314,
+          "sample_sd": 0.30048056153400715,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 9.969145128010396,
+          "sample_sd": 0.0931774896956118,
+          "ddof": 1
+        },
+        "time_nll": {
+          "mean": 3.590199103992355,
+          "sample_sd": 0.1385105793124835,
+          "ddof": 1
+        }
+      },
+      "tail": {
+        "qty_rmse": {
+          "mean": 438.7962557073099,
+          "sample_sd": 2.34739598165019,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 396.57809110991974,
+          "sample_sd": 2.1946201192994508,
+          "ddof": 1
+        },
+        "time_nll": {
+          "mean": 3.771375347675138,
+          "sample_sd": 0.23251390541228087,
+          "ddof": 1
+        }
+      }
+    },
+    "sahp": {
+      "overall": {
+        "qty_rmse": {
+          "mean": 41.04934427900633,
+          "sample_sd": 0.1561121108339262,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 10.2616431328514,
+          "sample_sd": 0.10323593559685378,
+          "ddof": 1
+        },
+        "time_nll": {
+          "mean": 4.232558356050786,
+          "sample_sd": 0.1552613110312395,
+          "ddof": 1
+        }
+      },
+      "tail": {
+        "qty_rmse": {
+          "mean": 425.4787191212092,
+          "sample_sd": 3.412326073487854,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 382.05403829436017,
+          "sample_sd": 4.221969051922881,
+          "ddof": 1
+        },
+        "time_nll": {
+          "mean": 3.822507042364251,
+          "sample_sd": 0.12335871254773013,
+          "ddof": 1
+        }
+      }
+    },
+    "s2p2_matched_head": {
+      "overall": {
+        "qty_rmse": {
+          "mean": 39.772935306713876,
+          "sample_sd": 0.1609135618279136,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 10.095805180469693,
+          "sample_sd": 0.1454926952674325,
+          "ddof": 1
+        },
+        "time_nll": {
+          "mean": 3.7415353041542585,
+          "sample_sd": 0.08834434617311446,
+          "ddof": 1
+        }
+      },
+      "tail": {
+        "qty_rmse": {
+          "mean": 406.40487056843176,
+          "sample_sd": 6.277029488544567,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 360.7214458640824,
+          "sample_sd": 6.575345928977158,
+          "ddof": 1
+        },
+        "time_nll": {
+          "mean": 3.8714120314670524,
+          "sample_sd": 0.065284644908895,
+          "ddof": 1
+        }
+      }
+    },
+    "attnhp_matched_head": {
+      "overall": {
+        "qty_rmse": {
+          "mean": 40.203624491917545,
+          "sample_sd": 0.20440243670610622,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 9.983933804754184,
+          "sample_sd": 0.028441535265402988,
+          "ddof": 1
+        },
+        "time_nll": {
+          "mean": 4.950771684863955,
+          "sample_sd": 0.16571957041687918,
+          "ddof": 1
+        }
+      },
+      "tail": {
+        "qty_rmse": {
+          "mean": 414.76477839776567,
+          "sample_sd": 1.8479323054990922,
+          "ddof": 1
+        },
+        "qty_mae": {
+          "mean": 371.2644453863812,
+          "sample_sd": 1.67144685851441,
+          "ddof": 1
+        },
+        "time_nll": {
+          "mean": 5.023035581509695,
+          "sample_sd": 0.26492640516987925,
+          "ddof": 1
+        }
+      }
+    }
+  },
+  "source_bindings": {
+    "benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_split_manifest.json": "cd2458aa3809014aa74b8a121572a74e3d86dc520a690335d79a1e5150899e27",
+    "benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_with_split.parquet": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d",
+    "reports/titantpp_completed_validation_test_20261004_v1/width16/original/raf_spare_parts__52__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt": "331e15b60b75036addd8523734d997efa582fadaf85567859f5f1a5ede6e8c8a",
+    "reports/titantpp_completed_validation_test_20261004_v1/width16/original/raf_spare_parts__52__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_52/history.json": "3f4569d26536289d8b6f9916fad088fe61d2b715f14975be9d26d4ed32a2614c",
+    "reports/titantpp_completed_validation_test_20261004_v1/width16/original/raf_spare_parts__52__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_52/summary.json": "6c3666efb028ddd53f4c661d108db3fad0f55bb9b16c437fb9be32f73ca3ab69",
+    "reports/titantpp_completed_validation_test_20261004_v1/width16/original/raf_spare_parts__62__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt": "ea98f3691e4fef6317dff28ea99bf01fdb94d6c3ea7a8634bcfda2c31570a00e",
+    "reports/titantpp_completed_validation_test_20261004_v1/width16/original/raf_spare_parts__62__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_62/history.json": "cbe3860664338c5cff2d8f8d86d12e1086acd6e29e2f790ffdfd670762a304db",
+    "reports/titantpp_completed_validation_test_20261004_v1/width16/original/raf_spare_parts__62__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_62/summary.json": "3e804c64a8dfa3919a3f27b0c6406661e2ba117008803dfed7e95bd9f104c21c",
+    "reports/titantpp_completed_validation_test_20261004_v1/width16/runs/test/raf_spare_parts__titantpp_history_mlp_width16__seed52/predictions/part-00000.parquet": "276007af95dd6750b4703c43666a198cf5a835fb73fed19960e9944f10c2c5a5",
+    "reports/titantpp_completed_validation_test_20261004_v1/width16/runs/test/raf_spare_parts__titantpp_history_mlp_width16__seed52/receipt.json": "86134f4b1d436cd78e4efaf8ab49e064d197b6757ed81379d44f3579490a43fb",
+    "reports/titantpp_completed_validation_test_20261004_v1/width16/runs/test/raf_spare_parts__titantpp_history_mlp_width16__seed62/predictions/part-00000.parquet": "c35652fec133c5a8c748577ab28a014901fb90fe897068e319d35f8bd11fcbd5",
+    "reports/titantpp_completed_validation_test_20261004_v1/width16/runs/test/raf_spare_parts__titantpp_history_mlp_width16__seed62/receipt.json": "eadd6052de6ba64011ea8ee72b74145c7406a3646a6c7e9f367822e4110faebb",
+    "reports/titantpp_history_mlp_shared_raw9_20261020_v1/BASELINE_REFERENCES.json": "23311c5ae5918dc2cd51a47e720c26dec87711936b3bd2d1db275a6a0071d8d4",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__attnhp_matched_head__seed42/predictions/part-00000.parquet": "b18fcc6faa1711b8cdb6dd4d590f9f84a5c8b90f6afe132e48a6b452402e9ef2",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__attnhp_matched_head__seed42/receipt.json": "8c4225410f5a30b67fec927e93e8479595ad4ba765485e3dce2bb84940c0cc24",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__attnhp_matched_head__seed52/predictions/part-00000.parquet": "8f0b6dc46017ae0f7a2dc621735a88acc67bec81fb736eeafa06fc48b06e7073",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__attnhp_matched_head__seed52/receipt.json": "ed79bd04cc20ecf2d5faf050797c5e1d957675ee975635b25b3ffeda6b3db265",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__attnhp_matched_head__seed62/predictions/part-00000.parquet": "be10992391185dc98fbd6a6f8ddcb39a6b434b9444d014be8718884e5b82fe5f",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__attnhp_matched_head__seed62/receipt.json": "65bc20e49db962e650312f83529fce47cd1a205977597a4c04bf2c996a149a71",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__nhp__seed42/predictions/part-00000.parquet": "ba5855d5af922911e6a8584a62002bd538661956e12fd235882b5e3ddf8f6538",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__nhp__seed42/receipt.json": "07414ddc054be0ac61f81fe16d8b7c70c924a343180cdc36b0cb4621a1c4c23b",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__nhp__seed52/predictions/part-00000.parquet": "828bf5c6f24c08b3af3b6d36cff7900c559b809656b68ba826e2671b8d74fdb5",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__nhp__seed52/receipt.json": "58d9e4594996d987ba18bf8464de788d18c33b3a1a7f2595ee8b5fe9d2c4931c",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__nhp__seed62/predictions/part-00000.parquet": "a5684a3e8d30cf8b23a5fad3e9e9a8e4fc299b55d09ebc916a22bbaa48862a87",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__nhp__seed62/receipt.json": "dc357d4aa23e638e4b93226ec44ae3f0e7d0e956c3a8658aada199de00dcba4a",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__rmtpp__seed42/predictions/part-00000.parquet": "f177d12cd2c7fe6f9739db00417f0317bcd7a9bbd0521a4e5762951192f876e8",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__rmtpp__seed42/receipt.json": "cbf2320fff950f34bc124da7f7418e08f2dad8dff9fdc32107e530762e38b8c8",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__rmtpp__seed52/predictions/part-00000.parquet": "461849236db76db01aee90c303a5abcc57f6b38a2ace104eba19b5393272df01",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__rmtpp__seed52/receipt.json": "fa87b1bc33219d098b4fa95e2b67e1ed2af2c707e7ed2754bf8300b85ca2d3e6",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__rmtpp__seed62/predictions/part-00000.parquet": "5aa0f81bf9185c6175116472591538cb7489ab1689c5b32795c581fc28e48fd9",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__rmtpp__seed62/receipt.json": "82429f9daf4a736e6e936cef005ae148ae83d780a122b992bfc4d239da7c4354",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__s2p2_matched_head__seed42/predictions/part-00000.parquet": "6be3b39e9d237bf800845257420bc5240975bd61932b89a492b146dd70053996",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__s2p2_matched_head__seed42/receipt.json": "d5b874f94fbfe493d63e238fa20a569a536ecd66308220d5eead470301316673",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__s2p2_matched_head__seed52/predictions/part-00000.parquet": "d7d259adc66c907e66809f56643f00e6f50c23e806da663ef994eb2a503136c0",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__s2p2_matched_head__seed52/receipt.json": "dc44005872b02c7f3eaed46c7e475115d88e7ac19c56c18048376b929036d3f9",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__s2p2_matched_head__seed62/predictions/part-00000.parquet": "cfb928adce7266e9154d28f4687738fef1c291136aa07fcef46d906bf34d855e",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__s2p2_matched_head__seed62/receipt.json": "b3464f7669f58a036bf8afc1f39139ee054cdd5125ca899fbce9c6b83f3eb27e",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__sahp__seed42/predictions/part-00000.parquet": "c53db3f5821851d901c3cf463584ead3d2ddf21b2f3a7096b0e790924e92aa55",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__sahp__seed42/receipt.json": "f90f46974c51f1f28e4775f0d1bb914854c5c3ab94873d1ba5b9b2f4c18761eb",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__sahp__seed52/predictions/part-00000.parquet": "c5ecc163b31d15326fce8b9eb886b0292a7df60322e26905fb79a780a088552b",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__sahp__seed52/receipt.json": "ab5ca2181e4398b7f70abbd85db24678c9e7ff3e75b9e01a7e110274aa8dcdd7",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__sahp__seed62/predictions/part-00000.parquet": "4ec9721655e17d62834f17099d1fa854dea1f51545bba5ce4c109bdcbb09392b",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__sahp__seed62/receipt.json": "ae11166dcd880d9ec99b7c6559725c8cba4f76e4b680fae701c26f0edd369da6",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__thp__seed42/predictions/part-00000.parquet": "1e60b96de8de05845c238d988738d37d4ff1acf77a90989d4aa49d97a8f3635a",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__thp__seed42/receipt.json": "07ae164dc6c6f468adf23d6f64e62ea9fc8b0baf3f358985e6d21f6ed1fcb159",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__thp__seed52/predictions/part-00000.parquet": "215ee5b793b871b4cf90164db4570b33f71e73f6e2a5c5de636467cda178fcd1",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__thp__seed52/receipt.json": "964ebb36044a50b3b996ceb6828d016a2dc71e55748a5dfefdb7350f5f7f427c",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__thp__seed62/predictions/part-00000.parquet": "634d68dc5b68514108a4322efa1d132601b7153807f91d845352a5d0d0143282",
+    "reports/titantpp_legacy_evaluation_20261003_v1/runs/test/attempt1/raf_spare_parts__thp__seed62/receipt.json": "24deb671ef6da61936a905535aadf6044c21741bd32a3450a48df35c187dd8a1",
+    "reports/titantpp_width16_test_20261003_v1/original/raf_spare_parts__42__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt": "e48ec120baf2a806e2613a36dfca46444306d4595047f39442f4e47c8eb36adf",
+    "reports/titantpp_width16_test_20261003_v1/original/raf_spare_parts__42__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_42/history.json": "5e7c8521c05e536348ba30b9a213470c1c0564f023026c07c35a69aa875fd2cf",
+    "reports/titantpp_width16_test_20261003_v1/original/raf_spare_parts__42__titantpp_history_mlp_width16/runs/titantpp_history_mlp_width16/count_only_log_regression/seed_42/summary.json": "95f131f9e191b81f5b64a797aab4015cb91b849f442d665e41ca55df6c5690af",
+    "reports/titantpp_width16_test_20261003_v1/runs/test/raf_spare_parts/predictions/part-00000.parquet": "d2d8c3acfa7f1fcef8e86ae593a21c4f0f0a636d81d78d6913c7e701346ec8a8",
+    "reports/titantpp_width16_test_20261003_v1/runs/test/raf_spare_parts/receipt.json": "3405bc96c7e1bb61be29693a636fda8d4ad70dd9353864ea52bb0a4ac53ff947",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/execution_contract.json": "7b83022702d244688d13e8afbd404ed38975b9f09f533de69995b4bd7fd3d9fc",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt": "8e7f10b2981d13b2b4be9639a520352dead333e447ab62f74a6eb69c5ccfa54a",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/history.json": "ba22b5b90126f972689f1e8f42235bb8a924a3039b0e0c351169f5c7f5ba8c03",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/summary.json": "f9c45e812f00686bbfb4f59aaeeedf53f8491965957b95864be9ac0d1ceaf4a1",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/terminal_manifest.json": "f0b46e67cf469e7d818c3a546d3def3139c6bf4094ce69fbe4678731928d2b0c",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/runs/nhp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt": "a9819262affac578986d3b8e2598eeab2af2e7c21dd00e60ef8beb28b0591a17",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/runs/nhp/count_only_log_regression/seed_42/history.json": "0c2cde5812f84f561557a5655ee9ef448452c906dba7010a1d3c0865645eae7d",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/runs/nhp/count_only_log_regression/seed_42/summary.json": "909e2e76b868c9f11e6e9d4d0aee7b6f2ee669b9a149b265bc38e4564cf79d5d",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/terminal_manifest.json": "3989f52abaedcd38b5805a3700641da2d641f204a6b9197576d9085622601755",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/runs/rmtpp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt": "d069a2867cf39eecca277b843f3d177e095a9025305b6abf28b93887090ae602",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/runs/rmtpp/count_only_log_regression/seed_42/history.json": "b70710a8e7057f4e2ede5ecdf094835565976e42a5dfcf6fbb7c1cf991e9353e",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/runs/rmtpp/count_only_log_regression/seed_42/summary.json": "ed2f7398455abc660cbf1ddb311ef4547b1c2c133512839d6e73bf7948e0ee0a",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/terminal_manifest.json": "1b97c2516aefa088c71ac6699f697adc081b164099ceb0de5bf7b4f64c3d34e8",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt": "5571b79df1368b0aad4c72b37a9e4162f7a65ca0aa9cd22a9c5097b0a107186d",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/history.json": "498aa293d4ba152f91674d226bf77eb27872c8bcad694abca258b49c3cdfd2de",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/summary.json": "25af4a7308de9daccdc2c838bbe27ad7168ac2fdd14e244405878ddc196eda4f",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/terminal_manifest.json": "321f9457ecf3a91c35a5aa13c55cc29b74bb84399be03671f6acce9125553956",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/runs/sahp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt": "d9f92eecf1cfc0c973ffe556b84e8a57a64440bdffd41b4bb33619c58df16847",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/runs/sahp/count_only_log_regression/seed_42/history.json": "ff1bc9ecc2cc8c673e05f0b18fdf6b67d71154be6bd488ad47500418a6dca27b",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/runs/sahp/count_only_log_regression/seed_42/summary.json": "2a32d2d74d55c1247d7923d8ea3f611fef70ba24f6b9e8adf849f3cd9fd63892",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/terminal_manifest.json": "b9f8c115f2657a8efe92f29aef6ebf28e21543e9462e1f19a980796cb08f3c9a",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/runs/thp/count_only_log_regression/seed_42/best_val_qty_rmse_model.pt": "785697214e53580212ef628dd9f12711f8b4deb0f787b777f90e80cb4dc5c0df",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/runs/thp/count_only_log_regression/seed_42/history.json": "ce6295849e5500679f0450ec00f17720ba1c36c2a62ce7b15bcce30c9878933e",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/runs/thp/count_only_log_regression/seed_42/summary.json": "7e6f6faa4dc1e4984ce4e204b0f53306639a05a1a4c7a79350d486842023cf96",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/terminal_manifest.json": "6282816ea25dabf0d4795be1f0449519142b57df688e82ead718cfeaa3f5bac9",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt": "a2a9e27ac9ec5c577b6d06ed6ec01fb4ff6c0176620570abcb2dfe078a77bac6",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/history.json": "2ae9926cc425d091f92c9ea9f2beba314566d01479475396fa85f21c45a4b0c1",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/summary.json": "ff47b7016e8b406738e8488f0f6e3e2b691609509f558c76181a67ec99a52ddf",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/terminal_manifest.json": "3ffedaf089094ebbb197e30c86f09ef9a24fc5d10c1b50da3b13aa823d0ac197",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/runs/nhp/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt": "a5a4907e0914aa68f35174651b03dbf332caaf885314b206892417da6c365e5a",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/runs/nhp/count_only_log_regression/seed_52/history.json": "f0c5ebdb4acdee6892e6fd6c25dc0e15ea38d47cda8d990e49dca2e5c1234451",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/runs/nhp/count_only_log_regression/seed_52/summary.json": "509a84fe610e61793c82e4522e46e44eae2f68704401bd386354f46de19dae6f",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/terminal_manifest.json": "f28dcca33c68fc87ed3bdfd8a25a21754aec7fa0aa0bbadb7eb3b80ea01cb055",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/runs/rmtpp/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt": "6ba914b44ba249c330fe55e2be5bd6ddcfa5eead613e9beb38e20519e9528719",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/runs/rmtpp/count_only_log_regression/seed_52/history.json": "017642815b0ed95f9695f4e430f3f53650e4c609518c18cee9c468607acdd135",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/runs/rmtpp/count_only_log_regression/seed_52/summary.json": "8bf46941758f4899c36f1a6d2bf2b34a4841ceb7c6390d73c95ae8c70c188a8b",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/terminal_manifest.json": "f987c94e387c2144e88f354ee46560d4a42cbbbcf5acf18e902e913f284ce5f0",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt": "3e8fa3fb6a0f664e06759ce258e7b0fb7f7320a3c3e809b5eeb954ae88acd5b6",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/history.json": "a5f4249ec1f90864c76ea49da0135d39d99d813635d4bd2c85e441ff35a29aa4",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/summary.json": "51c16749e1d418fdffdcafa9427e0ebc40fc57f705857ef228487363cb81fa5e",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/terminal_manifest.json": "9104475e9664cf606afb3d9b1de328a1adc4bcf39dd29872416187322c28e861",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/runs/sahp/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt": "b1b92c528a1201c458bcbd005371364afa4c44e437ba1fd5f5134afa9f24c48e",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/runs/sahp/count_only_log_regression/seed_52/history.json": "fb6abded4a9649218a9b8ab1bcde78c147bf178b4b2e9311b7549eab381e748c",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/runs/sahp/count_only_log_regression/seed_52/summary.json": "fa35fec9cf14afec3b9fcb454dc4281ba474e52ad8f10c3ef68cbbda9f756530",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/terminal_manifest.json": "449197a3bfd8c3c8f20787c1ca78fd93712c07a194302736508c43470b12cc06",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/runs/thp/count_only_log_regression/seed_52/best_val_qty_rmse_model.pt": "63bdacfda65177be8dcb23c2fccedebe515e11118340707986b4dc1bb5ea734a",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/runs/thp/count_only_log_regression/seed_52/history.json": "47c0a485a5c45b6917cd30798166a78646cb84611c9f42a0c9c2e56b575b6c1e",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/runs/thp/count_only_log_regression/seed_52/summary.json": "f794f60a54c5c856c7c7a178e3c6ebd7edf952125c0f614362a8054dd967eeb5",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/terminal_manifest.json": "f6464e396f10fced0a51154f516c7089647897a70139d942dd48e50ddf59642c",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt": "24cae8a4a285b2a59739cee1bf059eab5c31e6fae95528e370aa73fe01f77fea",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/history.json": "0d6d0a4bab421455bb876607697bbb9f3b0959691437e6077dcb596444a9f31d",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/summary.json": "6ede19606c85e485ba1196ea1cce5ff5923462515136cfa21d308f584d460ec1",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/terminal_manifest.json": "713af68e097912b746956a9ca37c1017a5237985273f69e0859053dec2d6aafe",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/runs/nhp/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt": "c39aa02752d73bf78744f1357db172117adf632ff81be12bd73022e01a48d077",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/runs/nhp/count_only_log_regression/seed_62/history.json": "92b5e4b8860bc02bb7a697160734cc9df3fbe9a1fd5031cfdbaf3d7ffadcc766",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/runs/nhp/count_only_log_regression/seed_62/summary.json": "89954f53c76fa6bbf674e1a6595869131d342be229a9aaf8f6a24311bbeff645",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/terminal_manifest.json": "d804ac42c013b3ac4e373258d426b88c3336925363400c105a60a0eac4fce884",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/runs/rmtpp/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt": "59defbbdf5b85946bd3439f25197c6ee8a213e6d9851b8ab1ab267a4330591c9",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/runs/rmtpp/count_only_log_regression/seed_62/history.json": "2d668327b8d4f7ed60b079e8b6a009fb14db4a0f34ba3029feb9b58660de01f8",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/runs/rmtpp/count_only_log_regression/seed_62/summary.json": "72afab9b05fdbe6552fb8b9f90fc7de002ceb4f2c8a602d3f0034c860bc07010",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/terminal_manifest.json": "effcfe47c716cd730054b70a472aacff0e9651b46c14a7777d8db077c3bd2eee",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt": "0619af965a5c3cdfa5c08445cbc4aff02bc8c494e05a45eff90e748b77eec8c9",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/history.json": "1a8ba22293c13cf541c9018bfb23f1226f9b210d7859adfa8534760764870741",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/summary.json": "8cfb68f138a8cc71fa54cb99a2b42289e72e7e40c28f0fefc63212dad8543e0c",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/terminal_manifest.json": "e4121574736e6a69678e6001f78aeed4581655b90f950594801a8205309a3907",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/runs/sahp/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt": "90b6fa7d544dbf5eb52a42408bc634626adc99b4fa973c19c8309813bc525603",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/runs/sahp/count_only_log_regression/seed_62/history.json": "2775406a48f03902025db12c64bddf37e867451e6aa6504e09a1cd07cbc9e759",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/runs/sahp/count_only_log_regression/seed_62/summary.json": "9a7f0f14f8466e175494b693ab149c38469648cb94b15a1436485687066f69d7",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/terminal_manifest.json": "78765e4ceb80320e3e955dca1e7fdc64da55e5f62db67b71050bdd4aeb0d8d6a",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/runs/thp/count_only_log_regression/seed_62/best_val_qty_rmse_model.pt": "03595a64a334525a55690f37dc07c59a8c9d20556f02b57374cbb13e235a40b3",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/runs/thp/count_only_log_regression/seed_62/history.json": "4a0b7c34041ec4570fe8c3505b61dd612fd8f95a34a7004eb3d5fc91f21c0c32",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/runs/thp/count_only_log_regression/seed_62/summary.json": "3f86bd297cdf66aa144e520dcc4c48cffeb4d02e9cd62338a248cd540dbf5af0",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/terminal_manifest.json": "205fdc84dc7bc6ad9e082513375c1b3af3e7097e001480fa5cd3d8b6c774b5f5"
+  },
+  "verified_saved_prediction_rows": 109746,
+  "new_inference_calls": 0,
+  "new_training_calls": 0,
+  "remote_calls": 0,
+  "existing_results_modified": false,
+  "other_dataset_test_read": false,
+  "candidate_shared15_selected_epochs": {
+    "42": 9,
+    "52": 5,
+    "62": 19
+  },
+  "candidate_results_included": false,
+  "limitations": [
+    "Stored Test references only; no reference model was retrained or reevaluated.",
+    "External encoders use project common numerical-input quantity/time heads; this is not original-paper native-head performance.",
+    "MLP16 seed42 stored evaluation uses CPU torch2.14; MLP16 seeds52/62 and external references use5080 torch2.11 cuDNN91900. New Shared15 training/evaluation uses5090 cuDNN92000.",
+    "hard_lmm target fingerprints and legacy target-ID/truth fingerprints are distinct contracts; both are bound through identical ordered rows.",
+    "Prior Test informed subsequent design; this comparison is exploratory and not independent generalization or statistical-significance evidence."
+  ]
+}

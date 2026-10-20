@@ -1,0 +1,169 @@
+{
+  "schema": "shared_raw_raf3_independent_qa_v1",
+  "status": "PASS",
+  "created_at_utc": "2026-10-20T02:09:32.136843+00:00",
+  "reviewer": "raw9_contract_qa",
+  "scope": "local static scientific/operational contract review plus fabricated CPU-only automated tests",
+  "files_reviewed_sha256": {
+    "paper/scripts/manage_titantpp_shared_raw_raf3_test.py": "c516112d606732a3093953c387b14c29ab347b565c531fd8c7a629932b33397a",
+    "paper/scripts/evaluate_titantpp_shared_raw_raf3_frozen.py": "2fdd0f56757c4330e3e140ca800bbfbb5d13060f8b663d7156a1e40a7e3225c5",
+    "paper/scripts/compare_titantpp_shared_raw_raf3_test.py": "5469ceb02be20d2559c51232a7b63dd5917540d5bc317e2903d0ef29141664dd",
+    "tests/test_titantpp_shared_raw_raf3_test_ops.py": "368dc0c4f4318775958fdcc2fcbcd45bdcff9e51ef3dd78113ec5eda5a7a3e6f",
+    "tests/test_titantpp_shared_raw_raf3_frozen.py": "83a4a6ef617f6fd369549fccc6b4dfdc50a189bdfddacb79fc965554a810bc52",
+    "tests/test_titantpp_shared_raw_raf3_test_compare.py": "5395d04eb1a51a8cbc46847e95b9869dcaece65e18bfc93400e54531f068b433",
+    "reports/titantpp_shared_raw_raf3_test_20261020_v1/SCIENCE_SPEC.json": "d127cb7721c43d708cd0add8456641341567495646e2e7bf73f2491c08fd1e76",
+    "reports/titantpp_shared_raw_raf3_test_20261020_v1/REFERENCES.json": "c365cf7a6d6ddf8edd0c1e233c307a89779923b0b8b26efdbc55fca4ae3b6d18",
+    "reports/titantpp_shared_raw_raf3_test_20261020_v1/REFERENCES.md": "6adca3f44675faad8cb76431f67e469530fcc539f175d83a1ce88e89606d95a7"
+  },
+  "automated_tests": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m pytest -p no:cacheprovider tests/test_titantpp_shared_raw_raf3_frozen.py tests/test_titantpp_shared_raw_raf3_test_ops.py tests/test_titantpp_shared_raw_raf3_test_compare.py -q",
+    "actual_exit_code": 0,
+    "tests_passed": 50,
+    "subtests_passed": 2,
+    "elapsed_seconds": 10.56,
+    "tool_session_id": 31039,
+    "source3_unchanged_before_after": true,
+    "results": "50 passed, 2 subtests passed in 10.56s",
+    "warning": "Existing fs/pkg_resources deprecation warning; no test failure.",
+    "reviewed_manager_sha256_at_full_suite": "9eeb02598c8580efdae5d99cd8edbae225f32eb7a53907ac94cf51c9b261dc97"
+  },
+  "acceptance_criteria": [
+    {
+      "id": "parent_completion",
+      "status": "PASS_local_review",
+      "evidence": "manage_titantpp_shared_raw_raf3_test.py:61",
+      "description": "raw9 fit9/Validation9/worker18/dispatcherexit0; immutable archive, manifest, original inventories and final bindings; local finisher absence before preparation"
+    },
+    {
+      "id": "exact_fixed_selection",
+      "status": "PASS_local_review",
+      "evidence": "evaluate_titantpp_shared_raw_raf3_frozen.py:42",
+      "description": "RAF only42/52/62 epochs9/5/19; binary/tensor/history-first-strict-minimum/summarymetadata/common model alpha1 restored without optimizer"
+    },
+    {
+      "id": "scientific_source_and_conditions",
+      "status": "PASS_local_review",
+      "evidence": "evaluate_titantpp_shared_raw_raf3_frozen.py:71",
+      "description": "983 frozen scientific files; raw9 immutable worker/host adapter; log1p quantity+time, logMSE/timealpha1; no originalCNN/ref retraining or reevaluation"
+    },
+    {
+      "id": "native_runtime",
+      "status": "PASS_local_review",
+      "evidence": "evaluate_titantpp_shared_raw_raf3_frozen.py:137",
+      "description": "Native5090 GPU UUID/cuDNN92000/runtime expected; fresh idle and at most3 evaluation children; current training left untouched"
+    },
+    {
+      "id": "full_data_and_targets",
+      "status": "PASS_local_review",
+      "evidence": "evaluate_titantpp_shared_raw_raf3_frozen.py:375",
+      "description": "SHA-bound full original RAF only for Test; exact Train/Validation subset equality, frozenloader, hard_lmm target/order/quantity binding and Test5226 contract"
+    },
+    {
+      "id": "synthetic_then_validation_then_test",
+      "status": "PASS_local_review",
+      "evidence": "evaluate_titantpp_shared_raw_raf3_frozen.py:312",
+      "description": "All3 fresh synthetic qualification receipts; all3 nativeValidation individual prediction and sixmetric replay, exact target, unchangedstate/context, explicit actualexit0 before Test stage"
+    },
+    {
+      "id": "finite_execution",
+      "status": "PASS_local_review",
+      "evidence": "manage_titantpp_shared_raw_raf3_test.py:198",
+      "description": "Exclusive intent/failure paths; local bounded completion wait; fresh processes<=3; ownedchild process-group timeout cleanup; no retrain/resume/retry mode"
+    },
+    {
+      "id": "collection",
+      "status": "PASS_local_review",
+      "evidence": "manage_titantpp_shared_raw_raf3_test.py:315",
+      "description": "Pipeline/child exit0 and timeoutfalse; explicit ownerPID/GPU absence before originalarchive; preserve binary transport and verify filemanifest hashes before comparator"
+    },
+    {
+      "id": "comparison",
+      "status": "PASS_local_review",
+      "evidence": "compare_titantpp_shared_raw_raf3_test.py:70",
+      "description": "Complete24 endpoints,3seed mean/sampleSD(ddof1), allseed Shared-minus21 refs absolute/relative changes including worsening; no Test checkpoint selection"
+    },
+    {
+      "id": "simple_baseline_fix",
+      "status": "PASS_local_review",
+      "evidence": "compare_titantpp_shared_raw_raf3_test.py:54",
+      "description": "Reads worker simple_quantity_baselines key; requires last/history_mean/support/timeNLL N/A; preserves identical acrossseed results inJSON/Markdown"
+    },
+    {
+      "id": "reviewed_version_guard",
+      "status": "PASS_local_review",
+      "evidence": "manage_titantpp_shared_raw_raf3_test.py:59",
+      "description": "prepare/start-followup require PASS QA with all7 required reviewed files; verify all9 source/test/spec/reference SHA bindings including additional refs; changes during local waiting fail before native setup."
+    }
+  ],
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "resolved_findings": [
+    {
+      "severity": "MEDIUM",
+      "original_file": "paper/scripts/compare_titantpp_shared_raw_raf3_test.py:201",
+      "description": "Worker emitted simple_quantity_baselines but comparator read simple_baselines and silently dropped both deterministic baselines.",
+      "remediation": "Owner changed main to simple_quantity_baselines(item), requiring actual worker key and N/A time/support checks; preserved JSON/Markdown baseline table.",
+      "verified_with": "tests/test_titantpp_shared_raw_raf3_test_compare.py plus final integrated50tests"
+    }
+  ],
+  "files_changed": [
+    "reports/titantpp_shared_raw_raf3_test_20261020_v1/INDEPENDENT_QA.json",
+    "reports/titantpp_shared_raw_raf3_test_20261020_v1/INDEPENDENT_QA.md"
+  ],
+  "implementation_files_modified_by_reviewer": false,
+  "ssh_calls": 0,
+  "native_gpu_runs": 0,
+  "real_test_inference_calls": 0,
+  "real_dataset_reads_for_this_code_review": 0,
+  "limitations": [
+    "PASS applies to local review and fabricated CPU tests, not a native execution completion claim.",
+    "Fresh5090 qualification and real Validation replay remain mandatory before any real Test.",
+    "No actual transport/remote timeout/GPU recovery was exercised; operations tests mock those boundaries.",
+    "Existing external/commonhead and CPU/5080/5090 runtime differences remain interpretation limits.",
+    "This QA does not certify new independent generalization or statistical significance.",
+    "Full suite50+2 ran before final review-version guard; final manager-only suite21 passed after that bounded change. Worker/comparator source unchanged. Parent will run consolidated57 tests separately."
+  ],
+  "review_revision": 3,
+  "revision_history": [
+    {
+      "previous_report_sha256": "55143171164681728723cc924889a2bce1b79cd39d698386762a91e193ce9e81",
+      "previous_worker_sha256": "2fdd0f56757c4330e3e140ca800bbfbb5d13060f8b663d7156a1e40a7e3225c5",
+      "reason": "Owner added exact evaluation Train/Validation input and population equality against original raw9 training contract after initial local QA. No native execution occurred."
+    },
+    {
+      "previous_report_sha256": "93fe16ba68cf020ceaeb48a294a4665d8174abeae265ba9e83ef4215773ea9d6",
+      "previous_manager_sha256": "9eeb02598c8580efdae5d99cd8edbae225f32eb7a53907ac94cf51c9b261dc97",
+      "reason": "Owner added PASS-reviewed source/test/spec hash guard before preparation and finite followup registration; extra reviewed references are checked too."
+    }
+  ],
+  "final_additional_review": {
+    "source_change": "Exact Train/Validation input SHA and validation population now tied to immutable training dataset definition.",
+    "actual_contract_metadata_check": {
+      "training_input_sha256": "d805cad0242078fedfbb87eed18bde9b73d37bfc9b93c6b75aac49087244efa2",
+      "validation_target_count": 6690,
+      "validation_target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+      "validation_target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+    },
+    "final_source3_unchanged_before_after": true
+  },
+  "updated_at_utc": "2026-10-20T02:11:47.798959+00:00",
+  "focused_final_ops_tests": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m pytest -p no:cacheprovider tests/test_titantpp_shared_raw_raf3_test_ops.py -q",
+    "actual_exit_code": 0,
+    "tests_passed": 21,
+    "elapsed_seconds": 0.09,
+    "manager_sha256": "c516112d606732a3093953c387b14c29ab347b565c531fd8c7a629932b33397a",
+    "tests_sha256": "368dc0c4f4318775958fdcc2fcbcd45bdcff9e51ef3dd78113ec5eda5a7a3e6f",
+    "source_unchanged_before_after": true,
+    "scope": "Final review guard, original operation tests, required inventory, missing/modified source/digest/status and extra-reference mismatch rejection; no SSH/native inference."
+  },
+  "stored_reference_reverification": {
+    "sha_bindings_verified": 145,
+    "mismatches": 0,
+    "method": "byte hashes only; no new model inference or metric reselection"
+  }
+}
