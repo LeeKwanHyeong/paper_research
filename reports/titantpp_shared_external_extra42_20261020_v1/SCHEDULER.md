@@ -66,3 +66,10 @@ START_RECEIPT.json은 보존한 원격 status stdout/SHA와 연결된다. native
 ## 사용자 지적에 따른 해석 정정 — 2026-10-20
 
 현재해석은 `reports/titantpp_shared_paper_interpretation_correction_20261020_v1/CORRECTION.md`를우선읽는다. 기존HistoryMLP의Titans-MAC대비5080효율실측은이미완료돼있으며 Shared15자체의배수와구분해재사용한다. Backbone전체의성능·비용기여에용량일치대조를필수로두지않는다. 현재공유형실험은Train학습/Validation선택/고정Test평가가확인되며, Test를봤다는이유만으로학습·구조·checkpoint튜닝에사용했다고단정하지않는다. 과거다른시도/관행의일반적한계를이번실험의확정사실로옮겨적지않는다. 기존frozen문서나집계기의구식해석문구는원문을보존하되정정기록과함께제시한다. 42개학습·평가경로/기존수치·checkpoint·source봉인은변경하지않는다.
+
+
+## RAF 추가 학습 완료와 Taxi 진입 — 2026-10-20 15:18:30 KST
+
+최신 실제 관측은 `LATEST_PROGRESS.json`과 `progress/20261020T0618308805030000/SUMMARY.json`에 결속했다. RAF의 추가 seed72·82 × 공유형/외부6종 총14개 학습이 실제 worker exit0와 receipt로 완료됐다. 전체42개 중 학습완료14·진행3·대기25·미확정0이며, Taxi 공유형72 저장23/best21·공유형82 저장9/best6·RMTPP72 저장6/best3이 실제 worker/dispatcher lease/GPU에서 진행 중이다. 전체42 학습 뒤 시행하는 nativeValidation42/Test42 및 최종회수는 아직 미실행이다. RAF 학습 완료를5seed Test 완료로 표현하지 않는다. 이 과거시각을 새 관측으로 사용하지 않는다.
+
+이번 회차 최초 로컬 SSH 시도는 sandbox의 Operation not permitted로 서버 접속 전에 차단돼 transport exit255 원문을 보존했다. 기존 승인 범위의 sandbox 승격 후 읽기 전용 상태관측1회는 transport exit0으로 통과했다. helper 호출은2회였고 성공한 실제 원격 status관측은1회다. 이는 해결된 로컬 권한 차단이며 학습 실패가 아니다. 후속 회차의 승인된 status 명령은 필요한 sandbox 승격을 처음부터 적용하고, 원격관측은 회차당1회만 수행한다. 학습·finisher·과학조건·기존 결과는 변경하지 않았다.
