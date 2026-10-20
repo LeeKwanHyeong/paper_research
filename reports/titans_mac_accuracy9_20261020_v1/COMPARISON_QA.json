@@ -1,0 +1,62 @@
+{
+  "schema": "titans_mac_accuracy9_comparison_independent_qa_v1",
+  "status": "PASS",
+  "created_at": "2026-10-20T07:17:40.991835+00:00",
+  "summary": "Local comparison implementation and independent synthetic calculations pass. Actual completed MAC comparison remains pending until the collected final receipt exists and all gates pass.",
+  "files_changed": [
+    "reports/titans_mac_accuracy9_20261020_v1/COMPARISON_QA.json",
+    "reports/titans_mac_accuracy9_20261020_v1/COMPARISON_QA.md"
+  ],
+  "files_reviewed_sha256": {
+    "paper/scripts/compare_titans_mac_accuracy9.py": "a3e5e18627ab19b1984ff6b8d9a54407225db1defcef7c9a3809299a876098b5",
+    "tests/test_compare_titans_mac_accuracy9.py": "a8052e5fc8c81dfffee14977a9cc7a07f52f21220f4ede7fa95a83dd522f967e",
+    "paper/scripts/manage_titans_mac_accuracy9.py": "045ae041d23de033bfc12e0756ffa94fa39b8b76faec156f29d21ed2d6cbfe86",
+    "paper/scripts/prepare_titans_mac_accuracy9.py": "268c80405a597beefee2a041e7dae0c296396de0a52d0ae4407e6179e93e26c2",
+    "paper/scripts/titans_mac_accuracy9_runtime.py": "f44597d6f01c6a05deb4371a1dc6241db069944cef9e86d2641a12c320648dc1"
+  },
+  "acceptance_criteria": {
+    "local_only_no_ssh_training_or_inference": true,
+    "MAC_complete9_train_validation_test27_exits_required_before_comparison": true,
+    "MAC_archive_manifest_original_receipt_and_sealed_source_verification": true,
+    "Shared18_stored_endpoints_and253_original_bindings_verified": true,
+    "same_uncapped_inputs_populations_common_heads_loss_budget_and_loader": true,
+    "six_metrics36_aggregates108_seed_deltas": true,
+    "sample_sd_ddof1_absolute_relative_differences_and_adverse_seeds": true,
+    "empty_tail_and_zero_reference_explicit_NA": true,
+    "Shared_Test5080_91900_MAC5090_92000_difference_disclosed": true,
+    "exclusive_new_outputs_preserve_previous_results": true
+  },
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "tests": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m pytest -q -p no:cacheprovider tests/test_compare_titans_mac_accuracy9.py",
+    "actual_exit_code": 0,
+    "passed": 20,
+    "duration_seconds": 0.03,
+    "random_trials": 50,
+    "independent_aggregate_checks": 1800,
+    "independent_seed_delta_checks": 5400,
+    "random_seed": 983145,
+    "checks": "Manual arithmetic mean/sampleSD and relative differences, adverse seed preservation"
+  },
+  "existing_shared_evidence": {
+    "manifest_sha256": "b87d3e7f22a44717c8a0ba58286ce1e737361bc1ccec9642be3afb5908dd47d7",
+    "source_bindings_verified": 253,
+    "stored_endpoints_verified": 18,
+    "common_conditions_match": true
+  },
+  "native_operations_performed": false,
+  "training_restarted": false,
+  "actual_MAC_final_comparison_performed": false,
+  "sealed_native_source_modified": false,
+  "limitations": [
+    "The 27 actual MAC worker exits are a mandatory future completion gate in reviewed code; this local QA is not a claim that they have occurred.",
+    "Shared Test uses stored 5080/cuDNN91900 results; MAC uses 5090/cuDNN92000. Scientific input/head/loss/budget matching does not imply all accuracy endpoints use the same GPU/Runtime.",
+    "Existing finite finisher must complete and collect originals before running the comparator.",
+    "No 5seed/significance/causal-sharing claim is established by this report."
+  ]
+}
