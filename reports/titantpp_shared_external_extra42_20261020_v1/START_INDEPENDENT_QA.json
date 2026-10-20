@@ -1,0 +1,172 @@
+{
+  "schema": "titantpp_extra42_start_independent_qa_v1",
+  "status": "PASS",
+  "reviewed_at_utc": "2026-10-20T05:34:42.633539+00:00",
+  "observation_at_utc": "2026-10-20T05:32:30.074028+00:00",
+  "observation_at_kst": "2026-10-20 14:32:30 KST",
+  "scope": "Stored observation comparison only; not current/live status or completion certification",
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "summary": "Stored 14:32:30 KST start receipt matches sealed source/contract, native synthetic qualification, transport bytes, process identities, GPU inventory and preserved paused owners.",
+  "source_commit": "f2975cbd767ede82f7050a85adafdc5e9e2193fc",
+  "integrity_sha256": "44794f5e4b9ff74e3ff903f964e619dbe565961ddc64c2117fa109b5bcc764ac",
+  "contract_sha256": "4d88a5df41c41ed4076b766c4f1383263e29f2584c22cbab21306fdf126edac2",
+  "source_files_verified": 987,
+  "archive_source_members_verified": 987,
+  "committed_new_source_files_verified": 4,
+  "transport_exit0_count": 4,
+  "qualification_sha256": "d55e8ac230b3c6d367ab147893672788afeb8e0c951f0c4137d50eba7484bd4d",
+  "qualification_raw_serialization_reconstructed_sha256_matches": true,
+  "synthetic_stdout_reconstruction_sha256_matches": 10,
+  "synthetic_actual_exit0_records": 10,
+  "concurrent_admission_worker_count": 3,
+  "concurrent_admission_pids": [
+    616775,
+    616776,
+    616777
+  ],
+  "memory_admission": {
+    "largest_reserved_bytes": 2327838720,
+    "three_times_reserved_bytes": 6983516160,
+    "free_before_bytes": 11803820032,
+    "fraction_limit": 0.85,
+    "passed": true
+  },
+  "at_observation": {
+    "completed_fits": 0,
+    "running_fits": 3,
+    "pending_fits": 39,
+    "unresolved_fits": 0,
+    "dispatcher_pid": 616624,
+    "training_rows": [
+      {
+        "job_id": "raf_spare_parts__titantpp_history_mlp_shared15_v1__seed72",
+        "pid": 616826,
+        "start_ticks": 87089945,
+        "saved_epoch": 7,
+        "best_epoch": 6
+      },
+      {
+        "job_id": "raf_spare_parts__titantpp_history_mlp_shared15_v1__seed82",
+        "pid": 616827,
+        "start_ticks": 87089946,
+        "saved_epoch": 7,
+        "best_epoch": 1
+      },
+      {
+        "job_id": "raf_spare_parts__rmtpp__seed72",
+        "pid": 616828,
+        "start_ticks": 87089946,
+        "saved_epoch": 11,
+        "best_epoch": 7
+      }
+    ],
+    "gpu_pids": [
+      351049,
+      351048,
+      353905,
+      616828,
+      616826,
+      616827
+    ],
+    "paused_pids": [
+      351034,
+      351048,
+      351049,
+      353905
+    ]
+  },
+  "acceptance_criteria": [
+    {
+      "criterion": "Source commit, sealed contract and archive source987 bytes match",
+      "status": "PASS"
+    },
+    {
+      "criterion": "All four saved transport calls exited0 without timeout and stdout/stderr bytes match",
+      "status": "PASS"
+    },
+    {
+      "criterion": "Seven independent and three concurrent native synthetic results have bound stdout SHA and actual exit0 records",
+      "status": "PASS"
+    },
+    {
+      "criterion": "Native runtime, full-shape memory qualification and joint-gradient proof match approved conditions",
+      "status": "PASS"
+    },
+    {
+      "criterion": "Dispatcher and three training PID/argv/start_ticks/cwd/pgid match launch/current saved evidence",
+      "status": "PASS"
+    },
+    {
+      "criterion": "All three training PIDs are present in stored GPU inventory; no foreign GPU owners",
+      "status": "PASS"
+    },
+    {
+      "criterion": "Stopped external dispatcher and three workers preserve exact identities and T state",
+      "status": "PASS"
+    },
+    {
+      "criterion": "Progress0 complete/3 running/39 pending and epochs7/7/11, best6/1/7 match stored histories",
+      "status": "PASS"
+    },
+    {
+      "criterion": "All sealed evidence remained unchanged during this local-only review",
+      "status": "PASS"
+    }
+  ],
+  "files_reviewed_sha256": {
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_shared_external_extra42_20261020_v1/START_RECEIPT.json": "14cd1760ae373f8ef9d6a8b5bd8b798d1d5971bd0b7b87412ad00252899a0efa",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/integrity.json": "44794f5e4b9ff74e3ff903f964e619dbe565961ddc64c2117fa109b5bcc764ac",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/execution_contract.json": "4d88a5df41c41ed4076b766c4f1383263e29f2584c22cbab21306fdf126edac2",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/input_snapshot/inputs/data/raf_spare_parts/train_validation.parquet": "d805cad0242078fedfbb87eed18bde9b73d37bfc9b93c6b75aac49087244efa2",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/input_snapshot/inputs/data/raf_spare_parts/split_manifest.json": "3cd6204667de4e44eda8787d32845bebff7624e1bb255ffd7677f810b8d7b149",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/input_snapshot/inputs/data/yellow_trip_hourly/train_validation.parquet": "54ce04a41e3cde688ce85f7ccda83773f47194c4f7ffbaf02001ea2390e881ab",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/input_snapshot/inputs/data/yellow_trip_hourly/split_manifest.json": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/input_snapshot/inputs/data/intermittent_frozen_5000/train_validation.parquet": "1b2c1001ad050b88acb2887c255adb9d611368eea91214bc8d66720edb9d4a5f",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/input_snapshot/inputs/data/intermittent_frozen_5000/split_manifest.json": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/input_snapshot/inputs/full/raf_spare_parts.parquet": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/input_snapshot/inputs/full/yellow_trip_hourly.parquet": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/input_snapshot/inputs/full/intermittent_frozen_5000.parquet": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/deployment.tar.gz": "56467bf05dfdc2f3989192dbcbd530ff0071a36f2389c036dff20fcb7d618fdc",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/manage_titantpp_shared_external_extra42.py": "7d4df0b7b670a859024a7e145c5a2d4166c1d1be2318db33156951262b62576d",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/prepare_titantpp_shared_external_extra42.py": "5f547fab82aef516819ac0c689d1a3e0c812bf163d970fb66209368515556f38",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/run_titantpp_shared_external_extra42.py": "df5edcd7c1db5c7c18e69159e67bf40c36ba2de12dc434c614856855ebb25569",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/titantpp_shared_external_extra42_runtime.py": "2b24b8414703c8de6d7f440af4870c6cfa62dc085029b5e139467516575040d3",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/tests/test_titantpp_shared_external_extra42_ops.py": "f089d6c81e1376fb1d5fecef6b52b5c899859a6d33f09a2ac384567ebc0f9c7f",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/tests/test_titantpp_shared_external_extra42_worker.py": "8127c766bcfd5c2fe1ca84019ef21bbffcdf5dfe56cccf566137cae690e242f8",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_shared_external_extra42_20261020_v1/SCIENCE_SPEC.json": "9dfb6ce647bd4376c967a35e5c8bbce4725fe235eb76fc93c978e22e832a8742",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_shared_external_extra42_20261020_v1/FROZEN_CONDITIONS.json": "2080a1c8c84d43a8553d412cc2a9f99e246d3a0bf9034be5f91183ebfd456099",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_shared_external_extra42_20261020_v1/verify_paper_gate.py": "4242b3487b42eb63ba2aa2b922723930c0800d389474c6f602ebf712cc9f0083",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/transport/5080/20261020T053101662067Z_fresh_preflight.stdout": "ad031fe81d5fb3811719fecb2384d56e9f493ac8a5d13d9bbb5ab6f1ff795d67",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/transport/5080/20261020T053101662067Z_fresh_preflight.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/transport/5080/20261020T053101662067Z_fresh_preflight.json": "3af1ba5faa3148cbe06470971a194fb526ebba431a1891285b4ca175675ca1ad",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/transport/5080/20261020T053102537522Z_install.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/transport/5080/20261020T053102537522Z_install.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/transport/5080/20261020T053102537522Z_install.json": "28df1b0358d9d96974a20045eb8bf8bf04961af9ac6714790fd92827ed523f59",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/transport/5080/20261020T053102776197Z_launch.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/transport/5080/20261020T053102776197Z_launch.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/transport/5080/20261020T053102776197Z_launch.json": "05933e18063feaea43f64ab174759f55a3666811d70e4e2cd8c647fc29a3b93c",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/transport/5080/20261020T053230150238Z_status.stdout": "e13ace51c435c92e1aa1bfaf7759ae13239e47bf3c2fb515d7dbc7bdb639f624",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/transport/5080/20261020T053230150238Z_status.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/transport/5080/20261020T053230150238Z_status.json": "c5d1c566883779385ff0db866360465674ced61972fdab47d761293119b7a350"
+  },
+  "limitations": [
+    "No SSH, new observation, training or inference performed.",
+    "Qualification object and synthetic stdout exact byte hashes were reconstructed from lossless saved JSON; original remote overlap/stdout/stderr files were not separately retrieved. The sealed code enforces ready/GO concurrency before producing these qualification records.",
+    "The observation directly records three concurrent training GPU workers, but their eventual exits and final results are not yet certified.",
+    "5090 current runtime was not observed or independently certified in this review.",
+    "Paper readiness is not certified by this start review."
+  ],
+  "remote_calls": 0,
+  "inference_calls": 0,
+  "current_reobservations": 0,
+  "existing_sealed_files_modified": false,
+  "files_changed": [
+    "reports/titantpp_shared_external_extra42_20261020_v1/START_INDEPENDENT_QA.json",
+    "reports/titantpp_shared_external_extra42_20261020_v1/START_INDEPENDENT_QA.md"
+  ]
+}
