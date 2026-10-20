@@ -14,6 +14,12 @@
 - 종료 exit0가 확인돼야 기존 수집 도구로126worker/dispatcher 실제exit0·owner부재·선택/원본/archive/manifest SHA를 확인하고 기존의 아직 없는 retrieval 경로에 최초 회수한다. 파일 전송은 기존900초 timeout이며 종료 확인45초와 구분한다.
 - 회수 뒤 기존 비교기를 local-only check-only→새5seed 보고 순서로 수행한다. 완료 캐시는 같은 원본과 결과 SHA를 로컬 재검증하며 SSH0이다.
 
-**검증된 진입점을 실행하고 후속 자동화를 갱신한다 — 다음 작업**
-- 신규 코드·합성 검사·독립 검토·별도 커밋을 마친 뒤 CONTROL_BINDINGS의 실제SHA로 최초 advance를 한 번 실행한다. 실제 반환값을 확인한 뒤 기존2seed 자동화만 이 경로로 갱신한다.
+**검증된 진입점을 실행하고 후속 자동화를 갱신한다 — 완료**
+- paper_research 저장소의 codex/contextual-retrieval-pilot-20261007 브랜치에 코드 commit727840c4737a773246aa0879fd2fee578a04cbc5를 만들었다. CONTROL_BINDINGS rawSHA는7b59a7fa0dc810c2aa35c2004d69d094a1c4775749936b0442bb4f0918fbf168, AUTHORIZATION rawSHA는fbf6befa8e0b39fe19286b564bdc81dabfb1e87580843e329d61a8c3dc95c9d2다. local verify는 실제exit0·remote0이다.
+- 최초 advance는2026-10-21 07:56:00.050136KST에 waiting·실제transportexit0·timeoutfalse로 끝났다. 원dispatcher616624 신원이 일치했고 stdout1,372bytes/stderr0의 원문과SHA를 보존했다. FIRST_CHECK.json과 당시 ROUND/TRANSPORT에 연결했다. 이는 전체 종료나GPU유휴 확인이 아니다.
+- 기존 자동화2seed만 ACTIVE·15분 간격·동일 채팅을 유지한 채 v2 advance로 갱신했다. 저장된 prompt가 요청문과 정확히 같고 id/name/kind/간격/대상/생성시각이 유지됐음을 확인했다. AUTOMATION_BEFORE/AFTER.json에 기록했다. Notion의 '7 남은 실험과 서버 분할 계획' 해당 항목만 수정하고 읽어 확인했다.
 - COLLECTION_COMPLETE는 회수 검증, COMPLETE는5seed 집계까지의 완료다. 어느 것도 최초 waiting이나 과거 READY로 대신하지 않는다. 최초 RAF/Taxi 학습 완료를 전체 Test 완료로 표현하지 않는다.
+
+**남은 검증과 회수 — 외부 작업 대기**
+- 기존5080 학습·Validation 전체 재현·고정Test 종료를 다음 정규 회차에서 짧게 확인한다.
+- 실제exit0와 전체 종료 증거가 확인되면 기존 collector로 한 번 회수하고5seed Validation/Test를 별도 집계한다. 현재 retrieval/COMPLETE는 아직 없다. 5090 작업과 기존 과학 실행은 그대로 둔다.

@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-20T22:56:00.059126+00:00",
+  "command": [
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=15",
+    "5080",
+    "cd /home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_shared_external_extra42_20261020_v1_5080/source && /home/leekwanhyeong/miniconda3/envs/ai_env/bin/python3.12 -u -c 'import json,pathlib,time\nfrom paper.scripts import titantpp_shared_external_extra42_runtime as r\nroot=pathlib.Path('\"'\"'/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_shared_external_extra42_20261020_v1_5080'\"'\"');expected={'\"'\"'pid'\"'\"': 616624, '\"'\"'start_ticks'\"'\"': 87087471, '\"'\"'argv'\"'\"': ['\"'\"'/home/leekwanhyeong/miniconda3/envs/ai_env/bin/python3.12'\"'\"', '\"'\"'-u'\"'\"', '\"'\"'-m'\"'\"', '\"'\"'paper.scripts.titantpp_shared_external_extra42_runtime'\"'\"', '\"'\"'--contract'\"'\"', '\"'\"'/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_shared_external_extra42_20261020_v1_5080/execution_contract.json'\"'\"', '\"'\"'--host'\"'\"', '\"'\"'5080'\"'\"', '\"'\"'--mode'\"'\"', '\"'\"'launch_dispatch'\"'\"'], '\"'\"'cwd'\"'\"': '\"'\"'/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_shared_external_extra42_20261020_v1_5080/source'\"'\"', '\"'\"'pgid'\"'\"': 616624};keys=('\"'\"'pid'\"'\"', '\"'\"'start_ticks'\"'\"', '\"'\"'argv'\"'\"', '\"'\"'cwd'\"'\"', '\"'\"'pgid'\"'\"')\nc=r.read(root/'\"'\"'execution_contract.json'\"'\"')\nr.require(r.sha_json(c)=='\"'\"'5927e2c67b891e66b45de2e428ebc24165e5572e57d9c8ccb09f1e2057b164d8'\"'\"','\"'\"'Original native contract changed'\"'\"')\ns=r.read(root/'\"'\"'start.json'\"'\"');l=r.read(root/'\"'\"'dispatcher_launch.json'\"'\"')\nr.require(s['\"'\"'contract_sha256'\"'\"']==r.sha_json(c),'\"'\"'Original start contract differs'\"'\"')\nr.require(s['\"'\"'pid'\"'\"']==l['\"'\"'pid'\"'\"']==expected['\"'\"'pid'\"'\"'] and l['\"'\"'command'\"'\"']==expected['\"'\"'argv'\"'\"'],'\"'\"'Original launch identity differs'\"'\"')\nr.require(all(s['\"'\"'identity'\"'\"'][k]==l['\"'\"'identity'\"'\"'][k]==expected[k] for k in keys),'\"'\"'Original dispatcher start identity differs'\"'\"')\nresult={'\"'\"'observed_at'\"'\"':r.now(),'\"'\"'contract_sha256'\"'\"':r.sha_json(c),'\"'\"'dispatcher_identity'\"'\"':expected,'\"'\"'read_only_check'\"'\"':True,'\"'\"'deadline'\"'\"':1792888885.815062}\nif (root/'\"'\"'dispatcher_exit.json'\"'\"').exists():\n x=r.read(root/'\"'\"'dispatcher_exit.json'\"'\"')\n r.require(x['\"'\"'pid'\"'\"']==expected['\"'\"'pid'\"'\"'] and x['\"'\"'start_ticks'\"'\"']==expected['\"'\"'start_ticks'\"'\"'] and x['\"'\"'command'\"'\"']==expected['\"'\"'argv'\"'\"'] and x['\"'\"'launch_sha256'\"'\"']==r.sha_file(root/'\"'\"'dispatcher_launch.json'\"'\"'),'\"'\"'Terminal identity differs'\"'\"')\n r.require(x.get('\"'\"'actual_child_exit_observed'\"'\"') is True,'\"'\"'Actual dispatcher exit was not observed'\"'\"')\n result.update(status='\"'\"'terminal'\"'\"' if x['\"'\"'actual_os_returncode'\"'\"']==0 and x.get('\"'\"'timeout'\"'\"') is False else '\"'\"'terminal_failure'\"'\"',dispatcher_exit=x)\nelse:\n live=r.proc_identity(expected['\"'\"'pid'\"'\"'])\n r.require(live is not None and all(live[k]==expected[k] for k in keys),'\"'\"'Current dispatcher identity differs'\"'\"')\n r.require(time.time()<1792888885.815062,'\"'\"'Inherited host deadline expired without terminal evidence'\"'\"')\n result.update(status='\"'\"'waiting'\"'\"',dispatcher_current_identity=live)\nprint(json.dumps(result),flush=True)\n'"
+  ],
+  "timeout_seconds": 45,
+  "actual_transport_exit": 0,
+  "transport_timeout": false,
+  "transport_error": null,
+  "stdout_path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/recovery_v2/transport/5080/20261020T2255597147470000_a47236d32f48/check.stdout",
+  "stdout_bytes": 1372,
+  "stdout_sha256": "629b70a780eb5de630cf29ce03fe92f8996c9d441cd3ea14d03a4133fca02017",
+  "stderr_path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_external_extra42_20261020_v1/recovery_v2/transport/5080/20261020T2255597147470000_a47236d32f48/check.stderr",
+  "stderr_bytes": 0,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "remote_scientific_process_signaled": false
+}

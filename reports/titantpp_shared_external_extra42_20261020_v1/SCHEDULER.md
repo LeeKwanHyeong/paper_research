@@ -98,3 +98,33 @@ START_RECEIPT.json은 보존한 원격 status stdout/SHA와 연결된다. native
 후속 heartbeat는 먼저 recovery_v1/FAILURE.json·COLLECTION_COMPLETE.json·COMPLETE.json과 completion 로그·연결 기록을 로컬로 확인한다. 이미 시작된 recovery start/finish 및 원래 finish/start-finisher/collect를 중복 호출하지 않는다. 정상 대기는 조용히 유지하며 별도 SSH/status 반복을 추가하지 않는다. 새 연결 실패·timeout·불완전 회수는 새 원문을 보존하고 자동 재시도하지 않는다.
 
 기존 dispatcher의 Train42→Validation42 전부재현→Test42 종료 뒤 기존 collector가126worker/dispatcher 실제exit0·owner부재·선택/원본/모든SHA를 검증하고 기존의 아직 없는 retrieval 경로에 최초 회수한다. 이후 같은 로컬 completion이 기존 비교기를 check-only→5seed 보고 순서로 실행한다. COLLECTION_COMPLETE는 회수 완료, COMPLETE는 추가로5seed 비교 완료다. 기존QUEUE_COMPLETE가 생겨도 새FAILURE가 five_seed_comparison 단계면 과학실험/회수완료와 집계실패를 구분한다. 다른자동화나5090을 변경하지 않는다.
+
+
+## 복구 대기 연결의 두 번째 장애와 학습 상태 확인 — 2026-10-21 07:41 KST
+
+recovery_v1의 대기 SSH가06:40:39KST에 Operation timed out/Broken pipe, 실제transportexit255로 종료됐다. 도구의외부timeout은false이고 remote_scientific_process_signaled=false다. FAILURE/WAIT_TRANSPORT와stdout772bytes·stderr101bytes 및모든SHA를원문보존했다. 회수·집계완료는아니다. 기존실패와이번실패를삭제/덮어쓰지않는다.
+
+사용자의“현재 진행상태는?”요청에따라5080/5090을각한번읽기전용status조회했다.07:41:32KST의5080학습완료33·진행3·대기6·실패0,5090완료6·Inter진행3·대기0·실패0을실제worker/lease/GPU와확인했다.5080의학습은새로시작하지않고기존dispatcher616624가계속수행중이다.양쪽Validation/Test는아직0이다.이번상태요청을또다른연결복구승인으로해석하지않았다.
+
+FAILURE_NOTIFICATION.json에이번사용자상태보고와연결했다.같은미해결실패동안heartbeat는로컬만확인하고반복알림·추가SSH/status·기존recovery/finisher/collector재호출을하지않는다.새제어경로로복구하려면이번오류와한계를정리한뒤사용자지시를따른다.5090작업과다른자동화는변경하지않는다.
+
+## 짧은 종료 확인으로 자동 회수를 복구한다 — 2026-10-21 07:56 KST
+
+사용자 최신 지시 “5080은 학습 그대로 두고 자동 회수만 다시 복구해줘. 장시간 SSH 연결 대신 짧게 종료 여부를 확인하는 방식으로 바꾸고, 기존 checkpoint·결과·실패 기록은 보존한 채 Validation/Test 검증과 회수까지 마무리해줘.”를 적용한다. 이 단락이 앞선 장시간 대기 연결과 로컬 확인만 허용하던 현재 단계 설명을 대체한다. 과거 QUEUE_FAILURE/ACTION_REQUIRED와 recovery_v1 실패·claim·로그는 원문으로 보존한다. 이들을 현재 승인 부족으로 해석하거나 삭제하지 않는다.
+
+**새 제어 구현과 검증 — 완료**
+- paper_research의 codex/contextual-retrieval-pilot-20261007 브랜치에 코드 commit727840c4737a773246aa0879fd2fee578a04cbc5를 만들었다. 신규 합성37검사와 독립37검사 actualexit0, 열린 발견0이며 기존1,013파일 SHA가 검사전후 동일했다. 원래987source·학습 계약·Runtime·기한·checkpoint는 변경하지 않았다.
+- 제어 경로 recovery_v2/CONTROL_BINDINGS.json rawSHA `7b59a7fa0dc810c2aa35c2004d69d094a1c4775749936b0442bb4f0918fbf168`, AUTHORIZATION.json rawSHA `fbf6befa8e0b39fe19286b564bdc81dabfb1e87580843e329d61a8c3dc95c9d2`다. 신규·부모·이전 실패39파일과 원래 integrity 전체를 원격 전에 검증한다. 최초 local verify는 remote0·actualexit0이다.
+
+**짧은 종료 확인 — 진행 중**
+- 최초 실제 확인은2026-10-21 07:56:00.050136 KST, actual transportexit0·timeoutfalse·waiting이었다. 기존 dispatcher616624의 PID/start_ticks/argv/cwd/pgid가 일치했다. ROUND rawSHA `8aad02676e17fc36758acf379cddf912bf536173bb1b7ace8bb67612a35e24cd`, FIRST_CHECK rawSHA `6452cc510bf2b9e2049be83af0e756d75351bda3bbe548465ec62c5d90acb2f1`에 결속했다. 이 확인은 전체 학습·Validation/Test 완료나 현재 전역GPU유휴 증명이 아니다.
+- 기존 자동화2seed의15분 간격에서 프로젝트 root의 아래 명령을 회차당 정확히 한 번 실행한다. 한 확인은 최대45초, SSH접속1회이며 기다리는 원격 sleep/장기 연결/별도 로컬 background finisher를 만들지 않는다. 900초 이내 중복 회차는 remote0, 경합은 busy·remote0이다. 별도 원래 status/finish/start-finisher/collect나 v1 start/finish를 호출하지 않는다.
+
+`PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m paper.scripts.advance_titantpp_shared_external_extra42_recovery_v2 --mode advance --binding-sha 7b59a7fa0dc810c2aa35c2004d69d094a1c4775749936b0442bb4f0918fbf168 --authorization-sha fbf6befa8e0b39fe19286b564bdc81dabfb1e87580843e329d61a8c3dc95c9d2`
+
+- waiting/busy/waiting_next_check는 조용히 유지한다. SSH255 또는 확인 transporttimeout만 새 원문과 실제exit/byte/SHA를 보존하고 다음 정규15분 회차에 확인한다. 같은 회차 재접속0, 연속3회면 차단하고 한 번 알린다. 성공하면 연속수만0으로 하며 과거 실패는 보존한다. 이는 이번에 승인된 읽기 전용 재확인이고 학습·평가·회수 자동retry는0이다. 신원 불일치·과학실패·기한초과·불완전 회수·collector 실패는 첫 발생부터 차단하며 이후 remote0이다.
+
+**기존 Validation/Test 증거 검증과 최초 회수 — 전체 종료 대기**
+- 원래 dispatcher의 Train42→Validation42 전체 재현gate→고정Test42가 모두 끝난 실제exit0 뒤만 원래 collector를 한 번 실행한다.126worker/dispatcher 실제exit0, ownerPID/GPU부재, paused선행작업 보존, 선택binary/tensor/source/input와 원본/archive/manifest SHA를 확인한다. collector파일전송의 기존900초timeout은45초 종료확인과 다르다. 과학 worker를 새로 실행하지 않는다.
+- 회수 뒤 기존 비교기 local-only check-only→새 five_seed_aggregation_v1을 수행한다. COLLECTION_COMPLETE는 회수검증, COMPLETE는5seed집계까지 완료다. 완료cache는 모든 원본·결과·종료증거 SHA와 순수집계 재계산을 SSH0으로 검증한다. partial retrieval/기존 COLLECT_INTENT/새 FAILURE가 있으면 원문을 보존하고 자동 반복하지 않는다.
+- 기존3seed·논문 연구자료·PAPER_START_GATE는 완료 기준선이므로 재실행하지 않는다.5seed Validation/Test RMSE·MAE 평균±표본SD와 모든seed 절대/상대차이·불리한 결과를 보고한다. 새 백본/추가학습,5090 MAC9,다른자동화는 변경하지 않는다.42검증·5seed보고·논문근거준비가 모두 끝나거나 사용자가 중단할 때만 자동화2seed를 종료한다.
