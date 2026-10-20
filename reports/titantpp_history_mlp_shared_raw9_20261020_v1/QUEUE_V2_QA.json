@@ -1,0 +1,80 @@
+{
+  "status": "PASS",
+  "scope": "local queue identity compatibility only; not native training qualification",
+  "summary": "Independent28 tests pass; strict Python path alias, exact argv and process start-time matching preserve duplicate guards.",
+  "actual_os_returncode": 0,
+  "automated_result": "............................                                             [100%]\n28 passed in 0.04s",
+  "command": [
+    "/usr/local/bin/python3",
+    "-m",
+    "pytest",
+    "-q",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/tests/test_titantpp_shared_history_raw9_queue_v2.py"
+  ],
+  "source_sha256_before": "637449332d3e33086e446a4c5c07183682423ae3fb74653f683a5464f3371e41",
+  "source_sha256_after": "637449332d3e33086e446a4c5c07183682423ae3fb74653f683a5464f3371e41",
+  "test_sha256": "6e094a2e24c52cd779744021ad929b35979eaace730801c88fe1660702371a71",
+  "source_and_old_records_unchanged": true,
+  "preserved_bindings": {
+    "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/prepare_titantpp_shared_history_raw9.py": "6fde6b743f44c4968e34961e506fb2a753673d349068afe7d7a5d906387c9c84",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/run_titantpp_shared_history_raw9.py": "100de1166d6e59dad906e0df21d3baadddc90d7834e948676cc124b822effb1c",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/manage_titantpp_shared_history_raw9.py": "d387fd00d0ebd1b026e7524577e1add45c1ddf85482f44d85db878650a91a8c4",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/titantpp_shared_history_raw9_runtime.py": "1e06302ee81eb2bbeb37bf1d4d55d6d046e01cbdad6a2a37bdcadf173ed55515",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/compare_titantpp_shared_history_raw9.py": "9642639de7f293ee0aea4e7210b071d1f86eb4e2e564ec04fc1bda544919a524",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_history_mlp_shared_raw9_20261020_v1/INDEPENDENT_QA.json": "fe0c7b3a8534eca9413e660b768c5b4946bc3cfc303db0065a2b19847fe2cb8f",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_history_mlp_shared_raw9_20261020_v1/INDEPENDENT_QA.md": "865152c86cb5321ea6d6b44d30591b31617f1fbfd791d79a250f40f3ec46f013",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_history_mlp_shared_raw9_20261020_v1/INDEPENDENT_QA_TESTS.log": "d996c8fdc5970f494a21267d55ef8be8f883bb4264bebbf3f9d032c0124710e4",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_history_mlp_shared_raw9_20261020_v1/QUEUE_FAILURE.json": "18d00ca7a6eb06d7287141055403d3a5fd0b5cb210810cfe9fca78a898ff483b",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_history_mlp_shared_raw9_20261020_v1/QUEUE_STARTED.json": "0cc9681606190adfa6a0df3144696c92fd3d111dc4f19dc5976f93aebaf2a5c5",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_history_mlp_shared_raw9_20261020_v1/WAIT_STARTED.json": "5b0e4658e37e97ca7b0ed97c8f589a4466a6dc19037ffcb59f4bd4ad98a39264"
+  },
+  "log_sha256": "1e484830c02cdd2e9ee2b138b2a23040b1ba6e4eef8613a68e2f9de420dd41e1",
+  "version_change_sha256": "631c5d42e10aa88332bae6637b99ac99893b60ae0a17f45439643d411c7538ba",
+  "actual_local_identity_check": {
+    "source": "parent agent elevated local read-only ps check, recorded in VERSION_CHANGE.json",
+    "pid": 16494,
+    "alive": true,
+    "observed_start_utc": "2026-10-19T13:24:11+00:00",
+    "recorded_start_utc": "2026-10-19T13:24:11.684818+00:00",
+    "absolute_difference_seconds": 0.684818,
+    "independently_rerun_by_qa": false
+  },
+  "prior_qa_scope_correction": "The earlier133-test PASS covered synthetic local contract/worker/lifecycle logic. It did not verify actual macOS ps executable rendering; it must not be read as proof of successful finite queue registration. The original false-negative and QA records are preserved.",
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "resolved_issue": {
+    "severity": "HIGH",
+    "file": "paper/scripts/manage_titantpp_shared_history_raw9.py",
+    "line": 189,
+    "description": "Exact executable substring comparison rejected alive macOS framework Python display alias.",
+    "fix_location": "paper/scripts/manage_titantpp_shared_history_raw9_queue_v2.py:32",
+    "remediation": "Path(expected).resolve() == Path(sys.executable).resolve(); require exact argv[1:] and process-start time within5 seconds; permit only current Python3.12 framework display alias.",
+    "old_sealed_source_modified": false
+  },
+  "acceptance_criteria": {
+    "old_sources_contract_and_failure_preserved": true,
+    "exact_expected_python_and_framework_alias": true,
+    "argv_order_count_module_mode_exact": true,
+    "pid_reuse_wrong_start_rejected": true,
+    "wrong_python_version_executable_rejected": true,
+    "ps_failure_fails_closed": true,
+    "remote_attempt_or_partial_collection_blocks_spawn": true,
+    "one_new_queue_only": true,
+    "same_scientific_bundle_and_exclusive_paths": true,
+    "actual_local_ps_checked_by_parent": true
+  },
+  "files_changed_by_reviewer": [
+    "tests/test_titantpp_shared_history_raw9_queue_v2.py",
+    "reports/titantpp_history_mlp_shared_raw9_20261020_v1/QUEUE_V2_QA.json",
+    "reports/titantpp_history_mlp_shared_raw9_20261020_v1/QUEUE_V2_QA.md",
+    "reports/titantpp_history_mlp_shared_raw9_20261020_v1/QUEUE_V2_QA_TESTS.log"
+  ],
+  "limits": [
+    "QA actual local ps invocation was blocked by sandbox EPERM; parent elevated read-only check passed.",
+    "No SSH, GPU/native qualification, training, checkpoint alteration or queue launch by QA."
+  ]
+}

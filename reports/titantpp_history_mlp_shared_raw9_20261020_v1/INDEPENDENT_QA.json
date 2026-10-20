@@ -1,0 +1,86 @@
+{
+  "status": "PASS",
+  "review_scope": [
+    "paper/scripts/prepare_titantpp_shared_history_raw9.py",
+    "paper/scripts/run_titantpp_shared_history_raw9.py",
+    "paper/scripts/manage_titantpp_shared_history_raw9.py",
+    "paper/scripts/titantpp_shared_history_raw9_runtime.py",
+    "paper/scripts/compare_titantpp_shared_history_raw9.py"
+  ],
+  "summary": "Independent local-only contract, worker, lifecycle and aggregation checks; no remote execution.",
+  "command": [
+    "/usr/local/bin/python3",
+    "-m",
+    "pytest",
+    "-q",
+    "paper/tests/test_titantpp_shared_history_raw9.py",
+    "tests/test_titantpp_shared_history_raw9_worker.py",
+    "tests/test_titantpp_shared_history_raw9_independent_qa.py"
+  ],
+  "actual_os_returncode": 0,
+  "elapsed_seconds": 12.394307136535645,
+  "source_sha256_before": {
+    "paper/scripts/prepare_titantpp_shared_history_raw9.py": "6fde6b743f44c4968e34961e506fb2a753673d349068afe7d7a5d906387c9c84",
+    "paper/scripts/run_titantpp_shared_history_raw9.py": "100de1166d6e59dad906e0df21d3baadddc90d7834e948676cc124b822effb1c",
+    "paper/scripts/manage_titantpp_shared_history_raw9.py": "d387fd00d0ebd1b026e7524577e1add45c1ddf85482f44d85db878650a91a8c4",
+    "paper/scripts/titantpp_shared_history_raw9_runtime.py": "1e06302ee81eb2bbeb37bf1d4d55d6d046e01cbdad6a2a37bdcadf173ed55515",
+    "paper/scripts/compare_titantpp_shared_history_raw9.py": "9642639de7f293ee0aea4e7210b071d1f86eb4e2e564ec04fc1bda544919a524"
+  },
+  "source_sha256_after": {
+    "paper/scripts/prepare_titantpp_shared_history_raw9.py": "6fde6b743f44c4968e34961e506fb2a753673d349068afe7d7a5d906387c9c84",
+    "paper/scripts/run_titantpp_shared_history_raw9.py": "100de1166d6e59dad906e0df21d3baadddc90d7834e948676cc124b822effb1c",
+    "paper/scripts/manage_titantpp_shared_history_raw9.py": "d387fd00d0ebd1b026e7524577e1add45c1ddf85482f44d85db878650a91a8c4",
+    "paper/scripts/titantpp_shared_history_raw9_runtime.py": "1e06302ee81eb2bbeb37bf1d4d55d6d046e01cbdad6a2a37bdcadf173ed55515",
+    "paper/scripts/compare_titantpp_shared_history_raw9.py": "9642639de7f293ee0aea4e7210b071d1f86eb4e2e564ec04fc1bda544919a524"
+  },
+  "source_unchanged_during_check": true,
+  "test_files_sha256": {
+    "paper/tests/test_titantpp_shared_history_raw9.py": "94c5e489b8359ca2412eebc2dde9abcd6e709729938c9b7ec2129060469200fe",
+    "tests/test_titantpp_shared_history_raw9_worker.py": "0fca055dd1ce2d9f97ea08d7ec86dcf55c3f23f4d352cf293e3c93d09f770cb1",
+    "tests/test_titantpp_shared_history_raw9_independent_qa.py": "3b38ee9585dc97ca654cec629d5706d275e614fc98e94ae5d4fa6442ab11a8bc"
+  },
+  "log_sha256": "d996c8fdc5970f494a21267d55ef8be8f883bb4264bebbf3f9d032c0124710e4",
+  "automated_result": "........................................................................ [ 54%]\n.............................................................            [100%]\n133 passed in 11.05s",
+  "ast_parse_files": 5,
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "resolved_findings": [
+    {
+      "severity": "HIGH",
+      "file": "paper/scripts/titantpp_shared_history_raw9_runtime.py",
+      "line": 94,
+      "description": "prepare emitted contract_raw_sha256 while validator expected rawsha; local preparation would fail before remote execution.",
+      "remediation": "require(predecessor[\"contract_raw_sha256\"] == _CAP_RAW_SHA, ...)",
+      "status": "fixed_by_implementation_agent_and_retested"
+    }
+  ],
+  "acceptance_criteria": {
+    "original_uncapped_shared_only_9_matrix": true,
+    "alpha1_joint_time_gradient_and_optimizer_update": true,
+    "existing_model_and_source_immutable": true,
+    "validation_only_no_test": true,
+    "strict_rmse_selection_same_checkpoint_mae": true,
+    "cap18_completion_before_deploy": true,
+    "one_finite_queue_and_duplicate_attempt_rejection": true,
+    "maximum_parallel_3_and_owned_child_cleanup": true,
+    "mean_sample_sd_and_all_seed_differences": true,
+    "invalid_cap_alpha0_target_and_duplicate_rejected": true
+  },
+  "files_changed_by_reviewer": [
+    "tests/test_titantpp_shared_history_raw9_independent_qa.py",
+    "reports/titantpp_history_mlp_shared_raw9_20261020_v1/INDEPENDENT_QA.json",
+    "reports/titantpp_history_mlp_shared_raw9_20261020_v1/INDEPENDENT_QA.md",
+    "reports/titantpp_history_mlp_shared_raw9_20261020_v1/INDEPENDENT_QA_TESTS.log"
+  ],
+  "limits": [
+    "No SSH, GPU/native qualification, data training or deployment performed.",
+    "Actual committed prepare/materialized input checks remain parent next step.",
+    "npm audit and UI accessibility tools not applicable to Python research CLI; no dependency installation.",
+    "Requested .agents execution protocol path absent; .agents files remain untouched under higher-priority no-modification rule."
+  ],
+  "initial_test_fixture_failures": "Independent QA first fixture included fourth inherited dataset and omitted temporary contract binary; test fixture corrected only. Final rerun is authoritative."
+}
