@@ -1,0 +1,1785 @@
+{
+  "schema": "shared_external_extra42_frozen_conditions_v1",
+  "created_at_utc": "2026-10-20T05:25:36.223418+00:00",
+  "arms": [
+    "titantpp_history_mlp_shared15_v1",
+    "rmtpp",
+    "thp",
+    "nhp",
+    "sahp",
+    "s2p2_matched_head",
+    "attnhp_matched_head"
+  ],
+  "seeds": [
+    72,
+    82
+  ],
+  "historical_seeds": [
+    42,
+    52,
+    62
+  ],
+  "models": {
+    "titantpp_history_mlp_shared15_v1": {
+      "expected_encoder_config_by_dataset": {
+        "raf_spare_parts": {
+          "active_prefix_parameter_counts": [
+            0,
+            2880,
+            3840,
+            4800,
+            5760,
+            6720,
+            7680,
+            8640,
+            9600
+          ],
+          "additional_parameter_count": 9600,
+          "backbone_contract_id": "titantpp_shared_history_mlp_v1",
+          "base_encoder": "CountAwareTitanTPP",
+          "branch_availability": "original_thresholds",
+          "candidate_name": "titantpp_history_mlp_shared15_v1",
+          "core_ablation_mode": "mlp",
+          "d_ff": 128,
+          "d_model": 64,
+          "data_variant": "original_uncapped",
+          "history_context": "immediate_predecessor",
+          "history_relation_branch_count": 8,
+          "history_relation_branch_widths": [
+            15,
+            15,
+            15,
+            15,
+            15,
+            15,
+            15,
+            15
+          ],
+          "history_relation_input_parameter_count": 1920,
+          "history_relation_output_parameter_count": 7680,
+          "history_relation_parameter_count": 9600,
+          "history_relation_sharing": "shared",
+          "history_relation_width": 15,
+          "independent_input_projection_count": 0,
+          "initialization": "default_Linear_input_zero_output_forked_cpu_rng",
+          "lmm_mem_size": 64,
+          "lmm_topk": 4,
+          "loss_mode": "log_mse",
+          "max_len": 84,
+          "memory_mode": "static_hard_lmm",
+          "model_role": "observed_time_history_mlp_shared15_v1",
+          "multilag_detail_activation": "gelu_exact_erf",
+          "multilag_detail_availability_lags": [
+            1,
+            2,
+            4,
+            8,
+            16,
+            32,
+            64,
+            128
+          ],
+          "multilag_detail_branch_count": 8,
+          "multilag_detail_implementation": "project_current_previous_before_gather",
+          "multilag_detail_initialization": "default_Linear_input_zero_output_forked_cpu_rng",
+          "multilag_detail_insertion": "between_encoder_blocks",
+          "multilag_detail_lags": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "multilag_detail_lifetime": "sample_local_forward_only",
+          "multilag_detail_mask": "observed_count_padding_skipped_withheld_segment_reset",
+          "multilag_detail_mode": "local",
+          "multilag_detail_projections": "shared_current_previous_bias_free_input_branch_outputs",
+          "multilag_detail_rank": 15,
+          "multilag_detail_residual_divisor": 8,
+          "n_heads": 4,
+          "n_layers": 2,
+          "online_writes": false,
+          "output_projection_count": 8,
+          "parameter_matching": "equal_active_trainable_count_at_every_branch_prefix_not_equal_function_capacity",
+          "persistent_mem_size": 16,
+          "quantity_capping_applied": false,
+          "quantity_head_family": "unchanged_softplus_log1p_location_then_expm1",
+          "quantity_input_transform": "log1p_nonnegative_float32",
+          "quantity_loss_normalization": "none",
+          "quantity_objective": "count_only_log_regression",
+          "removed_static_parameters": 0,
+          "residual_divisor": 8,
+          "shared_input_projection_count": 1,
+          "static_key_value_tied": true,
+          "static_retrieval_aggregation": "arithmetic_mean",
+          "static_retrieval_enabled": true,
+          "time_alpha": 1.0,
+          "time_head": {
+            "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+            "jacobian_correction": true,
+            "mode": "heteroscedastic_lognormal_duration",
+            "observation_likelihood": {
+              "mode": "positive_integer_round_clamp_v1",
+              "top_code": null,
+              "unit": "month"
+            },
+            "reported_metric": "recorded_positive_integer_time_nll",
+            "slope_parameterized": false,
+            "time_initial_location": -0.08887296773528319,
+            "time_initial_scale": 0.9589506323759867,
+            "time_location_transform": "identity",
+            "time_scale": 6.0,
+            "time_scale_conditioning": "linear_hidden",
+            "time_scale_transform": "softplus_plus_floor",
+            "time_scale_weight_initialization": "zeros",
+            "time_sigma_floor": 0.001,
+            "wd_clamp": 0.0
+          },
+          "time_head_trained": true,
+          "time_input": "log1p",
+          "time_input_transform": "log1p_nonnegative_float32",
+          "time_loss_graph_excluded": false
+        },
+        "yellow_trip_hourly": {
+          "active_prefix_parameter_counts": [
+            0,
+            2880,
+            3840,
+            4800,
+            5760,
+            6720,
+            7680,
+            8640,
+            9600
+          ],
+          "additional_parameter_count": 9600,
+          "backbone_contract_id": "titantpp_shared_history_mlp_v1",
+          "base_encoder": "CountAwareTitanTPP",
+          "branch_availability": "original_thresholds",
+          "candidate_name": "titantpp_history_mlp_shared15_v1",
+          "core_ablation_mode": "mlp",
+          "d_ff": 128,
+          "d_model": 64,
+          "data_variant": "original_uncapped",
+          "history_context": "immediate_predecessor",
+          "history_relation_branch_count": 8,
+          "history_relation_branch_widths": [
+            15,
+            15,
+            15,
+            15,
+            15,
+            15,
+            15,
+            15
+          ],
+          "history_relation_input_parameter_count": 1920,
+          "history_relation_output_parameter_count": 7680,
+          "history_relation_parameter_count": 9600,
+          "history_relation_sharing": "shared",
+          "history_relation_width": 15,
+          "independent_input_projection_count": 0,
+          "initialization": "default_Linear_input_zero_output_forked_cpu_rng",
+          "lmm_mem_size": 64,
+          "lmm_topk": 4,
+          "loss_mode": "log_mse",
+          "max_len": 256,
+          "memory_mode": "static_hard_lmm",
+          "model_role": "observed_time_history_mlp_shared15_v1",
+          "multilag_detail_activation": "gelu_exact_erf",
+          "multilag_detail_availability_lags": [
+            1,
+            2,
+            4,
+            8,
+            16,
+            32,
+            64,
+            128
+          ],
+          "multilag_detail_branch_count": 8,
+          "multilag_detail_implementation": "project_current_previous_before_gather",
+          "multilag_detail_initialization": "default_Linear_input_zero_output_forked_cpu_rng",
+          "multilag_detail_insertion": "between_encoder_blocks",
+          "multilag_detail_lags": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "multilag_detail_lifetime": "sample_local_forward_only",
+          "multilag_detail_mask": "observed_count_padding_skipped_withheld_segment_reset",
+          "multilag_detail_mode": "local",
+          "multilag_detail_projections": "shared_current_previous_bias_free_input_branch_outputs",
+          "multilag_detail_rank": 15,
+          "multilag_detail_residual_divisor": 8,
+          "n_heads": 4,
+          "n_layers": 2,
+          "online_writes": false,
+          "output_projection_count": 8,
+          "parameter_matching": "equal_active_trainable_count_at_every_branch_prefix_not_equal_function_capacity",
+          "persistent_mem_size": 16,
+          "quantity_capping_applied": false,
+          "quantity_head_family": "unchanged_softplus_log1p_location_then_expm1",
+          "quantity_input_transform": "log1p_nonnegative_float32",
+          "quantity_loss_normalization": "none",
+          "quantity_objective": "count_only_log_regression",
+          "removed_static_parameters": 0,
+          "residual_divisor": 8,
+          "shared_input_projection_count": 1,
+          "static_key_value_tied": true,
+          "static_retrieval_aggregation": "arithmetic_mean",
+          "static_retrieval_enabled": true,
+          "time_alpha": 1.0,
+          "time_head": {
+            "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+            "jacobian_correction": true,
+            "mode": "heteroscedastic_lognormal_duration",
+            "observation_likelihood": {
+              "mode": "positive_integer_round_clamp_v1",
+              "top_code": null,
+              "unit": "hour"
+            },
+            "reported_metric": "recorded_positive_integer_time_nll",
+            "slope_parameterized": false,
+            "time_initial_location": 0.2357508697949888,
+            "time_initial_scale": 0.5898045019331329,
+            "time_location_transform": "identity",
+            "time_scale": 1.0,
+            "time_scale_conditioning": "linear_hidden",
+            "time_scale_transform": "softplus_plus_floor",
+            "time_scale_weight_initialization": "zeros",
+            "time_sigma_floor": 0.001,
+            "wd_clamp": 0.0
+          },
+          "time_head_trained": true,
+          "time_input": "log1p",
+          "time_input_transform": "log1p_nonnegative_float32",
+          "time_loss_graph_excluded": false
+        },
+        "intermittent_frozen_5000": {
+          "candidate_name": "titantpp_history_mlp_shared15_v1",
+          "backbone_contract_id": "titantpp_shared_history_mlp_v1",
+          "model_role": "observed_time_history_mlp_shared15_v1",
+          "base_encoder": "CountAwareTitanTPP",
+          "d_model": 64,
+          "n_layers": 2,
+          "n_heads": 4,
+          "d_ff": 128,
+          "memory_mode": "static_hard_lmm",
+          "persistent_mem_size": 16,
+          "lmm_mem_size": 64,
+          "lmm_topk": 4,
+          "static_retrieval_aggregation": "arithmetic_mean",
+          "static_key_value_tied": true,
+          "multilag_detail_mode": "local",
+          "multilag_detail_rank": 15,
+          "multilag_detail_branch_count": 8,
+          "multilag_detail_lags": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "multilag_detail_availability_lags": [
+            1,
+            2,
+            4,
+            8,
+            16,
+            32,
+            64,
+            128
+          ],
+          "multilag_detail_residual_divisor": 8,
+          "multilag_detail_activation": "gelu_exact_erf",
+          "multilag_detail_projections": "shared_current_previous_bias_free_input_branch_outputs",
+          "multilag_detail_initialization": "default_Linear_input_zero_output_forked_cpu_rng",
+          "multilag_detail_insertion": "between_encoder_blocks",
+          "multilag_detail_mask": "observed_count_padding_skipped_withheld_segment_reset",
+          "multilag_detail_implementation": "project_current_previous_before_gather",
+          "multilag_detail_lifetime": "sample_local_forward_only",
+          "additional_parameter_count": 9600,
+          "quantity_objective": "count_only_log_regression",
+          "online_writes": false,
+          "core_ablation_mode": "mlp",
+          "removed_static_parameters": 0,
+          "static_retrieval_enabled": true,
+          "history_relation_sharing": "shared",
+          "history_relation_width": 15,
+          "history_relation_branch_widths": [
+            15,
+            15,
+            15,
+            15,
+            15,
+            15,
+            15,
+            15
+          ],
+          "history_relation_branch_count": 8,
+          "history_relation_input_parameter_count": 1920,
+          "history_relation_output_parameter_count": 7680,
+          "history_relation_parameter_count": 9600,
+          "parameter_matching": "equal_active_trainable_count_at_every_branch_prefix_not_equal_function_capacity",
+          "active_prefix_parameter_counts": [
+            0,
+            2880,
+            3840,
+            4800,
+            5760,
+            6720,
+            7680,
+            8640,
+            9600
+          ],
+          "shared_input_projection_count": 1,
+          "independent_input_projection_count": 0,
+          "output_projection_count": 8,
+          "history_context": "immediate_predecessor",
+          "branch_availability": "original_thresholds",
+          "residual_divisor": 8,
+          "initialization": "default_Linear_input_zero_output_forked_cpu_rng",
+          "max_len": 256,
+          "time_input": "log1p",
+          "time_input_transform": "log1p_nonnegative_float32",
+          "quantity_input_transform": "log1p_nonnegative_float32",
+          "time_alpha": 1.0,
+          "loss_mode": "log_mse",
+          "quantity_loss_normalization": "none",
+          "quantity_head_family": "unchanged_softplus_log1p_location_then_expm1",
+          "time_loss_graph_excluded": false,
+          "time_head_trained": true,
+          "data_variant": "original_uncapped",
+          "quantity_capping_applied": false,
+          "time_head": {
+            "mode": "heteroscedastic_lognormal_duration",
+            "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+            "time_scale": 3.0,
+            "time_initial_location": -0.21389036220110552,
+            "time_initial_scale": 0.6816420108412236,
+            "time_sigma_floor": 0.001,
+            "time_location_transform": "identity",
+            "time_scale_conditioning": "linear_hidden",
+            "time_scale_transform": "softplus_plus_floor",
+            "time_scale_weight_initialization": "zeros",
+            "slope_parameterized": false,
+            "jacobian_correction": true,
+            "wd_clamp": 0.0,
+            "observation_likelihood": {
+              "mode": "positive_integer_round_clamp_v1",
+              "top_code": null,
+              "unit": "week"
+            },
+            "reported_metric": "recorded_positive_integer_time_nll"
+          }
+        }
+      },
+      "expected_parameter_count_by_dataset": {
+        "raf_spare_parts": 88451,
+        "yellow_trip_hourly": 99459,
+        "intermittent_frozen_5000": 99459
+      },
+      "constructor_kwargs": {},
+      "historical_summary_bindings": [
+        {
+          "path": "search_artifacts/titantpp_shared_raf_taxi6_test_20261020_v1/selected/originals/run/raf_spare_parts__titantpp_history_mlp_shared15_v1__seed42__losslog_mse/runs/titantpp_history_mlp_shared15_v1/count_only_log_regression/seed_42/summary.json",
+          "sha256": "2dd52642df64bc23c8e7e49b68c976ef0e0f497ec867aa69a999f66cdf575ee5",
+          "dataset": "raf_spare_parts",
+          "seed": 42,
+          "source_revision": "5d8ee1d64601a67d5ae0d0b4b97dd5547b63ebdd",
+          "parameter_count": 88451
+        },
+        {
+          "path": "search_artifacts/titantpp_shared_raf_taxi6_test_20261020_v1/selected/originals/run/raf_spare_parts__titantpp_history_mlp_shared15_v1__seed52__losslog_mse/runs/titantpp_history_mlp_shared15_v1/count_only_log_regression/seed_52/summary.json",
+          "sha256": "b36e1b20c9d3ac773130b317747e42b2c4f7438b023b81af0d711cb4637468fd",
+          "dataset": "raf_spare_parts",
+          "seed": 52,
+          "source_revision": "5d8ee1d64601a67d5ae0d0b4b97dd5547b63ebdd",
+          "parameter_count": 88451
+        },
+        {
+          "path": "search_artifacts/titantpp_shared_raf_taxi6_test_20261020_v1/selected/originals/run/raf_spare_parts__titantpp_history_mlp_shared15_v1__seed62__losslog_mse/runs/titantpp_history_mlp_shared15_v1/count_only_log_regression/seed_62/summary.json",
+          "sha256": "4da087c945781c7cf9ab6cc205b77309e18ca08eb05980925e4e3b7482f999bf",
+          "dataset": "raf_spare_parts",
+          "seed": 62,
+          "source_revision": "5d8ee1d64601a67d5ae0d0b4b97dd5547b63ebdd",
+          "parameter_count": 88451
+        },
+        {
+          "path": "search_artifacts/titantpp_shared_raf_taxi6_test_20261020_v1/selected/originals/run/yellow_trip_hourly__titantpp_history_mlp_shared15_v1__seed42__losslog_mse/runs/titantpp_history_mlp_shared15_v1/count_only_log_regression/seed_42/summary.json",
+          "sha256": "3c5575ea70707664f2604815f54ecd22eb7b599697e9d81ecdd0f7e30dde874c",
+          "dataset": "yellow_trip_hourly",
+          "seed": 42,
+          "source_revision": "5d8ee1d64601a67d5ae0d0b4b97dd5547b63ebdd",
+          "parameter_count": 99459
+        },
+        {
+          "path": "search_artifacts/titantpp_shared_raf_taxi6_test_20261020_v1/selected/originals/run/yellow_trip_hourly__titantpp_history_mlp_shared15_v1__seed52__losslog_mse/runs/titantpp_history_mlp_shared15_v1/count_only_log_regression/seed_52/summary.json",
+          "sha256": "1c369f5ed869bfe7a227564170d1ee9de57a17f221c293871287f9b96539ea5d",
+          "dataset": "yellow_trip_hourly",
+          "seed": 52,
+          "source_revision": "5d8ee1d64601a67d5ae0d0b4b97dd5547b63ebdd",
+          "parameter_count": 99459
+        },
+        {
+          "path": "search_artifacts/titantpp_shared_raf_taxi6_test_20261020_v1/selected/originals/run/yellow_trip_hourly__titantpp_history_mlp_shared15_v1__seed62__losslog_mse/runs/titantpp_history_mlp_shared15_v1/count_only_log_regression/seed_62/summary.json",
+          "sha256": "31a94a4d59a1919831eacba465d18ebe366f010de89ebebf1ef0b46542bfb7f4",
+          "dataset": "yellow_trip_hourly",
+          "seed": 62,
+          "source_revision": "5d8ee1d64601a67d5ae0d0b4b97dd5547b63ebdd",
+          "parameter_count": 99459
+        },
+        {
+          "path": "search_artifacts/titantpp_shared_inter3_interim_test_20261020_v1/selected/derived/intermittent_frozen_5000__titantpp_history_mlp_shared15_v1__seed42__losslog_mse/checkpoint_metadata.json",
+          "sha256": "3477f9321104eb954b3cb9ab08b3cf16bbd56bd5cb97771ba4c050b7469baf40",
+          "dataset": "intermittent_frozen_5000",
+          "seed": 42,
+          "source_revision": "5d8ee1d64601a67d5ae0d0b4b97dd5547b63ebdd",
+          "parameter_count": 99459
+        },
+        {
+          "path": "search_artifacts/titantpp_shared_inter3_interim_test_20261020_v1/selected/derived/intermittent_frozen_5000__titantpp_history_mlp_shared15_v1__seed52__losslog_mse/checkpoint_metadata.json",
+          "sha256": "b70443b1a0c07c871ed76a13a9d870d699a51d85f29eb4cc6ba2e810f89da681",
+          "dataset": "intermittent_frozen_5000",
+          "seed": 52,
+          "source_revision": "5d8ee1d64601a67d5ae0d0b4b97dd5547b63ebdd",
+          "parameter_count": 99459
+        },
+        {
+          "path": "search_artifacts/titantpp_shared_inter3_interim_test_20261020_v1/selected/derived/intermittent_frozen_5000__titantpp_history_mlp_shared15_v1__seed62__losslog_mse/checkpoint_metadata.json",
+          "sha256": "ce5eee94e41943cf809f43ca9aa072770264084c2609ad1aad4bd63b2f95c874",
+          "dataset": "intermittent_frozen_5000",
+          "seed": 62,
+          "source_revision": "5d8ee1d64601a67d5ae0d0b4b97dd5547b63ebdd",
+          "parameter_count": 99459
+        }
+      ],
+      "historical_initial_state_sha256_by_dataset_seed": {
+        "raf_spare_parts": {
+          "42": "19e4a922fc6a03cbc8d4c19239ed8fa9524ce4023b1df1962bcadcb5ad332a36",
+          "52": "735b7a12964e74088f9fc7ec2da41daabd90c4d4f174fd211235500294e3169e",
+          "62": "7a498610ea48cd3fdc12f24dbf437e10a06d84622455cac15c3e2f56e0928812"
+        },
+        "yellow_trip_hourly": {
+          "42": "5b9df9b932d9ca4f0ffee568130fcdae5b933a575b24ca1f486287c3a992bce6",
+          "52": "1b51356e2f0059d1a64f94f64dfdfd81b5e7d6c5a3593ed50a93eade1e540318",
+          "62": "acb24b1c4a48ac28d635228515e554c8ac2b2d45fd0a109bbaf3a2aef4c57333"
+        },
+        "intermittent_frozen_5000": {
+          "42": "4d73754342fc0040e2956a4006cd1e19fadb3668c2284619edef0b47dd4d10f2",
+          "52": "8a8dbb480c8f5e99d920a2ea9c6d6304cfd8d02587b8d6c623212a7248b0e08c",
+          "62": "bb59fbf1578c575963d6b3bee8d23c12236a2f418c127c4d7608bf1d9322ec42"
+        }
+      }
+    },
+    "rmtpp": {
+      "expected_encoder_config_by_dataset": {
+        "raf_spare_parts": {
+          "candidate_name": "count_gru_h64",
+          "hidden_dim": 64,
+          "rnn_type": "gru",
+          "time_head": {
+            "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+            "jacobian_correction": true,
+            "mode": "heteroscedastic_lognormal_duration",
+            "observation_likelihood": {
+              "mode": "positive_integer_round_clamp_v1",
+              "top_code": null,
+              "unit": "month"
+            },
+            "reported_metric": "recorded_positive_integer_time_nll",
+            "slope_parameterized": false,
+            "time_initial_location": -0.08887296773528319,
+            "time_initial_scale": 0.9589506323759867,
+            "time_location_transform": "identity",
+            "time_scale": 6.0,
+            "time_scale_conditioning": "linear_hidden",
+            "time_scale_transform": "softplus_plus_floor",
+            "time_scale_weight_initialization": "zeros",
+            "time_sigma_floor": 0.001,
+            "wd_clamp": 0.0
+          }
+        },
+        "yellow_trip_hourly": {
+          "candidate_name": "count_gru_h64",
+          "hidden_dim": 64,
+          "rnn_type": "gru",
+          "time_head": {
+            "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+            "jacobian_correction": true,
+            "mode": "heteroscedastic_lognormal_duration",
+            "observation_likelihood": {
+              "mode": "positive_integer_round_clamp_v1",
+              "top_code": null,
+              "unit": "hour"
+            },
+            "reported_metric": "recorded_positive_integer_time_nll",
+            "slope_parameterized": false,
+            "time_initial_location": 0.2357508697949888,
+            "time_initial_scale": 0.5898045019331329,
+            "time_location_transform": "identity",
+            "time_scale": 1.0,
+            "time_scale_conditioning": "linear_hidden",
+            "time_scale_transform": "softplus_plus_floor",
+            "time_scale_weight_initialization": "zeros",
+            "time_sigma_floor": 0.001,
+            "wd_clamp": 0.0
+          }
+        },
+        "intermittent_frozen_5000": {
+          "candidate_name": "count_gru_h64",
+          "hidden_dim": 64,
+          "rnn_type": "gru",
+          "time_head": {
+            "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+            "jacobian_correction": true,
+            "mode": "heteroscedastic_lognormal_duration",
+            "observation_likelihood": {
+              "mode": "positive_integer_round_clamp_v1",
+              "top_code": null,
+              "unit": "week"
+            },
+            "reported_metric": "recorded_positive_integer_time_nll",
+            "slope_parameterized": false,
+            "time_initial_location": -0.21389036220110552,
+            "time_initial_scale": 0.6816420108412236,
+            "time_location_transform": "identity",
+            "time_scale": 3.0,
+            "time_scale_conditioning": "linear_hidden",
+            "time_scale_transform": "softplus_plus_floor",
+            "time_scale_weight_initialization": "zeros",
+            "time_sigma_floor": 0.001,
+            "wd_clamp": 0.0
+          }
+        }
+      },
+      "expected_parameter_count_by_dataset": {
+        "raf_spare_parts": 25347,
+        "yellow_trip_hourly": 25347,
+        "intermittent_frozen_5000": 25347
+      },
+      "constructor_kwargs": {},
+      "historical_summary_bindings": [
+        {
+          "path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/runs/rmtpp/count_only_log_regression/seed_42/summary.json",
+          "sha256": "ed2f7398455abc660cbf1ddb311ef4547b1c2c133512839d6e73bf7948e0ee0a",
+          "dataset": "raf_spare_parts",
+          "seed": 42,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 25347
+        },
+        {
+          "path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/runs/rmtpp/count_only_log_regression/seed_52/summary.json",
+          "sha256": "8bf46941758f4899c36f1a6d2bf2b34a4841ceb7c6390d73c95ae8c70c188a8b",
+          "dataset": "raf_spare_parts",
+          "seed": 52,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 25347
+        },
+        {
+          "path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/runs/rmtpp/count_only_log_regression/seed_62/summary.json",
+          "sha256": "72afab9b05fdbe6552fb8b9f90fc7de002ceb4f2c8a602d3f0034c860bc07010",
+          "dataset": "raf_spare_parts",
+          "seed": 62,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 25347
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_benchmark_execution_20260922_v2/run/yellow_trip_hourly/runs/rmtpp/count_only_log_regression/seed_42/summary.json",
+          "sha256": "e4f405b015499d102f4fd76da64fd54d2d1609b03391fb3f17ac90af333e2112",
+          "dataset": "yellow_trip_hourly",
+          "seed": 42,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 25347
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/yellow_trip_hourly/seed_52/runs/rmtpp/count_only_log_regression/seed_52/summary.json",
+          "sha256": "1f28a61f1e56fa599cb5dfc2fc7709f2cdf59740cdb3b3faed250728c0c15a16",
+          "dataset": "yellow_trip_hourly",
+          "seed": 52,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 25347
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/yellow_trip_hourly/seed_62/runs/rmtpp/count_only_log_regression/seed_62/summary.json",
+          "sha256": "b7614dca2ebe0084ea2003635e902055e5477dbeda3f2386009bd6a765b6afa7",
+          "dataset": "yellow_trip_hourly",
+          "seed": 62,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 25347
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_benchmark_intermittent_recovery_20260923_v4/run/intermittent_frozen_5000/runs/rmtpp/count_only_log_regression/seed_42/summary.json",
+          "sha256": "3802ea3a9e5ec337d0523d583fa426377e295c8a9527ab0f8621442ea58ecc01",
+          "dataset": "intermittent_frozen_5000",
+          "seed": 42,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 25347
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/intermittent_frozen_5000/seed_52/runs/rmtpp/count_only_log_regression/seed_52/summary.json",
+          "sha256": "74593f0535c4b383215507b1d53bffc3d4b7866c9289aa303d0c0e59ead2cc6f",
+          "dataset": "intermittent_frozen_5000",
+          "seed": 52,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 25347
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/intermittent_frozen_5000/seed_62/runs/rmtpp/count_only_log_regression/seed_62/summary.json",
+          "sha256": "8283c6194ee23113e9fc67f6501d4694d228007d9000e71346d3ce8f852cc89d",
+          "dataset": "intermittent_frozen_5000",
+          "seed": 62,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 25347
+        }
+      ],
+      "historical_initial_state_sha256_by_dataset_seed": {
+        "raf_spare_parts": {
+          "42": "9585ed8046d4d628606ca8c5ddb06e4dd415df63365dd9af0e6b4a1034f21b18",
+          "52": "f2a28763980515f7a226125dcab77823004b269c009e20ec279810b87d8878f6",
+          "62": "72e5fcb4a8773ebc8de93ec759407f0be40fa7561a49d68c5267f0155cf3b963"
+        },
+        "yellow_trip_hourly": {
+          "42": "946ec9846eaf182d042b994e249b295db29b60d4909967e5e9922579a1108b17",
+          "52": "c3148be52dfe610f5139c2c13b6d2868d3850da9742038ba8aea5ff422d76a8c",
+          "62": "eb7db7ebcdcb5017b160852294d50ad3a720a6cf1bdf65c4ff9e846148d383de"
+        },
+        "intermittent_frozen_5000": {
+          "42": "158913e4a0fee9eec9fca8595d9bb1f798ac1ba409d3b550b3aad05e985fd133",
+          "52": "de187973c364838e2837eab5f2522463ae4b3fa7b66867ec0516dd6eb4174d89",
+          "62": "f315a9f3881a5052cda461e6ef868015b7285a2c8d5c787299289261c47c2796"
+        }
+      }
+    },
+    "thp": {
+      "expected_encoder_config_by_dataset": {
+        "raf_spare_parts": {
+          "add_temporal_encoding_each_layer": false,
+          "candidate_name": "count_thp_small",
+          "d_inner": 256,
+          "d_model": 64,
+          "d_rnn": 64,
+          "dropout": 0.1,
+          "n_heads": 4,
+          "n_layers": 2,
+          "normalize_before": false,
+          "time_head": {
+            "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+            "jacobian_correction": true,
+            "mode": "heteroscedastic_lognormal_duration",
+            "observation_likelihood": {
+              "mode": "positive_integer_round_clamp_v1",
+              "top_code": null,
+              "unit": "month"
+            },
+            "reported_metric": "recorded_positive_integer_time_nll",
+            "slope_parameterized": false,
+            "time_initial_location": -0.08887296773528319,
+            "time_initial_scale": 0.9589506323759867,
+            "time_location_transform": "identity",
+            "time_scale": 6.0,
+            "time_scale_conditioning": "linear_hidden",
+            "time_scale_transform": "softplus_plus_floor",
+            "time_scale_weight_initialization": "zeros",
+            "time_sigma_floor": 0.001,
+            "wd_clamp": 0.0
+          },
+          "use_rnn": false
+        },
+        "yellow_trip_hourly": {
+          "add_temporal_encoding_each_layer": false,
+          "candidate_name": "count_thp_small",
+          "d_inner": 256,
+          "d_model": 64,
+          "d_rnn": 64,
+          "dropout": 0.1,
+          "n_heads": 4,
+          "n_layers": 2,
+          "normalize_before": false,
+          "time_head": {
+            "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+            "jacobian_correction": true,
+            "mode": "heteroscedastic_lognormal_duration",
+            "observation_likelihood": {
+              "mode": "positive_integer_round_clamp_v1",
+              "top_code": null,
+              "unit": "hour"
+            },
+            "reported_metric": "recorded_positive_integer_time_nll",
+            "slope_parameterized": false,
+            "time_initial_location": 0.2357508697949888,
+            "time_initial_scale": 0.5898045019331329,
+            "time_location_transform": "identity",
+            "time_scale": 1.0,
+            "time_scale_conditioning": "linear_hidden",
+            "time_scale_transform": "softplus_plus_floor",
+            "time_scale_weight_initialization": "zeros",
+            "time_sigma_floor": 0.001,
+            "wd_clamp": 0.0
+          },
+          "use_rnn": false
+        },
+        "intermittent_frozen_5000": {
+          "add_temporal_encoding_each_layer": false,
+          "candidate_name": "count_thp_small",
+          "d_inner": 256,
+          "d_model": 64,
+          "d_rnn": 64,
+          "dropout": 0.1,
+          "n_heads": 4,
+          "n_layers": 2,
+          "normalize_before": false,
+          "time_head": {
+            "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+            "jacobian_correction": true,
+            "mode": "heteroscedastic_lognormal_duration",
+            "observation_likelihood": {
+              "mode": "positive_integer_round_clamp_v1",
+              "top_code": null,
+              "unit": "week"
+            },
+            "reported_metric": "recorded_positive_integer_time_nll",
+            "slope_parameterized": false,
+            "time_initial_location": -0.21389036220110552,
+            "time_initial_scale": 0.6816420108412236,
+            "time_location_transform": "identity",
+            "time_scale": 3.0,
+            "time_scale_conditioning": "linear_hidden",
+            "time_scale_transform": "softplus_plus_floor",
+            "time_scale_weight_initialization": "zeros",
+            "time_sigma_floor": 0.001,
+            "wd_clamp": 0.0
+          },
+          "use_rnn": false
+        }
+      },
+      "expected_parameter_count_by_dataset": {
+        "raf_spare_parts": 100355,
+        "yellow_trip_hourly": 100355,
+        "intermittent_frozen_5000": 100355
+      },
+      "constructor_kwargs": {},
+      "historical_summary_bindings": [
+        {
+          "path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/runs/thp/count_only_log_regression/seed_42/summary.json",
+          "sha256": "7e6f6faa4dc1e4984ce4e204b0f53306639a05a1a4c7a79350d486842023cf96",
+          "dataset": "raf_spare_parts",
+          "seed": 42,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 100355
+        },
+        {
+          "path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/runs/thp/count_only_log_regression/seed_52/summary.json",
+          "sha256": "f794f60a54c5c856c7c7a178e3c6ebd7edf952125c0f614362a8054dd967eeb5",
+          "dataset": "raf_spare_parts",
+          "seed": 52,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 100355
+        },
+        {
+          "path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/runs/thp/count_only_log_regression/seed_62/summary.json",
+          "sha256": "3f86bd297cdf66aa144e520dcc4c48cffeb4d02e9cd62338a248cd540dbf5af0",
+          "dataset": "raf_spare_parts",
+          "seed": 62,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 100355
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_benchmark_execution_20260922_v2/run/yellow_trip_hourly/runs/thp/count_only_log_regression/seed_42/summary.json",
+          "sha256": "5b333a98bceb80ff75ec5377fe2876a466054b6a37ada82602ba7c8840321f95",
+          "dataset": "yellow_trip_hourly",
+          "seed": 42,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 100355
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/yellow_trip_hourly/seed_52/runs/thp/count_only_log_regression/seed_52/summary.json",
+          "sha256": "6abfd807baf28cc7978e9b9aa0ba1301ce79c0a98f0cd55e16603eb9f02ab89a",
+          "dataset": "yellow_trip_hourly",
+          "seed": 52,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 100355
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/yellow_trip_hourly/seed_62/runs/thp/count_only_log_regression/seed_62/summary.json",
+          "sha256": "d457f70e8c27944ec154e074066d0bb38df160baf296d0202f78f5768c9a7e74",
+          "dataset": "yellow_trip_hourly",
+          "seed": 62,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 100355
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_benchmark_intermittent_recovery_20260923_v4/run/intermittent_frozen_5000/runs/thp/count_only_log_regression/seed_42/summary.json",
+          "sha256": "4a2aebe25c9ccdc32df474e542dc0744513be528fd37c9f9412ff1615d303d8c",
+          "dataset": "intermittent_frozen_5000",
+          "seed": 42,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 100355
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/intermittent_frozen_5000/seed_52/runs/thp/count_only_log_regression/seed_52/summary.json",
+          "sha256": "f02a5fd9523daacdb51dab3316efbb8de472a2a9dc27ae839006616c222b7ec2",
+          "dataset": "intermittent_frozen_5000",
+          "seed": 52,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 100355
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/intermittent_frozen_5000/seed_62/runs/thp/count_only_log_regression/seed_62/summary.json",
+          "sha256": "de9117c0f30c4f195e68da1b9fa447f6c7fbb3aa277ddd21d3f669383884e967",
+          "dataset": "intermittent_frozen_5000",
+          "seed": 62,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 100355
+        }
+      ],
+      "historical_initial_state_sha256_by_dataset_seed": {
+        "raf_spare_parts": {
+          "42": "9c203e15dfd17b9ad70a7d153a5a24da86ee94e650c8f40d0e71cf9bfa336817",
+          "52": "7ef2b539cf1b498e0e24e6a0a643335fbc0be1ae6c4e2000af9452cca5c275ed",
+          "62": "08bcca3227a41dd335bcd94d3b5a910e1c96a6675e2418e10f50754fda83c97d"
+        },
+        "yellow_trip_hourly": {
+          "42": "8e71589e3941e38871f0598c2b8e242fcaad32a6e869b8c0045e1991101ae7a4",
+          "52": "78f803465316d00024d496d34235500386f17e15a5f5262678f3e04a46bad396",
+          "62": "9ee5aeaebdf69c9a6a6d30e667fbb98d76a800e9f4b20457c668a13ee4780a7e"
+        },
+        "intermittent_frozen_5000": {
+          "42": "6b141399a1dae72b1a24de5cf0e115629344a217339ba7fd21697d6d04de926f",
+          "52": "56609520e6e4a19fda1cb1f9c23b007f1748e0f97c78bc61ca3a79baf9e04130",
+          "62": "703c10e071e332779b2500689c69b9001743dfdd78520ed779e35120407df61c"
+        }
+      }
+    },
+    "nhp": {
+      "expected_encoder_config_by_dataset": {
+        "raf_spare_parts": {
+          "candidate_name": "count_nhp_ctlstm_h64",
+          "encoder_type": "continuous_time_lstm",
+          "hidden_dim": 64,
+          "shared_time_head": true,
+          "time_head": {
+            "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+            "jacobian_correction": true,
+            "mode": "heteroscedastic_lognormal_duration",
+            "observation_likelihood": {
+              "mode": "positive_integer_round_clamp_v1",
+              "top_code": null,
+              "unit": "month"
+            },
+            "reported_metric": "recorded_positive_integer_time_nll",
+            "slope_parameterized": false,
+            "time_initial_location": -0.08887296773528319,
+            "time_initial_scale": 0.9589506323759867,
+            "time_location_transform": "identity",
+            "time_scale": 6.0,
+            "time_scale_conditioning": "linear_hidden",
+            "time_scale_transform": "softplus_plus_floor",
+            "time_scale_weight_initialization": "zeros",
+            "time_sigma_floor": 0.001,
+            "wd_clamp": 0.0
+          }
+        },
+        "yellow_trip_hourly": {
+          "candidate_name": "count_nhp_ctlstm_h64",
+          "encoder_type": "continuous_time_lstm",
+          "hidden_dim": 64,
+          "shared_time_head": true,
+          "time_head": {
+            "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+            "jacobian_correction": true,
+            "mode": "heteroscedastic_lognormal_duration",
+            "observation_likelihood": {
+              "mode": "positive_integer_round_clamp_v1",
+              "top_code": null,
+              "unit": "hour"
+            },
+            "reported_metric": "recorded_positive_integer_time_nll",
+            "slope_parameterized": false,
+            "time_initial_location": 0.2357508697949888,
+            "time_initial_scale": 0.5898045019331329,
+            "time_location_transform": "identity",
+            "time_scale": 1.0,
+            "time_scale_conditioning": "linear_hidden",
+            "time_scale_transform": "softplus_plus_floor",
+            "time_scale_weight_initialization": "zeros",
+            "time_sigma_floor": 0.001,
+            "wd_clamp": 0.0
+          }
+        },
+        "intermittent_frozen_5000": {
+          "candidate_name": "count_nhp_ctlstm_h64",
+          "encoder_type": "continuous_time_lstm",
+          "hidden_dim": 64,
+          "shared_time_head": true,
+          "time_head": {
+            "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+            "jacobian_correction": true,
+            "mode": "heteroscedastic_lognormal_duration",
+            "observation_likelihood": {
+              "mode": "positive_integer_round_clamp_v1",
+              "top_code": null,
+              "unit": "week"
+            },
+            "reported_metric": "recorded_positive_integer_time_nll",
+            "slope_parameterized": false,
+            "time_initial_location": -0.21389036220110552,
+            "time_initial_scale": 0.6816420108412236,
+            "time_location_transform": "identity",
+            "time_scale": 3.0,
+            "time_scale_conditioning": "linear_hidden",
+            "time_scale_transform": "softplus_plus_floor",
+            "time_scale_weight_initialization": "zeros",
+            "time_sigma_floor": 0.001,
+            "wd_clamp": 0.0
+          }
+        }
+      },
+      "expected_parameter_count_by_dataset": {
+        "raf_spare_parts": 30211,
+        "yellow_trip_hourly": 30211,
+        "intermittent_frozen_5000": 30211
+      },
+      "constructor_kwargs": {},
+      "historical_summary_bindings": [
+        {
+          "path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/runs/nhp/count_only_log_regression/seed_42/summary.json",
+          "sha256": "909e2e76b868c9f11e6e9d4d0aee7b6f2ee669b9a149b265bc38e4564cf79d5d",
+          "dataset": "raf_spare_parts",
+          "seed": 42,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 30211
+        },
+        {
+          "path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/runs/nhp/count_only_log_regression/seed_52/summary.json",
+          "sha256": "509a84fe610e61793c82e4522e46e44eae2f68704401bd386354f46de19dae6f",
+          "dataset": "raf_spare_parts",
+          "seed": 52,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 30211
+        },
+        {
+          "path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/runs/nhp/count_only_log_regression/seed_62/summary.json",
+          "sha256": "89954f53c76fa6bbf674e1a6595869131d342be229a9aaf8f6a24311bbeff645",
+          "dataset": "raf_spare_parts",
+          "seed": 62,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 30211
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_benchmark_execution_20260922_v2/run/yellow_trip_hourly/runs/nhp/count_only_log_regression/seed_42/summary.json",
+          "sha256": "c0a2f0b594a606d06cd8dcf32722d2db9cfa5baf59a53c66864dd77ab5ff6671",
+          "dataset": "yellow_trip_hourly",
+          "seed": 42,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 30211
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/yellow_trip_hourly/seed_52/runs/nhp/count_only_log_regression/seed_52/summary.json",
+          "sha256": "21af42378c92de9d4f573fae211f65ce8fdf975e4ab6de0b06691c455936f151",
+          "dataset": "yellow_trip_hourly",
+          "seed": 52,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 30211
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/yellow_trip_hourly/seed_62/runs/nhp/count_only_log_regression/seed_62/summary.json",
+          "sha256": "a25b1a7a04c222161e579093e6ae8ee485a5a73c611b52bcf72f75d36afb3963",
+          "dataset": "yellow_trip_hourly",
+          "seed": 62,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 30211
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_benchmark_intermittent_recovery_20260923_v4/run/intermittent_frozen_5000/runs/nhp/count_only_log_regression/seed_42/summary.json",
+          "sha256": "d88d443afdcc0c2fbcc1796d43c80c3bf4cdf444a492107cdb4bd8bbb7beb674",
+          "dataset": "intermittent_frozen_5000",
+          "seed": 42,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 30211
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/intermittent_frozen_5000/seed_52/runs/nhp/count_only_log_regression/seed_52/summary.json",
+          "sha256": "c80f0f7d0e7f2b8c9592a89eb054eeb6bd8799b46d8ddb5183c5ec34982540e9",
+          "dataset": "intermittent_frozen_5000",
+          "seed": 52,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 30211
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/intermittent_frozen_5000/seed_62/runs/nhp/count_only_log_regression/seed_62/summary.json",
+          "sha256": "54938f0e1df00939dfaca9d9e9dab50e025a1709e47a267f3f6f4019108196b3",
+          "dataset": "intermittent_frozen_5000",
+          "seed": 62,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 30211
+        }
+      ],
+      "historical_initial_state_sha256_by_dataset_seed": {
+        "raf_spare_parts": {
+          "42": "8f8f8784ebdf1bca00a4e1a15acdb075553c7d4d9f4ab37e5c574e3e6e2661ff",
+          "52": "08e3deaf08f1439b788872931b153887ba1924e3b8f20fef64f4bc14df749a38",
+          "62": "7e450d9791f9127fd83a0d7d486cce165a83c2437ae6a748d4c3978e35ff34c2"
+        },
+        "yellow_trip_hourly": {
+          "42": "e70b6c9a7a0ef23ed819a2254e2d01c5dd87da9f711c4f732df06098f8151d62",
+          "52": "d28ac0cf437f8c8a50799aa3685e00fe3878e875cb3f76ffea2122c882de4e21",
+          "62": "fe2f0218954907db7a37e1a6686bb9cf05d4db90383ab2e492c5d9c532aeebdd"
+        },
+        "intermittent_frozen_5000": {
+          "42": "e153dc377bb715fb4ced3ad5353f316a992c55bc96a3eec21ffc81f67433002f",
+          "52": "934309f70187d4cc3578cad216c25cfbee9ea8451d6d50f80b3b0096c6aa1be9",
+          "62": "62f53bc73112e9dcb8baec7e6efc170fa04979be9482da4c9332b5233f985f8e"
+        }
+      }
+    },
+    "sahp": {
+      "expected_encoder_config_by_dataset": {
+        "raf_spare_parts": {
+          "candidate_name": "count_sahp_small",
+          "d_ff": 256,
+          "encoder_type": "causal_self_attention_with_continuous_decay",
+          "hidden_dim": 64,
+          "n_heads": 4,
+          "n_layers": 2,
+          "shared_time_head": true,
+          "time_head": {
+            "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+            "jacobian_correction": true,
+            "mode": "heteroscedastic_lognormal_duration",
+            "observation_likelihood": {
+              "mode": "positive_integer_round_clamp_v1",
+              "top_code": null,
+              "unit": "month"
+            },
+            "reported_metric": "recorded_positive_integer_time_nll",
+            "slope_parameterized": false,
+            "time_initial_location": -0.08887296773528319,
+            "time_initial_scale": 0.9589506323759867,
+            "time_location_transform": "identity",
+            "time_scale": 6.0,
+            "time_scale_conditioning": "linear_hidden",
+            "time_scale_transform": "softplus_plus_floor",
+            "time_scale_weight_initialization": "zeros",
+            "time_sigma_floor": 0.001,
+            "wd_clamp": 0.0
+          }
+        },
+        "yellow_trip_hourly": {
+          "candidate_name": "count_sahp_small",
+          "d_ff": 256,
+          "encoder_type": "causal_self_attention_with_continuous_decay",
+          "hidden_dim": 64,
+          "n_heads": 4,
+          "n_layers": 2,
+          "shared_time_head": true,
+          "time_head": {
+            "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+            "jacobian_correction": true,
+            "mode": "heteroscedastic_lognormal_duration",
+            "observation_likelihood": {
+              "mode": "positive_integer_round_clamp_v1",
+              "top_code": null,
+              "unit": "hour"
+            },
+            "reported_metric": "recorded_positive_integer_time_nll",
+            "slope_parameterized": false,
+            "time_initial_location": 0.2357508697949888,
+            "time_initial_scale": 0.5898045019331329,
+            "time_location_transform": "identity",
+            "time_scale": 1.0,
+            "time_scale_conditioning": "linear_hidden",
+            "time_scale_transform": "softplus_plus_floor",
+            "time_scale_weight_initialization": "zeros",
+            "time_sigma_floor": 0.001,
+            "wd_clamp": 0.0
+          }
+        },
+        "intermittent_frozen_5000": {
+          "candidate_name": "count_sahp_small",
+          "d_ff": 256,
+          "encoder_type": "causal_self_attention_with_continuous_decay",
+          "hidden_dim": 64,
+          "n_heads": 4,
+          "n_layers": 2,
+          "shared_time_head": true,
+          "time_head": {
+            "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+            "jacobian_correction": true,
+            "mode": "heteroscedastic_lognormal_duration",
+            "observation_likelihood": {
+              "mode": "positive_integer_round_clamp_v1",
+              "top_code": null,
+              "unit": "week"
+            },
+            "reported_metric": "recorded_positive_integer_time_nll",
+            "slope_parameterized": false,
+            "time_initial_location": -0.21389036220110552,
+            "time_initial_scale": 0.6816420108412236,
+            "time_location_transform": "identity",
+            "time_scale": 3.0,
+            "time_scale_conditioning": "linear_hidden",
+            "time_scale_transform": "softplus_plus_floor",
+            "time_scale_weight_initialization": "zeros",
+            "time_sigma_floor": 0.001,
+            "wd_clamp": 0.0
+          }
+        }
+      },
+      "expected_parameter_count_by_dataset": {
+        "raf_spare_parts": 112835,
+        "yellow_trip_hourly": 112835,
+        "intermittent_frozen_5000": 112835
+      },
+      "constructor_kwargs": {},
+      "historical_summary_bindings": [
+        {
+          "path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/runs/sahp/count_only_log_regression/seed_42/summary.json",
+          "sha256": "2a32d2d74d55c1247d7923d8ea3f611fef70ba24f6b9e8adf849f3cd9fd63892",
+          "dataset": "raf_spare_parts",
+          "seed": 42,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 112835
+        },
+        {
+          "path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/runs/sahp/count_only_log_regression/seed_52/summary.json",
+          "sha256": "fa35fec9cf14afec3b9fcb454dc4281ba474e52ad8f10c3ef68cbbda9f756530",
+          "dataset": "raf_spare_parts",
+          "seed": 52,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 112835
+        },
+        {
+          "path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/runs/sahp/count_only_log_regression/seed_62/summary.json",
+          "sha256": "9a7f0f14f8466e175494b693ab149c38469648cb94b15a1436485687066f69d7",
+          "dataset": "raf_spare_parts",
+          "seed": 62,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 112835
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_benchmark_execution_20260922_v2/run/yellow_trip_hourly/runs/sahp/count_only_log_regression/seed_42/summary.json",
+          "sha256": "7b13efb967c025cbe862583f779b8ce3fdb86b4f10fe9bb814ac4e79b16202ba",
+          "dataset": "yellow_trip_hourly",
+          "seed": 42,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 112835
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/yellow_trip_hourly/seed_52/runs/sahp/count_only_log_regression/seed_52/summary.json",
+          "sha256": "832f386680cd72becc7b9b4dfd3b2f03d8febfdd7ab4595239b9b3113d78955a",
+          "dataset": "yellow_trip_hourly",
+          "seed": 52,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 112835
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/yellow_trip_hourly/seed_62/runs/sahp/count_only_log_regression/seed_62/summary.json",
+          "sha256": "960e00fe71c4c59398e64fd4400101ef925a07a58554d18a49c81e356298e8aa",
+          "dataset": "yellow_trip_hourly",
+          "seed": 62,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 112835
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_benchmark_intermittent_recovery_20260923_v4/run/intermittent_frozen_5000/runs/sahp/count_only_log_regression/seed_42/summary.json",
+          "sha256": "7f13ee05a831b42f37cecbf356fc182d7582891a8f7574789a8a5c5e6274dc70",
+          "dataset": "intermittent_frozen_5000",
+          "seed": 42,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 112835
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/intermittent_frozen_5000/seed_52/runs/sahp/count_only_log_regression/seed_52/summary.json",
+          "sha256": "4b6d3fdf26230f3a649854f262ba0dc570b018f64929dc7c3cbdc357ee83d793",
+          "dataset": "intermittent_frozen_5000",
+          "seed": 52,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 112835
+        },
+        {
+          "path": "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/intermittent_frozen_5000/seed_62/runs/sahp/count_only_log_regression/seed_62/summary.json",
+          "sha256": "302c8d80a8555b9ab769de006878d881dc7c276590518fb9c6f2f76a52eb6219",
+          "dataset": "intermittent_frozen_5000",
+          "seed": 62,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 112835
+        }
+      ],
+      "historical_initial_state_sha256_by_dataset_seed": {
+        "raf_spare_parts": {
+          "42": "729dcfc98366dd1f20023535a420d31094ef20508fc9fa448c96257b4b60cb35",
+          "52": "061dc0e096ce9d77aa921661fab4d18894d3135bba0922f1113c54bca2470252",
+          "62": "204c9bb7f148c418183eb885a9dc3801bfba8df42e2ca3a9bfcf47bfe5761693"
+        },
+        "yellow_trip_hourly": {
+          "42": "684fd25be128800bab8a4d1c2148578a5a2ffed9c5ce17cf585a4e0964b9ed66",
+          "52": "d6a5ef76052441161af7641f02350a1df01d85558b2ed2f9d544ae263c1df680",
+          "62": "1716d8971fef98cb361a03e7518acb0cbbae46f1146cfb887ba61aa599adc323"
+        },
+        "intermittent_frozen_5000": {
+          "42": "e4c9f165d03160c3b3db541d328b09cdde3a0d0834e5a2e9664dacce8471cf02",
+          "52": "52e90a8f0a69d122389f7fe6d953994ca39c87f4bac983e32bd87fd8ef762513",
+          "62": "8848e5d1b8728941fc9d76a794a89c34e5d38dd9f6841abf5bf9e04b2efe98b6"
+        }
+      }
+    },
+    "s2p2_matched_head": {
+      "expected_encoder_config_by_dataset": {
+        "raf_spare_parts": {
+          "P": 16,
+          "adaptation": "observed_event_right_limit_common_heads",
+          "backbone_contract_id": "additional_tpp_matched_head_v1",
+          "complex_values": true,
+          "d_model": 64,
+          "discretization": "backward_ZOH",
+          "dropout": 0.1,
+          "encoder": "S2P2",
+          "future_target_time_used": false,
+          "input": "log1p_gap_log1p_quantity",
+          "max_len": 84,
+          "n_layers": 2,
+          "native_mark_intensity_head": false,
+          "post_norm": true,
+          "pre_norm": false,
+          "relative_time": true,
+          "scan": "affine_doubling",
+          "time_head": {
+            "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+            "jacobian_correction": true,
+            "mode": "heteroscedastic_lognormal_duration",
+            "observation_likelihood": {
+              "mode": "positive_integer_round_clamp_v1",
+              "top_code": null,
+              "unit": "month"
+            },
+            "reported_metric": "recorded_positive_integer_time_nll",
+            "slope_parameterized": false,
+            "time_initial_location": -0.08887296773528319,
+            "time_initial_scale": 0.9589506323759867,
+            "time_location_transform": "identity",
+            "time_scale": 6.0,
+            "time_scale_conditioning": "linear_hidden",
+            "time_scale_transform": "softplus_plus_floor",
+            "time_scale_weight_initialization": "zeros",
+            "time_sigma_floor": 0.001,
+            "wd_clamp": 0.0
+          },
+          "upstream_commit": "c3933240f16a22b43d80d09bda272475526ff24b"
+        },
+        "yellow_trip_hourly": {
+          "P": 16,
+          "adaptation": "observed_event_right_limit_common_heads",
+          "backbone_contract_id": "additional_tpp_matched_head_v1",
+          "complex_values": true,
+          "d_model": 64,
+          "discretization": "backward_ZOH",
+          "dropout": 0.1,
+          "encoder": "S2P2",
+          "future_target_time_used": false,
+          "input": "log1p_gap_log1p_quantity",
+          "max_len": 256,
+          "n_layers": 2,
+          "native_mark_intensity_head": false,
+          "post_norm": true,
+          "pre_norm": false,
+          "relative_time": true,
+          "scan": "affine_doubling",
+          "time_head": {
+            "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+            "jacobian_correction": true,
+            "mode": "heteroscedastic_lognormal_duration",
+            "observation_likelihood": {
+              "mode": "positive_integer_round_clamp_v1",
+              "top_code": null,
+              "unit": "hour"
+            },
+            "reported_metric": "recorded_positive_integer_time_nll",
+            "slope_parameterized": false,
+            "time_initial_location": 0.2357508697949888,
+            "time_initial_scale": 0.5898045019331329,
+            "time_location_transform": "identity",
+            "time_scale": 1.0,
+            "time_scale_conditioning": "linear_hidden",
+            "time_scale_transform": "softplus_plus_floor",
+            "time_scale_weight_initialization": "zeros",
+            "time_sigma_floor": 0.001,
+            "wd_clamp": 0.0
+          },
+          "upstream_commit": "c3933240f16a22b43d80d09bda272475526ff24b"
+        },
+        "intermittent_frozen_5000": {
+          "P": 16,
+          "adaptation": "observed_event_right_limit_common_heads",
+          "backbone_contract_id": "additional_tpp_matched_head_v1",
+          "complex_values": true,
+          "d_model": 64,
+          "discretization": "backward_ZOH",
+          "dropout": 0.1,
+          "encoder": "S2P2",
+          "future_target_time_used": false,
+          "input": "log1p_gap_log1p_quantity",
+          "max_len": 256,
+          "n_layers": 2,
+          "native_mark_intensity_head": false,
+          "post_norm": true,
+          "pre_norm": false,
+          "relative_time": true,
+          "scan": "affine_doubling",
+          "time_head": {
+            "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+            "jacobian_correction": true,
+            "mode": "heteroscedastic_lognormal_duration",
+            "observation_likelihood": {
+              "mode": "positive_integer_round_clamp_v1",
+              "top_code": null,
+              "unit": "week"
+            },
+            "reported_metric": "recorded_positive_integer_time_nll",
+            "slope_parameterized": false,
+            "time_initial_location": -0.21389036220110552,
+            "time_initial_scale": 0.6816420108412236,
+            "time_location_transform": "identity",
+            "time_scale": 3.0,
+            "time_scale_conditioning": "linear_hidden",
+            "time_scale_transform": "softplus_plus_floor",
+            "time_scale_weight_initialization": "zeros",
+            "time_sigma_floor": 0.001,
+            "wd_clamp": 0.0
+          },
+          "upstream_commit": "c3933240f16a22b43d80d09bda272475526ff24b"
+        }
+      },
+      "expected_parameter_count_by_dataset": {
+        "raf_spare_parts": 8003,
+        "yellow_trip_hourly": 8003,
+        "intermittent_frozen_5000": 8003
+      },
+      "constructor_kwargs": {},
+      "historical_summary_bindings": [
+        {
+          "path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/summary.json",
+          "sha256": "25af4a7308de9daccdc2c838bbe27ad7168ac2fdd14e244405878ddc196eda4f",
+          "dataset": "raf_spare_parts",
+          "seed": 42,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 8003
+        },
+        {
+          "path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/summary.json",
+          "sha256": "51c16749e1d418fdffdcafa9427e0ebc40fc57f705857ef228487363cb81fa5e",
+          "dataset": "raf_spare_parts",
+          "seed": 52,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 8003
+        },
+        {
+          "path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/summary.json",
+          "sha256": "8cfb68f138a8cc71fa54cb99a2b42289e72e7e40c28f0fefc63212dad8543e0c",
+          "dataset": "raf_spare_parts",
+          "seed": 62,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 8003
+        },
+        {
+          "path": "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/yellow_trip_hourly__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/summary.json",
+          "sha256": "cdda2a894c5fed7cbdc0dfeff15431e360cebe7eb818844eae96744e3d3c70fd",
+          "dataset": "yellow_trip_hourly",
+          "seed": 42,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 8003
+        },
+        {
+          "path": "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/yellow_trip_hourly__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/summary.json",
+          "sha256": "498a8522f2b234b7aaf9e50c0711f97373a9a7cff8ed70d80de0ce9cf48526ec",
+          "dataset": "yellow_trip_hourly",
+          "seed": 52,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 8003
+        },
+        {
+          "path": "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/yellow_trip_hourly__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/summary.json",
+          "sha256": "b618c584fdd56d2e9e3e89b85173575c1010940f64077c53303c9dbe21441ee6",
+          "dataset": "yellow_trip_hourly",
+          "seed": 62,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 8003
+        },
+        {
+          "path": "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/intermittent_frozen_5000__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/summary.json",
+          "sha256": "402445f70b2703708e2f73d771b3d3cf93d996cb95e759c49c38dd92ba0a83b6",
+          "dataset": "intermittent_frozen_5000",
+          "seed": 42,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 8003
+        },
+        {
+          "path": "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/intermittent_frozen_5000__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/summary.json",
+          "sha256": "c9384037cccc3baffd013601c301b64e41a698b4d95b00479aace9700e4edb8a",
+          "dataset": "intermittent_frozen_5000",
+          "seed": 52,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 8003
+        },
+        {
+          "path": "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/intermittent_frozen_5000__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/summary.json",
+          "sha256": "6240a3f2e155fa10cad47180b8289abee31bb959a3ac7d2396b384c1821ebc41",
+          "dataset": "intermittent_frozen_5000",
+          "seed": 62,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 8003
+        }
+      ],
+      "historical_initial_state_sha256_by_dataset_seed": {
+        "raf_spare_parts": {
+          "42": "b2a43e3ad448572548b80da6efefd6460ca1914af6b9b85fb16ff467304d262d",
+          "52": "338b3f8d9485f99705469ea94c249b03753b85d35c9dd1da6cb88f63d2d7a3a4",
+          "62": "5c12022a92c0984cb832a30c169776d75596926c4ea187242bb5c15262920725"
+        },
+        "yellow_trip_hourly": {
+          "42": "1c813137ce4bb67a62d29bcc322d1666213d12913fe2df3104686cbaad6b8965",
+          "52": "20b7783405693dba61e01220bb9b98429b28726e359224f722591cc768c68791",
+          "62": "68b6065b5aa3055c0a239ac4f4c5a43ef10fcf1f1398f9b8bfba9614732b5d43"
+        },
+        "intermittent_frozen_5000": {
+          "42": "a7125f5c1c6a18bf27675464a2a39d943b55d7473234e21181eabe6b499ca83c",
+          "52": "a52efa3ed928e29fed8684293b9065704dd658c8a156a8fe2fcd9e211aec93c6",
+          "62": "a4e47720836dde0f76884952ba2f72b82fdcfb23344db3116371566c23785f68"
+        }
+      }
+    },
+    "attnhp_matched_head": {
+      "expected_encoder_config_by_dataset": {
+        "raf_spare_parts": {
+          "adaptation": "observed_event_right_limit_common_heads",
+          "backbone_contract_id": "additional_tpp_matched_head_v1",
+          "d_model": 64,
+          "d_time": 16,
+          "dropout": 0.1,
+          "encoder": "AttNHP",
+          "future_target_time_used": false,
+          "input": "log1p_gap_log1p_quantity",
+          "max_len": 84,
+          "n_heads": 1,
+          "n_layers": 2,
+          "native_mark_intensity_head": false,
+          "query": "observed_t_i_including_event_i",
+          "time_head": {
+            "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+            "jacobian_correction": true,
+            "mode": "heteroscedastic_lognormal_duration",
+            "observation_likelihood": {
+              "mode": "positive_integer_round_clamp_v1",
+              "top_code": null,
+              "unit": "month"
+            },
+            "reported_metric": "recorded_positive_integer_time_nll",
+            "slope_parameterized": false,
+            "time_initial_location": -0.08887296773528319,
+            "time_initial_scale": 0.9589506323759867,
+            "time_location_transform": "identity",
+            "time_scale": 6.0,
+            "time_scale_conditioning": "linear_hidden",
+            "time_scale_transform": "softplus_plus_floor",
+            "time_scale_weight_initialization": "zeros",
+            "time_sigma_floor": 0.001,
+            "wd_clamp": 0.0
+          },
+          "upstream_commit": "78f754fde61547b84a0749fd7e7e020e7cd6b4d8",
+          "use_norm": false
+        },
+        "yellow_trip_hourly": {
+          "adaptation": "observed_event_right_limit_common_heads",
+          "backbone_contract_id": "additional_tpp_matched_head_v1",
+          "d_model": 64,
+          "d_time": 16,
+          "dropout": 0.1,
+          "encoder": "AttNHP",
+          "future_target_time_used": false,
+          "input": "log1p_gap_log1p_quantity",
+          "max_len": 256,
+          "n_heads": 1,
+          "n_layers": 2,
+          "native_mark_intensity_head": false,
+          "query": "observed_t_i_including_event_i",
+          "time_head": {
+            "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+            "jacobian_correction": true,
+            "mode": "heteroscedastic_lognormal_duration",
+            "observation_likelihood": {
+              "mode": "positive_integer_round_clamp_v1",
+              "top_code": null,
+              "unit": "hour"
+            },
+            "reported_metric": "recorded_positive_integer_time_nll",
+            "slope_parameterized": false,
+            "time_initial_location": 0.2357508697949888,
+            "time_initial_scale": 0.5898045019331329,
+            "time_location_transform": "identity",
+            "time_scale": 1.0,
+            "time_scale_conditioning": "linear_hidden",
+            "time_scale_transform": "softplus_plus_floor",
+            "time_scale_weight_initialization": "zeros",
+            "time_sigma_floor": 0.001,
+            "wd_clamp": 0.0
+          },
+          "upstream_commit": "78f754fde61547b84a0749fd7e7e020e7cd6b4d8",
+          "use_norm": false
+        },
+        "intermittent_frozen_5000": {
+          "adaptation": "observed_event_right_limit_common_heads",
+          "backbone_contract_id": "additional_tpp_matched_head_v1",
+          "d_model": 64,
+          "d_time": 16,
+          "dropout": 0.1,
+          "encoder": "AttNHP",
+          "future_target_time_used": false,
+          "input": "log1p_gap_log1p_quantity",
+          "max_len": 256,
+          "n_heads": 1,
+          "n_layers": 2,
+          "native_mark_intensity_head": false,
+          "query": "observed_t_i_including_event_i",
+          "time_head": {
+            "density_family": "heteroscedastic_lognormal_on_scaled_duration",
+            "jacobian_correction": true,
+            "mode": "heteroscedastic_lognormal_duration",
+            "observation_likelihood": {
+              "mode": "positive_integer_round_clamp_v1",
+              "top_code": null,
+              "unit": "week"
+            },
+            "reported_metric": "recorded_positive_integer_time_nll",
+            "slope_parameterized": false,
+            "time_initial_location": -0.21389036220110552,
+            "time_initial_scale": 0.6816420108412236,
+            "time_location_transform": "identity",
+            "time_scale": 3.0,
+            "time_scale_conditioning": "linear_hidden",
+            "time_scale_transform": "softplus_plus_floor",
+            "time_scale_weight_initialization": "zeros",
+            "time_sigma_floor": 0.001,
+            "wd_clamp": 0.0
+          },
+          "upstream_commit": "78f754fde61547b84a0749fd7e7e020e7cd6b4d8",
+          "use_norm": false
+        }
+      },
+      "expected_parameter_count_by_dataset": {
+        "raf_spare_parts": 31491,
+        "yellow_trip_hourly": 31491,
+        "intermittent_frozen_5000": 31491
+      },
+      "constructor_kwargs": {},
+      "historical_summary_bindings": [
+        {
+          "path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/summary.json",
+          "sha256": "f9c45e812f00686bbfb4f59aaeeedf53f8491965957b95864be9ac0d1ceaf4a1",
+          "dataset": "raf_spare_parts",
+          "seed": 42,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 31491
+        },
+        {
+          "path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/summary.json",
+          "sha256": "ff47b7016e8b406738e8488f0f6e3e2b691609509f558c76181a67ec99a52ddf",
+          "dataset": "raf_spare_parts",
+          "seed": 52,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 31491
+        },
+        {
+          "path": "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/summary.json",
+          "sha256": "6ede19606c85e485ba1196ea1cce5ff5923462515136cfa21d308f584d460ec1",
+          "dataset": "raf_spare_parts",
+          "seed": 62,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 31491
+        },
+        {
+          "path": "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/yellow_trip_hourly__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/summary.json",
+          "sha256": "52e3e33040c8b2253045604c6d5e4dd646d5d697311f85242f4589d0c6e208ed",
+          "dataset": "yellow_trip_hourly",
+          "seed": 42,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 31491
+        },
+        {
+          "path": "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/yellow_trip_hourly__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/summary.json",
+          "sha256": "cdb9d0a8e7361741505afce58145e958b9c554397e62a8c013d36b66a461e1e3",
+          "dataset": "yellow_trip_hourly",
+          "seed": 52,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 31491
+        },
+        {
+          "path": "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/yellow_trip_hourly__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/summary.json",
+          "sha256": "00764edcc8b4dd3bb9d53e160ea0913d846f515e02523c5592a7968a81f0ef94",
+          "dataset": "yellow_trip_hourly",
+          "seed": 62,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 31491
+        },
+        {
+          "path": "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/intermittent_frozen_5000__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/summary.json",
+          "sha256": "37443c2d51192b1bedc6b3e3bba8f3c034129acbfc579e653488bc805724e10e",
+          "dataset": "intermittent_frozen_5000",
+          "seed": 42,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 31491
+        },
+        {
+          "path": "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/intermittent_frozen_5000__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/summary.json",
+          "sha256": "45f975f36dd8459cb323d4034624d47ab65dc4bc7f33e47e54ac901eac8d1e44",
+          "dataset": "intermittent_frozen_5000",
+          "seed": 52,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 31491
+        },
+        {
+          "path": "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/intermittent_frozen_5000__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/summary.json",
+          "sha256": "f7e0af7083844248b87157b5363b76deb20bac0ee78dfcddae524cdac215535c",
+          "dataset": "intermittent_frozen_5000",
+          "seed": 62,
+          "source_revision": "1de2c31e8e3febda7ff20d0527402ea9959b4098",
+          "parameter_count": 31491
+        }
+      ],
+      "historical_initial_state_sha256_by_dataset_seed": {
+        "raf_spare_parts": {
+          "42": "22098b5c8d57b3a5441a5599176b0324e29572a0d800a764092a962be135d284",
+          "52": "5ea0f5cfa94364fdf7deb4a56c0d8cfb025f20ecd4de6907252c9d08dfd61ce7",
+          "62": "6e7e42112e9f98850228d63688a95dc89b7ea66b042f038a424af8500de3f20c"
+        },
+        "yellow_trip_hourly": {
+          "42": "2a5218fb57365abe5b816ca5a513cf0dfa30e8e961d8d205472ad192c8c3e8ff",
+          "52": "a448ef96c146d9f451bf6297b75f1e8d09f2cbf679ecad4fdd235c47152b1a36",
+          "62": "fc68254d00b96bb82296c1167cc458212cd01c97dfef79c8644f726367afa982"
+        },
+        "intermittent_frozen_5000": {
+          "42": "a00573f07a19aae8949f0b4c001acacf54d94a16e1d048fa1da90dc2b7949f86",
+          "52": "89805803b3a08be5bdcbe2c1aa74cfbc19b9d61d5e8738e78a738fdf0d425228",
+          "62": "e46146e505ee35d2dd6a95260c1216d296e67c6bdd39a9295459405ce305bc84"
+        }
+      }
+    }
+  },
+  "source_bindings": {
+    "search_artifacts/titantpp_history_mlp_shared_raw9_20261020_v1/execution_5090_v1/execution_contract.json": "4ed35f0054995f51dadb9b1d6227fc9c09194f9414a9f832bb723dc1d1c058f1",
+    "reports/titantpp_shared_raf_taxi6_test_20261020_v1/REFERENCES.json": "5cc41cd6e3f5c5965c4ab772fcf4d6936ab1343a653250625a2e73b6cd88e566",
+    "reports/titantpp_shared_inter3_interim_test_20261020_v1/REFERENCES.json": "9095a5394c7e6e5b11bbec3df2c18c3891da3a90de2d703337f1dd7c9db7e4b2",
+    "search_artifacts/titantpp_shared_raf_taxi6_test_20261020_v1/selected/originals/run/raf_spare_parts__titantpp_history_mlp_shared15_v1__seed42__losslog_mse/runs/titantpp_history_mlp_shared15_v1/count_only_log_regression/seed_42/summary.json": "2dd52642df64bc23c8e7e49b68c976ef0e0f497ec867aa69a999f66cdf575ee5",
+    "search_artifacts/titantpp_shared_raf_taxi6_test_20261020_v1/selected/originals/run/raf_spare_parts__titantpp_history_mlp_shared15_v1__seed52__losslog_mse/runs/titantpp_history_mlp_shared15_v1/count_only_log_regression/seed_52/summary.json": "b36e1b20c9d3ac773130b317747e42b2c4f7438b023b81af0d711cb4637468fd",
+    "search_artifacts/titantpp_shared_raf_taxi6_test_20261020_v1/selected/originals/run/raf_spare_parts__titantpp_history_mlp_shared15_v1__seed62__losslog_mse/runs/titantpp_history_mlp_shared15_v1/count_only_log_regression/seed_62/summary.json": "4da087c945781c7cf9ab6cc205b77309e18ca08eb05980925e4e3b7482f999bf",
+    "search_artifacts/titantpp_shared_raf_taxi6_test_20261020_v1/selected/originals/run/yellow_trip_hourly__titantpp_history_mlp_shared15_v1__seed42__losslog_mse/runs/titantpp_history_mlp_shared15_v1/count_only_log_regression/seed_42/summary.json": "3c5575ea70707664f2604815f54ecd22eb7b599697e9d81ecdd0f7e30dde874c",
+    "search_artifacts/titantpp_shared_raf_taxi6_test_20261020_v1/selected/originals/run/yellow_trip_hourly__titantpp_history_mlp_shared15_v1__seed52__losslog_mse/runs/titantpp_history_mlp_shared15_v1/count_only_log_regression/seed_52/summary.json": "1c369f5ed869bfe7a227564170d1ee9de57a17f221c293871287f9b96539ea5d",
+    "search_artifacts/titantpp_shared_raf_taxi6_test_20261020_v1/selected/originals/run/yellow_trip_hourly__titantpp_history_mlp_shared15_v1__seed62__losslog_mse/runs/titantpp_history_mlp_shared15_v1/count_only_log_regression/seed_62/summary.json": "31a94a4d59a1919831eacba465d18ebe366f010de89ebebf1ef0b46542bfb7f4",
+    "search_artifacts/titantpp_shared_inter3_interim_test_20261020_v1/selected/derived/intermittent_frozen_5000__titantpp_history_mlp_shared15_v1__seed42__losslog_mse/checkpoint_metadata.json": "3477f9321104eb954b3cb9ab08b3cf16bbd56bd5cb97771ba4c050b7469baf40",
+    "search_artifacts/titantpp_shared_inter3_interim_test_20261020_v1/selected/derived/intermittent_frozen_5000__titantpp_history_mlp_shared15_v1__seed52__losslog_mse/checkpoint_metadata.json": "b70443b1a0c07c871ed76a13a9d870d699a51d85f29eb4cc6ba2e810f89da681",
+    "search_artifacts/titantpp_shared_inter3_interim_test_20261020_v1/selected/derived/intermittent_frozen_5000__titantpp_history_mlp_shared15_v1__seed62__losslog_mse/checkpoint_metadata.json": "ce5eee94e41943cf809f43ca9aa072770264084c2609ad1aad4bd63b2f95c874",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/runs/rmtpp/count_only_log_regression/seed_42/summary.json": "ed2f7398455abc660cbf1ddb311ef4547b1c2c133512839d6e73bf7948e0ee0a",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/runs/rmtpp/count_only_log_regression/seed_52/summary.json": "8bf46941758f4899c36f1a6d2bf2b34a4841ceb7c6390d73c95ae8c70c188a8b",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/runs/rmtpp/count_only_log_regression/seed_62/summary.json": "72afab9b05fdbe6552fb8b9f90fc7de002ceb4f2c8a602d3f0034c860bc07010",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_benchmark_execution_20260922_v2/run/yellow_trip_hourly/runs/rmtpp/count_only_log_regression/seed_42/summary.json": "e4f405b015499d102f4fd76da64fd54d2d1609b03391fb3f17ac90af333e2112",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/yellow_trip_hourly/seed_52/runs/rmtpp/count_only_log_regression/seed_52/summary.json": "1f28a61f1e56fa599cb5dfc2fc7709f2cdf59740cdb3b3faed250728c0c15a16",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/yellow_trip_hourly/seed_62/runs/rmtpp/count_only_log_regression/seed_62/summary.json": "b7614dca2ebe0084ea2003635e902055e5477dbeda3f2386009bd6a765b6afa7",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_benchmark_intermittent_recovery_20260923_v4/run/intermittent_frozen_5000/runs/rmtpp/count_only_log_regression/seed_42/summary.json": "3802ea3a9e5ec337d0523d583fa426377e295c8a9527ab0f8621442ea58ecc01",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/intermittent_frozen_5000/seed_52/runs/rmtpp/count_only_log_regression/seed_52/summary.json": "74593f0535c4b383215507b1d53bffc3d4b7866c9289aa303d0c0e59ead2cc6f",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/intermittent_frozen_5000/seed_62/runs/rmtpp/count_only_log_regression/seed_62/summary.json": "8283c6194ee23113e9fc67f6501d4694d228007d9000e71346d3ce8f852cc89d",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/runs/thp/count_only_log_regression/seed_42/summary.json": "7e6f6faa4dc1e4984ce4e204b0f53306639a05a1a4c7a79350d486842023cf96",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/runs/thp/count_only_log_regression/seed_52/summary.json": "f794f60a54c5c856c7c7a178e3c6ebd7edf952125c0f614362a8054dd967eeb5",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/runs/thp/count_only_log_regression/seed_62/summary.json": "3f86bd297cdf66aa144e520dcc4c48cffeb4d02e9cd62338a248cd540dbf5af0",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_benchmark_execution_20260922_v2/run/yellow_trip_hourly/runs/thp/count_only_log_regression/seed_42/summary.json": "5b333a98bceb80ff75ec5377fe2876a466054b6a37ada82602ba7c8840321f95",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/yellow_trip_hourly/seed_52/runs/thp/count_only_log_regression/seed_52/summary.json": "6abfd807baf28cc7978e9b9aa0ba1301ce79c0a98f0cd55e16603eb9f02ab89a",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/yellow_trip_hourly/seed_62/runs/thp/count_only_log_regression/seed_62/summary.json": "d457f70e8c27944ec154e074066d0bb38df160baf296d0202f78f5768c9a7e74",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_benchmark_intermittent_recovery_20260923_v4/run/intermittent_frozen_5000/runs/thp/count_only_log_regression/seed_42/summary.json": "4a2aebe25c9ccdc32df474e542dc0744513be528fd37c9f9412ff1615d303d8c",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/intermittent_frozen_5000/seed_52/runs/thp/count_only_log_regression/seed_52/summary.json": "f02a5fd9523daacdb51dab3316efbb8de472a2a9dc27ae839006616c222b7ec2",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/intermittent_frozen_5000/seed_62/runs/thp/count_only_log_regression/seed_62/summary.json": "de9117c0f30c4f195e68da1b9fa447f6c7fbb3aa277ddd21d3f669383884e967",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/runs/nhp/count_only_log_regression/seed_42/summary.json": "909e2e76b868c9f11e6e9d4d0aee7b6f2ee669b9a149b265bc38e4564cf79d5d",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/runs/nhp/count_only_log_regression/seed_52/summary.json": "509a84fe610e61793c82e4522e46e44eae2f68704401bd386354f46de19dae6f",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/runs/nhp/count_only_log_regression/seed_62/summary.json": "89954f53c76fa6bbf674e1a6595869131d342be229a9aaf8f6a24311bbeff645",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_benchmark_execution_20260922_v2/run/yellow_trip_hourly/runs/nhp/count_only_log_regression/seed_42/summary.json": "c0a2f0b594a606d06cd8dcf32722d2db9cfa5baf59a53c66864dd77ab5ff6671",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/yellow_trip_hourly/seed_52/runs/nhp/count_only_log_regression/seed_52/summary.json": "21af42378c92de9d4f573fae211f65ce8fdf975e4ab6de0b06691c455936f151",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/yellow_trip_hourly/seed_62/runs/nhp/count_only_log_regression/seed_62/summary.json": "a25b1a7a04c222161e579093e6ae8ee485a5a73c611b52bcf72f75d36afb3963",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_benchmark_intermittent_recovery_20260923_v4/run/intermittent_frozen_5000/runs/nhp/count_only_log_regression/seed_42/summary.json": "d88d443afdcc0c2fbcc1796d43c80c3bf4cdf444a492107cdb4bd8bbb7beb674",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/intermittent_frozen_5000/seed_52/runs/nhp/count_only_log_regression/seed_52/summary.json": "c80f0f7d0e7f2b8c9592a89eb054eeb6bd8799b46d8ddb5183c5ec34982540e9",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/intermittent_frozen_5000/seed_62/runs/nhp/count_only_log_regression/seed_62/summary.json": "54938f0e1df00939dfaca9d9e9dab50e025a1709e47a267f3f6f4019108196b3",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/runs/sahp/count_only_log_regression/seed_42/summary.json": "2a32d2d74d55c1247d7923d8ea3f611fef70ba24f6b9e8adf849f3cd9fd63892",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/runs/sahp/count_only_log_regression/seed_52/summary.json": "fa35fec9cf14afec3b9fcb454dc4281ba474e52ad8f10c3ef68cbbda9f756530",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/runs/sahp/count_only_log_regression/seed_62/summary.json": "9a7f0f14f8466e175494b693ab149c38469648cb94b15a1436485687066f69d7",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_benchmark_execution_20260922_v2/run/yellow_trip_hourly/runs/sahp/count_only_log_regression/seed_42/summary.json": "7b13efb967c025cbe862583f779b8ce3fdb86b4f10fe9bb814ac4e79b16202ba",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/yellow_trip_hourly/seed_52/runs/sahp/count_only_log_regression/seed_52/summary.json": "832f386680cd72becc7b9b4dfd3b2f03d8febfdd7ab4595239b9b3113d78955a",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/yellow_trip_hourly/seed_62/runs/sahp/count_only_log_regression/seed_62/summary.json": "960e00fe71c4c59398e64fd4400101ef925a07a58554d18a49c81e356298e8aa",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_benchmark_intermittent_recovery_20260923_v4/run/intermittent_frozen_5000/runs/sahp/count_only_log_regression/seed_42/summary.json": "7f13ee05a831b42f37cecbf356fc182d7582891a8f7574789a8a5c5e6274dc70",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/intermittent_frozen_5000/seed_52/runs/sahp/count_only_log_regression/seed_52/summary.json": "4b6d3fdf26230f3a649854f262ba0dc570b018f64929dc7c3cbdc357ee83d793",
+    "search_artifacts/titantpp_independent_evaluation_preparation_20261001_v1/5080/attempt1/original/local_detail_replication_5080_20260924_v1/run/intermittent_frozen_5000/seed_62/runs/sahp/count_only_log_regression/seed_62/summary.json": "302c8d80a8555b9ab769de006878d881dc7c276590518fb9c6f2f76a52eb6219",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/summary.json": "25af4a7308de9daccdc2c838bbe27ad7168ac2fdd14e244405878ddc196eda4f",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/summary.json": "51c16749e1d418fdffdcafa9427e0ebc40fc57f705857ef228487363cb81fa5e",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/summary.json": "8cfb68f138a8cc71fa54cb99a2b42289e72e7e40c28f0fefc63212dad8543e0c",
+    "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/yellow_trip_hourly__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/summary.json": "cdda2a894c5fed7cbdc0dfeff15431e360cebe7eb818844eae96744e3d3c70fd",
+    "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/yellow_trip_hourly__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/summary.json": "498a8522f2b234b7aaf9e50c0711f97373a9a7cff8ed70d80de0ce9cf48526ec",
+    "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/yellow_trip_hourly__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/summary.json": "b618c584fdd56d2e9e3e89b85173575c1010940f64077c53303c9dbe21441ee6",
+    "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/intermittent_frozen_5000__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/summary.json": "402445f70b2703708e2f73d771b3d3cf93d996cb95e759c49c38dd92ba0a83b6",
+    "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/intermittent_frozen_5000__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/summary.json": "c9384037cccc3baffd013601c301b64e41a698b4d95b00479aace9700e4edb8a",
+    "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/intermittent_frozen_5000__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/summary.json": "6240a3f2e155fa10cad47180b8289abee31bb959a3ac7d2396b384c1821ebc41",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/summary.json": "f9c45e812f00686bbfb4f59aaeeedf53f8491965957b95864be9ac0d1ceaf4a1",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/summary.json": "ff47b7016e8b406738e8488f0f6e3e2b691609509f558c76181a67ec99a52ddf",
+    "search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/summary.json": "6ede19606c85e485ba1196ea1cce5ff5923462515136cfa21d308f584d460ec1",
+    "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/yellow_trip_hourly__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/summary.json": "52e3e33040c8b2253045604c6d5e4dd646d5d697311f85242f4589d0c6e208ed",
+    "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/yellow_trip_hourly__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/summary.json": "cdb9d0a8e7361741505afce58145e958b9c554397e62a8c013d36b66a461e1e3",
+    "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/yellow_trip_hourly__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/summary.json": "00764edcc8b4dd3bb9d53e160ea0913d846f515e02523c5592a7968a81f0ef94",
+    "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/intermittent_frozen_5000__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/summary.json": "37443c2d51192b1bedc6b3e3bba8f3c034129acbfc579e653488bc805724e10e",
+    "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/intermittent_frozen_5000__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/summary.json": "45f975f36dd8459cb323d4034624d47ab65dc4bc7f33e47e54ac901eac8d1e44",
+    "search_artifacts/titantpp_additional_tpp_20260930_v1/retrieved/terminal_5080_20261001_v1/original/run/intermittent_frozen_5000__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/summary.json": "f7e0af7083844248b87157b5363b76deb20bac0ee78dfcddae524cdac215535c"
+  },
+  "common_training_arguments": {
+    "batch_size": 128,
+    "eval_batch_size": 128,
+    "lr": 0.001,
+    "optimizer": "AdamW",
+    "weight_decay": 0.01,
+    "grad_clip": 1.0,
+    "max_epochs": 300,
+    "min_epochs": 40,
+    "early_stop_patience": 40,
+    "quantity_loss": "log_mse",
+    "lambda_log_qty": 1.0,
+    "lambda_tail": 0.0,
+    "alpha": 1.0,
+    "hidden_dim": 64,
+    "time_input": "log1p",
+    "quantity_input": "log1p",
+    "time_head_mode": "heteroscedastic_lognormal_duration",
+    "time_sigma_floor": 0.001,
+    "time_head_lr_multiplier": 1.0,
+    "intercept_limit": 30.0,
+    "time_w_max": 3.3333333333333335,
+    "time_wd_safety": 40.0,
+    "time_observation_mode": "positive_integer_round_clamp_v1",
+    "time_observation_top_code": null,
+    "data_variant": "original_uncapped",
+    "quantity_capping_applied": false,
+    "checkpoint_selection": "first strict finite fullValidation raw quantity RMSE minimum; earliest epoch on ties"
+  },
+  "interpretation": {
+    "historical_scientific_paths_preserved": true,
+    "source_closure_identical_to_historical_external": false,
+    "source983_parent_preserved_byte_identical": true,
+    "constructor_config_observed_not_extra_kwargs": true,
+    "native_paper_intensity_heads_used": false,
+    "fresh_training_without_checkpoint_warmstart": true,
+    "historical_baselines_retrained_or_reevaluated": false
+  }
+}
