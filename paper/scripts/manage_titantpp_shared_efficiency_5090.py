@@ -63,14 +63,14 @@ def prepare():
         source[name] = old["source_files"][name]; locations[name] = OLD / "source" / name
     require(len(source) == 985 and canonical(source) == "7905cb02aa6b51c3be5754260e48709f9d4f486276fc85c3ff460166b7032d7f", "Frozen source lineage changed")
     for name, digest in source.items(): require(sha(locations[name]) == digest, "Frozen source changed: " + name)
-    for name, digest in parent["input_files"].items(): require(sha(PARENT / name) == digest, "Frozen input changed: " + name)
+    for name, digest in parent["input_files"].items(): require(sha(PARENT / "input_snapshot" / name) == digest, "Frozen input changed: " + name)
     runtime = REPO / "paper/scripts/titantpp_shared_efficiency_benchmark.py"
     require(runtime.is_file(), "New benchmark runtime not ready")
     BUNDLE.mkdir(parents=True); REPORT.mkdir(parents=True, exist_ok=True)
     for name, origin in locations.items():
         dest = BUNDLE / "source" / name; dest.parent.mkdir(parents=True, exist_ok=True); shutil.copyfile(origin, dest)
     for name in parent["input_files"]:
-        dest = BUNDLE / name; dest.parent.mkdir(parents=True, exist_ok=True); shutil.copyfile(PARENT / name, dest)
+        dest = BUNDLE / name; dest.parent.mkdir(parents=True, exist_ok=True); shutil.copyfile(PARENT / "input_snapshot" / name, dest)
     shutil.copyfile(runtime, BUNDLE / "benchmark.py")
     (BUNDLE / "supervise.py").write_text(SUPERVISOR)
     contract = deepcopy(old)
