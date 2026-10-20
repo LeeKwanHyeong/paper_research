@@ -73,3 +73,28 @@ START_RECEIPT.json은 보존한 원격 status stdout/SHA와 연결된다. native
 최신 실제 관측은 `LATEST_PROGRESS.json`과 `progress/20261020T0618308805030000/SUMMARY.json`에 결속했다. RAF의 추가 seed72·82 × 공유형/외부6종 총14개 학습이 실제 worker exit0와 receipt로 완료됐다. 전체42개 중 학습완료14·진행3·대기25·미확정0이며, Taxi 공유형72 저장23/best21·공유형82 저장9/best6·RMTPP72 저장6/best3이 실제 worker/dispatcher lease/GPU에서 진행 중이다. 전체42 학습 뒤 시행하는 nativeValidation42/Test42 및 최종회수는 아직 미실행이다. RAF 학습 완료를5seed Test 완료로 표현하지 않는다. 이 과거시각을 새 관측으로 사용하지 않는다.
 
 이번 회차 최초 로컬 SSH 시도는 sandbox의 Operation not permitted로 서버 접속 전에 차단돼 transport exit255 원문을 보존했다. 기존 승인 범위의 sandbox 승격 후 읽기 전용 상태관측1회는 transport exit0으로 통과했다. helper 호출은2회였고 성공한 실제 원격 status관측은1회다. 이는 해결된 로컬 권한 차단이며 학습 실패가 아니다. 후속 회차의 승인된 status 명령은 필요한 sandbox 승격을 처음부터 적용하고, 원격관측은 회차당1회만 수행한다. 학습·finisher·과학조건·기존 결과는 변경하지 않았다.
+
+
+## 종료 대기 연결 장애 — 사용자 조치 대기
+
+2026-10-20 17:55:13 KST 기존 유한 finisher의 SSH 대기가 Connection reset by peer/Broken pipe, 실제 transport exit255로 종료됐다. QUEUE_FAILURE.json과 원문/SHA를 보존한다. 이후 같은 회차의 단일 상태 조회17:55:48 KST는 exit0였고 학습완료21(RAF14·Taxi7)·진행3·대기18·미확정0·과학실패0을 확인했다. Validation/Test0·최종회수미완료다. 자세한 증거는 LATEST_PROGRESS.json과 ACTION_REQUIRED.json을 우선한다.
+
+이 상태는 학습 실패가 아니라 종료 대기·자동회수 연결 실패다. 기존 학습/선택/결과/실패/claim은 변경하지 않았다. 이미 사용한 finish/start-finisher를 재호출하거나 같은 미해결 실패 중 추가 status/SSH/회수를 반복하지 않는다. 후속 heartbeat는 로컬 증거만 확인하고 조용히 유지한다. 별도 제어 경로의 종료 대기·검증·회수 연결 복구는 사용자의 추가 승인을 기다린다. 기존 5090 MAC9 작업과 다른 자동화는 변경하지 않는다.
+
+
+## 사용자 현재 상태 요청에 따른 단일 조회 — 2026-10-20 19:33:17 KST
+
+읽기 전용 상태조회1회에서 학습완료27(RAF14·Taxi13)·진행3(Taxi AttNHP82와 Intermittent Shared72/82)·대기12(모두Intermittent)·미확정0·학습실패0을 확인했다. Validation/Test0·최종회수미완료다. actual transport exit0·원문SHA·실제worker/dispatcher/GPU 연결은 최신 LATEST_PROGRESS에 결속했다. 이전 연결 장애와 ACTION_REQUIRED는 여전히 미해결이며 학습/finisher/회수를 재시작하지 않았다. 이 명시적 상태요청은 연결복구 승인으로 보지 않는다. 후속 heartbeat는 같은 미해결 실패 중 로컬 확인만 수행한다.
+
+
+## 사용자 승인 후 종료 대기 연결 복구 — 2026-10-20 21:43:53 KST
+
+사용자 최신 승인 “ㅇㅇ 그럼 학습은 그대로 두고 연결만 복구해. 끝나면 Validation/Test 확인하고 결과 회수까지 마저 진행해줘.”에 따라 기존 실패기록을 보존한 별도 recovery_v1 제어를 시작했다. 이 단락은 위의 추가 승인 대기/heartbeat 로컬 차단 설명을 현재 단계에서 대체한다. 기존 ACTION_REQUIRED/QUEUE_FAILURE/FINISH_STARTED와 로그는 과거 원문 그대로이며 수정·삭제하지 않는다.
+
+신규 복구 코드 commit69715e5c, CONTROL_BINDINGS rawSHA84b37e1e6da48b70e4e64b78f781253a583d7f53572508e6af67da9bfff17dbb, AUTHORIZATION rawSHAed6615236d089980fc5c57b5eefbd9c223aa958ffc4935499adfe8eefd3a39cf. 보고경로는 이 문서 옆 recovery_v1, 연결 원문은 search_artifacts/titantpp_shared_external_extra42_20261020_v1/recovery_v1/transport/5080다. 신규26합성검사/독립26검사와 기존비교기16검사 actualexit0, 기존987source+6실패/로그993SHA 검사전후 동일이다.
+
+별도 로컬 completion PID1564가 한 번의 read-only SSH로 같은 native contract와 dispatcher PID616624/start_ticks87087471/argv/cwd/pgid를 확인했다. wait.stdout 첫 READY의 실제 원관측은21:43:53.566025 KST다. CONNECTED.json에 응답과 prefix SHA를 보존했다. 학습시작·평가·resume·kill은 호출하지 않았고 원 학습/선택/기한/5090을 그대로 둔다. READY는 접속·dispatcher 신원 확인이며 학습/Validation/Test/회수 완료가 아니다.
+
+후속 heartbeat는 먼저 recovery_v1/FAILURE.json·COLLECTION_COMPLETE.json·COMPLETE.json과 completion 로그·연결 기록을 로컬로 확인한다. 이미 시작된 recovery start/finish 및 원래 finish/start-finisher/collect를 중복 호출하지 않는다. 정상 대기는 조용히 유지하며 별도 SSH/status 반복을 추가하지 않는다. 새 연결 실패·timeout·불완전 회수는 새 원문을 보존하고 자동 재시도하지 않는다.
+
+기존 dispatcher의 Train42→Validation42 전부재현→Test42 종료 뒤 기존 collector가126worker/dispatcher 실제exit0·owner부재·선택/원본/모든SHA를 검증하고 기존의 아직 없는 retrieval 경로에 최초 회수한다. 이후 같은 로컬 completion이 기존 비교기를 check-only→5seed 보고 순서로 실행한다. COLLECTION_COMPLETE는 회수 완료, COMPLETE는 추가로5seed 비교 완료다. 기존QUEUE_COMPLETE가 생겨도 새FAILURE가 five_seed_comparison 단계면 과학실험/회수완료와 집계실패를 구분한다. 다른자동화나5090을 변경하지 않는다.
