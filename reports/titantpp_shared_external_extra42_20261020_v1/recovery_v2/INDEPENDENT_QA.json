@@ -1,0 +1,33 @@
+{
+  "schema": "extra42_short_check_recovery_independent_qa_v2",
+  "status": "PASS",
+  "reviewer": "/root/extra42_recovery_qa",
+  "command": "PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m pytest -q -p no:cacheprovider tests/test_titantpp_shared_external_extra42_recovery_v2.py",
+  "actual_exit_code": 0,
+  "passed_test_count": 37,
+  "pytest_elapsed_seconds": 0.16,
+  "tool_wall_time_seconds": 0.890773583,
+  "tool_chunk_id": "0ff65b",
+  "evidence_source": "independent reviewer reported its actual tool response and static implementation review",
+  "stdout_stderr_separately_preserved": false,
+  "exact_execution_wall_clock_recorded": false,
+  "source_sha256": "ad34cc8e6d0430cc0880fc11a16fc9aabd24e8400088c26542ebcff010ff7408",
+  "tests_sha256": "d5c6ae6315359b87a1fc9dc744f7772a8f808a567d0ad14195b3778d007521e8",
+  "preserved_file_count": 1013,
+  "preserved_inventory_description": "original source987 + historical records6 + recovery_v1 control/raw records20",
+  "sorted_inventory_sha256_before": "3c404652a3b1a5be703c905d7bf5f9edb94cba293cd364ccd80abac81e0d858f",
+  "sorted_inventory_sha256_after": "3c404652a3b1a5be703c905d7bf5f9edb94cba293cd364ccd80abac81e0d858f",
+  "reviewed_guards": [
+    "one 45-second read-only SSH check per regular round",
+    "900-second early-call guard and nonblocking flock",
+    "transport255/timeout only: next regular round, maximum three consecutive errors",
+    "identity/scientific/partial/collection errors stop immediately",
+    "round sequence and latest pointer consistency including orphan-round crash boundary",
+    "no native training or evaluation invocation",
+    "preserved collector called once after verified dispatcher terminal exit0",
+    "complete cache revalidates original artifacts and local five-seed comparison without SSH"
+  ],
+  "open_findings": {"critical": 0, "high": 0, "medium": 0, "low": 0},
+  "remote_calls": 0,
+  "source_edits": 0
+}
