@@ -1,0 +1,83 @@
+{
+  "schema": "titans_mac_accuracy9_independent_qa_v1",
+  "status": "PASS",
+  "created_at": "2026-10-20T07:13:59.986795+00:00",
+  "reviewer": "mac9_independent_qa",
+  "scope": "Approved original RAF/Taxi/Intermittent MAC9 comparison on 5090; implementation, local synthetic tests and predeployment integrity only",
+  "summary": "Zero open critical/high/medium/low findings. Independent focused tests and local provenance verification passed. Native admission and scientific execution remain pending.",
+  "files_changed": [
+    "reports/titans_mac_accuracy9_20261020_v1/INDEPENDENT_QA.json",
+    "reports/titans_mac_accuracy9_20261020_v1/INDEPENDENT_QA.md"
+  ],
+  "files_reviewed_sha256": {
+    "paper/scripts/prepare_titans_mac_accuracy9.py": "268c80405a597beefee2a041e7dae0c296396de0a52d0ae4407e6179e93e26c2",
+    "paper/scripts/manage_titans_mac_accuracy9.py": "045ae041d23de033bfc12e0756ffa94fa39b8b76faec156f29d21ed2d6cbfe86",
+    "paper/scripts/titans_mac_accuracy9_runtime.py": "f44597d6f01c6a05deb4371a1dc6241db069944cef9e86d2641a12c320648dc1",
+    "paper/scripts/run_titans_mac_accuracy9.py": "8fda9deb7e4252cd8f8f03a95249878adc6c94fa7e6703e57f9d49e8ca0db4a3",
+    "paper/scripts/titans_mac_observed_time_contract.py": "ac80db7e4190c447ae2a3a8e4c33574886cc7edfca21a2fa272075914e926922",
+    "paper/scripts/titans_mac_observed_time_runtime.py": "36ec340041db9b3ea7d2335d30719cfb5c0e1255c72aee4935710cde673082d1",
+    "tests/test_titans_mac_accuracy9_ops.py": "ac4a11d40fe299a89f45267bddcec3dbfcbef45844629bc79a73a90a58280aca",
+    "tests/test_titans_mac_accuracy9_worker.py": "80b6363dcaef7816566d09f8958246e6cc1379f0721b5fae5729ab550bb6f83b",
+    "reports/titans_mac_accuracy9_20261020_v1/SCIENCE_SPEC.json": "49e6197e447f09ad91f75985eae9ccb1ab3c4eb5104e5343c75466ec52141692",
+    "reports/titans_mac_accuracy9_20261020_v1/FROZEN_CONDITIONS.json": "60a9b414e8d2292d17e068461b31299176de7a2c46846779ea552ec88a03f982"
+  },
+  "acceptance_criteria": {
+    "original_uncapped_three_datasets_by_three_seeds_exact_nine": true,
+    "mac_factory_matches_5090_efficiency_with_inner_clip_one_and_semantic_optimization": true,
+    "common_quantity_and_time_heads_loss_optimizer_budget_selector_preserved": true,
+    "all_shared_time_head_parameters_train_with_actual_gradient_update_proof": true,
+    "bounded_fresh_attempt_and_maximum_three_parallel_admission": true,
+    "native_qualification_inference_batch_matches_fixed_batch_128": true,
+    "all_nine_validation_replays_before_any_test_execution": true,
+    "selection_first_strict_finite_full_validation_raw_rmse_minimum": true,
+    "nine_worker_identity_exit_records_and_pipeline_collection_gates": true,
+    "old_983_sources_and_existing_results_preserved": true,
+    "reviewed_code_and_science_contract_bound_by_sha_before_deployment": true,
+    "no_native_run_or_real_data_training_performed_by_independent_reviewer": true
+  },
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "resolved_before_final_review": [
+    {
+      "issue": "Unused extra42 source hash dependency was absent from preserved source989 closure",
+      "resolution": "Removed the unused hash guard from the new worker only; inherited sources were not changed."
+    },
+    {
+      "issue": "Qualification description overclaimed new dataset-specific native runs",
+      "resolution": "Final science specification states all three configuration/head checks plus maximum-shape native and three-concurrent admission; prior measurement evidence remains separate."
+    },
+    {
+      "issue": "Native inference qualification batch exceeded fixed MAC maximum batch",
+      "resolution": "Qualification inference shape is 128 by maximum sequence length, matching actual evaluation batch 128."
+    }
+  ],
+  "automated_validation": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m pytest -q -p no:cacheprovider tests/test_titans_mac_accuracy9_ops.py tests/test_titans_mac_accuracy9_worker.py",
+    "actual_exit_code": 0,
+    "passed": 55,
+    "duration_seconds": 12.7,
+    "native_execution": false,
+    "real_data_training": false,
+    "notes": "Tests include fabricated CPU fit/selection/Validation/Test coverage with native check mocked. A pkg_resources deprecation warning was emitted; tests passed."
+  },
+  "integrity_validation": {
+    "parent_source_count": 983,
+    "current_source_count": 989,
+    "input_snapshot_count": 9,
+    "frozen_source_binding_count": 9,
+    "prior_completion_binding_count": 5,
+    "current_contract_sha256": "05b646251dbf831f4a91034111fc7a7d8f66d659a681b789c59825bbd5cfc16f",
+    "all_passed": true
+  },
+  "limitations": [
+    "This review is not evidence of new native qualification, training, Validation or Test completion.",
+    "Comparison concerns the Titans-MAC event adapter with common quantity/time heads, not native paper heads.",
+    "Actual runtime identity, GPU capacity and no foreign processes must pass the existing fresh native admission before deployment starts training.",
+    "The experiment tests complete adapter performance, not an isolated causal effect of sharing.",
+    "Dispatcher child exit is directly observed by its supervisor; wrapper own OS exit must not be inferred."
+  ]
+}
