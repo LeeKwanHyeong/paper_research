@@ -58,3 +58,11 @@ START_RECEIPT.json은 보존한 원격 status stdout/SHA와 연결된다. native
 5080 신규42는 실제관측14:48:43 KST에 학습완료6·진행3·대기33·미확정0, 과학실패0이다. RAF Shared15/RMTPP/THP 각각72/82의6fit 실제exit0·완료receipt가 있으며, NHP72/82·SAHP72가실제worker/GPU에서진행중이다. 전체42 nativeValidation/Test·최종회수는아직미완료다. 원본 status와 SHA는 `progress/20261020T054843Z/SUMMARY.json`에 결속된다. 이 관측시각을 새시각으로 사용하지 않는다.
 
 5seed 집계기 `paper.scripts.compare_titantpp_shared_external_five_seed`를 별도신규파일로 준비했고 focused16tests/독립QA PASS다. sealed987/기존4실행소스는변경하지않았다. 실제42완료자료 전체로 실행한 검증은 아직없다. 추가42 finalreceipt와 모든증거가complete일때만 로컬에서 `PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m paper.scripts.compare_titantpp_shared_external_five_seed --check-only`를 실행한다. 실제ready 뒤에만 --check-only를빼고 한 번 산출한다. 기본출력 `reports/titantpp_shared_external_extra42_20261020_v1/five_seed_aggregation_v1/FIVE_SEED_RESULTS.json/.md`를 보존한다. 기존출력존재시 덮어쓰기나 재학습을하지않고 source/출력SHA를 검증한다. 실제자료에서 도구오류가 확인되면 원본·실패를 보존한 순수로컬 국소수정·합성검증·독립검토만 허용하며 nativeTest/학습을 재실행해 디버깅하지않는다.
+
+
+후속 관측의 최신 포인터는 `LATEST_PROGRESS.json`이다. 해당 summary 경로·rawSHA·실제관측시각을 확인하고, 이 문서에 남은 과거 관측을 현재 상태로 사용하지 않는다. 정상 학습 중 완료 개수의 증가만 있고 데이터셋/단계 전환·실패·사용자조치가 없으면 알리지 않는다.
+
+
+## 사용자 지적에 따른 해석 정정 — 2026-10-20
+
+현재해석은 `reports/titantpp_shared_paper_interpretation_correction_20261020_v1/CORRECTION.md`를우선읽는다. 기존HistoryMLP의Titans-MAC대비5080효율실측은이미완료돼있으며 Shared15자체의배수와구분해재사용한다. Backbone전체의성능·비용기여에용량일치대조를필수로두지않는다. 현재공유형실험은Train학습/Validation선택/고정Test평가가확인되며, Test를봤다는이유만으로학습·구조·checkpoint튜닝에사용했다고단정하지않는다. 과거다른시도/관행의일반적한계를이번실험의확정사실로옮겨적지않는다. 기존frozen문서나집계기의구식해석문구는원문을보존하되정정기록과함께제시한다. 42개학습·평가경로/기존수치·checkpoint·source봉인은변경하지않는다.
