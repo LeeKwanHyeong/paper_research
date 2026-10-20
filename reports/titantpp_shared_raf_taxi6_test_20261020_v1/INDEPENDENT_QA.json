@@ -1,0 +1,90 @@
+{
+  "schema": "shared_raf_taxi6_independent_qa_v1",
+  "status": "PASS",
+  "reviewer": "/root/shared18_proc_fix",
+  "created_at_utc": "2026-10-20T04:43:03.376155+00:00",
+  "scope": "Independent local source/API review and fabricated CPU tests only; no SSH or actual native Validation/Test",
+  "summary": "최종 구현에서 열린 중대 실행 오류 없음. 6개 원본 선택 checkpoint의 부분 회수와 Validation6 전체 gate 뒤 Test6, 5080 평가 조건과 기존 결과 보존을 확인했다.",
+  "files_reviewed_sha256": {
+    "paper/scripts/compare_titantpp_shared_raf_taxi6_test.py": "6254eb9304ff6e13768b6882bc299eaf2826f40cd969b6d467f26fed9ecb9b7a",
+    "paper/scripts/evaluate_titantpp_shared_raf_taxi6_frozen.py": "3d796732555f2d97b0a8e74f1b30cbe22310a49e0b380ad061d3f92e983f70a9",
+    "paper/scripts/manage_titantpp_shared_raf_taxi6_test.py": "a95e2ea6aa6843db3f1ca9866b31754bad9c1dd7f04fd9777daa96051b0c6b6c",
+    "paper/scripts/prepare_titantpp_shared_raf_taxi6_references.py": "96c0851c9b33961db51671c6a092db06e336a763f7303b67844d0eca37cec8b3",
+    "tests/test_titantpp_shared_raf_taxi6_test_ops.py": "028b2fcd909a90d06c5abcaf9ca59becbc8de13315947c93c6aed8a7cd9f142a",
+    "tests/test_titantpp_shared_raf_taxi6_frozen.py": "c8a75e4c1ccac265719cc0be9913279794f8fc211aefe4d1a6e1825777cfa0dc",
+    "tests/test_titantpp_shared_raf_taxi6_test_compare.py": "d58d3c4b9eb05c7eba15d9712e6f11b1099b42bb9a24436c0bbee3d2ede27624",
+    "reports/titantpp_shared_raf_taxi6_test_20261020_v1/SCIENCE_SPEC.json": "14628de4ef9d0864306a639e5a30c94c7f75578ca52fcc9d1d828c8ed890eb46",
+    "reports/titantpp_shared_raf_taxi6_test_20261020_v1/REFERENCES.json": "5cc41cd6e3f5c5965c4ab772fcf4d6936ab1343a653250625a2e73b6cd88e566",
+    "reports/titantpp_shared_raf_taxi6_test_20261020_v1/REFERENCE_QA.json": "0d94621e58eb301e45885caf48065098574e5e98e75cb5c763cdd27ca3ebe1d8",
+    "reports/titantpp_shared_raf_taxi6_test_20261020_v1/EXPERIMENT_PLAN.md": "d5a7bbf6aa0a31981242575879b77cd4f359d5a24a4a082c0fd7044e81b26092",
+    "reports/titantpp_shared_raf_taxi6_test_20261020_v1/stop_cap5080/FINAL_RECEIPT.json": "17ea301b993f896f70228ac2d0ac033931b9d471fbc6f5f1f6d1ab68a970c74a",
+    "reports/titantpp_shared_raf_taxi6_test_20261020_v1/stop_cap5080/POST_STOP_VERIFIED.json": "179c24eed5cb3b89efb142bf168bcca272fa6b5df49424ad9997c490d429d6e0",
+    "paper/scripts/manage_titantpp_shared_raw_raf3_test.py": "c516112d606732a3093953c387b14c29ab347b565c531fd8c7a629932b33397a",
+    "paper/scripts/evaluate_titantpp_shared_raw_raf3_frozen.py": "2fdd0f56757c4330e3e140ca800bbfbb5d13060f8b663d7156a1e40a7e3225c5",
+    "paper/scripts/compare_titantpp_shared_raw_raf3_test.py": "5469ceb02be20d2559c51232a7b63dd5917540d5bc317e2903d0ef29141664dd"
+  },
+  "tests": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m pytest -q -p no:cacheprovider tests/test_titantpp_shared_raf_taxi6_frozen.py tests/test_titantpp_shared_raf_taxi6_test_ops.py tests/test_titantpp_shared_raf_taxi6_test_compare.py",
+    "actual_exit_code": 0,
+    "passed": 75,
+    "subtests_passed": 2,
+    "elapsed_seconds": 11.09,
+    "stdout": "75 passed, 2 subtests passed in 11.09s",
+    "warning": "Local fs pkg_resources deprecation warning on stderr; no test failure."
+  },
+  "acceptance_criteria": {
+    "fixed_six_selected_epochs": true,
+    "training_source983_byte_identical": true,
+    "old_operation_dependencies3_sha_unchanged": true,
+    "selected_subset_does_not_claim_whole_raw9_completion": true,
+    "raw9_inter_training_not_changed_or_waited_for": true,
+    "train_launch_exit_runtime_api_exists_and_matches": true,
+    "qualification6_before_validation6_before_test6": true,
+    "individual_validation_prediction_and_time_loss_replay_gate": true,
+    "failed_validation_or_gate_blocks_all_test": true,
+    "original5090_training_identity_separate_from5080_evaluation_runtime": true,
+    "paused_external4_identity_and_only3_cuda_context_allowlist": true,
+    "child_limit3_and_timeout_cleanup_owned_only": true,
+    "archive_binary_stdout_separate_from_stderr": true,
+    "references42_bindings280_sha_verified": true,
+    "two_dataset_metrics_and_seed_differences_not_pooled": true,
+    "final_counts_qualification6_validation6_test6_native18_pipeline1": true,
+    "reviewed_inventory_unchanged_during_tests": true,
+    "post_stop_observation_and_final_receipt_distinct_bindings": true
+  },
+  "open_findings": [],
+  "resolved_findings": [
+    {
+      "issue": "stop observation file lacks transport/files fields required by previous prepare version",
+      "resolution": "Final manager reads cap_stop.receipt_path FINAL_RECEIPT separately and binds both observation and final receipt; actual spec and 9 stop file bindings verified."
+    },
+    {
+      "issue": "Parent identified frozen-source remote suffix and inspect recompilation resetting stage count to3",
+      "resolution": "Final source explicitly sets5080 root and restores terminal count6 after inspect; synthetic phase6 tests pass."
+    }
+  ],
+  "preservation": {
+    "training_source_count": 983,
+    "reference_file_bindings": 280,
+    "reference_count": 42,
+    "old_operation_files": 3,
+    "source_or_checkpoint_mutations": 0,
+    "remote_calls": 0,
+    "actual_native_test_runs": 0
+  },
+  "archive_import_check": {
+    "actual_exit_code": 0,
+    "stdout_bytes": 0,
+    "stderr_bytes": 664,
+    "scope": "Local subprocess importing exact selected-collection dependencies; does not substitute for native execution."
+  },
+  "limitations": [
+    "Native5080 Validation reproduction is still required and may reject GPU/cuDNN differences at the fixed tolerance.",
+    "No liveGPU availability or actual native Test completion is claimed.",
+    "Wrapper own OS exit is distinct from observed child/pipeline exit."
+  ],
+  "files_changed": [
+    "reports/titantpp_shared_raf_taxi6_test_20261020_v1/INDEPENDENT_QA.json",
+    "reports/titantpp_shared_raf_taxi6_test_20261020_v1/INDEPENDENT_QA.md"
+  ]
+}
