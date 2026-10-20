@@ -1,0 +1,72 @@
+{
+  "schema": "mac_interim_validation_numerical_independent_qa_v1",
+  "status": "PASS",
+  "created_at": "2026-10-20T11:37:37.953277+00:00",
+  "source_observed_at": "2026-10-20T11:33:20.610203+00:00",
+  "scope": "Local numerical audit of completed-training Validation reference only; no native replay/collection completion claimed.",
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "acceptance_criteria": {
+    "five_completed_MAC_actual_train_exit0": true,
+    "first_strict_finite_full_validation_RMSE_selected_epoch": true,
+    "same_checkpoint_MAE_and_validation_reference_identity": true,
+    "matched_RAF42_52_62_and_Taxi42_62_all_eight_models": true,
+    "all32_mean_sampleSD_pairs_ddof1": true,
+    "all35_seed_pairs70_absolute_relative_differences": true,
+    "all27_adverse_metric_differences_preserved": true,
+    "markdown_rounded_values_and_conclusions": true,
+    "interim_validation_only_limits_no_Intermittent_claim": true
+  },
+  "counts": {
+    "records": 40,
+    "models": 8,
+    "completed_mac_fits": 5,
+    "mean_sd_pairs": 32,
+    "seed_comparison_pairs": 35,
+    "metric_differences": 70,
+    "adverse_differences": 27
+  },
+  "MAC_selected_epochs": {
+    "raf_spare_parts": {
+      "42": 9,
+      "52": 27,
+      "62": 20
+    },
+    "yellow_trip_hourly": {
+      "42": 54,
+      "62": 71
+    }
+  },
+  "files_reviewed_sha256": {
+    "reports/titans_mac_accuracy9_20261020_v1/interim_validation/20261020T113320610203+0000/RESULT.json": "d05875906718af32a22a67d6e25b745ab178c9da498dbab6a789fc642f2c36da",
+    "reports/titans_mac_accuracy9_20261020_v1/interim_validation/20261020T113320610203+0000/RESULT.md": "83966b762966f258aa22a09b8c27abfd870b97096ea94b7589c922cafc49f90b",
+    "reports/titans_mac_accuracy9_20261020_v1/interim_validation/20261020T113320610203+0000/MANIFEST.json": "82906bb7cf2d421ccf8fd2fa1d7dd2c57a6321f6ab69534613c678f12d8a4a1d"
+  },
+  "verified_source_bindings": {
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titans_mac_accuracy9_20261020_v1/transport/5090/20261020T113320791730Z_status.stdout": "1323197f56676eb1b6747e5dd305ea1775aedaae8cf791bb2d8e35d998da7f0d",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titans_mac_accuracy9_20261020_v1/transport/5090/20261020T113320791730Z_status.json": "7dcf3302ea21944d91f4a085765cf160bc6f56ca23779624e76508f12a7ad4b5",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_history_mlp_shared_raw9_20261020_v1/execution_5090_v1/THREE_SEED_VALIDATION.json": "442c5a9e931910c9546502e6b7879db1055538e38611a519413bfd2503b4263d",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_history_mlp_shared_raw9_20261020_v1/execution_5090_v1/interim_raf_taxi/20261020T040748297630Z/RESULT.json": "eb7c93a27922608695324e0474710ba03fc17272c228369f2ace24d711038169",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titans_mac_accuracy9_20261020_v1/integrity.json": "1dd974eccccce4c9b338bfdcd6b3f3755ee96a1172ee46de6b63c6f19db0cd04",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titans_mac_accuracy9_20261020_v1/execution_contract.json": "05b646251dbf831f4a91034111fc7a7d8f66d659a681b789c59825bbd5cfc16f"
+  },
+  "independent_arithmetic": "sum/n; sqrt(sum((x-mean)^2)/(n-1)); MAC-reference and100*(MAC-reference)/reference",
+  "conclusions_checked": {
+    "RAF": "MAC mean RMSE/MAE higher than Shared15 and per-metric best external references.",
+    "Taxi42_62": "MAC mean RMSE/MAE lower than per-metric best external RMTPP but higher than Shared15; n=2 only."
+  },
+  "limitations": [
+    "Original MAC checkpoint binaries and prediction files have not yet been collected; their SHA values are reported by bound remote training receipts, not rehashed as local checkpoint files.",
+    "All9 native Validation replay and final retrieval are pending. This is not Test or final3seed evidence for Taxi.",
+    "Existing external history audits and95Shared bindings are reused from the other reviewer; this review did not repeat broad source checks.",
+    "No SSH, helper rerun, training, inference, Test/mixed result reading, source modification or commit."
+  ],
+  "files_changed": [
+    "reports/titans_mac_accuracy9_20261020_v1/interim_validation/20261020T113320610203+0000/QA.json",
+    "reports/titans_mac_accuracy9_20261020_v1/interim_validation/20261020T113320610203+0000/QA.md"
+  ]
+}
