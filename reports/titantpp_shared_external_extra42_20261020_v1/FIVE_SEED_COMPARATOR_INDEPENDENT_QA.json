@@ -1,0 +1,139 @@
+{
+  "schema": "titantpp_five_seed_comparator_independent_qa_v1",
+  "status": "PASS",
+  "created_at_utc": "2026-10-20T05:51:02.942036+00:00",
+  "reviewer": "independent qa-reviewer",
+  "configured_model": "gpt-6-astra",
+  "configured_reasoning_effort": "high",
+  "scope": "Local read-only code review plus fabricated-data tests; not certification of completed real five-seed results",
+  "summary": "No open findings. Corrected original5090 execution-directory gate verified by regression; independent 16 tests passed and sealed source987 remained unchanged.",
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "files_reviewed_sha256": {
+    "paper/scripts/compare_titantpp_shared_external_five_seed.py": "9d2c28bc891806a8276b2e7d0387e485ac26d89215bc91665b68add0e7bffefe",
+    "tests/test_titantpp_shared_external_five_seed.py": "05a926aa9fc8583efb9f0fcc6a3b68a8b3cdc77f404033b30125e83cb138a17c",
+    "reports/titantpp_shared_external_extra42_20261020_v1/FIVE_SEED_COMPARATOR_TESTS.json": "12d45ef814028934cfd9688d3ba176848e6270009bd17958318ed73ae630d067"
+  },
+  "files_after_sha256": {
+    "paper/scripts/compare_titantpp_shared_external_five_seed.py": "9d2c28bc891806a8276b2e7d0387e485ac26d89215bc91665b68add0e7bffefe",
+    "tests/test_titantpp_shared_external_five_seed.py": "05a926aa9fc8583efb9f0fcc6a3b68a8b3cdc77f404033b30125e83cb138a17c",
+    "reports/titantpp_shared_external_extra42_20261020_v1/FIVE_SEED_COMPARATOR_TESTS.json": "12d45ef814028934cfd9688d3ba176848e6270009bd17958318ed73ae630d067"
+  },
+  "acceptance_criteria": [
+    {
+      "id": "complete_review",
+      "status": "PASS",
+      "detail": "Comparator, tests and updated author receipt reviewed; reviewed hashes match before and after independent tests."
+    },
+    {
+      "id": "aggregation",
+      "status": "PASS",
+      "detail": "210 expected endpoints; historical3, additional2 and all5 cohorts remain separate; sample SD uses ddof=1; no pooled raw-error recomputation."
+    },
+    {
+      "id": "missing_support",
+      "status": "PASS",
+      "detail": "A metric missing in any required seed produces N/A for that entire cohort cell; unsupported tail support is not replaced by a partial mean."
+    },
+    {
+      "id": "comparisons",
+      "status": "PASS",
+      "detail": "1080 per-seed model comparisons; signed Shared minus external differences retained; percentage divides by absolute reference; zero reference produces N/A."
+    },
+    {
+      "id": "selection",
+      "status": "PASS",
+      "detail": "Validation raw-quantity RMSE earliest minimum selects the checkpoint; RMSE and MAE use the identical epoch; no Test-driven reselection."
+    },
+    {
+      "id": "gates",
+      "status": "PASS",
+      "detail": "Extra42 completion, original5090 nested completion receipt, paper-start state equality, archive/manifests and frozen-condition SHA checks precede aggregation."
+    },
+    {
+      "id": "condition_identity",
+      "status": "PASS",
+      "detail": "Historical metadata and checkpoint states bind to frozen summaries/configuration and original Test references; Shared Validation/Test selected epoch and tensor state equality checked for all5 seeds."
+    },
+    {
+      "id": "immutability",
+      "status": "PASS",
+      "detail": "Comparator writes only to a new exclusive output directory; waiting/check-only create no aggregation output; 987 sealed source files and seven protected documents unchanged before/after this review run."
+    },
+    {
+      "id": "path_regression",
+      "status": "PASS",
+      "detail": "Correct execution_5090_v1 nested path admitted; a parent campaign-only receipt cannot satisfy the original5090 gate."
+    },
+    {
+      "id": "independent_tests",
+      "status": "PASS",
+      "detail": "16 fabricated-data tests passed with actual OS exit0; critical Ruff E9,F63,F7,F82 checks passed."
+    }
+  ],
+  "independent_test_execution": {
+    "command": [
+      "/usr/local/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "tests/test_titantpp_shared_external_five_seed.py"
+    ],
+    "actual_os_returncode": 0,
+    "elapsed_seconds": 1.0136459579807706,
+    "stdout": "................                                                         [100%]\n16 passed in 0.10s\n"
+  },
+  "test_count": 16,
+  "test_logs_sha256": {
+    "reports/titantpp_shared_external_extra42_20261020_v1/FIVE_SEED_COMPARATOR_INDEPENDENT_TESTS.stdout.log": "fd4b93811bf776e6eb026321c2ed111649d14492302f5cf92999156928e0b4ca",
+    "reports/titantpp_shared_external_extra42_20261020_v1/FIVE_SEED_COMPARATOR_INDEPENDENT_TESTS.stderr.log": "eae3b3ab88ebd007cd93d95595b7a951b2c689b68948b08fd24d8ff83282945e"
+  },
+  "critical_lint": {
+    "command": "python -m ruff check --select E9,F63,F7,F82 paper/scripts/compare_titantpp_shared_external_five_seed.py tests/test_titantpp_shared_external_five_seed.py",
+    "actual_os_returncode": 0,
+    "stdout": "All checks passed!"
+  },
+  "protected_files_sha256": {
+    "search_artifacts/titantpp_shared_external_extra42_20261020_v1/execution_contract.json": "4d88a5df41c41ed4076b766c4f1383263e29f2584c22cbab21306fdf126edac2",
+    "search_artifacts/titantpp_shared_external_extra42_20261020_v1/integrity.json": "44794f5e4b9ff74e3ff903f964e619dbe565961ddc64c2117fa109b5bcc764ac",
+    "reports/titantpp_shared_external_extra42_20261020_v1/INDEPENDENT_QA.json": "586a4472e30d5cd1604d92bdb765017ec107f46cea5076eed39ffc54d71938d9",
+    "reports/titantpp_shared_external_extra42_20261020_v1/INDEPENDENT_QA.md": "0b5e6506a06e86926043ced48980ca2e7b73271afc635a6aee4cd4ece233598f",
+    "reports/titantpp_shared_external_extra42_20261020_v1/OPERATING_TESTS.json": "3148c8eeb8bb0264b36b1df2f52a3b8fc3dd9f2da3f317ca5c35e924cef6cacb",
+    "reports/titantpp_shared_external_extra42_20261020_v1/SCIENCE_SPEC.json": "9dfb6ce647bd4376c967a35e5c8bbce4725fe235eb76fc93c978e22e832a8742",
+    "reports/titantpp_shared_external_extra42_20261020_v1/FROZEN_CONDITIONS.json": "2080a1c8c84d43a8553d412cc2a9f99e246d3a0bf9034be5f91183ebfd456099"
+  },
+  "source_files_verified_before_and_after": 987,
+  "resolved_during_review": [
+    {
+      "severity": "HIGH",
+      "file": "paper/scripts/compare_titantpp_shared_external_five_seed.py:469",
+      "description": "Original5090 receipt lookup omitted the execution_5090_v1 directory, which would incorrectly remain waiting after real completion.",
+      "remediation_code": "raw_bundle = root / \"search_artifacts\" / RAW9 / RAW9_EXECUTION",
+      "regression_test": "tests/test_titantpp_shared_external_five_seed.py:69",
+      "status": "RESOLVED; included in reviewed SHA and independent16 tests"
+    }
+  ],
+  "limitations": [
+    "Real completed extra42 archive and all126 Train/Val/Test receipt path was not executed; extra42 completion receipt was absent at review.",
+    "Synthetic orchestration mocks source loaders; the complete historical54 production checkpoint-metadata path was not executed in this review. Earlier frozen metadata review is separately recorded in INDEPENDENT_QA.json.",
+    "PASS covers the reviewed implementation and synthetic tests, not a five-seed empirical result or final experiment completion.",
+    "Existing fs/pkg_resources deprecation warning appeared on stderr; test process returned0."
+  ],
+  "remote_calls": 0,
+  "model_inference_calls": 0,
+  "actual_five_seed_result_files_created": 0,
+  "source_files_modified_by_reviewer": 0,
+  "existing_sealed_files_modified": 0,
+  "files_changed_by_reviewer": [
+    "reports/titantpp_shared_external_extra42_20261020_v1/FIVE_SEED_COMPARATOR_INDEPENDENT_QA.json",
+    "reports/titantpp_shared_external_extra42_20261020_v1/FIVE_SEED_COMPARATOR_INDEPENDENT_QA.md",
+    "reports/titantpp_shared_external_extra42_20261020_v1/FIVE_SEED_COMPARATOR_INDEPENDENT_TESTS.stdout.log",
+    "reports/titantpp_shared_external_extra42_20261020_v1/FIVE_SEED_COMPARATOR_INDEPENDENT_TESTS.stderr.log"
+  ]
+}

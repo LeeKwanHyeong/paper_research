@@ -1,0 +1,120 @@
+{
+  "schema": "titantpp_final_three_seed_paper_evidence_independent_qa_v1",
+  "status": "PASS",
+  "scope": "Independent read-only evidence-table code review, original receipt/hash comparison and numerical reaggregation. No model construction or inference.",
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "summary": "144 endpoints,288 aggregate cells,648 differences,12 metric-specific external-best rows and all original evidence bindings passed independent checks.",
+  "created_at_utc": "2026-10-20T05:54:44.372062+00:00",
+  "files_reviewed_sha256": {
+    "reports/titantpp_shared_paper_preparation_20261020_v1/build_evidence_tables.py": "add2b151397bbc06cffb31983ff2ef702eea5f4335a0309debe38e84cbc631c6",
+    "reports/titantpp_shared_paper_preparation_20261020_v1/RESULT_TABLES.json": "14fe48581bd3688f1ba96e3185d8ebf6deb623a4d39a567c1c1989f94c1ff707",
+    "reports/titantpp_shared_paper_preparation_20261020_v1/RESULT_TABLES.md": "685dd61f5421d71106fd5b0230c8b64a45bc016d606f396bbe261073b06b4663",
+    "reports/titantpp_shared_paper_preparation_20261020_v1/RESULT_TABLES.csv": "08d1b61f27764d90e1155ba40e4605b11dd20a2e2ffe22c12bd389700c8dfaad",
+    "reports/titantpp_shared_paper_preparation_20261020_v1/SEED_DIFFERENCES.csv": "791fd70efb0ba28b4a5283e33e187f385fa20a184378bbbdf366c7f4bdbbbdd6",
+    "reports/titantpp_shared_paper_preparation_20261020_v1/SOURCE_VERIFICATION.json": "256b9a2b1af4c1487eb48dc62b4da197036c238d93ca728283c703a39e416ff3"
+  },
+  "endpoint_count": 144,
+  "exact_source_endpoints": 108,
+  "historical_summary_endpoints": 36,
+  "same_selected_epoch_pairs": 72,
+  "aggregate_cells": 288,
+  "na_aggregate_cells": 36,
+  "all_seed_differences": 648,
+  "main_csv_seed_differences": 216,
+  "external_metric_bests": 12,
+  "source_bindings_verified_before_after": 244,
+  "original5090_inventory_files": 227,
+  "tiny_nonzero_markdown_mean_cells": 10,
+  "original_final_receipts_sha256": {
+    "search_artifacts/titantpp_shared_raf_taxi6_test_20261020_v1/final_receipt.json": "41dd6a4f621a3bf9f2654e71c7a0d643eb02a95885a620359debd03b2c410c70",
+    "search_artifacts/titantpp_shared_inter3_interim_test_20261020_v1/final_receipt.json": "1e1d4c7026ab32e6f89459c3db3fb35509d2c2b2b0380bc1e2ec62f22929fc4f"
+  },
+  "original_result_files_sha256": {
+    "reports/titantpp_shared_raf_taxi6_test_20261020_v1/THREE_SEED_TEST.json": "1ee5d2ee0322d1ca89a0b1495a7052b5db6bcfcb2e902c9e4a689c8612320b1e",
+    "reports/titantpp_shared_raf_taxi6_test_20261020_v1/THREE_SEED_TEST.md": "85142284e800bca98ebe63bfcfd69805eff37b3e2a938629147ab759bc9fb83c",
+    "reports/titantpp_shared_inter3_interim_test_20261020_v1/THREE_SEED_VALIDATION.json": "1522a1a245847b1b73a2f1a820364362a36234628fd312775a128aa5435ae992",
+    "reports/titantpp_shared_inter3_interim_test_20261020_v1/THREE_SEED_VALIDATION.md": "8511d551eee5a9fc10f7f1c477ba1eada1edeae73f6b3dd223d6053f94ffa458",
+    "reports/titantpp_shared_inter3_interim_test_20261020_v1/THREE_SEED_TEST.json": "018fc63d83b7c848a6b03cab55b1b15fb1e99ac7e4deed58a0f7411e9b9521e8",
+    "reports/titantpp_shared_inter3_interim_test_20261020_v1/THREE_SEED_TEST.md": "a1792741070ebc311281781d3f3316a46d96a08bdda39364490c69832dd3a627"
+  },
+  "all_pre_post_sha_unchanged": true,
+  "source_verification_file_bindings_rechecked": 251,
+  "original_inventory_counts": {
+    "titantpp_shared_raf_taxi6_test_20261020_v1": 205,
+    "titantpp_shared_inter3_interim_test_20261020_v1": 92,
+    "raw9_5090": 227
+  },
+  "original_inventory_total": 524,
+  "inter_original_validation_test_state_receipt_matches": 3,
+  "acceptance_criteria": [
+    {
+      "id": "complete_matrix",
+      "status": "PASS",
+      "detail": "8 models ×3 datasets ×3 seeds ×2 splits =144 unique endpoints; Shared candidate/external6/internal MLP16 roles remain separate."
+    },
+    {
+      "id": "source_reproduction",
+      "status": "PASS",
+      "detail": "108 endpoints match original result JSON exactly;36 historical RAF/Taxi external Validation endpoints match selected summary and earliest finite RMSE history epoch."
+    },
+    {
+      "id": "checkpoint_selection",
+      "status": "PASS",
+      "detail": "All72 Validation/Test endpoint pairs have identical selected epochs;36 reconstructed historical endpoints also match frozen Test state SHA. Inter42/52/62 original Validation/Test receipts match tensor SHA and epochs5/5/11."
+    },
+    {
+      "id": "aggregation",
+      "status": "PASS",
+      "detail": "288 mean/sample-SD cells independently recomputed with fsum and sqrt(sum squared deviations/(3-1));36 unsupported tail cells remain N/A."
+    },
+    {
+      "id": "differences",
+      "status": "PASS",
+      "detail": "648 full metric differences and216 primary CSV differences recomputed;12 metric-specific external-best comparisons independently selected and recalculated."
+    },
+    {
+      "id": "formatting",
+      "status": "PASS",
+      "detail": "CSV round-trips exactly against JSON;all288 Markdown cells match numeric formatting;10 tiny nonzero mean cells retain scientific notation."
+    },
+    {
+      "id": "evidence_hashes",
+      "status": "PASS",
+      "detail": "244 table source bindings verified before/after; E1/E2 final receipt result files match; all524 original inventory files205+92+227 checked; SOURCE_VERIFICATION251 file bindings rechecked."
+    },
+    {
+      "id": "immutability",
+      "status": "PASS",
+      "detail": "Reviewed files unchanged during checks;sealed source987 matches contract;reviewer did not modify source,original results or existing artifacts."
+    }
+  ],
+  "validation_execution": {
+    "actual_os_returncode": 0,
+    "checker_sha256": "5e244eff7d6ae453c8cefcd79a239f864d043a09a362f1bd1348124dface247c",
+    "critical_ruff_actual_os_returncode": 0,
+    "critical_ruff_select": "E9,F63,F7,F82",
+    "numeric_tolerance": "2e-13 relative/1e-100 absolute for values, sample SD and direct seed differences; external-best mean differences allow1e-12 absolute/1e-11 relative for subtraction cancellation. Tiny scientific notation checked separately."
+  },
+  "sealed_source_files_verified": 987,
+  "execution_contract_sha256": "4d88a5df41c41ed4076b766c4f1383263e29f2584c22cbab21306fdf126edac2",
+  "limitations": [
+    "Checks reproduce stored selected-checkpoint results; they do not rerun model inference or independently reconstruct predictive errors from parquet rows.",
+    "Checkpoint tensor files were hashed but not deserialized; Inter final/frozen state identity was cross-checked in the immutable original Validation/Test receipts.",
+    "This is the confirmed historical3-seed research evidence package; extra72/82 results are excluded and no5-seed completion or statistical significance is claimed.",
+    "Existing Test-informed exploratory design and runtime differences remain documented limitations."
+  ],
+  "remote_calls": 0,
+  "model_constructions": 0,
+  "new_inference": 0,
+  "source_edits": 0,
+  "old_result_edits": 0,
+  "files_changed_by_reviewer": [
+    "reports/titantpp_shared_paper_preparation_20261020_v1/PAPER_EVIDENCE_QA.json",
+    "reports/titantpp_shared_paper_preparation_20261020_v1/PAPER_EVIDENCE_QA.md"
+  ]
+}

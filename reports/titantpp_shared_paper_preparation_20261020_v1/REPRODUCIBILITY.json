@@ -1,0 +1,290 @@
+{
+  "schema": "shared_final_three_seed_reproducibility_v1",
+  "scope": "research evidence package, not generated manuscript prose",
+  "paper_start_gate_sha256": "e107aa615b23603859e519d93d482ce92b8741d18b8deb064ea02318cbfd80ca",
+  "original_final_receipt_sha256": "5f0deda74a3e606cd7a5819f3a15c55cf8c24105f5708abcf1dfc0f3ae7412d1",
+  "data_variant": "original_uncapped",
+  "quantity_capping_applied": false,
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "extra_seeds_pending": [
+    72,
+    82
+  ],
+  "training_condition": {
+    "time_input": "log1p",
+    "loss_mode": "log_mse",
+    "time_alpha": 1.0
+  },
+  "budget": {
+    "maximum_epochs": 300,
+    "minimum_epochs": 40,
+    "patience": 40,
+    "batch_size": 128,
+    "monitor": "validation_raw_quantity_rmse"
+  },
+  "selection": "first strict finite fullValidation raw quantity RMSE minimum; tie earliest; MAE and Test use identical checkpoint",
+  "training_source_base_revision": "5d8ee1d64601a67d5ae0d0b4b97dd5547b63ebdd",
+  "training_source_closure_sha256": "db59912adf29da1493ae675e0d0a88a30afdf7927a243644cbf2365d8f0a35b7",
+  "shared_training_runtime": {
+    "python": "3.12.13",
+    "torch": "2.11.0+cu130",
+    "cuda": "13.0",
+    "cudnn": 92000,
+    "threads": 4,
+    "interop_threads": 1
+  },
+  "shared_test_runtime": {
+    "python": "3.12.13",
+    "torch": "2.11.0+cu130",
+    "cuda": "13.0",
+    "cudnn": 91900,
+    "threads": 4,
+    "interop_threads": 1
+  },
+  "common_model_and_loss": {
+    "batch_size": 128,
+    "eval_batch_size": 128,
+    "lr": 0.001,
+    "optimizer": "AdamW",
+    "weight_decay": 0.01,
+    "grad_clip": 1.0,
+    "max_epochs": 300,
+    "min_epochs": 40,
+    "early_stop_patience": 40,
+    "quantity_loss": "log_mse",
+    "lambda_log_qty": 1.0,
+    "lambda_tail": 0.0,
+    "alpha": 1.0,
+    "hidden_dim": 64,
+    "time_input": "log1p",
+    "quantity_input": "log1p",
+    "time_head_mode": "heteroscedastic_lognormal_duration",
+    "time_sigma_floor": 0.001,
+    "time_head_lr_multiplier": 1.0,
+    "intercept_limit": 30.0,
+    "time_w_max": 3.3333333333333335,
+    "time_wd_safety": 40.0,
+    "time_observation_mode": "positive_integer_round_clamp_v1",
+    "time_observation_top_code": null,
+    "data_variant": "original_uncapped",
+    "quantity_capping_applied": false,
+    "checkpoint_selection": "first strict finite fullValidation raw quantity RMSE minimum; earliest epoch on ties"
+  },
+  "datasets": {
+    "raf_spare_parts": {
+      "full_data": {
+        "path": "benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_with_split.parquet",
+        "sha256": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d"
+      },
+      "full_split_manifest": {
+        "path": "benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_split_manifest.json",
+        "sha256": "cd2458aa3809014aa74b8a121572a74e3d86dc520a690335d79a1e5150899e27"
+      },
+      "training_validation_identity": {
+        "data": {
+          "path": "inputs/data/raf_spare_parts/train_validation.parquet",
+          "sha256": "d805cad0242078fedfbb87eed18bde9b73d37bfc9b93c6b75aac49087244efa2"
+        },
+        "split_manifest": {
+          "path": "inputs/data/raf_spare_parts/split_manifest.json",
+          "sha256": "3cd6204667de4e44eda8787d32845bebff7624e1bb255ffd7677f810b8d7b149"
+        },
+        "populations": {
+          "train": {
+            "target_count": 25779,
+            "target_identity_sha256": "9863e00d51357456e1bf53c0f82f17a867cbbaaf9f296064d1ae23c4392895b2",
+            "target_quantity_sha256": "abbb37aab32b35b029b8705fe6044bd3ed5e8b7239822d40ba7572d0ab6fae22"
+          },
+          "validation": {
+            "target_count": 6690,
+            "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+            "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+          }
+        }
+      },
+      "test_population": {
+        "target_count": 5226,
+        "target_identity_sha256": "aa96c7d64b938ab736954217182cadef1eed7e8eabd20bb4b4af4f72835a35ec",
+        "target_quantity_sha256": "1701d9e58336ecefad2b243e973927c3acde47808d3b9e6ef2b67220e2064482"
+      },
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 84,
+        "max_seq_len": 84,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "model_head": {
+        "hidden_dim": 64,
+        "lambda_log_qty": 1.0,
+        "lambda_tail": 0.0,
+        "quantity_variant": "count_only_log_regression",
+        "time_head_lr_multiplier": 1.0,
+        "time_head_mode": "heteroscedastic_lognormal_duration",
+        "time_initial_location": -0.08887296773528319,
+        "time_initial_scale": 0.9589506323759867,
+        "time_observation_contract": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "month"
+        },
+        "time_scale": 6.0,
+        "time_sigma_floor": 0.001
+      },
+      "tail_threshold": 200.0,
+      "shared_parameter_count": 88451
+    },
+    "yellow_trip_hourly": {
+      "full_data": {
+        "path": "sample_data/new_york_taxi/yellow_trip_hourly_with_split.parquet",
+        "sha256": "b47e98e9fdb75d4274a18e3f8a5d8f463418a1d56a6db4db7d9b834c9d89ca46"
+      },
+      "full_split_manifest": {
+        "path": "sample_data/new_york_taxi/yellow_trip_hourly_split_manifest.json",
+        "sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85"
+      },
+      "training_validation_identity": {
+        "data": {
+          "path": "inputs/data/yellow_trip_hourly/train_validation.parquet",
+          "sha256": "54ce04a41e3cde688ce85f7ccda83773f47194c4f7ffbaf02001ea2390e881ab"
+        },
+        "split_manifest": {
+          "path": "inputs/data/yellow_trip_hourly/split_manifest.json",
+          "sha256": "4a005d4a77a89f7ca793d8de56afb9267a3ca4a5e60c53e09465c0494d60ed85"
+        },
+        "populations": {
+          "train": {
+            "target_count": 38393,
+            "target_identity_sha256": "fc6453af5a9a34c93dd3f299cd545c9ab946be11752ee001f38055e52cc9e637",
+            "target_quantity_sha256": "bbabe4e040831f05bc96680afdb4c45a1856673e418bdd1db9495cda3f693680"
+          },
+          "validation": {
+            "target_count": 8268,
+            "target_identity_sha256": "19493e9265c6b733b03a08fafc391a86abf2f46b4efb0fc140c8d48534e407fb",
+            "target_quantity_sha256": "acaa58691a7370d2708c092da777a3d1c14b511d84bbb36b6ed9fb64b2e723cd"
+          }
+        }
+      },
+      "test_population": {
+        "target_count": 8327,
+        "target_identity_sha256": "27ee4c6fb638ba2ddee77da63a2d9ea18da04d7b3dd2ca30ed5173bd6497dbdc",
+        "target_quantity_sha256": "beee7d0490a1aadda31e65ee5a41f35e5702c5faf451cb77d3b995c0c4c85d8a"
+      },
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 168,
+        "max_seq_len": 256,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "model_head": {
+        "hidden_dim": 64,
+        "lambda_log_qty": 1.0,
+        "lambda_tail": 0.0,
+        "quantity_variant": "count_only_log_regression",
+        "time_head_lr_multiplier": 1.0,
+        "time_head_mode": "heteroscedastic_lognormal_duration",
+        "time_initial_location": 0.2357508697949888,
+        "time_initial_scale": 0.5898045019331329,
+        "time_observation_contract": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "hour"
+        },
+        "time_scale": 1.0,
+        "time_sigma_floor": 0.001
+      },
+      "tail_threshold": 3449,
+      "shared_parameter_count": 99459
+    },
+    "intermittent_frozen_5000": {
+      "full_data": {
+        "path": "sample_data/intermittent_v2/intermittent_frozen_5000_with_split.parquet",
+        "sha256": "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f"
+      },
+      "full_split_manifest": {
+        "path": "sample_data/intermittent_v2/intermittent_frozen_5000_split_manifest.json",
+        "sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04"
+      },
+      "training_validation_identity": {
+        "data": {
+          "path": "inputs/data/intermittent_frozen_5000/train_validation.parquet",
+          "sha256": "1b2c1001ad050b88acb2887c255adb9d611368eea91214bc8d66720edb9d4a5f"
+        },
+        "split_manifest": {
+          "path": "inputs/data/intermittent_frozen_5000/split_manifest.json",
+          "sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04"
+        },
+        "populations": {
+          "train": {
+            "target_count": 393824,
+            "target_identity_sha256": "fb8737489bc18e528adc322e2e55e26fcc5793aa6ff8021d93ceac98d7768aed",
+            "target_quantity_sha256": "c4a9c3721d3861c190e81abe35156488f545b00c8ddbbed4022a9a82a4b3a215"
+          },
+          "validation": {
+            "target_count": 86285,
+            "target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+            "target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385"
+          }
+        }
+      },
+      "test_population": {
+        "target_count": 88019,
+        "target_identity_sha256": "cbf5e47ea550cace2ff0cbaa6a1f6921abad0958d489485759d8038c0aa750f4",
+        "target_quantity_sha256": "597004dafff027c524893046b544179ba30eef5e449c097f59df6074c84eb931"
+      },
+      "loader": {
+        "batch_size": 128,
+        "drop_last": false,
+        "lookback_weeks": 520,
+        "max_seq_len": 256,
+        "num_workers": 0,
+        "train_shuffle": true,
+        "validation_shuffle": false
+      },
+      "model_head": {
+        "hidden_dim": 64,
+        "lambda_log_qty": 1.0,
+        "lambda_tail": 0.0,
+        "quantity_variant": "count_only_log_regression",
+        "time_head_lr_multiplier": 1.0,
+        "time_head_mode": "heteroscedastic_lognormal_duration",
+        "time_initial_location": -0.21389036220110552,
+        "time_initial_scale": 0.6816420108412236,
+        "time_observation_contract": {
+          "mode": "positive_integer_round_clamp_v1",
+          "top_code": null,
+          "unit": "week"
+        },
+        "time_scale": 3.0,
+        "time_sigma_floor": 0.001
+      },
+      "tail_threshold": 187,
+      "shared_parameter_count": 99459
+    }
+  },
+  "final_receipts": {
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_raf_taxi6_test_20261020_v1/final_receipt.json": "41dd6a4f621a3bf9f2654e71c7a0d643eb02a95885a620359debd03b2c410c70",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_shared_inter3_interim_test_20261020_v1/final_receipt.json": "1e1d4c7026ab32e6f89459c3db3fb35509d2c2b2b0380bc1e2ec62f22929fc4f",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_history_mlp_shared_raw9_20261020_v1/execution_5090_v1/retrieval/final_receipt.json": "5f0deda74a3e606cd7a5819f3a15c55cf8c24105f5708abcf1dfc0f3ae7412d1"
+  },
+  "extra42_contract_sha256": "4d88a5df41c41ed4076b766c4f1383263e29f2584c22cbab21306fdf126edac2",
+  "extra42_integrity_sha256": "44794f5e4b9ff74e3ff903f964e619dbe565961ddc64c2117fa109b5bcc764ac",
+  "measurement_limits": [
+    "Existing Test informed exploratory design.",
+    "External models use matched common quantity/time heads, not original native intensity objectives.",
+    "Historical3 Shared training5090/cuDNN92000; external historical fits5080/cuDNN91900 and some saved CPU replay evaluations.",
+    "Additionalseed72/82 are in progress and are not included.",
+    "RAF/Taxi external Validation tail metrics absent from verified historical summary are N/A; no zero imputation.",
+    "All metrics at first strict finite minimum fullValidation raw quantity RMSE; MAE uses the same checkpoint.",
+    "No statistical significance, universal dominance, or unmeasured runtime speedup claim."
+  ]
+}

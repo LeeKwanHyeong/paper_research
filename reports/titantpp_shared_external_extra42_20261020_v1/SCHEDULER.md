@@ -47,3 +47,14 @@ NEW_SEED_RESULTS가 complete이고 Train42/Val42/Test42 actualexit0 및 전체�
 START_RECEIPT.json은 보존한 원격 status stdout/SHA와 연결된다. native 모델7 검증과 실제3동시 admission의10worker exit0 뒤 첫3fit가 시작했다. 완료0·진행3·대기39·미확정0이다. Shared15 RAF72 PID616826 저장7/best6, RAF82 PID616827 저장7/best1, RMTPP RAF72 PID616828 저장11/best7이다. 실제worker의 PID/argv/start_ticks·lease와GPU를 확인했고 기존 paused4는 유지됐다. 이 과거시각을 새 관측시각으로 사용하지 않는다. 원 wrapper 자신의 OSexit는 직접 관측하지 않았다.
 
 후속 heartbeat id는 `2seed`다. 15분 간격으로 이 유한 작업만 이어가며 정상 진행에는 알리지 않는다. 자동화 도구로 실제 등록했고 FINISHER_STARTED.json의 유한 종료 대기와 역할을 구분한다. 후속 heartbeat는 학습을 시작하거나 finish/collect를 중복 호출하지 않는다.
+
+
+## 최신 단계 — 2026-10-20 14:48:43 KST 관측 및 논문 근거 준비 완료
+
+이 단락이 위 과거 대기 설명을 대체한다. 5090 원본9 학습·Validation9·원본227개 회수가2026-10-20 14:34:44 KST 완료됐다. 원본 final receipt SHA는 `5f0deda74a3e606cd7a5819f3a15c55cf8c24105f5708abcf1dfc0f3ae7412d1`다. PAPER_START_GATE.json PASS이며 Intermittent 최종epoch5/5/11과 고정 Test3의canonical 모델가중치가 모두 같았다. 기존 임시 Test 원본은 그대로 두며 새추론을 실행하지 않았다. 이제 5090 종료를 기다리거나 finish/collect를 다시 실행하지 않는다. 과거 종료관측을 현재전역GPU유휴 증거로 사용하지 않는다.
+
+논문 연구자료 `reports/titantpp_shared_paper_preparation_20261020_v1/`에 PREPARATION_RECEIPT.status=complete를 만들었다. 확정3seed144endpoint·288평균/표본SD(36N/A)·주지표216seed차이·전체648차이, 방법사실·재현·인간작성빈구조·미해결질문을 제공한다. 독립수치QA PASS 및 기존원본524개SHA 검증을 확인했다. 원고 본문은 자동작성하지 않았다. 후속회차는 이자료를 재생성하지 말고 receipt/manifest/SHA로 확인한다. 원래3seed자료는 추가5seed자료로 덮어쓰지 않는다.
+
+5080 신규42는 실제관측14:48:43 KST에 학습완료6·진행3·대기33·미확정0, 과학실패0이다. RAF Shared15/RMTPP/THP 각각72/82의6fit 실제exit0·완료receipt가 있으며, NHP72/82·SAHP72가실제worker/GPU에서진행중이다. 전체42 nativeValidation/Test·최종회수는아직미완료다. 원본 status와 SHA는 `progress/20261020T054843Z/SUMMARY.json`에 결속된다. 이 관측시각을 새시각으로 사용하지 않는다.
+
+5seed 집계기 `paper.scripts.compare_titantpp_shared_external_five_seed`를 별도신규파일로 준비했고 focused16tests/독립QA PASS다. sealed987/기존4실행소스는변경하지않았다. 실제42완료자료 전체로 실행한 검증은 아직없다. 추가42 finalreceipt와 모든증거가complete일때만 로컬에서 `PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m paper.scripts.compare_titantpp_shared_external_five_seed --check-only`를 실행한다. 실제ready 뒤에만 --check-only를빼고 한 번 산출한다. 기본출력 `reports/titantpp_shared_external_extra42_20261020_v1/five_seed_aggregation_v1/FIVE_SEED_RESULTS.json/.md`를 보존한다. 기존출력존재시 덮어쓰기나 재학습을하지않고 source/출력SHA를 검증한다. 실제자료에서 도구오류가 확인되면 원본·실패를 보존한 순수로컬 국소수정·합성검증·독립검토만 허용하며 nativeTest/학습을 재실행해 디버깅하지않는다.
