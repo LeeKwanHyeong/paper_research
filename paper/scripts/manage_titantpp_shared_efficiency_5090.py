@@ -17,7 +17,7 @@ import tarfile
 import textwrap
 
 REPO = Path(__file__).resolve().parents[2]
-NAME = "titantpp_shared_efficiency_5090_20261020_v1"
+NAME = "titantpp_shared_efficiency_5090_20261020_v2"
 BUNDLE = REPO / "search_artifacts" / NAME
 REPORT = REPO / "reports" / NAME
 PARENT = REPO / "search_artifacts/titantpp_history_mlp_shared_raw9_20261020_v1/execution_5090_v1"
@@ -37,6 +37,15 @@ def require(x, message):
 def write(p, value):
     p = Path(p); p.parent.mkdir(parents=True, exist_ok=True)
     with p.open("x") as f: json.dump(value, f, indent=2, ensure_ascii=False, allow_nan=False); f.write("\n")
+
+
+def package_payload(bundle, files):
+    """Include the empty project-root sentinel required by frozen pathing.py."""
+    (bundle / "source/sample_data").mkdir(exist_ok=True)
+    with tarfile.open(bundle / "payload.tar.gz", "w:gz") as tf:
+        for name in files: tf.add(bundle / name, arcname=name, recursive=False)
+        tf.add(bundle / "source/sample_data", arcname="source/sample_data", recursive=False)
+        tf.add(bundle / "deployment_manifest.json", arcname="deployment_manifest.json")
 
 
 SUPERVISOR = '''import datetime,json,os,pathlib,subprocess,sys,time,traceback
@@ -98,6 +107,7 @@ def prepare():
         order="dataset,mode,rep then Shared15-MAC except rep2 MAC-Shared15",
         runtime="existing native5090; no install/redeploy")
     contract["scope_description"] = "original uncapped Train-only paired cost; no Validation/Test performance or scientific checkpoint updates"
+    contract["packaging"] = {"required_empty_source_directories": ["sample_data"], "test_inputs_packaged": False}
     contract["operational_files"] = {name: sha(BUNDLE / name) for name in ("benchmark.py", "supervise.py")}
     write(BUNDLE / "contract.json", contract)
     write(BUNDLE / "approval.json", {"approved": True, "contract_sha256": canonical(contract),
@@ -105,9 +115,7 @@ def prepare():
         "host": "5090", "additional_5080_training_unchanged": True})
     files = {str(p.relative_to(BUNDLE)): sha(p) for p in BUNDLE.rglob("*") if p.is_file()}
     write(BUNDLE / "deployment_manifest.json", {"files": files, "contract_sha256": canonical(contract)})
-    with tarfile.open(BUNDLE / "payload.tar.gz", "w:gz") as tf:
-        for name in files: tf.add(BUNDLE / name, arcname=name, recursive=False)
-        tf.add(BUNDLE / "deployment_manifest.json", arcname="deployment_manifest.json")
+    package_payload(BUNDLE, files)
     write(REPORT / "PREPARED.json", {"status": "prepared", "contract_sha256": canonical(contract),
         "source_file_count": len(source), "input_file_count": len(parent["input_files"]),
         "payload_sha256": sha(BUNDLE / "payload.tar.gz"), "native_measurement_started": False})

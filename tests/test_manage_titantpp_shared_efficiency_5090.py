@@ -12,6 +12,18 @@ import pytest
 from paper.scripts import manage_titantpp_shared_efficiency_5090 as ops
 
 
+def test_packaging_preserves_empty_project_sentinel_without_test_data(tmp_path):
+    bundle=tmp_path/'bundle'; (bundle/'source/models').mkdir(parents=True);(bundle/'source/utils').mkdir()
+    (bundle/'contract.json').write_text('{}');(bundle/'deployment_manifest.json').write_text('{}')
+    ops.package_payload(bundle, ['contract.json'])
+    unpack=tmp_path/'unpack';unpack.mkdir()
+    with tarfile.open(bundle/'payload.tar.gz','r:gz') as archive:
+        names=archive.getnames();archive.extractall(unpack,filter='data')
+    assert (unpack/'source/sample_data').is_dir()
+    assert list((unpack/'source/sample_data').iterdir())==[]
+    assert not any(name.endswith('.parquet') for name in names)
+
+
 def test_supervisor_records_real_failed_child_exit_without_retry(tmp_path):
     (tmp_path / "source").mkdir()
     (tmp_path / "benchmark.py").write_text("import sys;sys.exit(7)\n")
