@@ -1,0 +1,82 @@
+{
+  "status": "PASS_local_start_evidence",
+  "reviewed_at_utc": "2026-10-20T01:05:35.829476+00:00",
+  "source_observed_at_utc": "2026-10-20T01:02:52.810519+00:00",
+  "source_observed_at_kst": "2026-10-20T10:02:52.810519+09:00",
+  "observation_path": "reports/titantpp_history_mlp_shared_raw9_20261020_v1/execution_5090_v1/observations/20261020T010252861453Z_5090.json",
+  "observation_sha256": "e4c479e72d8466650d16a2b634d7ec92e5931b0735486f1f1a65642c66b373a8",
+  "transport_metadata_sha256": "670646484d15d15089a7f40ec4d91f3cf63001afb75e229b8ea4ae78febf3664",
+  "contract_raw_sha256": "4ed35f0054995f51dadb9b1d6227fc9c09194f9414a9f832bb723dc1d1c058f1",
+  "contract_canonical_sha256": "14066e2fd56be0a71e7476003d314531018dd0e337261e9b2f691035a497b55f",
+  "source_file_count_verified": 983,
+  "input_file_count_verified": 6,
+  "source_new5_sha256_unchanged_from_prelaunch_qa": true,
+  "archive_sha256": "1073ed8f7062e2ba24a40b52608b8062dbaa07838170e32941d2a679d99b2735",
+  "qualification_actual_exit0_count": 3,
+  "qualification_verified_at": "2026-10-20T01:01:49.147536+00:00",
+  "qualification_raw_sha256": "171b76b962c33e8a6713d89b96459ab292a68899202f9617d9bc21d15a92542e",
+  "qualification_gate_interpretation": "Legacy field predecessor_5080_gate contains a fresh5090 idle gate; cap5080_completion_required=false. It does not certify Cap5080 completion.",
+  "running_fits": [
+    {
+      "seed": 42,
+      "pid": 1611342,
+      "saved_epoch": 7,
+      "best_epoch": 5,
+      "best_val_rmse": 34.72534483074919,
+      "best_val_mae": 9.138412805879419,
+      "state": "S"
+    },
+    {
+      "seed": 52,
+      "pid": 1611343,
+      "saved_epoch": 7,
+      "best_epoch": 5,
+      "best_val_rmse": 34.0936221512091,
+      "best_val_mae": 9.259728732460104,
+      "state": "S"
+    },
+    {
+      "seed": 62,
+      "pid": 1611344,
+      "saved_epoch": 7,
+      "best_epoch": 6,
+      "best_val_rmse": 34.69427925356115,
+      "best_val_mae": 9.028855348533222,
+      "state": "S"
+    }
+  ],
+  "counts": {
+    "running": 3,
+    "queued": 6,
+    "completed": 0,
+    "observed_failure": 0,
+    "unresolved_identity": 0
+  },
+  "cancellation_receipt_sha256": "664756d90d99210de2d5b835d18cadc2212bfc5e4cf0e356c2d8daa6e14b6637",
+  "acceptance_criteria": {
+    "transport_raw_bytes_and_sha_match_observation": true,
+    "original_uncapped_alpha1_validation_only_contract_verified": true,
+    "original_science_unchanged_and_new_source5_preserved": true,
+    "fresh5090_native_runtime_and_three_worker_qualification_verified": true,
+    "launch_worker_current_identity_status_and_gpu_pids_exact_match": true,
+    "raf_three_seeds_saved_new_epochs": true,
+    "cap5080_wait_queue_cancelled_without_remote_or_fit_attempt": true
+  },
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "limits": [
+    "Local independent recomputation of parent-collected evidence only; this QA made zero SSH/native/inference calls.",
+    "Observation timestamp retained; this is not a later fresh server observation.",
+    "Training has started, not completed. Validation replay, terminal exit checks and final collection remain pending.",
+    "Supervisor wrapper own OS exit is not directly observed; no claim of its exit0.",
+    "No 5080 current-state observation was performed; cancellation proof says Cap training was not modified."
+  ],
+  "files_changed": [
+    "START_INDEPENDENT_QA.json",
+    "START_INDEPENDENT_QA.md"
+  ]
+}

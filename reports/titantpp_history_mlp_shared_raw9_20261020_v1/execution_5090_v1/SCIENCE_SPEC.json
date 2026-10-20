@@ -1,0 +1,56 @@
+{
+  "schema": "titantpp_shared_history_raw9_science_v1",
+  "created_at": "2026-10-20T00:01:52.022103+00:00",
+  "data_variant": "original_uncapped",
+  "quantity_capping_applied": false,
+  "candidate": "titantpp_history_mlp_shared15_v1",
+  "datasets": [
+    "raf_spare_parts",
+    "yellow_trip_hourly",
+    "intermittent_frozen_5000"
+  ],
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "new_fit_count": 9,
+  "training_host": "5090",
+  "maximum_parallel_workers": 3,
+  "predecessor_required": "No wait for5080 Cap; cancelled5080pending successor and fresh idle5090 admission required",
+  "common_condition": {
+    "time_input": "log1p",
+    "quantity_input": "log1p",
+    "quantity_loss": "log_mse",
+    "time_alpha": 1.0,
+    "time_head": "unchanged_heteroscedastic_lognormal_duration",
+    "optimizer": "AdamW",
+    "lr": 0.001,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0,
+    "batch_size": 128,
+    "max_epochs": 300,
+    "min_epochs": 40,
+    "patience": 40
+  },
+  "selection": "first_strict_finite_fullValidation_raw_quantity_RMSE_minimum_same_checkpoint_MAE",
+  "tail_thresholds": {
+    "raf_spare_parts": 200,
+    "yellow_trip_hourly": 3449,
+    "intermittent_frozen_5000": 187
+  },
+  "stored_reference": "original_MLP16_9_no_retraining_no_reevaluation",
+  "test_authorized": false,
+  "new_models": false,
+  "same_shared15_implementation_as_cap": true,
+  "existing_sources_checkpoints_results_modified": false,
+  "recurring_automation_created": false,
+  "interpretation_limits": [
+    "Only raw-data MLP16 versus new raw-data shared15 is the paired quantity comparison. Cap errors must not be subtracted from original errors.",
+    "Joint alpha1 differs from Cap alpha0 by explicit user choice, so this is not a data-only ablation.",
+    "Original stored Validation includes CPU and CUDA cohorts; new fits use5080 native CUDA. Preserve runtime differences.",
+    "Validation selects checkpoints and is exploratory; no independent generalization or statistical significance claim."
+  ],
+  "host_migration_only": true,
+  "existing_Cap5080_training_modified": false
+}
