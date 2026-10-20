@@ -1,0 +1,110 @@
+{
+  "status": "PASS",
+  "scope": "Independent local pre-execution QA of immutable Intermittent3 interim best-state evaluation",
+  "reviewed_at_utc": "2026-10-20T05:12:24.891600+00:00",
+  "files_reviewed_sha256": {
+    "paper/scripts/compare_titantpp_shared_inter3_interim_test.py": "6e7986ffa2d93841153cb0182e966aa8503a5df1e0fdd930aea0915bdf8b20ca",
+    "paper/scripts/compare_titantpp_shared_raf_taxi6_test.py": "6254eb9304ff6e13768b6882bc299eaf2826f40cd969b6d467f26fed9ecb9b7a",
+    "paper/scripts/compare_titantpp_shared_raw_raf3_test.py": "5469ceb02be20d2559c51232a7b63dd5917540d5bc317e2903d0ef29141664dd",
+    "paper/scripts/evaluate_titantpp_shared_inter3_interim_frozen.py": "2794202ba5bb0e66a4720c75c017958a45f393e1796ee0e4a159cf0509b27758",
+    "paper/scripts/evaluate_titantpp_shared_raf_taxi6_frozen.py": "3d796732555f2d97b0a8e74f1b30cbe22310a49e0b380ad061d3f92e983f70a9",
+    "paper/scripts/evaluate_titantpp_shared_raw_raf3_frozen.py": "2fdd0f56757c4330e3e140ca800bbfbb5d13060f8b663d7156a1e40a7e3225c5",
+    "paper/scripts/manage_titantpp_shared_inter3_interim_test.py": "5819519c9492e044a3da3e9b7e2919fe4677e8ca22b26a36b44b16502ccc2288",
+    "paper/scripts/manage_titantpp_shared_raf_taxi6_test.py": "a95e2ea6aa6843db3f1ca9866b31754bad9c1dd7f04fd9777daa96051b0c6b6c",
+    "paper/scripts/manage_titantpp_shared_raw_raf3_test.py": "c516112d606732a3093953c387b14c29ab347b565c531fd8c7a629932b33397a",
+    "paper/scripts/prepare_titantpp_shared_inter3_interim_references.py": "ea4646de2369bd9a9f501fc97a65ee1448ef44d1f8ff5839cf5927ebf50d41db",
+    "paper/scripts/prepare_titantpp_shared_raf_taxi6_references.py": "96c0851c9b33961db51671c6a092db06e336a763f7303b67844d0eca37cec8b3",
+    "reports/titantpp_shared_inter3_interim_test_20261020_v1/EXPERIMENT_PLAN.md": "1115029557b3caa8764d20e21299e0134b6bcdb773d1f2ff5205ff8fdaa39acc",
+    "reports/titantpp_shared_inter3_interim_test_20261020_v1/REFERENCES.json": "9095a5394c7e6e5b11bbec3df2c18c3891da3a90de2d703337f1dd7c9db7e4b2",
+    "reports/titantpp_shared_inter3_interim_test_20261020_v1/REFERENCE_QA.json": "812c8da826d3c7fc6134c70cc70f41314cc0a6f979d74c5f98237d9e3abe2f48",
+    "reports/titantpp_shared_inter3_interim_test_20261020_v1/SCIENCE_SPEC.json": "b24278a2a05d0a12f2e2d466d9c0f2be667514757b5d325ed09ae73a21dfadf8",
+    "search_artifacts/titantpp_shared_inter3_interim_test_20261020_v1/selected/manifest.json": "5b3d02e6da77999989711935b89e87943c2630901ffcc06952c36fea9f16b99d",
+    "search_artifacts/titantpp_shared_inter3_interim_test_20261020_v1/selected/originals/snapshot_capture.json": "fe4f9be6420073c4ca007ef364bb115ee7ec3e13d5fa805de7c5da2df8bd196f",
+    "search_artifacts/titantpp_shared_inter3_interim_test_20261020_v1/selected/receipt.json": "5cbe6c1eb357247e125e38593b696e02293b2405de0e31398fb4973ba1e49cd2",
+    "tests/test_titantpp_shared_inter3_interim_frozen.py": "dc93ffa02a3582b5d1b47b40f9c6ad7270fbee7f2d967bba699afe8eb03321ff",
+    "tests/test_titantpp_shared_inter3_interim_test_compare.py": "3c49953bd85631fa7eb7cbf99fcb12faf023eaf7359803dc0c38995eeaa7eb4e",
+    "tests/test_titantpp_shared_inter3_interim_test_ops.py": "e15deff0d83fe05bdbd0db33f80ded7fc6bf84dc179e0fed1db60bb7d14cb95d"
+  },
+  "open_findings": [],
+  "resolved_findings": [
+    {
+      "issue": "Contract population includes two time-hash audit fields while worker requires exact three-key population identity",
+      "fix": "New manager projects three identity fields; immutable SPEC/reference retain extra time hashes",
+      "regression": "Synthetic prepare-to-worker verify_contract integration passes"
+    }
+  ],
+  "tests": {
+    "command": [
+      "/usr/local/bin/python3",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "tests/test_titantpp_shared_inter3_interim_frozen.py",
+      "tests/test_titantpp_shared_inter3_interim_test_ops.py",
+      "tests/test_titantpp_shared_inter3_interim_test_compare.py"
+    ],
+    "actual_exit_code": 0,
+    "summary": "57 passed, 2 subtests passed",
+    "reviewed_sha_before_after_identical": true,
+    "stdout": {
+      "path": "reports/titantpp_shared_inter3_interim_test_20261020_v1/INDEPENDENT_TESTS.stdout",
+      "sha256": "c33643a993c74a5e595d4942919c16d9e37971bf97840c5f09253f281c33fda4"
+    },
+    "stderr": {
+      "path": "reports/titantpp_shared_inter3_interim_test_20261020_v1/INDEPENDENT_TESTS.stderr",
+      "sha256": "eae3b3ab88ebd007cd93d95595b7a951b2c689b68948b08fd24d8ff83282945e"
+    }
+  },
+  "checks": {
+    "captured_best_state_not_current_state": true,
+    "snapshot_epochs": [
+      42,
+      40,
+      38
+    ],
+    "selected_epochs": [
+      5,
+      5,
+      11
+    ],
+    "cpu_only_selected_payload_metadata_and_tensor_verification": true,
+    "no_fabricated_training_completion_or_selected_epoch_gradient_proof": true,
+    "source983_byte_checks_enforced_by_worker": true,
+    "validation_gate_all_three_actual_exit0_before_test": true,
+    "historical_replay_three_overall_metrics_only_rtol_atol_1e_5": true,
+    "new_tail_metrics_finite_no_historical_individual_replay_claim": true,
+    "qualification3_validation3_test3_native9_pipeline1": true,
+    "native5080_cudnn91900_paused_external_gpu3_preserved": true,
+    "original5090_training_not_mutated": true,
+    "reference42_sha_bindings378_verified": true,
+    "external_validation18_aggregate_only_explicit": true,
+    "baseline_inference0": true
+  },
+  "acceptance_criteria": {
+    "frozen_snapshot_lineage_correct": true,
+    "all_validation_gate_before_test": true,
+    "synthetic_tests_pass": true,
+    "reviewed_file_inventory_bound": true,
+    "no_open_major_execution_issue": true
+  },
+  "files_changed": [
+    "INDEPENDENT_QA.json",
+    "INDEPENDENT_QA.md",
+    "INDEPENDENT_TESTS.stdout",
+    "INDEPENDENT_TESTS.stderr"
+  ],
+  "limitations": [
+    "This is local source and synthetic validation; actual native Validation/Test has not been performed by this reviewer.",
+    "Interim best checkpoints do not establish completion of original Intermittent training or whole raw9 campaign.",
+    "Historical replay binds overall RMSE/MAE/TimeNLL only; tail metrics and individual predictions lack historical replay evidence.",
+    "Selected best-state time-head differs from initial weights, but selected-epoch individual gradient proof is unavailable.",
+    "External Validation18 are stored aggregates, not individual prediction references.",
+    "5090/cuDNN92000 training versus 5080/cuDNN91900 evaluation must remain explicit.",
+    "Paused external GPU contexts remain; scoped owner absence is not global GPU idleness."
+  ],
+  "remote_calls": 0,
+  "actual_native_test_calls": 0,
+  "original_model_or_checkpoint_changes": 0
+}
