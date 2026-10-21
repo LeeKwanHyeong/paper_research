@@ -1,0 +1,198 @@
+{
+  "schema": "raf_prefix_sensitivity_design_v1",
+  "status": "HYPOTHESIS_NARROWED_FROBENIUS_REALIZATION_DEFERRED_AFTER_WEIGHT_CHECK",
+  "implemented": false,
+  "checkpoint_weight_inspection_performed": true,
+  "new_training_started": false,
+  "native_validation_performed": false,
+  "user_training_decision": "not_ready_for_training_recommendation_after_design_check",
+  "design_id": "shared15_per_prefix_hidden_pair_sensitivity_bound_v1",
+  "scope": {
+    "dataset": "original_uncapped_raf_spare_parts",
+    "diagnosis_seeds": [
+      42,
+      52,
+      62
+    ],
+    "diagnosis_split": "Validation",
+    "shared_train_individual_predictions_available": false,
+    "new_inference": 0,
+    "checkpoint_loads": 3,
+    "ssh_calls": 0,
+    "test_reads": 0,
+    "existing_source_or_experiment_changes": 0,
+    "checkpoint_read_scope": "selected original Shared15 RAF42/52/62 CPU weights_only; no model construction or forward"
+  },
+  "hypothesis": "Limiting hidden-pair sensitivity of each existing eligible branch prefix may reduce post-drop quantity overprediction while preserving the stored Shared15 large-quantity gain. Actual amplification and the proposed cause are unverified.",
+  "original_function": {
+    "z": "concat(encoder1_current, encoder1_immediate_observed_predecessor)",
+    "U_shape": [
+      15,
+      128
+    ],
+    "B_shapes": [
+      [
+        64,
+        15
+      ],
+      [
+        64,
+        15
+      ],
+      [
+        64,
+        15
+      ],
+      [
+        64,
+        15
+      ],
+      [
+        64,
+        15
+      ],
+      [
+        64,
+        15
+      ],
+      [
+        64,
+        15
+      ],
+      [
+        64,
+        15
+      ]
+    ],
+    "availability_thresholds": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64,
+      128
+    ],
+    "C_k": "sum(B_j for j<=k)/8",
+    "R_k": "C_k @ exact_GELU(U @ z)",
+    "biases": false,
+    "placement": "encoder1 -> add history correction -> encoder2 -> existing static memory"
+  },
+  "only_change": {
+    "L": 1.0,
+    "gamma": 1.25,
+    "a_k": "(gamma/L)^2 * sum(U^2) * sum(C_k^2)",
+    "s_k": "rsqrt(max(1,a_k))",
+    "new_R_k": "s_k * original_R_k",
+    "k_zero": {
+      "s": 1.0,
+      "R": 0.0
+    },
+    "dependence": "only learned U and eligible prefix B_1..B_k, selected with existing availability",
+    "differentiate_scale": true,
+    "detach_scale": false,
+    "optimizer_projection": false,
+    "global_max_prefix_scale": "rejected_due_to_gradient_into_ineligible_branches",
+    "initial_output_projections": "zeros, hence s_k=1 initially",
+    "parameter_count_correction": 9600,
+    "additional_parameters": 0,
+    "old_output_accumulation_order": "preserve; C_k is used for scale computation",
+    "guarantee": "For fixed weights and fixed k, ||new_R_k(z)-new_R_k(z_prime)||_2 <= L ||z-z_prime||_2 in exact arithmetic.",
+    "not_guaranteed": [
+      "full model or raw quantity Lipschitz bound",
+      "continuity when k changes",
+      "future drop detection",
+      "tail benefit retention",
+      "better Validation or Test",
+      "numerical finite gradients or measured runtime"
+    ],
+    "selection_of_L": "fixed design default, not empirically optimized; no Validation sweep"
+  },
+  "required_before_training": {
+    "current_state": "weight_norm_check_completed; mixed supporting and contrary evidence; no training recommendation",
+    "actions": [
+      "Verify stored selected Shared15 checkpoint/source identities without changing files",
+      "CPU weight-only U and C_1..C_8 Frobenius and exact operator norms",
+      "Inspect bounds on actually used RAF prefixes k=1..4, preserving seed and history availability scope"
+    ],
+    "no_training_if": [
+      "Proposed bound never binds on used prefixes",
+      "Only the conservatism of Frobenius makes it bind while operator sufficient bound is already <=1"
+    ],
+    "interpretation": "Operator product bound >1 is not evidence that an actual input Jacobian exceeds1. Weight norms cannot establish drop causality. All three k4 operator product bounds exceed1, but some shorter prefixes are <=1 while Frobenius would shrink. Preserve the predeclared deferral condition rather than relaxing it after reading weights.",
+    "actual_result_reference": "WEIGHT_NORMS.json"
+  },
+  "prospective_validation_contract": {
+    "status": "conditional_success_criteria_only; realization_deferred; not_execution_authorization",
+    "seeds": [
+      42,
+      52,
+      62
+    ],
+    "dataset": "original_uncapped_raf_spare_parts",
+    "reference": "stored same-lineage original Shared15; existing external models remain scientific comparison",
+    "common_condition_source": "reports/titantpp_history_mlp_shared_raw9_20261020_v1/SCIENCE_SPEC.json:common_condition",
+    "common_condition": {
+      "time_input": "log1p",
+      "quantity_input": "log1p",
+      "quantity_loss": "log_mse",
+      "time_alpha": 1.0,
+      "time_head": "unchanged_heteroscedastic_lognormal_duration",
+      "optimizer": "AdamW",
+      "lr": 0.001,
+      "weight_decay": 0.01,
+      "grad_clip": 1.0,
+      "batch_size": 128,
+      "max_epochs": 300,
+      "min_epochs": 40,
+      "patience": 40
+    },
+    "selection": "first strict finite full Validation raw quantity RMSE minimum, same checkpoint for MAE",
+    "all_required": [
+      {
+        "metric": "Validation drop cohort MAE",
+        "cohort": "actual next quantity <= preceding observed quantity / 5",
+        "rows": 577,
+        "decision": "strict improvement in each of three seeds"
+      },
+      {
+        "metric": "Validation overall MAE",
+        "decision": "strict improvement in mean of three per-seed metrics"
+      },
+      {
+        "metric": "Validation overall RMSE",
+        "decision": "no increase in mean of three per-seed metrics"
+      },
+      {
+        "metric": "Validation q>200 RMSE and MAE",
+        "rows": 50,
+        "decision": "neither mean increases compared with original Shared15"
+      }
+    ],
+    "required_reports": [
+      "all per-seed absolute and relative differences including worsenings",
+      "drop positive signed error and non-drop errors",
+      "tail underprediction and persistent-high/growth cohorts",
+      "history1/2/3-4/5-8/9+ crossed with quantity strata",
+      "time metrics and actual constraint activation",
+      "exact initial tensors and Runtime provenance"
+    ],
+    "test_authorized_by_this_design": false,
+    "entrypoint": null,
+    "execution_integrity_sha": null
+  },
+  "overlap_limit": "No identical per-prefix operator sensitivity constraint was identified in the bounded reviewed code/contracts. Generic norm/scale stabilization and spectral methods already exist. No global novelty claim.",
+  "existing_experiments": "untouched, including 5080extra42/recovery and 5090MAC9",
+  "weight_check_decision": {
+    "hypothesis": "retain_as_conditional_only",
+    "formula_adoption": "defer_this_Frobenius_realization",
+    "reason": "unnecessary shrink in some shorter already-bounded prefixes and strong overall conservatism; no measured Jacobian or tail preservation",
+    "raw_norm_script_summary_is_not_training_gate": true,
+    "operator_upper_bound_exceedance_is_actual_gain_proof": false,
+    "checkpoint_binary_and_canonical_sha_verified": true,
+    "model_forward": 0,
+    "analysis_actual_exit": 0
+  },
+  "analysis_output_sha256": "427fa0b17d976103cb7b316667713beffcdb9d63648b60fbca5184124ff3f41b"
+}

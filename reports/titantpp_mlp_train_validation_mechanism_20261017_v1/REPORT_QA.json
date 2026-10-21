@@ -1,0 +1,63 @@
+{
+  "status": "PASS",
+  "created_at": "2026-10-16T15:30:00.953712+00:00",
+  "review_scope": "new report and hypothesis transcription, coverage, runtime provenance and inference strength only",
+  "read_scope": "current analysis directory only; no original Test/mixed reports, model states or remote resources",
+  "files_changed": [
+    "reports/titantpp_mlp_train_validation_mechanism_20261017_v1/REPORT_QA.json",
+    "reports/titantpp_mlp_train_validation_mechanism_20261017_v1/REPORT_QA.md"
+  ],
+  "input_sha256": {
+    "REPORT.md": "255a6109ebfc03aba9f013f1f5f18799a7cab5f7a6a73b0f89c21dba85b4a05c",
+    "HYPOTHESIS.md": "b10fa1f4a15c884145cd95929a042e423d6a0e387ac49471b04d7dfb23fce25d",
+    "STATISTICAL_REVIEW.json": "c229112cf32aa629a109dc69e21801115c4c79c4b3b3cc82c073a48b293ad07d",
+    "STRUCTURE_AUDIT.md": "0c0dc682498e5248574bad0ee783dabaa64d471d6f349a127450e5ff6dd02f3e",
+    "ANALYSIS_PLAN.json": "c206fd44f671d2ca8a843bc9a010d31b4bed355aabe05e84a956473bb14ede8a",
+    "QA.json": "d67c19fc73fe9362b81793a73297468e492f45ab98c3cf6a9e34cccdbc9d0b2f",
+    "ROW_COVERAGE.json": "5b194a686f178ce254d3e91e56519bf088794ec3d7382b407ea3d2fa95062137",
+    "ROW_CHECKS.json": "08c78348146edd27e29fb9e7d82e9faae70cebca00d4ecd28963731435a3ed4b",
+    "VALIDATION_SUMMARY.csv": "130288cd4b677de1a835eb7fae96053f4912d1c9cafd56337f34e751a13781f2",
+    "VALIDATION_SEED_DELTAS.csv": "94ca8623037e7a967639e0db60215ab0c98cc907af4e71257db61ac180330ced",
+    "VALIDATION_DELTA_SUMMARY.csv": "d59659a9453feacb0302f500ffad3b63520e92a5134e634034d2a13de9cbd4a4",
+    "PAIRED_ROW_DELTAS.csv": "a70636511455e3ddb231e907b162d4fe8d9b8744233956676b24e30190665f73"
+  },
+  "findings_by_severity": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "verified_counts": {
+    "report_table_numeric_cells": 255,
+    "table_numeric_mismatches": 0,
+    "statistical_interpretation_items": 11
+  },
+  "acceptance_criteria": {
+    "report_overall_mean_sample_sd_table_matches_csv": true,
+    "all_seed_delta_table_matches_csv": true,
+    "quantity_cell_count_and_delta_table_matches_csv": true,
+    "train_validation_sample_pair_table_matches_csv": true,
+    "tail_mean_sample_sd_table_matches_csv": true,
+    "narrative_seed_exceptions_and_signs_match": true,
+    "quantity_and_history_contribution_narrative_matches": true,
+    "missing_train_and_seed42_pairing_limit_preserved": true,
+    "sample_estimates_not_full_census": true,
+    "cpu_native_runtime_distinction_matches_coverage": true,
+    "shared_input_transform_separate_output_and_fixed_divisor_matches_structure_audit": true,
+    "capacity_24576_to10240_arithmetic": true,
+    "sharing_success_and_causal_claims_not_asserted": true,
+    "statistical_scan_not_significance_or_causal_validation": true,
+    "historical_test_exposure_not_blinded": true
+  },
+  "interpretation_notes": [
+    "Review is consistency against already verified evidence; it does not establish that weight sharing will improve models.",
+    "Future acceptance criteria and capacity control are explicitly unresolved; no new training or hypothesis implementation was approved by this document review.",
+    "The 59-row Intermittent high-deviation group refers to the predefined above_double log1p(last)-log1p(mean)>log(2) group.",
+    "Current-only representation already contains encoder history; report does not describe it as history-free."
+  ],
+  "unperformed": [
+    "No additional original endpoint/prediction/model reads for this document pass.",
+    "No rerun of source analysis, training, inference or remote task.",
+    "No claim that matching parameter counts alone identifies sharing causality."
+  ]
+}

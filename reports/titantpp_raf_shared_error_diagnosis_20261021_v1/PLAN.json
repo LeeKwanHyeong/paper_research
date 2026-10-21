@@ -1,0 +1,43 @@
+{
+  "schema": "raf_shared_validation_error_diagnosis_v1",
+  "created_at_utc": "2026-10-20T23:48:46.731108+00:00",
+  "question": "Why does current Shared15 show only small RAF Validation RMSE gains and worse MAE than external best, despite strong Taxi performance?",
+  "scope": [
+    "RAF original_uncapped",
+    "Stored Shared15 seed42/52/62 Validation predictions",
+    "Same-target RMTPP and S2P2 seed42/52/62 Train/Validation predictions",
+    "Stored five-seed best Validation summaries for selection sensitivity only",
+    "Train-only thresholds and available historical quantities/gaps"
+  ],
+  "no_actions": [
+    "new training",
+    "new inference or checkpoint loading",
+    "Test metrics or predictions",
+    "CNN changes",
+    "5080/5090 or automation changes",
+    "source/checkpoint/original result edits"
+  ],
+  "steps": [
+    {
+      "main_subject": "검증된 같은 대상의 예측을 연결한다",
+      "status": "완료",
+      "purpose": "선택epoch·원본SHA·truth/history 일치를 확인해 서로 다른대상을 오류원인으로 혼동하지 않는다."
+    },
+    {
+      "main_subject": "RMSE와MAE 차이를 수량·이력·개체별로 분해한다",
+      "status": "완료",
+      "purpose": "서로 겹치지 않는 구간의 AE/SSE 합으로 전체 차이를 재구성하고 큰수량·과대/과소예측·급변·짧은이력 기여를 분리한다."
+    },
+    {
+      "main_subject": "데이터 정보와선택규칙의 설명력을 점검한다",
+      "status": "완료",
+      "purpose": "Train/Validation분포·직전관측의 예측단서·원자료와입력정보·RMSE선택의MAE상충을 검토하되 인과원인이나불가피한한계를단정하지 않는다."
+    },
+    {
+      "main_subject": "독립검산과원인우선순위를 기록한다",
+      "status": "완료",
+      "purpose": "관측사실·가능한설명·미확정을나누고 새학습을정당화할구별가능한질문만제시한다."
+    }
+  ],
+  "critical_limit": "Current Shared15 has stored Validation rows but no verified Train prediction rows; do not substitute training_validation_predictions for Train."
+}

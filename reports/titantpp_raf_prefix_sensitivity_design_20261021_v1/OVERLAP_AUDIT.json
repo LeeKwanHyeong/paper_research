@@ -1,0 +1,229 @@
+{
+  "schema": "raf_next_backbone_overlap_audit_20261021_v1",
+  "scope": "local read-only model code and Train/Validation-only design/contract audit; no Test or mixed metric result opened, no model execution, SSH or artifact helpers rerun",
+  "status": "complete_bounded_audit_not_repository_exhaustive_proof",
+  "entries": [
+    {
+      "axis": "shared15",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/CountAwareTitanSharedHistoryMLP.py",
+      "lines": [
+        93,
+        153
+      ],
+      "note": "구현 확인. 공유 W 128→15, 분기별 B_j 15→64 여덟 개. r_k=(sum_{j<=k}B_j) GELU(W[c;p])/8. 모든 활성 분기는 동일한 즉시 직전 hidden을 사용한다. 출력 B_j는 공유하지 않는다.",
+      "sha256": "eee18d3abe199f0c71d80da35acf01cf19acd8f56291ff7cfd33fd86d8bc82a2"
+    },
+    {
+      "axis": "eligibility",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/CountAwareTitanMultiLagDetail.py",
+      "lines": [
+        77,
+        114
+      ],
+      "note": "관측 문턱 1,2,4,8,16,32,64,128과 padding skip/withheld reset. local 모드에서 source는 같은 predecessor를 8회 복제한다.",
+      "sha256": "4bcbecdadf921df21a4e7fb379962eb4ecec2cfeb2f8ff1edccbb6b418807eae"
+    },
+    {
+      "axis": "placement",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/CountAwareTitanMultiLagDetail.py",
+      "lines": [
+        225,
+        238
+      ],
+      "note": "입력투영→Encoder1→잔차보정→Encoder2→후단 static LMM. Shared15는 이 경로를 상속한다.",
+      "sha256": "4bcbecdadf921df21a4e7fb379962eb4ecec2cfeb2f8ff1edccbb6b418807eae"
+    },
+    {
+      "axis": "active_branch_norm",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/CountAwareTitanActiveBranchNorm.py",
+      "lines": [
+        33,
+        57
+      ],
+      "note": "구현 확인. 독립 width4 pair MLP를 활성 분기 개수 max(k,1)로 나눈다. 단순 /8→/k 변경을 새 원리로 취급하면 중복.",
+      "sha256": "14ebe590a4190276fd789bb2608520d14e031c79e98afe08511fef4aeb13d7e9"
+    },
+    {
+      "axis": "all_branch",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/CountAwareTitanHistoryControls.py",
+      "lines": [
+        30,
+        65
+      ],
+      "note": "구현 확인. all_available은 실제 predecessor가 있는 즉시 8개 분기 모두 활성화, /8 유지. current_only는 현재 hidden만 쓰는 width6로 가중치 수를 맞춘다.",
+      "sha256": "60ce1ea2675e9f516f3d09663d893a39e4825ede5a2ab5a703779dcb158e640b"
+    },
+    {
+      "axis": "all_branch_width16",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/CountAwareTitanGRUControls.py",
+      "lines": [
+        25,
+        37
+      ],
+      "note": "구현 확인. width16 pair MLP 전체분기 활성 대조가 /1과 /8로 각각 존재한다. GRU pair2 step 대조도 있다.",
+      "sha256": "2b98bd74dd1b07c7b71fc39814d5cd45933da8b97ec4e3816abf06e2aa18f554"
+    },
+    {
+      "axis": "all_branch_width16_forward",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/CountAwareTitanGRUControls.py",
+      "lines": [
+        62,
+        79
+      ],
+      "note": "모든8 pairMLP16 분기 활성화 /1 또는 /8 실제 forward.",
+      "sha256": "2b98bd74dd1b07c7b71fc39814d5cd45933da8b97ec4e3816abf06e2aa18f554"
+    },
+    {
+      "axis": "level_history",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/CountAwareTitanLevelHistoryQKV.py",
+      "lines": [
+        232,
+        347
+      ],
+      "note": "구현 확인. 현재/직전 차분 두개, 유효전이 confidence, Q/K는 전이 RMS 기반 상대 norm상한, V는 차분 잔차. 수준/차분/상대상한 원리가 이미 존재.",
+      "sha256": "f4398a442c7872b158039f2346bc18ce5df5b89de97ec4c1c4a0f9291ad136e0"
+    },
+    {
+      "axis": "adaptive_history",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/CountAwareTitanAdaptiveHistoryCNN.py",
+      "lines": [
+        36,
+        103
+      ],
+      "note": "구현 확인. projected current와 두 연속차분→3-16-1 tanh MLP. Q/K/V 별 공유채널 제어. adaptive는 계수합 보존 tap multiplier[.5,1.5], capacity는 additive .5*tanh 출력. bounded activation 일반아이디어 이미 존재.",
+      "sha256": "efd5c47be2c6e62a8dba891aa51279c0b6fd789ba2bed42a8f63384a8561a16a"
+    },
+    {
+      "axis": "multilag",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/CountAwareTitanMultiLagDetail.py",
+      "lines": [
+        117,
+        180
+      ],
+      "note": "구현 확인. 8 lag level/change 저차원 GELU branch 대 local lag1 대조. 긴 관측범위와 수준/차분 결합은 기존축.",
+      "sha256": "4bcbecdadf921df21a4e7fb379962eb4ecec2cfeb2f8ff1edccbb6b418807eae"
+    },
+    {
+      "axis": "late_path",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/CountAwareTitanLateObservationPath.py",
+      "lines": [
+        67,
+        140
+      ],
+      "note": "구현 확인. Encoder2 뒤/HardLMM앞 64→8→64 GELU 잔차. 관측 직접 임베딩과 현재 contextual hidden 용량대조. 현재 관측 직접 전달 자체는 기존축.",
+      "sha256": "a8759bd93c265c486289f14ebe34d8ae14d693b2a75e070d04c655406e599a0e"
+    },
+    {
+      "axis": "shared_capacity",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_history_mlp_shared_cap_20261019_v1/EXPERIMENT_PLAN.md",
+      "lines": [
+        27,
+        41
+      ],
+      "note": "설계 계약 확인. Shared15 총9600 가중치 대 독립폭[15,5,5,5,5,5,5,5] 총9600, 각 활성 prefix별 참여 가중치 수도 동일. 함수공간/순수공유 인과효과는 동일하지 않음.",
+      "sha256": "eafa02b73c5355426a056766daa2a6aa846ba0ddc7540f58bbe4caf1fc99944d"
+    },
+    {
+      "axis": "nonlinear_qkv",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/CountAwareTitanNonlinearLocalCNN.py",
+      "lines": [
+        99,
+        149
+      ],
+      "note": "구현 확인. 원래3tap CNN 유지하고 grouped Conv→GELU→1x1 추가. channel/joint와 후속 Q/V 위치대조. 비선형 추가 자체는 기존축.",
+      "sha256": "f730c8561a567badc109c376e4e843bb6f3a7b5e3a69a394f55284af076060b3"
+    },
+    {
+      "axis": "value_difference",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/CountAwareTitanValueDifferenceCNN.py",
+      "lines": [
+        88,
+        107
+      ],
+      "note": "구현 확인. V만 두 인접 관측차분 계수, Q/K 기존CNN 유지. 차분/zeroDC는 기존축.",
+      "sha256": "83d6d535e1c7a46eb7528ad1ef5f95cb85c8f0fd423fabc93d79ad509a90e276"
+    },
+    {
+      "axis": "bounded_qk",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/CountAwareTitanBoundedQK.py",
+      "lines": [
+        161,
+        208
+      ],
+      "note": "구현 확인. Q/K 잔차 RMS를 unmodified projection RMS 상대 smooth norm bound, V 원래CNN. 전체모델 Lipschitz bound 아님.",
+      "sha256": "b0139d409801c4bf184954f393f15d2f3d06f725009621c3e5b95b5ef2aed2a0"
+    },
+    {
+      "axis": "gru_residual_cap",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/CountAwareTitanCNNGRUResidualCap.py",
+      "lines": [
+        77,
+        116
+      ],
+      "note": "구현 확인. GRU 보정을 0.25*detached block1 L2 norm에 투영하는 parameter-free cap. 역사잔차 norm 제한 일반원리 이미 존재.",
+      "sha256": "a5aaff3d01dfc0198dba4e7395f35552573ecf3a2350bcc1a69fed78ca4bac0e"
+    },
+    {
+      "axis": "local_gate",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/CountAwareTitanLocalGate.py",
+      "lines": [
+        30,
+        44
+      ],
+      "note": "구현 확인. 관측시간/수량 수준·변화의 scalar 2sigmoid gate. 급락을 gate로 억제하는 단순아이디어 중복 가능.",
+      "sha256": "3f235b761b33f7367cfbc5303f320d23b0cd97bad121903a67ae06de358f7b30"
+    },
+    {
+      "axis": "recent4_mean",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/CountAwareTitanMLPCandidates.py",
+      "lines": [
+        35,
+        79
+      ],
+      "note": "구현 확인. predecessor up-to4 arithmetic mean와 current, cross-product pair 대조. 평균 이력 요약은 기존축이나 median/trimmed robust pool과 동일하진 않음.",
+      "sha256": "eb88a42aa092bb173ccbf0139a1a8469542e5a4cb5f25fd23b098d60f2ca841a"
+    },
+    {
+      "axis": "moment_cnn",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/CountAwareTitanMomentCNN.py",
+      "lines": [
+        1,
+        71
+      ],
+      "note": "코드가 명시적으로 preparation-only, factory미등록. detached prefix mean/std 잠재 정규화와 logquantity moment tap conditioning/capacity. 평균·분산 통계조합도 기존 설계축. 학습완료로 해석 금지.",
+      "sha256": "33b8b4e93566cb076dd1c83dfa8cffaac5518c40d5d05cffd3354b8455034036"
+    },
+    {
+      "axis": "pair_message",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/CountAwareTitanPairMessage.py",
+      "lines": [
+        59,
+        79
+      ],
+      "note": "구현 확인. query-conditioned sigmoid messages를 attention 전/후 pool하는 대조. 분포 결합/게이팅 전체를 새것으로 표현하지 않도록 주의.",
+      "sha256": "79c1e7f1da3b22f6a3bbaf606e5e915ff1eab39e2adc849c472c58f1a562508e"
+    },
+    {
+      "axis": "post_attention_ffn",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/models/TPPs/CountAwareTitanPostAttentionFFN.py",
+      "lines": [
+        42,
+        76
+      ],
+      "note": "설계·구현 확인. CNN유지, 최종FFN확장부에 current/current/current 대 관측3tap의 channelwise affine-GELU 추가. 후단 비선형 관측결합은 기존축.",
+      "sha256": "b7c6e0e08dd609fe12240ff76163ae565f3caf6877d335e396ae08935a0d8fbf"
+    }
+  ],
+  "not_identified_in_reviewed_scope": [
+    "models/TPPs 및 models/Titan의 history보정 spectral/operator norm 강제 또는 global Lipschitz 제약 구현은 이번 검색에서 찾지 못했다. 코드 전체부재/선행문헌 신규성은 뜻하지 않는다.",
+    "검토한 모델과 보고서 SCIENCE_SPEC/PLAN/DESIGN/contract 중 median/trimmed/winsorized history-pooling을 직접 구현·계약한 후보는 찾지 못했다. recent4mean과 MomentCNN의 mean/std는 이미 있다.",
+    "Shared15 출력 B_j를 동일 tensor로 tie해 k별 동일함수를 보장하는 전용 구현·준비계약은 이번 범위에서 확인되지 않았다. 다만 all-branch 대조가 이미 있고, 모든branch 동일입력이므로 분기접기/공유출력은 함수적으로 단순MLP/분기평균 재표현이 될 수 있다."
+  ],
+  "finite_conclusions": [
+    "새 가설을 단순 tanh/잔차cap/현재직접전달/분기활성화/활성분모화/과거평균/차분/gate라고 부르면 기존축과 겹친다.",
+    "operator norm 제약은 같은 residual-amplitude cap과 수학적으로 다르다: f가 입력변화에 반응하는 민감도 상한과 f(x)크기상한은 구분된다. 단 구체적 상한/좌표/훈련효과는 아직 근거없으며 전역예측 Lipschitz를 보장하지 않는다.",
+    "median robust pool은 outlier과거를 줄일 수 있으나 현재급증/큰수량 신호도 제거할 수 있고 현 Shared15는 단일predecessor만 추가로 읽는다. RAF 급락 원인을 보이는 증거 없이 자동채택 불가.",
+    "길이별 B_prefix 변화는 실제 구조이며 이력길이 자체의 causal effect와 분리되지 않는다. 분기별 output연산자/gradient 노출 또는 길이별 Jacobian 분석은 새로운 fit 없이 진단가능하지만 본감사에서는 실행하지 않았다.",
+    "각 파일에서 구현존재와 일부 preparation-only상태만 확인했다. native완료 여부와 성능은 이 감사에서 재검증하지 않았으며 parent의 고정 lineage 증적과 구분해야 한다."
+  ]
+}

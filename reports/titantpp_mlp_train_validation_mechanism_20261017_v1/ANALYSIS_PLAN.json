@@ -1,0 +1,49 @@
+{
+  "scope": "stored Train/Validation predictions only; no training/inference/remote/CNN changes",
+  "datasets": [
+    "yellow_trip_hourly",
+    "raf_spare_parts",
+    "intermittent_frozen_5000"
+  ],
+  "model_scope": [
+    "titantpp_history_mlp",
+    "titantpp_history_mlp_width16",
+    "titantpp_all_available_history_mlp",
+    "titantpp_current_only_param_matched"
+  ],
+  "primary_comparisons": [
+    "width16-width4",
+    "all_available-width4",
+    "width4-current_only"
+  ],
+  "coverage_policy": "Full rows, weighted stratified samples and aggregate-only endpoints reported separately. Missing rows remain missing; no new inference.",
+  "predefined_groups": {
+    "quantity": "original Train-derived fixed bins in diagnostic receipt; q>3449 Taxi, >200 RAF, >187 Inter tail",
+    "history_length": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64,
+      128
+    ],
+    "observed_last_vs_history_mean": "log1p(last)-log1p(mean), below -log(2), middle, above log(2). Both predictors are observed history only."
+  },
+  "statistics": [
+    "RMSE",
+    "MAE",
+    "signed bias",
+    "TimeNLL",
+    "paired delta AE/SE/signed error",
+    "sum-error contributions",
+    "row and entity-equal weighting",
+    "all seeds retained; sample SD ddof1"
+  ],
+  "causal_status": "descriptive retrospective analysis; no p-values or causal attribution",
+  "boundary_incident": {
+    "root": "Prior reassessment REPORT.md was opened before discovering it mixed Validation and Test. Its numerical results are excluded from current calculations. Prior Test knowledge cannot be erased; this is not a blinded analysis.",
+    "inventory_agent": "Prior history_train_fit README/diagnosis contained mixed Test interpretation; excluded and unrelated CNN-model scope rejected."
+  }
+}

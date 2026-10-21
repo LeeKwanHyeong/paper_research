@@ -1,0 +1,1044 @@
+{
+  "schema": "raf_train_validation_data_audit_v1",
+  "scope": {
+    "test_rows_read": false,
+    "test_metrics_read": false,
+    "new_training": false,
+    "new_model_inference": false,
+    "ssh": false,
+    "note": "Train/Validation filtered in lazy parquet scan before collection. Quantiles fixed using all original Train event rows only."
+  },
+  "input_sha256": "439cc3bdd2f969f1121b149de5aa9ece4a7e1ce0c6da9e734a7687c54989780d",
+  "input_schema": {
+    "oper_part_no": "String",
+    "demand_dt": "Int64",
+    "seq": "Int64",
+    "demand_qty": "Float64",
+    "chronological_split": "String",
+    "delta_t": "Int32",
+    "log_qty": "Float64",
+    "log10_qty": "Float64",
+    "raw_order": "Int32",
+    "mark": "Int32",
+    "scale_residual": "Float64",
+    "z": "Float64"
+  },
+  "train_all_event_quantiles": {
+    "q25": 1.0,
+    "q50": 2.0,
+    "q75": 10.0,
+    "q90": 30.0,
+    "q95": 60.0,
+    "q99": 200.0
+  },
+  "splits": {
+    "train": {
+      "positive_event_count": 30779,
+      "positive_event_entity_count": 5000,
+      "zero_monthly_rate_5000_items": 0.8938655172413793,
+      "next_event_targets": 25779,
+      "positive_quantity_all_event_rows": {
+        "n": 30779,
+        "mean": 14.503590110140031,
+        "sd_ddof1": 50.4575865513844,
+        "min": 1.0,
+        "q25": 1.0,
+        "median": 2.0,
+        "q75": 10.0,
+        "q90": 30.0,
+        "q95": 60.0,
+        "q99": 200.0,
+        "max": 2062.0
+      },
+      "positive_quantity_targets": {
+        "n": 25779,
+        "mean": 14.661197098413437,
+        "sd_ddof1": 51.9983187895003,
+        "min": 1.0,
+        "q25": 1.0,
+        "median": 2.0,
+        "q75": 10.0,
+        "q90": 30.0,
+        "q95": 60.0,
+        "q99": 200.0,
+        "max": 2062.0
+      },
+      "target_gap_months": {
+        "n": 25779,
+        "mean": 8.164630125295783,
+        "sd_ddof1": 6.867316228937765,
+        "min": 1.0,
+        "q25": 3.0,
+        "median": 6.0,
+        "q75": 12.0,
+        "q90": 19.0,
+        "q95": 23.0,
+        "q99": 29.0,
+        "max": 35.0
+      },
+      "observed_history_length": {
+        "n": 25779,
+        "mean": 3.6103805423018738,
+        "sd_ddof1": 2.2309152342669343,
+        "min": 1.0,
+        "q25": 2.0,
+        "median": 3.0,
+        "q75": 5.0,
+        "q90": 7.0,
+        "q95": 8.0,
+        "q99": 10.0,
+        "max": 14.0
+      },
+      "history_length_counts": {
+        "1": 5000,
+        "2": 4857,
+        "3": 4355,
+        "4": 3639,
+        "5": 2850,
+        "6": 2049,
+        "7": 1374,
+        "8": 846,
+        "9": 461,
+        "10": 217,
+        "11": 92,
+        "12": 32,
+        "13": 6,
+        "14": 1
+      },
+      "history_at_most": {
+        "1": {
+          "count": 5000,
+          "share": 0.19395632103650257
+        },
+        "2": {
+          "count": 9857,
+          "share": 0.38236549129136116
+        },
+        "4": {
+          "count": 17851,
+          "share": 0.6924628573645215
+        },
+        "8": {
+          "count": 24970,
+          "share": 0.9686178672562938
+        },
+        "16": {
+          "count": 25779,
+          "share": 1.0
+        },
+        "32": {
+          "count": 25779,
+          "share": 1.0
+        },
+        "64": {
+          "count": 25779,
+          "share": 1.0
+        },
+        "128": {
+          "count": 25779,
+          "share": 1.0
+        }
+      },
+      "last_observed_state_active_branch_counts": {
+        "0": 5000,
+        "1": 4857,
+        "2": 7994,
+        "3": 7119,
+        "4": 809,
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 0
+      },
+      "last_observed_state_active_branch_mean": 1.7625974630513208,
+      "eligible_branch_fractions_at_last_observed_state": {
+        "1": 0.8060436789634974,
+        "2": 0.6176345087086388,
+        "4": 0.3075371426354785,
+        "8": 0.03138213274370612,
+        "16": 0.0,
+        "32": 0.0,
+        "64": 0.0,
+        "128": 0.0
+      },
+      "fixed_divisor8_eligible_count_over8_mean": 0.2203246828814151,
+      "quantity_over_train_quantile": {
+        "q25": {
+          "count": 16552,
+          "share": 0.6420730051592382
+        },
+        "q50": {
+          "count": 12584,
+          "share": 0.4881492687846697
+        },
+        "q75": {
+          "count": 5132,
+          "share": 0.19907676791186624
+        },
+        "q90": {
+          "count": 2310,
+          "share": 0.08960782031886419
+        },
+        "q95": {
+          "count": 1270,
+          "share": 0.049264905543271655
+        },
+        "q99": {
+          "count": 205,
+          "share": 0.007952209162496606
+        }
+      },
+      "q_gt200": {
+        "count": 205,
+        "share": 0.007952209162496606,
+        "quantity_sum_share": 0.23534003085056,
+        "quantity_squared_sum_share": 0.7481103607357635,
+        "target_q_stats": {
+          "n": 205,
+          "mean": 433.88780487804877,
+          "sd_ddof1": 294.5178713868417,
+          "min": 202.0,
+          "q25": 250.0,
+          "median": 300.0,
+          "q75": 500.0,
+          "q90": 700.0,
+          "q95": 1000.0,
+          "q99": 1827.2800000000007,
+          "max": 2062.0
+        },
+        "previous_q_median": 100.0,
+        "history_length_median": 4.0,
+        "previous_q_le_train_q75_share": 0.13170731707317074,
+        "previous_q_gt200_share": 0.28292682926829266
+      },
+      "target_above_all_observed_history_max": {
+        "count": 4919,
+        "share": 0.19081422863571124
+      },
+      "target_at_least5x_last": {
+        "count": 2134,
+        "share": 0.0827805578183793
+      },
+      "target_at_most_one_fifth_last": {
+        "count": 2240,
+        "share": 0.08689243182435316
+      },
+      "pearson_quantity_vs_last": 0.37915153661313183,
+      "pearson_log1p_quantity_vs_last": 0.6770805384465444,
+      "pearson_quantity_vs_history_mean": 0.47547783290641793,
+      "descriptive_history_rules": {
+        "last_quantity": {
+          "rmse": 57.691093823297976,
+          "mae": 13.425113464447806,
+          "bias_pred_minus_true": 0.05430776989022072,
+          "note": "Descriptive deterministic history rule only; no fitted model and not an external benchmark"
+        },
+        "observed_history_mean": {
+          "rmse": 47.71196073450506,
+          "mae": 12.248875287467746,
+          "bias_pred_minus_true": -0.0802022523510944,
+          "note": "Descriptive deterministic history rule only; no fitted model and not an external benchmark"
+        }
+      },
+      "monthly_positive_events": [
+        {
+          "seq": 1,
+          "event_count": 584,
+          "mean_positive_q": 17.736301369863014,
+          "sum_positive_q": 10358.0
+        },
+        {
+          "seq": 2,
+          "event_count": 595,
+          "mean_positive_q": 14.154621848739495,
+          "sum_positive_q": 8422.0
+        },
+        {
+          "seq": 3,
+          "event_count": 585,
+          "mean_positive_q": 15.155555555555555,
+          "sum_positive_q": 8866.0
+        },
+        {
+          "seq": 4,
+          "event_count": 466,
+          "mean_positive_q": 15.015021459227468,
+          "sum_positive_q": 6997.0
+        },
+        {
+          "seq": 5,
+          "event_count": 460,
+          "mean_positive_q": 15.495652173913044,
+          "sum_positive_q": 7128.0
+        },
+        {
+          "seq": 6,
+          "event_count": 475,
+          "mean_positive_q": 14.635789473684211,
+          "sum_positive_q": 6952.0
+        },
+        {
+          "seq": 7,
+          "event_count": 515,
+          "mean_positive_q": 13.718446601941748,
+          "sum_positive_q": 7065.0
+        },
+        {
+          "seq": 8,
+          "event_count": 405,
+          "mean_positive_q": 14.28888888888889,
+          "sum_positive_q": 5787.0
+        },
+        {
+          "seq": 9,
+          "event_count": 502,
+          "mean_positive_q": 14.589641434262948,
+          "sum_positive_q": 7324.0
+        },
+        {
+          "seq": 10,
+          "event_count": 596,
+          "mean_positive_q": 14.291946308724832,
+          "sum_positive_q": 8518.0
+        },
+        {
+          "seq": 11,
+          "event_count": 545,
+          "mean_positive_q": 15.023853211009174,
+          "sum_positive_q": 8188.0
+        },
+        {
+          "seq": 12,
+          "event_count": 377,
+          "mean_positive_q": 14.297082228116711,
+          "sum_positive_q": 5390.0
+        },
+        {
+          "seq": 13,
+          "event_count": 603,
+          "mean_positive_q": 16.112769485903815,
+          "sum_positive_q": 9716.0
+        },
+        {
+          "seq": 14,
+          "event_count": 583,
+          "mean_positive_q": 16.55917667238422,
+          "sum_positive_q": 9654.0
+        },
+        {
+          "seq": 15,
+          "event_count": 536,
+          "mean_positive_q": 12.376865671641792,
+          "sum_positive_q": 6634.0
+        },
+        {
+          "seq": 16,
+          "event_count": 571,
+          "mean_positive_q": 11.751313485113835,
+          "sum_positive_q": 6710.0
+        },
+        {
+          "seq": 17,
+          "event_count": 504,
+          "mean_positive_q": 16.61904761904762,
+          "sum_positive_q": 8376.0
+        },
+        {
+          "seq": 18,
+          "event_count": 530,
+          "mean_positive_q": 12.877358490566039,
+          "sum_positive_q": 6825.0
+        },
+        {
+          "seq": 19,
+          "event_count": 604,
+          "mean_positive_q": 13.947019867549669,
+          "sum_positive_q": 8424.0
+        },
+        {
+          "seq": 20,
+          "event_count": 496,
+          "mean_positive_q": 14.483870967741936,
+          "sum_positive_q": 7184.0
+        },
+        {
+          "seq": 21,
+          "event_count": 600,
+          "mean_positive_q": 12.675,
+          "sum_positive_q": 7605.0
+        },
+        {
+          "seq": 22,
+          "event_count": 642,
+          "mean_positive_q": 14.633956386292835,
+          "sum_positive_q": 9395.0
+        },
+        {
+          "seq": 23,
+          "event_count": 666,
+          "mean_positive_q": 13.552552552552553,
+          "sum_positive_q": 9026.0
+        },
+        {
+          "seq": 24,
+          "event_count": 450,
+          "mean_positive_q": 12.626666666666667,
+          "sum_positive_q": 5682.0
+        },
+        {
+          "seq": 25,
+          "event_count": 573,
+          "mean_positive_q": 15.596858638743456,
+          "sum_positive_q": 8937.0
+        },
+        {
+          "seq": 26,
+          "event_count": 651,
+          "mean_positive_q": 15.064516129032258,
+          "sum_positive_q": 9807.0
+        },
+        {
+          "seq": 27,
+          "event_count": 641,
+          "mean_positive_q": 14.17160686427457,
+          "sum_positive_q": 9084.0
+        },
+        {
+          "seq": 28,
+          "event_count": 502,
+          "mean_positive_q": 23.98605577689243,
+          "sum_positive_q": 12041.0
+        },
+        {
+          "seq": 29,
+          "event_count": 409,
+          "mean_positive_q": 14.205378973105134,
+          "sum_positive_q": 5810.0
+        },
+        {
+          "seq": 30,
+          "event_count": 561,
+          "mean_positive_q": 13.344028520499108,
+          "sum_positive_q": 7486.0
+        },
+        {
+          "seq": 31,
+          "event_count": 548,
+          "mean_positive_q": 12.155109489051094,
+          "sum_positive_q": 6661.0
+        },
+        {
+          "seq": 32,
+          "event_count": 436,
+          "mean_positive_q": 13.511467889908257,
+          "sum_positive_q": 5891.0
+        },
+        {
+          "seq": 33,
+          "event_count": 541,
+          "mean_positive_q": 13.410351201478743,
+          "sum_positive_q": 7255.0
+        },
+        {
+          "seq": 34,
+          "event_count": 515,
+          "mean_positive_q": 18.864077669902912,
+          "sum_positive_q": 9715.0
+        },
+        {
+          "seq": 35,
+          "event_count": 590,
+          "mean_positive_q": 13.591525423728813,
+          "sum_positive_q": 8019.0
+        },
+        {
+          "seq": 36,
+          "event_count": 413,
+          "mean_positive_q": 15.021791767554479,
+          "sum_positive_q": 6204.0
+        },
+        {
+          "seq": 37,
+          "event_count": 588,
+          "mean_positive_q": 15.760204081632653,
+          "sum_positive_q": 9267.0
+        },
+        {
+          "seq": 38,
+          "event_count": 587,
+          "mean_positive_q": 17.30664395229983,
+          "sum_positive_q": 10159.0
+        },
+        {
+          "seq": 39,
+          "event_count": 652,
+          "mean_positive_q": 16.161042944785276,
+          "sum_positive_q": 10537.0
+        },
+        {
+          "seq": 40,
+          "event_count": 524,
+          "mean_positive_q": 11.889312977099237,
+          "sum_positive_q": 6230.0
+        },
+        {
+          "seq": 41,
+          "event_count": 490,
+          "mean_positive_q": 17.506122448979593,
+          "sum_positive_q": 8578.0
+        },
+        {
+          "seq": 42,
+          "event_count": 504,
+          "mean_positive_q": 12.031746031746032,
+          "sum_positive_q": 6064.0
+        },
+        {
+          "seq": 43,
+          "event_count": 403,
+          "mean_positive_q": 16.089330024813897,
+          "sum_positive_q": 6484.0
+        },
+        {
+          "seq": 44,
+          "event_count": 485,
+          "mean_positive_q": 11.847422680412372,
+          "sum_positive_q": 5746.0
+        },
+        {
+          "seq": 45,
+          "event_count": 572,
+          "mean_positive_q": 12.435314685314685,
+          "sum_positive_q": 7113.0
+        },
+        {
+          "seq": 46,
+          "event_count": 529,
+          "mean_positive_q": 16.468809073724007,
+          "sum_positive_q": 8712.0
+        },
+        {
+          "seq": 47,
+          "event_count": 613,
+          "mean_positive_q": 13.597063621533442,
+          "sum_positive_q": 8335.0
+        },
+        {
+          "seq": 48,
+          "event_count": 424,
+          "mean_positive_q": 14.606132075471699,
+          "sum_positive_q": 6193.0
+        },
+        {
+          "seq": 49,
+          "event_count": 502,
+          "mean_positive_q": 13.404382470119522,
+          "sum_positive_q": 6729.0
+        },
+        {
+          "seq": 50,
+          "event_count": 537,
+          "mean_positive_q": 12.905027932960893,
+          "sum_positive_q": 6930.0
+        },
+        {
+          "seq": 51,
+          "event_count": 600,
+          "mean_positive_q": 16.345,
+          "sum_positive_q": 9807.0
+        },
+        {
+          "seq": 52,
+          "event_count": 433,
+          "mean_positive_q": 10.263279445727482,
+          "sum_positive_q": 4444.0
+        },
+        {
+          "seq": 53,
+          "event_count": 470,
+          "mean_positive_q": 12.274468085106383,
+          "sum_positive_q": 5769.0
+        },
+        {
+          "seq": 54,
+          "event_count": 523,
+          "mean_positive_q": 17.29827915869981,
+          "sum_positive_q": 9047.0
+        },
+        {
+          "seq": 55,
+          "event_count": 489,
+          "mean_positive_q": 12.020449897750511,
+          "sum_positive_q": 5878.0
+        },
+        {
+          "seq": 56,
+          "event_count": 513,
+          "mean_positive_q": 12.943469785575049,
+          "sum_positive_q": 6640.0
+        },
+        {
+          "seq": 57,
+          "event_count": 505,
+          "mean_positive_q": 13.097029702970296,
+          "sum_positive_q": 6614.0
+        },
+        {
+          "seq": 58,
+          "event_count": 566,
+          "mean_positive_q": 14.123674911660778,
+          "sum_positive_q": 7994.0
+        }
+      ]
+    },
+    "validation": {
+      "positive_event_count": 6690,
+      "positive_event_entity_count": 4121,
+      "zero_monthly_rate_5000_items": 0.8970769230769231,
+      "next_event_targets": 6690,
+      "positive_quantity_all_event_rows": {
+        "n": 6690,
+        "mean": 12.765321375186845,
+        "sd_ddof1": 41.762936374504086,
+        "min": 1.0,
+        "q25": 1.0,
+        "median": 2.0,
+        "q75": 10.0,
+        "q90": 24.0,
+        "q95": 50.0,
+        "q99": 200.0,
+        "max": 1000.0
+      },
+      "positive_quantity_targets": {
+        "n": 6690,
+        "mean": 12.765321375186845,
+        "sd_ddof1": 41.762936374504086,
+        "min": 1.0,
+        "q25": 1.0,
+        "median": 2.0,
+        "q75": 10.0,
+        "q90": 24.0,
+        "q95": 50.0,
+        "q99": 200.0,
+        "max": 1000.0
+      },
+      "target_gap_months": {
+        "n": 6690,
+        "mean": 10.08221225710015,
+        "sd_ddof1": 7.850513048782655,
+        "min": 1.0,
+        "q25": 4.0,
+        "median": 8.0,
+        "q75": 15.0,
+        "q90": 22.0,
+        "q95": 26.0,
+        "q99": 31.0,
+        "max": 35.0
+      },
+      "observed_history_length": {
+        "n": 6690,
+        "mean": 6.817189835575486,
+        "sd_ddof1": 2.567067883723668,
+        "min": 2.0,
+        "q25": 5.0,
+        "median": 7.0,
+        "q75": 9.0,
+        "q90": 10.0,
+        "q95": 11.0,
+        "q99": 13.0,
+        "max": 16.0
+      },
+      "history_length_counts": {
+        "2": 136,
+        "3": 466,
+        "4": 741,
+        "5": 899,
+        "6": 1005,
+        "7": 938,
+        "8": 815,
+        "9": 642,
+        "10": 457,
+        "11": 289,
+        "12": 163,
+        "13": 85,
+        "14": 39,
+        "15": 12,
+        "16": 3
+      },
+      "history_at_most": {
+        "1": {
+          "count": 0,
+          "share": 0.0
+        },
+        "2": {
+          "count": 136,
+          "share": 0.020328849028400597
+        },
+        "4": {
+          "count": 1343,
+          "share": 0.2007473841554559
+        },
+        "8": {
+          "count": 5000,
+          "share": 0.7473841554559043
+        },
+        "16": {
+          "count": 6690,
+          "share": 1.0
+        },
+        "32": {
+          "count": 6690,
+          "share": 1.0
+        },
+        "64": {
+          "count": 6690,
+          "share": 1.0
+        },
+        "128": {
+          "count": 6690,
+          "share": 1.0
+        }
+      },
+      "last_observed_state_active_branch_counts": {
+        "0": 0,
+        "1": 136,
+        "2": 1207,
+        "3": 3657,
+        "4": 1690,
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 0
+      },
+      "last_observed_state_active_branch_mean": 3.0315396113602393,
+      "eligible_branch_fractions_at_last_observed_state": {
+        "1": 1.0,
+        "2": 0.9796711509715994,
+        "4": 0.7992526158445441,
+        "8": 0.2526158445440957,
+        "16": 0.0,
+        "32": 0.0,
+        "64": 0.0,
+        "128": 0.0
+      },
+      "fixed_divisor8_eligible_count_over8_mean": 0.3789424514200299,
+      "quantity_over_train_quantile": {
+        "q25": {
+          "count": 4149,
+          "share": 0.6201793721973095
+        },
+        "q50": {
+          "count": 3064,
+          "share": 0.45799701046337815
+        },
+        "q75": {
+          "count": 1192,
+          "share": 0.17817638266068758
+        },
+        "q90": {
+          "count": 509,
+          "share": 0.07608370702541106
+        },
+        "q95": {
+          "count": 274,
+          "share": 0.04095665171898356
+        },
+        "q99": {
+          "count": 50,
+          "share": 0.007473841554559043
+        }
+      },
+      "q_gt200": {
+        "count": 50,
+        "share": 0.007473841554559043,
+        "quantity_sum_share": 0.21584309133489463,
+        "quantity_squared_sum_share": 0.6572178763680034,
+        "target_q_stats": {
+          "n": 50,
+          "mean": 368.66,
+          "sd_ddof1": 180.04768189316417,
+          "min": 204.0,
+          "q25": 250.0,
+          "median": 300.0,
+          "q75": 422.5,
+          "q90": 532.5000000000001,
+          "q95": 737.3999999999999,
+          "q99": 1000.0,
+          "max": 1000.0
+        },
+        "previous_q_median": 100.0,
+        "history_length_median": 8.0,
+        "previous_q_le_train_q75_share": 0.18,
+        "previous_q_gt200_share": 0.28
+      },
+      "target_above_all_observed_history_max": {
+        "count": 694,
+        "share": 0.10373692077727951
+      },
+      "target_at_least5x_last": {
+        "count": 505,
+        "share": 0.07548579970104634
+      },
+      "target_at_most_one_fifth_last": {
+        "count": 577,
+        "share": 0.08624813153961136
+      },
+      "pearson_quantity_vs_last": 0.4627184637632197,
+      "pearson_log1p_quantity_vs_last": 0.6642893602969223,
+      "pearson_quantity_vs_history_mean": 0.5254129196844552,
+      "descriptive_history_rules": {
+        "last_quantity": {
+          "rmse": 44.57417190701152,
+          "mae": 11.313602391629297,
+          "bias_pred_minus_true": -0.08191330343796711,
+          "note": "Descriptive deterministic history rule only; no fitted model and not an external benchmark"
+        },
+        "observed_history_mean": {
+          "rmse": 36.84990622814952,
+          "mae": 10.85635939670693,
+          "bias_pred_minus_true": 0.5857110954980908,
+          "note": "Descriptive deterministic history rule only; no fitted model and not an external benchmark"
+        }
+      },
+      "monthly_positive_events": [
+        {
+          "seq": 59,
+          "event_count": 587,
+          "mean_positive_q": 10.885860306643952,
+          "sum_positive_q": 6390.0
+        },
+        {
+          "seq": 60,
+          "event_count": 321,
+          "mean_positive_q": 11.654205607476635,
+          "sum_positive_q": 3741.0
+        },
+        {
+          "seq": 61,
+          "event_count": 603,
+          "mean_positive_q": 14.82587064676617,
+          "sum_positive_q": 8940.0
+        },
+        {
+          "seq": 62,
+          "event_count": 471,
+          "mean_positive_q": 10.259023354564755,
+          "sum_positive_q": 4832.0
+        },
+        {
+          "seq": 63,
+          "event_count": 600,
+          "mean_positive_q": 15.048333333333334,
+          "sum_positive_q": 9029.0
+        },
+        {
+          "seq": 64,
+          "event_count": 455,
+          "mean_positive_q": 9.452747252747253,
+          "sum_positive_q": 4301.0
+        },
+        {
+          "seq": 65,
+          "event_count": 505,
+          "mean_positive_q": 10.946534653465347,
+          "sum_positive_q": 5528.0
+        },
+        {
+          "seq": 66,
+          "event_count": 528,
+          "mean_positive_q": 14.717803030303031,
+          "sum_positive_q": 7771.0
+        },
+        {
+          "seq": 67,
+          "event_count": 521,
+          "mean_positive_q": 13.804222648752399,
+          "sum_positive_q": 7192.0
+        },
+        {
+          "seq": 68,
+          "event_count": 442,
+          "mean_positive_q": 9.364253393665159,
+          "sum_positive_q": 4139.0
+        },
+        {
+          "seq": 69,
+          "event_count": 474,
+          "mean_positive_q": 16.803797468354432,
+          "sum_positive_q": 7965.0
+        },
+        {
+          "seq": 70,
+          "event_count": 622,
+          "mean_positive_q": 14.263665594855306,
+          "sum_positive_q": 8872.0
+        },
+        {
+          "seq": 71,
+          "event_count": 561,
+          "mean_positive_q": 11.942959001782532,
+          "sum_positive_q": 6700.0
+        }
+      ]
+    }
+  },
+  "rows": {},
+  "code_facts": {
+    "entity": "part number Item Ref no; model tensor part_idx is bookkeeping, not passed to encode_task_states",
+    "event_definition": "positive monthly aggregate demand; zero-demand months removed; month gap between positive observations retained as delta_t",
+    "time_unit": "month; seq month index, despite lookback_weeks historical variable name",
+    "lookback_W": 84,
+    "max_seq_len_including_target": 84,
+    "no_history_truncation_in_train_validation": true,
+    "first_event_gap": "raw0 on first event only; loader clips to1; target never firstevent",
+    "target_dt_not_supplied_to_quantity_prediction": "target state is masked and output read at preceding observed position, target dt used for time likelihood after encoder",
+    "raw_source_available_metadata_not_in_model_schema": [
+      "DESCRIPTION",
+      "Lead Time (months)",
+      "PRICE (£)"
+    ],
+    "model_inputs": [
+      "observed delta_t",
+      "observed demand_qty",
+      "valid/observed masks",
+      "learned token position in encoder"
+    ],
+    "shared_correction": "every eligible branch reads same immediate predecessor; availability history_length>lag at last observed state; outputs sum then divide8",
+    "shared_branch_lags": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64,
+      128
+    ],
+    "same_function_for_all_available_branches_except_output_projection": "shared current/previous GELU width15 features; distinct output linear projections",
+    "no_new_inference": "Only deterministic data summaries and two explicit descriptive history rules; no checkpoint loaded or model constructed.",
+    "no_history_truncation_proof": "All Train/Validation seq indices are1..71; left edge at previous seq-83 is never positive for retained samples; maximum observed row length is16, below max83."
+  },
+  "source_hashes": {
+    "benchmark_data/scripts/audit_and_prepare_raf.py": {
+      "sha256": "4528acb349d026abd018ff4751b6f0b2c82189ad9615d9531e400f16b1f79fda",
+      "frozen_source_sha256": null,
+      "same_as_frozen_source": null
+    },
+    "benchmark_data/contracts/raf_spare_parts_v1.json": {
+      "sha256": "ce210da058a60c9f3de2a10174b3b9f8da0a5e058e29c29fc3144ecd318efdab",
+      "frozen_source_sha256": null,
+      "same_as_frozen_source": null
+    },
+    "benchmark_data/data/candidates/raf_spare_parts/raf_spare_parts_split_manifest.json": {
+      "sha256": "cd2458aa3809014aa74b8a121572a74e3d86dc520a690335d79a1e5150899e27",
+      "frozen_source_sha256": null,
+      "same_as_frozen_source": null
+    },
+    "data_loader/event_seq_data_module.py": {
+      "sha256": "7c11d9ace6c4e4d3bb03861aae92393aa946a38452d702dc7625210b339897ca",
+      "frozen_source_sha256": "7c11d9ace6c4e4d3bb03861aae92393aa946a38452d702dc7625210b339897ca",
+      "same_as_frozen_source": true
+    },
+    "paper/scripts/count_aware_tpp_backbone/core.py": {
+      "sha256": "c5cc72a265a05199868332c9beaa32ce9568afaf5f4cfa0930b836215ab36084",
+      "frozen_source_sha256": "c5cc72a265a05199868332c9beaa32ce9568afaf5f4cfa0930b836215ab36084",
+      "same_as_frozen_source": true
+    },
+    "models/TPPs/CountAwareTitanSharedHistoryMLP.py": {
+      "sha256": "eee18d3abe199f0c71d80da35acf01cf19acd8f56291ff7cfd33fd86d8bc82a2",
+      "frozen_source_sha256": "eee18d3abe199f0c71d80da35acf01cf19acd8f56291ff7cfd33fd86d8bc82a2",
+      "same_as_frozen_source": true
+    },
+    "models/TPPs/CountAwareTitanMultiLagDetail.py": {
+      "sha256": "4bcbecdadf921df21a4e7fb379962eb4ecec2cfeb2f8ff1edccbb6b418807eae",
+      "frozen_source_sha256": "4bcbecdadf921df21a4e7fb379962eb4ecec2cfeb2f8ff1edccbb6b418807eae",
+      "same_as_frozen_source": true
+    },
+    "models/TPPs/CountAwareTPP.py": {
+      "sha256": "9348e4ad18aea3c12e532cf1403fecd5f8a7af2d932f9c1019ddd8b3b48e4c1c",
+      "frozen_source_sha256": "9348e4ad18aea3c12e532cf1403fecd5f8a7af2d932f9c1019ddd8b3b48e4c1c",
+      "same_as_frozen_source": true
+    }
+  },
+  "validation_train_entity_support": {
+    "novel_entities": 0,
+    "train_positive_event_count_for_validation_rows": {
+      "n": 6690,
+      "mean": 6.309118086696562,
+      "sd_ddof1": 2.3998786471011417,
+      "min": 2.0,
+      "q25": 5.0,
+      "median": 6.0,
+      "q75": 8.0,
+      "q90": 10.0,
+      "q95": 11.0,
+      "q99": 12.0,
+      "max": 15.0
+    },
+    "train_positive_event_count_at_most": {
+      "1": {
+        "rows": 0,
+        "share": 0.0
+      },
+      "2": {
+        "rows": 216,
+        "share": 0.03228699551569507
+      },
+      "4": {
+        "rows": 1671,
+        "share": 0.24977578475336323
+      },
+      "8": {
+        "rows": 5424,
+        "share": 0.810762331838565
+      },
+      "16": {
+        "rows": 6690,
+        "share": 1.0
+      },
+      "32": {
+        "rows": 6690,
+        "share": 1.0
+      }
+    },
+    "train_positive_event_count_across_all5000_entities": {
+      "n": 5000,
+      "mean": 6.1558,
+      "sd_ddof1": 2.343464257236493,
+      "min": 2.0,
+      "q25": 4.0,
+      "median": 6.0,
+      "q75": 8.0,
+      "q90": 9.0,
+      "q95": 10.0,
+      "q99": 12.0,
+      "max": 15.0
+    }
+  },
+  "interpretations": [
+    {
+      "status": "inferred",
+      "claim": "Sparse per-item positive-event histories and large unanticipated quantity jumps leave limited direct recent-history evidence; not a proof of unpredictability or absence of exogenous signal."
+    },
+    {
+      "status": "inferred",
+      "claim": "Fixed divisor8 with few eligible branches may alter correction strength relative to long histories, but learned output weights can compensate; branch-count association is not causal proof or a model defect."
+    },
+    {
+      "status": "unconfirmed",
+      "claim": "Whether month aggregation, stockouts, order batching, calendar phase, lead time or price cause the model ranking cannot be determined from current retained model inputs alone."
+    }
+  ],
+  "data_consistency_checks": {
+    "delta_t_vs_exact_seq_month_difference_mismatches": 0,
+    "first_event_raw_gap0_count": 5000,
+    "duplicate_entity_month_count": 0,
+    "nonpositive_quantity_count": 0,
+    "actual_dataset_sample_checks": {
+      "train": 4,
+      "validation": 4,
+      "history_lengths_and_target_quantities_match": true
+    },
+    "frozen_loader_core_shared_model_source_sha_equal": true
+  }
+}

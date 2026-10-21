@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "items": [
+    {
+      "id": "tail-error-concentration",
+      "title": "큰 수량은 드물지만 RMSE 오차가 집중됩니다",
+      "queries": [
+        {
+          "id": "tail-accounting",
+          "source": {
+            "label": "RAF 저장 예측 오류 분해",
+            "files": [
+              {
+                "label": "RESULT.json"
+              },
+              {
+                "label": "DETAILS.json"
+              }
+            ],
+            "filters": [
+              "Dataset: RAF original uncapped",
+              "Evaluation: Validation only",
+              "Prediction seeds: 42, 52, 62",
+              "Large quantity: q > 200, fixed from Train Q99"
+            ],
+            "metricDefinitions": [
+              {
+                "label": "큰 수량 오류 비중",
+                "definition": "큰 수량의 SSE와 log 수량 제곱오차 합이 각 전체 오차 합에서 차지하는 비중을 seed별로 구한 뒤 평균했습니다."
+              }
+            ],
+            "caveats": [
+              "현재 공유형의 회수된3seed 예측만 사용했습니다. 이 비중 차이가 특정 손실 변경의 개선을 보장하지는 않습니다."
+            ]
+          },
+          "columns": [
+            "cohort",
+            "count",
+            "target_share_percent",
+            "sse_share_percent",
+            "log_mse_sum_share_percent"
+          ],
+          "rows": [
+            {
+              "cohort": "q>200",
+              "count": 50,
+              "target_share_percent": 0.7473841554559043,
+              "sse_share_percent": 68.63755517126195,
+              "log_mse_sum_share_percent": 4.850504289953913
+            }
+          ],
+          "methods": [
+            {
+              "language": "calculation",
+              "code": "For each seed: sum((prediction - truth)^2 over q>200) / sum((prediction - truth)^2 over all6690).\nCompute the analogous ratio for (log1p(prediction)-log1p(truth))^2.\nReport the arithmetic mean of the three seed-specific ratios."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "drop-error-difference",
+      "title": "급락 뒤의 과대예측이 RMTPP 대비 MAE 열세에 기여합니다",
+      "queries": [
+        {
+          "id": "drop-accounting",
+          "source": {
+            "label": "같은 대상의 공유형·RMTPP 예측",
+            "files": [
+              {
+                "label": "RESULT.json"
+              },
+              {
+                "label": "SOURCE_MAP.json"
+              }
+            ],
+            "filters": [
+              "Dataset: RAF original uncapped",
+              "Evaluation: Validation only",
+              "Prediction seeds: 42, 52, 62",
+              "Diagnostic cohort: current quantity <= previous observed quantity / 5"
+            ],
+            "metricDefinitions": [
+              {
+                "label": "급락 구간 MAE 차이 기여",
+                "definition": "급락 행의 공유형 절대오차 합에서 RMTPP 절대오차 합을 뺀 값을 전체6690행으로 나누고3seed에서 평균했습니다."
+              }
+            ],
+            "caveats": [
+              "급락 여부는 정답을 사용한 사후 오류 구간이며 모델 입력이나 학습 gate로 사용하지 않았습니다."
+            ]
+          },
+          "columns": [
+            "cohort",
+            "count",
+            "shared_mae",
+            "rmtpp_mae",
+            "overall_mae_difference_contribution"
+          ],
+          "rows": [
+            {
+              "cohort": "직전의1/5 이하",
+              "count": 577,
+              "shared_mae": 16.6468062122594,
+              "rmtpp_mae": 14.542937519989696,
+              "overall_mae_difference_contribution": 0.18145474371294745
+            }
+          ],
+          "methods": [
+            {
+              "language": "calculation",
+              "code": "MAE contribution = mean_over_seeds(sum(abs(shared_error)-abs(rmtpp_error) over577drop rows) /6690).\n0.181454744 + (-0.070875138 from other rows) =0.110579606 overall MAE difference."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "history-branch-use",
+      "title": "짧은 이력과 분기 사용 비중의 변화가 확인됩니다",
+      "queries": [
+        {
+          "id": "history-audit",
+          "source": {
+            "label": "RAF Train·Validation 원자료와 분기 코드",
+            "files": [
+              {
+                "label": "DATASET_AUDIT.json"
+              }
+            ],
+            "filters": [
+              "Dataset: RAF original uncapped",
+              "Splits: Train and Validation; Test excluded before reading"
+            ],
+            "metricDefinitions": [
+              {
+                "label": "lag8 분기 활성 비중",
+                "definition": "마지막 관측 위치에서 관측 이력이8개를 초과하여 네 번째인 lag8 기준 분기가 활성화되는 타깃 비중입니다."
+              }
+            ],
+            "caveats": [
+              "이력 길이별 오류 차이는 수량 구성과도 연결됩니다. 분기나 고정 분모8이 성능 저하의 원인이라는 인과 증명은 아닙니다."
+            ]
+          },
+          "columns": [
+            "split",
+            "target_count",
+            "history_median",
+            "history_max",
+            "lag8_branch_active_percent"
+          ],
+          "rows": [
+            {
+              "split": "Train",
+              "target_count": 25779,
+              "history_median": 3,
+              "history_max": 14,
+              "lag8_branch_active_percent": 3.138213274370612
+            },
+            {
+              "split": "Validation",
+              "target_count": 6690,
+              "history_median": 7,
+              "history_max": 16,
+              "lag8_branch_active_percent": 25.26158445440957
+            }
+          ],
+          "methods": [
+            {
+              "language": "calculation",
+              "code": "active branches at last observed state = sum(history_length > threshold for threshold in [1,2,4,8,16,32,64,128]).\nlag8 availability: Train809/25779, Validation1690/6690.\nThreshold16/32/64/128 branches have zero availability in both splits."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "schema": "raf_prefix_design_final_qa_after_weights_20261021",
+  "status": "PASS_bounded_design_and_weight_interpretation_review",
+  "training_readiness": "NOT_READY_FROBENIUS_REALIZATION_DEFERRED",
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "summary": "24 prefix의 보고 norm 산술과3개 Frobenius-only 축소 사례가 일치하며 최종문서가 사전 보류조건에 따라 학습 진입을 보류함. 실제 Jacobian/예측 효과/학습 성능으로 확대하지 않음.",
+  "files_changed": [
+    "/private/tmp/raf_prefix_design_final_qa_after_weights_20261021.json"
+  ],
+  "reviewed_file_sha256": {
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_raf_prefix_sensitivity_design_20261021_v1/DESIGN.md": "b723ce902779d7cea7c4026264fe642c9bb6a2a31c44798cf815634a02b35734",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_raf_prefix_sensitivity_design_20261021_v1/SCIENCE_SPEC.json": "9e21aa18d9a4ebb2acbdaa1d6b1c2b847da7b86a191309ff703d123c3ce0fe1a",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_raf_prefix_sensitivity_design_20261021_v1/WEIGHT_NORMS.json": "427fa0b17d976103cb7b316667713beffcdb9d63648b60fbca5184124ff3f41b",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_raf_prefix_sensitivity_design_20261021_v1/WEIGHT_NORM_ANALYSIS.py": "e0632d7681b80aee170aa01f8d398829e00d5182e4ec148fe2490c280c4c31e6",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_raf_prefix_sensitivity_design_20261021_v1/WEIGHT_ADDENDUM_REVIEW.md": "7cc140f66be4856b53e46590cfa34e09585557a789e38a4ecf66efb07d8edbeb",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_raf_prefix_sensitivity_design_20261021_v1/SOURCE_BINDINGS.json": "09d87b0c973ef160652a897d2d1481eae89febabcbf3a873247fd140a8e19429",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_raf_prefix_sensitivity_design_20261021_v1/DESIGN_QA_BEFORE_WEIGHTS.json": "bf9296bafca5b2b0d0ca4f3939ca8acfc55b416184c19b08bbe1c2d3cb9d96cf",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_raf_prefix_sensitivity_design_20261021_v1/weight_analysis.stdout": "a0a9b42cb83df545b68b5b180467e9c57f140c30194efc4be7a8e8850eb1d13d",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_raf_prefix_sensitivity_design_20261021_v1/weight_analysis.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "verification": {
+    "original_source_bindings_count": 30,
+    "original_source_bytes_sha_match": true,
+    "checkpoint_identity_report_count": 3,
+    "checkpoint_hashes_and_canonical_state_match_source_map": true,
+    "checkpoint_files_independently_opened_by_reviewer": false,
+    "parent_analysis_source_before_after_checkpoint_assertions_present": true,
+    "parent_analysis_scope": "CPU weights_only load3; no model construction/forward/training/evaluation/Test/SSH",
+    "parent_reported_actual_exit": 0,
+    "actual_exit_evidence_scope": "parent message and SCIENCE_SPEC report exit0; saved stdout matches result, stderr0; reviewer did not observe or rerun parent process",
+    "prefix_arithmetic_checked_count": 24,
+    "used_prefix_count": 12,
+    "used_frobenius_active_count": 11,
+    "used_operator_bound_above_one_count": 8,
+    "frobenius_only_shrink_cases": [
+      {
+        "seed": 42,
+        "k": 1
+      },
+      {
+        "seed": 52,
+        "k": 2
+      },
+      {
+        "seed": 52,
+        "k": 3
+      }
+    ],
+    "previous_qa_original_bytes_preserved": true
+  },
+  "acceptance_criteria_checklist": {
+    "fixed_k_bound_scope_preserved": true,
+    "greater_operator_upper_bound_not_claimed_as_actual_jacobian": true,
+    "scale_not_claimed_as_prediction_change": true,
+    "selected_checkpoint_only_not_entire_training_trajectory": true,
+    "short_prefix_unnecessary_shrink_is_counterevidence": true,
+    "predeclared_deferral_not_relaxed": true,
+    "raw_script_decision_explicitly_not_training_gate": true,
+    "formula_implementation_and_training_unperformed": true,
+    "tail_and_overall_success_conditions_unchanged": true
+  },
+  "limitations": [
+    "norm 수치는 부모 분석의 보고값을 이용한 산술 검산이며 원 tensor의 독립 SVD 재계산이 아니다.",
+    "checkpoint 전후 SHA 불변은 부모 스크립트의 assertion과 결과 기록으로 확인했으며 검토자는 checkpoint를 열지 않았다.",
+    "상한>1은 실제 Jacobian>1의 증거가 아니며 s_k는 raw 예측이나 재학습 후의 축소율이 아니다."
+  ],
+  "reviewer_checkpoint_loads": 0,
+  "reviewer_model_executions": 0,
+  "reviewer_runtime_tests": 0,
+  "reviewer_test_or_mixed_result_reads": 0,
+  "reviewer_remote_calls": 0,
+  "reviewer_automation_calls": 0,
+  "reviewer_existing_files_modified": 0
+}

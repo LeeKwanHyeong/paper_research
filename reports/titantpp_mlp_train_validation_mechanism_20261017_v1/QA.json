@@ -1,0 +1,92 @@
+{
+  "status": "PASS",
+  "created_at": "2026-10-16T15:23:40.782656+00:00",
+  "scope": "stored Train/Validation only; no inference, training or remote calls",
+  "independent_method": "pandas/numpy calculations from explicitly admitted receipt/endpoint/parquet sources; original analyzers not imported or rerun",
+  "counts": {
+    "input_sha": 122,
+    "numeric_comparisons": 35096,
+    "endpoint_count": 36,
+    "endpoint_cells": 336,
+    "summary_groups": 112,
+    "endpoint_seed_deltas": 336,
+    "delta_summary_groups": 112,
+    "row_cohorts": 24,
+    "sample_strata": 60,
+    "row_metric_records": 1416,
+    "paired_metric_records": 708,
+    "paired_target_rows": 163423,
+    "full_row_state_endpoint_matches": 12,
+    "full_row_endpoint_metric_comparisons": 36
+  },
+  "errors": [],
+  "files_changed": [
+    "reports/titantpp_mlp_train_validation_mechanism_20261017_v1/QA.json",
+    "reports/titantpp_mlp_train_validation_mechanism_20261017_v1/QA.md"
+  ],
+  "input_manifests": {
+    "SOURCE_INVENTORY.json": "3f438558cfd284aab5a52a823b0c2553a4942d0202924db5c648a0a4377ae8b5",
+    "ENDPOINT_INPUT_MANIFEST.json": "ac4a6d65b08156d46bd361775280b545627cf19e240b6884792de4c6529707e7",
+    "ROW_INPUT_MANIFEST.json": "518d1560dfc4c0d379203cd31d70a0bcf2bef273564ef62fb7d8f49bc1f2901a"
+  },
+  "scope_limits": [
+    "MLP16 Train rows absent; no MLP16 Train-vs-Validation generalization-gap claim.",
+    "Paired row analysis restricted to seed42; 3seed endpoints are separate evidence.",
+    "Weighted stratified sample estimates are not full-row measurements; entity-equal weights normalize sampled represented mass per entity within each group.",
+    "No current-only row predictions: current-only comparison uses aggregate Validation endpoints.",
+    "Historical mixed-report exposure recorded in ANALYSIS_PLAN; current computations exclude it and analysis is not blinded."
+  ],
+  "acceptance_criteria": {
+    "input_sha_valid": true,
+    "endpoint_selection_state_counts": true,
+    "three_seed_mean_sample_sd": true,
+    "same_targets_truth_history": true,
+    "sample_stratum_weights": true,
+    "row_entity_equal_metrics": true,
+    "qty_history_additive": true,
+    "missing_scope_explicit": true,
+    "improved_fraction_respects_weighting": true,
+    "full_row_state_endpoint_link": true
+  },
+  "verified_artifact_sha256": {
+    "ANALYSIS_PLAN.json": "c206fd44f671d2ca8a843bc9a010d31b4bed355aabe05e84a956473bb14ede8a",
+    "analyze_endpoints.py": "38d97e6a905781c9467732d271e5815b149204cebca58ef157b4406c1f4dd03b",
+    "analyze_rows.py": "bad37a73ac5f95ead1d120d7eb24133639cdf26b36396b15fd8e7a0eac932a9f",
+    "SOURCE_INVENTORY.json": "3f438558cfd284aab5a52a823b0c2553a4942d0202924db5c648a0a4377ae8b5",
+    "ENDPOINT_INPUT_MANIFEST.json": "ac4a6d65b08156d46bd361775280b545627cf19e240b6884792de4c6529707e7",
+    "ROW_INPUT_MANIFEST.json": "518d1560dfc4c0d379203cd31d70a0bcf2bef273564ef62fb7d8f49bc1f2901a",
+    "ROW_COVERAGE.json": "5b194a686f178ce254d3e91e56519bf088794ec3d7382b407ea3d2fa95062137",
+    "ROW_CHECKS.json": "08c78348146edd27e29fb9e7d82e9faae70cebca00d4ecd28963731435a3ed4b",
+    "ROW_METRICS.csv": "fa73546d7546ed08a4e57eede4e15043bc5f990f95b3482bc3c9cb0677b739d8",
+    "PAIRED_ROW_DELTAS.csv": "a70636511455e3ddb231e907b162d4fe8d9b8744233956676b24e30190665f73",
+    "EXAMPLE_ROWS.csv": "28a1935fa46f2fad699ec1e75bb70f0d669d3c4e4cb16261b476f87ee63afc2e",
+    "VALIDATION_ENDPOINTS.csv": "95e58b79e5f918952dd5990ec8ef555c650ba74047ec7c9d5913b83e748f348e",
+    "VALIDATION_SUMMARY.csv": "130288cd4b677de1a835eb7fae96053f4912d1c9cafd56337f34e751a13781f2",
+    "VALIDATION_SEED_DELTAS.csv": "94ca8623037e7a967639e0db60215ab0c98cc907af4e71257db61ac180330ced",
+    "VALIDATION_DELTA_SUMMARY.csv": "d59659a9453feacb0302f500ffad3b63520e92a5134e634034d2a13de9cbd4a4"
+  },
+  "full_row_endpoint_metric_max_abs_difference": 4.2186132901633755e-05,
+  "resolved_findings": [
+    {
+      "severity": "MEDIUM",
+      "file": "analyze_rows.py",
+      "original_line": 151,
+      "fixed_lines": "150-156",
+      "description": "entity_equal improved_row_fraction used row weights; root normalized weights by entity within subgroup.",
+      "evidence_before": {
+        "dataset": "yellow_trip_hourly",
+        "pair": "all_available-width4",
+        "split": "train",
+        "reported": 0.574972086586422,
+        "expected": 0.576854138289256
+      },
+      "verification": "All 708 paired metric records including weighted improved fraction independently recomputed after fix; 0 mismatches."
+    }
+  ],
+  "findings_by_severity": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  }
+}

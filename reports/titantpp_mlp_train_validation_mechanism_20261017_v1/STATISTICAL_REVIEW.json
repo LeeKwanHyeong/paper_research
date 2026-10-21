@@ -1,0 +1,28 @@
+{
+  "status": "ANALYZED",
+  "review_type": "qualitative statistical interpretation scan; not causal validation",
+  "checked_count": 11,
+  "checks": [
+    {"topic": "Simpson paradox", "checked": true, "handling": "Full aggregates, quantity cells, seed exceptions and row/entity weighting are shown separately. RAF all-available seed42 Validation RMSE changes direction under entity-equal weighting."},
+    {"topic": "Ecological fallacy", "checked": true, "handling": "Dataset averages do not imply every entity/row benefits; entity-equal results and paired targets are retained. Group diagnostics are not per-entity causal claims."},
+    {"topic": "Selection bias", "checked": true, "handling": "Coverage is explicit. Train rows are stratified samples with N/n weighting, not a census. Missing width16 Train and control seed52/62 rows remain missing. Checkpoints were already Validation-selected."},
+    {"topic": "Collider bias", "checked": true, "handling": "Conditioning on target quantity and observed history is descriptive only; target quantity cells do not justify inference-time gating or causal attribution."},
+    {"topic": "Base-rate neglect", "checked": true, "handling": "Counts accompany all cells and aggregate SSE/SAE contributions are checked. RAF tail n50 and Intermittent high observed-deviation n59 are explicitly limited."},
+    {"topic": "Regression to the mean", "checked": true, "handling": "No seed is selected for reporting; all 42/52/62 differences remain. Three-seed SD is not a general stability guarantee."},
+    {"topic": "Survivorship bias", "checked": true, "handling": "All four requested structure classes and all available seeds are retained, including worse quantity and time results. Missing predictions are not silently excluded as if complete."},
+    {"topic": "Look-elsewhere effect", "checked": true, "handling": "History, quantity and observed-deviation scans are exploratory. No p-values, significance claims or post-hoc winning subgroup model selection are made."},
+    {"topic": "Garden of forking paths", "checked": true, "handling": "ANALYSIS_PLAN fixes comparisons and group axes. Additional subgroup readings remain descriptive; final proposal is marked a hypothesis, not confirmed by the same scan."},
+    {"topic": "Association versus causation", "checked": true, "handling": "Output differences cannot identify overfitting, redundant features, sparse branch training or optimization. Sharing also changes parameter count. These remain unresolved."},
+    {"topic": "Reverse causality", "checked": true, "handling": "Observed-history covariates precede the target, but error association does not establish that changing them or a branch will improve prediction. Target-based conditions are not available inputs."}
+  ],
+  "residual_limitations": [
+    "Previous Test-informed research choices and mixed-report exposure mean this is not blinded or independent confirmatory evidence.",
+    "Saved outputs do not directly measure feature overlap or the performance of shared transformations.",
+    "Three-seed native endpoints, CPU sampled diagnostics and partly CPU full-row predictions have distinct provenance and numerical tolerance.",
+    "Entity-equal sample estimates describe represented sampled entities; they are not a full-entity census."
+  ],
+  "training_or_inference_performed": false,
+  "test_used_in_current_calculations": false,
+  "causal_claim": false,
+  "statistical_significance_claim": false
+}
