@@ -37,3 +37,11 @@
 - v2는 reference6개의 복사를 완료했으나 train3 child는 training 모듈 import에서 실제exit1로 종료했다. 원래 prepare가 만든 빈 `source/sample_data` 폴더가 새 배포에 누락되어 project-root 탐색이 차단된 운영 오류다. 모델 복원·optimizer step 전 실패이며 모든 원문·v2 root·세 actualexit를 보존한다.
 - 현재 manager는 `execution_v3/`, `search_artifacts/titans_mac_accuracy9_recovery_20261021_v3`, 원격 `titans_mac_accuracy9_recovery_20261021_v3_5090`만 대상으로 한다. v1/v2를 재실행하지 않는다.
 - 원래 project bootstrap인 models/utils/sample_data 세 디렉터리를 고정하고 science989·입력·운영3과 함께 새root에 구성한다. native 시작 전 전체 training/recovery import를 검증하므로 폴더 부재가 scientific child 시작으로 이어지지 않는다. 과학 코드는 수정하지 않는다.
+
+## 학습은 유지하고 후속 검증 연결만 분리 — execution_v4 준비
+
+- v3은 실제 2026-10-21 14:17:07KST Intermittent3 worker를 시작했다. 14:18:32KST PID57080/57081/57082·start_ticks200976·정확한 command/cwd/pgid와 해당GPU3process 및 backward 경로를 확인했다. checkpoint 사본은 원76/74/67 SHA 그대로였다. 이 관측은 새 epoch 저장 완료와 구분한다.
+- v3의 세 번째 Popen 직후 신원 조회 순간 경합으로 `Owned child identity changed`가 기록됐다. dispatcher는 이미 시작한3fit을 끝까지 drain하며, 학습은 중단·중복 실행하지 않는다. 원 failed 표식·claim·로그를 삭제하거나 성공으로 바꾸지 않는다.
+- 새 v4 completion bridge는 같은5090에서 짧은 로컬 파일 확인으로 v3의 실제3fit exit0와 완료receipt를 기다린다. 새 학습은0이다. v3의 동일 운영 오류와 모든 성공한 scientific trainreceipt만 확인한 뒤9fit 결과를 새root로동일SHA복사하고 Validation9→고정Test9를 수행한다.
+- seed62의 원 train_exit.start_ticks가None이면 그원문을보존하고, 이미확인한initial live PID/start_ticks/argv/cwd/pgid와원부모의actualexit0를연결한새사본에만보강한다. supervisor가 worker OSexit를직접봤다고추정하지않는다.
+- v4의 새 검증 child는 actualPopen직후에만 최대2초의한정된 exec진입확인을 사용한다. 이미등록된 child의신원불일치는재시도하지않는다. 5080·원학습·checkpoint·과학source989/Runtime/기한은변경하지않는다.
