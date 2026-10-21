@@ -45,3 +45,16 @@
 - 새 v4 completion bridge는 같은5090에서 짧은 로컬 파일 확인으로 v3의 실제3fit exit0와 완료receipt를 기다린다. 새 학습은0이다. v3의 동일 운영 오류와 모든 성공한 scientific trainreceipt만 확인한 뒤9fit 결과를 새root로동일SHA복사하고 Validation9→고정Test9를 수행한다.
 - seed62의 원 train_exit.start_ticks가None이면 그원문을보존하고, 이미확인한initial live PID/start_ticks/argv/cwd/pgid와원부모의actualexit0를연결한새사본에만보강한다. supervisor가 worker OSexit를직접봤다고추정하지않는다.
 - v4의 새 검증 child는 actualPopen직후에만 최대2초의한정된 exec진입확인을 사용한다. 이미등록된 child의신원불일치는재시도하지않는다. 5080·원학습·checkpoint·과학source989/Runtime/기한은변경하지않는다.
+
+
+## 실제 가동 확인 — 2026-10-21 14:32 KST
+
+**네트워크 상태·관리자 로그를 자동 수집한다 — 완료**
+- 사용자 설치 후 root 서비스 `paper-5090-network.service`가 14:27:24 KST부터 실제 PID82489로 실행 중이고 부팅 시작도 enabled임을 확인했다. 사용자 서비스는 inactive/disabled로 중복 실행하지 않는다.
+- 14:32:04 KST 실제 관측에서 설치 collector SHA는 `efb930ec8045618117e1116e27343ad5837ff0708b59f0066fce7fe229e6c369`와 일치한다. `/var/log/paper-5090-network/network.jsonl`은 root 소유·그룹 읽기0640이며 uid0의 실제 journal 수집 returncode0과 10초 snapshot이 계속 기록된다. 로그는 10MiB×8개로 제한하고 원 사용자 로그도 보존했다.
+- 증거: `network/v2/ROOT_VERIFIED.json`, 해당 ROOT_VERIFICATION 원문. 네트워크·SSH/Tailscale 설정과 인증정보는 변경하지 않았다. 이번 수집은 다음 장애의 원인을 구분하기 위한 것이며 이전 단절의 원인을 확정한 결과가 아니다.
+
+**진행 중인 학습을 유지하며 후속 검증을 연결한다 — 진행 중**
+- v4 bridge는 14:27:50 KST 설치·preflight·tmux launch actualexit0, 14:30:43 KST actual start와 `waiting_for_preserved_training`을 확인했다. dispatcher PID83345/start_ticks265346, contract SHA `191d2534245ab6c02efff817fe9e21bb43e6589415b1839e22f1a7dec40797c2`, 새 학습0이다. `execution_v4/ACTUAL_WAITING.json`과 실제 transport 원문을 기준으로 한다.
+- v3 Intermittent3의 실제GPU PID57080/57081/57082는 14:31:22 KST에도 동일하게 실행 중이다. 당시 마지막 저장 epoch는76/74/67로 아직 새 epoch 저장 전이며 실행 중인77/75/68 완료를 추정하지 않는다. 원본1,141개 SHA는 모두 그대로다.
+- 다음은 실제 새 epoch 저장 확인, 원래3fit 성공 종료, v4 Validation9 전체 재현 gate와 고정Test9, 한 번의 회수다. 회수 도구의 로컬 독립 검증이 끝나기 전에는 실제 회수를 요청하지 않는다.
