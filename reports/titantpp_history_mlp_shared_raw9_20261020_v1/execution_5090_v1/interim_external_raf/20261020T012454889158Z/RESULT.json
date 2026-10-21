@@ -1,0 +1,867 @@
+{
+  "status": "provisional_shared_vs_verified_historical_validation_only",
+  "dataset": "raf_spare_parts",
+  "data_variant": "original_uncapped",
+  "split": "validation",
+  "candidate_source_observed_at_kst": "2026-10-20 10:24:54 KST",
+  "seed_count": 3,
+  "target_identity": {
+    "target_count": 6690,
+    "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+    "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+  },
+  "selection": "first strict finite fullValidation raw quantity RMSE minimum; MAE at same epoch",
+  "sample_sd_ddof": 1,
+  "time_alpha": 1.0,
+  "loss_mode": "log_mse",
+  "models": {
+    "mlp16": {
+      "label": "기존 MLP16",
+      "status": "stored_selected_validation_replay_verified",
+      "metrics": {
+        "qty_rmse": {
+          "mean": 34.08303790025404,
+          "sample_sd": 0.0868611355859195
+        },
+        "qty_mae": {
+          "mean": 9.264039863783385,
+          "sample_sd": 0.08068098542588166
+        }
+      }
+    },
+    "shared15": {
+      "label": "공유형 Shared15",
+      "status": "training_complete_native_validation_replay_pending",
+      "metrics": {
+        "qty_rmse": {
+          "mean": 33.96731802405049,
+          "sample_sd": 0.11059002546228101
+        },
+        "qty_mae": {
+          "mean": 9.246784169907349,
+          "sample_sd": 0.06419610690269932
+        }
+      }
+    },
+    "rmtpp": {
+      "label": "RMTPP",
+      "status": "stored_selected_validation_replay_verified",
+      "metrics": {
+        "qty_rmse": {
+          "mean": 34.55032733120328,
+          "sample_sd": 0.250627048553142
+        },
+        "qty_mae": {
+          "mean": 9.136204564111056,
+          "sample_sd": 0.055678014468013064
+        }
+      }
+    },
+    "thp": {
+      "label": "THP",
+      "status": "stored_selected_validation_replay_verified",
+      "metrics": {
+        "qty_rmse": {
+          "mean": 34.744517470768365,
+          "sample_sd": 0.3204133163281381
+        },
+        "qty_mae": {
+          "mean": 9.301358198478082,
+          "sample_sd": 0.1819002055995457
+        }
+      }
+    },
+    "nhp": {
+      "label": "NHP",
+      "status": "stored_selected_validation_replay_verified",
+      "metrics": {
+        "qty_rmse": {
+          "mean": 36.27307783825351,
+          "sample_sd": 0.31864123499191854
+        },
+        "qty_mae": {
+          "mean": 9.179252661011025,
+          "sample_sd": 0.08815933265436442
+        }
+      }
+    },
+    "sahp": {
+      "label": "SAHP",
+      "status": "stored_selected_validation_replay_verified",
+      "metrics": {
+        "qty_rmse": {
+          "mean": 35.419269494244105,
+          "sample_sd": 0.2130471959371725
+        },
+        "qty_mae": {
+          "mean": 9.233170785123457,
+          "sample_sd": 0.020876095990418102
+        }
+      }
+    },
+    "s2p2_matched_head": {
+      "label": "S2P2（공통 head）",
+      "status": "stored_selected_validation_replay_verified",
+      "metrics": {
+        "qty_rmse": {
+          "mean": 33.99470373349431,
+          "sample_sd": 0.1261185452077655
+        },
+        "qty_mae": {
+          "mean": 9.27298777857169,
+          "sample_sd": 0.05168394797336973
+        }
+      }
+    },
+    "attnhp_matched_head": {
+      "label": "AttNHP（공통 head）",
+      "status": "stored_selected_validation_replay_verified",
+      "metrics": {
+        "qty_rmse": {
+          "mean": 34.876643893807326,
+          "sample_sd": 0.06756723846631019
+        },
+        "qty_mae": {
+          "mean": 9.191659003154639,
+          "sample_sd": 0.0433969393818474
+        }
+      }
+    }
+  },
+  "external_seed_rows": {
+    "rmtpp": {
+      "42": {
+        "seed": 42,
+        "selected_epoch": 30,
+        "qty_rmse": 34.72873558852717,
+        "qty_mae": 9.075063116962065,
+        "time_nll": 3.6879246080971972,
+        "validation_target_identity": {
+          "target_count": 6690,
+          "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+          "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+        },
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/runs/rmtpp/count_only_log_regression/seed_42/endpoint_replays.json",
+        "source_sha256": "d59a3af6b6240a3ba2315feede4f472702185356ccd9144e4855a0beb19ecf37"
+      },
+      "52": {
+        "seed": 52,
+        "selected_epoch": 15,
+        "qty_rmse": 34.26378646557772,
+        "qty_mae": 9.149560936826584,
+        "time_nll": 3.4291756375266287,
+        "validation_target_identity": {
+          "target_count": 6690,
+          "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+          "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+        },
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/runs/rmtpp/count_only_log_regression/seed_52/endpoint_replays.json",
+        "source_sha256": "b11bef9be36a478bb7327d21aff103c3d9558127b6c8ce61e2b2906d7b9c7d13"
+      },
+      "62": {
+        "seed": 62,
+        "selected_epoch": 8,
+        "qty_rmse": 34.65845993950495,
+        "qty_mae": 9.183989638544519,
+        "time_nll": 3.440224571806367,
+        "validation_target_identity": {
+          "target_count": 6690,
+          "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+          "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+        },
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/runs/rmtpp/count_only_log_regression/seed_62/endpoint_replays.json",
+        "source_sha256": "a9363e726d81e8f59f7c5a37679856acbbe8e7f88f1d173cc37e23bc7ed2a594"
+      }
+    },
+    "thp": {
+      "42": {
+        "seed": 42,
+        "selected_epoch": 50,
+        "qty_rmse": 34.8182236760018,
+        "qty_mae": 9.216271015257757,
+        "time_nll": 3.3794196754086205,
+        "validation_target_identity": {
+          "target_count": 6690,
+          "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+          "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+        },
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/runs/thp/count_only_log_regression/seed_42/endpoint_replays.json",
+        "source_sha256": "528c1d0ff0eac6d28a3b5cb35c2c73bcc854b73a6b267e6f80c3f64f0564b032"
+      },
+      "52": {
+        "seed": 52,
+        "selected_epoch": 15,
+        "qty_rmse": 35.0216551956657,
+        "qty_mae": 9.177595406458874,
+        "time_nll": 3.3846585763647177,
+        "validation_target_identity": {
+          "target_count": 6690,
+          "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+          "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+        },
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/runs/thp/count_only_log_regression/seed_52/endpoint_replays.json",
+        "source_sha256": "336ce779044d5d2c36ff02cbf07f92b9607faea935eb42a96c846eabf12b1d2a"
+      },
+      "62": {
+        "seed": 62,
+        "selected_epoch": 20,
+        "qty_rmse": 34.39367354063759,
+        "qty_mae": 9.510208173717619,
+        "time_nll": 3.414188187634984,
+        "validation_target_identity": {
+          "target_count": 6690,
+          "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+          "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+        },
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/runs/thp/count_only_log_regression/seed_62/endpoint_replays.json",
+        "source_sha256": "8e914944350692a39661a052107e00e79aaef63aa625ad4bc61f65d70256495c"
+      }
+    },
+    "nhp": {
+      "42": {
+        "seed": 42,
+        "selected_epoch": 4,
+        "qty_rmse": 36.046264351092866,
+        "qty_mae": 9.105753867312576,
+        "time_nll": 3.349052834613168,
+        "validation_target_identity": {
+          "target_count": 6690,
+          "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+          "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+        },
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/runs/nhp/count_only_log_regression/seed_42/endpoint_replays.json",
+        "source_sha256": "10b336398c6722a16fa7919babd3a7afece23f2235547e1400b702a7217b70fc"
+      },
+      "52": {
+        "seed": 52,
+        "selected_epoch": 15,
+        "qty_rmse": 36.135588252309674,
+        "qty_mae": 9.155006046288038,
+        "time_nll": 3.365283294185194,
+        "validation_target_identity": {
+          "target_count": 6690,
+          "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+          "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+        },
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/runs/nhp/count_only_log_regression/seed_52/endpoint_replays.json",
+        "source_sha256": "e890fd4a307a7f830a148f2d060fde494a87f90d065a96fa577622ad781bad16"
+      },
+      "62": {
+        "seed": 62,
+        "selected_epoch": 8,
+        "qty_rmse": 36.637380911357994,
+        "qty_mae": 9.276998069432462,
+        "time_nll": 3.452505026773373,
+        "validation_target_identity": {
+          "target_count": 6690,
+          "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+          "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+        },
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/runs/nhp/count_only_log_regression/seed_62/endpoint_replays.json",
+        "source_sha256": "9943a27d90ae45022a54003f858cbcde048ec0629f4148947ac10fd9204ab950"
+      }
+    },
+    "sahp": {
+      "42": {
+        "seed": 42,
+        "selected_epoch": 30,
+        "qty_rmse": 35.542306504229316,
+        "qty_mae": 9.255863888238755,
+        "time_nll": 3.7909441650703615,
+        "validation_target_identity": {
+          "target_count": 6690,
+          "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+          "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+        },
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/runs/sahp/count_only_log_regression/seed_42/endpoint_replays.json",
+        "source_sha256": "07ad59c37ab4038262651480b38ee6d859d5cb5fb1eec6b7ee767a41970db95d"
+      },
+      "52": {
+        "seed": 52,
+        "selected_epoch": 9,
+        "qty_rmse": 35.54223819294627,
+        "qty_mae": 9.228865447030117,
+        "time_nll": 3.655765690672271,
+        "validation_target_identity": {
+          "target_count": 6690,
+          "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+          "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+        },
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/runs/sahp/count_only_log_regression/seed_52/endpoint_replays.json",
+        "source_sha256": "f12fc5932e25c780241f0a056cf7f30baf40a52bfc30f83108f3f2fc9726047f"
+      },
+      "62": {
+        "seed": 62,
+        "selected_epoch": 20,
+        "qty_rmse": 35.17326378555673,
+        "qty_mae": 9.214783020101498,
+        "time_nll": 3.7777806889395698,
+        "validation_target_identity": {
+          "target_count": 6690,
+          "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+          "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+        },
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/runs/sahp/count_only_log_regression/seed_62/endpoint_replays.json",
+        "source_sha256": "089cb6525fa755171441d1f3a265a693afdece90c49a07d5090fe679fe66e998"
+      }
+    },
+    "s2p2_matched_head": {
+      "42": {
+        "seed": 42,
+        "selected_epoch": 21,
+        "qty_rmse": 33.9627982128862,
+        "qty_mae": 9.311775153928808,
+        "time_nll": 3.3865719590410133,
+        "validation_target_identity": {
+          "target_count": 6690,
+          "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+          "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+        },
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/endpoint_replays.json",
+        "source_sha256": "d89dc0da3d4099b67bb2cc193d529e76ea5cf92520672299be8a27635d449a50"
+      },
+      "52": {
+        "seed": 52,
+        "selected_epoch": 27,
+        "qty_rmse": 33.887601970267674,
+        "qty_mae": 9.292873667173856,
+        "time_nll": 3.440315609567934,
+        "validation_target_identity": {
+          "target_count": 6690,
+          "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+          "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+        },
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/endpoint_replays.json",
+        "source_sha256": "93cf1356d33c5acec027950d2fa9248dbb9a74ee061f04ad54dd8e4d9a116ee5"
+      },
+      "62": {
+        "seed": 62,
+        "selected_epoch": 22,
+        "qty_rmse": 34.13371101732907,
+        "qty_mae": 9.214314514612402,
+        "time_nll": 3.4292991072983243,
+        "validation_target_identity": {
+          "target_count": 6690,
+          "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+          "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+        },
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/endpoint_replays.json",
+        "source_sha256": "c9776bf3578cc92a4bbfffd467dd9cbf2e8cd461b05c1447d8b33f39528faa40"
+      }
+    },
+    "attnhp_matched_head": {
+      "42": {
+        "seed": 42,
+        "selected_epoch": 50,
+        "qty_rmse": 34.85607951830057,
+        "qty_mae": 9.201472211418665,
+        "time_nll": 3.9047633709398584,
+        "validation_target_identity": {
+          "target_count": 6690,
+          "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+          "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+        },
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/endpoint_replays.json",
+        "source_sha256": "0ba631936aa2dd9192828d163df91ab48f5b754e3219b49e381779e53633ce22"
+      },
+      "52": {
+        "seed": 52,
+        "selected_epoch": 80,
+        "qty_rmse": 34.952104003888564,
+        "qty_mae": 9.144195730269223,
+        "time_nll": 4.024915600833778,
+        "validation_target_identity": {
+          "target_count": 6690,
+          "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+          "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+        },
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/endpoint_replays.json",
+        "source_sha256": "f372497af00bc00ee664014064f27752847d8fac1f788a31197d09b27be47c97"
+      },
+      "62": {
+        "seed": 62,
+        "selected_epoch": 26,
+        "qty_rmse": 34.821748159232854,
+        "qty_mae": 9.229309067776029,
+        "time_nll": 3.982451284575812,
+        "validation_target_identity": {
+          "target_count": 6690,
+          "target_identity_sha256": "32e206799b3fffe3131c8aad238ce351428f5bc38a2a57c0a203c63b216bea0a",
+          "target_quantity_sha256": "d1ae84c37d78ed8187bf3ff441e2b41dff0001dceace227576a0506f394ef3ba"
+        },
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/endpoint_replays.json",
+        "source_sha256": "c0a638df2df2f1cd8af4d16dd27a409bcc742f6fc6c279ee055acb16b57cb243"
+      }
+    }
+  },
+  "seed_differences": [
+    {
+      "external_model": "rmtpp",
+      "seed": 42,
+      "delta_definition": "Shared15 minus external",
+      "metrics": {
+        "qty_rmse": {
+          "shared": 33.92046333230765,
+          "external": 34.72873558852717,
+          "absolute_difference": -0.8082722562195244,
+          "relative_difference_percent": -2.327387515042562
+        },
+        "qty_mae": {
+          "shared": 9.303521609930002,
+          "external": 9.075063116962065,
+          "absolute_difference": 0.22845849296793652,
+          "relative_difference_percent": 2.5174314494951355
+        }
+      }
+    },
+    {
+      "external_model": "rmtpp",
+      "seed": 52,
+      "delta_definition": "Shared15 minus external",
+      "metrics": {
+        "qty_rmse": {
+          "shared": 34.0936221512091,
+          "external": 34.26378646557772,
+          "absolute_difference": -0.17016431436861978,
+          "relative_difference_percent": -0.4966302090972089
+        },
+        "qty_mae": {
+          "shared": 9.259728732460104,
+          "external": 9.149560936826584,
+          "absolute_difference": 0.11016779563352053,
+          "relative_difference_percent": 1.2040774021199199
+        }
+      }
+    },
+    {
+      "external_model": "rmtpp",
+      "seed": 62,
+      "delta_definition": "Shared15 minus external",
+      "metrics": {
+        "qty_rmse": {
+          "shared": 33.88786858863474,
+          "external": 34.65845993950495,
+          "absolute_difference": -0.7705913508702125,
+          "relative_difference_percent": -2.2233860137330135
+        },
+        "qty_mae": {
+          "shared": 9.17710216733194,
+          "external": 9.183989638544519,
+          "absolute_difference": -0.006887471212579044,
+          "relative_difference_percent": -0.0749943269063898
+        }
+      }
+    },
+    {
+      "external_model": "thp",
+      "seed": 42,
+      "delta_definition": "Shared15 minus external",
+      "metrics": {
+        "qty_rmse": {
+          "shared": 33.92046333230765,
+          "external": 34.8182236760018,
+          "absolute_difference": -0.8977603436941521,
+          "relative_difference_percent": -2.5784208638791837
+        },
+        "qty_mae": {
+          "shared": 9.303521609930002,
+          "external": 9.216271015257757,
+          "absolute_difference": 0.08725059467224483,
+          "relative_difference_percent": 0.9467017031920978
+        }
+      }
+    },
+    {
+      "external_model": "thp",
+      "seed": 52,
+      "delta_definition": "Shared15 minus external",
+      "metrics": {
+        "qty_rmse": {
+          "shared": 34.0936221512091,
+          "external": 35.0216551956657,
+          "absolute_difference": -0.9280330444566047,
+          "relative_difference_percent": -2.649883448602562
+        },
+        "qty_mae": {
+          "shared": 9.259728732460104,
+          "external": 9.177595406458874,
+          "absolute_difference": 0.08213332600123024,
+          "relative_difference_percent": 0.8949329575307673
+        }
+      }
+    },
+    {
+      "external_model": "thp",
+      "seed": 62,
+      "delta_definition": "Shared15 minus external",
+      "metrics": {
+        "qty_rmse": {
+          "shared": 33.88786858863474,
+          "external": 34.39367354063759,
+          "absolute_difference": -0.5058049520028547,
+          "relative_difference_percent": -1.4706336949009664
+        },
+        "qty_mae": {
+          "shared": 9.17710216733194,
+          "external": 9.510208173717619,
+          "absolute_difference": -0.33310600638567855,
+          "relative_difference_percent": -3.502615298225009
+        }
+      }
+    },
+    {
+      "external_model": "nhp",
+      "seed": 42,
+      "delta_definition": "Shared15 minus external",
+      "metrics": {
+        "qty_rmse": {
+          "shared": 33.92046333230765,
+          "external": 36.046264351092866,
+          "absolute_difference": -2.125801018785218,
+          "relative_difference_percent": -5.897423927427773
+        },
+        "qty_mae": {
+          "shared": 9.303521609930002,
+          "external": 9.105753867312576,
+          "absolute_difference": 0.19776774261742602,
+          "relative_difference_percent": 2.1718986203587574
+        }
+      }
+    },
+    {
+      "external_model": "nhp",
+      "seed": 52,
+      "delta_definition": "Shared15 minus external",
+      "metrics": {
+        "qty_rmse": {
+          "shared": 34.0936221512091,
+          "external": 36.135588252309674,
+          "absolute_difference": -2.041966101100577,
+          "relative_difference_percent": -5.650845052923861
+        },
+        "qty_mae": {
+          "shared": 9.259728732460104,
+          "external": 9.155006046288038,
+          "absolute_difference": 0.1047226861720656,
+          "relative_difference_percent": 1.1438844020701235
+        }
+      }
+    },
+    {
+      "external_model": "nhp",
+      "seed": 62,
+      "delta_definition": "Shared15 minus external",
+      "metrics": {
+        "qty_rmse": {
+          "shared": 33.88786858863474,
+          "external": 36.637380911357994,
+          "absolute_difference": -2.7495123227232554,
+          "relative_difference_percent": -7.504663964314317
+        },
+        "qty_mae": {
+          "shared": 9.17710216733194,
+          "external": 9.276998069432462,
+          "absolute_difference": -0.09989590210052235,
+          "relative_difference_percent": -1.0768127938894103
+        }
+      }
+    },
+    {
+      "external_model": "sahp",
+      "seed": 42,
+      "delta_definition": "Shared15 minus external",
+      "metrics": {
+        "qty_rmse": {
+          "shared": 33.92046333230765,
+          "external": 35.542306504229316,
+          "absolute_difference": -1.6218431719216682,
+          "relative_difference_percent": -4.563134279787607
+        },
+        "qty_mae": {
+          "shared": 9.303521609930002,
+          "external": 9.255863888238755,
+          "absolute_difference": 0.04765772169124638,
+          "relative_difference_percent": 0.5148922052732875
+        }
+      }
+    },
+    {
+      "external_model": "sahp",
+      "seed": 52,
+      "delta_definition": "Shared15 minus external",
+      "metrics": {
+        "qty_rmse": {
+          "shared": 34.0936221512091,
+          "external": 35.54223819294627,
+          "absolute_difference": -1.448616041737175,
+          "relative_difference_percent": -4.07575919634872
+        },
+        "qty_mae": {
+          "shared": 9.259728732460104,
+          "external": 9.228865447030117,
+          "absolute_difference": 0.030863285429987286,
+          "relative_difference_percent": 0.3344212309425229
+        }
+      }
+    },
+    {
+      "external_model": "sahp",
+      "seed": 62,
+      "delta_definition": "Shared15 minus external",
+      "metrics": {
+        "qty_rmse": {
+          "shared": 33.88786858863474,
+          "external": 35.17326378555673,
+          "absolute_difference": -1.2853951969219892,
+          "relative_difference_percent": -3.654466656147542
+        },
+        "qty_mae": {
+          "shared": 9.17710216733194,
+          "external": 9.214783020101498,
+          "absolute_difference": -0.037680852769558015,
+          "relative_difference_percent": -0.40891741766853856
+        }
+      }
+    },
+    {
+      "external_model": "s2p2_matched_head",
+      "seed": 42,
+      "delta_definition": "Shared15 minus external",
+      "metrics": {
+        "qty_rmse": {
+          "shared": 33.92046333230765,
+          "external": 33.9627982128862,
+          "absolute_difference": -0.04233488057855084,
+          "relative_difference_percent": -0.1246507437731915
+        },
+        "qty_mae": {
+          "shared": 9.303521609930002,
+          "external": 9.311775153928808,
+          "absolute_difference": -0.008253543998806734,
+          "relative_difference_percent": -0.08863555941129456
+        }
+      }
+    },
+    {
+      "external_model": "s2p2_matched_head",
+      "seed": 52,
+      "delta_definition": "Shared15 minus external",
+      "metrics": {
+        "qty_rmse": {
+          "shared": 34.0936221512091,
+          "external": 33.887601970267674,
+          "absolute_difference": 0.20602018094142238,
+          "relative_difference_percent": 0.6079514895216855
+        },
+        "qty_mae": {
+          "shared": 9.259728732460104,
+          "external": 9.292873667173856,
+          "absolute_difference": -0.033144934713751795,
+          "relative_difference_percent": -0.35667045416567916
+        }
+      }
+    },
+    {
+      "external_model": "s2p2_matched_head",
+      "seed": 62,
+      "delta_definition": "Shared15 minus external",
+      "metrics": {
+        "qty_rmse": {
+          "shared": 33.88786858863474,
+          "external": 34.13371101732907,
+          "absolute_difference": -0.24584242869433126,
+          "relative_difference_percent": -0.7202335209597382
+        },
+        "qty_mae": {
+          "shared": 9.17710216733194,
+          "external": 9.214314514612402,
+          "absolute_difference": -0.03721234728046241,
+          "relative_difference_percent": -0.40385366943411455
+        }
+      }
+    },
+    {
+      "external_model": "attnhp_matched_head",
+      "seed": 42,
+      "delta_definition": "Shared15 minus external",
+      "metrics": {
+        "qty_rmse": {
+          "shared": 33.92046333230765,
+          "external": 34.85607951830057,
+          "absolute_difference": -0.9356161859929202,
+          "relative_difference_percent": -2.6842266798871957
+        },
+        "qty_mae": {
+          "shared": 9.303521609930002,
+          "external": 9.201472211418665,
+          "absolute_difference": 0.10204939851133688,
+          "relative_difference_percent": 1.1090551182092099
+        }
+      }
+    },
+    {
+      "external_model": "attnhp_matched_head",
+      "seed": 52,
+      "delta_definition": "Shared15 minus external",
+      "metrics": {
+        "qty_rmse": {
+          "shared": 34.0936221512091,
+          "external": 34.952104003888564,
+          "absolute_difference": -0.8584818526794677,
+          "relative_difference_percent": -2.456166451621791
+        },
+        "qty_mae": {
+          "shared": 9.259728732460104,
+          "external": 9.144195730269223,
+          "absolute_difference": 0.11553300219088136,
+          "relative_difference_percent": 1.2634572312187355
+        }
+      }
+    },
+    {
+      "external_model": "attnhp_matched_head",
+      "seed": 62,
+      "delta_definition": "Shared15 minus external",
+      "metrics": {
+        "qty_rmse": {
+          "shared": 33.88786858863474,
+          "external": 34.821748159232854,
+          "absolute_difference": -0.9338795705981155,
+          "relative_difference_percent": -2.681885947620068
+        },
+        "qty_mae": {
+          "shared": 9.17710216733194,
+          "external": 9.229309067776029,
+          "absolute_difference": -0.052206900444089044,
+          "relative_difference_percent": -0.5656642340255841
+        }
+      }
+    }
+  ],
+  "external_metric_best_comparisons": {
+    "qty_rmse": {
+      "best_external_model": "s2p2_matched_head",
+      "best_external_mean": 33.99470373349431,
+      "shared_mean": 33.96731802405049,
+      "absolute_difference": -0.027385709443819906,
+      "relative_difference_percent": -0.08055875308846215,
+      "strictly_better": true
+    },
+    "qty_mae": {
+      "best_external_model": "rmtpp",
+      "best_external_mean": 9.136204564111056,
+      "shared_mean": 9.246784169907349,
+      "absolute_difference": 0.11057960579629267,
+      "relative_difference_percent": 1.2103451167312163,
+      "strictly_better": false
+    }
+  },
+  "passes_external_both_quantity_metrics": false,
+  "limitations": [
+    "Shared15 training complete, but independent native Validation replay and final immutable collection are still pending.",
+    "External models are common numerical-input, quantity/time-head and objective adaptations, not original-paper native-head benchmark claims.",
+    "Historical external RAF and MLP16 training used5080/cuDNN91900; new Shared15 uses5090/cuDNN92000; complete Runtime and source generations differ. MLP16 seed42 stored replay wasCPU.",
+    "Shared15 changes sharing and correction capacity together; historical MLP16 24576 versusShared15 9600 correction parameters.",
+    "Same seed identifiers do not establish identical initial weights across architectures. Seed differences here are descriptive arithmetic, not statistical significance tests.",
+    "RMSE best among these six external models does not mean best across all previously attempted internal backbones."
+  ],
+  "held_out_test_evaluated": false,
+  "new_remote_calls": 0,
+  "new_inference_calls": 0,
+  "verified_sources": {
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_completed_external_comparison_20261001_v1/comparison.json": "587d035451f4b5a2cb36b4e444b924b126c745a3257cd6f7d941df0514591480",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_raf_execution_20261001_v1/comparison.json": "87acc5ddec247cc4e4b90fc45556da48a0e10c4328643b9bac168b68124868e6",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/collection_manifest.json": "4d972e0927534d560c51a5ea2ec4bfbc9479bd867dea56d0231077d3b5bb109e",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_history_mlp_shared_raw9_20261020_v1/execution_5090_v1/interim_raf/20261020T012454889158Z/RESULT.json": "62c7dbbd7790e1d869f4e020dcecb331dfe05347a1be237ae530a11b49eadadf",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/runs/rmtpp/count_only_log_regression/seed_42/endpoint_replays.json": "d59a3af6b6240a3ba2315feede4f472702185356ccd9144e4855a0beb19ecf37",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/runs/rmtpp/count_only_log_regression/seed_42/history.json": "b70710a8e7057f4e2ede5ecdf094835565976e42a5dfcf6fbb7c1cf991e9353e",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/runs/rmtpp/count_only_log_regression/seed_42/summary.json": "ed2f7398455abc660cbf1ddb311ef4547b1c2c133512839d6e73bf7948e0ee0a",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__rmtpp/terminal_manifest.json": "1b97c2516aefa088c71ac6699f697adc081b164099ceb0de5bf7b4f64c3d34e8",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/runs/thp/count_only_log_regression/seed_42/endpoint_replays.json": "528c1d0ff0eac6d28a3b5cb35c2c73bcc854b73a6b267e6f80c3f64f0564b032",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/runs/thp/count_only_log_regression/seed_42/history.json": "ce6295849e5500679f0450ec00f17720ba1c36c2a62ce7b15bcce30c9878933e",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/runs/thp/count_only_log_regression/seed_42/summary.json": "7e6f6faa4dc1e4984ce4e204b0f53306639a05a1a4c7a79350d486842023cf96",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__thp/terminal_manifest.json": "6282816ea25dabf0d4795be1f0449519142b57df688e82ead718cfeaa3f5bac9",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/runs/nhp/count_only_log_regression/seed_42/endpoint_replays.json": "10b336398c6722a16fa7919babd3a7afece23f2235547e1400b702a7217b70fc",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/runs/nhp/count_only_log_regression/seed_42/history.json": "0c2cde5812f84f561557a5655ee9ef448452c906dba7010a1d3c0865645eae7d",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/runs/nhp/count_only_log_regression/seed_42/summary.json": "909e2e76b868c9f11e6e9d4d0aee7b6f2ee669b9a149b265bc38e4564cf79d5d",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__nhp/terminal_manifest.json": "3989f52abaedcd38b5805a3700641da2d641f204a6b9197576d9085622601755",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/runs/sahp/count_only_log_regression/seed_42/endpoint_replays.json": "07ad59c37ab4038262651480b38ee6d859d5cb5fb1eec6b7ee767a41970db95d",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/runs/sahp/count_only_log_regression/seed_42/history.json": "ff1bc9ecc2cc8c673e05f0b18fdf6b67d71154be6bd488ad47500418a6dca27b",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/runs/sahp/count_only_log_regression/seed_42/summary.json": "2a32d2d74d55c1247d7923d8ea3f611fef70ba24f6b9e8adf849f3cd9fd63892",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__sahp/terminal_manifest.json": "b9f8c115f2657a8efe92f29aef6ebf28e21543e9462e1f19a980796cb08f3c9a",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/endpoint_replays.json": "d89dc0da3d4099b67bb2cc193d529e76ea5cf92520672299be8a27635d449a50",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/history.json": "498aa293d4ba152f91674d226bf77eb27872c8bcad694abca258b49c3cdfd2de",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_42/summary.json": "25af4a7308de9daccdc2c838bbe27ad7168ac2fdd14e244405878ddc196eda4f",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__s2p2_matched_head/terminal_manifest.json": "321f9457ecf3a91c35a5aa13c55cc29b74bb84399be03671f6acce9125553956",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/endpoint_replays.json": "0ba631936aa2dd9192828d163df91ab48f5b754e3219b49e381779e53633ce22",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/history.json": "ba22b5b90126f972689f1e8f42235bb8a924a3039b0e0c351169f5c7f5ba8c03",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_42/summary.json": "f9c45e812f00686bbfb4f59aaeeedf53f8491965957b95864be9ac0d1ceaf4a1",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__42__attnhp_matched_head/terminal_manifest.json": "f0b46e67cf469e7d818c3a546d3def3139c6bf4094ce69fbe4678731928d2b0c",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/runs/rmtpp/count_only_log_regression/seed_52/endpoint_replays.json": "b11bef9be36a478bb7327d21aff103c3d9558127b6c8ce61e2b2906d7b9c7d13",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/runs/rmtpp/count_only_log_regression/seed_52/history.json": "017642815b0ed95f9695f4e430f3f53650e4c609518c18cee9c468607acdd135",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/runs/rmtpp/count_only_log_regression/seed_52/summary.json": "8bf46941758f4899c36f1a6d2bf2b34a4841ceb7c6390d73c95ae8c70c188a8b",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__rmtpp/terminal_manifest.json": "f987c94e387c2144e88f354ee46560d4a42cbbbcf5acf18e902e913f284ce5f0",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/runs/thp/count_only_log_regression/seed_52/endpoint_replays.json": "336ce779044d5d2c36ff02cbf07f92b9607faea935eb42a96c846eabf12b1d2a",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/runs/thp/count_only_log_regression/seed_52/history.json": "47c0a485a5c45b6917cd30798166a78646cb84611c9f42a0c9c2e56b575b6c1e",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/runs/thp/count_only_log_regression/seed_52/summary.json": "f794f60a54c5c856c7c7a178e3c6ebd7edf952125c0f614362a8054dd967eeb5",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__thp/terminal_manifest.json": "f6464e396f10fced0a51154f516c7089647897a70139d942dd48e50ddf59642c",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/runs/nhp/count_only_log_regression/seed_52/endpoint_replays.json": "e890fd4a307a7f830a148f2d060fde494a87f90d065a96fa577622ad781bad16",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/runs/nhp/count_only_log_regression/seed_52/history.json": "f0c5ebdb4acdee6892e6fd6c25dc0e15ea38d47cda8d990e49dca2e5c1234451",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/runs/nhp/count_only_log_regression/seed_52/summary.json": "509a84fe610e61793c82e4522e46e44eae2f68704401bd386354f46de19dae6f",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__nhp/terminal_manifest.json": "f28dcca33c68fc87ed3bdfd8a25a21754aec7fa0aa0bbadb7eb3b80ea01cb055",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/runs/sahp/count_only_log_regression/seed_52/endpoint_replays.json": "f12fc5932e25c780241f0a056cf7f30baf40a52bfc30f83108f3f2fc9726047f",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/runs/sahp/count_only_log_regression/seed_52/history.json": "fb6abded4a9649218a9b8ab1bcde78c147bf178b4b2e9311b7549eab381e748c",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/runs/sahp/count_only_log_regression/seed_52/summary.json": "fa35fec9cf14afec3b9fcb454dc4281ba474e52ad8f10c3ef68cbbda9f756530",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__sahp/terminal_manifest.json": "449197a3bfd8c3c8f20787c1ca78fd93712c07a194302736508c43470b12cc06",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/endpoint_replays.json": "93cf1356d33c5acec027950d2fa9248dbb9a74ee061f04ad54dd8e4d9a116ee5",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/history.json": "a5f4249ec1f90864c76ea49da0135d39d99d813635d4bd2c85e441ff35a29aa4",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_52/summary.json": "51c16749e1d418fdffdcafa9427e0ebc40fc57f705857ef228487363cb81fa5e",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__s2p2_matched_head/terminal_manifest.json": "9104475e9664cf606afb3d9b1de328a1adc4bcf39dd29872416187322c28e861",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/endpoint_replays.json": "f372497af00bc00ee664014064f27752847d8fac1f788a31197d09b27be47c97",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/history.json": "2ae9926cc425d091f92c9ea9f2beba314566d01479475396fa85f21c45a4b0c1",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_52/summary.json": "ff47b7016e8b406738e8488f0f6e3e2b691609509f558c76181a67ec99a52ddf",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__52__attnhp_matched_head/terminal_manifest.json": "3ffedaf089094ebbb197e30c86f09ef9a24fc5d10c1b50da3b13aa823d0ac197",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/runs/rmtpp/count_only_log_regression/seed_62/endpoint_replays.json": "a9363e726d81e8f59f7c5a37679856acbbe8e7f88f1d173cc37e23bc7ed2a594",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/runs/rmtpp/count_only_log_regression/seed_62/history.json": "2d668327b8d4f7ed60b079e8b6a009fb14db4a0f34ba3029feb9b58660de01f8",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/runs/rmtpp/count_only_log_regression/seed_62/summary.json": "72afab9b05fdbe6552fb8b9f90fc7de002ceb4f2c8a602d3f0034c860bc07010",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__rmtpp/terminal_manifest.json": "effcfe47c716cd730054b70a472aacff0e9651b46c14a7777d8db077c3bd2eee",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/runs/thp/count_only_log_regression/seed_62/endpoint_replays.json": "8e914944350692a39661a052107e00e79aaef63aa625ad4bc61f65d70256495c",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/runs/thp/count_only_log_regression/seed_62/history.json": "4a0b7c34041ec4570fe8c3505b61dd612fd8f95a34a7004eb3d5fc91f21c0c32",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/runs/thp/count_only_log_regression/seed_62/summary.json": "3f86bd297cdf66aa144e520dcc4c48cffeb4d02e9cd62338a248cd540dbf5af0",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__thp/terminal_manifest.json": "205fdc84dc7bc6ad9e082513375c1b3af3e7097e001480fa5cd3d8b6c774b5f5",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/runs/nhp/count_only_log_regression/seed_62/endpoint_replays.json": "9943a27d90ae45022a54003f858cbcde048ec0629f4148947ac10fd9204ab950",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/runs/nhp/count_only_log_regression/seed_62/history.json": "92b5e4b8860bc02bb7a697160734cc9df3fbe9a1fd5031cfdbaf3d7ffadcc766",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/runs/nhp/count_only_log_regression/seed_62/summary.json": "89954f53c76fa6bbf674e1a6595869131d342be229a9aaf8f6a24311bbeff645",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__nhp/terminal_manifest.json": "d804ac42c013b3ac4e373258d426b88c3336925363400c105a60a0eac4fce884",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/runs/sahp/count_only_log_regression/seed_62/endpoint_replays.json": "089cb6525fa755171441d1f3a265a693afdece90c49a07d5090fe679fe66e998",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/runs/sahp/count_only_log_regression/seed_62/history.json": "2775406a48f03902025db12c64bddf37e867451e6aa6504e09a1cd07cbc9e759",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/runs/sahp/count_only_log_regression/seed_62/summary.json": "9a7f0f14f8466e175494b693ab149c38469648cb94b15a1436485687066f69d7",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__sahp/terminal_manifest.json": "78765e4ceb80320e3e955dca1e7fdc64da55e5f62db67b71050bdd4aeb0d8d6a",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/endpoint_replays.json": "c9776bf3578cc92a4bbfffd467dd9cbf2e8cd461b05c1447d8b33f39528faa40",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/history.json": "1a8ba22293c13cf541c9018bfb23f1226f9b210d7859adfa8534760764870741",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/runs/s2p2_matched_head/count_only_log_regression/seed_62/summary.json": "8cfb68f138a8cc71fa54cb99a2b42289e72e7e40c28f0fefc63212dad8543e0c",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__s2p2_matched_head/terminal_manifest.json": "e4121574736e6a69678e6001f78aeed4581655b90f950594801a8205309a3907",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/endpoint_replays.json": "c0a638df2df2f1cd8af4d16dd27a409bcc742f6fc6c279ee055acb16b57cb243",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/input_receipt.json": "621e09f15be3d6d45d254868789e5e99a3cdacb99a5e7a48649189aa703d33af",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/history.json": "0d6d0a4bab421455bb876607697bbb9f3b0959691437e6077dcb596444a9f31d",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/runs/attnhp_matched_head/count_only_log_regression/seed_62/summary.json": "6ede19606c85e485ba1196ea1cce5ff5923462515136cfa21d308f584d460ec1",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_raf_5080_20260930_v1/retrieved/terminal_20261001_v2/original/run/raf_spare_parts__62__attnhp_matched_head/terminal_manifest.json": "713af68e097912b746956a9ca37c1017a5237985273f69e0859053dec2d6aafe"
+  }
+}

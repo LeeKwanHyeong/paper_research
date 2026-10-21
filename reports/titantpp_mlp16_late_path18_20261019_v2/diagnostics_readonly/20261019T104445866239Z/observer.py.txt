@@ -1,0 +1,77 @@
+
+import json,os,hashlib,subprocess
+from pathlib import Path
+from datetime import datetime,timezone
+ROOT=Path('/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_mlp16_late_path18_20261019_v2_5090')
+EXPECTED='67bfcad872b68886bf1de09879e031e055c70063bafbf4aa0db42b4ae5ca6fc7'
+def now():return datetime.now(timezone.utc).isoformat()
+def digest(data):return hashlib.sha256(data).hexdigest()
+def identity(pid):
+ try:
+  stat=Path('/proc',str(pid),'stat').read_text();f=stat[stat.rfind(')')+2:].split()
+  return {'pid':pid,'state':f[0],'ppid':int(f[1]),'pgid':int(f[2]),'start_ticks':int(f[19]),'argv':[a.decode() for a in Path('/proc',str(pid),'cmdline').read_bytes().split(b'\0') if a],'cwd':os.readlink('/proc/'+str(pid)+'/cwd')}
+ except (FileNotFoundError,ProcessLookupError,PermissionError) as e:return {'pid':pid,'unavailable':type(e).__name__}
+raw=(ROOT/'execution_contract.json').read_bytes()
+assert digest(raw)==EXPECTED,'Remote contract SHA changed'
+c=json.loads(raw);cfg=c['hosts']['5090'];assert cfg['root']==str(ROOT)
+source=ROOT/'source';source_bad=[]
+for name,want in c['source']['files'].items():
+ try:got=digest((source/name).read_bytes())
+ except OSError:got=None
+ if got!=want:source_bad.append({'name':name,'got':got,'expected':want})
+assert not source_bad,'Remote source SHA mismatch: '+repr(source_bad)
+result={'schema':'late_path18_readonly_diagnostic_v1','host':'5090','observed_at':now(),'remote_contract_raw_sha256':EXPECTED,'source_file_count':len(c['source']['files']),'source_inventory_verified':True,'read_only':True,'training_started':False,'signals_sent':0,'completion_gate_satisfied_by_this_diagnostic':False,'files':{},'paused_identity_checks':[],'jobs':[]}
+def record(p):
+ if not p.exists():return None
+ try:
+  b=p.read_bytes();data=json.loads(b)
+  result['files'][str(p.relative_to(ROOT))]={'raw_text':b.decode(),'sha256':digest(b),'bytes':len(b)}
+  return data
+ except (OSError,ValueError) as e:
+  result['files'][str(p.relative_to(ROOT))]={'read_error':type(e).__name__+': '+str(e)}
+  return None
+for name in ['execution_contract.json','launch_attempt.json','qualification.json','start.json','status.json','dispatch_failure.json','final_receipt.json','dispatcher_exit.json']:
+ data=record(ROOT/name)
+ if data is not None:result[name]=data
+start=result.get('start.json')
+if start:result['dispatcher_current_identity']=identity(start['pid'])
+for p in cfg['paused_processes']:
+ live=identity(p['pid']);mismatch={}
+ for k in ['pid','start_ticks','argv','cwd','pgid']:
+  if live.get(k)!=p[k]:mismatch[k]={'expected':p[k],'actual':live.get(k)}
+ if live.get('state') not in ['T','t']:mismatch['state']={'expected':'T/t','actual':live.get('state')}
+ result['paused_identity_checks'].append({'expected':p,'current':live,'mismatches':mismatch})
+for job in c['jobs']:
+ if job['host']!='5090':continue
+ entry={'job':job,'stages':{}}
+ jobroot=ROOT/'run'/job['id']
+ for stage in ['train','validation']:
+  stage_data={}
+  for kind in ['launch','exit','receipt']:
+   value=record(jobroot/(stage+'_'+kind+'.json'))
+   if value is not None:stage_data[kind]=value
+  if 'launch' in stage_data:stage_data['current_identity']=identity(stage_data['launch']['pid'])
+  if stage_data:entry['stages'][stage]=stage_data
+ histories=list(jobroot.glob('runs/*/*/seed_*/history.json'))
+ entry['history_path_count']=len(histories)
+ if len(histories)==1:
+  value=record(histories[0]);entry['history']=value.get('history',[]) if value else []
+ for stage in ['train','validation']:
+  log=ROOT/'logs'/(job['id']+'.'+stage+'.stderr.log')
+  if log.exists():
+   b=log.read_bytes();entry[stage+'_stderr']={'bytes':len(b),'sha256':digest(b),'tail':b[-5000:].decode(errors='replace')}
+ result['jobs'].append(entry)
+def command(args):
+ p=subprocess.run(args,capture_output=True,text=True,timeout=20)
+ return {'args':args,'actual_os_returncode':p.returncode,'stdout':p.stdout,'stderr':p.stderr}
+result['gpu_query']=command(['nvidia-smi','--query-gpu=uuid,name,memory.used,memory.total','--format=csv,noheader,nounits'])
+result['gpu_process_query']=command(['nvidia-smi','--query-compute-apps=gpu_uuid,pid,process_name,used_gpu_memory','--format=csv,noheader,nounits'])
+pids=[]
+for line in result['gpu_process_query']['stdout'].splitlines():
+ f=[v.strip() for v in line.split(',')]
+ if len(f)>=2 and f[0]==cfg['gpu_uuid']:
+  try:pids.append(int(f[1]))
+  except ValueError:pass
+result['gpu_compute_identities']=[identity(p) for p in pids]
+result['finished_observation_at']=now()
+print(json.dumps(result,ensure_ascii=False))

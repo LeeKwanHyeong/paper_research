@@ -1,0 +1,130 @@
+{
+  "status": "training_in_progress_raf_test_waiting",
+  "observed_at_utc": "2026-10-20T02:15:04.999691+00:00",
+  "observed_at_kst": "2026-10-20T11:15:04.999691+09:00",
+  "counts": {
+    "complete": 4,
+    "running": 3,
+    "queued": 2
+  },
+  "validation_replay_complete_count": 0,
+  "raf_test_completed_count": 0,
+  "fits": [
+    {
+      "dataset": "raf_spare_parts",
+      "seed": 42,
+      "state": "complete",
+      "saved_epoch": 49,
+      "best_epoch": 9,
+      "recent_epoch_elapsed_median_seconds": null
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "seed": 52,
+      "state": "complete",
+      "saved_epoch": 45,
+      "best_epoch": 5,
+      "recent_epoch_elapsed_median_seconds": null
+    },
+    {
+      "dataset": "raf_spare_parts",
+      "seed": 62,
+      "state": "complete",
+      "saved_epoch": 59,
+      "best_epoch": 19,
+      "recent_epoch_elapsed_median_seconds": null
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "seed": 42,
+      "state": "complete",
+      "saved_epoch": 152,
+      "best_epoch": 112,
+      "recent_epoch_elapsed_median_seconds": null
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "seed": 52,
+      "state": "running",
+      "saved_epoch": 160,
+      "best_epoch": 148,
+      "recent_epoch_elapsed_median_seconds": null,
+      "conditional_stop_epoch_without_new_best": 188,
+      "remaining_epochs_without_new_best": 28,
+      "observation_interval_average_seconds_per_epoch": 24.87694655371901,
+      "speed_method": "elapsed time between two actual observations / completed epoch count difference; not recent10 median",
+      "speed_interval_seconds": 3010.110533,
+      "speed_interval_completed_epochs": 121,
+      "conditional_training_eta_kst": "2026-10-20T11:26:41.554195+09:00",
+      "training_300epoch_eta_kst": "2026-10-20T12:13:07.772209+09:00"
+    },
+    {
+      "dataset": "yellow_trip_hourly",
+      "seed": 62,
+      "state": "running",
+      "saved_epoch": 154,
+      "best_epoch": 127,
+      "recent_epoch_elapsed_median_seconds": null,
+      "conditional_stop_epoch_without_new_best": 167,
+      "remaining_epochs_without_new_best": 13,
+      "observation_interval_average_seconds_per_epoch": 24.87694655371901,
+      "speed_method": "elapsed time between two actual observations / completed epoch count difference; not recent10 median",
+      "speed_interval_seconds": 3010.110533,
+      "speed_interval_completed_epochs": 121,
+      "conditional_training_eta_kst": "2026-10-20T11:20:28.399996+09:00",
+      "training_300epoch_eta_kst": "2026-10-20T12:15:37.033888+09:00"
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "seed": 42,
+      "state": "running",
+      "saved_epoch": 1,
+      "best_epoch": 1,
+      "recent_epoch_elapsed_median_seconds": null,
+      "conditional_stop_epoch_without_new_best": 41,
+      "remaining_epochs_without_new_best": 40
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "seed": 52,
+      "state": "queued",
+      "saved_epoch": null,
+      "best_epoch": null,
+      "recent_epoch_elapsed_median_seconds": null
+    },
+    {
+      "dataset": "intermittent_frozen_5000",
+      "seed": 62,
+      "state": "queued",
+      "saved_epoch": null,
+      "best_epoch": null,
+      "recent_epoch_elapsed_median_seconds": null
+    }
+  ],
+  "raf_test_start_eta": null,
+  "raf_test_start_eta_reason": "Intermittent42 only one completed epoch without per-epoch timing; Intermittent52/62 not yet started. Do not borrow another fit/GPU speed. Validation9/collection/newqualification3/RAFValidation3 overhead not measured.",
+  "training_remaining_epoch_scope": "best-not-improved condition; maximum300 scenario separate",
+  "epoch_timing_files_present": false,
+  "local_timing_read_note": "Read-only timing transportexit0. A local bytes-to-text write TypeError occurred after evidence was saved; recovered by reading preserved stdout only, with no remote retry.",
+  "transport_observation_path": "search_artifacts/titantpp_history_mlp_shared_raw9_20261020_v1/execution_5090_v1/transport/5090/20261020T021654235232Z_eta_epoch_timing.stdout",
+  "transport_metadata_path": "search_artifacts/titantpp_history_mlp_shared_raw9_20261020_v1/execution_5090_v1/transport/5090/20261020T021654235232Z_eta_epoch_timing.json",
+  "source_observation": {
+    "path": "/Users/igwanhyeong/PycharmProjects/paper_research/reports/titantpp_history_mlp_shared_raw9_20261020_v1/execution_5090_v1/observations/20261020T021505090406Z_5090.json",
+    "sha256": "38b48870eab32f67f488ed1a6a20880a697cd5160d4b7a3d4b16f8899c9032e6"
+  },
+  "earlier_observation": {
+    "path": "reports/titantpp_history_mlp_shared_raw9_20261020_v1/execution_5090_v1/observations/20261020T012455297188Z_5090.json",
+    "sha256": "edeba5de8440a57da99c9f25430b172cd818d74078f493885d3e8b329b532076"
+  },
+  "new_training_calls": 0,
+  "new_inference_calls": 0,
+  "source_code_changes": false,
+  "remaining_pipeline": [
+    "finish remaining training5",
+    "nativeValidation9",
+    "immutablecollectionSHA+localcomparison+finisherexit",
+    "fresh5090nativequalification3",
+    "RAFfixedcheckpointValidation3gate",
+    "RAFTest3"
+  ]
+}

@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/manage_titantpp_late_path18_5090_recovery_v2.py", line 647, in <module>
+    main()
+  File "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/manage_titantpp_late_path18_5090_recovery_v2.py", line 638, in main
+    value = {"prepare": prepare, "deploy": deploy, "status": status, "finish": finish, "collect": collect}[args.mode]()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/manage_titantpp_late_path18_5090_recovery_v2.py", line 625, in finish
+    terminal = json.loads(transport("wait", ssh(command, timeout=max(1, contract["absolute_host_deadline_unix"] - time.time()))))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/manage_titantpp_late_path18_5090_recovery_v2.py", line 241, in transport
+    require(result.returncode == 0, "Recovery " + phase + " failed; original transport preserved at " + str(folder))
+  File "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/manage_titantpp_late_path18_5090_recovery_v2.py", line 37, in require
+    raise ValueError(message)
+ValueError: Recovery wait failed; original transport preserved at /Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/titantpp_mlp16_late_path18_5090_recovery_20261019_v2/transport/20261019T164823866943Z_wait
