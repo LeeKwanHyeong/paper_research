@@ -1,12 +1,14 @@
 """Contract checks for independent, bounded incident evidence capture."""
 import json
+import errno
 import os
 from pathlib import Path
 import tempfile
 import unittest
+import time
 from unittest.mock import patch
 
-from paper.scripts.collect_5090_network_incident import AlreadyRunning, CollectorLock, JsonlWriter, ProbeRunner, collect_snapshot, journal_event, redact, save_cursor, summarize_tailscale
+from paper.scripts.collect_5090_network_incident import AlreadyRunning, CollectorLock, JsonlWriter, ProbeRunner, collect_snapshot, journal_event, probe_tcp, redact, save_cursor, summarize_tailscale
 
 
 class NetworkCaptureTests(unittest.TestCase):
@@ -111,10 +113,50 @@ class NetworkCaptureTests(unittest.TestCase):
                 if argv[0] == "tailscale":
                     return {"returncode": 1, "stderr": "private diagnostics"}
                 return {"returncode": 0, "stdout": "observed"}
-        result = collect_snapshot("lo", "127.0.0.1", runner=FakeRunner())
+        with patch("paper.scripts.collect_5090_network_incident.probe_tcp", return_value={"status": "fake_tcp"}):
+            result = collect_snapshot("lo", "127.0.0.1", runner=FakeRunner())
         self.assertEqual(result["probes"]["ssh_listen"]["error"], "RuntimeError")
         self.assertEqual(result["probes"]["route"]["stdout"], "observed")
         self.assertNotIn("private diagnostics", json.dumps(result))
+
+    def test_tcp_handshake_and_refusal_both_prove_a_responding_path(self):
+        class FakeSocket:
+            def settimeout(self, value):
+                self.timeout = value
+            def connect_ex(self, target):
+                self.target = target
+                return self.code
+            def close(self):
+                self.closed = True
+        for code, expected in ((0, "connected"), (errno.ECONNREFUSED, "connection_refused")):
+            connection = FakeSocket()
+            connection.code = code
+            with patch("paper.scripts.collect_5090_network_incident.socket.socket", return_value=connection):
+                result = probe_tcp("192.168.0.1", 80, time.monotonic() + 60)
+            self.assertEqual(result["status"], expected)
+            self.assertTrue(result["path_reachable"])
+            self.assertEqual(result["listener_open"], code == 0)
+            self.assertEqual(connection.timeout, 1)
+            self.assertTrue(connection.closed)
+
+    def test_tcp_timeout_does_not_claim_unreachable_and_respects_deadline(self):
+        class FakeSocket:
+            def settimeout(self, value):
+                self.timeout = value
+            def connect_ex(self, target):
+                raise TimeoutError()
+            def close(self):
+                pass
+        connection = FakeSocket()
+        with patch("paper.scripts.collect_5090_network_incident.socket.socket", return_value=connection):
+            result = probe_tcp("100.74.94.125", 22, time.monotonic() + 0.15)
+        self.assertEqual(result["status"], "timeout")
+        self.assertIsNone(result["path_reachable"])
+        self.assertLessEqual(connection.timeout, 0.15)
+        with patch("paper.scripts.collect_5090_network_incident.socket.socket") as factory:
+            skipped = probe_tcp("100.74.94.125", 22, 0)
+            factory.assert_not_called()
+        self.assertEqual(skipped["error"], "snapshot_deadline_exceeded")
 
     def test_timeout_and_global_deadline_are_explicit(self):
         runner = ProbeRunner(1.0)

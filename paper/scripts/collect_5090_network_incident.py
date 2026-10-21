@@ -8,12 +8,14 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import errno
 import fcntl
 import json
 import os
 from pathlib import Path
 import re
 import signal
+import socket
 import stat
 import subprocess
 import tempfile
@@ -167,6 +169,40 @@ def read_local(path: Path) -> dict[str, Any]:
         return {"error": type(exc).__name__, "detail": str(exc)}
 
 
+def probe_tcp(address: str, port: int, deadline: float, timeout: float = 1.0) -> dict[str, Any]:
+    """TCP handshake only: no authentication or application payload is sent."""
+    started = time.monotonic()
+    result: dict[str, Any] = {"address": address, "port": port, "path_reachable": None, "listener_open": None}
+    remaining = deadline - started
+    if remaining <= 0:
+        return {**result, "status": "skipped", "error": "snapshot_deadline_exceeded"}
+    connection = None
+    try:
+        connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        connection.settimeout(min(1.0, timeout, remaining))
+        code = connection.connect_ex((address, port))
+        result["errno"] = code
+        if code == 0:
+            result.update(status="connected", path_reachable=True, listener_open=True)
+        elif code == errno.ECONNREFUSED:
+            result.update(status="connection_refused", path_reachable=True, listener_open=False)
+        elif code in (errno.ETIMEDOUT, errno.EAGAIN, errno.EWOULDBLOCK):
+            result["status"] = "timeout"
+        elif code in (errno.EPERM, errno.EACCES):
+            result["status"] = "permission_denied"
+        else:
+            result["status"] = "connect_error"
+    except (TimeoutError, socket.timeout):
+        result["status"] = "timeout"
+    except OSError as exc:
+        result.update(status="connect_error", error=type(exc).__name__, errno=exc.errno)
+    finally:
+        if connection is not None:
+            connection.close()
+    result["elapsed_seconds"] = round(time.monotonic() - started, 6)
+    return result
+
+
 def summarize_tailscale(result: dict[str, Any]) -> dict[str, Any]:
     """Never persist the full peer inventory, node keys, or user accounts."""
     summary = {key: value for key, value in result.items() if key not in ("stdout", "stderr")}
@@ -212,6 +248,11 @@ def collect_snapshot(interface: str, gateway: str, deadline_seconds: float = 60.
         row["probes"]["tailscale"] = summarize_tailscale(runner.run(["tailscale", "status", "--json"], timeout=5.0))
     except Exception as exc:
         row["probes"]["tailscale"] = {"error": type(exc).__name__}
+    for name, address, port in (("tcp_gateway", gateway, 80), ("tcp_mac_tailscale", PEER_IPS[0], 22), ("tcp_5080_tailscale", PEER_IPS[1], 22), ("tcp_mac_lan", "192.168.0.45", 22)):
+        try:
+            row["probes"][name] = probe_tcp(address, port, getattr(runner, "deadline", started + deadline_seconds))
+        except Exception as exc:
+            row["probes"][name] = {"error": type(exc).__name__, "path_reachable": None}
     row["local"] = {name: read_local(Path(path)) for name, path in {"carrier": f"/sys/class/net/{interface}/carrier", "operstate": f"/sys/class/net/{interface}/operstate", "loadavg": "/proc/loadavg", "meminfo": "/proc/meminfo", "uptime": "/proc/uptime"}.items()}
     row["elapsed_seconds"] = round(time.monotonic() - started, 6)
     return row
