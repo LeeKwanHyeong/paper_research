@@ -17,10 +17,10 @@ from paper.scripts import titans_mac_accuracy9_recovery_runtime as r
 
 ROOT = Path(__file__).resolve().parents[2]
 REPORT_BASE = ROOT / 'reports/titans_mac_accuracy9_recovery_20261021_v1'
-REPORT = REPORT_BASE / 'execution_v2'
-BUNDLE = ROOT / 'search_artifacts/titans_mac_accuracy9_recovery_20261021_v2'
+REPORT = REPORT_BASE / 'execution_v3'
+BUNDLE = ROOT / 'search_artifacts/titans_mac_accuracy9_recovery_20261021_v3'
 ORIGINAL = ROOT / 'search_artifacts/titans_mac_accuracy9_20261020_v1/execution_contract.json'
-REMOTE = '/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titans_mac_accuracy9_recovery_20261021_v2_5090'
+REMOTE = '/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titans_mac_accuracy9_recovery_20261021_v3_5090'
 SNAPSHOT = REPORT_BASE / 'preflight/ORIGINAL_SNAPSHOT_v3.stdout.json'
 OPERATION_FILES = ('paper/scripts/run_titans_mac_accuracy9_recovery.py',
                    'paper/scripts/titans_mac_accuracy9_recovery_runtime.py',
@@ -57,6 +57,7 @@ def prepare():
                                 'canonical_sha256': canonical(original)},
         'source': {**deepcopy(original['source']), 'source_revision': original['source']['base_git_revision']},
         'input_files': original['input_files'], 'operation_files': operations,
+        'required_source_directories': ['models', 'utils', 'sample_data'],
         'operation_files_sha256': canonical(operations), 'operation_git_revision': revision,
         'immutable_originals': {'root': h['root'], 'files': snapshot['files'], 'files_sha256': canonical(snapshot['files'])},
         'jobs': jobs, 'training_jobs': [j['id'] for j in jobs if j['recovery_mode'] == 'resume'],
@@ -68,7 +69,7 @@ def prepare():
         'environment': {**h['environment'], 'PYTHONPATH': REMOTE + '/source', 'MPLCONFIGDIR': REMOTE + '/cache/matplotlib',
             'XDG_CACHE_HOME': REMOTE + '/cache', 'TORCHINDUCTOR_CACHE_DIR': REMOTE + '/cache/torchinductor'},
         'snapshot_raw_sha256': sha(SNAPSHOT), 'tmux_binary': h['tmux_binary'],
-        'tmux_session': 'titans_mac9_resume_20261021_v2'}
+        'tmux_session': 'titans_mac9_resume_20261021_v3'}
     # Validation uses the frozen original contract on5090; here its local byte
     # equivalent is substituted only for the pure scope check.
     remote_binding = c['scientific_contract']['path']
@@ -135,6 +136,7 @@ assert Path('/proc/sys/kernel/random/boot_id').read_text().strip()==c['boot_id']
 for n,s in c['immutable_originals']['files'].items():assert sha(old/n)==s,n
 root.mkdir();t.extractall(root,filter='data')
 source=root/'source'
+for name in c['required_source_directories']:(source/name).mkdir(parents=True,exist_ok=True)
 for n,s in {**c['source']['files'],**c['input_files']}.items():
  p=source/n;p.parent.mkdir(parents=True,exist_ok=True);assert not p.exists()
  shutil.copyfile(old/'source'/n,p);assert sha(p)==s,n

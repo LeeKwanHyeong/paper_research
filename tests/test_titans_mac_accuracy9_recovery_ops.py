@@ -35,6 +35,7 @@ def contract(tmp_path, monkeypatch):
             'canonical_sha256': m.canonical(original)},
         'source': {**original['source'], 'source_revision': original['source']['base_git_revision']},
         'input_files': original['input_files'], 'jobs': jobs,
+        'required_source_directories': ['models', 'utils', 'sample_data'],
         'immutable_originals': {'root': str(old), 'files': files}, 'operation_git_revision': 'fabricated',
         'authorization': {'resume_three_only': True, 'originals_immutable': True},
         'operation_files': {k: m.sha(m.ROOT / k) for k in m.OPERATION_FILES},
@@ -202,8 +203,11 @@ def test_import_from_only_sealed_science_and_operation_closure(tmp_path):
     for name in {*original['source']['files'], *m.OPERATION_FILES}:
         target = source / name; target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(m.ROOT / name, target)
+    for name in ('models', 'utils', 'sample_data'):(source / name).mkdir(exist_ok=True)
     environment = {**os.environ, 'PYTHONDONTWRITEBYTECODE': '1', 'PYTHONPATH': str(source)}
-    program = 'from paper.scripts import titans_mac_accuracy9_recovery_runtime as r; print(r.SCHEMA)'
+    program = ('from paper.scripts import titans_mac_accuracy9_recovery_runtime as r; '
+        'from paper.scripts.count_aware_tpp_backbone import training; '
+        'from paper.scripts import run_titans_mac_accuracy9_recovery; print(r.SCHEMA)')
     p = subprocess.run([sys.executable, '-c', program], cwd=tmp_path, env=environment, capture_output=True, text=True, timeout=30)
     assert p.returncode == 0, p.stderr
     assert r.SCHEMA in p.stdout

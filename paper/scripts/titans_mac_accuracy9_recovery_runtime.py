@@ -62,6 +62,7 @@ def validate_contract(c, host=HOST):
             and source['files_sha256'] == sha_json(source['files']) == ORIGINAL_SOURCE
             and source['source_revision'] == original['source']['base_git_revision'], 'Scientific source changed')
     require(c['input_files'] == original['input_files'], 'Input bytes changed')
+    require(c.get('required_source_directories') == ['models', 'utils', 'sample_data'], 'Project bootstrap directories changed')
     expected_env = {**target['environment'], 'PYTHONPATH': str(root / 'source'),
                     'MPLCONFIGDIR': str(root / 'cache/matplotlib'), 'XDG_CACHE_HOME': str(root / 'cache'),
                     'TORCHINDUCTOR_CACHE_DIR': str(root / 'cache/torchinductor')}
@@ -105,6 +106,7 @@ def verify_files(c):
     validate_contract(c)
     original = scientific_contract(c)
     source, old = Path(c['source_root']), Path(original['hosts'][HOST]['source_root'])
+    require(all((source / name).is_dir() for name in c['required_source_directories']), 'Incomplete isolated project bootstrap')
     for name, digest in {**c['source']['files'], **c['input_files']}.items():
         require(sha_file(local_path(source, name)) == digest and sha_file(local_path(old, name)) == digest,
                 'Frozen source/input changed: ' + name)
@@ -304,7 +306,10 @@ def main(argv=None):
     a = p.parse_args(argv); c = read(a.contract)
     require(sha_json(c) == a.contract_sha, 'Pinned recovery contract changed')
     if a.mode == 'check':
-        verify_files(c); print(json.dumps({'status': 'passed', 'gpu': gpu_state(c)})); return 0
+        verify_files(c)
+        from paper.scripts.count_aware_tpp_backbone import training
+        from paper.scripts import run_titans_mac_accuracy9_recovery
+        print(json.dumps({'status': 'passed', 'gpu': gpu_state(c), 'scientific_imports_passed': True})); return 0
     return supervise(c, a.contract) if a.mode == 'supervise' else dispatch(c, a.contract)
 
 

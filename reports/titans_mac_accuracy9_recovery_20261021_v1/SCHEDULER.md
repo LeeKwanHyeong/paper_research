@@ -31,3 +31,9 @@
 - 현재 작업 경로는 위 v1 이름 대신 `titans_mac_accuracy9_recovery_20261021_v2_5090`, 로컬 bundle은 `search_artifacts/titans_mac_accuracy9_recovery_20261021_v2`, 운영 보고는 `execution_v2/`다.
 - 과학 소스989는 그대로 두고, 운영 파일은 recovery worker/runtime와 기존 bounded helper(SHA4edc46490bf67c4bb47f8b7fc9b217347afc0802c98aa4f1a6066010078de377)3개를 봉인했다. 기존 helper는 수정하지 않았다.
 - 격리된 source989+운영3만으로 import하는 회귀 검사와 설치 직후 native --modecheck gate를 추가했다. 이 gate가 실패하면 tmux 시작을 요청하지 않는다. 운영26검사·worker17검사·네트워크20검사 모두 실제exit0, 독립 검토PASS다.
+
+## 원래 프로젝트 시작 폴더까지 복원 — execution_v3
+
+- v2는 reference6개의 복사를 완료했으나 train3 child는 training 모듈 import에서 실제exit1로 종료했다. 원래 prepare가 만든 빈 `source/sample_data` 폴더가 새 배포에 누락되어 project-root 탐색이 차단된 운영 오류다. 모델 복원·optimizer step 전 실패이며 모든 원문·v2 root·세 actualexit를 보존한다.
+- 현재 manager는 `execution_v3/`, `search_artifacts/titans_mac_accuracy9_recovery_20261021_v3`, 원격 `titans_mac_accuracy9_recovery_20261021_v3_5090`만 대상으로 한다. v1/v2를 재실행하지 않는다.
+- 원래 project bootstrap인 models/utils/sample_data 세 디렉터리를 고정하고 science989·입력·운영3과 함께 새root에 구성한다. native 시작 전 전체 training/recovery import를 검증하므로 폴더 부재가 scientific child 시작으로 이어지지 않는다. 과학 코드는 수정하지 않는다.
