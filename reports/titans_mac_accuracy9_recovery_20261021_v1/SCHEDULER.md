@@ -76,3 +76,16 @@
 - 기존 비교 CLI는 원래 v1 회수 경로에 묶여 있어 변경하지 않고 별도 `compare_titans_mac_accuracy9_recovery` local-only wrapper가 기존 순수 비교 함수를 재사용한다. 회수 검증을 선행하고, 새 `execution_v4/comparison_v1/`에만 배타적으로 작성한다. partial은 보존하며 자동 덮어쓰지 않는다.
 - 독립19검사 actualexit0과 실제모듈 미회수 check-only remote0 통과. 원본 scientific contract·Sharedmanifest·공통조건·전체원본SHA 검증 후3데이터×Validation/Test×3seed의36집계/108seed별 지표를 계산한다. 전체/큰수량 qty RMSE·MAE·recorded TimeNLL, 평균±표본SD(ddof1), 절대/상대차이와 불리한seed를 보존한다. 기존 Shared Test5080/cuDNN91900과MAC5090/cuDNN92000 평가환경 차이도 기존 함수로 명시한다.
 - 지금은 미회수이므로 실제 Test값을 읽거나 비교보고를 생성하지 않았다. 완료 뒤 check-only→별도보고생성→check-only로 검증한다. 기존3seed와5080추가2seed 결과·자동화는 변경하지 않는다.
+
+
+## 최종 연결 상태 — 2026-10-21
+
+**MAC 완료 확인과 회수를 별도 자동화로 이어간다 — 완료**
+- 별도 heartbeat `mac9`(MAC9 재개 검증·회수 마무리)을 현재 채팅에15분 간격 ACTIVE로 등록하고 실제 저장 설정을 다시 확인했다. `execution_v4/AUTOMATION.json`에 도구 생성·대상thread·promptSHA를 기록했다. 기존2seed와 다른 자동화는 변경하지 않았다.
+- 매회 `CONTROL_BINDINGS.json` SHA `f255070c3d55089d6209a690d0a1c1791afd4ec33ed9760f831cb2d47ed7db01`과 모든 운영 소스SHA 검증 후 `collect_titans_mac_accuracy9_recovery --completion-bridge --mode advance`를 정확히 한 번 실행한다. 정상 waiting/busy는 조용히 유지한다. 통신/과학/partial실패 원문을 보존하고 차단 후 한 번 알리며 자동학습/재회수하지 않는다.
+
+**남은 과학 실행과 보고를 기다린다 — 외부 작업 대기**
+1. 현재5090 v3의 Intermittent3fit을 원래 예산으로 끝낸다. 새77/75/68epoch 저장까지는 확인 완료다.
+2. 이미 실행 중인 v4 bridge가 실제3fit exit0를 확인한 뒤 Validation9 전체 재현 gate→고정Test9를 수행한다.
+3. mac9가 실제 성공 종료·owner/GPU 부재와 전체SHA를 검증하고 한 번 회수한다.
+4. local-only 비교 check-only→별도3seed보고생성→check-only 후 결과·불리한seed·평가환경 제한을 보고하고 mac9만 종료한다. 전체 실험 완료로 앞서 보고하지 않는다.
