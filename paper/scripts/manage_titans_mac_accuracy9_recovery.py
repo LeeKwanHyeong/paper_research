@@ -16,13 +16,15 @@ import time
 from paper.scripts import titans_mac_accuracy9_recovery_runtime as r
 
 ROOT = Path(__file__).resolve().parents[2]
-REPORT = ROOT / 'reports/titans_mac_accuracy9_recovery_20261021_v1'
-BUNDLE = ROOT / 'search_artifacts/titans_mac_accuracy9_recovery_20261021_v1'
+REPORT_BASE = ROOT / 'reports/titans_mac_accuracy9_recovery_20261021_v1'
+REPORT = REPORT_BASE / 'execution_v2'
+BUNDLE = ROOT / 'search_artifacts/titans_mac_accuracy9_recovery_20261021_v2'
 ORIGINAL = ROOT / 'search_artifacts/titans_mac_accuracy9_20261020_v1/execution_contract.json'
-REMOTE = '/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titans_mac_accuracy9_recovery_20261021_v1_5090'
-SNAPSHOT = REPORT / 'preflight/ORIGINAL_SNAPSHOT_v3.stdout.json'
+REMOTE = '/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titans_mac_accuracy9_recovery_20261021_v2_5090'
+SNAPSHOT = REPORT_BASE / 'preflight/ORIGINAL_SNAPSHOT_v3.stdout.json'
 OPERATION_FILES = ('paper/scripts/run_titans_mac_accuracy9_recovery.py',
-                   'paper/scripts/titans_mac_accuracy9_recovery_runtime.py')
+                   'paper/scripts/titans_mac_accuracy9_recovery_runtime.py',
+                   'paper/scripts/titantpp_late_path18_5090_recovery_runtime.py')
 require, read, sha, canonical, write = r.require, r.read, r.sha_file, r.sha_json, r.write
 
 
@@ -66,7 +68,7 @@ def prepare():
         'environment': {**h['environment'], 'PYTHONPATH': REMOTE + '/source', 'MPLCONFIGDIR': REMOTE + '/cache/matplotlib',
             'XDG_CACHE_HOME': REMOTE + '/cache', 'TORCHINDUCTOR_CACHE_DIR': REMOTE + '/cache/torchinductor'},
         'snapshot_raw_sha256': sha(SNAPSHOT), 'tmux_binary': h['tmux_binary'],
-        'tmux_session': 'titans_mac9_resume_20261021_v1'}
+        'tmux_session': 'titans_mac9_resume_20261021_v2'}
     # Validation uses the frozen original contract on5090; here its local byte
     # equivalent is substituted only for the pure scope check.
     remote_binding = c['scientific_contract']['path']
@@ -139,6 +141,9 @@ for n,s in {**c['source']['files'],**c['input_files']}.items():
 print(json.dumps({'status':'installed','root':str(root),'source_files':len(c['source']['files']),'original_files_preserved':len(c['immutable_originals']['files'])}))
 '''.replace('__ARCHIVE__', repr(sha(BUNDLE / 'deployment.tar.gz')))
     folder = transport('install', shlex.join(['/usr/bin/python3', '-c', program]), data=(BUNDLE / 'deployment.tar.gz').read_bytes(), timeout=300)
+    check = shlex.join(['env', *[k + '=' + v for k,v in c['environment'].items()], c['python'], '-m', r.MODULE,
+        '--contract', c['root'] + '/recovery_contract.json', '--contract-sha', expected, '--mode', 'check'])
+    transport('installed_source_check', 'cd ' + shlex.quote(c['source_root']) + ' && ' + check, timeout=120)
     command = shlex.join(['env', *[k + '=' + v for k,v in c['environment'].items()], c['python'], '-u', '-m', r.MODULE,
         '--contract', c['root'] + '/recovery_contract.json', '--contract-sha', expected, '--mode', 'supervise'])
     shell = 'cd ' + shlex.quote(c['source_root']) + ' && ' + command + ' > ' + shlex.quote(c['root'] + '/supervisor.stdout.log') + ' 2> ' + shlex.quote(c['root'] + '/supervisor.stderr.log')

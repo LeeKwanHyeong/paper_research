@@ -24,3 +24,10 @@
 **검증과 실제 배포를 구분한다 — 진행 중**
 - 로컬 CPU 합성 exact-resume17검사, 운영 계약·queue25검사와 네트워크20검사를 통과했다. 연속4epoch와2+2epoch의 model/best/optimizer/RNG/loader/history/선택/proof가 정확히 일치한다. 이는 실제 재개 완료나 scientific Test 결과가 아니다.
 - 실제 설치·서비스 상태·초기 새 epoch 저장 증적은 후속 receipt에 기록한다. 코드 commit·contract SHA·관측 시각은 해당 실제 파일을 기준으로 확인한다.
+
+## 실제 배포 의존성 보완 — execution_v2
+
+- v1은 누락된 운영 helper import에서 멈췄다. 원격 run 디렉터리와 GPU worker가 없었음을 `preflight/FAILED_LAUNCH_v1.json`에 기록했다. 새 scientific fit/재개 step은0이며 v1 root·stderr·계약을 보존했다.
+- 현재 작업 경로는 위 v1 이름 대신 `titans_mac_accuracy9_recovery_20261021_v2_5090`, 로컬 bundle은 `search_artifacts/titans_mac_accuracy9_recovery_20261021_v2`, 운영 보고는 `execution_v2/`다.
+- 과학 소스989는 그대로 두고, 운영 파일은 recovery worker/runtime와 기존 bounded helper(SHA4edc46490bf67c4bb47f8b7fc9b217347afc0802c98aa4f1a6066010078de377)3개를 봉인했다. 기존 helper는 수정하지 않았다.
+- 격리된 source989+운영3만으로 import하는 회귀 검사와 설치 직후 native --modecheck gate를 추가했다. 이 gate가 실패하면 tmux 시작을 요청하지 않는다. 운영26검사·worker17검사·네트워크20검사 모두 실제exit0, 독립 검토PASS다.

@@ -68,7 +68,10 @@ def validate_contract(c, host=HOST):
     require(c['environment'] == expected_env, 'Only private source/cache paths may change')
     operations = c['operation_files']
     require(set(operations) == {'paper/scripts/run_titans_mac_accuracy9_recovery.py',
-            'paper/scripts/titans_mac_accuracy9_recovery_runtime.py'}
+            'paper/scripts/titans_mac_accuracy9_recovery_runtime.py',
+            'paper/scripts/titantpp_late_path18_5090_recovery_runtime.py'}
+            and operations['paper/scripts/titantpp_late_path18_5090_recovery_runtime.py']
+                == '4edc46490bf67c4bb47f8b7fc9b217347afc0802c98aa4f1a6066010078de377'
             and sha_json(operations) == c['operation_files_sha256']
             and not set(operations).intersection(source['files']) and c['operation_git_revision'], 'Unsealed operation files')
     require(c['boot_id'] and c['immutable_originals']['root'] == str(old)

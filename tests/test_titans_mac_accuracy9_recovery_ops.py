@@ -37,7 +37,7 @@ def contract(tmp_path, monkeypatch):
         'input_files': original['input_files'], 'jobs': jobs,
         'immutable_originals': {'root': str(old), 'files': files}, 'operation_git_revision': 'fabricated',
         'authorization': {'resume_three_only': True, 'originals_immutable': True},
-        'operation_files': {k: 'c' * 64 for k in m.OPERATION_FILES},
+        'operation_files': {k: m.sha(m.ROOT / k) for k in m.OPERATION_FILES},
         'environment': {**h['environment'], 'PYTHONPATH': str(root / 'source'),
             'MPLCONFIGDIR': str(root / 'cache/matplotlib'), 'XDG_CACHE_HOME': str(root / 'cache'),
             'TORCHINDUCTOR_CACHE_DIR': str(root / 'cache/torchinductor')}}
@@ -191,3 +191,19 @@ def test_supervisor_cleans_new_leases_after_timeout_or_dispatcher_crash(contract
     assert calls == ['cleanup']
     assert r.read(root / 'dispatcher_exit.json')['timeout'] is timeout
     assert bool(r.read(root / 'dispatcher_exit.json')['cleanup_error']) is cleanup_failure
+
+
+def test_import_from_only_sealed_science_and_operation_closure(tmp_path):
+    import os
+    import shutil
+    import subprocess
+    import sys
+    original = m.read(m.ORIGINAL); source = tmp_path / 'source'; source.mkdir()
+    for name in {*original['source']['files'], *m.OPERATION_FILES}:
+        target = source / name; target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(m.ROOT / name, target)
+    environment = {**os.environ, 'PYTHONDONTWRITEBYTECODE': '1', 'PYTHONPATH': str(source)}
+    program = 'from paper.scripts import titans_mac_accuracy9_recovery_runtime as r; print(r.SCHEMA)'
+    p = subprocess.run([sys.executable, '-c', program], cwd=tmp_path, env=environment, capture_output=True, text=True, timeout=30)
+    assert p.returncode == 0, p.stderr
+    assert r.SCHEMA in p.stdout
