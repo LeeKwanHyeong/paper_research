@@ -58,3 +58,21 @@
 - v4 bridge는 14:27:50 KST 설치·preflight·tmux launch actualexit0, 14:30:43 KST actual start와 `waiting_for_preserved_training`을 확인했다. dispatcher PID83345/start_ticks265346, contract SHA `191d2534245ab6c02efff817fe9e21bb43e6589415b1839e22f1a7dec40797c2`, 새 학습0이다. `execution_v4/ACTUAL_WAITING.json`과 실제 transport 원문을 기준으로 한다.
 - v3 Intermittent3의 실제GPU PID57080/57081/57082는 14:31:22 KST에도 동일하게 실행 중이다. 당시 마지막 저장 epoch는76/74/67로 아직 새 epoch 저장 전이며 실행 중인77/75/68 완료를 추정하지 않는다. 원본1,141개 SHA는 모두 그대로다.
 - 다음은 실제 새 epoch 저장 확인, 원래3fit 성공 종료, v4 Validation9 전체 재현 gate와 고정Test9, 한 번의 회수다. 회수 도구의 로컬 독립 검증이 끝나기 전에는 실제 회수를 요청하지 않는다.
+
+
+## 실제 재개 후 새 checkpoint 저장 확인 — 2026-10-21 14:35:20 KST
+
+**중단 전 상태부터 새 epoch를 저장한다 — 완료**
+- Intermittent seed42는76→77, seed52는74→75, seed62는67→68 epoch를 새 경로에 저장했다. 각 fit의 누적 optimizer step은233852→236929, 227698→230775, 206159→209236으로3077씩 증가했다. 실제 GPU 사용률94%, 세 PID57080/57081/57082 연산 중이다.
+- 새 checkpoint SHA는 각 job의 `execution_v3/RESUMED_NEW_EPOCH_VERIFIED.json`에 기록했다. 중단 전 원본 checkpoint·완료6fit·과거실패를 포함한1,141파일은 원 SHA와 모두 일치한다. 재개 진행을 확인한 것이며 전체 학습·Validation/Test 완료가 아니다.
+
+**짧은 종료 확인 뒤 한 번 회수한다 — 진행 중**
+- 회수 코드/테스트 독립30검사 actualexit0, 실제모듈 smoke와 CLI check-local remote0 통과. 코드 commit `a5cd89f5`, collector SHA `f9be7ab6a26aace6ede264b02b66022955954e7e7fc81510a983b32a279c4b8a`.
+- 첫 실제 advance는14:34:28 KST `waiting`, SSH1/actualexit0/0.238초/회수0이다. C4 PID83345/start_ticks265346의 실제 신원 일치를 검증했고 원문과 SHA는 `execution_v4/collection_v1/rounds/20261021T053428_504b17561750`에 보존했다.
+- 이후 확인은900초 간격의45초 상한 단일 SSH이며 기다리는 SSH·별도 finisher를 만들지 않는다. owner/GPU부재와27scientific actualexit0(원6+재개3+새Validation9+Test9), dispatcher actualexit0 및전체SHA를 확인한 뒤 최초900초 상한 전송을 수행한다. 회수 실패/partial/기존attempt는 보존 후 차단하며 자동재회수하지 않는다.
+
+
+**회수 이후 기존 Shared3seed와 비교한다 — 다음 작업**
+- 기존 비교 CLI는 원래 v1 회수 경로에 묶여 있어 변경하지 않고 별도 `compare_titans_mac_accuracy9_recovery` local-only wrapper가 기존 순수 비교 함수를 재사용한다. 회수 검증을 선행하고, 새 `execution_v4/comparison_v1/`에만 배타적으로 작성한다. partial은 보존하며 자동 덮어쓰지 않는다.
+- 독립19검사 actualexit0과 실제모듈 미회수 check-only remote0 통과. 원본 scientific contract·Sharedmanifest·공통조건·전체원본SHA 검증 후3데이터×Validation/Test×3seed의36집계/108seed별 지표를 계산한다. 전체/큰수량 qty RMSE·MAE·recorded TimeNLL, 평균±표본SD(ddof1), 절대/상대차이와 불리한seed를 보존한다. 기존 Shared Test5080/cuDNN91900과MAC5090/cuDNN92000 평가환경 차이도 기존 함수로 명시한다.
+- 지금은 미회수이므로 실제 Test값을 읽거나 비교보고를 생성하지 않았다. 완료 뒤 check-only→별도보고생성→check-only로 검증한다. 기존3seed와5080추가2seed 결과·자동화는 변경하지 않는다.
