@@ -1,0 +1,22 @@
+{
+  "command": [
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=15",
+    "5090",
+    "cd /home/leekwanhyeong/workspace/paper_research_experiment_artifacts/shared_history_mlp_control_20261022_v1_5090/source && env CUBLAS_WORKSPACE_CONFIG=:4096:8 CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=0 LD_LIBRARY_PATH=/opt/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib MKL_NUM_THREADS=4 NVIDIA_TF32_OVERRIDE=0 OMP_NUM_THREADS=4 OPENBLAS_NUM_THREADS=4 PYTHONHASHSEED=42 SOURCE_REVISION=747e9e255a6ebe2dd180fcafd61af7a494bce25c PYTHONPATH=/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/shared_history_mlp_control_20261022_v1_5090/source PYTHONDONTWRITEBYTECODE=1 MPLCONFIGDIR=/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/shared_history_mlp_control_20261022_v1_5090/cache/matplotlib XDG_CACHE_HOME=/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/shared_history_mlp_control_20261022_v1_5090/cache TORCHINDUCTOR_CACHE_DIR=/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/shared_history_mlp_control_20261022_v1_5090/cache/torchinductor /home/leekwanhyeong/workspace/paper_research_experiment_artifacts/titantpp_cnn_gru_resume_dual_20261005_v1_5090/runtime_env/bin/python3.12 -u -c 'import json,pathlib,hashlib,base64,time,os\nroot=pathlib.Path('\"'\"'/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/shared_history_mlp_control_20261022_v1_5090'\"'\"');host='\"'\"'5090'\"'\"'\nraw=(root/'\"'\"'execution_contract.json'\"'\"').read_bytes()\nassert hashlib.sha256(raw).hexdigest()=='\"'\"'b9a698bb16dc171ca351fdf5df720aa99980be24075c572a9e68f262e329e8e7'\"'\"'\nc=json.loads(raw);source=root/'\"'\"'source'\"'\"'\nfor name,digest in {**c['\"'\"'source'\"'\"']['\"'\"'files'\"'\"'],**c['\"'\"'input_files'\"'\"'],**c['\"'\"'legacy_files'\"'\"']}.items():\n p=source/name;assert not p.is_symlink() and p.resolve().is_relative_to(source.resolve())\n assert hashlib.sha256(p.read_bytes()).hexdigest()==digest,name\npaths=set()\nfor name in ('\"'\"'fit_validation.failure.json'\"'\"','\"'\"'fit_validation.supervisor_exit.json'\"'\"','\"'\"'fit_validation.supervisor.intent.json'\"'\"','\"'\"'fit_validation.claim.json'\"'\"','\"'\"'fit_validation.complete.json'\"'\"','\"'\"'fit_validation.stdout.log'\"'\"','\"'\"'fit_validation.stderr.log'\"'\"'):\n if (root/name).is_file():paths.add(root/name)\nfor p in (root/'\"'\"'control'\"'\"').glob('\"'\"'*'\"'\"'):\n if p.is_file() and '\"'\"'.synthetic.'\"'\"' not in p.name and '\"'\"'.capacity.'\"'\"' not in p.name:paths.add(p)\nfor p in (root/'\"'\"'run'\"'\"').glob('\"'\"'*/train_receipt.json'\"'\"'):paths.add(p)\nfiles={};total=0\nfor p in sorted(paths):\n assert not p.is_symlink() and p.resolve().is_relative_to(root.resolve())\n b=p.read_bytes();total+=len(b);assert total<=32*1024*1024\n files[str(p.relative_to(root))]={'\"'\"'bytes'\"'\"':len(b),'\"'\"'sha256'\"'\"':hashlib.sha256(b).hexdigest(),'\"'\"'base64'\"'\"':base64.b64encode(b).decode()}\nprint(json.dumps({'\"'\"'host'\"'\"':host,'\"'\"'read_only'\"'\"':True,'\"'\"'observed_at'\"'\"':time.time(),'\"'\"'boot_id'\"'\"':pathlib.Path('\"'\"'/proc/sys/kernel/random/boot_id'\"'\"').read_text().strip(),'\"'\"'files'\"'\"':files,'\"'\"'source_input_legacy_all_sha_verified'\"'\"':True}),flush=True)\n'"
+  ],
+  "started_at_unix": 1792682488.279819,
+  "observed_at": "2026-10-22T15:21:28.652121+00:00",
+  "elapsed_seconds": 0.37233996391296387,
+  "timeout_seconds": 45,
+  "actual_os_returncode": 0,
+  "timeout": false,
+  "transport_error": null,
+  "stdout_sha256": "791d1de0783e28ce1137f4ec01c0f42b771b7df56ac385c6cb83686ff5d8a138",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_bytes": 69543,
+  "stderr_bytes": 0
+}

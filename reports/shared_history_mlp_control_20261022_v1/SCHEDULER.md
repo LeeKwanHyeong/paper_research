@@ -39,3 +39,17 @@
 - 이전 복구 상태의 추가 실행을 중단하고 모든 v1 파일 bytes/SHA를 고정했다. 기존 명시적 초기 검증·실험 승인 범위에서 별도 recovery_v2가 읽기 전용 설치 확인의 범위를 실제 소스·라이브러리 버전·GPU/boot/env 신원으로 한정한다. 수치 설정의 성공은 이 단계에서 주장하지 않는다.
 - 원래 qualification의 9개 구조·유한성 점검과 3개 full-batch capacity 점검을 유지한다. 3개 capacity는 변경하지 않은 profiler._runtime의 전체 수치 설정/신원 검증을 실제 실행하며, 실제 train/Validation도 변경하지 않은 runner._native_runtime을 통과해야 한다. 새로운 복구 제어는 실제 capacity receipt의 Runtime/GPU를 추가 확인한 후 최초 fit을 허용한다.
 - 과학 소스·원래 실행 계약·archive·선택본·고정 15개 파일은 그대로이며, 새 Test·MAC·학습 재시도는 여전히 0이다. v2는 별도 테스트/독립 QA 및 증거 핀을 통과한 뒤 실행한다. 연결 실패·과학 실패·원본 SHA/신원/기한 불일치는 추가 복구 대상으로 자동 승인하지 않는다.
+
+## 양 서버의 최초 qualification을 실행한다 — 진행 중 (2026-10-23 00:14 KST)
+- recovery_v2는 신규 34개 로컬 테스트와 전체 Ruff·독립 QA PASS를 확인한 뒤 로컬 제어 commit 833d68a3으로 고정했다. 원 과학 소스 commit 747e9e25 및 archive/계약은 변경하지 않았다.
+- 5080 기존 파일의 전체 source991/input9/legacy199/archive SHA·정적 Runtime/boot/GPU/정지 프로세스 확인 actual exit0을 관측했다. 재전송 0, 수치 설정은 pending으로 명시했다.
+- 5090은 같은 archive의 최초 전송 및 전체 수치 Runtime 확인 actual exit0을 관측했다. cuDNN은 5080 91900 / 5090 92000이며, 이후 비용의 절대 시간을 두 GPU 사이에 섞지 않는다.
+- 두 host 각각 qualification dispatcher와 별도 부모의 실제 초기 신원을 확인했다. 5080 dispatcher872998/start_ticks107866007, 5090 dispatcher3429498/start_ticks12425101이다. 이는 시작 확인이며 전체 12개 종료나 학습 완료를 의미하지 않는다.
+- 다음 단계는 host당 읽기 전용 종료 확인 1회로 12개 child 및 dispatcher의 실제 exit0·원문 SHA·신원 부재와 3개 capacity Runtime/GPU를 검증하는 것이다. 양쪽 모두 통과한 뒤에만 원래 MLP9 fit/B·D18 재사용/Validation27을 최초 시작한다.
+
+## 학습 진입 전 누락된 계약 정보를 보완한다 — 진행 중 (2026-10-23 00:32 KST)
+- 최초 양 서버 qualification은 각 12개 child와 dispatcher의 actual exit0 및 세 capacity Runtime/GPU 검증을 통과했다. 이후 첫 shared15 재사용은 actual exit0이었지만, 첫 single_mlp 학습 준비가 양쪽 모두 actual exit1로 종료했다.
+- native_failure_forensics_v1의 각 host 읽기 전용 1회 조회는 actual exit0이었다. 원래 child/dispatcher exit·stderr·claim·supervisor 증거 17개씩을 bytes/SHA 그대로 회수했다. 공통 traceback은 `_training_interface`에서 `design_sha256`를 찾지 못하며, 뒤의 `training.train_one` 호출 전이다. 실제 MLP optimizer step은 0이고 수치 학습 실패나 SSH 실패로 분류하지 않는다. 기존 continuation_v1 실패 상태와 모든 원문을 유지한다.
+- 원래 303개 테스트에는 실제 generic CPU 2epoch 테스트가 있었지만 args/interface를 fixture가 주입해 실제 연결 누락을 놓쳤다. 새 execution_v2에는 실제 `_training_args → _training_interface → train_one → 선택 checkpoint 재로드 → Validation`을 연결하는 회귀 검증을 추가한다.
+- 기존 과학·모델·손실·선택 조건과 991개 과학 source/9 input/199 legacy는 변경하지 않는다. 새 계약에 `design_sha256 = SCIENCE_SPEC SHA`만 보완하고 새 격리 실행 경로와 새 제어 QA를 사용한다. 기존 절대 host 기한을 연장하지 않는다. 추가 회귀/독립 QA와 양 서버 원래 qualification을 통과한 뒤 동일한 최초 실제 MLP9 학습을 진행한다.
+- execution_v2/ADMISSION.json은 기존 명시적 검증·필요 실험 승인 안에서 설정 메타데이터 복구 범위를 기록한다. 새 사용자 응답으로 간주하지 않으며 303개 기존 증거의 bytes/SHA를 고정한다. Test·MAC·기존 B/D 재학습·실패 삭제는 0이다.

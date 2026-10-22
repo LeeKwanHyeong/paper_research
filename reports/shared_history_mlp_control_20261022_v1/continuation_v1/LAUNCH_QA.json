@@ -1,0 +1,120 @@
+{
+  "status": "WARNING",
+  "evidence_audit": "PASS",
+  "independent_reviewer": true,
+  "reviewed_at_utc": "2026-10-22T15:22:21.845404+00:00",
+  "campaign": "shared_history_mlp_control_20261022_v1",
+  "scope": "Local audit of actual native qualification and initial fit_validation launch proof; first continuation round failure classification",
+  "binding_sha256": "33a0d31480e6968e7c944dc5f4d0a5381317527309282449d38b26843046585e",
+  "binding_files_verified": 164,
+  "binding_files_mismatches": 0,
+  "initial_launch_sha256": "a4db51c450d39b6dab7dd3685edeef378f99a392cf5d351c060bdde0f3a567ba",
+  "native_qualification": {
+    "children_actualexit0": 24,
+    "dispatchers_actualexit0": 2,
+    "full_runtime_capacity_snapshots_verified": 6,
+    "raw_snapshot_files_verified": 92,
+    "hosts": {
+      "5080": {
+        "qualification_pass_path": "reports/shared_history_mlp_control_20261022_v1/recovery_v2/initial_execution/5080/QUALIFICATION_PASS.json",
+        "qualification_pass_sha256": "f21e6c2d527ecaeb77fe474d44842b33f2a1ffdc1d3da30a48e7a6e5acc10334",
+        "qualification_raw_inventory_files": 46,
+        "structural_synthetic_actualexit0": 9,
+        "full_runtime_capacity_actualexit0": 3,
+        "dispatcher_actualexit0": true,
+        "all_capacity_runtime_fields_and_gpu_uuid_exact": true,
+        "all_child_raw_exit_and_stdout_stderr_sha_exact": true,
+        "snapshot_matches_original_base64_raw_transport_bytes": true,
+        "historical_terminal_check_observed_identity_absence": true,
+        "supervisor_own_os_exit_directly_observed": false,
+        "qualification_dispatcher_exit_observed_unix": 1792682081.4829948,
+        "fit_validation_launch_observed_kst": "2026-10-23T00:17:11.405174+09:00",
+        "fit_dispatcher": {
+          "pid": 873390,
+          "start_ticks": 107884317,
+          "pgid": 873383
+        },
+        "fit_dispatcher_argv_cwd_boot_match": true,
+        "actual_mlp_training_epoch_or_optimizer_start_verified": false
+      },
+      "5090": {
+        "qualification_pass_path": "reports/shared_history_mlp_control_20261022_v1/recovery_v2/initial_execution/5090/QUALIFICATION_PASS.json",
+        "qualification_pass_sha256": "47c86cc6c64eb078f0d5a307cec0211f6d895319f9d87ba4bb4370c5ad0d670a",
+        "qualification_raw_inventory_files": 46,
+        "structural_synthetic_actualexit0": 9,
+        "full_runtime_capacity_actualexit0": 3,
+        "dispatcher_actualexit0": true,
+        "all_capacity_runtime_fields_and_gpu_uuid_exact": true,
+        "all_child_raw_exit_and_stdout_stderr_sha_exact": true,
+        "snapshot_matches_original_base64_raw_transport_bytes": true,
+        "historical_terminal_check_observed_identity_absence": true,
+        "supervisor_own_os_exit_directly_observed": false,
+        "qualification_dispatcher_exit_observed_unix": 1792682103.9279532,
+        "fit_validation_launch_observed_kst": "2026-10-23T00:17:40.780600+09:00",
+        "fit_dispatcher": {
+          "pid": 3434774,
+          "start_ticks": 12444319,
+          "pgid": 3434771
+        },
+        "fit_dispatcher_argv_cwd_boot_match": true,
+        "actual_mlp_training_epoch_or_optimizer_start_verified": false
+      }
+    }
+  },
+  "first_round": {
+    "round_path": "reports/shared_history_mlp_control_20261022_v1/continuation_v1/rounds/20261022T151900061201_9c521d019522",
+    "round_sha256": "b6d30401cab4603953b1ffafcd9c55e8d0745679369ea3465b9298e38efa88ab",
+    "failure_sha256": "9bb4def3a82ff10e982fb320eacb6fc6e554d2b2530a9e2c06667489200de74d",
+    "failure_seal_sha256": "bca3f2fa0e9283af69f552fa6148f36341a2ae9cb341cb4c67db16b4f8ee98b6",
+    "status": "failed",
+    "failure_host": "5080",
+    "native_phase": "fit_validation",
+    "check_actual_os_returncode": 1,
+    "timeout": false,
+    "transport_error": null,
+    "stderr_bytes": 382,
+    "stderr_sha256": "4e91982f493a66e16c763f16feb406a0517c23f720256752eba38feb72a04c2c",
+    "native_failure_marker": "fit_validation.failure.json",
+    "native_failure_reason_collected": false,
+    "5090_check_calls": 0,
+    "further_remote_calls_per_failed_controller": 0
+  },
+  "overall_experiment_complete": false,
+  "validation27_complete_verified": false,
+  "train_cost162_complete_verified": false,
+  "scientific_inference": "No conclusion about MLP performance or completed training; actual dispatcher launch does not prove optimizer/epoch start.",
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [
+      {
+        "file": "reports/shared_history_mlp_control_20261022_v1/continuation_v1/rounds/20261022T151900061201_9c521d019522/5080/check.stderr",
+        "line": 6,
+        "description": "First continuation check reports a preserved native fit_validation.failure.json. Native cause and failed stage are not present locally in this round.",
+        "remediation": "Preserve the failed round and marker. Use a separately admitted read-only forensic capture to identify native cause before deciding any follow-up; do not retry training, delete claims or infer SSH connection failure."
+      }
+    ],
+    "LOW": []
+  },
+  "preservation": {
+    "bound_sources_and_historical_setup_failures_unchanged": true,
+    "old_qa_files_not_modified": true
+  },
+  "acceptance_criteria": {
+    "actual_native_qualification_exit_proofs": true,
+    "all_runtime_capacity_and_gpu_identity": true,
+    "raw_transport_receipt_and_stream_byte_sha": true,
+    "launch_fixed_identity_argv_cwd_boot": true,
+    "first_failure_and_first_host_stop_preserved": true,
+    "whole_experiment_completion": false
+  },
+  "verification_actual_os_returncode": 0,
+  "remote_calls_by_reviewer": 0,
+  "gpu_calls_by_reviewer": 0,
+  "real_data_inference_by_reviewer": 0,
+  "held_out_prediction_or_metric_reads": 0,
+  "files_changed": [
+    "reports/shared_history_mlp_control_20261022_v1/continuation_v1/LAUNCH_QA.json",
+    "reports/shared_history_mlp_control_20261022_v1/continuation_v1/LAUNCH_QA.md"
+  ]
+}
