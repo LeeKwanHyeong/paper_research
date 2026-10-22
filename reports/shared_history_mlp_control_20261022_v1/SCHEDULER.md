@@ -53,3 +53,17 @@
 - 원래 303개 테스트에는 실제 generic CPU 2epoch 테스트가 있었지만 args/interface를 fixture가 주입해 실제 연결 누락을 놓쳤다. 새 execution_v2에는 실제 `_training_args → _training_interface → train_one → 선택 checkpoint 재로드 → Validation`을 연결하는 회귀 검증을 추가한다.
 - 기존 과학·모델·손실·선택 조건과 991개 과학 source/9 input/199 legacy는 변경하지 않는다. 새 계약에 `design_sha256 = SCIENCE_SPEC SHA`만 보완하고 새 격리 실행 경로와 새 제어 QA를 사용한다. 기존 절대 host 기한을 연장하지 않는다. 추가 회귀/독립 QA와 양 서버 원래 qualification을 통과한 뒤 동일한 최초 실제 MLP9 학습을 진행한다.
 - execution_v2/ADMISSION.json은 기존 명시적 검증·필요 실험 승인 안에서 설정 메타데이터 복구 범위를 기록한다. 새 사용자 응답으로 간주하지 않으며 303개 기존 증거의 bytes/SHA를 고정한다. Test·MAC·기존 B/D 재학습·실패 삭제는 0이다.
+
+## 보완한 계약으로 실제 MLP 학습을 진행한다 — 진행 중 (2026-10-23 00:40 KST)
+- paper_research / codex/shared-history-mlp-control-20261022의 실행 제어는 cd44d201, 실제 과학 source는 변경 없이 747e9e25에 고정했다. 새 계약 raw SHA는 56721f98f69c962fee1cdb8c4331d6dd4c4373bb5745f302fc2164a1b9819673이다. 새 archive와 실행 경로를 사용하고 이전 실패·checkpoint·소스와 절대기한은 보존했다.
+- 새 로컬 77개 테스트와 전체 Ruff actual exit0, 실제 fabricated CPU 2epoch/optimizer2step/선택본 재로드/Validation2회 재현, 독립 QA PASS를 확인했다. CPU 비용 경로는 RAM 사본의 train37step/eval0을 검증한 것으로 GPU 속도·메모리 측정 완료를 뜻하지 않는다.
+- 양 host의 새 qualification 각각 12 child와 dispatcher actual exit0, 과학 신원 부재, 세 capacity의 Runtime/GPU 증거를 검증했다. 당시 5080의 기존 정지4개와 5090의 다른 GPU 작업 없음도 guard로 확인했다. supervisor 자신의 OS exit를 직접 관측한 것으로 표현하지 않는다.
+- 00:38:56/58 KST에 양 host fit_validation dispatcher를 시작했다. 00:40 KST 최초 bounded controller actual exit0/waiting에서 RAF single_mlp seed42 epoch27, seed52 epoch25와 최근5epoch train_all_finite=true를 확인했다. 이는 실제 학습 진입 증거이며 전체9fit/Validation27 완료나 결과 우위를 뜻하지 않는다.
+- 다음은 동일 선택본의 Validation27 전체 gate → Train 고정37batch의162freshprocess 비용 측정 → 최초 회수/원본과 archive·manifest·member·종료·선택 SHA 검증 → 독립 로컬 비교 검토다. 이 연구의 새 Test 평가는0이며 MAC은 보류한다.
+- 후속 제어는 아래 한 명령만 회차당1회 실행한다. waiting_next_check(900초 이내)/busy는 SSH0, 실제 확인은 host당 읽기 전용SSH1/45초 상한이다. 실패/partial/기존attempt/신원·원본 불일치는 원문을 보존하고 추가 원격0이며 과학 재시도나 재시작을 하지 않는다.
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 reports/shared_history_mlp_control_20261022_v1/execution_v2/advance.py --mode advance --binding-sha 3f61a06bdac3b53815771ccf9cf24f7285db14f9624876972dbeb316915283af --authorization-sha 5e631f4a2ba71cd49da2b8ef134ece59457c76d14994ae9c83c8e31d60152ef2
+```
+
+- 양 서버 fit/cost 종료·최초 pack/전송은 이 controller가 고정 gate 안에서만 처리한다. 별도 status/dispatch/collect/finisher와 새 학습을 추가 호출하지 않는다. 자동 점검 방식에 대한 선택 질문은 아직 응답 대기이며 새 자동화를 생성하지 않았다.
