@@ -1,0 +1,133 @@
+{
+  "schema": "shared_history_mlp_control_science_v1",
+  "status": "locked",
+  "campaign": "shared_history_mlp_control_20261022_v1",
+  "scope": "Validation-only comparison of shared15 correction and one ordinary MLP; MAC deferred",
+  "parent_contract_raw_sha256": "462996103c87523785965f733404d9c56f6e03e73418aa38f593838c4a6c696a",
+  "arms": {
+    "shared15": {
+      "origin": "reuse verified B checkpoint",
+      "underlying_arm": "no_prototype",
+      "history": "shared width15, eight eligibility gated outputs",
+      "additional_parameters": 9600
+    },
+    "single_mlp": {
+      "origin": "fresh fit",
+      "underlying_arm": "single_mlp",
+      "history": "[current64,immediate_previous64,availability8] ->48->64",
+      "additional_parameters": 9600
+    },
+    "encoder_only": {
+      "origin": "reuse verified D checkpoint",
+      "underlying_arm": "encoder_only",
+      "history": "zero correction",
+      "additional_parameters": 0
+    }
+  },
+  "datasets": [
+    "raf_spare_parts",
+    "yellow_trip_hourly",
+    "intermittent_frozen_5000"
+  ],
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "host_by_seed": {
+    "42": "5080",
+    "52": "5090",
+    "62": "5090"
+  },
+  "new_fit_count": 9,
+  "reused_fit_count": 18,
+  "conditions": 27,
+  "architecture": {
+    "prototype": false,
+    "persistent_memory": 16,
+    "hidden_dim": 64,
+    "encoder_blocks": 2,
+    "attention_heads": 4,
+    "common_input_head_loss_target_mask": "unchanged parent source and data contracts",
+    "single_mlp": {
+      "input_features": 136,
+      "hidden_width": 48,
+      "output_features": 64,
+      "bias": false,
+      "activation": "gelu_exact_erf",
+      "output_initialization": "zero",
+      "input_initialization": "default Linear",
+      "rng": "forked CPU; preserve common encoder/head initialization",
+      "residual_divisor": 8,
+      "eligibility": "same eight local observed-count thresholds; same immediate predecessor; correction0 without eligible predecessor"
+    },
+    "matching": "equal input information and total 9600 parameters; not equal active-prefix parameter count or function class",
+    "length_only_correction": "single MLP availability inputs permit learned length-only correction; shared15 does not; disclose"
+  },
+  "training": {
+    "maximum_epochs": 300,
+    "minimum_epochs": 40,
+    "patience": 40,
+    "batch_size": 128,
+    "monitor": "validation_raw_quantity_rmse",
+    "selection": "first strict finite minimum on full Validation",
+    "optimizer": "AdamW",
+    "lr": 0.001,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0,
+    "warmstart": false
+  },
+  "evaluation": {
+    "scope": "validation_only",
+    "validation_jobs": 27,
+    "test_authorized": false,
+    "test_for_architecture_selection": false,
+    "no_new_test_evaluation": true,
+    "large_quantity_rule": "true quantity > last Train cutoff",
+    "metrics": [
+      "overall and large raw quantity RMSE/MAE",
+      "recorded integer-duration TimeNLL"
+    ],
+    "aggregation": "mean and sample SD ddof1 across matched training seeds",
+    "decision": "report all per-dataset paired differences and time/cost tradeoffs; no posthoc weighted score or automatic final-model selection"
+  },
+  "cost": {
+    "selected_checkpoints": true,
+    "input_split": "train",
+    "batch_size": 128,
+    "preparation_seed": 42,
+    "warmup_batches": 5,
+    "measured_batches": 32,
+    "repetitions": 3,
+    "modes": [
+      "train",
+      "eval"
+    ],
+    "fresh_process_per_rep": true,
+    "same_fit_host": true,
+    "cost_process_count": 162,
+    "maximum_parallel_workers_per_gpu": 1,
+    "checkpoint_writes": false,
+    "after_global_validation_27": true,
+    "prior_costs": "preserve historical values; do not substitute for fresh matched measurement"
+  },
+  "preservation": {
+    "parent_scientific_sources": "all987SHA unchanged",
+    "parent_inputs": "all9SHA unchanged",
+    "B_D_checkpoints": "18 original binaries/tensors/history/selection/actual exits/predictions preserved; byte copies only",
+    "old_results_and_failures": "preserve",
+    "MAC": "deferred",
+    "other_jobs_and_automations": "unchanged",
+    "runtime_network_credentials": "unchanged"
+  },
+  "failure_policy": {
+    "scientific_retry": 0,
+    "claim_delete": false,
+    "partial_overwrite": false,
+    "foreign_process_kill": false,
+    "first_transport_failure": "preserve real exit/stdout/stderr/bytes/SHA; no automatic reconnect",
+    "bounded_terminal_check_seconds": 45,
+    "minimum_check_interval_seconds": 900,
+    "first_transfer_timeout_seconds": 900
+  }
+}

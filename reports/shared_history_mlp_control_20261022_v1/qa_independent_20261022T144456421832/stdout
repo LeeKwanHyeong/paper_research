@@ -1,0 +1,56 @@
+....................F.............F                                      [100%]
+=================================== FAILURES ===================================
+_ test_synthetic_qualification_rejects_nonfinite_loss_even_with_finite_gradients _
+
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-766/test_synthetic_qualification_r0')
+
+    def test_synthetic_qualification_rejects_nonfinite_loss_even_with_finite_gradients(tmp_path):
+        from paper.scripts import run_shared_history_mlp_control as runner
+        from paper.scripts.count_aware_tpp_backbone import core
+        from paper.tests.test_run_shared_history_mlp_control import contract
+    
+        value = contract(tmp_path)
+        job = next(item for item in value["jobs"] if item["arm"] == "single_mlp")
+        target = core.target_outputs
+    
+        def corrupt_loss(*args, **kwargs):
+            output = target(*args, **kwargs)
+            return {**output, "joint_loss": output["joint_loss"] + float("nan")}
+    
+        with patch.object(core, "target_outputs", corrupt_loss):
+>           with pytest.raises((RuntimeError, ValueError)):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE any of (<class 'RuntimeError'>, <class 'ValueError'>)
+
+paper/tests/test_history_mlp_control_independent.py:167: Failed
+----------------------------- Captured stderr call -----------------------------
+
+Fontconfig error: No writable cache directories
+	/opt/homebrew/var/cache/fontconfig
+	/Users/igwanhyeong/.cache/fontconfig
+	/Users/igwanhyeong/.fontconfig
+------------------------------ Captured log call -------------------------------
+WARNING  matplotlib:__init__.py:538 /Users/igwanhyeong/.matplotlib is not a writable directory
+WARNING  matplotlib:__init__.py:551 Matplotlib created a temporary cache directory at /var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/matplotlib-96zn9by_ because there was an issue with the default path (/Users/igwanhyeong/.matplotlib); it is highly recommended to set the MPLCONFIGDIR environment variable to a writable directory, in particular to speed up the import of Matplotlib and to better support multiprocessing.
+WARNING  matplotlib.font_manager:font_manager.py:1095 Matplotlib is building the font cache; this may take a moment.
+________ test_native_training_admission_requires_actual_dispatcher_exit ________
+
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-766/test_native_training_admission0')
+
+    def test_native_training_admission_requires_actual_dispatcher_exit(tmp_path):
+        from paper.tests.test_manage_shared_history_mlp_control import contract, native_gate
+    
+        value = contract.__wrapped__()
+        native_gate(value, tmp_path)
+        terminal = tmp_path / "qualification.supervisor_exit.json"
+        if terminal.exists():
+            terminal.unlink()  # Synthetic tmp fixture only; never production evidence.
+>       with pytest.raises((RuntimeError, FileNotFoundError)):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE any of (<class 'RuntimeError'>, <class 'FileNotFoundError'>)
+
+paper/tests/test_history_mlp_control_independent.py:222: Failed
+=========================== short test summary info ============================
+FAILED paper/tests/test_history_mlp_control_independent.py::test_synthetic_qualification_rejects_nonfinite_loss_even_with_finite_gradients
+FAILED paper/tests/test_history_mlp_control_independent.py::test_native_training_admission_requires_actual_dispatcher_exit
+2 failed, 33 passed in 9.26s
