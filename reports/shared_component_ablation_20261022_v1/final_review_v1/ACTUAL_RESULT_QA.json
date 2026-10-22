@@ -1,0 +1,1043 @@
+{
+  "schema": "shared_component_actual_result_qa_v1",
+  "status": "PASS",
+  "independent_reviewer": true,
+  "reviewer": "/root/component_recovery_qa",
+  "created_at": "2026-10-22T14:13:24.701152+00:00",
+  "summary": "Actual complete collections, binary/tensor checkpoint identity, 72 prediction metrics and all derived arithmetic independently verified. No adverse seed results omitted; cost summaries retain GPU and training-seed strata.",
+  "files_reviewed_sha256": {
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json": "0c7a44d76aaaaa9adaf68c0abe6e03fe57e4c6b6df233399bc83adab4dc6d119",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/shared_component_ablation_20261022_v1/final_review_v1/DERIVED_TABLES.json": "da574a2ae8eaa9a4a1d2ea7d0dab99defa6d316645bb64aee7158ea9ebc4840f",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/shared_component_ablation_20261022_v1/final_review_v1/RESULT_SUMMARY.md": "af7f2ed293de42d606e05ad66af6977585437da7d28e1c3817163626f4b0e582",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/shared_component_ablation_20261022_v1/final_review_v1/ALL_SEED_DELTAS.csv": "afdc7fc8da8a4382d9bb9ac50716cfb7e6820889eaef77b9f0759829934cc481",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/shared_component_ablation_20261022_v1/final_review_v1/GPU_SEED_COSTS.csv": "9a1a0375fea507590a2ab5bae3816dc34e021862bd70eda798f676ce8b5165c8",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/shared_component_ablation_20261022_v1/final_review_v1/build_summary.py": "e79748e7ee103613fe4e0c248a444af91bbca114257a8ddd9f9fa11f4b9c1034",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/shared_component_ablation_20261022_v1/recovery_v1/COMPLETE.json": "b6aa1f6ebbe3203eec252209d9ac3f8815da7065b96a96be30f288829612181d",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/shared_component_ablation_20261022_v1/recovery_v1/COLLECTION_COMPLETE.json": "939fdba93792e93fa8de43599e9987456654bb2100ccacc0e9998add7e493786",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/shared_component_ablation_20261022_v1/recovery_v1/CONTROL_BINDINGS.json": "5f6cfed57bd14404da25a4e899de66e3125404a11fe3f383afae0931c6b5b90a",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/shared_component_ablation_20261022_v1/recovery_v1/AUTHORIZATION.json": "9d6e32e8af0d2d5b006e05282d8b4662fabcd3d517146a5794b1398bcbe99161",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/shared_component_ablation_20261022_v1/recovery_v1/PRESERVATION.json": "09d668bc842b385ad55b8a8ed4a346ea6bf333580cbc6094ec48711d42c2af72",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/shared_component_ablation_20261022_v1/continuation_v1/FAILURE.json": "048a47775b42897c4df928beee30f1f4461761983d349a48ec82c9c745955546",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/shared_component_ablation_20261022_v1/final_review_v1/INTERPRETATION.md": "a6b36234ad03e2823d4152bde2fe470d531a73cccd397c7f277f64c04989531a",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/shared_component_ablation_20261022_v1/final_review_v1/EVIDENCE_INDEX.json": "e320e68f740412cda02e3ceaa2f0c6c0b525cfd88fe9f8bd2d022b041667375d",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/shared_component_ablation_20261022_v1/final_review_v1/EVIDENCE_INDEX.md": "f9cedbdbeb22892fe7039f506194aeb56d8f6f007020ee66291d5774e7f80fea"
+  },
+  "counts": {
+    "verified_collections": 4,
+    "fit_train_exits": 30,
+    "fit_reuse_exits": 6,
+    "validation_exits": 36,
+    "test_exits": 36,
+    "cost_exits": 216,
+    "prepare_batches_exits": 2,
+    "test_cost_child_exits": 254,
+    "successful_dispatcher_exits": 4,
+    "selected_checkpoints_binary_and_tensor": 36,
+    "metrics": 72,
+    "accuracy_tables": 24,
+    "paired_deltas": 432,
+    "adverse_deltas": 205,
+    "raw_cost": 216,
+    "cost_groups": 72,
+    "cost_comparisons": 72,
+    "fit_records": 36,
+    "pinned_source_files": 987,
+    "input_files": 9,
+    "legacy_files": 36,
+    "preserved_original_files": 833,
+    "completion_inventory_files": 4436,
+    "prediction_rows": {
+      "validation": 1214916,
+      "test": 1218864
+    }
+  },
+  "methods": [
+    "Original recovery.verify and verified_collection validated source bindings, archive/manifest/transport/extracted bytes; no comparator CLI or aggregate called.",
+    "Manual phase/cardinality/terminal-probe/GPU allowlist checks used recorded local evidence, not a new live probe.",
+    "Each selected checkpoint tensor digest independently reconstructed from sorted name/dtype/shape/raw CPU bytes; no model built or inference executed.",
+    "All 72 compressed prediction files independently aggregated with NumPy, strict truth > cutoff and original split/order checks.",
+    "NumPy ddof=1 summaries, direct subtraction/division, sorted medians, raw 4096-target throughput, MiB=bytes/1048576 and CSV cell equality independently recomputed without invoking build_summary.py."
+  ],
+  "checks": {
+    "all_acceptance_criteria_passed": true,
+    "all_205_adverse_cases_preserved": true,
+    "cudnn_difference_recorded": {
+      "5080": 91900,
+      "5090": 92000
+    },
+    "gpu_seed_timing_not_pooled": true,
+    "test_cost_profile_train_is_not_scientific_fit": true,
+    "old_failure_preserved": true,
+    "supervisor_own_os_exit_directly_observed": false,
+    "remote_calls": 0,
+    "gpu_calls": 0,
+    "inference_calls": 0,
+    "advance_calls": 0,
+    "comparator_cli_calls": 0,
+    "derived_helper_calls": 0
+  },
+  "dispatchers": [
+    {
+      "host": "5080",
+      "phase": "fit_validation",
+      "actual_dispatcher_os_returncode": 0,
+      "child_exits": 24,
+      "supervisor_own_os_exit_directly_observed": false,
+      "receipt_sha256": "858c77dd9f8e49092dc823ba94f618195fff6d12661379a27e35565a5ee84bb5"
+    },
+    {
+      "host": "5080",
+      "phase": "test_cost",
+      "actual_dispatcher_os_returncode": 0,
+      "child_exits": 85,
+      "supervisor_own_os_exit_directly_observed": false,
+      "receipt_sha256": "282326e5085674a174c345f2373dd3f62e3b2d19ca5e52254e1f2e4e78a2ab5c"
+    },
+    {
+      "host": "5090",
+      "phase": "fit_validation",
+      "actual_dispatcher_os_returncode": 0,
+      "child_exits": 48,
+      "supervisor_own_os_exit_directly_observed": false,
+      "receipt_sha256": "e8062f556d8bd6315da5acf89b8043640a20db826be5cc1acb6c152d06de1d87"
+    },
+    {
+      "host": "5090",
+      "phase": "test_cost",
+      "actual_dispatcher_os_returncode": 0,
+      "child_exits": 169,
+      "supervisor_own_os_exit_directly_observed": false,
+      "receipt_sha256": "d07a19a0636ed71ae71c9abb7e6341224ab572ba8d75b98c4c0b8906addaa5f0"
+    }
+  ],
+  "recorded_terminal_guards": [
+    {
+      "host": "5080",
+      "recorded_gpu_guard": {
+        "compute_pids": [
+          351048,
+          351049,
+          353905
+        ],
+        "paused_preserved": 4
+      },
+      "terminal_probe_paths": [
+        "/Users/igwanhyeong/PycharmProjects/paper_research/reports/shared_component_ablation_20261022_v1/recovery_v1/rounds/20261022T140729590873_e787b886c947/5080/check.stdout"
+      ],
+      "rechecked_live": false
+    },
+    {
+      "host": "5090",
+      "recorded_gpu_guard": {
+        "compute_pids": [],
+        "paused_preserved": 0
+      },
+      "terminal_probe_paths": [
+        "/Users/igwanhyeong/PycharmProjects/paper_research/reports/shared_component_ablation_20261022_v1/recovery_v1/rounds/20261022T140729590873_e787b886c947/5090/check.stdout"
+      ],
+      "rechecked_live": false
+    }
+  ],
+  "prediction_sources": [
+    {
+      "job_id": "raf_spare_parts__full__seed42",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/raf_spare_parts__full__seed42/validation_predictions.jsonl.gz",
+      "sha256": "9d6ca9709b6985585fefe8d86873b035d0202fc8e312eddbf36f65061bb430d2",
+      "rows": 6690
+    },
+    {
+      "job_id": "raf_spare_parts__full__seed42",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/raf_spare_parts__full__seed42/test_predictions.jsonl.gz",
+      "sha256": "20a84cef56cc1394972e36819f86a0fca83f6fd273331c99816b81a29dd49938",
+      "rows": 5226
+    },
+    {
+      "job_id": "raf_spare_parts__no_prototype__seed42",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/raf_spare_parts__no_prototype__seed42/validation_predictions.jsonl.gz",
+      "sha256": "f23bffcbe848341ded233cbd94bb2f32c75e9db4d1920c1b236b86d180772885",
+      "rows": 6690
+    },
+    {
+      "job_id": "raf_spare_parts__no_prototype__seed42",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/raf_spare_parts__no_prototype__seed42/test_predictions.jsonl.gz",
+      "sha256": "32df13b0065126bab49bf5a2f45cd574709eedf9d0ac784a462c5413ddab61d2",
+      "rows": 5226
+    },
+    {
+      "job_id": "raf_spare_parts__no_history__seed42",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/raf_spare_parts__no_history__seed42/validation_predictions.jsonl.gz",
+      "sha256": "b6536e10b7ed35018082c9352a673bd8356cc0e4dc6c76c679f6d8d63b48288e",
+      "rows": 6690
+    },
+    {
+      "job_id": "raf_spare_parts__no_history__seed42",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/raf_spare_parts__no_history__seed42/test_predictions.jsonl.gz",
+      "sha256": "bde85c264faad195ab5c98ec22d189d6de8346b5aee166b4ab07014a9406d95c",
+      "rows": 5226
+    },
+    {
+      "job_id": "raf_spare_parts__encoder_only__seed42",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/raf_spare_parts__encoder_only__seed42/validation_predictions.jsonl.gz",
+      "sha256": "e4f58951254ecdbada9bd305d80a5c3caa628ee751e94463da45e49028985d0b",
+      "rows": 6690
+    },
+    {
+      "job_id": "raf_spare_parts__encoder_only__seed42",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/raf_spare_parts__encoder_only__seed42/test_predictions.jsonl.gz",
+      "sha256": "d7995c9eb1ce484db286669214ae2ab3f97fa47daf911b2126d09ccbd5a58e6e",
+      "rows": 5226
+    },
+    {
+      "job_id": "raf_spare_parts__full__seed52",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/raf_spare_parts__full__seed52/validation_predictions.jsonl.gz",
+      "sha256": "19ebbc10271cdb217c28caf9b9477b32dfd195660371d1dca4fccd9bd68fc410",
+      "rows": 6690
+    },
+    {
+      "job_id": "raf_spare_parts__full__seed52",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/raf_spare_parts__full__seed52/test_predictions.jsonl.gz",
+      "sha256": "5c0783b745216bc84ce1f24da517a32d5ba9b88878c18efbf096b555f5fc2095",
+      "rows": 5226
+    },
+    {
+      "job_id": "raf_spare_parts__no_prototype__seed52",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/raf_spare_parts__no_prototype__seed52/validation_predictions.jsonl.gz",
+      "sha256": "6d123a4aaf342209c7392940d085978f62a233dee2f66e106fabd303d5786355",
+      "rows": 6690
+    },
+    {
+      "job_id": "raf_spare_parts__no_prototype__seed52",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/raf_spare_parts__no_prototype__seed52/test_predictions.jsonl.gz",
+      "sha256": "ca55736ff9ee9e3c4270b71bd708b4139f39d14b471dce3187699e61ac6f4700",
+      "rows": 5226
+    },
+    {
+      "job_id": "raf_spare_parts__no_history__seed52",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/raf_spare_parts__no_history__seed52/validation_predictions.jsonl.gz",
+      "sha256": "abdb92c1f7c8c8782f8353175f4ab70362bbd8cac147de426a4a923e891aa58d",
+      "rows": 6690
+    },
+    {
+      "job_id": "raf_spare_parts__no_history__seed52",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/raf_spare_parts__no_history__seed52/test_predictions.jsonl.gz",
+      "sha256": "e21aac918edaae2adae307cc0145f688f26361bb358f08d594500dbf585dc17e",
+      "rows": 5226
+    },
+    {
+      "job_id": "raf_spare_parts__encoder_only__seed52",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/raf_spare_parts__encoder_only__seed52/validation_predictions.jsonl.gz",
+      "sha256": "2c2b8ce35d542d30c7cab038e23f87f3b88a579e510d08486ef7cef4becc9d9f",
+      "rows": 6690
+    },
+    {
+      "job_id": "raf_spare_parts__encoder_only__seed52",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/raf_spare_parts__encoder_only__seed52/test_predictions.jsonl.gz",
+      "sha256": "70ab08caa416770414d2658a1d001342f442c8e4c1b4f5d7b71c9e3c46b5019b",
+      "rows": 5226
+    },
+    {
+      "job_id": "raf_spare_parts__full__seed62",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/raf_spare_parts__full__seed62/validation_predictions.jsonl.gz",
+      "sha256": "b29f64acb9ca7e61fc1217f224cce851be0c50249c88a5a531350faec3ee672b",
+      "rows": 6690
+    },
+    {
+      "job_id": "raf_spare_parts__full__seed62",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/raf_spare_parts__full__seed62/test_predictions.jsonl.gz",
+      "sha256": "3086a71d23b64fc7daebd1c65e3b0192b4d11296a1f86eb68f29460b91d41ad2",
+      "rows": 5226
+    },
+    {
+      "job_id": "raf_spare_parts__no_prototype__seed62",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/raf_spare_parts__no_prototype__seed62/validation_predictions.jsonl.gz",
+      "sha256": "6fa310793ff976def087974e0a8884d2012304d0ae15ec0b51616cf9e723ffee",
+      "rows": 6690
+    },
+    {
+      "job_id": "raf_spare_parts__no_prototype__seed62",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/raf_spare_parts__no_prototype__seed62/test_predictions.jsonl.gz",
+      "sha256": "f847f13ef49d0d0e4fe0e355e2219591c5659e94e23ff87773eba141182c0ed7",
+      "rows": 5226
+    },
+    {
+      "job_id": "raf_spare_parts__no_history__seed62",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/raf_spare_parts__no_history__seed62/validation_predictions.jsonl.gz",
+      "sha256": "d410753e43c4d0e9fad815a34699fe41a001ad8d6bd22a7e8f6993b41bc1b4ca",
+      "rows": 6690
+    },
+    {
+      "job_id": "raf_spare_parts__no_history__seed62",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/raf_spare_parts__no_history__seed62/test_predictions.jsonl.gz",
+      "sha256": "45acaee687ea5ddaa64394bb2ba312033ad8fef128e2b3987bee87404e95b785",
+      "rows": 5226
+    },
+    {
+      "job_id": "raf_spare_parts__encoder_only__seed62",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/raf_spare_parts__encoder_only__seed62/validation_predictions.jsonl.gz",
+      "sha256": "7fbae5df98e6c1d9875522f80bfcd87897b642c8dd593d03c8783eaa69208c96",
+      "rows": 6690
+    },
+    {
+      "job_id": "raf_spare_parts__encoder_only__seed62",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/raf_spare_parts__encoder_only__seed62/test_predictions.jsonl.gz",
+      "sha256": "649b6ff3d4a3f8ddd95be74b8cf76982c892e2f965746a0a77fbcf9aac7a57e5",
+      "rows": 5226
+    },
+    {
+      "job_id": "yellow_trip_hourly__full__seed42",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/yellow_trip_hourly__full__seed42/validation_predictions.jsonl.gz",
+      "sha256": "aeb454d5752f4c55f8712162288d6c748aa91459f9f254c6fde3f1bf5dee5711",
+      "rows": 8268
+    },
+    {
+      "job_id": "yellow_trip_hourly__full__seed42",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/yellow_trip_hourly__full__seed42/test_predictions.jsonl.gz",
+      "sha256": "0a46ea4e84bf564fd13d28c349d881998403b827f64543737e39f91bf7951441",
+      "rows": 8327
+    },
+    {
+      "job_id": "yellow_trip_hourly__no_prototype__seed42",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/yellow_trip_hourly__no_prototype__seed42/validation_predictions.jsonl.gz",
+      "sha256": "94e909ede92b590763d1255c7a993b36de63fcd6cbc56330de753f40f0ed9190",
+      "rows": 8268
+    },
+    {
+      "job_id": "yellow_trip_hourly__no_prototype__seed42",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/yellow_trip_hourly__no_prototype__seed42/test_predictions.jsonl.gz",
+      "sha256": "cdbfca523eb78e5cde7fa3f2573ff20808c5ea6c7d33ee518a805a9b10f9a052",
+      "rows": 8327
+    },
+    {
+      "job_id": "yellow_trip_hourly__no_history__seed42",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/yellow_trip_hourly__no_history__seed42/validation_predictions.jsonl.gz",
+      "sha256": "54f39fb559142a0930a49f2d78b7e8ab8810421cefc9468f66e848dfd7e0ddaf",
+      "rows": 8268
+    },
+    {
+      "job_id": "yellow_trip_hourly__no_history__seed42",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/yellow_trip_hourly__no_history__seed42/test_predictions.jsonl.gz",
+      "sha256": "a2b651e5b677315d3fb9813eb9c4c9ebb0a9d8a27b3f85689b36a142905fd77a",
+      "rows": 8327
+    },
+    {
+      "job_id": "yellow_trip_hourly__encoder_only__seed42",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/yellow_trip_hourly__encoder_only__seed42/validation_predictions.jsonl.gz",
+      "sha256": "2759459c4f2298518089a74180cffe55430b7a687f72b2010d218539a6c5a5f4",
+      "rows": 8268
+    },
+    {
+      "job_id": "yellow_trip_hourly__encoder_only__seed42",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/yellow_trip_hourly__encoder_only__seed42/test_predictions.jsonl.gz",
+      "sha256": "1890cf17eed193b1ca2c1d0d16420c5d96858982e92d94e0be4788ba30130d9d",
+      "rows": 8327
+    },
+    {
+      "job_id": "yellow_trip_hourly__full__seed52",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/yellow_trip_hourly__full__seed52/validation_predictions.jsonl.gz",
+      "sha256": "063e789816b2c07fead61ea226ab0e740ecdfbb661502912275cbfffcdfa99ae",
+      "rows": 8268
+    },
+    {
+      "job_id": "yellow_trip_hourly__full__seed52",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/yellow_trip_hourly__full__seed52/test_predictions.jsonl.gz",
+      "sha256": "bffcdfadabee6428a11a5fb77ce22289b0692f458b7b8a7362651e3d4ba727e1",
+      "rows": 8327
+    },
+    {
+      "job_id": "yellow_trip_hourly__no_prototype__seed52",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/yellow_trip_hourly__no_prototype__seed52/validation_predictions.jsonl.gz",
+      "sha256": "b25bc1cb566c3cad5db1fc03a5a398365eff5a0d35d129a43749a4d5856bd7ba",
+      "rows": 8268
+    },
+    {
+      "job_id": "yellow_trip_hourly__no_prototype__seed52",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/yellow_trip_hourly__no_prototype__seed52/test_predictions.jsonl.gz",
+      "sha256": "d0a0d28a5e94115747f86f2324256cefb847bb7e47b250e2ac0899cb40230b2f",
+      "rows": 8327
+    },
+    {
+      "job_id": "yellow_trip_hourly__no_history__seed52",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/yellow_trip_hourly__no_history__seed52/validation_predictions.jsonl.gz",
+      "sha256": "870132ec33589aa488ea4ac11942f5acff289f2f87a1aeadfadc0baa28be05b3",
+      "rows": 8268
+    },
+    {
+      "job_id": "yellow_trip_hourly__no_history__seed52",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/yellow_trip_hourly__no_history__seed52/test_predictions.jsonl.gz",
+      "sha256": "d8dbe44e7d716673750a871536d89b2ac794e935156c82a79d640b306b0ec689",
+      "rows": 8327
+    },
+    {
+      "job_id": "yellow_trip_hourly__encoder_only__seed52",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/yellow_trip_hourly__encoder_only__seed52/validation_predictions.jsonl.gz",
+      "sha256": "88fad4a4414b015c35347c9a2bee448607c98efbe9c60ff15466ed3cc8d268d1",
+      "rows": 8268
+    },
+    {
+      "job_id": "yellow_trip_hourly__encoder_only__seed52",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/yellow_trip_hourly__encoder_only__seed52/test_predictions.jsonl.gz",
+      "sha256": "da6224aa49a7b2cd253788d07cff041b0855d48ad1c1f7d0331858ac162585d9",
+      "rows": 8327
+    },
+    {
+      "job_id": "yellow_trip_hourly__full__seed62",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/yellow_trip_hourly__full__seed62/validation_predictions.jsonl.gz",
+      "sha256": "4761ebb4457b1e2366df516011fafff772a426810927417a75cc2d6ae568068b",
+      "rows": 8268
+    },
+    {
+      "job_id": "yellow_trip_hourly__full__seed62",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/yellow_trip_hourly__full__seed62/test_predictions.jsonl.gz",
+      "sha256": "0ec9052fb1055b07ddac1a0ca51b4d969d98938fddad168a83084fd41038e5e0",
+      "rows": 8327
+    },
+    {
+      "job_id": "yellow_trip_hourly__no_prototype__seed62",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/yellow_trip_hourly__no_prototype__seed62/validation_predictions.jsonl.gz",
+      "sha256": "4bb82affa9896c6b1a0eaade9124de88c922d0d72a780ef2c645271b9e86d5ab",
+      "rows": 8268
+    },
+    {
+      "job_id": "yellow_trip_hourly__no_prototype__seed62",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/yellow_trip_hourly__no_prototype__seed62/test_predictions.jsonl.gz",
+      "sha256": "9bde026a41bc25784101a068c9d51620b5048fdfd832c96f63634994f11240b6",
+      "rows": 8327
+    },
+    {
+      "job_id": "yellow_trip_hourly__no_history__seed62",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/yellow_trip_hourly__no_history__seed62/validation_predictions.jsonl.gz",
+      "sha256": "5982d77a27ba0e0180b58a8d54c0212f6dc8b1e6aa487db7437ac905cd7f428a",
+      "rows": 8268
+    },
+    {
+      "job_id": "yellow_trip_hourly__no_history__seed62",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/yellow_trip_hourly__no_history__seed62/test_predictions.jsonl.gz",
+      "sha256": "d654c899ef5ba0aaac5944002de8346e27bab30bfc658365d7220d1539608d16",
+      "rows": 8327
+    },
+    {
+      "job_id": "yellow_trip_hourly__encoder_only__seed62",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/yellow_trip_hourly__encoder_only__seed62/validation_predictions.jsonl.gz",
+      "sha256": "6c665a0cfb6a516b77c8fcf207c4c48f5eafd8381bcb4f41a1cee4a78b7e5487",
+      "rows": 8268
+    },
+    {
+      "job_id": "yellow_trip_hourly__encoder_only__seed62",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/yellow_trip_hourly__encoder_only__seed62/test_predictions.jsonl.gz",
+      "sha256": "b3bf3844350aeb23f64641103768507bc534013aa0e806b5880723a9ed63fbfb",
+      "rows": 8327
+    },
+    {
+      "job_id": "intermittent_frozen_5000__full__seed42",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/intermittent_frozen_5000__full__seed42/validation_predictions.jsonl.gz",
+      "sha256": "1119ec198e6908cb53666c5e4b21d7b5427a5f0016eb443555d88ce6778a299d",
+      "rows": 86285
+    },
+    {
+      "job_id": "intermittent_frozen_5000__full__seed42",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/intermittent_frozen_5000__full__seed42/test_predictions.jsonl.gz",
+      "sha256": "ff884c3b350bd59e76a77e7c126f124bfce4c9a5493b128e878fcf765eeaf4cf",
+      "rows": 88019
+    },
+    {
+      "job_id": "intermittent_frozen_5000__no_prototype__seed42",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/intermittent_frozen_5000__no_prototype__seed42/validation_predictions.jsonl.gz",
+      "sha256": "3f40a8b007ba34372105049c276bebd446110a9d41a41774fa8b5e3e678b0944",
+      "rows": 86285
+    },
+    {
+      "job_id": "intermittent_frozen_5000__no_prototype__seed42",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/intermittent_frozen_5000__no_prototype__seed42/test_predictions.jsonl.gz",
+      "sha256": "5b590bf3ae10392daea0ac530e01d55926a2ddc91ba83270b6c32fb581b11c9e",
+      "rows": 88019
+    },
+    {
+      "job_id": "intermittent_frozen_5000__no_history__seed42",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/intermittent_frozen_5000__no_history__seed42/validation_predictions.jsonl.gz",
+      "sha256": "a692b9cc8e13694cecbbe260c9090d338156db04845d3274b13c9a04b76a5268",
+      "rows": 86285
+    },
+    {
+      "job_id": "intermittent_frozen_5000__no_history__seed42",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/intermittent_frozen_5000__no_history__seed42/test_predictions.jsonl.gz",
+      "sha256": "28f5e27a46907d20e8a9b4bc5cadb707105cb79a9dad207209a7c958dd0b2c62",
+      "rows": 88019
+    },
+    {
+      "job_id": "intermittent_frozen_5000__encoder_only__seed42",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/intermittent_frozen_5000__encoder_only__seed42/validation_predictions.jsonl.gz",
+      "sha256": "dd989bc484b0aafdb46ea2077552a427d63c45784417b6ea71883da8772e0152",
+      "rows": 86285
+    },
+    {
+      "job_id": "intermittent_frozen_5000__encoder_only__seed42",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5080/originals/run/intermittent_frozen_5000__encoder_only__seed42/test_predictions.jsonl.gz",
+      "sha256": "b117ad6ec05a8633e44825b46f3b47c2a44e858b09bd838bf5fba820ba4bc58f",
+      "rows": 88019
+    },
+    {
+      "job_id": "intermittent_frozen_5000__full__seed52",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/intermittent_frozen_5000__full__seed52/validation_predictions.jsonl.gz",
+      "sha256": "46f8711b9503f40db046a8e87c6301ccd74bfe02de87c09d0e8509c9ff59c627",
+      "rows": 86285
+    },
+    {
+      "job_id": "intermittent_frozen_5000__full__seed52",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/intermittent_frozen_5000__full__seed52/test_predictions.jsonl.gz",
+      "sha256": "137ac6a0b49738430efcff7f5e6087239527935897a393dd6db0a39d582ba78c",
+      "rows": 88019
+    },
+    {
+      "job_id": "intermittent_frozen_5000__no_prototype__seed52",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/intermittent_frozen_5000__no_prototype__seed52/validation_predictions.jsonl.gz",
+      "sha256": "4f9d52a7c7af7e71f9b673baab89ad219606d227e2cc0ac7f7f9a71df84bb227",
+      "rows": 86285
+    },
+    {
+      "job_id": "intermittent_frozen_5000__no_prototype__seed52",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/intermittent_frozen_5000__no_prototype__seed52/test_predictions.jsonl.gz",
+      "sha256": "4715a0fe0727123559ffe2aca5c89a3f918b1a89f833a0c601d17090207be97c",
+      "rows": 88019
+    },
+    {
+      "job_id": "intermittent_frozen_5000__no_history__seed52",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/intermittent_frozen_5000__no_history__seed52/validation_predictions.jsonl.gz",
+      "sha256": "ac39362b0d0e8e984f667cbc07a577805faf78ddc474b00eb2d068987e73815a",
+      "rows": 86285
+    },
+    {
+      "job_id": "intermittent_frozen_5000__no_history__seed52",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/intermittent_frozen_5000__no_history__seed52/test_predictions.jsonl.gz",
+      "sha256": "18caf241a9d79d309fefa19a15746b57b7d4c192e69047d3c6638b911ca6b868",
+      "rows": 88019
+    },
+    {
+      "job_id": "intermittent_frozen_5000__encoder_only__seed52",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/intermittent_frozen_5000__encoder_only__seed52/validation_predictions.jsonl.gz",
+      "sha256": "684ad91a04df7f10cc6eb6fd930e4361a81d1eff65c3f15091998b8525ecd48b",
+      "rows": 86285
+    },
+    {
+      "job_id": "intermittent_frozen_5000__encoder_only__seed52",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/intermittent_frozen_5000__encoder_only__seed52/test_predictions.jsonl.gz",
+      "sha256": "3b37309e321142def06b8041bdb3908508cb123344bba3aeae04f3c3610a285a",
+      "rows": 88019
+    },
+    {
+      "job_id": "intermittent_frozen_5000__full__seed62",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/intermittent_frozen_5000__full__seed62/validation_predictions.jsonl.gz",
+      "sha256": "34778790d5631b3a34d552736f775813fe9212036c753744c8dfce1bfdc30691",
+      "rows": 86285
+    },
+    {
+      "job_id": "intermittent_frozen_5000__full__seed62",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/intermittent_frozen_5000__full__seed62/test_predictions.jsonl.gz",
+      "sha256": "c52783e84917cf778c5181d7f61eb9ab87d1087d060879a432e3d5c6a8b99f92",
+      "rows": 88019
+    },
+    {
+      "job_id": "intermittent_frozen_5000__no_prototype__seed62",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/intermittent_frozen_5000__no_prototype__seed62/validation_predictions.jsonl.gz",
+      "sha256": "3d92fb3ddcb359d4c751f4e550128993168e0295142e07a23067bc8d96314fae",
+      "rows": 86285
+    },
+    {
+      "job_id": "intermittent_frozen_5000__no_prototype__seed62",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/intermittent_frozen_5000__no_prototype__seed62/test_predictions.jsonl.gz",
+      "sha256": "a90c0c459e8decbcc1761c287dd8c17bcea36de53f8182a142ce4bec61a4aa13",
+      "rows": 88019
+    },
+    {
+      "job_id": "intermittent_frozen_5000__no_history__seed62",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/intermittent_frozen_5000__no_history__seed62/validation_predictions.jsonl.gz",
+      "sha256": "f853b709b2b9863a0835b4741f157bdf5c08141b13452ebe083dd178f385e9f5",
+      "rows": 86285
+    },
+    {
+      "job_id": "intermittent_frozen_5000__no_history__seed62",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/intermittent_frozen_5000__no_history__seed62/test_predictions.jsonl.gz",
+      "sha256": "0348c09f2932492db2fe7344090df500de094bde971db90aa01a6c83002f623a",
+      "rows": 88019
+    },
+    {
+      "job_id": "intermittent_frozen_5000__encoder_only__seed62",
+      "split": "validation",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/intermittent_frozen_5000__encoder_only__seed62/validation_predictions.jsonl.gz",
+      "sha256": "9a526d1d1ce8d03ded85f89c8e8be8bfb2efe5dc4a7a6cbc2e479067562021b8",
+      "rows": 86285
+    },
+    {
+      "job_id": "intermittent_frozen_5000__encoder_only__seed62",
+      "split": "test",
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/retrieval/test_cost/5090/originals/run/intermittent_frozen_5000__encoder_only__seed62/test_predictions.jsonl.gz",
+      "sha256": "9795a24144216ab59aed12b28d27a6257e7f097719ae9ac38f80c4985f063465",
+      "rows": 88019
+    }
+  ],
+  "scientific_three_seed_means": [
+    {
+      "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json",
+      "split": "test",
+      "dataset": "raf_spare_parts",
+      "scope": "overall",
+      "metric": "qty_rmse",
+      "three_seed_means": {
+        "full": 39.76106360991216,
+        "no_prototype": 39.80241939306293,
+        "no_history": 39.41667861928607,
+        "encoder_only": 39.41943913281515
+      }
+    },
+    {
+      "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json",
+      "split": "test",
+      "dataset": "raf_spare_parts",
+      "scope": "large",
+      "metric": "qty_rmse",
+      "three_seed_means": {
+        "full": 404.6236258160299,
+        "no_prototype": 405.7230501631477,
+        "no_history": 400.74876411100007,
+        "encoder_only": 400.77424993369135
+      }
+    },
+    {
+      "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json",
+      "split": "test",
+      "dataset": "raf_spare_parts",
+      "scope": "overall",
+      "metric": "time_nll",
+      "three_seed_means": {
+        "full": 3.89318307033272,
+        "no_prototype": 3.9219510435573497,
+        "no_history": 4.258429297752875,
+        "encoder_only": 4.261929465581071
+      }
+    },
+    {
+      "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json",
+      "split": "test",
+      "dataset": "raf_spare_parts",
+      "scope": "large",
+      "metric": "time_nll",
+      "three_seed_means": {
+        "full": 4.049351493592882,
+        "no_prototype": 4.074980068877587,
+        "no_history": 4.0514683158349944,
+        "encoder_only": 4.066880635192773
+      }
+    },
+    {
+      "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json",
+      "split": "test",
+      "dataset": "yellow_trip_hourly",
+      "scope": "overall",
+      "metric": "qty_rmse",
+      "three_seed_means": {
+        "full": 108.04254400061718,
+        "no_prototype": 118.88051334257769,
+        "no_history": 174.06535310088262,
+        "encoder_only": 160.1800148470393
+      }
+    },
+    {
+      "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json",
+      "split": "test",
+      "dataset": "yellow_trip_hourly",
+      "scope": "large",
+      "metric": "qty_rmse",
+      "three_seed_means": {
+        "full": 582.3209167606827,
+        "no_prototype": 665.5181499260162,
+        "no_history": 980.4996766766211,
+        "encoder_only": 805.4800431777721
+      }
+    },
+    {
+      "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json",
+      "split": "test",
+      "dataset": "yellow_trip_hourly",
+      "scope": "overall",
+      "metric": "time_nll",
+      "three_seed_means": {
+        "full": 1.0169239433195794,
+        "no_prototype": 1.2154982786249038,
+        "no_history": 0.8141141861671451,
+        "encoder_only": 0.7967419065038827
+      }
+    },
+    {
+      "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json",
+      "split": "test",
+      "dataset": "yellow_trip_hourly",
+      "scope": "large",
+      "metric": "time_nll",
+      "three_seed_means": {
+        "full": 3.934783269938767e-23,
+        "no_prototype": 2.0812131679523502e-50,
+        "no_history": 5.434266284320023e-37,
+        "encoder_only": 1.1264294007443538e-29
+      }
+    },
+    {
+      "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json",
+      "split": "test",
+      "dataset": "intermittent_frozen_5000",
+      "scope": "overall",
+      "metric": "qty_rmse",
+      "three_seed_means": {
+        "full": 2.8589512458569106,
+        "no_prototype": 2.903449780364516,
+        "no_history": 2.7994734974934423,
+        "encoder_only": 2.85018291606713
+      }
+    },
+    {
+      "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json",
+      "split": "test",
+      "dataset": "intermittent_frozen_5000",
+      "scope": "large",
+      "metric": "qty_rmse",
+      "three_seed_means": {
+        "full": 12.654981817224845,
+        "no_prototype": 12.495445611037036,
+        "no_history": 17.898850370509546,
+        "encoder_only": 15.39780266571667
+      }
+    },
+    {
+      "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json",
+      "split": "test",
+      "dataset": "intermittent_frozen_5000",
+      "scope": "overall",
+      "metric": "time_nll",
+      "three_seed_means": {
+        "full": 13.312661900032227,
+        "no_prototype": 30.483310602562806,
+        "no_history": 13.993714957764759,
+        "encoder_only": 13.192460460680424
+      }
+    },
+    {
+      "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json",
+      "split": "test",
+      "dataset": "intermittent_frozen_5000",
+      "scope": "large",
+      "metric": "time_nll",
+      "three_seed_means": {
+        "full": 19.508363693544773,
+        "no_prototype": 2.0179408682886324,
+        "no_history": 2.1854049511388024e-07,
+        "encoder_only": 0.047682912090098735
+      }
+    }
+  ],
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "limitations": [
+    "Timing comparisons apply within the recorded GPU and training seed; 5080/5090 and cuDNN 91900/92000 differ.",
+    "Parent-recorded dispatcher OS exit0 and scientific child exits were verified. The supervisor/parent own OS exit was not directly observed and is not claimed.",
+    "Cost eval uses fixed Train batches, not Test inference throughput. Train profiling uses fresh optimizer copies and does not resume scientific fit.",
+    "Only local archived evidence was reviewed; no fresh live process or GPU observation was made.",
+    "Recorded TimeNLL retains the original artifact definition; tiny tail values and large Test changes do not establish general time-model superiority."
+  ],
+  "duration_seconds": 8.415,
+  "files_changed": [
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/shared_component_ablation_20261022_v1/final_review_v1/ACTUAL_RESULT_QA.json",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/shared_component_ablation_20261022_v1/final_review_v1/ACTUAL_RESULT_QA.md"
+  ],
+  "additional_interpretation_review": {
+    "status": "PASS",
+    "claims": [
+      {
+        "claim": "yellow_trip_hourly full vs no_history Test overall RMSE",
+        "left": 108.04254400061718,
+        "reference": 174.06535310088262,
+        "relative_percent": -37.92989697496018,
+        "displayed_percent": -37.93,
+        "split": "test",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      },
+      {
+        "claim": "yellow_trip_hourly no_prototype vs encoder_only Test overall RMSE",
+        "left": 118.88051334257769,
+        "reference": 160.1800148470393,
+        "relative_percent": -25.78317997029764,
+        "displayed_percent": -25.78,
+        "split": "test",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      },
+      {
+        "claim": "yellow_trip_hourly full vs no_prototype Test overall RMSE",
+        "left": 108.04254400061718,
+        "reference": 118.88051334257769,
+        "relative_percent": -9.116691236627446,
+        "displayed_percent": -9.12,
+        "split": "test",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      },
+      {
+        "claim": "intermittent_frozen_5000 full vs no_prototype Test overall RMSE",
+        "left": 2.8589512458569106,
+        "reference": 2.903449780364516,
+        "relative_percent": -1.53260906417395,
+        "displayed_percent": -1.53,
+        "split": "test",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      },
+      {
+        "claim": "RAF Test absolute A-B RMSE relative difference",
+        "relative_percent": 0.1039026867747918,
+        "displayed_percent": 0.104,
+        "split": "test",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      },
+      {
+        "claim": "raf_spare_parts B vs A train allocated seed42",
+        "left": 246.6552734375,
+        "reference": 540.75927734375,
+        "relative_percent": -54.387232217431546,
+        "displayed_percent": -54.39,
+        "split": "fixed Train cost batches",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      },
+      {
+        "claim": "raf_spare_parts B vs A train allocated seed52",
+        "left": 246.6552734375,
+        "reference": 540.75927734375,
+        "relative_percent": -54.387232217431546,
+        "displayed_percent": -54.39,
+        "split": "fixed Train cost batches",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      },
+      {
+        "claim": "raf_spare_parts B vs A train allocated seed62",
+        "left": 246.6552734375,
+        "reference": 540.75927734375,
+        "relative_percent": -54.387232217431546,
+        "displayed_percent": -54.39,
+        "split": "fixed Train cost batches",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      },
+      {
+        "claim": "yellow_trip_hourly B vs A train allocated seed42",
+        "left": 1119.078125,
+        "reference": 1877.92333984375,
+        "relative_percent": -40.40874293126836,
+        "displayed_percent": -40.41,
+        "split": "fixed Train cost batches",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      },
+      {
+        "claim": "yellow_trip_hourly B vs A train allocated seed52",
+        "left": 1119.078125,
+        "reference": 1877.92333984375,
+        "relative_percent": -40.40874293126836,
+        "displayed_percent": -40.41,
+        "split": "fixed Train cost batches",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      },
+      {
+        "claim": "yellow_trip_hourly B vs A train allocated seed62",
+        "left": 1119.078125,
+        "reference": 1877.92333984375,
+        "relative_percent": -40.40874293126836,
+        "displayed_percent": -40.41,
+        "split": "fixed Train cost batches",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      },
+      {
+        "claim": "intermittent_frozen_5000 B vs A train allocated seed42",
+        "left": 1119.078125,
+        "reference": 1877.92333984375,
+        "relative_percent": -40.40874293126836,
+        "displayed_percent": -40.41,
+        "split": "fixed Train cost batches",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      },
+      {
+        "claim": "intermittent_frozen_5000 B vs A train allocated seed52",
+        "left": 1119.078125,
+        "reference": 1877.92333984375,
+        "relative_percent": -40.40874293126836,
+        "displayed_percent": -40.41,
+        "split": "fixed Train cost batches",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      },
+      {
+        "claim": "intermittent_frozen_5000 B vs A train allocated seed62",
+        "left": 1119.078125,
+        "reference": 1877.92333984375,
+        "relative_percent": -40.40874293126836,
+        "displayed_percent": -40.41,
+        "split": "fixed Train cost batches",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      },
+      {
+        "claim": "Intermittent B vs A train latency seed42",
+        "left": 22.222584462724626,
+        "reference": 32.59872901253402,
+        "relative_percent": -31.829905226733928,
+        "displayed_percent": -31.83,
+        "split": "fixed Train cost batches",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      },
+      {
+        "claim": "Intermittent B vs A train latency seed52",
+        "left": 17.327073503111023,
+        "reference": 22.811199502029922,
+        "relative_percent": -24.0413749326548,
+        "displayed_percent": -24.04,
+        "split": "fixed Train cost batches",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      },
+      {
+        "claim": "Intermittent B vs A train latency seed62",
+        "left": 17.449891500291415,
+        "reference": 22.73872850491898,
+        "relative_percent": -23.259158943225223,
+        "displayed_percent": -23.26,
+        "split": "fixed Train cost batches",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      },
+      {
+        "claim": "Intermittent full eval allocated seed42",
+        "mib": 389.24169921875,
+        "displayed_mib": 389.2417,
+        "split": "fixed Train cost batches",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      },
+      {
+        "claim": "Intermittent no_prototype eval allocated seed42",
+        "mib": 389.2255859375,
+        "displayed_mib": 389.2256,
+        "split": "fixed Train cost batches",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      },
+      {
+        "claim": "Intermittent full eval allocated seed52",
+        "mib": 389.24169921875,
+        "displayed_mib": 389.2417,
+        "split": "fixed Train cost batches",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      },
+      {
+        "claim": "Intermittent no_prototype eval allocated seed52",
+        "mib": 389.2255859375,
+        "displayed_mib": 389.2256,
+        "split": "fixed Train cost batches",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      },
+      {
+        "claim": "Intermittent full eval allocated seed62",
+        "mib": 389.24169921875,
+        "displayed_mib": 389.2417,
+        "split": "fixed Train cost batches",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      },
+      {
+        "claim": "Intermittent no_prototype eval allocated seed62",
+        "mib": 389.2255859375,
+        "displayed_mib": 389.2256,
+        "split": "fixed Train cost batches",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      },
+      {
+        "claim": "Adverse Intermittent Test large-quantity A versus B seed52 RMSE",
+        "left": 21.253908835914277,
+        "reference": 13.894555403189058,
+        "relative_percent": 52.965735276683354,
+        "displayed_percent": 52.97,
+        "split": "test, large quantity, seed52",
+        "source": "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/shared_component_ablation_20261022_v1/comparison_v1/REPORT.json"
+      }
+    ],
+    "evidence_index_accuracy_records": 72,
+    "evidence_index_cost_records": 216,
+    "all_index_json_paths_sha_and_split_verified": true,
+    "markdown_accuracy_direct_links_verified": 72,
+    "markdown_cost_access": "Full 216 paths and SHA values are intentionally in EVIDENCE_INDEX.json cost_sources; Markdown explicitly directs readers there.",
+    "no_universal_A_superiority_claim": true,
+    "no_statistical_significance_claim": true,
+    "reviewed_at": "2026-10-22T14:15:31.026433+00:00"
+  },
+  "execution_result": {
+    "actual_local_verification_process_exit_code": 0,
+    "main_verification_duration_seconds": 8.415,
+    "no_external_execution": true
+  }
+}
