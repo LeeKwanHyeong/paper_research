@@ -1,0 +1,67 @@
+{
+  "status": "REPRODUCED",
+  "remote_calls": 0,
+  "diagnosis": "Python startup cached a nonexistent PYTHONPATH as an invalid finder; a later sys.path.insert alone leaves the cached None entry. importlib.invalidate_caches removes it.",
+  "original_deployment_actual_exit": 1,
+  "connection_failure_exit255_observed": false,
+  "original_evidence": {
+    "transport.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "transport.stderr": {
+      "sha256": "91f24d08b1f40c7eeb7d7935f3963f6d1271f3443e303fffa760689077a949dc",
+      "bytes": 120
+    },
+    "transport.json": {
+      "sha256": "645400aa28dd3cea28f97c4f793ba1228d8e48a0ae20c041ab14a3faa3156cd3",
+      "bytes": 6001
+    },
+    "ATTEMPT.json": {
+      "sha256": "477c70768c5df60effde7473896930752609dac6bc93db002c75af307e5e5454",
+      "bytes": 169
+    },
+    "FAILURE.json": {
+      "sha256": "7e4b7638a0be24c49c6616c5c60c7945e67dadcd9b9f5671416d1d8959f97abb",
+      "bytes": 140
+    }
+  },
+  "cases": {
+    "without_invalidation": {
+      "actual_os_returncode": 1,
+      "stdout": "{\"status\": \"module_not_found\", \"startup_cache\": \"None\", \"invalidation\": false}\n",
+      "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 9, in <module>\nModuleNotFoundError: No module named 'fresh_probe_package'\n"
+    },
+    "with_invalidation": {
+      "actual_os_returncode": 0,
+      "stdout": "{\"status\": \"imported\", \"value\": 42, \"startup_cache\": \"None\", \"invalidation\": true}\n",
+      "stderr": ""
+    }
+  },
+  "observed_facts": {
+    "original_ssh_actual_os_returncode": 1,
+    "original_transport_error": null,
+    "original_timeout": false,
+    "remote_error": "ModuleNotFoundError: No module named paper",
+    "error_site": "generated remote deployment line79, after extraction and sys.path.insert",
+    "new_remote_calls_during_diagnosis": 0
+  },
+  "inference": "The original remote bootstrap failure is consistent with the independently reproduced stale negative path importer cache. The remote cache itself was not queried.",
+  "frozen_reviewed_files_unchanged": {
+    "models/TPPs/CountAwareHistoryMLPControl.py": true,
+    "paper/scripts/advance_shared_history_mlp_control.py": true,
+    "paper/scripts/compare_shared_history_mlp_control.py": true,
+    "paper/scripts/manage_shared_history_mlp_control.py": true,
+    "paper/scripts/profile_shared_history_mlp_control.py": true,
+    "paper/scripts/run_shared_history_mlp_control.py": true,
+    "reports/shared_history_mlp_control_20261022_v1/initial_execution.py": true,
+    "paper/tests/test_advance_shared_history_mlp_control.py": true,
+    "paper/tests/test_compare_shared_history_mlp_control.py": true,
+    "paper/tests/test_history_mlp_control_independent.py": true,
+    "paper/tests/test_history_mlp_control_model.py": true,
+    "paper/tests/test_history_mlp_initial_execution.py": true,
+    "paper/tests/test_manage_shared_history_mlp_control.py": true,
+    "paper/tests/test_profile_shared_history_mlp_control.py": true,
+    "paper/tests/test_run_shared_history_mlp_control.py": true
+  }
+}

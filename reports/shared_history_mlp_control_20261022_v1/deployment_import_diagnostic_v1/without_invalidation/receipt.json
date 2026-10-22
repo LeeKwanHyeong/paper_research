@@ -1,0 +1,17 @@
+{
+  "command": [
+    "/usr/local/bin/python3",
+    "-u",
+    "-c",
+    "import importlib,json,pathlib,sys\nsource=pathlib.Path(sys.argv[1]);invalidate=sys.argv[2]=='invalidate'\nbefore=repr(sys.path_importer_cache.get(str(source),'missing'))\n(source/'fresh_probe_package').mkdir(parents=True)\n(source/'fresh_probe_package/__init__.py').write_text('VALUE=42\\n')\nsys.path.insert(0,str(source))\nif invalidate:importlib.invalidate_caches()\ntry:\n import fresh_probe_package\n print(json.dumps({'status':'imported','value':fresh_probe_package.VALUE,'startup_cache':before,'invalidation':invalidate}),flush=True)\nexcept ModuleNotFoundError:\n print(json.dumps({'status':'module_not_found','startup_cache':before,'invalidation':invalidate}),flush=True)\n raise\n",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/shared_history_mlp_control_20261022_v1/deployment_import_diagnostic_v1/without_invalidation/new_source",
+    "preserve"
+  ],
+  "actual_os_returncode": 1,
+  "timeout": false,
+  "remote_calls": 0,
+  "stdout_bytes": 79,
+  "stderr_bytes": 133,
+  "stdout_sha256": "ddf76b5cc8c572ca01ad2f0673952a43c952d2ee0d7d7e8a6f1e720bac9d93f9",
+  "stderr_sha256": "26a3171b46186956d6236ed9a1b87e0e6c6fe561224283838af67f12b40ddd74"
+}
