@@ -37,3 +37,15 @@
 ## 보존과 범위 — 유지
 - 기존A/외부5seed·MAC결과/checkpoint/실패기록을보존한다. 기존외부5seed는A결과이므로다른변형으로이름만바꾸지않는다.
 - 원고자동작성·새MAC학습·외부baseline재학습·별도단순MLP추가실험으로확대하지않는다.
+
+## 후속 확인과 비교 제어 — 완료, 학습 종료 대기
+- `paper_research`의 `codex/shared-component-ablation-20261022` 로컬 제어 commit `8300e2348f49d3b03f0b7d13c924ea2b8ecbea7f`에 controller/comparator와 독립 QA를 별도로 기록했다. 실제 원격 실행 소스는 앞의 `b1455bae`에서 변경하지 않았다.
+- controller 독립67 tests, comparator 실제 합성21확인 및CLI3process, 최종 전체170 tests+4 subtests가 actual exit0이다. 현재 코드와 QA·원본 source/input/legacy·실제 시작 신원을 `continuation_v1/CONTROL_BINDINGS.json`에 묶었다. binding SHA `446dc5af7e1558e5003e9fe970c8ffb097b93e6f467eabff51b5b7ac282e7e90`, authorization SHA `3905719993b7179cbf7f892a9ddaa24395e98d900459c3a97b6a4434fd72dd42`다.
+- 09:56:34 KST 최초 actual advance exit0에서 두 host의 읽기 전용 SSH actual exit0와 waiting·고정 dispatcher 신원 일치를 확인했다. RAF 후속 history와 5080 Taxi A epoch27이 관측됐으나 해당 tail 값은 선택본 결과표나 전체완료 근거가 아니다. 전체 Validation/Test/회수/비교는 아직 미완료다.
+- 이 채팅의 새 heartbeat `a-d-3seed`를 ACTIVE/15분으로 생성했다. 실제 원문은 `continuation_v1/FIRST_ADVANCE.*`, 각 round, `AUTOMATION.json`과 `AUTOMATION_PROMPT.txt`에 보존한다. 기존2seed/mac9/다른자동화는 변경하지 않았다. 정상대기는조용히유지하고주요전환/실패/완료때만알린다.
+- 다음 순서는 진행 중인 양host fit/Validation 회수 → 전역36개 개별 Validation gate → 고정 Test36 및 비용216 → 전수회수·별도비교·독립실제결과검토다. 기존 partial/실패/claim을 삭제하거나 재시작하지 않는다.
+
+## 새 논문 중심 문서 — 완료
+- 사용자가 지정한 논문 작성 상위 페이지 아래 `논문 중심 개선안`과 7개 주제+과거기록 보관 페이지를 생성하고 모든 제목·하위 경로·내용·목차8개 연결을 다시 확인했다. 외부5seed 표·악화seed·A–D 미완료 상태를 구분했다.
+- 새URL `https://app.notion.com/p/401bbe405613815eafbff5c04fec8744`. 생성·readback 증적은 `NOTION_IMPROVEMENT_COMPLETE.json`, 실제 export 본문은 `notion_improvement_drafts/`다. 기존 `논문 중심`은 수정하지 않았다. 서버PID·내부경로·commit·인증정보는 새문서에 전송하지 않았다.
+- 앞선 Notion 상태갱신의 자동승인거부는 원문으로 보존했다. 이후 사용자가 새 목적지와 문서 재구성을 명시승인해 새 페이지를 생성한 별도 작업이며, 거부된 내부정보 payload를 재전송하지 않았다.
