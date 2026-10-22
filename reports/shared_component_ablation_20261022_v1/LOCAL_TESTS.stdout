@@ -1,0 +1,81 @@
+.................................................................... [ 72%]
+....................F.....                                               [100%]
+=================================== FAILURES ===================================
+_ test_actual_time_interface_accepts_component_contract_without_legacy_design_keys _
+
+tmp_path = PosixPath('/private/var/folders/w7/ybvrl2jd4hl24bpzjmfk9qh80000gn/T/pytest-of-igwanhyeong/pytest-624/test_actual_time_interface_acc0')
+
+    def test_actual_time_interface_accepts_component_contract_without_legacy_design_keys(tmp_path):
+        from paper.scripts.run_taxi_quantity_interface_ablation import make_loader
+        from paper.scripts.run_count_aware_tpp_backbone_control import derive_train_time_contract
+        from paper.scripts.run_hard_lmm_frozen_lognormal_duration import target_dt_sha256
+        args,frame,data,interface,quantity=fixture._engine_fixture(tmp_path,'titantpp_history_mlp_shared15_v1')
+        data['dataset_id']='raf_spare_parts'; data['loader'].update(batch_size=128,lookback_weeks=84)
+        temporal=derive_train_time_contract(frame,lookback_weeks=84,max_seq_len=84)
+        stats={'train_time_scale':temporal['time_scale'],'train_log_scaled_mean':temporal['target_log_scaled_mean'],'train_log_scaled_std':temporal['target_log_scaled_std']}
+        for split in ['train','validation']:
+            loader=make_loader(frame,target_split=split,shuffle=False,generator=None,**data['loader'])
+            ds=loader.dataset; targets=torch.tensor([max(1.,float(ds.dt_lists[p][i+1])) for p,i in ds.index],dtype=torch.float64)
+            stats['expected_'+split+'_targets']=len(targets)
+            stats['expected_'+split+'_target_dt_sha256']=target_dt_sha256(targets)
+        data['time_statistics']=stats
+        c=contract_fixture(tmp_path); c['science_spec_sha256']='a'*64; c['science']={'retained':{'hidden_dim':64}}
+        assert 'design_sha256' not in c and 'architecture' not in c
+>       actual=worker._training_interface(c,data,frame,'full')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+paper/tests/test_shared_component_integration.py:236: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+paper/scripts/run_shared_component_ablation.py:247: in _training_interface
+    interface = base.time_interface(data, frame, contract)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+data = {'dataset_id': 'raf_spare_parts', 'loader': {'batch_size': 128, 'lookback_weeks': 84, 'max_seq_len': 84}, 'model': {'h...4011846471596084, ...}, 'statistics': {'train_log_mean': 1.5819969503836135, 'train_log_std': 0.6713748537119225}, ...}
+frame = shape: (40, 7)
+┌──────────────┬─────┬─────────┬────────────┬─────────────────────┬──────┬────────────────┐
+│ oper_part...  ┆ 0    ┆ 2.0            │
+└──────────────┴─────┴─────────┴────────────┴─────────────────────┴──────┴────────────────┘
+contract = {'common_condition': {'loss_mode': 'log_mse', 'time_alpha': 1.0, 'time_input': 'log1p'}, 'datasets': [{'dataset_id': '...est_actual_time_interface_acc0'}}, 'implementation_qualification': {'status': 'passed', 'training_allowed': True}, ...}
+
+    def time_interface(data, frame, contract):
+        import numpy as np
+        import torch
+        from data_loader.event_seq_data_module import RMTPPWeekLookbackDataset
+        from paper.scripts.run_count_aware_tpp_backbone_control import derive_train_time_contract
+        from paper.scripts.run_hard_lmm_frozen_lognormal_duration import target_dt_sha256
+        from paper.scripts.count_aware_tpp_backbone.observed_time import validate_recorded_grid
+        validate_recorded_grid(frame, data["dataset_id"])
+        loader, frozen = data["loader"], data["time_statistics"]
+        stats = derive_train_time_contract(frame, lookback_weeks=loader["lookback_weeks"], max_seq_len=loader["max_seq_len"])
+        for measured, key in (("time_scale", "train_time_scale"), ("target_log_scaled_mean", "train_log_scaled_mean"),
+                              ("target_log_scaled_std", "train_log_scaled_std")):
+            require(math.isclose(stats[measured], frozen[key], rel_tol=0, abs_tol=1e-12), "Train time statistics mismatch")
+        for split in ("train", "validation"):
+            dataset = RMTPPWeekLookbackDataset(frame, lookback_weeks=loader["lookback_weeks"],
+                max_seq_len=loader["max_seq_len"], val_ratio=.2, mode="all", split_col="chronological_split", target_splits={split})
+            values = torch.tensor(np.asarray([max(1., float(dataset.dt_lists[p][i+1])) for p, i in dataset.index], dtype=np.float64))
+            require(values.numel() == frozen[f"expected_{split}_targets"]
+                    and target_dt_sha256(values) == frozen[f"expected_{split}_target_dt_sha256"], "Duration target identity mismatch")
+        model = data["model"]
+        return {"train_target_mean": data["statistics"]["train_log_mean"],
+            "train_target_std": data["statistics"]["train_log_std"], "statistics": data["statistics"],
+            "data_scope": "verified_train_validation_only", "execution_contract_sha256": common.sha_json(contract),
+            "source_files_sha256": contract["source"]["files_sha256"],
+            "backbone_design": {"schema": "hard_lmm_multilag_detail_design_v1",
+>               "design_sha256": contract["design_sha256"],
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+                "architecture": contract["architecture"],
+                "mode_by_arm": {ARMS[0]: None, ARMS[1]: "local", ARMS[2]: "multilag"},
+                "train_time_scale": model["time_scale"],
+                "time_statistics": data["time_statistics"]},
+            "time_head": {"mode": model["time_head_mode"], "time_scale": model["time_scale"],
+                "time_initial_location": model["time_initial_location"], "time_initial_scale": model["time_initial_scale"],
+                "statistics_source_split": "train", "train_time_statistics": stats,
+                "observation_likelihood": model["time_observation_contract"], "reported_metric": TIME_METRIC}}
+E       KeyError: 'design_sha256'
+
+paper/scripts/run_multilag_detail_execution.py:319: KeyError
+=========================== short test summary info ============================
+FAILED paper/tests/test_shared_component_integration.py::test_actual_time_interface_accepts_component_contract_without_legacy_design_keys
+1 failed, 93 passed, 4 subtests passed in 12.44s

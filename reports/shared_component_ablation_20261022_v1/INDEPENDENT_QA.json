@@ -1,0 +1,106 @@
+{
+  "schema": "shared_component_independent_qa_v1",
+  "status": "PASS",
+  "created_at_utc": "2026-10-22T00:37:22.810480+00:00",
+  "reviewer": "/root/component_independent_qa",
+  "scope": "Independent local implementation review and fabricated CPU integration; native qualification is still required on both GPUs before scientific training.",
+  "science_spec_sha256": "3c3aaf9ee9fd8c20b0705bc4d45a4604dd6425810728656ca8105f498f7ad2ce",
+  "files_reviewed_sha256": {
+    "models/TPPs/CountAwareComponentAblation.py": "d09e5b877f55742f9641640a8f2c8bba4f11a161c9ca1142b4461a8930734a43",
+    "paper/scripts/run_shared_component_ablation.py": "3c4bd30de277af0a62e9ef13bef23c5b2a5cc2a701e1d60634f56958b7bb5a26",
+    "paper/scripts/profile_shared_component_ablation.py": "4b9c2eca384a3b8d337d6793cef855a180263a47294316eb1cfa2a8fc0d38639",
+    "paper/scripts/manage_shared_component_ablation.py": "b51413f2489c3df67b3d2c54fd5e62332759ef93b5c337e0cb7ee0745823d8a7",
+    "paper/tests/test_shared_component_model.py": "4fae44ecc42c646d12c42871232914d7560636f8ba19713744f267f8e5d49ded",
+    "paper/tests/test_shared_component_runner.py": "3b4d1441d833ed4f03337da6b615a81f2cef9a02e9a3391d237c8f50e3939005",
+    "paper/tests/test_shared_component_profile.py": "79221c8a38d4fa1fae3ae15eaa129bff0294f9cd9a320785e0929103f44c623c",
+    "paper/tests/test_manage_shared_component_ablation.py": "ab4c72f7ac6f057c921a6b48dac64e2cac25fb0bae93c61067ff30156c2913cd",
+    "paper/tests/test_shared_component_integration.py": "0d87a37859b963822df0f9f114eb5ff0ef22e1b438bbaa9a1b275d083cb44622"
+  },
+  "automated_tests": {
+    "command": [
+      "/usr/local/bin/python3",
+      "-m",
+      "pytest",
+      "-q",
+      "paper/tests/test_shared_component_model.py",
+      "paper/tests/test_shared_component_runner.py",
+      "paper/tests/test_shared_component_profile.py",
+      "paper/tests/test_manage_shared_component_ablation.py",
+      "paper/tests/test_shared_component_integration.py"
+    ],
+    "actual_os_returncode": 0,
+    "elapsed_seconds": 14.54761791229248,
+    "stdout": ".................................................................... [ 70%]\n.............................                                            [100%]\n97 passed, 4 subtests passed in 13.16s\n",
+    "stderr": "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/fs/__init__.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.\n  __import__(\"pkg_resources\").declare_namespace(__name__)  # type: ignore\n",
+    "files_checked_sha256": {
+      "models/TPPs/CountAwareComponentAblation.py": "d09e5b877f55742f9641640a8f2c8bba4f11a161c9ca1142b4461a8930734a43",
+      "paper/scripts/run_shared_component_ablation.py": "3c4bd30de277af0a62e9ef13bef23c5b2a5cc2a701e1d60634f56958b7bb5a26",
+      "paper/scripts/profile_shared_component_ablation.py": "4b9c2eca384a3b8d337d6793cef855a180263a47294316eb1cfa2a8fc0d38639",
+      "paper/scripts/manage_shared_component_ablation.py": "b51413f2489c3df67b3d2c54fd5e62332759ef93b5c337e0cb7ee0745823d8a7",
+      "paper/tests/test_shared_component_model.py": "4fae44ecc42c646d12c42871232914d7560636f8ba19713744f267f8e5d49ded",
+      "paper/tests/test_shared_component_runner.py": "3b4d1441d833ed4f03337da6b615a81f2cef9a02e9a3391d237c8f50e3939005",
+      "paper/tests/test_shared_component_profile.py": "79221c8a38d4fa1fae3ae15eaa129bff0294f9cd9a320785e0929103f44c623c",
+      "paper/tests/test_manage_shared_component_ablation.py": "ab4c72f7ac6f057c921a6b48dac64e2cac25fb0bae93c61067ff30156c2913cd",
+      "paper/tests/test_shared_component_integration.py": "0d87a37859b963822df0f9f114eb5ff0ef22e1b438bbaa9a1b275d083cb44622"
+    },
+    "source_unchanged_during_tests": true
+  },
+  "acceptance_criteria": {
+    "A_factory_legacy_exact_rng_outputs_gradients": true,
+    "all_four_arms_common_initial_tensors_3_datasets_3_seeds": true,
+    "actual_parameter_removal_and_persistent16_two_blocks_preserved": true,
+    "target_padding_mask_and_foreign_checkpoint_rejection": true,
+    "generic_train_one_each_arm_one_two_epoch_selected_not_final": true,
+    "selected_time_head_proof_required_and_bound_to_selected_tensor": true,
+    "first_train_receipt_creation_and_individual_multibatch_validation_replay": true,
+    "original_A_source_legacy_byte_copy_and_no_new_training": true,
+    "actual_profile_loader_all_four_arms_and_selected_binary_preserved": true,
+    "global_Validation_gate_before_Test_materialization": true,
+    "fixed_Test_full_parent_and_target_identity_separate_from_Validation": true,
+    "actual_Test_eight_fabricated_targets_all_four_arms": true,
+    "native_runtime_configuration_before_identity_and_wrong_GPU_rejected_CPU_mock": true,
+    "native_capacity_all_arm_B128_L256_train_eval_evidence_and_negative_cases": true,
+    "cost_full_profile_JSON_write_real_model_37_batches_CPU_mock_CUDA_boundary": true,
+    "cost_clock_memory_boundary_nonfinite_last_step_and_immutable_checkpoint": true,
+    "paused_predecessor_T_state_PID_identity_and_foreign_GPU_refusal_CPU_mock": true,
+    "phase_worker_matrix_36_Validation_36_Test_216_cost_and_raw_exit_control_reviewed": true,
+    "original_983_sources_36_reuse_evidence_files_9_inputs_SHA_unchanged": true,
+    "MAC_deferred_no_remote_no_GPU_no_real_data_training_or_inference": true
+  },
+  "unresolved_findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "resolved_findings": [
+    "Fresh full-arm checkpoint neutral-label reload rejection",
+    "Initial train stage depended on not-yet-written final train receipt",
+    "Reuse legacy paths resolved against wrong root",
+    "Test stage used Train/Validation-only input and population",
+    "Native runner numerical runtime/GPU guard missing",
+    "Legacy time-interface design keys absent from new execution contract",
+    "Native capacity measurement and actual-exit host checks incomplete",
+    "Last optimizer step nonfinite parameter accepted",
+    "Cost selected Path was not JSON serializable",
+    "Selected time-head proof absence accepted"
+  ],
+  "preservation_observations": {
+    "historical_source_files_sha_verified": 983,
+    "reused_A_original_files_sha_verified": 36,
+    "original_A_train_validation_actual_exit_zero": 12,
+    "frozen_input_files_sha_verified": 9
+  },
+  "limitations": [
+    "This PASS is the local implementation gate, not native GPU capacity qualification or completed scientific experiments.",
+    "Native timing/memory numbers are not produced by CPU fake-clock tests.",
+    "Comparator/collection postprocessing is a separate local review and is outside these four execution source files.",
+    "Inherited third-party pkg_resources deprecation warning did not cause test failures."
+  ],
+  "files_changed_by_reviewer": [
+    "paper/tests/test_shared_component_integration.py",
+    "reports/shared_component_ablation_20261022_v1/INDEPENDENT_QA.json",
+    "reports/shared_component_ablation_20261022_v1/INDEPENDENT_QA.md"
+  ],
+  "execution_protocol_note": "The requested .agents/skills/_shared/runtime/execution-protocols/codex.md is absent; .agents was not modified. Evidence is written only to the task-authorized report paths."
+}

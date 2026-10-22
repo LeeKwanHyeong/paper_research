@@ -1,0 +1,138 @@
+{
+  "schema": "shared_component_ablation_science_v1",
+  "status": "locked",
+  "campaign": "shared_component_ablation_20261022_v1",
+  "scope": "independent event-quantity model component ablation; MAC deferred",
+  "arms": {
+    "full": {
+      "label": "A",
+      "prototype": true,
+      "history": true
+    },
+    "no_prototype": {
+      "label": "B",
+      "prototype": false,
+      "history": true
+    },
+    "no_history": {
+      "label": "C",
+      "prototype": true,
+      "history": false
+    },
+    "encoder_only": {
+      "label": "D",
+      "prototype": false,
+      "history": false
+    }
+  },
+  "datasets": [
+    "raf_spare_parts",
+    "yellow_trip_hourly",
+    "intermittent_frozen_5000"
+  ],
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "host_by_seed": {
+    "42": "5080",
+    "52": "5090",
+    "62": "5090"
+  },
+  "new_fit_count": 30,
+  "reused_fit_count": 6,
+  "A_reuse": {
+    "seeds": [
+      52,
+      62
+    ],
+    "host": "5090",
+    "requires": "verified original source/input/binary/tensor/history/selection/actual exits/Validation evidence",
+    "on_mismatch": "block; preserve evidence; no automatic fallback or overwrite",
+    "new_validation_and_test_on_fit_host": true
+  },
+  "retained": {
+    "hidden_dim": 64,
+    "encoder_blocks": 2,
+    "attention_heads": 4,
+    "persistent_memory": 16,
+    "prototype_count_when_present": 64,
+    "prototype_topk_when_present": 4,
+    "history_basis_when_present": 15,
+    "history_branches_when_present": 8,
+    "target_policy": "unchanged frozen Shared observed mask; target dt and quantity zeroed/excluded in encoder",
+    "head": "unchanged common quantity and recorded integer duration heads",
+    "loss": "time NLL + quantity log-MSE, alpha1, lambda_tail0"
+  },
+  "training": {
+    "maximum_epochs": 300,
+    "minimum_epochs": 40,
+    "patience": 40,
+    "batch_size": 128,
+    "monitor": "validation_raw_quantity_rmse",
+    "selection": "first strict finite minimum on full Validation",
+    "optimizer": "AdamW",
+    "lr": 0.001,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0,
+    "warmstart": false
+  },
+  "evaluation": {
+    "global_validation_jobs": 36,
+    "test_only_after_all_selected_validation_replay_and_actual_exits": true,
+    "large_quantity_cutoff": "quantity_boundaries_all_train_rows[-1]",
+    "report": [
+      "overall quantity RMSE/MAE",
+      "large quantity RMSE/MAE",
+      "recorded TimeNLL",
+      "all seed deltas and adverse results"
+    ],
+    "aggregation": "mean and sample SD ddof1",
+    "test_for_architecture_selection": false
+  },
+  "cost": {
+    "selected_checkpoints": true,
+    "input_split": "train",
+    "batch_size": 128,
+    "preparation_seed": 42,
+    "warmup_batches": 5,
+    "measured_batches": 32,
+    "repetitions": 3,
+    "modes": [
+      "train",
+      "eval"
+    ],
+    "fresh_process_per_rep": true,
+    "same_fit_host": true,
+    "maximum_parallel_workers_per_gpu": 1,
+    "checkpoint_writes": false,
+    "metrics": [
+      "latency",
+      "throughput",
+      "total fit/epoch time (reused historical fit time labeled separately)",
+      "peak allocated/reserved training and evaluation memory",
+      "parameter count"
+    ],
+    "paused_predecessors": "preserve exact stopped identities; report their reserved device memory separately; no active competitor"
+  },
+  "preservation": {
+    "historical_source_modified": false,
+    "historical_results_overwritten": false,
+    "historical_checkpoints_modified": false,
+    "MAC_executed": false,
+    "external_5seed": "retain as historical A comparison; do not relabel another ablation as A"
+  },
+  "failure_policy": {
+    "scientific_retry": 0,
+    "claim_delete": false,
+    "partial_overwrite": false,
+    "foreign_process_kill": false,
+    "transport": "one bounded read-only check; preserve actual stdout/stderr/exit and no immediate reconnect"
+  },
+  "A_reuse_audit": {
+    "path": "reports/shared_component_ablation_20261022_v1/A_REUSE_AUDIT.json",
+    "sha256": "276834024cdded7128d5be7418bac7218efff432b01bd925c4d243004333b6e2",
+    "result": "PASS_CONDITIONAL_REUSE"
+  }
+}
