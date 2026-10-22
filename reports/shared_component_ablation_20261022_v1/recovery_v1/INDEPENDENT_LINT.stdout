@@ -1,0 +1,55 @@
+F401 [*] `contextlib.contextmanager` imported but unused
+ --> paper/tests/test_advance_shared_component_ablation_recovery.py:2:24
+  |
+1 | """Synthetic recovery controls; no remote execution, GPU, or original writes."""
+2 | from contextlib import contextmanager
+  |                        ^^^^^^^^^^^^^^
+3 | from copy import deepcopy
+4 | import hashlib
+  |
+help: Remove unused import: `contextlib.contextmanager`
+
+F401 [*] `json` imported but unused
+ --> paper/tests/test_advance_shared_component_ablation_recovery.py:5:8
+  |
+3 | from copy import deepcopy
+4 | import hashlib
+5 | import json
+  |        ^^^^
+6 | from pathlib import Path
+7 | import subprocess
+  |
+help: Remove unused import: `json`
+
+F401 [*] `paper.tests.test_advance_shared_component_ablation.controls` imported but unused
+  --> paper/tests/test_advance_shared_component_ablation_recovery.py:14:17
+   |
+12 | from paper.scripts import advance_shared_component_ablation_recovery as r
+13 | from paper.tests.test_advance_shared_component_ablation import (
+14 |     controls as original_controls, collection_fixture, dump, host_evidence, identity,
+   |                 ^^^^^^^^^^^^^^^^^
+15 | )
+   |
+help: Remove unused import: `paper.tests.test_advance_shared_component_ablation.controls`
+
+F811 Redefinition of unused `original_controls` from line 14
+  --> paper/tests/test_advance_shared_component_ablation_recovery.py:56:23
+   |
+55 | @pytest.fixture
+56 | def recovery_controls(original_controls, monkeypatch):
+   |                       ^^^^^^^^^^^^^^^^^ `original_controls` redefined here
+57 |     state = original_controls
+58 |     monkeypatch.setattr(r, "ROOT", state["root"]); monkeypatch.setattr(r, "BUNDLE", state["bundle"])
+   |
+  ::: paper/tests/test_advance_shared_component_ablation_recovery.py:14:17
+   |
+12 | from paper.scripts import advance_shared_component_ablation_recovery as r
+13 | from paper.tests.test_advance_shared_component_ablation import (
+14 |     controls as original_controls, collection_fixture, dump, host_evidence, identity,
+   |                 ----------------- previous definition of `original_controls` here
+15 | )
+   |
+help: Remove definition: `original_controls`
+
+Found 4 errors.
+[*] 3 fixable with the `--fix` option.

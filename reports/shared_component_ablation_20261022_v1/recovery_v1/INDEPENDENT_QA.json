@@ -1,0 +1,219 @@
+{
+  "schema": "shared_component_recovery_independent_qa_v1",
+  "status": "PASS",
+  "independent_reviewer": true,
+  "reviewer": "/root/component_recovery_qa",
+  "reviewer_role_configuration": {
+    "path": ".codex/agents/qa-reviewer.toml",
+    "model": "gpt-6-astra",
+    "reasoning_effort": "high"
+  },
+  "created_at": "2026-10-22T13:50:00.209642+00:00",
+  "summary": "93 local recovery tests passed (21 owner, 72 independent). Zero CRITICAL/HIGH/MEDIUM open findings. Two LOW unused imports remain; frozen source preserved.",
+  "files_reviewed_sha256": {
+    "paper/scripts/advance_shared_component_ablation_recovery.py": "7c49e7ebed3b84fffa4e6317c753bc9b1e682c2748e2f6836a7e9005266f0348",
+    "paper/tests/test_advance_shared_component_ablation_recovery.py": "1598974387499ed4a3361b2608bb015d4dc9e3b5fedea3dfffbc0b71e10a32f4",
+    "paper/tests/test_shared_component_recovery_independent.py": "4999834c9d40b86c08f7c33801b45d38fa89a50dc8e5999219c9b20535910cd2"
+  },
+  "files_changed": [
+    "paper/tests/test_shared_component_recovery_independent.py",
+    "reports/shared_component_ablation_20261022_v1/recovery_v1/INDEPENDENT_LINT.stderr",
+    "reports/shared_component_ablation_20261022_v1/recovery_v1/INDEPENDENT_LINT.stdout",
+    "reports/shared_component_ablation_20261022_v1/recovery_v1/INDEPENDENT_REGRESSION.stderr",
+    "reports/shared_component_ablation_20261022_v1/recovery_v1/INDEPENDENT_REGRESSION.stdout",
+    "reports/shared_component_ablation_20261022_v1/recovery_v1/INDEPENDENT_TEST_EVIDENCE.json",
+    "reports/shared_component_ablation_20261022_v1/recovery_v1/INDEPENDENT_QA.json",
+    "reports/shared_component_ablation_20261022_v1/recovery_v1/INDEPENDENT_QA.md"
+  ],
+  "findings": [
+    {
+      "severity": "LOW",
+      "file": "paper/tests/test_advance_shared_component_ablation_recovery.py",
+      "line": 2,
+      "description": "Unused contextmanager import; no execution or integrity effect.",
+      "remediation_code": "-from contextlib import contextmanager"
+    },
+    {
+      "severity": "LOW",
+      "file": "paper/tests/test_advance_shared_component_ablation_recovery.py",
+      "line": 5,
+      "description": "Unused json import; no execution or integrity effect.",
+      "remediation_code": "-import json"
+    }
+  ],
+  "severity_counts": {
+    "CRITICAL": 0,
+    "HIGH": 0,
+    "MEDIUM": 0,
+    "LOW": 2
+  },
+  "resolved_findings": [
+    {
+      "severity": "MEDIUM",
+      "file": "paper/scripts/advance_shared_component_ablation_recovery.py",
+      "line": 72,
+      "description": "External VERIFIED marker symlink was accepted; fixed with regular_files(folder) before original validation.",
+      "verified_by": "test_verified_marker_does_not_replace_original_archive_revalidation[marker_symlink]"
+    },
+    {
+      "severity": "HIGH",
+      "file": "paper/scripts/advance_shared_component_ablation_recovery.py",
+      "line": 216,
+      "description": "Orphan paired launch receipts could reach remote-check construction without completed transition; fixed by requiring same bound INTENT/ROUND and matching transition for both hosts.",
+      "verified_by": "test_paired_launch_receipts_without_completed_transition_are_rejected"
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "criterion": "No new fit/training or MAC commands; frozen upstream paths are not reassigned",
+      "status": "PASS",
+      "evidence": "AST inspection, unchanged upstream delegation, original advisory lock test"
+    },
+    {
+      "criterion": "Fresh admission requires exact bound historical SSH255 failure and original bytes",
+      "status": "PASS",
+      "evidence": "8 independently mutated historical transport fields; authorization/source/preservation binding tests"
+    },
+    {
+      "criterion": "833 preserved original files retain exact SHA and size",
+      "status": "PASS",
+      "evidence": "Actual local preservation manifest reread; 833 files, zero mismatches; no metric interpretation"
+    },
+    {
+      "criterion": "Partial collection, unresolved attempt, interrupted round, orphan paired launches and single-host launch prevent remote progress",
+      "status": "PASS",
+      "evidence": "Independent residual fixtures and corrected completed-transition checks"
+    },
+    {
+      "criterion": "Strict VERIFIED contents, regular paths, actual archive and extracted bytes",
+      "status": "PASS",
+      "evidence": "Real manager.pack archive format; 12 field mutations; archive/transport/checkpoint/symlink mutations"
+    },
+    {
+      "criterion": "All 36 Validation jobs and 144 raw evidence files precede two fixed Test launches",
+      "status": "PASS",
+      "evidence": "Independent gate mutation tests and owner successful two-host transition with mocked launch boundary"
+    },
+    {
+      "criterion": "All 36 Test and 216 cost exits are required",
+      "status": "PASS",
+      "evidence": "Synthetic complete phase evidence; missing Test/cost, duplicate cost and failed cost are rejected by actual manager verifier"
+    },
+    {
+      "criterion": "Comparator precheck/create/postcheck and cache check-only use original retrieval paths",
+      "status": "PASS",
+      "evidence": "Recorded argument sequence with mocked process boundary"
+    },
+    {
+      "criterion": "COMPLETE requires all inventory SHA/size, expected nonempty outputs, collection marker and unchanged completion seal",
+      "status": "PASS",
+      "evidence": "Independent inventory deletion/addition/digest/size/receipt mutations"
+    },
+    {
+      "criterion": "Cached outputs are checked against pure recomputation",
+      "status": "PASS",
+      "evidence": "Independent recomputation boundary invoked; forged JSON/Markdown/CSV rejected even after resealing inventory"
+    },
+    {
+      "criterion": "Shared original lock excludes concurrent recovery",
+      "status": "PASS",
+      "evidence": "Actual flock held while both check-only and advance return busy/remote_calls=0"
+    },
+    {
+      "criterion": "Deadline, maximum rounds, fail-first and cached failure are enforced",
+      "status": "PASS",
+      "evidence": "Synthetic expired/budget states; actual transport wrapper mocked SSH255/timeout/OSError retains exact streams, second call remote_calls=0"
+    },
+    {
+      "criterion": "Implementation and both test files remain unchanged throughout final evidence run",
+      "status": "PASS",
+      "evidence": "SHA captured before/after both commands and verified again before report creation"
+    }
+  ],
+  "test_commands": [
+    {
+      "command": [
+        "python3",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "paper/tests/test_advance_shared_component_ablation_recovery.py",
+        "paper/tests/test_shared_component_recovery_independent.py"
+      ],
+      "environment": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "actual_os_returncode": 0,
+      "duration_seconds": 25.241,
+      "stdout": "reports/shared_component_ablation_20261022_v1/recovery_v1/INDEPENDENT_REGRESSION.stdout",
+      "stdout_sha256": "51928958e742d0927da418c3a8422eb5fcce4b70c892686e1b65697100845a7b",
+      "stderr": "reports/shared_component_ablation_20261022_v1/recovery_v1/INDEPENDENT_REGRESSION.stderr",
+      "stderr_sha256": "eae3b3ab88ebd007cd93d95595b7a951b2c689b68948b08fd24d8ff83282945e",
+      "files_before_sha256": {
+        "paper/scripts/advance_shared_component_ablation_recovery.py": "7c49e7ebed3b84fffa4e6317c753bc9b1e682c2748e2f6836a7e9005266f0348",
+        "paper/tests/test_advance_shared_component_ablation_recovery.py": "1598974387499ed4a3361b2608bb015d4dc9e3b5fedea3dfffbc0b71e10a32f4",
+        "paper/tests/test_shared_component_recovery_independent.py": "4999834c9d40b86c08f7c33801b45d38fa89a50dc8e5999219c9b20535910cd2"
+      },
+      "files_after_sha256": {
+        "paper/scripts/advance_shared_component_ablation_recovery.py": "7c49e7ebed3b84fffa4e6317c753bc9b1e682c2748e2f6836a7e9005266f0348",
+        "paper/tests/test_advance_shared_component_ablation_recovery.py": "1598974387499ed4a3361b2608bb015d4dc9e3b5fedea3dfffbc0b71e10a32f4",
+        "paper/tests/test_shared_component_recovery_independent.py": "4999834c9d40b86c08f7c33801b45d38fa89a50dc8e5999219c9b20535910cd2"
+      }
+    },
+    {
+      "command": [
+        "python3",
+        "-m",
+        "ruff",
+        "check",
+        "--select",
+        "F",
+        "paper/scripts/advance_shared_component_ablation_recovery.py",
+        "paper/tests/test_advance_shared_component_ablation_recovery.py",
+        "paper/tests/test_shared_component_recovery_independent.py"
+      ],
+      "environment": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "actual_os_returncode": 1,
+      "duration_seconds": 0.027,
+      "stdout": "reports/shared_component_ablation_20261022_v1/recovery_v1/INDEPENDENT_LINT.stdout",
+      "stdout_sha256": "ddcf61b92f1ca26190d0b2a76f044345f4235758547b15eb58695eab616b5cfe",
+      "stderr": "reports/shared_component_ablation_20261022_v1/recovery_v1/INDEPENDENT_LINT.stderr",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files_before_sha256": {
+        "paper/scripts/advance_shared_component_ablation_recovery.py": "7c49e7ebed3b84fffa4e6317c753bc9b1e682c2748e2f6836a7e9005266f0348",
+        "paper/tests/test_advance_shared_component_ablation_recovery.py": "1598974387499ed4a3361b2608bb015d4dc9e3b5fedea3dfffbc0b71e10a32f4",
+        "paper/tests/test_shared_component_recovery_independent.py": "4999834c9d40b86c08f7c33801b45d38fa89a50dc8e5999219c9b20535910cd2"
+      },
+      "files_after_sha256": {
+        "paper/scripts/advance_shared_component_ablation_recovery.py": "7c49e7ebed3b84fffa4e6317c753bc9b1e682c2748e2f6836a7e9005266f0348",
+        "paper/tests/test_advance_shared_component_ablation_recovery.py": "1598974387499ed4a3361b2608bb015d4dc9e3b5fedea3dfffbc0b71e10a32f4",
+        "paper/tests/test_shared_component_recovery_independent.py": "4999834c9d40b86c08f7c33801b45d38fa89a50dc8e5999219c9b20535910cd2"
+      }
+    }
+  ],
+  "test_counts": {
+    "owner": 21,
+    "independent": 72,
+    "total": 93
+  },
+  "preservation": {
+    "manifest_sha256": "09d668bc842b385ad55b8a8ed4a346ea6bf333580cbc6094ec48711d42c2af72",
+    "files_verified": 833,
+    "mismatch_count": 0
+  },
+  "actual_remote_calls": 0,
+  "actual_gpu_calls": 0,
+  "actual_inference_calls": 0,
+  "limitations": [
+    "Local synthetic QA only: no real SSH, GPU, model inference, checkpoint training, MAC execution or real experiment completion attestation.",
+    "Cache-envelope tests inject deep collection/launch validators and comparator.aggregate. Actual archive and gate validators and fixed Test/cost exit cardinality run separately; this is not a full synthetic scientific aggregate pipeline.",
+    "Final Ruff exit is 1: two verified LOW unused imports, plus F401/F811 for the intentional pytest original_controls fixture import. The fixture diagnostics are not correctness findings. Implementation and independent test Ruff checks passed separately.",
+    "Bandit and mypy were not installed. npm audit and browser accessibility checks are not applicable to this Python CLI-only change.",
+    "Project .agents/skills/_shared/runtime/execution-protocols/codex.md and ~/.codex/skills/_shared fallback were absent. No .agents files were written; assigned recovery report paths are used.",
+    "Historical upstream baseline suites separately passed 67 tests before recovery review; final captured report covers 21 owner plus 72 independent tests."
+  ]
+}
