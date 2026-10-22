@@ -1,0 +1,68 @@
+{
+  "title": "Validation-only research claim review",
+  "status": "PASS",
+  "created_at": "2026-10-22T23:00:03.748085+00:00",
+  "scope": "Interpretation correctness and claim boundaries; not full experiment completion, novelty certification, significance testing, or cost validation",
+  "reviewed_artifact_sha256": {
+    "INTERPRETATION.md": "0a4af524d6930cb5488d9465e3c5634f69b23e69977fa45310a6cb3a9f414f2f",
+    "REPORT.json": "8d2308f1cbb076a240e0655d4474a39323f99a490db98353bd478a46465c6425",
+    "REPORT.md": "65afcffdd3f72d958013ddc4449e799703d9b1024486e9c8fcd7d4098f179671",
+    "INDEPENDENT_QA.json": "94f61f0cabd5e7e24a4cdd4954b8cec4d7d400ef19eb4d772c5461df228ecdb4"
+  },
+  "method": "Read INTERPRETATION.md and frozen SCIENCE_SPEC; independently recomputed three-seed receipt means, sample SDs, ratios and worsening seed sets from all 27 Validation receipts using Python standard library; checked additional claims against original receipt values. Separate prediction-level arithmetic QA is recorded in INDEPENDENT_QA.json.",
+  "checks": {
+    "all_27_receipts_complete_and_test_not_evaluated": true,
+    "overall_B_vs_MLP_all_three_dataset_mean_RMSE_directions": true,
+    "B_D_RMSE_wins_8_of_9_and_MLP_D_9_of_9": true,
+    "Taxi_large_quantity_all_three_seed_improvements": true,
+    "RAF_large_quantity_all_three_seed_worsening": true,
+    "Intermittent_all_three_seed_MAE_worsening": true,
+    "Intermittent_seed62_quantity_ratios_and_tail_NLL_values": true,
+    "Taxi_time_NLL_tradeoff_B_64_3399_MLP_45_8081_percent": true,
+    "tail_cutoffs_200_3449_187_and_counts_50_79_1141": true,
+    "Taxi_tail_NLL_positive_but_near_zero_not_exact_zero": true,
+    "checkpoint_selection_reuse_Validation_bias_disclosed": true,
+    "three_seed_and_seed_GPU_confounding_limits_disclosed": true,
+    "equal_9600_correction_parameters_not_equal_function_class": true,
+    "eight_branches_not_eight_actual_historical_lags": true,
+    "no_general_accuracy_efficiency_stability_or_novelty_overclaim": true,
+    "Taxi_large_quantity_focus_identified_as_exploratory": true,
+    "no_posthoc_weighted_score_or_automatic_model_selection": true,
+    "no_additional_training_or_Test_authorization_inferred": true,
+    "cost_results_not_read_or_used": true
+  },
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "recommendation_summary": "Keep B as a research candidate and defer designation as the core method. Taxi large-quantity improvement is supported; broad superiority over the ordinary MLP is not. Await matched cost verification without implying that cost gains or novelty have already been established.",
+  "tradeoffs": [
+    "B retains a documented Taxi large-quantity benefit while worsening other dataset/metric/seed combinations.",
+    "The single MLP is a materially simpler alternative and has lower mean overall quantity RMSE on all three datasets, but is not automatically a novel contribution or superior on every target."
+  ],
+  "risks": [
+    "Validation selected checkpoints and was reused for structure comparison.",
+    "Only three seeds and three datasets; seed and GPU effects are not separable in this allocation.",
+    "Matching total correction parameters does not match active-prefix capacity or function class.",
+    "No distribution-parameter re-evaluation was performed for recorded TimeNLL."
+  ],
+  "validation_steps": [
+    "Independent receipt aggregation and arithmetic cross-check.",
+    "Read full interpretation for distinction between factual results, exploratory hypotheses, and recommendations.",
+    "Confirm no Test, cost-result, remote, new inference, or training work was used in this review."
+  ],
+  "artifacts_created": [
+    "CLAIM_QA.json",
+    "CLAIM_QA.md"
+  ],
+  "remote_calls": 0,
+  "new_model_forward_passes": 0,
+  "held_out_test_performance_read": false,
+  "cost_results_read": false,
+  "limitations": [
+    "cuDNN numeric environment versions were not independently re-audited in this claim-review pass; the experimental source/provenance QA remains the basis for those environment facts.",
+    "This pass does not certify statistical significance, equivalence, publication suitability, literature novelty, or cost-measurement completion."
+  ]
+}

@@ -67,3 +67,15 @@ PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 reports/shared_history_mlp_cont
 ```
 
 - 양 서버 fit/cost 종료·최초 pack/전송은 이 controller가 고정 gate 안에서만 처리한다. 별도 status/dispatch/collect/finisher와 새 학습을 추가 호출하지 않는다. 자동 점검 방식에 대한 선택 질문은 아직 응답 대기이며 새 자동화를 생성하지 않았다.
+
+## 학습과 Validation을 마치고 비용 측정을 진행한다 — 진행 중 (2026-10-23 07:49 KST)
+- 고정 controller를 사용자 상태 확인 요청에 따라 회차당1회 실행했다. 양 host 읽기 전용 종료 확인 actual exit0, source/input/legacy 및 기존 작업 guard를 통과했다. 새 학습9/9·기존 B/D 재사용18/18·Validation27/27의 모든 child와 dispatcher 실제 종료0을 확인했다. dispatcher 종료 시각은 5080 03:05:00, 5090 03:31:43 KST이며 학습 종료와 이후 회수 확인 시각을 구분한다.
+- 양 host fit 결과의 최초 pack/회수를 완료하고 archive·manifest·member 및 선택 checkpoint/입력/원본 SHA를 검증했다. 전역 Validation27의108개 원문 SHA, 같은 선택 path/epoch/binary/tensor/origin, 개별 예측 재현이 통과했다. 새 round 원문을 읽은 독립 검토에서도 같은 완료 개수를 확인했다.
+- 같은 전역 gate SHA 3e7df12b14e5f853b7092db5d3ca6b55bdf88159a7b9d06d7495e44403faec2c를 양 서버에 전달하고 cost dispatcher를 5080 07:49:02,5090 07:49:04 KST에 실제 시작했다. 고정된162개 비용 측정(5080 54/5090 108)의 완료 개수와 전체 종료는 아직 확인하지 않았다. 기존 checkpoint는 RAM 사본으로 측정하며 원본 변경을 허용하지 않는다. 새 학습·Test·MAC 호출은0이다.
+- 다음 작업은 비용 단계 실제 종료 확인 → 최초 회수 및 모든 SHA/종료 검증 → 고정 독립 comparator의 local-only check/create/check → 정확도·속도·메모리 보고다. 현재 round는 execution_v2/continuation_v1/rounds/20261022T224814088413_769fa55471c4/ROUND.json이며 SHA ab75b17e845f0bd6d7e7cb95503f0faaf45746cfbfa1d71f79b1018fa0e3fdac이다. 전체 비교 완료로 표시하지 않는다.
+
+## 비용과 분리해 Validation 비교를 검증한다 — 완료 (2026-10-23)
+- 사용자 요청에 따라 execution_v2/validation_review_v1에만 별도 분석을 생성했다. 고정 full comparator의 경로나 소스는 변경하지 않았으며, 두 fit_validation 회수본과 전역 gate를 검증한 뒤 기존 순수 지표/짝비교 함수를 사용했다. 원격·새 추론·학습·Test·Notion 전송은0이다.
+- 원예측27개·911,187행의 전체/큰수량 RMSE·MAE 및 recorded TimeNLL을 재집계했다. receipt와 최대 절대차이는2.984279490192421e-13으로 합산 순서의 반올림 수준이다. 3seed 평균±표본SD(ddof1),54개 평균차이,162개 모든 seed 지표의 절대/상대차이,54개 악화 seed 집합과 원본파일·split·SHA를 보존했다. 분석 실제exit0·Ruff0·독립 수치QA PASS다.
+- B는 단일 MLP 대비 전체 수량 RMSE 평균이 RAF+0.0646%,Taxi+0.6529%,Intermittent+4.6036%로 세 데이터에서 높다. B의 강한 긍정 근거는 Taxi 큰수량 RMSE/MAE 평균7.0294%/8.3128% 개선과 두 지표 전seed 개선이며, RAF 시간NLL도 MLP보다 전seed 낮다. RAF 큰수량은 반대로 전seed 악화하고 Intermittent seed62의 큰수량 TimeNLL10.546195 등 반례를 모두 남겼다.
+- 현재 B를 범용 핵심 방법으로 확정할 근거가 부족하다는 해석을 기록했다. 같은 Validation을 checkpoint 선택과 구조 비교에 사용했으며 통계적 유의성·held-out 일반화·novelty·효율 우위를 입증하지 않는다. 모델/학습/목표 변경은 하지 않았다. 비용은 아직 이 분석에 포함하지 않으며, 후속 고정 제어의 실제 종료·회수·독립 집계 뒤 판단을 보완한다. MAC은 계속 보류한다.
