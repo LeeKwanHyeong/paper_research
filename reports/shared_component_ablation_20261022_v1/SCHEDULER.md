@@ -13,14 +13,20 @@
 - 원본 과학 소스와 모델 파일은 수정하지 않는다. 신규 중립 model/runner/profile/manager 파일만 사용한다.
 - 원래A52/62훈련은5090/cuDNN92000·3병렬, 원래Test는5080/cuDNN91900이다. 새A–D비교는fit별동일GPU에선택본평가와cost를맞춘다. 과거A총훈련시간을신규단독훈련시간과직접비교하지않는다.
 - 독립 검증은97 tests+4 subtests, 최종 통합 검사는102 tests+4 subtests 모두 actual exit0이다. 실행 소스4개의 검사 전후 SHA가 같으며 `INDEPENDENT_QA.json`과 `LOCAL_TESTS_v2.json`에 연결했다.
-- 실제 GPU 학습/평가/qualification은 아직 시작하지 않았다. CPU 합성 검증을 실제 GPU 용량 검증이나 과학 실험 완료로 해석하지 않는다.
+- 위 결과는 CPU 합성 검증이다. 실제 GPU 용량 검증과 학습 시작은 아래 별도 실제 증적에 연결한다.
 
-## 실제 GPU 자격 검증 — 다음 작업
-- 커밋된 과학소스·입력9·기존A사본6종의전수SHA를묶어별도root에배포한다. 기존root나checkpoint를덮어쓰지않는다.
+## 실제 GPU 자격 검증 — 완료
+- 커밋된 과학소스·입력9·기존A사본6종의전수SHA를묶어별도root에배포했다. 기존root나checkpoint는덮어쓰지않았다.
 - 각GPU에서dataset/arm synthetic12개와B128/길이256 capacity4개가실제exit0이어야학습을시작한다.
 - 5080의원래정지프로세스351034/351048/351049/353905는T/start_ticks/argv/cwd/pgid를보존한다. 해당GPU예약메모리를측정자신allocator메모리와구분한다. 다른active소유자는차단한다.
+- `paper_research`의 `codex/shared-component-ablation-20261022` 브랜치 commit `b1455baec1c084e422ce044dec7cd454acd95631`을 두 서버의 새 전용 root에 배포했다. 실행 계약 raw SHA256 `462996103c87523785965f733404d9c56f6e03e73418aa38f593838c4a6c696a`, canonical `e81652c0b644fd00bf6e8a3499294aca6b111a2d744226dab0a224feea416db6`이다.
+- 실제 배포 SHA는 source987/input9/legacy36개 모두 일치했다. 양GPU 각각 synthetic12+capacity4와 dispatcher 실제 exit0을 확인했다. 원문은 `deployment/`와 `observations/qualification_check_2/`, 연결 요약은 `NATIVE_QUALIFICATION.json`이다.
 
-## 학습과 평가·회수 — 다음 작업
+## 학습과 A 재사용 검증 — 진행 중
+- 실제 최초 실행은2026-10-22 09:41 KST다. 5080 dispatcher848518/start_ticks102629746, parent848511; 5090 dispatcher1832601/start_ticks7186554, parent1832598을 실제 argv/cwd와 함께 확인했다. 원문 `launch/`와 `continuation_v1/LAUNCHED.json`을 보존한다.
+- 초기 관측에서5080 worker848523의A학습,5090 A재사용 admission 실제exit0 뒤 worker1832803의B학습을 확인했다. 이 과거 초기 관측은 전체학습·Validation/Test 완료를 뜻하지 않는다.
+
+## 전체 Validation gate 뒤 Test와 비용 비교 — 다음 작업
 - GPU당과학worker1개. 최대300/min40/patience40, AdamW .001/wd.01/clip1, batch128, 전체Validation raw수량RMSE 최초엄격최소선택을고정한다.
 - 부모가각scientific child와dispatcher의실제OSexit를관측해보존한다. 자체supervisor의OSexit를직접관측했다고표현하지않는다.
 - 전체36개선택본의개별Validation재현과실제exit를묶은두hostglobalgate이후에만고정Test36개를평가한다. 네사전지정구조를모두보고하며Test를보고모델·seed를변경하지않는다.

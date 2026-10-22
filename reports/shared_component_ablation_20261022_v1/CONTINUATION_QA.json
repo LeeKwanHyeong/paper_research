@@ -1,0 +1,176 @@
+{
+  "status": "PASS",
+  "schema": "shared-component-continuation-independent-qa-v1",
+  "campaign": "shared_component_ablation_20261022_v1",
+  "reviewed_at": "2026-10-22T00:48:56.624897+00:00",
+  "reviewer": "/root/component_continuation_independent_qa",
+  "configured_project_role": {
+    "name": "qa-reviewer",
+    "model": "gpt-6-astra",
+    "reasoning_effort": "high"
+  },
+  "summary": "Local continuation verified after resolving parent-observed dispatcher stream integrity gap. No unresolved CRITICAL/HIGH/MEDIUM/LOW findings.",
+  "files_reviewed_sha256": {
+    "paper/scripts/advance_shared_component_ablation.py": "24cde3076a194c53864642349ce3aee66b591c4fd66b25518510be7717cbdb79",
+    "paper/tests/test_advance_shared_component_ablation.py": "346694cd3563fece854df15a0055abe494b947c616262931e1a42f4e2a16c2fc",
+    "paper/tests/test_shared_component_continuation_independent.py": "615b74d394bd7e07987129502cd3e23bb1075b7dca1151f399f3e4bdf4ffd13d",
+    "models/TPPs/CountAwareComponentAblation.py": "d09e5b877f55742f9641640a8f2c8bba4f11a161c9ca1142b4461a8930734a43",
+    "paper/scripts/run_shared_component_ablation.py": "3c4bd30de277af0a62e9ef13bef23c5b2a5cc2a701e1d60634f56958b7bb5a26",
+    "paper/scripts/profile_shared_component_ablation.py": "4b9c2eca384a3b8d337d6793cef855a180263a47294316eb1cfa2a8fc0d38639",
+    "paper/scripts/manage_shared_component_ablation.py": "b51413f2489c3df67b3d2c54fd5e62332759ef93b5c337e0cb7ee0745823d8a7"
+  },
+  "frozen_remote_sources_sha256": {
+    "models/TPPs/CountAwareComponentAblation.py": "d09e5b877f55742f9641640a8f2c8bba4f11a161c9ca1142b4461a8930734a43",
+    "paper/scripts/run_shared_component_ablation.py": "3c4bd30de277af0a62e9ef13bef23c5b2a5cc2a701e1d60634f56958b7bb5a26",
+    "paper/scripts/profile_shared_component_ablation.py": "4b9c2eca384a3b8d337d6793cef855a180263a47294316eb1cfa2a8fc0d38639",
+    "paper/scripts/manage_shared_component_ablation.py": "b51413f2489c3df67b3d2c54fd5e62332759ef93b5c337e0cb7ee0745823d8a7"
+  },
+  "files_changed_by_reviewer": [
+    "paper/tests/test_shared_component_continuation_independent.py",
+    "reports/shared_component_ablation_20261022_v1/CONTINUATION_QA.json",
+    "reports/shared_component_ablation_20261022_v1/CONTINUATION_QA.md"
+  ],
+  "source_files_modified_by_reviewer": [],
+  "actual_remote_calls": 0,
+  "actual_gpu_runs": 0,
+  "real_inference_runs": 0,
+  "unresolved_findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "resolved_findings": [
+    {
+      "severity": "MEDIUM",
+      "file": "paper/scripts/advance_shared_component_ablation.py",
+      "lines": [
+        186,
+        187,
+        295,
+        296,
+        297,
+        298
+      ],
+      "description": "Fresh archive SHA previously replaced the earlier parent-observed dispatcher output SHA, permitting contradictory phase output evidence.",
+      "reproduction_test": "test_parent_observed_dispatcher_stream_hash_must_match_collected_stream",
+      "before_actual_os_returncode": 1,
+      "before_result": "Failed: DID NOT RAISE RuntimeError",
+      "fixed_by": "parent/root, local controller only",
+      "remediation_code": "_, terminal = manager.verify_phase_receipt(c, host, phase, originals)\nfor stream in (\"stdout\", \"stderr\"):\n    require(sha(originals / (phase + \".\" + stream + \".log\")) == terminal.get(stream + \"_sha256\"), \"Actual dispatcher output changed\")",
+      "after_result": "PASS; native stdout/stderr fault regressions also pass"
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "criterion": "Local sealed evidence before SSH",
+      "status": "PASS",
+      "evidence": "Actual local sealed contract source987/input9/legacy36 all SHA matched; owner tests additionally inject source/controller/input/legacy/auth/launch/archive changes."
+    },
+    {
+      "criterion": "Actual phase termination",
+      "status": "PASS",
+      "evidence": "Generated native terminal probe executes against synthetic files; complete file without parent-observed dispatcher exit cannot become terminal; nonzero child/dispatcher exits and still-live scientific identities refused."
+    },
+    {
+      "criterion": "Host and GPU ownership",
+      "status": "PASS",
+      "evidence": "Unmodified manager.guard exercised with injected OS read boundary: boot, paused state/start_ticks, foreign GPU PID faults refused; no kill or process signal calls."
+    },
+    {
+      "criterion": "Bounded transport and sticky failure",
+      "status": "PASS",
+      "evidence": "45s short probe, timeout/SSH255/OSError exact byte preservation, first failure blocks all subsequent remote calls; owner busy/cooldown SSH0 tests pass."
+    },
+    {
+      "criterion": "One-shot real manager collection",
+      "status": "PASS",
+      "evidence": "Unchanged manager.pack generated real archive format for both hosts and both phases; pack and SCP have separate900s bounds and no second attempt."
+    },
+    {
+      "criterion": "Archive safety and cached payload verification",
+      "status": "PASS",
+      "evidence": "Regular files only; canonical members, exact manifest inventory, member size/SHA, extracted size/SHA, missing/extra/symlink rejection; direct packed bytes are checked on cache, including independent peer regression previously recorded."
+    },
+    {
+      "criterion": "Global Validation gate",
+      "status": "PASS",
+      "evidence": "36 jobs and144 raw evidence JSONs verified; actual failed A reuse exit, wrong host, missing raw file or aggregate-only replay blocks generated test launch with zero subprocess starts."
+    },
+    {
+      "criterion": "Only fixed Test/cost launch",
+      "status": "PASS",
+      "evidence": "Generated launch executed with mock tmux only; both hosts receive identical145 files (gate+144 originals) byte-for-byte; explicit pinned environment and phase=test_cost, no fit/resume/deploy path."
+    },
+    {
+      "criterion": "Parent dispatcher stream evidence",
+      "status": "PASS",
+      "evidence": "Resolved MEDIUM: native terminal and collected files now verify stdout/stderr SHA against parent-observed exit receipt. Actual contradiction regression initially failed exit1, then passes after fix."
+    },
+    {
+      "criterion": "Complete cache",
+      "status": "PASS",
+      "evidence": "Four real manager archive fixtures, global gate and COMPLETE inventory revalidated; missing original exit rejected even after refreshing top-level inventory; empty/missing/symlink roots refused; cache emits remote_calls0."
+    },
+    {
+      "criterion": "Local comparison boundary",
+      "status": "PASS",
+      "evidence": "Source-bound independent COMPARATOR_QA required; check-only/create/check-only and cached check-only command ordering verified with subprocess boundary mock; actual comparator semantics belong to separate COMPARATOR_QA."
+    },
+    {
+      "criterion": "Frozen remote source preservation",
+      "status": "PASS",
+      "evidence": "All four source SHA values match pre-review frozen originals; independent reviewer edited only its own test/report files."
+    }
+  ],
+  "automated_validation": {
+    "command": [
+      "/usr/local/bin/python3",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "paper/tests/test_advance_shared_component_ablation.py",
+      "paper/tests/test_shared_component_continuation_independent.py"
+    ],
+    "environment": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTHONPATH": "."
+    },
+    "actual_os_returncode": 0,
+    "owner_tests": 36,
+    "independent_tests": 31,
+    "total_passed": 67,
+    "pytest_elapsed_seconds": 5.73,
+    "observed_wall_seconds": 7.383450984954834,
+    "stdout": "...................................................................      [100%]\n67 passed in 5.73s\n",
+    "stderr": "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/fs/__init__.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.\n  __import__(\"pkg_resources\").declare_namespace(__name__)  # type: ignore\n",
+    "stdout_sha256": "802361eeb600431ed1572f2fd27a56b7822ca3d5cd7dcd4f2355467a85800bb1",
+    "stderr_sha256": "eae3b3ab88ebd007cd93d95595b7a951b2c689b68948b08fd24d8ff83282945e",
+    "reviewed_file_sha_unchanged_during_test": true,
+    "ast_parse_all_reviewed_python_files": "PASS",
+    "npm_audit": "not applicable: Python continuation, no Node dependency change"
+  },
+  "actual_local_seal_check": {
+    "actual_os_returncode": 0,
+    "status": "PASS",
+    "source_files": 987,
+    "input_files": 9,
+    "legacy_files": 36,
+    "mismatches": [],
+    "contract_sha256": "462996103c87523785965f733404d9c56f6e03e73418aa38f593838c4a6c696a",
+    "science_spec_sha256": "3c3aaf9ee9fd8c20b0705bc4d45a4604dd6425810728656ca8105f498f7ad2ce",
+    "initial_launch_sha256": "c3895534b7b25455b7775b8d0d2ab7ae25f538c93f82391b6c68d429d5fa8c83",
+    "authorization_sha256": "3905719993b7179cbf7f892a9ddaa24395e98d900459c3a97b6a4434fd72dd42"
+  },
+  "limitations": [
+    "Synthetic local control/evidence QA only; no assertion that current real fits have finished.",
+    "OS identity/GPU and tmux/network execution boundaries are injected; real manager guard/pack/phase/gate/archive verification executes over temporary fixtures.",
+    "Independent tests reuse owner fixture construction helpers, not owner test assertions; actual manager.pack is used instead of replicated archive format.",
+    "Comparator numerical and scientific evidence checks require separately source-bound COMPARATOR_QA PASS; this review verifies invocation/admission boundary.",
+    "No runtime performance benchmark or UI accessibility scope applies.",
+    "Project .agents execution-protocol file was absent; no .agents files changed. Authorized report paths used."
+  ],
+  "automation_admission": "Continuation controller eligible only at these exact source/test SHA values and final bound controls. Comparator remains separately gated."
+}
