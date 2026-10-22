@@ -1,0 +1,25 @@
+{
+  "command": [
+    "/usr/local/bin/python3",
+    "-u",
+    "-c",
+    "import importlib.util,json,os,pathlib,sys,torch\nfrom paper.scripts import quantity_comparison_runtime as runtime\nroot=pathlib.Path(sys.argv[2]);mode=sys.argv[3]\ndef audit(event,args):\n if event=='os.mkdir' and pathlib.Path(args[0]).resolve().is_relative_to(root):\n  raise RuntimeError('readonly cache mkdir intercepted')\nsys.addaudithook(audit)\nif mode=='configure':\n runtime.configure_runtime('cpu',threads=4)\n raise AssertionError('Expected actual Torch configuration to attempt private cache creation')\nspec=importlib.util.spec_from_file_location('fresh_static_recovery',sys.argv[1])\nd=importlib.util.module_from_spec(spec);spec.loader.exec_module(d)\ndef forbidden(*args,**kwargs):raise AssertionError('Numeric configuration must not run in read-only admission')\nruntime.configure_runtime=forbidden;runtime.runtime_identity=forbidden;torch.use_deterministic_algorithms=forbidden\nruntime._gpu_identity=lambda index:{'uuid':'synthetic-CPU-test-GPU'}\nbefore=(torch.are_deterministic_algorithms_enabled(),torch.get_num_threads(),torch.get_num_interop_threads(),torch.backends.cudnn.benchmark,torch.backends.cuda.matmul.allow_tf32)\nvalue=d.static_runtime_identity()\nafter=(torch.are_deterministic_algorithms_enabled(),torch.get_num_threads(),torch.get_num_interop_threads(),torch.backends.cudnn.benchmark,torch.backends.cuda.matmul.allow_tf32)\nassert before==after\nassert value['numerical_runtime_configured'] is False\nassert value['full_numeric_gate_deferred_to_native_qualification'] is True\nprint(json.dumps({'status':'static_identity_observed_without_configuration','flags_unchanged':True,'mock_gpu_for_local_CPU_test':True,'snapshot':value}),flush=True)\n",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/shared_history_mlp_control_20261022_v1/recovery_v2/recover_initial_deployment.py",
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/shared_history_mlp_control_20261022_v1/recovery_v2/static_runtime_reproduction/static/private_cache",
+    "static"
+  ],
+  "actual_os_returncode": 0,
+  "remote_calls": 0,
+  "private_cache_created": false,
+  "GPU_identity_mocked_for_local_CPU_test": true,
+  "streams": {
+    "stdout": {
+      "bytes": 531,
+      "sha256": "6cc41dc1e4371f469f8d62fefa5c3c7f29ca8d50d968b0fc61e0ee9ff664b3f6"
+    },
+    "stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  }
+}

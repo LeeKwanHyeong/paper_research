@@ -33,3 +33,9 @@
 - 새 경로를 생성 전 PYTHONPATH로 전달하면 import finder의 None 캐시가 남는 현상을 새 로컬 Python 프로세스에서 재현했다. 캐시 무효화 전 exit1, 이후 exit0이다. 실패한 원격 프로세스의 당시 캐시 내용 자체를 관측했다고 주장하지 않는다.
 - 기존 명시적 양 서버 검증·실험 승인 안에서 별도 recovery_v1/ADMISSION.json으로 초기화 복구 범위를 기록했다. 새 사용자 응답으로 가장하지 않는다. 동결된 15개 소스/테스트, 과학·실행 계약, archive와 원 실패 상태는 수정하지 않는다.
 - 다음 순서는 별도 복구 도구의 독립 검토 → 5080 기존 전송본의 읽기 전용 전체 SHA/Runtime/신원 검증 1회 → 5090 최초 전송 → 양 서버 원래 12개 합성/용량 검증 → 기존 계약의 최초 학습이다. 5080 재전송·실제 학습 재시도·MAC·Test는 0이다. 복구에서 다시 실패하면 추가 원격 호출을 중단한다.
+
+## 읽기 전용 설치 확인과 수치 검증을 구분한다 — 진행 중 (2026-10-23 00:10 KST)
+- recovery_v1의 5080 확인은 전체 archive/member SHA·import·기존 프로세스 guard 이후, `configure_runtime`에서 torch 2.11의 private cache 생성이 읽기 전용 audit에 차단돼 actual exit1로 끝났다. transport_error=null, timeout=false, stderr 2,197 bytes이며 원문과 실패를 새로 보존했다. 모델 학습 실패나 SSH 연결 실패로 분류하지 않는다.
+- 이전 복구 상태의 추가 실행을 중단하고 모든 v1 파일 bytes/SHA를 고정했다. 기존 명시적 초기 검증·실험 승인 범위에서 별도 recovery_v2가 읽기 전용 설치 확인의 범위를 실제 소스·라이브러리 버전·GPU/boot/env 신원으로 한정한다. 수치 설정의 성공은 이 단계에서 주장하지 않는다.
+- 원래 qualification의 9개 구조·유한성 점검과 3개 full-batch capacity 점검을 유지한다. 3개 capacity는 변경하지 않은 profiler._runtime의 전체 수치 설정/신원 검증을 실제 실행하며, 실제 train/Validation도 변경하지 않은 runner._native_runtime을 통과해야 한다. 새로운 복구 제어는 실제 capacity receipt의 Runtime/GPU를 추가 확인한 후 최초 fit을 허용한다.
+- 과학 소스·원래 실행 계약·archive·선택본·고정 15개 파일은 그대로이며, 새 Test·MAC·학습 재시도는 여전히 0이다. v2는 별도 테스트/독립 QA 및 증거 핀을 통과한 뒤 실행한다. 연결 실패·과학 실패·원본 SHA/신원/기한 불일치는 추가 복구 대상으로 자동 승인하지 않는다.

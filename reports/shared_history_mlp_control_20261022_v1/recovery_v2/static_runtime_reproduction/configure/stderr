@@ -1,0 +1,25 @@
+Traceback (most recent call last):
+  File "<string>", line 9, in <module>
+  File "/Users/igwanhyeong/PycharmProjects/paper_research/paper/scripts/quantity_comparison_runtime.py", line 56, in configure_runtime
+    torch.use_deterministic_algorithms(True, warn_only=False)
+  File "/Users/igwanhyeong/Library/Python/3.12/lib/python/site-packages/torch/__init__.py", line 1900, in use_deterministic_algorithms
+    import torch._inductor.config as inductor_config
+  File "/Users/igwanhyeong/Library/Python/3.12/lib/python/site-packages/torch/_inductor/__init__.py", line 12, in <module>
+    from .standalone_compile import (
+  File "/Users/igwanhyeong/Library/Python/3.12/lib/python/site-packages/torch/_inductor/standalone_compile.py", line 18, in <module>
+    from torch._dynamo.aot_compile_types import BundledAOTAutogradSerializableCallable
+  File "/Users/igwanhyeong/Library/Python/3.12/lib/python/site-packages/torch/_dynamo/__init__.py", line 13, in <module>
+    from . import (
+  File "/Users/igwanhyeong/Library/Python/3.12/lib/python/site-packages/torch/_dynamo/aot_compile.py", line 19, in <module>
+    from torch._dynamo.package import SystemInfo
+  File "/Users/igwanhyeong/Library/Python/3.12/lib/python/site-packages/torch/_dynamo/package.py", line 1299, in <module>
+    DynamoCache = DiskDynamoCache(os.path.join(cache_dir(), "dynamo"))
+                                               ^^^^^^^^^^^
+  File "/Users/igwanhyeong/Library/Python/3.12/lib/python/site-packages/torch/_dynamo/package.py", line 1296, in cache_dir
+    return cache_dir()
+           ^^^^^^^^^^^
+  File "/Users/igwanhyeong/Library/Python/3.12/lib/python/site-packages/torch/_inductor/runtime/cache_dir_utils.py", line 20, in cache_dir
+    os.makedirs(cache_dir, exist_ok=True)
+  File "<frozen os>", line 225, in makedirs
+  File "<string>", line 6, in audit
+RuntimeError: readonly cache mkdir intercepted

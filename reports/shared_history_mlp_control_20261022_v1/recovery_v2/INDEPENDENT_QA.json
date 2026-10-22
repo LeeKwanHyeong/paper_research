@@ -1,0 +1,101 @@
+{
+  "status": "PASS",
+  "independent_reviewer": true,
+  "campaign": "shared_history_mlp_control_20261022_v1",
+  "scope": "Recovery v2 static read-only setup admission and unchanged full native numerical qualification before initial fits",
+  "reviewed_at_utc": "2026-10-22T15:12:45.398272+00:00",
+  "files_reviewed_sha256": {
+    "reports/shared_history_mlp_control_20261022_v1/recovery_v2/recover_initial_deployment.py": "ff8b6fe91d549d34f0aa370914e8ab5d190a1ae47c57fbc7066a421177f43fc2",
+    "reports/shared_history_mlp_control_20261022_v1/recovery_v2/test_recovery_initial_execution.py": "c3eea96b827f9550cc98f45d63174e092cf4f4b6d628c0c296f216fbb8d1904b",
+    "reports/shared_history_mlp_control_20261022_v1/recovery_v2/test_independent_recovery.py": "2e0e60880d1d9b5932ce24ae16ba7a7c4a2e3bdda0d5cc71f81169bcb4591130",
+    "reports/shared_history_mlp_control_20261022_v1/recovery_v2/ADMISSION.json": "f07b6c57c2753c1c94ca8a8362988f0bab2f71e83ed87bcf9777c0efb7a6a5a0"
+  },
+  "original_15_files_unchanged": true,
+  "all_recovery_v1_files_unchanged": true,
+  "original_15_files_sha256": {
+    "models/TPPs/CountAwareHistoryMLPControl.py": "d1ed18fa6af32045f7d6d33cb6f580f0ed0e1f42ddf9618f41ff6e60ae58467f",
+    "paper/scripts/advance_shared_history_mlp_control.py": "9357e518137648a4cfd93c30d36733a291f3e1e1d90f7a8035e3b2a4b560ea25",
+    "paper/scripts/compare_shared_history_mlp_control.py": "7b161fb169627650b2f1a864eded078af3fb636670ce9df2febc8d79c3abb050",
+    "paper/scripts/manage_shared_history_mlp_control.py": "05a58589eb0d12c07fa3c2794d1e7576a9ec6c6f30de5b816e7238caee351abc",
+    "paper/scripts/profile_shared_history_mlp_control.py": "13ab02ab3e4288d8cbc6c703a15f344f0b292ff022a514fbdea62ae2562475f0",
+    "paper/scripts/run_shared_history_mlp_control.py": "dc6614e67c70051415f4bb1aa9e739162f615ef08b36e1c6e3837abb02630f13",
+    "reports/shared_history_mlp_control_20261022_v1/initial_execution.py": "117e5f2243f45ca762a313f9e9af7feaca6ac800ffc2741e589b261328a3ee66",
+    "paper/tests/test_advance_shared_history_mlp_control.py": "c5903c04b84e14c0e9d49e73ec0b68b66990896816778b6b057039ee84ca1ddb",
+    "paper/tests/test_compare_shared_history_mlp_control.py": "e8d84191e81e79fc6843f07c7220563397ae4169b0e0935917532d68a2dedcdf",
+    "paper/tests/test_history_mlp_control_independent.py": "0c0b9130e229d4ba91fa5776c49409021b41506d326edeaa6c575e74f8373d7f",
+    "paper/tests/test_history_mlp_control_model.py": "e88f35489a8cc8baf52cc5d0adb197558c8594a5957f1fb7158a07e969503bac",
+    "paper/tests/test_history_mlp_initial_execution.py": "356cb1e8036688e6fa16744796fa3339e6c1bbe16213597819e932e0983e1b57",
+    "paper/tests/test_manage_shared_history_mlp_control.py": "44cf4f1b0605221379c2d6a68a7a2cc2d37042a5dfd93f47767607d35290bf3f",
+    "paper/tests/test_profile_shared_history_mlp_control.py": "5383c12f7bed6e511ed2d11560ea7dc18b03eccd2f499773fd9020631e46ef21",
+    "paper/tests/test_run_shared_history_mlp_control.py": "a04db077532602059351d20943db5375e6bbefd000b8ad0e8c017101409eb081"
+  },
+  "frozen_recovery_v1_inventory_sha256": "d466ff944e788fa8c85ae058083b727c9d97909f9be36eb431bb6bb8890561c0",
+  "tests": {
+    "receipt": "reports/shared_history_mlp_control_20261022_v1/recovery_v2/independent_checks_20261022T151134988125/receipt.json",
+    "receipt_sha256": "2c76fc122fbd6731f831c8f5cef5b66984b66cda660b1e1d16664f4ff305a913",
+    "pytest_passed": 34,
+    "independent_tests": 11,
+    "actual_os_returncode": 0,
+    "full_ruff_actual_os_returncode": 0,
+    "source_unchanged": true,
+    "all_raw_stream_byte_counts_and_sha256_verified": true
+  },
+  "native_failure_classification": "Read-only setup guard correctly rejected a private cache mkdir caused by configure_runtime; no SSH connection failure or scientific training failure",
+  "native_failure_evidence": {
+    "transport_path": "reports/shared_history_mlp_control_20261022_v1/recovery_v1/initial_execution/5080/verify-existing/transport.json",
+    "transport_sha256": "2cfd84254c82e7acdd2d51eed2ca22aefb01d4c22abc4d59e8268b3a61cac6f8",
+    "actual_os_returncode": 1,
+    "transport_error": null,
+    "timeout": false,
+    "stdout_bytes": 0,
+    "stderr_bytes": 2197
+  },
+  "authorization_basis": "Existing explicit user verification/two-host experiment instruction; ADMISSION is not described as a new human response",
+  "unresolved_findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "resolved_findings": [
+    {
+      "severity": "MEDIUM",
+      "file": "reports/shared_history_mlp_control_20261022_v1/recovery_v1/recover_initial_deployment.py",
+      "line": 234,
+      "description": "Read-only setup called configure_runtime, which imported Torch inductor/dynamo and attempted a private cache mkdir denied by its audit guard.",
+      "remediation": "Preserve v1 and use v2 static identity without numerical mutation. Mark numerical_runtime_configured=false and full gate deferred. Before either fit, revalidate three actual capacity receipt runtime_expected fields and GPU UUID after original native phase verification."
+    }
+  ],
+  "acceptance_criteria": {
+    "static_only_setup_no_numeric_flag_mutation": true,
+    "explicit_numerical_pending_marker": true,
+    "full_runtime_gate_preserved_before_real_fit": true,
+    "three_capacity_runtime_and_gpu_proofs_reverified": true,
+    "nine_structural_synthetic_checks_not_misreported_as_numerically_configured": true,
+    "source_contract_archive_original15_and_v1_unchanged": true,
+    "two_failures_raw_preserved": true,
+    "5080_no_reupload_or_overwrite": true,
+    "5090_first_deployment_only": true,
+    "same_initial_scientific_plan_no_Test_no_MAC": true,
+    "bounded_checks_and_transfers_new_failure_stops_calls": true,
+    "generated_archive_prefix_and_write_guard_executed_locally": true
+  },
+  "trust_boundary": "Original nine structural/finite synthetic checks plus three capacity checks remain. Each capacity producer configures/checks full numerical runtime, its source/actual exit/raw receipt are bound, and v2 independently rechecks all three runtime snapshots before initial fit. Actual train/Validation continue to enforce original _native_runtime.",
+  "remote_calls": 0,
+  "gpu_calls": 0,
+  "real_data_inference": 0,
+  "real_data_training": 0,
+  "held_out_prediction_or_metric_reads": 0,
+  "limitations": [
+    "Local synthetic/static tests are not native 5080/5090 success evidence.",
+    "Static setup admission does not establish deterministic flags, thread settings or full numerical runtime; those are explicitly pending until native qualification.",
+    "The original 303 tests were not rerun; frozen originals were SHA-checked.",
+    "Local fresh-process tests use a synthetic GPU identity; no actual GPU was queried by QA."
+  ],
+  "files_changed": [
+    "reports/shared_history_mlp_control_20261022_v1/recovery_v2/test_independent_recovery.py",
+    "reports/shared_history_mlp_control_20261022_v1/recovery_v2/INDEPENDENT_QA.json",
+    "reports/shared_history_mlp_control_20261022_v1/recovery_v2/INDEPENDENT_QA.md",
+    "reports/shared_history_mlp_control_20261022_v1/recovery_v2/independent_checks_20261022T151134988125"
+  ]
+}
