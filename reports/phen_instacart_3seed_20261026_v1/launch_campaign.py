@@ -7,7 +7,7 @@ from pathlib import Path
 import shlex
 import subprocess
 
-OUT = Path(__file__).resolve().parent / "execution_v2"
+OUT = Path(__file__).resolve().parent / "execution_v3"
 C = json.loads((OUT / "EXECUTION_CONTRACT.json").read_text())
 B = json.loads((OUT / "BUNDLE.json").read_text())
 
@@ -22,7 +22,7 @@ env={**os.environ,'PYTHONPATH':str(root/'source'),'PYTHONDONTWRITEBYTECODE':'1',
      'OMP_NUM_THREADS':'4','MKL_NUM_THREADS':'4','OPENBLAS_NUM_THREADS':'4','PYTHONHASHSEED':'42',
      'CUDA_VISIBLE_DEVICES':'0','CUDA_DEVICE_ORDER':'PCI_BUS_ID','CUBLAS_WORKSPACE_CONFIG':':4096:8',
      'NVIDIA_TF32_OVERRIDE':'0','MPLCONFIGDIR':str(root/'cache/matplotlib'),'XDG_CACHE_HOME':str(root/'cache')}
-if host=='5080': env['LD_LIBRARY_PATH']='/home/leekwanhyeong/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib'
+env.update(spec['process_environment'])
 command=[spec['python'],'-u','-m','paper.scripts.run_phen_instacart_3seed','--contract',str(contract),
          '--contract-sha',digest,'--host',host,'--mode','dispatch','--device','cuda:0']
 stdout=root/'dispatcher.stdout.log';stderr=root/'dispatcher.stderr.log';start=time.monotonic()
@@ -57,7 +57,7 @@ for mode in ['synthetic','capacity']:
     receipt=json.loads((root/'qualification'/(mode+'.json')).read_text())
     assert receipt['status']=='passed' and receipt['runtime']['device']=='cuda:0'
 assert not (root/'dispatch_attempt.json').exists() and not (root/'jobs').exists()
-session='phen_instacart_3seed_v2_'+host
+session='phen_instacart_3seed_v3_'+host
 assert subprocess.run([spec['tmux'],'has-session','-t',session],capture_output=True).returncode!=0
 payload=sys.stdin.buffer.read()
 with (root/'supervise.py').open('xb') as f:f.write(payload)
@@ -72,11 +72,24 @@ sys.exit(result.returncode)
 '''
 
 
-def launch(host):
+def verify_local_qualification(host):
     local = json.loads((OUT / f"{host}_deploy_qualify.receipt.json").read_text())
     assert local["actual_ssh_exit"] == 0
+    for channel in ("stdout", "stderr"):
+        path = OUT / local[channel]["path"]
+        assert path.stat().st_size == local[channel]["bytes"]
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == local[channel]["sha256"]
     detail = json.loads((OUT / f"{host}_deploy_qualify.stdout").read_text())
     assert detail["status"] == "qualified" and all(x["actual_os_returncode"] == 0 for x in detail["results"])
+    assert [x["mode"] for x in detail["results"]] == ["check", "synthetic", "capacity"]
+    for mode in ("synthetic", "capacity"):
+        receipt = detail["qualification"][mode]
+        assert receipt["status"] == "passed" and receipt["contract_sha256"] == B["contract_sha256"]
+        assert receipt["host"] == host and receipt["runtime"]["device"] == "cuda:0"
+
+
+def launch(host):
+    verify_local_qualification(host)
     command = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=12", host,
                "python3 -c " + shlex.quote(REMOTE) + " " + " ".join(map(shlex.quote,
                   [C["hosts"][host]["root"], host, B["contract_raw_sha256"]]))]
@@ -97,7 +110,7 @@ def launch(host):
 if __name__ == "__main__":
     # Both qualification gates must have passed before either fit is admitted.
     for host in C["hosts"]:
-        assert json.loads((OUT / f"{host}_deploy_qualify.receipt.json").read_text())["actual_ssh_exit"] == 0
+        verify_local_qualification(host)
     with concurrent.futures.ThreadPoolExecutor(2) as pool:
         codes = list(pool.map(launch, ["5080", "5090"]))
     raise SystemExit(0 if codes == [0, 0] else 1)

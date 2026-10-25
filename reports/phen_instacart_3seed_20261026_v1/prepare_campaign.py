@@ -8,8 +8,8 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[2]
 BASE = Path(__file__).resolve().parent
-OUT = BASE / "execution_v2"
-CAMPAIGN = BASE.name + "_execution_v2"
+OUT = BASE / "execution_v3"
+CAMPAIGN = BASE.name + "_execution_v3"
 
 
 def digest(path):
@@ -76,6 +76,7 @@ def main():
             "python": observed["python"], "boot_id": observed["boot_id"],
             "gpu_uuid": observed["gpu_csv"].split(",")[0],
             "paused_processes": observed["paused_processes"],
+            "process_environment": {"LD_LIBRARY_PATH": str(Path(observed["python"]).parents[1] / "lib/python3.12/site-packages/nvidia/cu13/lib")},
             "native_runtime": {k: observed[k] for k in ("python_version", "torch_version", "cuda_version", "cudnn_version")},
             "tmux": "/usr/bin/tmux" if host == "5080" else "/opt/miniconda3/envs/ai_env/bin/tmux",
         }

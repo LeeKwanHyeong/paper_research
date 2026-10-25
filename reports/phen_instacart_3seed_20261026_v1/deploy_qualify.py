@@ -7,7 +7,7 @@ from pathlib import Path
 import shlex
 import subprocess
 
-OUT = Path(__file__).resolve().parent / "execution_v2"
+OUT = Path(__file__).resolve().parent / "execution_v3"
 CONTRACT = json.loads((OUT / "EXECUTION_CONTRACT.json").read_text())
 BUNDLE = json.loads((OUT / "BUNDLE.json").read_text())
 
@@ -33,7 +33,8 @@ env={**os.environ,'PYTHONPATH':str(root/'source'),'PYTHONDONTWRITEBYTECODE':'1',
      'OMP_NUM_THREADS':'4','MKL_NUM_THREADS':'4','OPENBLAS_NUM_THREADS':'4','PYTHONHASHSEED':'42',
      'CUDA_VISIBLE_DEVICES':'0','CUDA_DEVICE_ORDER':'PCI_BUS_ID','CUBLAS_WORKSPACE_CONFIG':':4096:8',
      'NVIDIA_TF32_OVERRIDE':'0','MPLCONFIGDIR':str(root/'cache/matplotlib'),'XDG_CACHE_HOME':str(root/'cache')}
-if host=='5080': env['LD_LIBRARY_PATH']='/home/leekwanhyeong/miniconda3/envs/ai_env/lib/python3.12/site-packages/nvidia/cu13/lib'
+env.update(spec['process_environment'])
+assert pathlib.Path(env['LD_LIBRARY_PATH'],'libnvrtc-builtins.so.13.0').is_file()
 results=[]
 for mode in ['check','synthetic','capacity']:
     command=[spec['python'],'-u','-m','paper.scripts.run_phen_instacart_3seed','--contract',str(contract_path),
@@ -46,6 +47,7 @@ for mode in ['check','synthetic','capacity']:
         except subprocess.TimeoutExpired:
             child.kill();code=child.wait()
     result={'mode':mode,'actual_os_returncode':code,'elapsed_seconds':time.monotonic()-started,'pid':child.pid,
+            'process_environment':spec['process_environment'],
             'command':command,'stdout_bytes':out.stat().st_size,'stderr_bytes':err.stat().st_size,
             'stdout_sha256':hashlib.sha256(out.read_bytes()).hexdigest(),'stderr_sha256':hashlib.sha256(err.read_bytes()).hexdigest()}
     with (root/(mode+'.exit.json')).open('x') as f: json.dump(result,f,indent=2)
