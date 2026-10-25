@@ -98,11 +98,37 @@ def verify_files(contract, host):
     root = Path(contract["hosts"][host]["root"]).resolve()
     source = root / "source"
     require(Path(__file__).resolve().is_relative_to(source.resolve()), "Runner is not executing from its sealed source")
+    verify_bootstrap(source)
     for path, digest in {**contract["source"]["files"], **contract["input_files"]}.items():
         require(sha(below(source, path)) == digest, "Frozen source/input bytes changed: " + path)
     for key in ("data", "split_manifest"):
         data["inherited_data_identity"][key]["path"] = str(below(source, data["inherited_data_identity"][key]["path"]))
     return data, root
+
+
+def verify_internal_modules(source, modules=None):
+    """Reject repository imports resolved from an ancestor or another checkout."""
+    source = Path(source).resolve()
+    prefixes = {"paper", "models", "utils", "data_loader", "simple_lab_test", "benchmark_data"}
+    for name, module in list((sys.modules if modules is None else modules).items()):
+        if name.split(".", 1)[0] not in prefixes or module is None:
+            continue
+        filename = getattr(module, "__file__", None)
+        paths = ([filename] if filename else []) + list(getattr(module, "__path__", []))
+        for path in paths:
+            require(Path(path).resolve().is_relative_to(source),
+                    "Internal module escaped sealed source: " + name + " -> " + str(path))
+
+
+def verify_bootstrap(source):
+    """Check the existing root resolver before importing model/data modules."""
+    source = Path(source).resolve()
+    require(all((source / name).is_dir() for name in ("models", "utils", "sample_data")),
+            "Sealed source is missing project-root sentinels")
+    verify_internal_modules(source)
+    from simple_lab_test.common.pathing import resolve_project_root
+    require(resolve_project_root(__file__) == source, "Project bootstrap escaped sealed source")
+    verify_internal_modules(source)
 
 
 def process_identity(pid):
@@ -134,9 +160,11 @@ def gpu_guard(contract, host):
             "retained_paused_processes": list(retained.values()), "gpu_processes": sorted(active)}
 
 
-def runtime(device):
+def runtime(device, *, source=None):
     import torch
     from paper.scripts.quantity_comparison_runtime import configure_runtime
+    if source is not None:
+        verify_internal_modules(source)
     configure_runtime(device, 4)
     require(device == "cpu" or (device == "cuda:0" and torch.cuda.is_available()), "Unsupported device")
     return {"python": sys.version, "torch": torch.__version__, "cuda": torch.version.cuda,
@@ -145,18 +173,20 @@ def runtime(device):
 
 
 def qualify(contract, host, mode, device):
+    data, root = verify_files(contract, host)
     import torch
     from paper.scripts import run_shared_component_ablation as shared
     from paper.scripts.count_aware_tpp_backbone import core
     from simple_lab_test.search.common.runner import canonical_state_dict_sha256
-    data, root = verify_files(contract, host)
+    verify_internal_modules(root / "source")
     folder = root / "qualification"
     folder.mkdir(exist_ok=True)
     write(folder / (mode + "_attempt.json"), {"contract_sha256": canonical(contract), "started_at": now()})
     guard = gpu_guard(contract, host) if device.startswith("cuda") else None
-    native = runtime(device)
+    native = runtime(device, source=root / "source")
     torch.manual_seed(42)
     model, encoder = shared._build_model(data, "full")
+    verify_internal_modules(root / "source")
     model = model.to(device).train()
     tracker = shared.raw9.JointTimeHeadTracker(model)
     optimizer = tracker.bind_optimizer(torch.optim.AdamW(model.parameters(), lr=.001, weight_decay=.01))
@@ -296,13 +326,14 @@ def verify_selected_metrics(evaluation, summary):
 
 
 def train(contract, host, seed, device):
+    require(device == "cuda:0", "Official fits require the admitted CUDA device")
+    require(seed in SEEDS and HOST_BY_SEED[str(seed)] == host, "Wrong seed placement")
+    data, root = verify_files(contract, host)
     import torch
     from paper.scripts import run_shared_component_ablation as shared
     from paper.scripts import run_multilag_detail_execution as base
     from paper.scripts.count_aware_tpp_backbone import training
-    require(device == "cuda:0", "Official fits require the admitted CUDA device")
-    require(seed in SEEDS and HOST_BY_SEED[str(seed)] == host, "Wrong seed placement")
-    data, root = verify_files(contract, host)
+    verify_internal_modules(root / "source")
     qualification = verify_qualification(contract, host, root)
     guard = gpu_guard(contract, host)
     folder = root / "jobs" / f"seed{seed}"
@@ -310,13 +341,14 @@ def train(contract, host, seed, device):
     started = time.monotonic()
     write(folder / "attempt.json", {"seed": seed, "host": host, "started_at": now(),
                                    "contract_sha256": canonical(contract), "gpu_guard": guard})
-    native = runtime(device)
+    native = runtime(device, source=root / "source")
     require(native == qualification["synthetic"]["runtime"], "Training runtime differs from qualification")
     frame, input_receipt = base.prepare_admitted_data(data)
     require(set(frame["chronological_split"].unique().to_list()) == {"train", "validation"}, "Test materialized")
     write(folder / "input_receipt.json", input_receipt)
     interface = shared._training_interface(contract, data, frame, "full")
     args = shared._training_args(contract, data, folder, "full")
+    verify_internal_modules(root / "source")
     args.device, args.execution_role = device, "phen_instacart_3seed_validation"
     print(json.dumps({"event": "training_entered", "seed": seed, "host": host, "time": now(),
                       "training": contract["training"], "loader": data["loader"], "runtime": native}), flush=True)

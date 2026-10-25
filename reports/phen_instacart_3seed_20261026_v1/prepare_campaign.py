@@ -4,10 +4,12 @@ import json
 from pathlib import Path
 import subprocess
 import tarfile
+import sys
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = Path(__file__).resolve().parent
-CAMPAIGN = OUT.name
+BASE = Path(__file__).resolve().parent
+OUT = BASE / "execution_v2"
+CAMPAIGN = BASE.name + "_execution_v2"
 
 
 def digest(path):
@@ -26,6 +28,7 @@ def save(path, value):
 
 
 def main():
+    OUT.mkdir(exist_ok=False)
     revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
     tracked = subprocess.check_output(["git", "ls-files", "*.py"], cwd=ROOT, text=True).splitlines()
     prefixes = ("paper/", "models/", "data_loader/", "simple_lab_test/", "utils/")
@@ -46,13 +49,13 @@ def main():
         data.pop(key, None)
     original_identity = json.loads(json.dumps(data["inherited_data_identity"]))
     input_dir = ROOT / "search_artifacts/titantpp_instacart_norm_5080_20260930_v1/data/insta_market_basket"
-    inputs = {"inputs/instacart/train_validation.parquet": input_dir / "train_validation.parquet",
-              "inputs/instacart/split_manifest.json": input_dir / "split_manifest.json"}
+    inputs = {"sample_data/insta_market_basket/train_validation.parquet": input_dir / "train_validation.parquet",
+              "sample_data/insta_market_basket/split_manifest.json": input_dir / "split_manifest.json"}
     hashes = {p: digest(source) for p, source in inputs.items()}
-    assert hashes["inputs/instacart/train_validation.parquet"] == "2593041835f1bfc16bdb7ced6d5aab177c6c0006d6d970ba75aeccb97a82b505"
-    assert hashes["inputs/instacart/split_manifest.json"] == "81f1c59686dc49bc7b9183f29680d4567e63341fe3d2fac7c6d2c0f4dbaaf71c"
+    assert hashes["sample_data/insta_market_basket/train_validation.parquet"] == "2593041835f1bfc16bdb7ced6d5aab177c6c0006d6d970ba75aeccb97a82b505"
+    assert hashes["sample_data/insta_market_basket/split_manifest.json"] == "81f1c59686dc49bc7b9183f29680d4567e63341fe3d2fac7c6d2c0f4dbaaf71c"
     for key, name in (("data", "train_validation.parquet"), ("split_manifest", "split_manifest.json")):
-        relative = "inputs/instacart/" + name
+        relative = "sample_data/insta_market_basket/" + name
         data["inherited_data_identity"][key] = {"path": relative, "sha256": hashes[relative]}
 
     architecture = {
@@ -67,7 +70,7 @@ def main():
     }
     hosts = {}
     for host in ("5080", "5090"):
-        observed = json.loads((OUT / f"{host}_runtime.stdout").read_text())
+        observed = json.loads((BASE / f"{host}_runtime.stdout").read_text())
         hosts[host] = {
             "root": f"/home/leekwanhyeong/workspace/paper_research/search_artifacts/{CAMPAIGN}_{host}",
             "python": observed["python"], "boot_id": observed["boot_id"],
@@ -102,6 +105,17 @@ def main():
         for relative, path in inputs.items():
             archive.add(path, arcname="source/" + relative, recursive=False)
         archive.add(OUT / "EXECUTION_CONTRACT.json", arcname="EXECUTION_CONTRACT.json", recursive=False)
+    # Verify bootstrap resolution in the exact extracted layout, outside the
+    # original repository. Local in-repo tests cannot expose missing sentinels.
+    import tempfile
+    with tempfile.TemporaryDirectory(prefix="phen-instacart-source-") as tmp:
+        dest = Path(tmp)
+        with tarfile.open(bundle) as archive:
+            archive.extractall(dest, filter="data")
+        check = "from pathlib import Path; from simple_lab_test.common.pathing import resolve_project_root; root=Path.cwd().resolve(); assert resolve_project_root(__file__ if '__file__' in globals() else root)==root; from paper.scripts.count_aware_tpp_backbone import core; import utils.magnitude_pipeline; assert Path(utils.magnitude_pipeline.__file__).resolve().is_relative_to(root); print('isolated bootstrap and scientific imports PASS')"
+        result = subprocess.run([sys.executable, "-c", check], cwd=dest / "source", capture_output=True, text=True)
+        save(OUT / "ISOLATED_IMPORT_CHECK.json", {"actual_exit_code": result.returncode, "stdout": result.stdout, "stderr": result.stderr})
+        assert result.returncode == 0, result.stderr
     save(OUT / "BUNDLE.json", {"source_revision": revision, "source_files": len(files),
                               "source_files_sha256": canonical(files), "input_files": hashes,
                               "contract_sha256": canonical(contract), "contract_raw_sha256": digest(OUT / "EXECUTION_CONTRACT.json"),

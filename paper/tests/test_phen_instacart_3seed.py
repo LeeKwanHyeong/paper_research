@@ -2,6 +2,7 @@
 from copy import deepcopy
 import json
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import Mock
 
 import pytest
@@ -143,6 +144,9 @@ def test_real_phen_cpu_synthetic_roundtrip(tmp_path, monkeypatch):
     data["loader"]["max_seq_len"] = 64
     data["model"]["time_observation_contract"] = {"mode": "positive_integer_round_clamp_v1", "unit": "day", "top_code": 30}
     monkeypatch.setattr(r, "verify_files", lambda *_: (data, tmp_path))
+    # This unit fixture executes repository code in-place; extracted-source
+    # confinement has separate tests and is not a native CUDA qualification.
+    monkeypatch.setattr(r, "verify_internal_modules", lambda *_: None)
     result = r.qualify({"source": {"files_sha256": "a" * 64}}, "5080", "synthetic", "cpu")
     assert result["status"] == "passed" and result["parameter_count"] > 10000
     assert result["real_data_loaded"] is False
@@ -203,3 +207,55 @@ def test_actual_two_epoch_training_checkpoint_and_individual_validation(tmp_path
     r.verify_selected_metrics(second, summary)
     assert r.common.compare_prediction_files(tmp_path / "reference.jsonl.gz", tmp_path / "replay.jsonl.gz") == 8
     assert state == second_state and binary_sha == r.sha(checkpoint)
+
+
+@pytest.mark.parametrize("mode", ["synthetic", "train"])
+def test_missing_source_sentinel_blocks_before_gpu_or_downstream_imports(contract, tmp_path, monkeypatch, mode):
+    """Reproduce an archive nested below a different, discoverable checkout."""
+    from simple_lab_test.common.pathing import resolve_project_root
+    ancestor = tmp_path / "ancestor_checkout"
+    for name in ("models", "utils", "sample_data"):
+        (ancestor / name).mkdir(parents=True)
+    root = ancestor / "search_artifacts" / "new_execution"
+    source = root / "source"
+    for name in ("models", "utils"):
+        (source / name).mkdir(parents=True)
+    entry = source / "paper" / "scripts" / "run_phen_instacart_3seed.py"
+    entry.parent.mkdir(parents=True)
+    entry.write_text("# fixture\n")
+    contract["hosts"]["5080"]["root"] = str(root)
+    assert resolve_project_root(entry) == ancestor
+    monkeypatch.setattr(r, "__file__", str(entry))
+    gpu = Mock(side_effect=AssertionError("GPU must not be touched"))
+    monkeypatch.setattr(r, "gpu_guard", gpu)
+    import builtins
+    original_import = builtins.__import__
+    def guarded_import(name, *args, **kwargs):
+        assert name not in {"paper.scripts.count_aware_tpp_backbone", "simple_lab_test.search.common.runner"}
+        if name == "paper.scripts":
+            assert not set(kwargs.get("fromlist", args[2] if len(args) > 2 else ())) & {
+                "run_shared_component_ablation", "run_multilag_detail_execution"}
+        return original_import(name, *args, **kwargs)
+    monkeypatch.setattr(builtins, "__import__", guarded_import)
+    with pytest.raises(ValueError, match="missing project-root sentinels"):
+        if mode == "synthetic": r.qualify(contract, "5080", "synthetic", "cuda:0")
+        else: r.train(contract, "5080", 42, "cuda:0")
+    gpu.assert_not_called()
+    assert not (root / "qualification").exists() and not (root / "jobs").exists()
+
+
+def test_first_party_module_files_and_namespace_paths_are_confined(tmp_path):
+    source = tmp_path / "source"
+    source.mkdir()
+    correct = {"utils.local": SimpleNamespace(__file__=str(source / "utils" / "local.py")),
+               "utils": SimpleNamespace(__path__=[str(source / "utils")]),
+               "numpy": SimpleNamespace(__file__="/external/numpy.py")}
+    r.verify_internal_modules(source, correct)
+    with pytest.raises(ValueError, match="escaped sealed source: utils.local"):
+        r.verify_internal_modules(source, {**correct, "utils.local": SimpleNamespace(__file__=str(tmp_path / "utils" / "local.py"))})
+    with pytest.raises(ValueError, match="escaped sealed source: utils"):
+        r.verify_internal_modules(source, {**correct, "utils": SimpleNamespace(__path__=[str(source / "utils"), str(tmp_path / "utils")])})
+
+
+def test_existing_complete_source_bootstrap_is_local():
+    r.verify_bootstrap(Path(r.__file__).resolve().parents[2])
