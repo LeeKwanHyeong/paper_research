@@ -5,9 +5,11 @@ import json
 import shutil
 from copy import deepcopy
 from datetime import datetime, timezone
+import argparse
 
 ROOT = Path(__file__).resolve().parents[2]
-HERE = Path(__file__).resolve().parent
+CONTROL = Path(__file__).resolve().parent
+HERE = CONTROL
 BASE = ROOT / 'search_artifacts/shared_component_ablation_20261022_v1'
 FROZEN = ROOT / 'reports/phen_intermittent_best_last_20261026_v1/attempt3/bundle/source42'
 REMOTE = '/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/phen_fixed_position_pilot_20261026_v1_5080'
@@ -42,8 +44,8 @@ def main():
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / name, dst)
     (source / 'pilot_assets').mkdir()
-    shutil.copyfile(HERE / 'plot_curves.py', source / 'pilot_assets/plot_curves.py')
-    shutil.copyfile(HERE / 'remote_parent.py', source / 'pilot_assets/remote_parent.py')
+    shutil.copyfile(CONTROL / 'plot_curves.py', source / 'pilot_assets/plot_curves.py')
+    shutil.copyfile(CONTROL / 'remote_parent.py', source / 'pilot_assets/remote_parent.py')
     files = {**original['source']['files'], **{n: sha(source / n) for n in overlay},
              'pilot_assets/plot_curves.py': sha(source / 'pilot_assets/plot_curves.py'),
              'pilot_assets/remote_parent.py': sha(source / 'pilot_assets/remote_parent.py')}
@@ -64,6 +66,9 @@ def main():
             inputs[name] = digest
     host = deepcopy(original['hosts']['5080'])
     host['root'] = REMOTE
+    host['source_root'] = REMOTE + '/source'
+    host['environment'].update(PYTHONPATH=REMOTE+'/source',MPLCONFIGDIR=REMOTE+'/cache/matplotlib',
+                               XDG_CACHE_HOME=REMOTE+'/cache',TORCHINDUCTOR_CACHE_DIR=REMOTE+'/cache/torchinductor')
     host.pop('output_dir', None)
     policy = {'kind': 'fixed_sinusoidal', 'base': 10000.0, 'index_origin': 0,
               'order': 'oldest_to_newest_in_observed_window', 'trainable': False, 'amplitude': 1.0}
@@ -104,4 +109,9 @@ def main():
     print(json.dumps(proof, indent=2))
 
 if __name__ == '__main__':
+    parser=argparse.ArgumentParser();parser.add_argument('--attempt',type=int,default=1);args=parser.parse_args()
+    if args.attempt != 1:
+        assert args.attempt == 2, 'Only the documented pre-training environment repair is admitted'
+        HERE=CONTROL/'attempt2';HERE.mkdir(exist_ok=False)
+        REMOTE=REMOTE.replace('_v1_5080','_v1_attempt2_5080')
     main()

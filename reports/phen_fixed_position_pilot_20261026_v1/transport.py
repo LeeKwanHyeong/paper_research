@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tarfile
 import time
+import argparse
 
 HERE=Path(__file__).resolve().parent
 REMOTE='/home/leekwanhyeong/workspace/paper_research_experiment_artifacts/phen_fixed_position_pilot_20261026_v1_5080'
@@ -62,7 +63,7 @@ sys.path.insert(0,str(r/'source'))
 from paper.scripts.run_phen_fixed_position_pilot import verify_files,gpu_guard
 c=json.loads((r/'execution_contract.json').read_text());verify_files(c);guard=gpu_guard(c)
 command=shlex.join(['env','PYTHONDONTWRITEBYTECODE=1','PYTHONHASHSEED=42',PYTHON,str(r/'source/pilot_assets/remote_parent.py')])+' > '+shlex.quote(str(r/'parent.stdout'))+' 2> '+shlex.quote(str(r/'parent.stderr'))
-p=subprocess.run(['/usr/bin/tmux','new-session','-d','-s','phen-fixed-pos-20261026-v1',command],capture_output=True,text=True)
+p=subprocess.run(['/usr/bin/tmux','new-session','-d','-s',r.name,command],capture_output=True,text=True)
 assert p.returncode==0,(p.returncode,p.stdout,p.stderr)
 print(json.dumps({'tmux_launch_actual_exit':p.returncode,'gpu_guard':guard,'source_verified':True}))
 '''
@@ -120,4 +121,10 @@ p=r/'results.tar.gz';print(json.dumps({'bytes':p.stat().st_size,'sha256':hashlib
             assert sha(dest/n)==v['sha256'] and (dest/n).stat().st_size==v['bytes']
         print('All collected bytes and SHA256 verified')
     else: raise ValueError(mode)
-if __name__=='__main__':main(sys.argv[1])
+if __name__=='__main__':
+    parser=argparse.ArgumentParser();parser.add_argument('mode');parser.add_argument('--attempt',type=int,default=1);args=parser.parse_args()
+    if args.attempt!=1:
+        assert args.attempt==2
+        HERE=HERE/'attempt2'
+        REMOTE=json.loads((HERE/'PREPARED.json').read_text())['remote_root']
+    main(args.mode)
