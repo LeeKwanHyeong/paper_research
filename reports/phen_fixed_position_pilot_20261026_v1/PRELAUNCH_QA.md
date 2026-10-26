@@ -75,3 +75,49 @@
 - 이 실험은 위치 표현값·크기·학습 가능성을 함께 바꾸는 한 seed의 대조이다. 개선 여부를 Intermittent나 다른 seed로 일반화하거나, 미학습 positional row 하나의 단독 인과 효과로 주장하지 않는다.
 - 추가 Train 평가를 포함한 elapsed/epoch를 과거 순수 학습 속도와 직접 비교하지 않는다. online 손실과 epoch-end eval 손실을 구분한다.
 - 다음 순서: 승인된 5080 신규 경로 배포 → native synthetic/capacity gate → RAF/Taxi 순차 학습 → 실제 종료·회수 검증 → 같은 가중치 Train/Validation 곡선과 기존 Validation 기준선 비교. 이후 단계의 검증은 아직 완료되지 않았다.
+
+## 실행 환경 전달 복구 검토 — attempt2
+
+### Review Result: PASS (control repair, local-only)
+
+첫 native qualification에서 아래 환경 전달 결함이 드러났다. 앞선 로컬 PASS는 native 실행 가능성을 증명하지 못했다. 최초 실패 기록을 유지한 상태에서 수정된 제어를 별도로 검토했다. 이 추가 판정도 CUDA qualification 통과를 대신하지 않는다.
+
+### CRITICAL
+
+- 미해결 사항 없음.
+
+### HIGH
+
+- 해결됨: 최초 `bundle/source/pilot_assets/remote_parent.py:23`은 계약의 `hosts.5080.environment`를 전달하지 않아 기준선 `LD_LIBRARY_PATH` 등이 누락됐다. RAF synthetic child가 `libnvrtc-builtins.so.13.0`을 찾지 못해 exit 1로 끝났다. attempt2 `child_environment()`는 `{**os.environ, **contract['hosts']['5080']['environment']}` 순서로 계약 값을 적용하고 source/cache 경로만 새 root에 맞춘다. 모든 child가 동일 helper를 통과한다.
+- 미해결 HIGH 없음.
+
+### MEDIUM
+
+- 미해결 사항 없음.
+
+### LOW
+
+- 미해결 사항 없음.
+
+### 독립 확인
+
+- `NATIVE_FAILURE_DIAGNOSIS.stdout`에서 최초 synthetic 실제 exit 1, stderr 14,861 bytes 및 SHA256 `d91c158afbf2086b9d81ac31285040db52c709a168dbcdf189d7d61504cdf974` 일치를 직접 검산했다. source check exit 0 이후 첫 synthetic에서 중단됐고 당시 status의 두 jobs는 모두 빈 객체이며 dispatcher가 시작되지 않았다. 실제 데이터 fit 재시도가 아니다.
+- attempt2의 runner/test 및 과학 소스는 첫 봉인과 동일하다. 소스 차이는 `pilot_assets/remote_parent.py` 하나다. datasets/training/position_encoding/architecture/input_files/jobs/common_condition 값은 모두 동일하다. host root와 source_root 및 PYTHONPATH/cache 경로만 새 시도로 분리하고, GPU·boot·protected process 조건은 유지한다.
+- helper를 독립 import하여 로컬 child→grandchild를 실제 실행했다. 두 단계 모두 계약의 공개 환경 키 15개가 완전히 일치했고 실제 exit 0이었다. `LD_LIBRARY_PATH`, CUDA 장치, TF32, CUBLAS, 스레드, seed 조건은 원래 계약 값이다. 출력에 전체 ambient environment를 기록하지 않았다.
+- 원래 실패 directory·계약·bundle은 보존된다. `transport.py --attempt 2`는 별도 local attempt2와 `PREPARED.json`에 고정된 별도 remote root를 사용하며 tmux 이름도 그 root 이름이다. 기존 시도를 재사용하거나 삭제하지 않는다.
+- attempt2 bundle의 991 source + 4 input SHA, 최종 archive의 동일 995개 SHA 및 996개 member를 검증했다. 과학 runner 변경이 없어 앞서 수행한 35개 테스트 결과를 그 코드에 적용하며, 추가 변경은 환경 전파 테스트로 검증했다.
+- attempt2 계약 raw SHA: `bd95bae0571ce393ec85c860e350272ffabbeb0b7e7dd8fef6179f6b8a357cfe`.
+- attempt2 remote_parent SHA: `821917a8643cc5139f5105cdb3e914010b450c9cf3afacbaa85e9108775dee93`.
+- 첫 독립 계약 비교에서 source_root까지 불변으로 요구한 QA assertion이 실패했다. 확인 결과 새 root로의 의도된 경로 정규화였으며, 검사를 `source_root == new_root/source`로 고쳐 재검증했다. 과학 조건 변화나 실행 결함으로 판정하지 않았다.
+
+### Acceptance criteria 및 남은 순서
+
+- [x] 최초 native 실패 원문·실제 exit·SHA 보존 확인
+- [x] 실제 데이터 fit 진입 전 실패 확인
+- [x] 기준선 환경의 child 및 grandchild 전파 검증
+- [x] source/cache/receipt/tmux의 attempt2 격리 검토
+- [x] 과학 코드·데이터·학습 설정 불변 및 archive SHA 확인
+- [ ] attempt2 5080 native synthetic/capacity 실제 exit 0
+- [ ] 승인된 최초 RAF/Taxi fit 두 건, 종료 및 결과 회수 검증
+
+다음 작업은 attempt2의 native qualification이다. 다시 실패하면 해당 원인과 증거를 확인하기 전 실제 학습으로 넘어가면 안 된다. 이 QA는 SSH를 실행하지 않았다.
