@@ -1,0 +1,203 @@
+{
+  "schema": "phen-time-head-control-v1",
+  "frozen_utc": "2026-10-26T13:20:40.019383+00:00",
+  "scope": "Intermittent original Train and retrospective Validation; no Test; no full-model retraining",
+  "bindings": {
+    "authorization": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/reports/phen_intermittent_time_head_control_20261026_v1/AUTHORIZATION.json",
+      "bytes": 870,
+      "sha256": "82fe04a4d7252429c714e07e5d66e4d0e911875ee4f5913a32eb434fe4dce15d"
+    },
+    "collection": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/reports/phen_intermittent_full_observations_20261026_v1/FINAL_COLLECTION.json",
+      "bytes": 588202,
+      "sha256": "18a9f78e3a0355d502fbd7789161ea6ef1ddcb9ca1fc7410397ee6672b1b0461"
+    },
+    "collection_qa": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/reports/phen_intermittent_full_observations_20261026_v1/POSTRUN_FINAL_INVENTORY_QA.json",
+      "bytes": 2137,
+      "sha256": "f70309c7e554e6eaba12b71692d267ba8c9384e25f7a274fcdfd7e1d06e0054d"
+    },
+    "metadata": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/reports/phen_intermittent_full_observations_20261026_v1/support/results_v1/target_metadata.parquet",
+      "bytes": 3055221,
+      "sha256": "dcee4a92d729a1937b1f47e64b317e49e4043adf6dfce882fa0ace8398b5edb8"
+    },
+    "support_cells": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/reports/phen_intermittent_full_observations_20261026_v1/support/results_v1/support_cells_full_primary_exact.csv.gz",
+      "bytes": 185724,
+      "sha256": "bf16af48055ebc1d628a9d80cf6c068c02203d07da0b15ecda2cd124af72677b"
+    },
+    "native_probability_helper": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/reports/phen_intermittent_full_observations_20261026_v1/execution_v6/bundle/source42/models/TPPs/positive_integer_time.py",
+      "bytes": 7011,
+      "sha256": "783113642d897aaed3da1213fc91fb993ee71af380f953a1159142a1cda8ae59"
+    },
+    "train_roles": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/reports/phen_intermittent_time_head_control_20261026_v1/split/train_roles.parquet",
+      "bytes": 2187570,
+      "sha256": "6c2c6992e151f52922e34531a252428175cfcc3224d0af9e173a6b8a2d81b595"
+    },
+    "split_entities": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/reports/phen_intermittent_time_head_control_20261026_v1/split/entities.csv",
+      "bytes": 171809,
+      "sha256": "182bfd3bcd4527fd15adbc210e6519085b80031ba7eb541ee1008b35d6a25ca1"
+    },
+    "split_coverage": {
+      "path": "/Users/igwanhyeong/PycharmProjects/paper_research/reports/phen_intermittent_time_head_control_20261026_v1/split/coverage.csv",
+      "bytes": 498,
+      "sha256": "be407429b9b89f28fccfb0117efe708bb83c2ab19744f12b623663c4e869ea6f"
+    }
+  },
+  "checkpoints": [
+    {
+      "seed": 52,
+      "checkpoint": "best",
+      "epoch": 5,
+      "sha256": "0bc7617a1a40afea40f39f0bf5e363c960483014972f3fb6d15cabd6b12debd3"
+    },
+    {
+      "seed": 52,
+      "checkpoint": "last",
+      "epoch": 45,
+      "sha256": "944f83d5b76f026983a5e682d5dbb18e215b5b26684ca7b6f3bd3ac2bfd48fc3"
+    },
+    {
+      "seed": 42,
+      "checkpoint": "best",
+      "epoch": 1,
+      "sha256": "f1a8375fce1957f2957a86321e8def7c0c9d2745252798cbd7bbb1560178a3ba"
+    },
+    {
+      "seed": 42,
+      "checkpoint": "last",
+      "epoch": 41,
+      "sha256": "39dad19ca2ee302d89fdcde3851892bb51262262f11d19ef0c20c3ac421b976c"
+    }
+  ],
+  "seed_order": [
+    52,
+    42
+  ],
+  "replication_rule": "Run seed42 with identical settings irrespective of seed52 effect direction after technical verification; no performance gate",
+  "arms": {
+    "original": {
+      "trainable_parameters": 0
+    },
+    "widthonly": {
+      "trainable_parameters": 65,
+      "trainable_keys": [
+        "time_scale_weight.weight",
+        "w_raw"
+      ]
+    },
+    "joint": {
+      "trainable_parameters": 130,
+      "trainable_keys": [
+        "time_scale_weight.weight",
+        "w_raw",
+        "v_t.weight",
+        "b_t"
+      ]
+    }
+  },
+  "frozen": "All original checkpoints, encoder, correction, prototypes, quantity head and cached final hidden inputs; every arm warm-starts its own original time head",
+  "head": {
+    "hidden_dim": 64,
+    "sigma_min": 0.001,
+    "time_scale": 3.0,
+    "distribution": "D=max(1,round(3*LogNormal(mu,sigma)))",
+    "likelihood": "native stable float64 positive-integer bin mass; no top code"
+  },
+  "split": {
+    "source": "original Train only",
+    "sort": [
+      "entity_id",
+      "target_seq",
+      "target_index"
+    ],
+    "rule": "first floor(0.8*n) events per entity fit; remainder dev; n<2 fails",
+    "fit_rows": 313215,
+    "dev_rows": 80609,
+    "full_train_rows": 393824,
+    "validation_rows": 86285,
+    "use_all_fit_rows": true,
+    "limitations": "Original encoder saw all Train, including head-dev; within-entity chronological head selection is not an independent heldout generalization test."
+  },
+  "fit_config": {
+    "learning_rate": 0.001,
+    "weight_decay": 0.0,
+    "batch_size": 2048,
+    "maximum_epochs": 50,
+    "patience": 8,
+    "minimum_improvement": 1e-08,
+    "gradient_clip_norm": 5.0,
+    "shuffle_seed": 20261026,
+    "evaluation_batch_size": 8192
+  },
+  "optimizer": "AdamW",
+  "training_device": "cpu",
+  "dtype": "float64",
+  "torch_num_threads": 1,
+  "deterministic_algorithms": true,
+  "selection": "Lowest finite event-weighted head-dev NLL over epochs including epoch0; earliest exact tie; minimum_improvement affects patience reference only, not argmin selection",
+  "stopping": "8 successive epochs without >1e-8 decrease from patience reference, or epoch50; preserve last and selected separately; nonfinite objective/gradient stops and preserves failure",
+  "validation_use": "Only after head-dev selection, never for fitting, hyperparameters, epoch selection, or deciding seed42 replication",
+  "inference": {
+    "hosts": {
+      "52": "5090",
+      "42": "5080"
+    },
+    "reuse": "Existing best Train hidden per original FINAL_COLLECTION",
+    "missing_splits_per_seed": [
+      "best Validation",
+      "last Train",
+      "last Validation"
+    ],
+    "qualification_events_per_cohort": 2048,
+    "full_once_after_qualification": true,
+    "original_checkpoint_and_model_state_unchanged": true
+  },
+  "parity": {
+    "quantity": {
+      "atol": 1e-05,
+      "rtol": 1e-05
+    },
+    "time_nll": {
+      "atol": 0.0001,
+      "rtol": 0.0001
+    },
+    "mu_sigma": "diagnostic only for rounded historical exports; use native same-hidden evaluation to check math",
+    "no_automatic_tolerance_relaxation": true
+  },
+  "report": {
+    "primary": [
+      "whole Validation",
+      "Validation history128-192 inclusive"
+    ],
+    "secondary": [
+      "all Train and head-fit/head-dev",
+      "fixed matched532",
+      "matched532 and history128-192",
+      "other history bins",
+      "strict quantity>187 retrospective tail"
+    ],
+    "metrics": [
+      "recorded-bin NLL",
+      "paired NLL change vs original",
+      "log-center distance outside recorded bin",
+      "sigma",
+      "95% predicted interval disjoint from observed bin",
+      "quantity RMSE/MAE unchanged"
+    ],
+    "uncertainty": "1000 paired entity-cluster bootstrap repetitions with RNG20261026; conditional on fitted heads, not training uncertainty",
+    "report_every_seed_checkpoint_arm": true,
+    "interpretation": "Readout-only improvement demonstrates compensability on fixed representations under this protocol; it does not establish head-only causality, exonerate encoder/distribution shift, or establish independent Test generalization"
+  },
+  "preservation": [
+    "Existing model/source/data/results/failures",
+    "Stopped 5080 tasks and reserved memory",
+    "Other jobs/automations/runtime/network/authentication",
+    "Existing manuscripts and Notion"
+  ]
+}
