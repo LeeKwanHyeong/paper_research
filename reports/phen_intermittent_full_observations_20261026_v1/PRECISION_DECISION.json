@@ -1,0 +1,25 @@
+{
+  "stage": "before any real checkpoint qualification",
+  "native_arithmetic": "float64 original time law; float32 quantity/head/prototypes",
+  "comparison_tolerances": {
+    "pred_quantity": {
+      "atol": 1e-05,
+      "rtol": 1e-05
+    },
+    "time_nll": {
+      "atol": 0.0001,
+      "rtol": 0.0001
+    },
+    "log_qty_mse": {
+      "atol": 1e-07,
+      "rtol": 1e-05
+    },
+    "topk_similarity": {
+      "atol": 1e-07,
+      "rtol": 1e-05
+    }
+  },
+  "reason": "q/NLL device parity uses the previous full Validation probe predeclared tolerances; log-MSE/cosines use 1e-7/1e-5. This separates cross-device comparisons from exact source/state/identity and native arithmetic checks.",
+  "top4": "exact ordered IDs, no tie exception",
+  "postfailure_relaxation": false
+}

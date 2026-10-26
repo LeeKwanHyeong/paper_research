@@ -1,0 +1,55 @@
+{
+  "status": "PASS",
+  "scope": "Isolated collector_v2 prelaunch; qualification still required",
+  "collector_sha256": "f15cb58666c9962a4d062cfda32027ef0881254a426672095f8c680d78165d36",
+  "test_sha256": "1f325556d5dd813b3b4a6c7ec037006d1e46401b46f933f8747823b1a5c414a6",
+  "specs": {
+    "5080_FULL_SPEC_v2.json": "ceaaf7d0bb5a2526be994ecf55d5c4ca70f7d9f046ecc8aa470e3c296df61d61",
+    "5080_QUALIFICATION_SPEC_v2.json": "73b38e8de96c503e6ba73298744af99134b22bfc53d78644723b854e3918ac41",
+    "5090_FULL_SPEC_v2.json": "7b0576fe6cface52788628a8e0bae06f50d5957efb2f102e4b89eb1589e28968",
+    "5090_QUALIFICATION_SPEC_v2.json": "d244c17b06426e7124c3e34e6ba6c7e07e6f9050e14b4ab6bfa51e8bb3ea851c",
+    "CPU_QUALIFICATION_SPEC_v2.json": "d916d9670d5b95514be08116a0f1694aaf1db176b3b99e8096b51cb9e426d3a5"
+  },
+  "unchanged_math_functions": [
+    "NativeObserver",
+    "export_batch",
+    "compare_reference",
+    "ChunkWriter",
+    "aggregate_update",
+    "fixed_order",
+    "read_reference",
+    "state_sha",
+    "context_snapshot"
+  ],
+  "synthetic_tests": {
+    "count": 13,
+    "actual_exit": 0,
+    "receipt_sha256": "6de768de635277b27f8ad0cfdc99edea522263c9377102fdc22da5464405f9b4"
+  },
+  "import_only": {
+    "sources": 2,
+    "actual_child_exits": [
+      0,
+      0
+    ],
+    "receipt_sha256": "a90e086600832d61cc8bfdf1f4a40825fc1408798aaef3cbf99358bb98ee75c1"
+  },
+  "original_v1_failure_preserved": true,
+  "input_sidecar": {
+    "path": "/Users/igwanhyeong/PycharmProjects/paper_research/reports/phen_intermittent_full_observations_20261026_v1/bundle/inputs/data/intermittent_frozen_5000/split_manifest.json",
+    "sha256": "393158a54a8ca703dbf7e9311b9dff6d2825ef737e3e3de1c30a1f3ff64c1c04"
+  },
+  "findings": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [],
+    "LOW": []
+  },
+  "notes": [
+    "Native model/data sources and weights unchanged; frozen prepare_admitted_data retained.",
+    "Empty sample_data directory fixes legacy root bootstrap; files remain exact source inventory.",
+    "Finder pins research imports/namespaces before data access, sidecar and bundle cwd checked.",
+    "First v2 synthetic path-alias failure preserved; corrected test canonical paths only.",
+    "Initial QA inline helper failed because audit-only operational_revision was omitted from its expected delta set; no inference/source failure or tolerance change."
+  ]
+}
