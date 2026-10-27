@@ -1,3 +1,5 @@
+> **PHEN 브랜치 안내 (2026-10-27):** 독립 PHEN 모델, 외부 비교군 6종, 모델별 shell 실행법은 [phen/README.md](phen/README.md), 구조 설명은 [phen/ARCHITECTURE.md](phen/ARCHITECTURE.md)를 따릅니다. 아래 v0.7 문서와 기존 실험 source는 역사적 기준선으로 보존합니다.
+>
 > **저장소 작업 안내 (2026-10-16):** 코드 위치, 안전한 로컬 점검, 동결 실험 보존 원칙은 [DEVELOPMENT.md](DEVELOPMENT.md)에서 확인합니다.
 >
 > **후속 연구 안내 (2026-10-03):** 이 README의 v0.7은 역사적 validation freeze입니다. 이후 History MLP 폭 비교·관측 시간 계약·A100 후보·재현 소스와 master 통합 상태는 [연구 재현성 인덱스](paper/reproducibility/README.md)를 따릅니다. 아래 frozen 수치와 선택 기준은 그대로 보존합니다.

@@ -1,0 +1,61 @@
+{
+  "schema": "phen_reproduction_v1",
+  "dataset_id": "intermittent_frozen_5000",
+  "provenance": {
+    "contract": "search_artifacts/titantpp_history_mlp_shared_raw9_20261020_v1/execution_contract.json",
+    "legacy_source_revision": "41c1278760def3a30ee5e22c4e964a0380e6abb2"
+  },
+  "data_path": "sample_data/phen/intermittent_frozen_5000/train_validation.parquet",
+  "accepted_data_sha256": [
+    "1b2c1001ad050b88acb2887c255adb9d611368eea91214bc8d66720edb9d4a5f",
+    "85d1fe3ade3ae5a90241018e99a3e9463828d5ba35bc374b56def0168ffffc3f"
+  ],
+  "expected_populations": {
+    "train": {
+      "target_count": 393824,
+      "target_identity_sha256": "fb8737489bc18e528adc322e2e55e26fcc5793aa6ff8021d93ceac98d7768aed",
+      "target_quantity_sha256": "c4a9c3721d3861c190e81abe35156488f545b00c8ddbbed4022a9a82a4b3a215"
+    },
+    "validation": {
+      "target_count": 86285,
+      "target_identity_sha256": "32b59854dab805a4dce4190cbe880f4db64aaec8250b36b2d6da8d5dfd2b08bf",
+      "target_quantity_sha256": "e172236cfaf75520e0342956907eb252d9485d9eab47ef3e3a4d30df89742385"
+    }
+  },
+  "loader": {
+    "batch_size": 128,
+    "lookback": 520,
+    "max_seq_len": 256
+  },
+  "model": {
+    "hidden_dim": 64,
+    "time_initial_location": -0.21389036220110552,
+    "time_initial_scale": 0.6816420108412236,
+    "time_observation_contract": {
+      "mode": "positive_integer_round_clamp_v1",
+      "top_code": null,
+      "unit": "week"
+    },
+    "time_scale": 3,
+    "time_sigma_floor": 0.001
+  },
+  "quantity_boundaries": [2, 31, 46, 187],
+  "statistics": {
+    "train_log_mean": 1.821123902075507,
+    "train_log_std": 1.2853917394914367
+  },
+  "training": {
+    "epochs": 300,
+    "min_epochs": 40,
+    "patience": 40,
+    "lr": 0.001,
+    "weight_decay": 0.01,
+    "grad_clip": 1,
+    "lambda_log_qty": 1
+  },
+  "seeds": [
+    42,
+    52,
+    62
+  ]
+}
