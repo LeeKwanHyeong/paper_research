@@ -35,3 +35,11 @@ prepare_01의 context_only 호환성 실패를 보존했다. 검사 전용 사�
 ## 최초 배포 전송 실패 — 보존
 
 최초 배포 명령의 Python -c 인수가 OS 길이 제한을 초과하여 remote Python 실행 전에 실제 SSH exit 1로 끝났다. 학습 실패가 아니다. transport/의 원본 stdout·stderr·실제 종료·failure를 그대로 보존했다. 실행 소스·입력·과학 계약을 유지한 별도 transport_v2에서 긴 코드와 archive를 stdin으로 전달하도록 제어만 수정한다. 원격 폴더가 이미 있으면 새 전송도 중단하며 덮어쓰거나 학습을 재시작하지 않는다.
+
+## 격리 실행 배치 — 완료, 실제 학습 진입 확인 중
+
+2026-10-27 14:45:04 KST에 5090 tmux launch 실제 exit 0, SSH 실제 exit 0을 확인했다. 기존 디렉터리 부재 검사와 동일 archive SHA 검증을 통과했다. 모델 소스 commit은 3a98264a5fbd261f364d5031fe42041f6203a462, 전송 제어 commit은 e14fda20c2527a60c38c0fc37e8a1fcd2559f9f0이다. tmux의 libtinfo 버전 경고는 stderr 원문에 보존했으며 launch 종료값은 0이다. 배치 성공 자체를 학습 시작·완료로 보고하지 않는다.
+
+## 원격 사전 준비 경로 오류 — 보존 및 배치 수정
+
+최초 tmux 배치는 prelaunch_02에서 exit 1로 끝났으며 actual supervisor/dispatcher exit도 1이다. 원격 읽기 전용 확인에서 fit.STARTED·FIT_CLAIM·prepared 산출물은 모두 없었다. sample_data root sentinel 디렉터리 부재로 격리 밖 옛 utils가 import된 것이 원인이다. execution_v2는 데이터 없는 marker와 소스 inventory를 추가하고 native 검사에서 프로젝트 루트·실제 import 경로·SHA를 검증한다. 원래 991개 Python 파일과 새 runner·과학 계약은 그대로다. 새 prepare와 native CPU 검사는 actual exit 0이며, 기존 실패 폴더를 유지하고 새 sibling 폴더에 배치한다. 실제 학습 횟수는 아직 0이다.
