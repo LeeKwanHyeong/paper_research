@@ -1,0 +1,103 @@
+{
+  "schema": "taxi_internal_holdout_transport_recovery_v2",
+  "status": "PASS",
+  "parent_reviewed": true,
+  "scope": "Transport-only stdin framing recovery from preserved argv-length deployment failure; no scientific retry, resume, or payload modification.",
+  "controller_sha256": "9bd47435910cbdd664ac6db4efd7c511b6f3835e5cf7a46ea619223d0fe445be",
+  "preserved_files": {
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/phen_taxi_internal_holdout_20261027_v1/AUTHORIZATION.json": {
+      "bytes": 598,
+      "sha256": "4bcb449b72f9b54b8e421e1fa8d2908413ef90b617f3145a34830f390431e3d6"
+    },
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/phen_taxi_internal_holdout_20261027_v1/LOCAL_QA.json": {
+      "bytes": 2855,
+      "sha256": "42c6f112207f9be996e245726a36e6aaa181dd097ef32dc740e94dbaf9f94e2c"
+    },
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/phen_taxi_internal_holdout_20261027_v1/payload/EXECUTION.json": {
+      "bytes": 142536,
+      "sha256": "989b49b93ce930c2835765bae0cbd258a76bc9652bd6d718682e00339d0f663f"
+    },
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/phen_taxi_internal_holdout_20261027_v1/SCIENCE_SPEC.json": {
+      "bytes": 3991,
+      "sha256": "5ac466826ac7473c186b7379251809ba5b05ef7697a7f7199540d838f6ced501"
+    },
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/phen_taxi_internal_holdout_20261027_v1/PAYLOAD.json": {
+      "bytes": 182810,
+      "sha256": "1990a367482faadc18181e0ee5b2cda3e0a036190d155608ba1438346a354c5a"
+    },
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/phen_taxi_internal_holdout_20261027_v1/transport/deploy.json": {
+      "bytes": 430,
+      "sha256": "44868cb91e68697a9bcf9c285589edebf25907ba07a697cc450cb10721df957a"
+    },
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/phen_taxi_internal_holdout_20261027_v1/supervise.py": {
+      "bytes": 9713,
+      "sha256": "200cd79800583a3375bb1e06a6700bbdc7effe70280745e96373f0745d9a8450"
+    },
+    "/Users/igwanhyeong/PycharmProjects/paper_research/search_artifacts/phen_taxi_internal_holdout_20261027_v1/payload.tar.gz": {
+      "bytes": 5187301,
+      "sha256": "19a1531b105580c0f4e99c8c65a6867ec75460767767cf33ff7ddf2f00d5141d"
+    },
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/phen_taxi_internal_holdout_20261027_v1/transport/deploy.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/phen_taxi_internal_holdout_20261027_v1/remote_control.py": {
+      "bytes": 15376,
+      "sha256": "ff38d657b4e0038828821b9029495fcf6dc65c2b61d9b54dcd540aa6a6ffa3e6"
+    },
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/phen_taxi_internal_holdout_20261027_v1/transport/deploy.stderr": {
+      "bytes": 34,
+      "sha256": "6412ca370a1c594b3f8919b46e2ffc012ee979a9deed38d6db2f994e2ac9b4fe"
+    },
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/phen_taxi_internal_holdout_20261027_v1/transport/TRANSPORT_FAILURE.json": {
+      "bytes": 430,
+      "sha256": "44868cb91e68697a9bcf9c285589edebf25907ba07a697cc450cb10721df957a"
+    },
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/phen_taxi_internal_holdout_20261027_v1/transport/deploy.claim": {
+      "bytes": 149,
+      "sha256": "88b132b74fca8000838f1f14136bba84136f1df82a3569561376ab14910af90f"
+    },
+    "/Users/igwanhyeong/PycharmProjects/paper_research/reports/phen_taxi_internal_holdout_20261027_v1/PREFLIGHT_QA.json": {
+      "bytes": 2265,
+      "sha256": "cc6d623c590b870cf62f632ec51bdba9f47e28f105182312995fcf4a21076e36"
+    }
+  },
+  "original_failure": {
+    "mode": "deploy",
+    "actual_ssh_exit_code": 1,
+    "timed_out": false,
+    "local_wrapper_exit_code": 1,
+    "started_utc": "2026-10-27T05:41:08.134745+00:00",
+    "finished_utc": "2026-10-27T05:41:08.377876+00:00",
+    "stdout_bytes": 0,
+    "stderr_bytes": 34,
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "6412ca370a1c594b3f8919b46e2ffc012ee979a9deed38d6db2f994e2ac9b4fe"
+  },
+  "local_checks": {
+    "status": "PASS",
+    "checks": [
+      "controller_and_generated_scripts_syntax",
+      "all_remote_scripts_byte_identical_to_original",
+      "actual_large_deploy_script_and_archive_frame_exact",
+      "over_128KiB_script_bootstrap_preserves_remaining_binary_stdin",
+      "five_truncated_or_invalid_frames_rejected",
+      "existing_path_allowlist_and_prelaunch_stage_guard",
+      "recovery_qa_valid_exact_failure_evidence_accepted",
+      "recovery_review_self_sha_inventory_and_archive_mutation_guards",
+      "all_original_evidence_and_1001_payload_members_unchanged"
+    ],
+    "actual_local_python_exit_code": 0,
+    "original_deploy_script_bytes": 165363,
+    "bootstrap_bytes": 460,
+    "archive_bytes": 5187301,
+    "archive_sha256": "19a1531b105580c0f4e99c8c65a6867ec75460767767cf33ff7ddf2f00d5141d",
+    "payload_member_count": 1001,
+    "test_access": false,
+    "ssh_calls": 0,
+    "gpu_calls": 0
+  },
+  "pending_parent_review": "Completed: scoped diff and unchanged scientific payload verified; no learning attempt occurred in the argv failure.",
+  "remote_absence_gate": "Unmodified deploy script asserts remote_root does not exist before extraction or launch; remote absence has not been checked by this local verification.",
+  "parent_reviewed_utc": "2026-10-27T05:44:41.993164+00:00"
+}

@@ -31,3 +31,7 @@ prepare_01의 context_only 호환성 실패를 보존했다. 검사 전용 사�
 ## 회수·판독 — 다음 작업
 
 실제 child·supervisor·dispatcher 종료와 원본 불변·회수 파일 SHA를 검증한 후, 동일 checkpoint의 사건별 재계산과 learning curve를 대조한다. 수량 RMSE·MAE·log-MSE와 시간 NLL을 각각 읽는다. fit 지원 범위 안팎을 함께 보고 후기 일반화 악화와 구간 차이가 공존할 가능성을 남긴다. 이 seed42 한 번으로 순수 과적합과 순수 분포 변화의 인과 효과를 확정하거나 새 모델을 채택하지 않는다.
+
+## 최초 배포 전송 실패 — 보존
+
+최초 배포 명령의 Python -c 인수가 OS 길이 제한을 초과하여 remote Python 실행 전에 실제 SSH exit 1로 끝났다. 학습 실패가 아니다. transport/의 원본 stdout·stderr·실제 종료·failure를 그대로 보존했다. 실행 소스·입력·과학 계약을 유지한 별도 transport_v2에서 긴 코드와 archive를 stdin으로 전달하도록 제어만 수정한다. 원격 폴더가 이미 있으면 새 전송도 중단하며 덮어쓰거나 학습을 재시작하지 않는다.
